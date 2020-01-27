@@ -7,11 +7,12 @@ from sklearn.model_selection import cross_val_score
 
 class GASearchCV:
     
-    """Hyper parameter tunning using generic algorithms.
+    """
+    Hyper parameter tunning using generic algorithms.
     Parameters
     ----------
     estimator: Sklearn Classifier or Regressor
-    cv: int, number of splits used for calculating cross_val score
+    cv: int, number of splits used for calculating cross_val_score
     scoring: string, Scoring function to use as fitness value
     pop_size: int, size of the population
     crossover_prob: float, probability of crossover operation
