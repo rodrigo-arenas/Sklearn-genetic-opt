@@ -25,7 +25,7 @@ clf = SGDClassifier(loss='hinge',fit_intercept=True)
 evolved_estimator = GASearchCV(clf,
                     cv=3,
                     scoring='accuracy',
-                    pop_size=20,
+                    pop_size=16,
                     generations=8,
                     tournament_size=3,
                     elitism=True,
