@@ -7,6 +7,26 @@ from sklearn.model_selection import cross_val_score
 
 class GASearchCV:
     
+    """Hyper parameter tunning using generic algorithms.
+    Parameters
+    ----------
+    estimator: Sklearn Classifier or Regressor
+    cv: int, number of splits used for calculating cross_val score
+    scoring: string, Scoring function to use as fitness value
+    pop_size: int, size of the population
+    crossover_prob: float, probability of crossover operation
+    mutation_prob: float, probability of child mutation
+    tournament_size: number of chromosomes to performe tournament selection
+    elitism: bool, if true takes the two best solution to the next generation
+    verbose: bool, if true, shows the best solution in each generation
+    generations: int, number of generations to run the genetic algorithm
+    continuous_parameters: dict, continous parameters to tune, expected a list or tuple with the range (min,max) to search
+    categorical_parameters: dict, categorical parameters to tune, expected a list with the posible options to choose
+    int_parameters: dict, integers parameters to tune, expected a list or tuple with the range (min,max) to search
+    encoding_len: enconding lenght for the continuous_parameters and int_parameters
+    """
+    
+    
     def __init__(self,
                  estimator,
                  cv=3,
