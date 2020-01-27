@@ -37,5 +37,5 @@ evolved_estimator = GASearchCV(clf,
                     
 evolved_estimator.fit(X_train,y_train)
 evolved_estimator.best_params_
-y_predicy_ga = evolved_estimator.predict(X_test)
-accuracy_score(y_test,y_predicy_ga)
+y_predict_ga = evolved_estimator.predict(X_test)
+accuracy_score(y_test,y_predict_ga)
