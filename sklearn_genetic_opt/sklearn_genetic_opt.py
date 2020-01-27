@@ -109,9 +109,7 @@ class GASearchCV:
             self._categorical_chromosomes_init= np.transpose(np.array([np.random.randint(len(value),
                                                                        size=(self.pop_size)) 
                                                               for key, value in self.categorical_parameters.items()]))
-        #self._categorical_chromosomes_init = self._categorical_chromosomes_init.reshape(self.pop_size,self._categorical_parameters_number)
         return np.hstack((self._continous_chromosomes_init, self._int_chromosomes_init,self._categorical_chromosomes_init))
-        #return self._categorical_chromosomes_init,self._continous_chromosomes_init
 
     
     def _decode(self,chromosome):
@@ -170,9 +168,6 @@ class GASearchCV:
         
         if random.random() < self.crossover_prob:
         
-            #crossover_points= random.sample(range(self._continous_parameters_range[0], 
-            #                                      self._continous_parameters_range[1] 
-            #                                      + self._int_parameters_number*self._encoding_len), 2)
             crossover_points= random.sample(range(len(parent1)),2)
             _point1, _point2= min(crossover_points),max(crossover_points)
 
@@ -198,8 +193,7 @@ class GASearchCV:
             if random.random() < self.mutation_prob:
                 child[value[0]:value[1]] = np.random.randint(len(value))
         
-        return child
-        
+        return child    
     
     def fit(self,X,y):
         
@@ -231,9 +225,6 @@ class GASearchCV:
                                             "fitness_std":round(np.std(_cv_score),4)}
             
             
-            """
-            generates a new population
-            """
             _temp_current_generation_chromosomes = []
             
             for n_chrom in range(self._child_range): 
