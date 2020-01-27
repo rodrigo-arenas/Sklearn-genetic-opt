@@ -15,7 +15,6 @@ import numpy as np
 
 
 data = load_digits() 
-label_names = data['target_names'] 
 y = data['target']
 X = data['data'] 
 
