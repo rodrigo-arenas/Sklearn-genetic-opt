@@ -2,10 +2,13 @@ import numpy as np
 import random
 import functools
 import operator
-from sklearn.base import clone
+from sklearn.base import clone, ClassifierMixin, RegressorMixin
 from sklearn.model_selection import cross_val_score
+from sklearn.base import is_classifier, is_regressor
+from sklearn.metrics import check_scoring
 
-class GASearchCV:
+
+class GASearchCV(ClassifierMixin, RegressorMixin):
     
     """
     Hyper parameter tunning using generic algorithms.
@@ -43,7 +46,7 @@ class GASearchCV:
                  categorical_parameters = {}, 
                  int_parameters = {},
                  encoding_len=10):
-        
+
         self.estimator=clone(estimator)
         self.cv=cv
         self.scoring=scoring
@@ -80,6 +83,7 @@ class GASearchCV:
                                                     +1)
                                                     for x,key in enumerate([*self.categorical_parameters])}
         
+
     def _get_precision(self):
         
         self._continuous_parameters_precision = {}
@@ -197,6 +201,10 @@ class GASearchCV:
     
     def fit(self,X,y):
         
+        if not is_classifier(self.estimator) and not is_regressor(self.estimator):
+            raise ValueError("{} is not a valid Sklearn estimator".format(self.estimator))
+        scorer = check_scoring(self.estimator, scoring=self.scoring)
+
         self._get_precision()
         self.X= X
         self.y = y
@@ -270,3 +278,4 @@ class GASearchCV:
         
         self.X_predict= X_predict
         return self.estimator.predict(self.X_predict)
+
