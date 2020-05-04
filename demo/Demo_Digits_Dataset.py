@@ -53,8 +53,8 @@ print("grid search best params: \n", grid_search.best_params_)
 evolved_estimator = GASearchCV(clf,
                                cv=3,
                                scoring='accuracy',
-                               pop_size=16,
-                               generations=10,
+                               pop_size=12,
+                               generations=8,
                                tournament_size=3,
                                elitism=True,
                                continuous_parameters={'l1_ratio': (0, 1), 'alpha': (1e-4, 1)},
@@ -67,3 +67,7 @@ y_predict_ga = evolved_estimator.predict(X_test)
 accuracy = accuracy_score(y_test, y_predict_ga)
 print("accuracy score: ", "{:.2f}".format(accuracy))
 print("genetic algorithm best params: \n", evolved_estimator.best_params_)
+print("genetic algorithm decision function: \n", evolved_estimator.decision_function(X_test))
+
+
+

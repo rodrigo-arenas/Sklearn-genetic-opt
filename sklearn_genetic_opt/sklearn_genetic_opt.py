@@ -6,6 +6,8 @@ from utils.custom_properties import LazyProperty
 from sklearn.base import clone, ClassifierMixin, RegressorMixin
 from sklearn.model_selection import cross_val_score
 from sklearn.base import is_classifier, is_regressor
+from sklearn.utils.metaestimators import if_delegate_has_method
+from sklearn.utils.validation import check_array
 from sklearn.metrics import check_scoring
 
 
@@ -57,8 +59,8 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         self.elitism = elitism
         self.verbose = verbose
         self._encoding_len = encoding_len
-        self.X = None
-        self.y = None
+        self.X_ = None
+        self.Y_ = None
         self._child_range = None
         self._best_solutions = None
         self._gen_results = None
@@ -99,6 +101,10 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
                                                       self._categorical_parameters_range[0] + x
                                                       + 1)
                                                 for x, key in enumerate([*self.categorical_parameters])}
+
+    @property
+    def _estimator_type(self):
+        return self.estimator._estimatortype
 
     @LazyProperty
     def _precision(self):
@@ -213,14 +219,15 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
 
         return child
 
+    @if_delegate_has_method(delegate='estimator')
     def fit(self, X, y):
 
         if not is_classifier(self.estimator) and not is_regressor(self.estimator):
             raise ValueError("{} is not a valid Sklearn estimator".format(self.estimator))
         scorer = check_scoring(self.estimator, scoring=self.scoring)
 
-        self.X = X
-        self.y = y
+        self.X_= X
+        self.Y_ = y
         _current_generation_chromosomes = self._initialize_population()
         if self.elitism:
             self._child_range = int((len(_current_generation_chromosomes) / 2) - 2)
@@ -238,7 +245,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
 
                 self.estimator.set_params(**_current_generation_params)
 
-                _cv_score = cross_val_score(self.estimator, self.X, self.y, cv=self.cv, scoring=self.scoring, n_jobs=-1)
+                _cv_score = cross_val_score(self.estimator, self.X_, self.Y_, cv=self.cv, scoring=self.scoring, n_jobs=-1)
 
                 self._gen_results[n_chrom] = {"n_chrom": n_chrom,
                                               "params": _current_generation_params,
@@ -281,10 +288,31 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         self.best_params_ = self._best_solutions[self.generations - 1]["params"]
 
         self.estimator.set_params(**self.best_params_)
-        self.estimator.fit(self.X, self.y)
-        return self._best_solutions[self.generations - 1]
+        self.estimator.fit(self.X_, self.Y_)
+        #return self._best_solutions[self.generations - 1]
+        return self
 
-    def predict(self, x_predict):
+    @if_delegate_has_method(delegate='estimator')
+    def predict(self, X):
+        X = check_array(X)
+        return self.estimator.predict(X)
 
-        self.X_predict = x_predict
-        return self.estimator.predict(self.X_predict)
+    @if_delegate_has_method(delegate='estimator')
+    def score(self, X, y):
+        X = check_array(X)
+        return self.estimator.score(X, y)
+
+    @if_delegate_has_method(delegate='estimator')
+    def decision_function(self, X):
+        X = check_array(X)
+        return self.estimator.decision_function(X)
+
+    @if_delegate_has_method(delegate='estimator')
+    def predict_proba(self, X):
+        X = check_array(X)
+        return self.estimator.predict_proba(X)
+
+    @if_delegate_has_method(delegate='estimator')
+    def predict_log_proba(self, X):
+        X = check_array(X)
+        return self.estimator.predict_log_proba(X)
