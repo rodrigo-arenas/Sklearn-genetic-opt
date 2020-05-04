@@ -11,7 +11,6 @@ from sklearn.linear_model import SGDClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.datasets import load_digits
 from sklearn.metrics import accuracy_score
-import numpy as np
 
 
 data = load_digits() 
@@ -26,7 +25,7 @@ evolved_estimator = GASearchCV(clf,
                     cv=3,
                     scoring='accuracy',
                     pop_size=16,
-                    generations=8,
+                    generations=20,
                     tournament_size=3,
                     elitism=True,
                     continuous_parameters = {'l1_ratio':(0,1), 'alpha':(1e-4,1)},

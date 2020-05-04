@@ -2,7 +2,7 @@ import numpy as np
 import random
 import functools
 import operator
-from utils.utils import LazyProperty
+from utils.custom_properties import LazyProperty
 from sklearn.base import clone, ClassifierMixin, RegressorMixin
 from sklearn.model_selection import cross_val_score
 from sklearn.base import is_classifier, is_regressor
@@ -11,7 +11,7 @@ from sklearn.metrics import check_scoring
 
 class GASearchCV(ClassifierMixin, RegressorMixin):
     """
-    Hyper parameter tunning using generic algorithms.
+    Hyper parameter tuning using generic algorithms.
     Parameters
     ----------
     estimator: Sklearn Classifier or Regressor
@@ -57,6 +57,13 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         self.elitism = elitism
         self.verbose = verbose
         self._encoding_len = encoding_len
+        self.X = None
+        self.y = None
+        self._child_range = None
+        self._best_solutions = None
+        self._gen_results = None
+        self.best_params_ = None
+        self.X_predict = None
 
         if not continuous_parameters:
             self.continuous_parameters = {}
@@ -133,7 +140,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
 
         _decoded_dict = {}
 
-        # Continuos variables
+        # Continuous variables
         for key, value in self.continuous_parameters.items():
             __index = self._continuous_parameters_indexes[key]
 
