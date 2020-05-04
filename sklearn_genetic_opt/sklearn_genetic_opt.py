@@ -2,6 +2,7 @@ import numpy as np
 import random
 import functools
 import operator
+from utils.utils import LazyProperty
 from sklearn.base import clone, ClassifierMixin, RegressorMixin
 from sklearn.model_selection import cross_val_score
 from sklearn.base import is_classifier, is_regressor
@@ -92,7 +93,8 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
                                                       + 1)
                                                 for x, key in enumerate([*self.categorical_parameters])}
 
-    def _get_precision(self):
+    @LazyProperty
+    def _precision(self):
 
         self._continuous_parameters_precision = {}
         self._int_parameters_precision = {}
@@ -106,9 +108,9 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
             for key, value in self.int_parameters.items():
                 self._int_parameters_precision[key] = round((value[1] - value[0]) / (2 ** self._encoding_len - 1), 10)
 
-        self._params_precision = {**self._continuous_parameters_precision, **self._int_parameters_precision}
+        _params_precision = {**self._continuous_parameters_precision, **self._int_parameters_precision}
 
-        return self._params_precision
+        return _params_precision
 
     def _initialize_population(self):
 
@@ -136,7 +138,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
             __index = self._continuous_parameters_indexes[key]
 
             chrom = chromosome[__index[0]:__index[1]]
-            decoded = round(value[0] + sum([x * (2 ** n) for n, x in enumerate(chrom)]) * self._params_precision[key],
+            decoded = round(value[0] + sum([x * (2 ** n) for n, x in enumerate(chrom)]) * self._precision[key],
                             15)
 
             _decoded_dict[key] = decoded
@@ -147,7 +149,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
 
             chrom_int = chromosome[__index_int[0]:__index_int[1]]
             decoded_int = int(
-                value_int[0] + sum([x * (2 ** n) for n, x in enumerate(chrom_int)]) * self._params_precision[key_int])
+                value_int[0] + sum([x * (2 ** n) for n, x in enumerate(chrom_int)]) * self._precision[key_int])
 
             _decoded_dict[key_int] = decoded_int
 
@@ -168,7 +170,8 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
 
         return _contestants[_best_score_idx]
 
-    def _elitism(self, gen_results):
+    @staticmethod
+    def _elitism(gen_results):
         """
         Returns top 2 by fitness value
         """
@@ -209,7 +212,6 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
             raise ValueError("{} is not a valid Sklearn estimator".format(self.estimator))
         scorer = check_scoring(self.estimator, scoring=self.scoring)
 
-        self._get_precision()
         self.X = X
         self.y = y
         _current_generation_chromosomes = self._initialize_population()
@@ -275,7 +277,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         self.estimator.fit(self.X, self.y)
         return self._best_solutions[self.generations - 1]
 
-    def predict(self, X_predict):
+    def predict(self, x_predict):
 
-        self.X_predict = X_predict
+        self.X_predict = x_predict
         return self.estimator.predict(self.X_predict)
