@@ -30,7 +30,8 @@ evolved_estimator = GASearchCV(clf,
                     continuous_parameters = {'l1_ratio':(0,1), 'alpha':(1e-4,1)},
                     categorical_parameters = {'average': [True, False]},
                     int_parameters = {},
-                    encoding_len=10)
+                    encoding_len=10,
+                    n_jobs=-1)
                     
 evolved_estimator.fit(X_train,y_train)
 evolved_estimator.best_params_
