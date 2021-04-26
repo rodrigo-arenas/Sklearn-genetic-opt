@@ -4,4 +4,3 @@ codecov==2.1.11
 pytest-cov==2.11.1
 twine==3.3.0
 numpy>=1.18.1
-joblib~=0.11
