@@ -1,5 +1,10 @@
+[![Build Status](https://www.travis-ci.com/rodrigo-arenas/Sklearn-genetic.svg?branch=master)](https://www.travis-ci.com/rodrigo-arenas/Sklearn-genetic)
+[![Codecov](https://codecov.io/gh/rodrigo-arenas/Sklearn-genetic/branch/main/graphs/badge.svg?branch=master&service=github)](https://codecov.io/github/rodrigo-arenas/Sklearn-genetic?branch=master)
+[![PyPI Version](https://badge.fury.io/py/sklearn-genetic.svg)](https://badge.fury.io/py/sklearn-genetic)
+[![Python Version](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8%20%7C%203.9-blue)](https://www.python.org/downloads/)
+
 # Sklearn-genetic
-Sklearn models hyper parameters tuning using genetic algorithms
+Sklearn models hyperparameters tuning using genetic algorithms
 
 
 ## Example
@@ -36,6 +41,6 @@ evolved_estimator = GASearchCV(clf,
                                n_jobs=-1)
                     
 evolved_estimator.fit(X_train,y_train)
-evolved_estimator.best_params_
+print(evolved_estimator.best_params_)
 y_predict_ga = evolved_estimator.predict(X_test)
-accuracy_score(y_test,y_predict_ga)
+print(accuracy_score(y_test,y_predict_ga))
