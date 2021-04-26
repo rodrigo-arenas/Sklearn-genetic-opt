@@ -22,14 +22,14 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
     pop_size: int, size of the population
     crossover_prob: float, probability of crossover operation
     mutation_prob: float, probability of child mutation
-    tournament_size: number of chromosomes to performe tournament selection
+    tournament_size: number of chromosomes to perform tournament selection
     elitism: bool, if true takes the two best solution to the next generation
     verbose: bool, if true, shows the best solution in each generation
     generations: int, number of generations to run the genetic algorithm
     continuous_parameters: dict, continuous parameters to tune, expected a list or tuple with the range (min,max) to search
-    categorical_parameters: dict, categorical parameters to tune, expected a list with the posible options to choose
+    categorical_parameters: dict, categorical parameters to tune, expected a list with the possible options to choose
     int_parameters: dict, integers parameters to tune, expected a list or tuple with the range (min,max) to search
-    encoding_len: enconding lenght for the continuous_parameters and int_parameters
+    encoding_len: encoding length for the continuous_parameters and int_parameters
     """
 
     def __init__(self,

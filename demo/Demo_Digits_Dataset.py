@@ -1,4 +1,4 @@
-from sklearn_genetic.sklearn_genetic import GASearchCV
+from sklearn_genetic import GASearchCV
 from sklearn.linear_model import SGDClassifier
 from sklearn.model_selection import train_test_split, GridSearchCV, RandomizedSearchCV
 import scipy.stats as stats
