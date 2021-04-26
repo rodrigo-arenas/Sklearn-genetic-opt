@@ -6,6 +6,14 @@
 # Sklearn-genetic
 Sklearn models hyperparameters tuning using genetic algorithms
 
+# Usage:
+Install sklearn-genetic
+
+It's advised to install pyworkforce using a virtual env, inside the env use:
+
+```
+pip install sklearn-genetic
+```
 
 ## Example
 
