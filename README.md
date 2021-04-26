@@ -1,12 +1,11 @@
-# Sklearn-genetic-opt
-Repository for sklearn models hyper parameters tunning using genetic algorithms
+# Sklearn-genetic
+Sklearn models hyper parameters tuning using genetic algorithms
 
-This is not ment to be a highly optimized implementation, it was made for demostration purposes
 
 ## Example
 
 ```python
-from sklearn_genetic_opt import GASearchCV
+from sklearn_genetic import GASearchCV
 from sklearn.linear_model import SGDClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.datasets import load_digits
