@@ -2,7 +2,7 @@ import numpy as np
 import random
 import functools
 import operator
-from utils.custom_properties import LazyProperty
+from sklearn_genetic.utils.custom_properties import LazyProperty
 from sklearn.base import clone, ClassifierMixin, RegressorMixin
 from sklearn.model_selection import cross_val_score
 from sklearn.base import is_classifier, is_regressor
