@@ -46,7 +46,8 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
                  continuous_parameters=None,
                  categorical_parameters=None,
                  int_parameters=None,
-                 encoding_len=10):
+                 encoding_len=10,
+                 n_jobs=1):
 
         self.estimator = clone(estimator)
         self.cv = cv
@@ -59,6 +60,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         self.elitism = elitism
         self.verbose = verbose
         self._encoding_len = encoding_len
+        self.n_jobs = n_jobs
         self.X_ = None
         self.Y_ = None
         self._child_range = None
@@ -69,15 +71,18 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
 
         if not continuous_parameters:
             self.continuous_parameters = {}
-        self.continuous_parameters = continuous_parameters
+        else:
+            self.continuous_parameters = continuous_parameters
 
         if not categorical_parameters:
             self.categorical_parameters = {}
-        self.categorical_parameters = categorical_parameters
+        else:
+            self.categorical_parameters = categorical_parameters
 
         if not int_parameters:
             self.int_parameters = {}
-        self.int_parameters = int_parameters
+        else:
+            self.int_parameters = int_parameters
 
         self._continuous_parameters_number = len(self.continuous_parameters.keys())
         self._continuous_parameters_range = (0, self._continuous_parameters_number * self._encoding_len)
@@ -102,10 +107,6 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
                                                       + 1)
                                                 for x, key in enumerate([*self.categorical_parameters])}
 
-    @property
-    def _estimator_type(self):
-        return self.estimator._estimatortype
-
     @LazyProperty
     def _precision(self):
 
@@ -129,14 +130,11 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
 
         self._continuous_chromosomes_init = np.random.randint(2, size=(
             self.pop_size, self._continuous_parameters_number * self._encoding_len))
-        self._int_chromosomes_init = np.random.randint(2, size=(
-            self.pop_size, self._int_parameters_number * self._encoding_len)
-                                                       )
+        self._int_chromosomes_init = np.random.randint(2, size=(self.pop_size, self._int_parameters_number * self._encoding_len))
 
         self._categorical_chromosomes_init = np.empty((self.pop_size, 0), int)
         if bool(self.categorical_parameters):
-            self._categorical_chromosomes_init = np.transpose(np.array([np.random.randint(len(value),
-                                                                                          size=(self.pop_size))
+            self._categorical_chromosomes_init = np.transpose(np.array([np.random.randint(len(value), size=self.pop_size)
                                                                         for key, value in
                                                                         self.categorical_parameters.items()]))
         return np.hstack(
@@ -151,8 +149,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
             __index = self._continuous_parameters_indexes[key]
 
             chrom = chromosome[__index[0]:__index[1]]
-            decoded = round(value[0] + sum([x * (2 ** n) for n, x in enumerate(chrom)]) * self._precision[key],
-                            15)
+            decoded = round(value[0] + sum([x * (2 ** n) for n, x in enumerate(chrom)]) * self._precision[key], 15)
 
             _decoded_dict[key] = decoded
 
@@ -221,7 +218,19 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
 
     @if_delegate_has_method(delegate='estimator')
     def fit(self, X, y):
+        """
+        Main method of GASearchCV, optimize the hyper parameters of the given estimator
+        Parameters
+        ----------
+        X: training samples to learn from
+        y: training labels for each X obversation
 
+        Returns
+
+        fitted sklearn Regressor or Classifier
+        -------
+
+        """
         if not is_classifier(self.estimator) and not is_regressor(self.estimator):
             raise ValueError("{} is not a valid Sklearn estimator".format(self.estimator))
         scorer = check_scoring(self.estimator, scoring=self.scoring)
@@ -236,16 +245,16 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
 
         for gen in range(0, self.generations):
             self._gen_results = {}
-
-            """
-            Adjust the model for each chromosome and get fitness
-            """
             for n_chrom, chromosome in enumerate(_current_generation_chromosomes):
                 _current_generation_params = self._decode(chromosome)
 
                 self.estimator.set_params(**_current_generation_params)
 
-                _cv_score = cross_val_score(self.estimator, self.X_, self.Y_, cv=self.cv, scoring=self.scoring, n_jobs=-1)
+                _cv_score = cross_val_score(self.estimator,
+                                            self.X_, self.Y_,
+                                            cv=self.cv,
+                                            scoring=self.scoring,
+                                            n_jobs=self.n_jobs)
 
                 self._gen_results[n_chrom] = {"n_chrom": n_chrom,
                                               "params": _current_generation_params,
@@ -282,14 +291,13 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
             self._best_solutions[gen] = self._gen_results[_best_solution_idx]
 
             if self.verbose:
-                print("n_gen:", gen, self._best_solutions[gen])
-                print()
+                print("n_gen:", gen, self._best_solutions[gen], "\n")
 
         self.best_params_ = self._best_solutions[self.generations - 1]["params"]
 
         self.estimator.set_params(**self.best_params_)
         self.estimator.fit(self.X_, self.Y_)
-        #return self._best_solutions[self.generations - 1]
+
         return self
 
     @if_delegate_has_method(delegate='estimator')
