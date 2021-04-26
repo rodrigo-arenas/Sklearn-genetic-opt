@@ -18,20 +18,22 @@ X = data['data']
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
 
-clf = SGDClassifier(loss='hinge',fit_intercept=True)
+clf = DecisionTreeClassifier()
 
 evolved_estimator = GASearchCV(clf,
-                    cv=3,
-                    scoring='accuracy',
-                    pop_size=16,
-                    generations=20,
-                    tournament_size=3,
-                    elitism=True,
-                    continuous_parameters = {'l1_ratio':(0,1), 'alpha':(1e-4,1)},
-                    categorical_parameters = {'average': [True, False]},
-                    int_parameters = {},
-                    encoding_len=10,
-                    n_jobs=-1)
+                               cv=3,
+                               scoring='accuracy',
+                               pop_size=16,
+                               generations=30,
+                               tournament_size=3,
+                               elitism=True,
+                               crossover_prob=0.9,
+                               mutation_prob=0.05,
+                               continuous_parameters={'min_weight_fraction_leaf': (0, 0.5)},
+                               categorical_parameters={'criterion': ['gini', 'entropy']},
+                               int_parameters={'max_depth': (2, 20), 'max_leaf_nodes': (2, 30)},
+                               encoding_len=10,
+                               n_jobs=-1)
                     
 evolved_estimator.fit(X_train,y_train)
 evolved_estimator.best_params_
