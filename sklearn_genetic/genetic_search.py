@@ -14,55 +14,59 @@ from sklearn.metrics import check_scoring
 class GASearchCV(ClassifierMixin, RegressorMixin):
     """
     Hyper parameter tuning using generic algorithms.
-    Parameters
-    ----------
-    estimator: Sklearn Classifier or Regressor
-    cv: int, number of splits used for calculating cross_val_score
-    scoring: string, Scoring function to use as fitness value
-    pop_size: int, size of the population
-    crossover_prob: float, probability of crossover operation
-    mutation_prob: float, probability of child mutation
-    tournament_size: number of chromosomes to perform tournament selection
-    elitism: bool, if true takes the two best solution to the next generation
-    verbose: bool, if true, shows the best solution in each generation
-    generations: int, number of generations to run the genetic algorithm
-    continuous_parameters: dict, continuous parameters to tune, expected a list or tuple with the range (min,max) to search
-    categorical_parameters: dict, categorical parameters to tune, expected a list with the possible options to choose
-    int_parameters: dict, integers parameters to tune, expected a list or tuple with the range (min,max) to search
-    encoding_len: encoding length for the continuous_parameters and int_parameters
     """
 
     def __init__(self,
                  estimator,
-                 cv=3,
+                 cv: int = 3,
                  scoring=None,
-                 pop_size=20,
-                 generations=50,
-                 crossover_prob=1.0,
-                 mutation_prob=0.1,
-                 tournament_size=3,
-                 elitism=True,
-                 verbose=True,
-                 continuous_parameters=None,
-                 categorical_parameters=None,
-                 int_parameters=None,
-                 encoding_len=10,
-                 n_jobs=1):
+                 population_size: int = 20,
+                 generations: int = 50,
+                 crossover_probability: float = 1.0,
+                 mutation_probability: float = 0.1,
+                 tournament_size: int = 3,
+                 elitism: bool = True,
+                 verbose: bool = True,
+                 continuous_parameters: dict = None,
+                 categorical_parameters: dict = None,
+                 integer_parameters: dict = None,
+                 encoding_length: int = 10,
+                 n_jobs: int = 1):
+        """
+
+        Parameters
+        ----------
+        estimator: Sklearn Classifier or Regressor
+        cv: int, number of splits used for calculating cross_val_score
+        scoring: string, Scoring function to use as fitness value
+        population_size: int, size of the population
+        crossover_probability: float, probability of crossover operation
+        mutation_probability: float, probability of child mutation
+        tournament_size: number of chromosomes to perform tournament selection
+        elitism: bool, if true takes the two best solution to the next generation
+        verbose: bool, if true, shows the best solution in each generation
+        generations: int, number of generations to run the genetic algorithm
+        continuous_parameters: dict, continuous parameters to tune, expected a list or tuple with the range (min,max) to search
+        categorical_parameters: dict, categorical parameters to tune, expected a list with the possible options to choose
+        integer_parameters: dict, integers parameters to tune, expected a list or tuple with the range (min,max) to search
+        encoding_length: encoding length for the continuous_parameters and integer_parameters
+        n_jobs: Number of jobs to run in parallel
+        """
 
         self.estimator = clone(estimator)
         self.cv = cv
         self.scoring = scoring
-        self.pop_size = pop_size
+        self.pop_size = population_size
         self.generations = generations
-        self.crossover_prob = crossover_prob
-        self.mutation_prob = mutation_prob
+        self.crossover_probability = crossover_probability
+        self.mutation_probability = mutation_probability
         self.tournament_size = tournament_size
         self.elitism = elitism
         self.verbose = verbose
-        self._encoding_len = encoding_len
+        self._encoding_len = encoding_length
         self.n_jobs = n_jobs
-        self.X_ = None
-        self.Y_ = None
+        self.X = None
+        self.Y = None
         self._child_range = None
         self._best_solutions = None
         self._gen_results = None
@@ -79,10 +83,10 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         else:
             self.categorical_parameters = categorical_parameters
 
-        if not int_parameters:
-            self.int_parameters = {}
+        if not integer_parameters:
+            self.integer_parameters = {}
         else:
-            self.int_parameters = int_parameters
+            self.integer_parameters = integer_parameters
 
         self._continuous_parameters_number = len(self.continuous_parameters.keys())
         self._continuous_parameters_range = (0, self._continuous_parameters_number * self._encoding_len)
@@ -90,21 +94,20 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
             key: (x * self._encoding_len, x * self._encoding_len + self._encoding_len)
             for x, key in enumerate([*self.continuous_parameters])}
 
-        self._int_parameters_number = len(self.int_parameters.keys())
+        self._int_parameters_number = len(self.integer_parameters.keys())
         self._int_parameters_range = (self._continuous_parameters_range[1],
                                       self._continuous_parameters_range[
                                           1] + self._int_parameters_number * self._encoding_len)
         self._int_parameters_indexes = {key: (self._int_parameters_range[0] + x * self._encoding_len,
                                               self._int_parameters_range[
                                                   0] + x * self._encoding_len + self._encoding_len)
-                                        for x, key in enumerate([*self.int_parameters])}
+                                        for x, key in enumerate([*self.integer_parameters])}
 
         self._categorical_parameters_number = len(self.categorical_parameters.keys())
         self._categorical_parameters_range = (self._int_parameters_range[1],
                                               self._int_parameters_range[1] + self._categorical_parameters_number)
         self._categorical_parameters_indexes = {key: (self._categorical_parameters_range[0] + x,
-                                                      self._categorical_parameters_range[0] + x
-                                                      + 1)
+                                                      self._categorical_parameters_range[0] + x + 1)
                                                 for x, key in enumerate([*self.categorical_parameters])}
 
     @LazyProperty
@@ -118,8 +121,8 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
                 self._continuous_parameters_precision[key] = round(
                     (value[1] - value[0]) / (2 ** self._encoding_len - 1), 10)
 
-        if bool(self.int_parameters):
-            for key, value in self.int_parameters.items():
+        if bool(self.integer_parameters):
+            for key, value in self.integer_parameters.items():
                 self._int_parameters_precision[key] = round((value[1] - value[0]) / (2 ** self._encoding_len - 1), 10)
 
         _params_precision = {**self._continuous_parameters_precision, **self._int_parameters_precision}
@@ -154,7 +157,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
             _decoded_dict[key] = decoded
 
         # Integer variables
-        for key_int, value_int in self.int_parameters.items():
+        for key_int, value_int in self.integer_parameters.items():
             __index_int = self._int_parameters_indexes[key_int]
 
             chrom_int = chromosome[__index_int[0]:__index_int[1]]
@@ -189,7 +192,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
 
     def _crossover(self, parent1, parent2):
 
-        if random.random() < self.crossover_prob:
+        if random.random() < self.crossover_probability:
             crossover_points = random.sample(range(len(parent1)), 2)
             _point1, _point2 = min(crossover_points), max(crossover_points)
 
@@ -207,11 +210,11 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
 
         for n in range(self._continuous_parameters_range[0],
                        self._continuous_parameters_range[1] + self._int_parameters_number * self._encoding_len):
-            if random.random() < self.mutation_prob:
+            if random.random() < self.mutation_probability:
                 child[n] = 1 - child[n]
 
         for key, value in self._categorical_parameters_indexes.items():
-            if random.random() < self.mutation_prob:
+            if random.random() < self.mutation_probability:
                 child[value[0]:value[1]] = np.random.randint(len(value))
 
         return child
@@ -235,8 +238,8 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
             raise ValueError("{} is not a valid Sklearn estimator".format(self.estimator))
         scorer = check_scoring(self.estimator, scoring=self.scoring)
 
-        self.X_= X
-        self.Y_ = y
+        self.X= X
+        self.Y = y
         _current_generation_chromosomes = self._initialize_population()
         if self.elitism:
             self._child_range = int((len(_current_generation_chromosomes) / 2) - 2)
@@ -251,7 +254,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
                 self.estimator.set_params(**_current_generation_params)
 
                 _cv_score = cross_val_score(self.estimator,
-                                            self.X_, self.Y_,
+                                            self.X, self.Y,
                                             cv=self.cv,
                                             scoring=self.scoring,
                                             n_jobs=self.n_jobs)
@@ -296,7 +299,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         self.best_params_ = self._best_solutions[self.generations - 1]["params"]
 
         self.estimator.set_params(**self.best_params_)
-        self.estimator.fit(self.X_, self.Y_)
+        self.estimator.fit(self.X, self.Y)
 
         return self
 

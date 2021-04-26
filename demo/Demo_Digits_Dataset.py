@@ -53,14 +53,14 @@ print("grid search best params: \n", grid_search.best_params_)
 evolved_estimator = GASearchCV(clf,
                                cv=3,
                                scoring='accuracy',
-                               pop_size=12,
+                               population_size=12,
                                generations=8,
                                tournament_size=3,
                                elitism=True,
                                continuous_parameters={'l1_ratio': (0, 1), 'alpha': (1e-4, 1)},
                                categorical_parameters={'average': [True, False]},
-                               int_parameters={},
-                               encoding_len=10,
+                               integer_parameters={},
+                               encoding_length=10,
                                n_jobs=-1)
 
 evolved_estimator.fit(X_train, y_train)

@@ -20,14 +20,14 @@ def test_expected_ga_results():
     evolved_estimator = GASearchCV(clf,
                                    cv=3,
                                    scoring='accuracy',
-                                   pop_size=12,
+                                   population_size=12,
                                    generations=generations,
                                    tournament_size=3,
                                    elitism=False,
                                    continuous_parameters={'l1_ratio': (0, 1), 'alpha': (1e-4, 1)},
                                    categorical_parameters={'average': [True, False]},
                                    verbose=False,
-                                   encoding_len=10)
+                                   encoding_length=10)
 
     evolved_estimator.fit(X_train, y_train)
 
@@ -49,14 +49,14 @@ def test_expected_ga_no_continuous():
     evolved_estimator = GASearchCV(clf,
                                    cv=3,
                                    scoring='accuracy',
-                                   pop_size=15,
+                                   population_size=15,
                                    generations=generations,
                                    tournament_size=3,
                                    elitism=True,
                                    categorical_parameters={'criterion': ['gini', 'entropy']},
-                                   int_parameters={'max_depth': (2, 20), 'max_leaf_nodes': (2, 30)},
+                                   integer_parameters={'max_depth': (2, 20), 'max_leaf_nodes': (2, 30)},
                                    verbose=False,
-                                   encoding_len=10)
+                                   encoding_length=10)
 
     evolved_estimator.fit(X_train, y_train)
 
@@ -73,14 +73,14 @@ def test_expected_ga_no_categorical():
     evolved_estimator = GASearchCV(clf,
                                    cv=3,
                                    scoring='accuracy',
-                                   pop_size=15,
+                                   population_size=15,
                                    generations=generations,
                                    tournament_size=3,
                                    elitism=True,
                                    continuous_parameters={'min_weight_fraction_leaf': (0, 0.5)},
-                                   int_parameters={'max_depth': (2, 20), 'max_leaf_nodes': (2, 30)},
+                                   integer_parameters={'max_depth': (2, 20), 'max_leaf_nodes': (2, 30)},
                                    verbose=False,
-                                   encoding_len=10)
+                                   encoding_length=10)
 
     evolved_estimator.fit(X_train, y_train)
 

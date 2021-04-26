@@ -19,16 +19,16 @@ clf = DecisionTreeClassifier()
 evolved_estimator = GASearchCV(clf,
                                cv=3,
                                scoring='accuracy',
-                               pop_size=16,
+                               population_size=16,
                                generations=30,
                                tournament_size=3,
                                elitism=True,
-                               crossover_prob=0.9,
-                               mutation_prob=0.05,
+                               crossover_probability=0.9,
+                               mutation_probability=0.05,
                                continuous_parameters={'min_weight_fraction_leaf': (0, 0.5)},
                                categorical_parameters={'criterion': ['gini', 'entropy']},
-                               int_parameters={'max_depth': (2, 20), 'max_leaf_nodes': (2, 30)},
-                               encoding_len=10,
+                               integer_parameters={'max_depth': (2, 20), 'max_leaf_nodes': (2, 30)},
+                               encoding_length=10,
                                n_jobs=-1)
 
 evolved_estimator.fit(X_train, y_train)
