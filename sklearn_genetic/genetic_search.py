@@ -75,6 +75,9 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         self.best_params_ = None
         self.X_predict = None
 
+        if not is_classifier(self.estimator) and not is_regressor(self.estimator):
+            raise ValueError("{} is not a valid Sklearn classifier or regressor".format(self.estimator))
+
         if criteria not in ['max', 'min']:
             raise ValueError(f"Criteria must be 'max' or 'min', got {criteria} instead")
         elif criteria == 'max':
@@ -276,8 +279,6 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         -------
 
         """
-        if not is_classifier(self.estimator) and not is_regressor(self.estimator):
-            raise ValueError("{} is not a valid Sklearn estimator".format(self.estimator))
         scorer = check_scoring(self.estimator, scoring=self.scoring)
 
         self.X = X
