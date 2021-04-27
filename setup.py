@@ -28,6 +28,7 @@ setup(
     ],
     packages=find_packages(include=['sklearn_genetic', 'sklearn_genetic.*']),
     install_requires=['scikit-learn>=0.21.3', 'numpy>=1.13.3'],
+    extras_require={'seaborn': ['seaborn>=1.20.2']},
     python_requires=">=3.6",
     include_package_data=True,
 )
