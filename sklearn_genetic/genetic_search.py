@@ -243,7 +243,8 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         _current_generation_chromosomes = self._initialize_population()
         if self.elitism:
             self._child_range = int((len(_current_generation_chromosomes) / 2) - 2)
-        self._child_range = int((len(_current_generation_chromosomes) / 2))
+        else:
+            self._child_range = int((len(_current_generation_chromosomes) / 2))
         self._best_solutions = {}
 
         for gen in range(0, self.generations):
