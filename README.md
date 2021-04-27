@@ -1,25 +1,25 @@
-[![Build Status](https://www.travis-ci.com/rodrigo-arenas/Sklearn-genetic.svg?branch=master)](https://www.travis-ci.com/rodrigo-arenas/Sklearn-genetic)
-[![Codecov](https://codecov.io/gh/rodrigo-arenas/Sklearn-genetic/branch/main/graphs/badge.svg?branch=master&service=github)](https://codecov.io/github/rodrigo-arenas/Sklearn-genetic?branch=master)
-[![PyPI Version](https://badge.fury.io/py/sklearn-genetic.svg)](https://badge.fury.io/py/sklearn-genetic)
+[![Build Status](https://www.travis-ci.com/rodrigo-arenas/Sklearn-genetic-opt.svg?branch=master)](https://www.travis-ci.com/rodrigo-arenas/Sklearn-genetic-opt)
+[![Codecov](https://codecov.io/gh/rodrigo-arenas/Sklearn-genetic-opt/branch/main/graphs/badge.svg?branch=master&service=github)](https://codecov.io/github/rodrigo-arenas/Sklearn-genetic-opt?branch=master)
+[![PyPI Version](https://badge.fury.io/py/sklearn-genetic-opt.svg)](https://badge.fury.io/py/sklearn-genetic-opt)
 [![Python Version](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8%20%7C%203.9-blue)](https://www.python.org/downloads/)
 
-# Sklearn-genetic
+# Sklearn-genetic-opt
 Sklearn models hyperparameters tuning using genetic algorithms
 
 # Usage:
-Install sklearn-genetic
+Install sklearn-genetic-opt
 
 It's advised to install sklearn-genetic using a virtual env, inside the env use:
 
 ```
-pip install sklearn-genetic
+pip install sklearn-genetic-opt
 ```
 
 ## Example
 
 ```python
 from sklearn_genetic import GASearchCV
-from sklearn.linear_model import SGDClassifier
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.datasets import load_digits
 from sklearn.metrics import accuracy_score
