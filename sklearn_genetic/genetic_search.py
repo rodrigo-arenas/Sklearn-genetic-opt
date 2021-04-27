@@ -347,6 +347,47 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
 
         return self
 
+    def __getitem__(self, index):
+        """
+
+        Parameters
+        ----------
+        index: slice required to get
+
+        Returns
+        -------
+        Best solution of the iteration corresponding to the index number
+        """
+        if not self._best_solutions:
+            raise ValueError("Make sure the model is already fitted")
+
+        return self._best_solutions[index]
+
+    def __iter__(self):
+        self.n = 0
+        return self
+
+    def __next__(self):
+        """
+        Returns
+        -------
+        Iteration over the best solution found in each generation
+        """
+        if self.n < self.generations:
+            result = self.__getitem__(self.n)
+            self.n += 1
+            return result
+        else:
+            raise StopIteration
+
+    def __len__(self):
+        """
+        Returns
+        -------
+        Number of generations fitted
+        """
+        return self.generations
+
     @if_delegate_has_method(delegate='estimator')
     def predict(self, X):
         X = check_array(X)
