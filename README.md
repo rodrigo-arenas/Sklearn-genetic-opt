@@ -1,5 +1,5 @@
 [![Build Status](https://www.travis-ci.com/rodrigo-arenas/Sklearn-genetic-opt.svg?branch=master)](https://www.travis-ci.com/rodrigo-arenas/Sklearn-genetic-opt)
-[![Codecov](https://codecov.io/gh/rodrigo-arenas/Sklearn-genetic-opt/branch/main/graphs/badge.svg?branch=master&service=github)](https://codecov.io/github/rodrigo-arenas/Sklearn-genetic-opt?branch=master)
+[![Codecov](https://codecov.io/gh/rodrigo-arenas/Sklearn-genetic-opt/branch/master/graphs/badge.svg?branch=master&service=github)](https://codecov.io/github/rodrigo-arenas/Sklearn-genetic-opt?branch=master)
 [![PyPI Version](https://badge.fury.io/py/sklearn-genetic-opt.svg)](https://badge.fury.io/py/sklearn-genetic-opt)
 [![Python Version](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8%20%7C%203.9-blue)](https://www.python.org/downloads/)
 
