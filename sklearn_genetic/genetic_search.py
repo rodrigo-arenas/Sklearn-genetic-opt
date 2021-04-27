@@ -30,6 +30,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
                  continuous_parameters: dict = None,
                  categorical_parameters: dict = None,
                  integer_parameters: dict = None,
+                 criteria: str = 'max',
                  encoding_length: int = 10,
                  n_jobs: int = 1):
         """
@@ -49,8 +50,9 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         continuous_parameters: dict, continuous parameters to tune, expected a list or tuple with the range (min,max) to search
         categorical_parameters: dict, categorical parameters to tune, expected a list with the possible options to choose
         integer_parameters: dict, integers parameters to tune, expected a list or tuple with the range (min,max) to search
-        encoding_length: encoding length for the continuous_parameters and integer_parameters
-        n_jobs: Number of jobs to run in parallel
+        criteria: str, 'max' if a higher scoring metric is better, 'min' otherwise
+        encoding_length: int, encoding length for the continuous_parameters and integer_parameters
+        n_jobs: int, Number of jobs to run in parallel
         """
 
         self.estimator = clone(estimator)
@@ -72,6 +74,13 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         self._gen_results = None
         self.best_params_ = None
         self.X_predict = None
+
+        if criteria not in ['max', 'min']:
+            raise ValueError(f"Criteria must be 'max' or 'min', got {criteria} instead")
+        elif criteria == 'max':
+            self.criteria_sign = 1
+        else:
+            self.criteria_sign = -1
 
         if not continuous_parameters:
             self.continuous_parameters = {}
@@ -133,17 +142,28 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
 
         self._continuous_chromosomes_init = np.random.randint(2, size=(
             self.pop_size, self._continuous_parameters_number * self._encoding_len))
-        self._int_chromosomes_init = np.random.randint(2, size=(self.pop_size, self._int_parameters_number * self._encoding_len))
+        self._int_chromosomes_init = np.random.randint(2, size=(
+        self.pop_size, self._int_parameters_number * self._encoding_len))
 
         self._categorical_chromosomes_init = np.empty((self.pop_size, 0), int)
         if bool(self.categorical_parameters):
-            self._categorical_chromosomes_init = np.transpose(np.array([np.random.randint(len(value), size=self.pop_size)
-                                                                        for key, value in
-                                                                        self.categorical_parameters.items()]))
+            self._categorical_chromosomes_init = np.transpose(
+                np.array([np.random.randint(len(value), size=self.pop_size)
+                          for key, value in
+                          self.categorical_parameters.items()]))
         return np.hstack(
             (self._continuous_chromosomes_init, self._int_chromosomes_init, self._categorical_chromosomes_init))
 
     def _decode(self, chromosome):
+        """
+        Parameters
+        ----------
+        chromosome: binary representation of a parameter
+
+        Returns
+        -------
+        The numerical equivalent of the encoded chromosome
+        """
 
         _decoded_dict = {}
 
@@ -186,11 +206,23 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
     @staticmethod
     def _elitism(gen_results):
         """
-        Returns top 2 by fitness value
+        Returns top 2 by fitness value from the current generation fitness values
         """
         return sorted(gen_results.keys(), key=lambda x: gen_results[x]["fitness"], reverse=True)[:2]
 
     def _crossover(self, parent1, parent2):
+        """
+        Generate new chromosomes by swamping random positions of two chromosomes if a random value meets the
+        crossover probability threshold
+        Parameters
+        ----------
+        parent1: Chromosome one to make crossover
+        parent2: Chromosome two to make crossover
+
+        Returns
+        -------
+        New child from the result of the crossover
+        """
 
         if random.random() < self.crossover_probability:
             crossover_points = random.sample(range(len(parent1)), 2)
@@ -207,6 +239,16 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         return parent1, parent2
 
     def _mutation(self, child):
+        """
+        Swaps the chromosome values if a random value meets the mutation probability threshold
+        Parameters
+        ----------
+        child: chromosome that is going under the mutation mechanism
+
+        Returns
+        -------
+        mutated child chromosome
+        """
 
         for n in range(self._continuous_parameters_range[0],
                        self._continuous_parameters_range[1] + self._int_parameters_number * self._encoding_len):
@@ -238,7 +280,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
             raise ValueError("{} is not a valid Sklearn estimator".format(self.estimator))
         scorer = check_scoring(self.estimator, scoring=self.scoring)
 
-        self.X= X
+        self.X = X
         self.Y = y
         _current_generation_chromosomes = self._initialize_population()
         if self.elitism:
@@ -254,11 +296,11 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
 
                 self.estimator.set_params(**_current_generation_params)
 
-                _cv_score = cross_val_score(self.estimator,
-                                            self.X, self.Y,
-                                            cv=self.cv,
-                                            scoring=self.scoring,
-                                            n_jobs=self.n_jobs)
+                _cv_score = self.criteria_sign * cross_val_score(self.estimator,
+                                                                 self.X, self.Y,
+                                                                 cv=self.cv,
+                                                                 scoring=self.scoring,
+                                                                 n_jobs=self.n_jobs)
 
                 self._gen_results[n_chrom] = {"n_chrom": n_chrom,
                                               "params": _current_generation_params,

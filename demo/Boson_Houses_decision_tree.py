@@ -26,7 +26,8 @@ evolved_estimator = GASearchCV(clf,
                                continuous_parameters={'ccp_alpha': (0, 1)},
                                categorical_parameters={'criterion': ['mse', 'mae']},
                                integer_parameters={'max_depth': (2, 20), 'min_samples_split': (2, 30)},
-                               encoding_length=10,
+                               encoding_length=20,
+                               criteria='max',
                                n_jobs=-1)
 
 evolved_estimator.fit(X_train, y_train)

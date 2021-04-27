@@ -46,6 +46,7 @@ evolved_estimator = GASearchCV(clf,
                                categorical_parameters={'criterion': ['gini', 'entropy']},
                                integer_parameters={'max_depth': (2, 20), 'max_leaf_nodes': (2, 30)},
                                encoding_length=10,
+                               criteria='max',
                                n_jobs=-1)
                     
 evolved_estimator.fit(X_train,y_train)
