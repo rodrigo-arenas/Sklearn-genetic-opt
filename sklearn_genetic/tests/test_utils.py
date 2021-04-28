@@ -1,11 +1,8 @@
-from sklearn_genetic import GASearchCV
 from sklearn_genetic.utils import plot_fitness_evolution
+from sklearn_genetic import GASearchCV
 from sklearn.datasets import load_boston
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeRegressor
-from sklearn.metrics import r2_score
-import matplotlib.pyplot as plt
-
 
 data = load_boston()
 
@@ -33,13 +30,8 @@ evolved_estimator = GASearchCV(clf,
                                n_jobs=-1)
 
 evolved_estimator.fit(X_train, y_train)
-y_predict_ga = evolved_estimator.predict(X_test)
-r_squared = r2_score(y_test, y_predict_ga)
 
-print(evolved_estimator.best_params_)
-print("r-squared: ", "{:.2f}".format(r_squared))
 
-plot = plot_fitness_evolution(evolved_estimator)
-
-plt.show()
+def test_plot_created():
+    plot = plot_fitness_evolution(evolved_estimator)
 

@@ -1,10 +1,9 @@
 import seaborn as sns
-from sklearn_genetic import GASearchCV
 
 sns.set_style("darkgrid")
 
 
-def plot_fitness_evolution(estimator: GASearchCV):
+def plot_fitness_evolution(estimator):
     """
     Parameters
     ----------
