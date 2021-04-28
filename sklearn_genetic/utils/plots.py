@@ -1,6 +1,7 @@
 import seaborn as sns
-import numpy as np
 from sklearn_genetic import GASearchCV
+
+sns.set_style("darkgrid")
 
 
 def plot_fitness_evolution(estimator: GASearchCV):
@@ -18,6 +19,7 @@ def plot_fitness_evolution(estimator: GASearchCV):
     for generation in estimator:
         fitness_history.append(generation['fitness'])
 
-    return sns.lineplot(x=range(len(estimator)), y=fitness_history)
-
+    ax = sns.lineplot(x=range(len(estimator)), y=fitness_history)
+    ax.set(xlabel='generations', ylabel=f'fitness ({estimator.scoring})')
+    return ax
 
