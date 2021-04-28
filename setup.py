@@ -10,7 +10,7 @@ README = (HERE / "README.md").read_text()
 
 setup(
     name="sklearn-genetic-opt",
-    version="0.1.1",
+    version="0.1.1dev1",
     description="Sklearn models hyperparameters tuning using genetic algorithms",
     long_description=README,
     long_description_content_type="text/markdown",
@@ -27,8 +27,7 @@ setup(
 
     ],
     packages=find_packages(include=['sklearn_genetic', 'sklearn_genetic.*']),
-    install_requires=['scikit-learn>=0.21.3', 'numpy>=1.13.3'],
-    extras_require={'seaborn': ['seaborn>=0.11.1']},
+    install_requires=['scikit-learn>=0.21.3', 'numpy>=1.13.3', 'seaborn>=0.11.1'],
     python_requires=">=3.6",
     include_package_data=True,
 )
