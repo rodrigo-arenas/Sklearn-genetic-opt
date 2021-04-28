@@ -10,7 +10,7 @@ README = (HERE / "README.md").read_text()
 
 setup(
     name="sklearn-genetic-opt",
-    version="0.1.1dev1",
+    version="0.1.1",
     description="Sklearn models hyperparameters tuning using genetic algorithms",
     long_description=README,
     long_description_content_type="text/markdown",
