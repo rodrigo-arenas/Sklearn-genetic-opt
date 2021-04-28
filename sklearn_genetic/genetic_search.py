@@ -359,7 +359,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         Best solution of the iteration corresponding to the index number
         """
         if not self._best_solutions:
-            raise ValueError("Make sure the model is already fitted")
+            raise IndexError("Make sure the model is already fitted")
 
         return self._best_solutions[index]
 
