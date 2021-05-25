@@ -1,8 +1,6 @@
 import numpy as np
 import random
-import functools
-import operator
-from sklearn_genetic.utils.custom_properties import LazyProperty
+from deap import base, creator, tools, algorithms
 from sklearn.base import clone, ClassifierMixin, RegressorMixin
 from sklearn.model_selection import cross_val_score
 from sklearn.base import is_classifier, is_regressor
@@ -31,7 +29,6 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
                  categorical_parameters: dict = None,
                  integer_parameters: dict = None,
                  criteria: str = 'max',
-                 encoding_length: int = 10,
                  n_jobs: int = 1):
         """
 
@@ -44,18 +41,18 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         crossover_probability: float, probability of crossover operation
         mutation_probability: float, probability of child mutation
         tournament_size: number of chromosomes to perform tournament selection
-        elitism: bool, if true takes the two best solution to the next generation
+        elitism: bool, if true takes the |tournament_size| best solution to the next generation
         verbose: bool, if true, shows the best solution in each generation
         generations: int, number of generations to run the genetic algorithm
         continuous_parameters: dict, continuous parameters to tune, expected a list or tuple with the range (min,max) to search
         categorical_parameters: dict, categorical parameters to tune, expected a list with the possible options to choose
         integer_parameters: dict, integers parameters to tune, expected a list or tuple with the range (min,max) to search
         criteria: str, 'max' if a higher scoring metric is better, 'min' otherwise
-        encoding_length: int, encoding length for the continuous_parameters and integer_parameters
         n_jobs: int, Number of jobs to run in parallel
         """
 
         self.estimator = clone(estimator)
+        self.toolbox = base.Toolbox()
         self.cv = cv
         self.scoring = scoring
         self.pop_size = population_size
@@ -65,14 +62,12 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         self.tournament_size = tournament_size
         self.elitism = elitism
         self.verbose = verbose
-        self._encoding_len = encoding_length
         self.n_jobs = n_jobs
+        self.logbook = None
+        self.history = None
         self.X = None
         self.Y = None
-        self._child_range = None
-        self._best_solutions = None
-        self._gen_results = None
-        self.best_params_ = None
+        self.best_params = None
         self.X_predict = None
 
         if not is_classifier(self.estimator) and not is_regressor(self.estimator):
@@ -100,169 +95,80 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         else:
             self.integer_parameters = integer_parameters
 
-        self._continuous_parameters_number = len(self.continuous_parameters.keys())
-        self._continuous_parameters_range = (0, self._continuous_parameters_number * self._encoding_len)
-        self._continuous_parameters_indexes = {
-            key: (x * self._encoding_len, x * self._encoding_len + self._encoding_len)
-            for x, key in enumerate([*self.continuous_parameters])}
+        self.parameters = [*list(self.continuous_parameters.keys()),
+                           *list(self.integer_parameters.keys()),
+                           *list(self.categorical_parameters.keys())]
 
-        self._int_parameters_number = len(self.integer_parameters.keys())
-        self._int_parameters_range = (self._continuous_parameters_range[1],
-                                      self._continuous_parameters_range[
-                                          1] + self._int_parameters_number * self._encoding_len)
-        self._int_parameters_indexes = {key: (self._int_parameters_range[0] + x * self._encoding_len,
-                                              self._int_parameters_range[
-                                                  0] + x * self._encoding_len + self._encoding_len)
-                                        for x, key in enumerate([*self.integer_parameters])}
+        self.continuous_parameters_range = (0, len(self.continuous_parameters))
+        self.integer_parameters_range = (self.continuous_parameters_range[1],
+                                         self.continuous_parameters_range[1] + len(self.integer_parameters))
+        self.categorical_parameters_range = (self.integer_parameters_range[1],
+                                             self.integer_parameters_range[1] + len(self.categorical_parameters))
 
-        self._categorical_parameters_number = len(self.categorical_parameters.keys())
-        self._categorical_parameters_range = (self._int_parameters_range[1],
-                                              self._int_parameters_range[1] + self._categorical_parameters_number)
-        self._categorical_parameters_indexes = {key: (self._categorical_parameters_range[0] + x,
-                                                      self._categorical_parameters_range[0] + x + 1)
-                                                for x, key in enumerate([*self.categorical_parameters])}
+    def register(self):
 
-    @LazyProperty
-    def _precision(self):
+        creator.create("FitnessMax", base.Fitness, weights=[1.0])
+        creator.create("Individual", list, fitness=creator.FitnessMax)
 
-        self._continuous_parameters_precision = {}
-        self._int_parameters_precision = {}
+        attributes = []
 
-        if bool(self.continuous_parameters):
-            for key, value in self.continuous_parameters.items():
-                self._continuous_parameters_precision[key] = round(
-                    (value[1] - value[0]) / (2 ** self._encoding_len - 1), 10)
-
-        if bool(self.integer_parameters):
-            for key, value in self.integer_parameters.items():
-                self._int_parameters_precision[key] = round((value[1] - value[0]) / (2 ** self._encoding_len - 1), 10)
-
-        _params_precision = {**self._continuous_parameters_precision, **self._int_parameters_precision}
-
-        return _params_precision
-
-    def _initialize_population(self):
-
-        self._continuous_chromosomes_init = np.random.randint(2, size=(
-            self.pop_size, self._continuous_parameters_number * self._encoding_len))
-        self._int_chromosomes_init = np.random.randint(2, size=(
-        self.pop_size, self._int_parameters_number * self._encoding_len))
-
-        self._categorical_chromosomes_init = np.empty((self.pop_size, 0), int)
-        if bool(self.categorical_parameters):
-            self._categorical_chromosomes_init = np.transpose(
-                np.array([np.random.randint(len(value), size=self.pop_size)
-                          for key, value in
-                          self.categorical_parameters.items()]))
-        return np.hstack(
-            (self._continuous_chromosomes_init, self._int_chromosomes_init, self._categorical_chromosomes_init))
-
-    def _decode(self, chromosome):
-        """
-        Parameters
-        ----------
-        chromosome: binary representation of a parameter
-
-        Returns
-        -------
-        The numerical equivalent of the encoded chromosome
-        """
-
-        _decoded_dict = {}
-
-        # Continuous variables
         for key, value in self.continuous_parameters.items():
-            __index = self._continuous_parameters_indexes[key]
+            self.toolbox.register(f"{key}", random.uniform, value[0], value[1])
+            attributes.append(getattr(self.toolbox, key))
 
-            chrom = chromosome[__index[0]:__index[1]]
-            decoded = round(value[0] + sum([x * (2 ** n) for n, x in enumerate(chrom)]) * self._precision[key], 15)
+        for key, value in self.integer_parameters.items():
+            self.toolbox.register(f"{key}", random.randint, value[0], value[1])
+            attributes.append(getattr(self.toolbox, key))
 
-            _decoded_dict[key] = decoded
+        for key, value in self.categorical_parameters.items():
+            self.toolbox.register(f"{key}", random.choice, value)
+            attributes.append(getattr(self.toolbox, key))
 
-        # Integer variables
-        for key_int, value_int in self.integer_parameters.items():
-            __index_int = self._int_parameters_indexes[key_int]
+        IND_SIZE = 1
 
-            chrom_int = chromosome[__index_int[0]:__index_int[1]]
-            decoded_int = int(
-                value_int[0] + sum([x * (2 ** n) for n, x in enumerate(chrom_int)]) * self._precision[key_int])
+        self.toolbox.register("individual",
+                              tools.initCycle, creator.Individual,
+                              tuple(attributes), n=IND_SIZE)
 
-            _decoded_dict[key_int] = decoded_int
+        self.toolbox.register("population", tools.initRepeat, list, self.toolbox.individual)
 
-        # categorical variables
-        for key_categorical, value_categorical in self.categorical_parameters.items():
-            __index_categorical = self._categorical_parameters_indexes[key_categorical]
+        self.toolbox.register("mate", tools.cxTwoPoint)
+        self.toolbox.register("mutate", self.mutate)
+        if self.elitism:
+            self.toolbox.register("select", tools.selTournament, tournsize=self.tournament_size)
+        else:
+            self.toolbox.register("select", tools.selRoulette)
 
-            chrom_categorical = chromosome[__index_categorical[0]:__index_categorical[1]]
-            decoded_categorical = np.array(self.categorical_parameters[key_categorical])[chrom_categorical][0]
-            _decoded_dict[key_categorical] = decoded_categorical
+        self.toolbox.register("evaluate", self.evaluate)
 
-        return _decoded_dict
+    def mutate(self, individual):
+        gen = random.randrange(0, len(self.parameters))
+        parameter_index = self.parameters[gen]
 
-    def _tournament(self, gen_results):
+        if gen in range(self.continuous_parameters_range[0], self.continuous_parameters_range[1]):
+            parameter = self.continuous_parameters[parameter_index]
+            individual[gen] = random.uniform(parameter[0], parameter[1])
+        elif gen in range(self.integer_parameters_range[0], self.integer_parameters_range[1]):
+            parameter = self.integer_parameters[parameter_index]
+            individual[gen] = random.randint(parameter[0], parameter[1])
+        elif gen in range(self.categorical_parameters_range[0], self.categorical_parameters_range[1]):
+            parameter = self.categorical_parameters[parameter_index]
+            individual[gen] = random.choice(parameter)
+        else:
+            raise IndexError(f'mutate gen number {gen} is out of index')
 
-        _contestants = random.sample(list(gen_results.keys()), k=self.tournament_size)
-        _best_score_idx = np.argmax([gen_results.get(key)["fitness"] for key in _contestants])
+        return [individual]
 
-        return _contestants[_best_score_idx]
+    def evaluate(self, individual):
+        current_generation_params = {key: individual[n] for n, key in enumerate(self.parameters)}
+        self.estimator.set_params(**current_generation_params)
+        cv_scores = self.criteria_sign * cross_val_score(self.estimator,
+                                                         self.X, self.Y,
+                                                         cv=self.cv,
+                                                         scoring=self.scoring,
+                                                         n_jobs=self.n_jobs)
 
-    @staticmethod
-    def _elitism(gen_results):
-        """
-        Returns top 2 by fitness value from the current generation fitness values
-        """
-        return sorted(gen_results.keys(), key=lambda x: gen_results[x]["fitness"], reverse=True)[:2]
-
-    def _crossover(self, parent1, parent2):
-        """
-        Generate new chromosomes by swamping random positions of two chromosomes if a random value meets the
-        crossover probability threshold
-        Parameters
-        ----------
-        parent1: Chromosome one to make crossover
-        parent2: Chromosome two to make crossover
-
-        Returns
-        -------
-        New child from the result of the crossover
-        """
-
-        if random.random() < self.crossover_probability:
-            crossover_points = random.sample(range(len(parent1)), 2)
-            _point1, _point2 = min(crossover_points), max(crossover_points)
-
-            _child1 = [parent1[0:_point1], parent2[_point1:_point2], parent1[_point2:]]
-            _child2 = [parent2[0:_point1], parent1[_point1:_point2], parent2[_point2:]]
-
-            _child1 = np.array(functools.reduce(operator.iconcat, _child1, []))
-            _child2 = np.array(functools.reduce(operator.iconcat, _child2, []))
-
-            return _child1, _child2
-
-        return parent1, parent2
-
-    def _mutation(self, child):
-        """
-        Swaps the chromosome values if a random value meets the mutation probability threshold
-        Parameters
-        ----------
-        child: chromosome that is going under the mutation mechanism
-
-        Returns
-        -------
-        mutated child chromosome
-        """
-
-        for n in range(self._continuous_parameters_range[0],
-                       self._continuous_parameters_range[1] + self._int_parameters_number * self._encoding_len):
-            if random.random() < self.mutation_probability:
-                child[n] = 1 - child[n]
-
-        for key, value in self._categorical_parameters_indexes.items():
-            if random.random() < self.mutation_probability:
-                child[value[0]:value[1]] = np.random.randint(len(value))
-
-        return child
+        return [np.mean(cv_scores)]
 
     @if_delegate_has_method(delegate='estimator')
     def fit(self, X, y):
@@ -283,66 +189,35 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
 
         self.X = X
         self.Y = y
-        _current_generation_chromosomes = self._initialize_population()
-        if self.elitism:
-            self._child_range = int((len(_current_generation_chromosomes) / 2) - 2)
-        else:
-            self._child_range = int((len(_current_generation_chromosomes) / 2))
-        self._best_solutions = {}
 
-        for gen in range(0, self.generations):
-            self._gen_results = {}
-            for n_chrom, chromosome in enumerate(_current_generation_chromosomes):
-                _current_generation_params = self._decode(chromosome)
+        self.register()
 
-                self.estimator.set_params(**_current_generation_params)
+        pop = self.toolbox.population(n=self.pop_size)
+        hof = tools.HallOfFame(1)
+        stats = tools.Statistics(lambda ind: ind.fitness.values)
+        stats.register("fitness", np.mean)
+        stats.register("fitness_std", np.std)
+        stats.register("fitness_max", np.max)
+        stats.register("fitness_min", np.min)
 
-                _cv_score = self.criteria_sign * cross_val_score(self.estimator,
-                                                                 self.X, self.Y,
-                                                                 cv=self.cv,
-                                                                 scoring=self.scoring,
-                                                                 n_jobs=self.n_jobs)
+        pop, log = algorithms.eaSimple(pop, self.toolbox,
+                                       cxpb=self.crossover_probability,
+                                       stats=stats,
+                                       mutpb=self.mutation_probability,
+                                       ngen=self.generations,
+                                       halloffame=hof,
+                                       verbose=self.verbose)
 
-                self._gen_results[n_chrom] = {"n_chrom": n_chrom,
-                                              "params": _current_generation_params,
-                                              "fitness": round(np.mean(_cv_score), 4),
-                                              "fitness_std": round(np.std(_cv_score), 4)}
+        self.best_params = {key: hof[0][n] for n, key in enumerate(self.parameters)}
+        self.logbook = log
 
-            _temp_current_generation_chromosomes = []
+        self.history = {"gen": log.select("gen"),
+                        "fitness": log.select("fitness"),
+                        "fitness_std": log.select("fitness_std"),
+                        "fitness_max": log.select("fitness_max"),
+                        "fitness_min": log.select("fitness_min")}
 
-            for n_chrom in range(self._child_range):
-                _parent_1_idx = self._tournament(self._gen_results)
-                _parent_2_idx = self._tournament(self._gen_results)
-
-                _parent_1 = _current_generation_chromosomes[_parent_1_idx]
-                _parent_2 = _current_generation_chromosomes[_parent_2_idx]
-
-                _child_1, _child_2 = self._crossover(_parent_1, _parent_2)
-                _child_1, _child_2 = self._mutation(_child_1), self._mutation(_child_2)
-
-                _temp_current_generation_chromosomes.append(_child_1)
-                _temp_current_generation_chromosomes.append(_child_2)
-
-            if self.elitism:
-                _elite_child_1_idx, _elite_child_2_idx = self._elitism(self._gen_results)
-
-                _elite_child_1 = _current_generation_chromosomes[_elite_child_1_idx]
-                _elite_child_2 = _current_generation_chromosomes[_elite_child_2_idx]
-
-                _temp_current_generation_chromosomes.append(_elite_child_1)
-                _temp_current_generation_chromosomes.append(_elite_child_2)
-
-            _current_generation_chromosomes = np.array(_temp_current_generation_chromosomes)
-
-            _best_solution_idx = self._elitism(self._gen_results)[0]
-            self._best_solutions[gen] = self._gen_results[_best_solution_idx]
-
-            if self.verbose:
-                print("n_gen:", gen, self._best_solutions[gen], "\n")
-
-        self.best_params_ = self._best_solutions[self.generations - 1]["params"]
-
-        self.estimator.set_params(**self.best_params_)
+        self.estimator.set_params(**self.best_params)
         self.estimator.fit(self.X, self.Y)
 
         return self
@@ -358,10 +233,10 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         -------
         Best solution of the iteration corresponding to the index number
         """
-        if not self._best_solutions:
+        if not self.best_solutions:
             raise IndexError("Make sure the model is already fitted")
 
-        return self._best_solutions[index]
+        return self.best_solutions[index]
 
     def __iter__(self):
         self.n = 0
