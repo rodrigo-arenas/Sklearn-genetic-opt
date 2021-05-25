@@ -4,7 +4,11 @@
 [![Python Version](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8%20%7C%203.9-blue)](https://www.python.org/downloads/)
 
 # Sklearn-genetic-opt
-Sklearn models hyperparameters tuning using genetic algorithms
+Sklearn models hyperparameters tuning using evolutionary algorithms.
+
+This is meant to be an alternative from popular methods inside Sklearn such as Grid Search and Random Grid Search.
+
+Sklearn-genetic-opt uses evolutionary algorithms from the deap package to find the "best" set of hyperparameters by trying to optimize the cross validation scores, it can be used for both regression and classification problems.
 
 # Usage:
 Install sklearn-genetic-opt
@@ -19,10 +23,12 @@ pip install sklearn-genetic-opt
 
 ```python
 from sklearn_genetic import GASearchCV
+from sklearn_genetic.utils import plot_fitness_evolution
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.datasets import load_digits
 from sklearn.metrics import accuracy_score
+import matplotlib.pyplot as plt
 
 
 data = load_digits() 
@@ -45,11 +51,22 @@ evolved_estimator = GASearchCV(clf,
                                continuous_parameters={'min_weight_fraction_leaf': (0, 0.5)},
                                categorical_parameters={'criterion': ['gini', 'entropy']},
                                integer_parameters={'max_depth': (2, 20), 'max_leaf_nodes': (2, 30)},
-                               encoding_length=10,
                                criteria='max',
-                               n_jobs=-1)
+                               n_jobs=-1,
+                               verbose=True)
                     
 evolved_estimator.fit(X_train,y_train)
-print(evolved_estimator.best_params_)
+# Best parameters found
+print(evolved_estimator.best_params)
+# Use the model fitted with the best parameters
 y_predict_ga = evolved_estimator.predict(X_test)
 print(accuracy_score(y_test,y_predict_ga))
+
+# See the evolution of the optimization per generation
+plot_fitness_evolution(evolved_estimator)
+plt.show()
+
+# Saved metadata for further analysis
+print(evolved_estimator.history)
+print(evolved_estimator.logbook)
+```
