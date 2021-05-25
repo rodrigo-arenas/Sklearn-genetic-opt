@@ -161,14 +161,18 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
 
     def evaluate(self, individual):
         current_generation_params = {key: individual[n] for n, key in enumerate(self.parameters)}
+
         self.estimator.set_params(**current_generation_params)
         cv_scores = self.criteria_sign * cross_val_score(self.estimator,
                                                          self.X, self.Y,
                                                          cv=self.cv,
                                                          scoring=self.scoring,
                                                          n_jobs=self.n_jobs)
+        score = np.mean(cv_scores)
 
-        return [np.mean(cv_scores)]
+        self.logbook.record(parameters=current_generation_params, score=score)
+
+        return [score]
 
     @if_delegate_has_method(delegate='estimator')
     def fit(self, X, y):
@@ -194,11 +198,14 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
 
         pop = self.toolbox.population(n=self.pop_size)
         hof = tools.HallOfFame(1)
+
         stats = tools.Statistics(lambda ind: ind.fitness.values)
         stats.register("fitness", np.mean)
         stats.register("fitness_std", np.std)
         stats.register("fitness_max", np.max)
         stats.register("fitness_min", np.min)
+
+        self.logbook = tools.Logbook()
 
         pop, log = algorithms.eaSimple(pop, self.toolbox,
                                        cxpb=self.crossover_probability,
@@ -209,7 +216,6 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
                                        verbose=self.verbose)
 
         self.best_params = {key: hof[0][n] for n, key in enumerate(self.parameters)}
-        self.logbook = log
 
         self.history = {"gen": log.select("gen"),
                         "fitness": log.select("fitness"),
@@ -233,10 +239,10 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         -------
         Best solution of the iteration corresponding to the index number
         """
-        if not self.best_solutions:
+        if not self.history:
             raise IndexError("Make sure the model is already fitted")
 
-        return self.best_solutions[index]
+        return self.history[index]
 
     def __iter__(self):
         self.n = 0
@@ -248,7 +254,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         -------
         Iteration over the best solution found in each generation
         """
-        if self.n < self.generations:
+        if self.n < self.generations + 1:
             result = self.__getitem__(self.n)
             self.n += 1
             return result
@@ -261,7 +267,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         -------
         Number of generations fitted
         """
-        return self.generations
+        return self.generations + 1
 
     @if_delegate_has_method(delegate='estimator')
     def predict(self, X):
