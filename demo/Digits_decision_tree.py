@@ -28,12 +28,12 @@ evolved_estimator = GASearchCV(clf,
                                continuous_parameters={'min_weight_fraction_leaf': (0, 0.5)},
                                categorical_parameters={'criterion': ['gini', 'entropy']},
                                integer_parameters={'max_depth': (2, 20), 'max_leaf_nodes': (2, 30)},
-                               encoding_length=10,
-                               n_jobs=-1)
+                               n_jobs=-1,
+                               verbose=True)
 
 evolved_estimator.fit(X_train, y_train)
 y_predict_ga = evolved_estimator.predict(X_test)
 accuracy = accuracy_score(y_test, y_predict_ga)
 
-print(evolved_estimator.best_params_)
+print(evolved_estimator.best_params)
 print("accuracy score: ", "{:.2f}".format(accuracy))

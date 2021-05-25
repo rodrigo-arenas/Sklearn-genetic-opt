@@ -28,7 +28,6 @@ evolved_estimator = GASearchCV(clf,
                                continuous_parameters={'ccp_alpha': (0, 1)},
                                categorical_parameters={'criterion': ['mse', 'mae']},
                                integer_parameters={'max_depth': (2, 20), 'min_samples_split': (2, 30)},
-                               encoding_length=20,
                                criteria='max',
                                n_jobs=-1)
 
@@ -36,7 +35,7 @@ evolved_estimator.fit(X_train, y_train)
 y_predict_ga = evolved_estimator.predict(X_test)
 r_squared = r2_score(y_test, y_predict_ga)
 
-print(evolved_estimator.best_params_)
+print(evolved_estimator.best_params)
 print("r-squared: ", "{:.2f}".format(r_squared))
 
 plot = plot_fitness_evolution(evolved_estimator)
