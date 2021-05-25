@@ -156,8 +156,6 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         elif gen in range(self.categorical_parameters_range[0], self.categorical_parameters_range[1]):
             parameter = self.categorical_parameters[parameter_index]
             individual[gen] = random.choice(parameter)
-        else:
-            raise IndexError(f'mutate gen number {gen} is out of index')
 
         return [individual]
 
