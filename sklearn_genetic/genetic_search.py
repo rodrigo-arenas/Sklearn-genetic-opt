@@ -5,8 +5,9 @@ from sklearn.base import clone, ClassifierMixin, RegressorMixin
 from sklearn.model_selection import cross_val_score
 from sklearn.base import is_classifier, is_regressor
 from sklearn.utils.metaestimators import if_delegate_has_method
-from sklearn.utils.validation import check_array
+from sklearn.utils.validation import check_array, check_is_fitted
 from sklearn.metrics import check_scoring
+from sklearn.exceptions import NotFittedError
 
 
 class GASearchCV(ClassifierMixin, RegressorMixin):
@@ -63,6 +64,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         self.elitism = elitism
         self.verbose = verbose
         self.n_jobs = n_jobs
+        self.creator = creator
         self.logbook = None
         self.history = None
         self.X = None
@@ -107,8 +109,8 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
 
     def register(self):
 
-        creator.create("FitnessMax", base.Fitness, weights=[1.0])
-        creator.create("Individual", list, fitness=creator.FitnessMax)
+        self.creator.create("FitnessMax", base.Fitness, weights=[1.0])
+        self.creator.create("Individual", list, fitness=creator.FitnessMax)
 
         attributes = []
 
@@ -163,16 +165,16 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         current_generation_params = {key: individual[n] for n, key in enumerate(self.parameters)}
 
         self.estimator.set_params(**current_generation_params)
-        cv_scores = self.criteria_sign * cross_val_score(self.estimator,
-                                                         self.X, self.Y,
-                                                         cv=self.cv,
-                                                         scoring=self.scoring,
-                                                         n_jobs=self.n_jobs)
+        cv_scores = cross_val_score(self.estimator,
+                                    self.X_, self.Y_,
+                                    cv=self.cv,
+                                    scoring=self.scoring,
+                                    n_jobs=self.n_jobs)
         score = np.mean(cv_scores)
 
         self.logbook.record(parameters=current_generation_params, score=score)
 
-        return [score]
+        return [self.criteria_sign * score]
 
     @if_delegate_has_method(delegate='estimator')
     def fit(self, X, y):
@@ -191,8 +193,8 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         """
         scorer = check_scoring(self.estimator, scoring=self.scoring)
 
-        self.X = X
-        self.Y = y
+        self.X_ = X
+        self.Y_ = y
 
         self.register()
 
@@ -223,12 +225,24 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
                         "fitness_max": log.select("fitness_max"),
                         "fitness_min": log.select("fitness_min")}
 
-        
-
         self.estimator.set_params(**self.best_params)
-        self.estimator.fit(self.X, self.Y)
+        self.estimator.fit(self.X_, self.Y_)
+
+        del self.creator.FitnessMax
+        del self.creator.Individual
 
         return self
+
+    @property
+    def fitted(self):
+        try:
+            check_is_fitted(self.estimator)
+            is_fitted = True
+        except Exception as e:
+            is_fitted = False
+
+        has_history = True if bool(self.history) else False
+        return all([is_fitted, has_history])
 
     def __getitem__(self, index):
         """
@@ -241,10 +255,15 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         -------
         Best solution of the iteration corresponding to the index number
         """
-        if not bool(self.history):
-            raise IndexError("Make sure the model is already fitted")
+        if not self.fitted:
+            raise NotFittedError(
+                f"This GASearchCV instance is not fitted yet. Call 'fit' with appropriate arguments before using this estimator.")
 
-        return self.history[index]
+        return {"gen": self.history['gen'][index],
+                "fitness": self.history['fitness'][index],
+                "fitness_std": self.history['fitness_std'][index],
+                "fitness_max": self.history['fitness_max'][index],
+                "fitness_min": self.history['fitness_min'][index]}
 
     def __iter__(self):
         self.n = 0
