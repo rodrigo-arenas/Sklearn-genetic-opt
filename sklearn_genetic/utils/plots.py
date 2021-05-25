@@ -14,9 +14,7 @@ def plot_fitness_evolution(estimator):
     -------
 
     """
-    fitness_history = []
-    for generation in estimator:
-        fitness_history.append(generation['fitness'])
+    fitness_history = estimator.history["fitness"]
 
     ax = sns.lineplot(x=range(len(estimator)), y=fitness_history)
     ax.set(xlabel='generations', ylabel=f'fitness ({estimator.scoring})')
