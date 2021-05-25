@@ -4,9 +4,9 @@
 [![Python Version](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8%20%7C%203.9-blue)](https://www.python.org/downloads/)
 
 # Sklearn-genetic-opt
-Sklearn models hyperparameters tuning using evolutionary algorithms.
+scikit-learn models hyperparameters tuning using evolutionary algorithms.
 
-This is meant to be an alternative from popular methods inside Sklearn such as Grid Search and Random Grid Search.
+This is meant to be an alternative from popular methods inside scikit-learn such as Grid Search and Random Grid Search.
 
 Sklearn-genetic-opt uses evolutionary algorithms from the deap package to find the "best" set of hyperparameters by trying to optimize the cross validation scores, it can be used for both regression and classification problems.
 
