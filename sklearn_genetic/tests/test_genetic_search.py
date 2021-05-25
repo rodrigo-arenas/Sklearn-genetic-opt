@@ -28,27 +28,25 @@ def test_expected_ga_results():
                                    elitism=False,
                                    continuous_parameters={'l1_ratio': (0, 1), 'alpha': (1e-4, 1)},
                                    categorical_parameters={'average': [True, False]},
-                                   verbose=False,
-                                   encoding_length=10)
+                                   verbose=False)
 
     evolved_estimator.fit(X_train, y_train)
 
     assert check_is_fitted(evolved_estimator) is None
-    assert 'l1_ratio' in evolved_estimator.best_params_
-    assert 'alpha' in evolved_estimator.best_params_
-    assert 'average' in evolved_estimator.best_params_
-    assert len(evolved_estimator._best_solutions) == generations
-    assert len(evolved_estimator) == generations
+    assert 'l1_ratio' in evolved_estimator.best_params
+    assert 'alpha' in evolved_estimator.best_params
+    assert 'average' in evolved_estimator.best_params
+    assert len(evolved_estimator) == generations + 1  # +1 random initial population
     assert len(evolved_estimator.predict(X_test)) == len(X_test)
     assert evolved_estimator.score(X_train, y_train) >= 0
     assert len(evolved_estimator.decision_function(X_test)) == len(X_test)
     assert len(evolved_estimator.predict_proba(X_test)) == len(X_test)
     assert len(evolved_estimator.predict_log_proba(X_test)) == len(X_test)
-    assert 'n_chrom' in evolved_estimator[0]
-    assert 'params' in evolved_estimator[0]
+    assert 'gen' in evolved_estimator[0]
+    assert 'fitness_max' in evolved_estimator[0]
     assert 'fitness' in evolved_estimator[0]
     assert 'fitness_std' in evolved_estimator[0]
-    assert evolved_estimator[0] == evolved_estimator._best_solutions[0]
+    assert 'fitness_min' in evolved_estimator[0]
 
 
 def test_expected_ga_no_continuous():
@@ -63,16 +61,14 @@ def test_expected_ga_no_continuous():
                                    elitism=True,
                                    categorical_parameters={'criterion': ['gini', 'entropy']},
                                    integer_parameters={'max_depth': (2, 20), 'max_leaf_nodes': (2, 30)},
-                                   verbose=False,
-                                   encoding_length=10)
+                                   verbose=False)
 
     evolved_estimator.fit(X_train, y_train)
 
     assert check_is_fitted(evolved_estimator) is None
-    assert 'criterion' in evolved_estimator.best_params_
-    assert 'max_depth' in evolved_estimator.best_params_
-    assert 'max_leaf_nodes' in evolved_estimator.best_params_
-    assert len(evolved_estimator._best_solutions) == generations
+    assert 'criterion' in evolved_estimator.best_params
+    assert 'max_depth' in evolved_estimator.best_params
+    assert 'max_leaf_nodes' in evolved_estimator.best_params
 
 
 def test_expected_ga_no_categorical():
@@ -87,16 +83,14 @@ def test_expected_ga_no_categorical():
                                    elitism=True,
                                    continuous_parameters={'min_weight_fraction_leaf': (0, 0.5)},
                                    integer_parameters={'max_depth': (2, 20), 'max_leaf_nodes': (2, 30)},
-                                   verbose=False,
-                                   encoding_length=10)
+                                   verbose=False)
 
     evolved_estimator.fit(X_train, y_train)
 
     assert check_is_fitted(evolved_estimator) is None
-    assert 'min_weight_fraction_leaf' in evolved_estimator.best_params_
-    assert 'max_depth' in evolved_estimator.best_params_
-    assert 'max_leaf_nodes' in evolved_estimator.best_params_
-    assert len(evolved_estimator._best_solutions) == generations
+    assert 'min_weight_fraction_leaf' in evolved_estimator.best_params
+    assert 'max_depth' in evolved_estimator.best_params
+    assert 'max_leaf_nodes' in evolved_estimator.best_params
 
 
 def test_negative_criteria():
@@ -121,18 +115,16 @@ def test_negative_criteria():
                                    continuous_parameters={'ccp_alpha': (0, 1)},
                                    categorical_parameters={'criterion': ['mse', 'mae']},
                                    integer_parameters={'max_depth': (2, 20), 'min_samples_split': (2, 30)},
-                                   encoding_length=20,
                                    criteria='min',
                                    n_jobs=-1)
 
     evolved_estimator.fit(X_train_b, y_train_b)
 
     assert check_is_fitted(evolved_estimator) is None
-    assert 'ccp_alpha' in evolved_estimator.best_params_
-    assert 'criterion' in evolved_estimator.best_params_
-    assert 'max_depth' in evolved_estimator.best_params_
-    assert 'min_samples_split' in evolved_estimator.best_params_
-    assert len(evolved_estimator._best_solutions) == generations
+    assert 'ccp_alpha' in evolved_estimator.best_params
+    assert 'criterion' in evolved_estimator.best_params
+    assert 'max_depth' in evolved_estimator.best_params
+    assert 'min_samples_split' in evolved_estimator.best_params
     assert len(evolved_estimator.predict(X_test_b)) == len(X_test_b)
     assert evolved_estimator.score(X_train_b, y_train_b) >= 0
 
@@ -151,8 +143,7 @@ def test_wrong_criteria():
                                        continuous_parameters={'l1_ratio': (0, 1), 'alpha': (1e-4, 1)},
                                        categorical_parameters={'average': [True, False]},
                                        verbose=False,
-                                       criteria='maximization',
-                                       encoding_length=10)
+                                       criteria='maximization')
     assert str(excinfo.value) == "Criteria must be 'max' or 'min', got maximization instead"
 
 
@@ -170,8 +161,7 @@ def test_wrong_estimator():
                                        continuous_parameters={'l1_ratio': (0, 1), 'alpha': (1e-4, 1)},
                                        categorical_parameters={'average': [True, False]},
                                        verbose=False,
-                                       criteria='maximization',
-                                       encoding_length=10)
+                                       criteria='maximization')
     assert str(excinfo.value) == "KMeans() is not a valid Sklearn classifier or regressor"
 
 
@@ -188,11 +178,10 @@ def test_wrong_get_item():
                                    continuous_parameters={'l1_ratio': (0, 1), 'alpha': (1e-4, 1)},
                                    categorical_parameters={'average': [True, False]},
                                    verbose=False,
-                                   criteria='max',
-                                   encoding_length=10)
+                                   criteria='max')
     with pytest.raises(Exception) as excinfo:
         value = evolved_estimator[0]
-    assert str(excinfo.value) == "Make sure the model is already fitted"
+    assert str(excinfo.value) == "This GASearchCV instance is not fitted yet. Call 'fit' with appropriate arguments before using this estimator."
 
 
 def test_iterator():
@@ -207,8 +196,7 @@ def test_iterator():
                                    elitism=True,
                                    continuous_parameters={'min_weight_fraction_leaf': (0, 0.5)},
                                    integer_parameters={'max_depth': (2, 20), 'max_leaf_nodes': (2, 30)},
-                                   verbose=False,
-                                   encoding_length=10)
+                                   verbose=False)
     evolved_estimator.fit(X_train, y_train)
 
     i = iter(evolved_estimator)
