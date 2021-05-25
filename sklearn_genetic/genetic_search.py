@@ -223,6 +223,8 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
                         "fitness_max": log.select("fitness_max"),
                         "fitness_min": log.select("fitness_min")}
 
+        
+
         self.estimator.set_params(**self.best_params)
         self.estimator.fit(self.X, self.Y)
 
@@ -239,7 +241,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         -------
         Best solution of the iteration corresponding to the index number
         """
-        if not self.history:
+        if not bool(self.history):
             raise IndexError("Make sure the model is already fitted")
 
         return self.history[index]
