@@ -76,4 +76,4 @@ print("Best k solutions: ", evolved_estimator.hof)
 ```
 ### Result
 
-![demo](./demo/geneticopt.gif)
+![demo](https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/demo/geneticopt.gif?raw=true)
