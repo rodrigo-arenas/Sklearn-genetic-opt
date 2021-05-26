@@ -42,15 +42,15 @@ clf = DecisionTreeClassifier()
 evolved_estimator = GASearchCV(estimator=clf,
                                cv=3,
                                scoring='accuracy',
-                               population_size=16,
-                               generations=30,
+                               population_size=25,
+                               generations=35,
                                tournament_size=3,
                                elitism=True,
                                crossover_probability=0.8,
                                mutation_probability=0.1,
                                continuous_parameters={'min_weight_fraction_leaf': (0, 0.5)},
                                categorical_parameters={'criterion': ['gini', 'entropy']},
-                               integer_parameters={'max_depth': (2, 20), 'max_leaf_nodes': (2, 30)},
+                               integer_parameters={'max_depth': (2, 25), 'max_leaf_nodes': (2, 35)},
                                criteria='max',
                                algorithm='eaMuPlusLambda',
                                n_jobs=-1,
@@ -74,3 +74,6 @@ print("Stats achieved in each generation: ", evolved_estimator.history)
 print("Parameters and cv scores in each iteration: ", evolved_estimator.logbook)
 print("Best k solutions: ", evolved_estimator.hof)
 ```
+### Result
+
+![demo](./demo/geneticopt.gif)

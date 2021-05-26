@@ -17,6 +17,7 @@ def plot_fitness_evolution(estimator):
     fitness_history = estimator.history["fitness"]
 
     palette = sns.color_palette("rocket")
+    sns.set(rc={'figure.figsize': (12, 15)})
 
     ax = sns.lineplot(x=range(len(estimator)), y=fitness_history,
                       markers=True,
