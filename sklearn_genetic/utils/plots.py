@@ -1,6 +1,6 @@
 import seaborn as sns
 
-sns.set_style("darkgrid")
+sns.set_style("whitegrid")
 
 
 def plot_fitness_evolution(estimator):
@@ -16,7 +16,12 @@ def plot_fitness_evolution(estimator):
     """
     fitness_history = estimator.history["fitness"]
 
-    ax = sns.lineplot(x=range(len(estimator)), y=fitness_history)
+    palette = sns.color_palette("rocket")
+
+    ax = sns.lineplot(x=range(len(estimator)), y=fitness_history,
+                      markers=True,
+                      palette=palette)
+    ax.set_title('Fitness average evolution over generations')
+
     ax.set(xlabel='generations', ylabel=f'fitness ({estimator.scoring})')
     return ax
-
