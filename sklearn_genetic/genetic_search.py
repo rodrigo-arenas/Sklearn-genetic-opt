@@ -8,6 +8,7 @@ from sklearn.utils.metaestimators import if_delegate_has_method
 from sklearn.utils.validation import check_array, check_is_fitted
 from sklearn.metrics import check_scoring
 from sklearn.exceptions import NotFittedError
+from sklearn_genetic.parameters import Algorithms, Criteria
 
 
 class GASearchCV(ClassifierMixin, RegressorMixin):
@@ -20,17 +21,18 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
                  cv: int = 3,
                  scoring=None,
                  population_size: int = 20,
-                 generations: int = 50,
-                 crossover_probability: float = 1.0,
+                 generations: int = 40,
+                 crossover_probability: float = 0.8,
                  mutation_probability: float = 0.1,
                  tournament_size: int = 3,
                  elitism: bool = True,
                  verbose: bool = True,
-                 keep_top_k=1,
+                 keep_top_k: int = 1,
                  continuous_parameters: dict = None,
                  categorical_parameters: dict = None,
                  integer_parameters: dict = None,
-                 criteria: str = 'max',
+                 criteria: Criteria = 'max',
+                 algorithm: Algorithms = 'eaMuPlusLambda',
                  n_jobs: int = 1):
         """
 
@@ -51,6 +53,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         categorical_parameters: dict, categorical parameters to tune, expected a list with the possible options to choose
         integer_parameters: dict, integers parameters to tune, expected a list or tuple with the range (min,max) to search
         criteria: str, 'max' if a higher scoring metric is better, 'min' otherwise
+        algorithm: str, accepts 'eaSimple' or 'eaMuPlusLambda' as optimization routines. See more details in the deap algorithms documentation
         n_jobs: int, Number of jobs to run in parallel during the cross validation scoring
         """
 
@@ -66,6 +69,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         self.elitism = elitism
         self.verbose = verbose
         self.keep_top_k = keep_top_k
+        self.algorithm = algorithm
         self.n_jobs = n_jobs
         self.creator = creator
         self.logbook = None
@@ -79,11 +83,11 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         if not is_classifier(self.estimator) and not is_regressor(self.estimator):
             raise ValueError("{} is not a valid Sklearn classifier or regressor".format(self.estimator))
 
-        if criteria not in ['max', 'min']:
-            raise ValueError(f"Criteria must be 'max' or 'min', got {criteria} instead")
-        elif criteria == 'max':
+        if criteria not in Criteria.list():
+            raise ValueError(f"Criteria must be one of {Criteria.list()}, got {criteria} instead")
+        elif criteria == Criteria.max.value:
             self.criteria_sign = 1
-        else:
+        elif criteria == Criteria.min.value:
             self.criteria_sign = -1
 
         if not continuous_parameters:
@@ -213,13 +217,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
 
         self.logbook = tools.Logbook()
 
-        pop, log = algorithms.eaSimple(pop, self.toolbox,
-                                       cxpb=self.crossover_probability,
-                                       stats=stats,
-                                       mutpb=self.mutation_probability,
-                                       ngen=self.generations,
-                                       halloffame=hof,
-                                       verbose=self.verbose)
+        pop, log = self._select_algorithm(pop=pop, stats=stats, hof=hof)
 
         self.best_params = {key: hof[0][n] for n, key in enumerate(self.parameters)}
 
@@ -238,6 +236,36 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         del self.creator.Individual
 
         return self
+
+    def _select_algorithm(self, pop, stats, hof):
+
+        if self.algorithm == Algorithms.eaSimple.value:
+
+            pop, log = algorithms.eaSimple(pop, self.toolbox,
+                                           cxpb=self.crossover_probability,
+                                           stats=stats,
+                                           mutpb=self.mutation_probability,
+                                           ngen=self.generations,
+                                           halloffame=hof,
+                                           verbose=self.verbose)
+
+        elif self.algorithm == Algorithms.eaMuPlusLambda.value:
+
+            pop, log = algorithms.eaMuPlusLambda(pop, self.toolbox,
+                                                 mu=self.generations,
+                                                 lambda_=2 * self.generations,
+                                                 cxpb=self.crossover_probability,
+                                                 stats=stats,
+                                                 mutpb=self.mutation_probability,
+                                                 ngen=self.generations,
+                                                 halloffame=hof,
+                                                 verbose=self.verbose)
+
+        else:
+            raise ValueError(
+                f"The algorithm {self.algorithm} is not supported, please select one from {Algorithms.list()}")
+
+        return pop, log
 
     @property
     def fitted(self):
