@@ -26,6 +26,7 @@ def test_expected_ga_results():
                                    generations=generations,
                                    tournament_size=3,
                                    elitism=False,
+                                   keep_top_k=4,
                                    continuous_parameters={'l1_ratio': (0, 1), 'alpha': (1e-4, 1)},
                                    categorical_parameters={'average': [True, False]},
                                    verbose=False)
@@ -42,6 +43,7 @@ def test_expected_ga_results():
     assert len(evolved_estimator.decision_function(X_test)) == len(X_test)
     assert len(evolved_estimator.predict_proba(X_test)) == len(X_test)
     assert len(evolved_estimator.predict_log_proba(X_test)) == len(X_test)
+    assert len(evolved_estimator.hof) == evolved_estimator.keep_top_k
     assert 'gen' in evolved_estimator[0]
     assert 'fitness_max' in evolved_estimator[0]
     assert 'fitness' in evolved_estimator[0]

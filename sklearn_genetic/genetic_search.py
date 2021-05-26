@@ -26,6 +26,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
                  tournament_size: int = 3,
                  elitism: bool = True,
                  verbose: bool = True,
+                 keep_top_k=1,
                  continuous_parameters: dict = None,
                  categorical_parameters: dict = None,
                  integer_parameters: dict = None,
@@ -43,7 +44,8 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         mutation_probability: float, probability of child mutation
         tournament_size: number of chromosomes to perform tournament selection
         elitism: bool, if true takes the |tournament_size| best solution to the next generation
-        verbose: bool, if true, shows the best solution in each generation
+        verbose: bool, if true, shows the metrics on the optimization routine
+        keep_top_k: int, number of best solutions to keep in the hof object
         generations: int, number of generations to run the genetic algorithm
         continuous_parameters: dict, continuous parameters to tune, expected a list or tuple with the range (min,max) to search
         categorical_parameters: dict, categorical parameters to tune, expected a list with the possible options to choose
@@ -63,6 +65,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         self.tournament_size = tournament_size
         self.elitism = elitism
         self.verbose = verbose
+        self.keep_top_k = keep_top_k
         self.n_jobs = n_jobs
         self.creator = creator
         self.logbook = None
@@ -70,6 +73,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         self.X = None
         self.Y = None
         self.best_params = None
+        self.hof = None
         self.X_predict = None
 
         if not is_classifier(self.estimator) and not is_regressor(self.estimator):
@@ -170,7 +174,9 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
                                     n_jobs=self.n_jobs)
         score = np.mean(cv_scores)
 
-        self.logbook.record(parameters=current_generation_params, score=score)
+        current_generation_params['score'] = score
+
+        self.logbook.record(parameters=current_generation_params)
 
         return [self.criteria_sign * score]
 
@@ -197,7 +203,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         self.register()
 
         pop = self.toolbox.population(n=self.pop_size)
-        hof = tools.HallOfFame(1)
+        hof = tools.HallOfFame(self.keep_top_k)
 
         stats = tools.Statistics(lambda ind: ind.fitness.values)
         stats.register("fitness", np.mean)
@@ -216,6 +222,8 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
                                        verbose=self.verbose)
 
         self.best_params = {key: hof[0][n] for n, key in enumerate(self.parameters)}
+
+        self.hof = {k: {key: hof[k][n] for n, key in enumerate(self.parameters)} for k in range(self.keep_top_k)}
 
         self.history = {"gen": log.select("gen"),
                         "fitness": log.select("fitness"),
@@ -239,7 +247,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         except Exception as e:
             is_fitted = False
 
-        has_history = True if bool(self.history) else False
+        has_history = bool(self.history)
         return all([is_fitted, has_history])
 
     def __getitem__(self, index):

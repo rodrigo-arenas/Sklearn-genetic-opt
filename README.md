@@ -39,7 +39,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random
 
 clf = DecisionTreeClassifier()
 
-evolved_estimator = GASearchCV(clf,
+evolved_estimator = GASearchCV(estimator=clf,
                                cv=3,
                                scoring='accuracy',
                                population_size=16,
@@ -53,8 +53,10 @@ evolved_estimator = GASearchCV(clf,
                                integer_parameters={'max_depth': (2, 20), 'max_leaf_nodes': (2, 30)},
                                criteria='max',
                                n_jobs=-1,
-                               verbose=True)
-                    
+                               verbose=True,
+                               keep_top_k=4)
+
+# Train and optimize the estimator 
 evolved_estimator.fit(X_train,y_train)
 # Best parameters found
 print(evolved_estimator.best_params)
@@ -67,6 +69,7 @@ plot_fitness_evolution(evolved_estimator)
 plt.show()
 
 # Saved metadata for further analysis
-print(evolved_estimator.history)
-print(evolved_estimator.logbook)
+print("Stats achieved in each generation: ", evolved_estimator.history)
+print("Parameters and cv scores in each iteration: ", evolved_estimator.logbook)
+print("Best k solutions: ", evolved_estimator.hof)
 ```

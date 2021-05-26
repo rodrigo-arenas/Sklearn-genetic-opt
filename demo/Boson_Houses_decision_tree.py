@@ -23,6 +23,7 @@ evolved_estimator = GASearchCV(clf,
                                generations=60,
                                tournament_size=3,
                                elitism=True,
+                               keep_top_k=4,
                                crossover_probability=0.9,
                                mutation_probability=0.05,
                                continuous_parameters={'ccp_alpha': (0, 1)},
@@ -38,6 +39,7 @@ r_squared = r2_score(y_test, y_predict_ga)
 print(evolved_estimator.best_params)
 print("r-squared: ", "{:.2f}".format(r_squared))
 
+print("Best k solutions: ", evolved_estimator.hof)
 plot = plot_fitness_evolution(evolved_estimator)
 
 plt.show()
