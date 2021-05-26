@@ -19,16 +19,18 @@ clf = DecisionTreeRegressor()
 evolved_estimator = GASearchCV(clf,
                                cv=3,
                                scoring='r2',
-                               population_size=8,
-                               generations=60,
+                               population_size=12,
+                               generations=30,
                                tournament_size=3,
                                elitism=True,
+                               keep_top_k=4,
                                crossover_probability=0.9,
                                mutation_probability=0.05,
                                continuous_parameters={'ccp_alpha': (0, 1)},
                                categorical_parameters={'criterion': ['mse', 'mae']},
                                integer_parameters={'max_depth': (2, 20), 'min_samples_split': (2, 30)},
                                criteria='max',
+                               algorithm='eaMuPlusLambda',
                                n_jobs=-1)
 
 evolved_estimator.fit(X_train, y_train)
@@ -38,6 +40,7 @@ r_squared = r2_score(y_test, y_predict_ga)
 print(evolved_estimator.best_params)
 print("r-squared: ", "{:.2f}".format(r_squared))
 
+print("Best k solutions: ", evolved_estimator.hof)
 plot = plot_fitness_evolution(evolved_estimator)
 
 plt.show()

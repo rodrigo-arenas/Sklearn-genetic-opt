@@ -26,9 +26,11 @@ def test_expected_ga_results():
                                    generations=generations,
                                    tournament_size=3,
                                    elitism=False,
+                                   keep_top_k=4,
                                    continuous_parameters={'l1_ratio': (0, 1), 'alpha': (1e-4, 1)},
                                    categorical_parameters={'average': [True, False]},
-                                   verbose=False)
+                                   verbose=False,
+                                   algorithm='eaSimple')
 
     evolved_estimator.fit(X_train, y_train)
 
@@ -42,6 +44,7 @@ def test_expected_ga_results():
     assert len(evolved_estimator.decision_function(X_test)) == len(X_test)
     assert len(evolved_estimator.predict_proba(X_test)) == len(X_test)
     assert len(evolved_estimator.predict_log_proba(X_test)) == len(X_test)
+    assert len(evolved_estimator.hof) == evolved_estimator.keep_top_k
     assert 'gen' in evolved_estimator[0]
     assert 'fitness_max' in evolved_estimator[0]
     assert 'fitness' in evolved_estimator[0]
@@ -144,7 +147,7 @@ def test_wrong_criteria():
                                        categorical_parameters={'average': [True, False]},
                                        verbose=False,
                                        criteria='maximization')
-    assert str(excinfo.value) == "Criteria must be 'max' or 'min', got maximization instead"
+    assert str(excinfo.value) == "Criteria must be one of ['max', 'min'], got maximization instead"
 
 
 def test_wrong_estimator():
@@ -202,3 +205,24 @@ def test_iterator():
     i = iter(evolved_estimator)
     assert next(i) == evolved_estimator[0]
     assert next(i) == evolved_estimator[1]
+
+
+def test_wrong_algorithm():
+    clf = SGDClassifier(loss='log', fit_intercept=True)
+    generations = 8
+    evolved_estimator = GASearchCV(clf,
+                                   cv=3,
+                                   scoring='accuracy',
+                                   population_size=12,
+                                   generations=generations,
+                                   tournament_size=3,
+                                   elitism=False,
+                                   continuous_parameters={'l1_ratio': (0, 1), 'alpha': (1e-4, 1)},
+                                   categorical_parameters={'average': [True, False]},
+                                   verbose=False,
+                                   criteria='max',
+                                   algorithm='genetic')
+    with pytest.raises(Exception) as excinfo:
+        evolved_estimator.fit(X_train, y_train)
+    assert str(excinfo.value) == "The algorithm genetic is not supported, please select one from ['eaSimple', 'eaMuPlusLambda']"
+
