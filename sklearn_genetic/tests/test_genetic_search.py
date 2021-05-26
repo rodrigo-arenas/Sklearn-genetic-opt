@@ -224,5 +224,5 @@ def test_wrong_algorithm():
                                    algorithm='genetic')
     with pytest.raises(Exception) as excinfo:
         evolved_estimator.fit(X_train, y_train)
-    assert str(excinfo.value) == "The algorithm 'genetic' is not supported, please select one from ['eaSimple', 'eaMuPlusLambda']"
+    assert str(excinfo.value) == "The algorithm genetic is not supported, please select one from ['eaSimple', 'eaMuPlusLambda']"
 
