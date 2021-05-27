@@ -30,7 +30,7 @@ evolved_estimator = GASearchCV(clf,
                                categorical_parameters={'criterion': ['mse', 'mae']},
                                integer_parameters={'max_depth': (2, 20), 'min_samples_split': (2, 30)},
                                criteria='max',
-                               algorithm='eaMuPlusLambda',
+                               algorithm='eaMuCommaLambda',
                                n_jobs=-1)
 
 evolved_estimator.fit(X_train, y_train)

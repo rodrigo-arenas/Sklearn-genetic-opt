@@ -28,6 +28,7 @@ evolved_estimator = GASearchCV(clf,
                                continuous_parameters={'min_weight_fraction_leaf': (0, 0.5)},
                                categorical_parameters={'criterion': ['gini', 'entropy']},
                                integer_parameters={'max_depth': (2, 20), 'max_leaf_nodes': (2, 30)},
+                               algorithm='eaMuPlusLambda',
                                n_jobs=-1,
                                verbose=True)
 

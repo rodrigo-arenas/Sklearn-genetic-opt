@@ -24,7 +24,7 @@ pip install sklearn-genetic-opt
 ```python
 from sklearn_genetic import GASearchCV
 from sklearn_genetic.utils import plot_fitness_evolution
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.datasets import load_digits
 from sklearn.metrics import accuracy_score
@@ -32,12 +32,12 @@ import matplotlib.pyplot as plt
 
 
 data = load_digits() 
+n_samples = len(data.images)
+X = data.images.reshape((n_samples, -1))
 y = data['target']
-X = data['data'] 
-
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
 
-clf = DecisionTreeClassifier()
+clf = RandomForestClassifier()
 
 evolved_estimator = GASearchCV(estimator=clf,
                                cv=3,
