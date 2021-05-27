@@ -94,7 +94,7 @@ class Categorical(object):
             raise ValueError("choices can not be empty")
 
         if priors is None:
-            self.priors = [1/len(choices) for _ in range(len(choices))]
+            self.priors = [1 / len(choices) for _ in range(len(choices))]
         elif sum(priors) != 1:
             raise ValueError(f"The sum of the probabilities in the priors must be one, got {sum(priors)} instead")
         elif not len(priors) == len(choices):
@@ -117,3 +117,42 @@ class Categorical(object):
 
         return self.rvs(self.choices, p=self.priors)
 
+
+def check_space(param_grid: dict = None):
+    """
+
+    Parameters
+    ----------
+    param_grid: dict
+        Dictionary with the for {"hyperparameter_name": SpaceInstance}
+
+    Returns
+    -------
+        Raises a Value Error if the dictionary does not have valid space instances
+    """
+    if not param_grid:
+        raise ValueError(f"param_grid can not be empty")
+
+    for key, value in param_grid.items():
+        if not isinstance(value, (Integer, Categorical, Continuous)):
+            raise ValueError(f"{key} must be a valid instance of Integer, Categorical or Continuous classes")
+
+
+class Space(object):
+    """Search space for all the models hyperparameters"""
+
+    def __init__(self, param_grid: dict = None):
+        check_space(param_grid)
+
+        self.param_grid = param_grid
+
+    @property
+    def dimensions(self):
+        return len(self.param_grid)
+
+    @property
+    def parameters(self):
+        return [*list(self.param_grid.keys())]
+
+    def __len__(self):
+        return self.dimensions
