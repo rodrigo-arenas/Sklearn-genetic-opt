@@ -20,19 +20,19 @@ def create_space(continuous_parameters, categorical_parameters, integer_paramete
 
     if continuous_parameters:
         warnings.warn("Warning, 'continuous_parameters' is deprecated and will be removed from package in version "
-                      "0.4.0, you should use 'param_grid' instead")
+                      "0.4.0, you should use 'param_grid' instead", DeprecationWarning)
         for key, value in continuous_parameters.items():
             local_space[key] = Continuous(lower=value[0], upper=value[1])
 
     if categorical_parameters:
         warnings.warn("Warning, 'categorical_parameters' is deprecated and will be removed from package in version "
-                      "0.4.0, you should use 'param_grid' instead")
+                      "0.4.0, you should use 'param_grid' instead", DeprecationWarning)
         for key, value in categorical_parameters.items():
             local_space[key] = Categorical(choices=value)
 
     if integer_parameters:
-        warnings.warn("Warning, 'integer_parameters' is deprecated and will be removed from package in version "
-                      "0.4.0, you should use 'param_grid' instead")
+        warnings.warn("Warning, 'integer_parameters' is deprecated and will be removed from package in version 0.4.0, "
+                      "you should use 'param_grid' instead", DeprecationWarning)
         for key, value in integer_parameters.items():
             local_space[key] = Integer(lower=value[0], upper=value[1])
 
@@ -69,8 +69,8 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
                  continuous_parameters: dict = None,
                  categorical_parameters: dict = None,
                  integer_parameters: dict = None,
-                 criteria: Criteria = 'max',
-                 algorithm: Algorithms = 'eaMuPlusLambda',
+                 criteria: str = 'max',
+                 algorithm: str = 'eaMuPlusLambda',
                  n_jobs: int = 1):
         """
 
