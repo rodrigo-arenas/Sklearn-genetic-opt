@@ -156,3 +156,7 @@ class Space(object):
 
     def __len__(self):
         return self.dimensions
+
+    def __getitem__(self, index):
+
+        return self.param_grid[index]
