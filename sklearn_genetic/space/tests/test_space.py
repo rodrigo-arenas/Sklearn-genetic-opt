@@ -1,6 +1,6 @@
 import pytest
 
-from ..space import Categorical, Integer, Continuous
+from ..space import Categorical, Integer, Continuous, Space
 
 
 def test_sample_variables():
@@ -63,3 +63,20 @@ def test_categorical_bad_parameters():
     with pytest.raises(Exception) as excinfo:
         my_categorical = Categorical([True], priors=[0.1, 0.9])
     assert str(excinfo.value) == "priors and choices must have same size"
+
+
+def test_check_space_fail():
+    with pytest.raises(Exception) as excinfo:
+        my_space = Space()
+    assert str(excinfo.value) == "param_grid can not be empty"
+
+    param_grid = {
+        'min_weight_fraction_leaf': Continuous(lower=0.001, upper=0.5, distribution='log-uniform'),
+        'max_leaf_nodes': Integer(lower=2, upper=35),
+        'criterion': Categorical(choices=['gini', 'entropy']),
+        'max_depth': range(10, 20)
+    }
+
+    with pytest.raises(Exception) as excinfo:
+        my_space = Space(param_grid)
+    assert str(excinfo.value) == "max_depth must be a valid instance of Integer, Categorical or Continuous classes"
