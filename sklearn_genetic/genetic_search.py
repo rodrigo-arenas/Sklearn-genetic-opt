@@ -261,6 +261,17 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
                                                  halloffame=hof,
                                                  verbose=self.verbose)
 
+        elif self.algorithm == Algorithms.eaMuCommaLambda.value:
+            pop, log = algorithms.eaMuCommaLambda(pop, self.toolbox,
+                                                  mu=self.generations,
+                                                  lambda_=2 * self.generations,
+                                                  cxpb=self.crossover_probability,
+                                                  stats=stats,
+                                                  mutpb=self.mutation_probability,
+                                                  ngen=self.generations,
+                                                  halloffame=hof,
+                                                  verbose=self.verbose)
+
         else:
             raise ValueError(
                 f"The algorithm {self.algorithm} is not supported, please select one from {Algorithms.list()}")

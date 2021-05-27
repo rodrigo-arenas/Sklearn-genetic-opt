@@ -11,6 +11,7 @@ class ExtendedEnum(enum.Enum):
 class Algorithms(ExtendedEnum):
     eaSimple = 'eaSimple'
     eaMuPlusLambda = 'eaMuPlusLambda'
+    eaMuCommaLambda = 'eaMuCommaLambda'
 
 
 class Criteria(ExtendedEnum):

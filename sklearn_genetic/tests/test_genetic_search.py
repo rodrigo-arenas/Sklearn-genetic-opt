@@ -86,6 +86,7 @@ def test_expected_ga_no_categorical():
                                    elitism=True,
                                    continuous_parameters={'min_weight_fraction_leaf': (0, 0.5)},
                                    integer_parameters={'max_depth': (2, 20), 'max_leaf_nodes': (2, 30)},
+                                   algorithm='eaMuCommaLambda',
                                    verbose=False)
 
     evolved_estimator.fit(X_train, y_train)
