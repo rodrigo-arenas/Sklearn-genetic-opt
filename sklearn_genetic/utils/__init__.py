@@ -1,3 +1,3 @@
-from ..utils.plots import plot_fitness_evolution, plot_search_space
+from .logbook import logbook_to_pandas
 
-__all__ = ['plot_fitness_evolution', 'plot_search_space']
+__all__ = ['logbook_to_pandas']

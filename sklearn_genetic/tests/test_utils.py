@@ -3,7 +3,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeRegressor
 
 from .. import GASearchCV
-from ..utils import plot_fitness_evolution, plot_search_space
+from ..plots import plot_fitness_evolution, plot_search_space
 from ..space import Integer, Categorical, Continuous
 
 
