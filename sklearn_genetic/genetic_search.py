@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 import random
 from deap import base, creator, tools, algorithms
@@ -8,13 +10,48 @@ from sklearn.utils.metaestimators import if_delegate_has_method
 from sklearn.utils.validation import check_array, check_is_fitted
 from sklearn.metrics import check_scoring
 from sklearn.exceptions import NotFittedError
-from sklearn_genetic.parameters import Algorithms, Criteria
+
+from .parameters import Algorithms, Criteria
+from .space import Space, Continuous, Integer, Categorical
+
+
+def create_space(continuous_parameters, categorical_parameters, integer_parameters, param_grid):
+    local_space = {}
+
+    if continuous_parameters:
+        warnings.warn("Warning, 'continuous_parameters' is deprecated and will be removed from package in version "
+                      "0.4.0, you should use 'param_grid' instead", DeprecationWarning)
+        for key, value in continuous_parameters.items():
+            local_space[key] = Continuous(lower=value[0], upper=value[1])
+
+    if categorical_parameters:
+        warnings.warn("Warning, 'categorical_parameters' is deprecated and will be removed from package in version "
+                      "0.4.0, you should use 'param_grid' instead", DeprecationWarning)
+        for key, value in categorical_parameters.items():
+            local_space[key] = Categorical(choices=value)
+
+    if integer_parameters:
+        warnings.warn("Warning, 'integer_parameters' is deprecated and will be removed from package in version 0.4.0, "
+                      "you should use 'param_grid' instead", DeprecationWarning)
+        for key, value in integer_parameters.items():
+            local_space[key] = Integer(lower=value[0], upper=value[1])
+
+    if bool(local_space) and bool(param_grid):
+        warnings.warn("Warning, found parameters both in param_grid and older dictionary parameters, "
+                      "algorithm is only going to use param_grid")
+        space = Space(param_grid)
+    elif bool(param_grid):
+        space = Space(param_grid)
+    elif bool(local_space):
+        space = Space(local_space)
+    else:
+        space = Space()
+
+    return space
 
 
 class GASearchCV(ClassifierMixin, RegressorMixin):
-    """
-    Hyper parameter tuning using generic algorithms.
-    """
+    """Scikit-learn Hyperparameters tuning using evolutionary algorithms."""
 
     def __init__(self,
                  estimator,
@@ -28,11 +65,12 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
                  elitism: bool = True,
                  verbose: bool = True,
                  keep_top_k: int = 1,
+                 param_grid: dict = None,
                  continuous_parameters: dict = None,
                  categorical_parameters: dict = None,
                  integer_parameters: dict = None,
-                 criteria: Criteria = 'max',
-                 algorithm: Algorithms = 'eaMuPlusLambda',
+                 criteria: str = 'max',
+                 algorithm: str = 'eaMuPlusLambda',
                  n_jobs: int = 1):
         """
 
@@ -42,18 +80,19 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         cv: int, number of splits used for calculating cross_val_score
         scoring: string, Scoring function to use as fitness value
         population_size: int, size of the population
+        generations: int, number of generations to run the genetic algorithm
         crossover_probability: float, probability of crossover operation
         mutation_probability: float, probability of child mutation
         tournament_size: number of chromosomes to perform tournament selection
         elitism: bool, if true takes the |tournament_size| best solution to the next generation
         verbose: bool, if true, shows the metrics on the optimization routine
         keep_top_k: int, number of best solutions to keep in the hof object
-        generations: int, number of generations to run the genetic algorithm
+        param_grid: dict, grid with the parameters to tune, expects as values of each key a sklearn_genetic.space Integer, Categorical or Continuous
         continuous_parameters: dict, continuous parameters to tune, expected a list or tuple with the range (min,max) to search
         categorical_parameters: dict, categorical parameters to tune, expected a list with the possible options to choose
         integer_parameters: dict, integers parameters to tune, expected a list or tuple with the range (min,max) to search
         criteria: str, 'max' if a higher scoring metric is better, 'min' otherwise
-        algorithm: str, accepts 'eaSimple' or 'eaMuPlusLambda' as optimization routines. See more details in the deap algorithms documentation
+        algorithm: str, accepts 'eaSimple', 'eaMuPlusLambda' or 'eaMuCommaLambda' as optimization routines. See more details in the deap algorithms documentation
         n_jobs: int, Number of jobs to run in parallel during the cross validation scoring
         """
 
@@ -69,6 +108,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         self.elitism = elitism
         self.verbose = verbose
         self.keep_top_k = keep_top_k
+        self.param_grid = param_grid
         self.algorithm = algorithm
         self.n_jobs = n_jobs
         self.creator = creator
@@ -90,30 +130,10 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         elif criteria == Criteria.min.value:
             self.criteria_sign = -1
 
-        if not continuous_parameters:
-            self.continuous_parameters = {}
-        else:
-            self.continuous_parameters = continuous_parameters
-
-        if not categorical_parameters:
-            self.categorical_parameters = {}
-        else:
-            self.categorical_parameters = categorical_parameters
-
-        if not integer_parameters:
-            self.integer_parameters = {}
-        else:
-            self.integer_parameters = integer_parameters
-
-        self.parameters = [*list(self.continuous_parameters.keys()),
-                           *list(self.integer_parameters.keys()),
-                           *list(self.categorical_parameters.keys())]
-
-        self.continuous_parameters_range = (0, len(self.continuous_parameters))
-        self.integer_parameters_range = (self.continuous_parameters_range[1],
-                                         self.continuous_parameters_range[1] + len(self.integer_parameters))
-        self.categorical_parameters_range = (self.integer_parameters_range[1],
-                                             self.integer_parameters_range[1] + len(self.categorical_parameters))
+        self.space = create_space(continuous_parameters=continuous_parameters,
+                                  categorical_parameters=categorical_parameters,
+                                  integer_parameters=integer_parameters,
+                                  param_grid=param_grid)
 
     def register(self):
 
@@ -122,17 +142,9 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
 
         attributes = []
 
-        for key, value in self.continuous_parameters.items():
-            self.toolbox.register(f"{key}", random.uniform, value[0], value[1])
-            attributes.append(getattr(self.toolbox, key))
-
-        for key, value in self.integer_parameters.items():
-            self.toolbox.register(f"{key}", random.randint, value[0], value[1])
-            attributes.append(getattr(self.toolbox, key))
-
-        for key, value in self.categorical_parameters.items():
-            self.toolbox.register(f"{key}", random.choice, value)
-            attributes.append(getattr(self.toolbox, key))
+        for parameter, dimension in self.space.param_grid.items():
+            self.toolbox.register(f"{parameter}", dimension.sample)
+            attributes.append(getattr(self.toolbox, parameter))
 
         IND_SIZE = 1
 
@@ -152,23 +164,17 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         self.toolbox.register("evaluate", self.evaluate)
 
     def mutate(self, individual):
-        gen = random.randrange(0, len(self.parameters))
-        parameter_index = self.parameters[gen]
 
-        if gen in range(self.continuous_parameters_range[0], self.continuous_parameters_range[1]):
-            parameter = self.continuous_parameters[parameter_index]
-            individual[gen] = random.uniform(parameter[0], parameter[1])
-        elif gen in range(self.integer_parameters_range[0], self.integer_parameters_range[1]):
-            parameter = self.integer_parameters[parameter_index]
-            individual[gen] = random.randint(parameter[0], parameter[1])
-        elif gen in range(self.categorical_parameters_range[0], self.categorical_parameters_range[1]):
-            parameter = self.categorical_parameters[parameter_index]
-            individual[gen] = random.choice(parameter)
+        gen = random.randrange(0, len(self.space))
+        parameter_idx = self.space.parameters[gen]
+        parameter = self.space[parameter_idx]
+
+        individual[gen] = parameter.sample()
 
         return [individual]
 
     def evaluate(self, individual):
-        current_generation_params = {key: individual[n] for n, key in enumerate(self.parameters)}
+        current_generation_params = {key: individual[n] for n, key in enumerate(self.space.parameters)}
 
         self.estimator.set_params(**current_generation_params)
         cv_scores = cross_val_score(self.estimator,
@@ -219,9 +225,9 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
 
         pop, log = self._select_algorithm(pop=pop, stats=stats, hof=hof)
 
-        self.best_params = {key: hof[0][n] for n, key in enumerate(self.parameters)}
+        self.best_params = {key: hof[0][n] for n, key in enumerate(self.space.parameters)}
 
-        self.hof = {k: {key: hof[k][n] for n, key in enumerate(self.parameters)} for k in range(self.keep_top_k)}
+        self.hof = {k: {key: hof[k][n] for n, key in enumerate(self.space.parameters)} for k in range(self.keep_top_k)}
 
         self.history = {"gen": log.select("gen"),
                         "fitness": log.select("fitness"),
@@ -252,14 +258,25 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         elif self.algorithm == Algorithms.eaMuPlusLambda.value:
 
             pop, log = algorithms.eaMuPlusLambda(pop, self.toolbox,
-                                                 mu=self.generations,
-                                                 lambda_=2 * self.generations,
+                                                 mu=self.pop_size,
+                                                 lambda_=2 * self.pop_size,
                                                  cxpb=self.crossover_probability,
                                                  stats=stats,
                                                  mutpb=self.mutation_probability,
                                                  ngen=self.generations,
                                                  halloffame=hof,
                                                  verbose=self.verbose)
+
+        elif self.algorithm == Algorithms.eaMuCommaLambda.value:
+            pop, log = algorithms.eaMuCommaLambda(pop, self.toolbox,
+                                                  mu=self.pop_size,
+                                                  lambda_=2 * self.pop_size,
+                                                  cxpb=self.crossover_probability,
+                                                  stats=stats,
+                                                  mutpb=self.mutation_probability,
+                                                  ngen=self.generations,
+                                                  halloffame=hof,
+                                                  verbose=self.verbose)
 
         else:
             raise ValueError(

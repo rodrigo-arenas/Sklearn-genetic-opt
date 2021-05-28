@@ -1,12 +1,14 @@
+import scipy.stats as stats
+import numpy as np
+import warnings
 from sklearn_genetic import GASearchCV
+from sklearn_genetic.space import Continuous, Categorical
 from sklearn.linear_model import SGDClassifier
 from sklearn.model_selection import train_test_split, GridSearchCV, RandomizedSearchCV
-import scipy.stats as stats
 from sklearn.utils.fixes import loguniform
 from sklearn.datasets import load_digits
 from sklearn.metrics import accuracy_score
-import numpy as np
-import warnings
+
 
 warnings.filterwarnings("ignore")
 
@@ -50,6 +52,10 @@ print("grid search best params: \n", grid_search.best_params_)
 
 #  3. Genetic Algorithm
 
+param_grid = {'l1_ratio': Continuous(0, 1),
+              'alpha': Continuous(1e-4, 1, distribution='log-uniform'),
+              'average': Categorical([True, False])}
+
 evolved_estimator = GASearchCV(clf,
                                cv=3,
                                scoring='accuracy',
@@ -57,9 +63,7 @@ evolved_estimator = GASearchCV(clf,
                                generations=8,
                                tournament_size=3,
                                elitism=True,
-                               continuous_parameters={'l1_ratio': (0, 1), 'alpha': (1e-4, 1)},
-                               categorical_parameters={'average': [True, False]},
-                               integer_parameters={},
+                               param_grid=param_grid,
                                n_jobs=-1)
 
 evolved_estimator.fit(X_train, y_train)
