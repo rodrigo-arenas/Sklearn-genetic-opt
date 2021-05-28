@@ -7,11 +7,10 @@ from setuptools import setup, find_packages
 HERE = pathlib.Path(__file__).parent
 
 README = (HERE / "README.md").read_text()
-
 setup(
     name="sklearn-genetic-opt",
-    version="0.2.1",
-    description="Sklearn models hyperparameters tuning using evolutionary algorithms",
+    version="0.3.0",
+    description="Scikit-lean models hyperparameters tuning, using evolutionary algorithms",
     long_description=README,
     long_description_content_type="text/markdown",
     url="https://github.com/rodrigo-arenas/Sklearn-genetic-opt",

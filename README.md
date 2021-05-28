@@ -24,8 +24,8 @@ pip install sklearn-genetic-opt
 ```python
 from sklearn_genetic import GASearchCV
 from sklearn_genetic.utils import plot_fitness_evolution
-from sklearn_genetic.space import Continuous, Categorical
-from sklearn.linear_model import SGDClassifier
+from sklearn_genetic.space import Continuous, Categorical, Integer
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.datasets import load_digits
 from sklearn.metrics import accuracy_score
@@ -38,17 +38,19 @@ X = data.images.reshape((n_samples, -1))
 y = data['target']
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
 
-clf = SGDClassifier()
+clf = RandomForestClassifier()
 
-param_grid = {'l1_ratio': Continuous(0, 1),
-              'alpha': Continuous(1e-4, 1, distribution='log-uniform'),
-              'average': Categorical([True, False])}
+param_grid = {'min_weight_fraction_leaf': Continuous(0.01, 0.5, distribution='log-uniform'),
+              'bootstrap': Categorical([True, False]),
+              'max_depth': Integer(2, 30), 
+              'max_leaf_nodes': Integer(2, 35), 
+              'n_estimators': Integer(100, 300)}
 
 evolved_estimator = GASearchCV(estimator=clf,
                                cv=3,
                                scoring='accuracy',
                                population_size=10,
-                               generations=30,
+                               generations=25,
                                tournament_size=3,
                                elitism=True,
                                crossover_probability=0.8,
@@ -77,6 +79,3 @@ print("Stats achieved in each generation: ", evolved_estimator.history)
 print("Parameters and cv scores in each iteration: ", evolved_estimator.logbook)
 print("Best k solutions: ", evolved_estimator.hof)
 ```
-### Result
-
-![demo](https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/demo/geneticopt.gif?raw=true)
