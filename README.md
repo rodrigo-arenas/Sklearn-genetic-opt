@@ -23,7 +23,7 @@ pip install sklearn-genetic-opt
 
 ```python
 from sklearn_genetic import GASearchCV
-from sklearn_genetic.utils import plot_fitness_evolution
+from sklearn_genetic.utils import plot_fitness_evolution, plot_search_space
 from sklearn_genetic.space import Continuous, Categorical, Integer
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split, StratifiedKFold
@@ -51,7 +51,7 @@ evolved_estimator = GASearchCV(estimator=clf,
                                cv=cv,
                                scoring='accuracy',
                                population_size=10,
-                               generations=25,
+                               generations=35,
                                tournament_size=3,
                                elitism=True,
                                crossover_probability=0.8,
@@ -71,12 +71,23 @@ print(evolved_estimator.best_params_)
 y_predict_ga = evolved_estimator.predict(X_test)
 print(accuracy_score(y_test, y_predict_ga))
 
+# Check the distribution of sampled hyperparameters
+plot_search_space(evolved_estimator, features=['min_weight_fraction_leaf', 'max_depth', 'max_leaf_nodes', 'n_estimators'])
+plt.show()
+
 # See the evolution of the optimization per generation
 plot_fitness_evolution(evolved_estimator)
 plt.show()
 
 # Saved metadata for further analysis
 print("Stats achieved in each generation: ", evolved_estimator.history)
-print("Parameters and cv scores in each iteration: ", evolved_estimator.logbook)
 print("Best k solutions: ", evolved_estimator.hof)
 ```
+
+## Results
+Sampled distribution
+![Density Distribution](./demo/images/density.png)
+Fitness evolution over generations
+![Fitness Evolution](./demo/images/fitness.png)
+Log controlled by verbosity
+![Verbosity Log](./demo/images/log.jpg)
