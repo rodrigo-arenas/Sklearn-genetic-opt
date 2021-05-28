@@ -92,7 +92,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         categorical_parameters: dict, categorical parameters to tune, expected a list with the possible options to choose
         integer_parameters: dict, integers parameters to tune, expected a list or tuple with the range (min,max) to search
         criteria: str, 'max' if a higher scoring metric is better, 'min' otherwise
-        algorithm: str, accepts 'eaSimple' or 'eaMuPlusLambda' as optimization routines. See more details in the deap algorithms documentation
+        algorithm: str, accepts 'eaSimple', 'eaMuPlusLambda' or 'eaMuCommaLambda' as optimization routines. See more details in the deap algorithms documentation
         n_jobs: int, Number of jobs to run in parallel during the cross validation scoring
         """
 
@@ -258,8 +258,8 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         elif self.algorithm == Algorithms.eaMuPlusLambda.value:
 
             pop, log = algorithms.eaMuPlusLambda(pop, self.toolbox,
-                                                 mu=self.generations,
-                                                 lambda_=2 * self.generations,
+                                                 mu=self.pop_size,
+                                                 lambda_=2 * self.pop_size,
                                                  cxpb=self.crossover_probability,
                                                  stats=stats,
                                                  mutpb=self.mutation_probability,
@@ -269,8 +269,8 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
 
         elif self.algorithm == Algorithms.eaMuCommaLambda.value:
             pop, log = algorithms.eaMuCommaLambda(pop, self.toolbox,
-                                                  mu=self.generations,
-                                                  lambda_=2 * self.generations,
+                                                  mu=self.pop_size,
+                                                  lambda_=2 * self.pop_size,
                                                   cxpb=self.crossover_probability,
                                                   stats=stats,
                                                   mutpb=self.mutation_probability,
