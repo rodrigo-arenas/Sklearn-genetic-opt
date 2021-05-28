@@ -1,10 +1,11 @@
+import matplotlib.pyplot as plt
 from sklearn_genetic import GASearchCV
+from sklearn_genetic.space import Integer, Categorical, Continuous
 from sklearn_genetic.utils import plot_fitness_evolution
 from sklearn.datasets import load_boston
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.metrics import r2_score
-import matplotlib.pyplot as plt
 
 
 data = load_boston()
@@ -16,6 +17,11 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random
 
 clf = DecisionTreeRegressor()
 
+param_grid = {'ccp_alpha': Continuous(0, 1),
+              'criterion': Categorical(['mse', 'mae']),
+              'max_depth': Integer(2, 20),
+              'min_samples_split': Integer(2, 30)}
+
 evolved_estimator = GASearchCV(clf,
                                cv=3,
                                scoring='r2',
@@ -26,9 +32,7 @@ evolved_estimator = GASearchCV(clf,
                                keep_top_k=4,
                                crossover_probability=0.9,
                                mutation_probability=0.05,
-                               continuous_parameters={'ccp_alpha': (0, 1)},
-                               categorical_parameters={'criterion': ['mse', 'mae']},
-                               integer_parameters={'max_depth': (2, 20), 'min_samples_split': (2, 30)},
+                               param_grid=param_grid,
                                criteria='max',
                                algorithm='eaMuCommaLambda',
                                n_jobs=-1)

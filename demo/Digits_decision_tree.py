@@ -1,9 +1,11 @@
+import warnings
 from sklearn_genetic import GASearchCV
+from sklearn_genetic.space import Categorical, Integer, Continuous
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.datasets import load_digits
 from sklearn.metrics import accuracy_score
-import warnings
+
 
 warnings.filterwarnings("ignore")
 
@@ -16,6 +18,10 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random
 
 clf = DecisionTreeClassifier()
 
+params_grid = {'min_weight_fraction_leaf': Continuous(0, 0.5),
+               'criterion': Categorical(['gini', 'entropy']),
+               'max_depth': Integer(2, 20), 'max_leaf_nodes': Integer(2, 30)}
+
 evolved_estimator = GASearchCV(clf,
                                cv=3,
                                scoring='accuracy',
@@ -25,9 +31,7 @@ evolved_estimator = GASearchCV(clf,
                                elitism=True,
                                crossover_probability=0.9,
                                mutation_probability=0.05,
-                               continuous_parameters={'min_weight_fraction_leaf': (0, 0.5)},
-                               categorical_parameters={'criterion': ['gini', 'entropy']},
-                               integer_parameters={'max_depth': (2, 20), 'max_leaf_nodes': (2, 30)},
+                               param_grid=params_grid,
                                algorithm='eaMuPlusLambda',
                                n_jobs=-1,
                                verbose=True)
