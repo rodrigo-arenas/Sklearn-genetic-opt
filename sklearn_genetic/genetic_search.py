@@ -71,29 +71,51 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
                  integer_parameters: dict = None,
                  criteria: str = 'max',
                  algorithm: str = 'eaMuPlusLambda',
+                 refit: bool = True,
                  n_jobs: int = 1):
         """
 
         Parameters
         ----------
-        estimator: Sklearn Classifier or Regressor
-        cv: int, number of splits used for calculating cross_val_score
-        scoring: string, Scoring function to use as fitness value
-        population_size: int, size of the population
-        generations: int, number of generations to run the genetic algorithm
-        crossover_probability: float, probability of crossover operation
-        mutation_probability: float, probability of child mutation
-        tournament_size: number of chromosomes to perform tournament selection
-        elitism: bool, if true takes the |tournament_size| best solution to the next generation
-        verbose: bool, if true, shows the metrics on the optimization routine
-        keep_top_k: int, number of best solutions to keep in the hof object
-        param_grid: dict, grid with the parameters to tune, expects as values of each key a sklearn_genetic.space Integer, Categorical or Continuous
-        continuous_parameters: dict, continuous parameters to tune, expected a list or tuple with the range (min,max) to search
-        categorical_parameters: dict, categorical parameters to tune, expected a list with the possible options to choose
-        integer_parameters: dict, integers parameters to tune, expected a list or tuple with the range (min,max) to search
-        criteria: str, 'max' if a higher scoring metric is better, 'min' otherwise
-        algorithm: str, accepts 'eaSimple', 'eaMuPlusLambda' or 'eaMuCommaLambda' as optimization routines. See more details in the deap algorithms documentation
-        n_jobs: int, Number of jobs to run in parallel during the cross validation scoring
+        estimator: estimator object, default=None
+            scikit-learn Classifier or Regressor
+        cv: int, default=3
+            Number of splits used for calculating cross_val_score
+        scoring: string, default=None
+            Scoring function to use as fitness value
+        population_size: int, default=20
+            Size of the population
+        generations: int, default=40
+            Number of generations to run the genetic algorithm
+        crossover_probability: float, default=0.8
+            Probability of crossover operation
+        mutation_probability: float, default=0.1
+            Probability of child mutation
+        tournament_size: int, default=3
+            Number of individuals to perform tournament selection
+        elitism: bool, default=True
+            If True takes the |tournament_size| best solution to the next generation
+        verbose: bool, default=True
+            If true, shows the metrics on the optimization routine
+        keep_top_k: int, default=1
+            Number of best solutions to keep in the hof object
+        param_grid: dict, default=None
+            Grid with the parameters to tune, expects as values of each key a sklearn_genetic.space Integer, Categorical or Continuous
+        continuous_parameters: dict, default=None
+            Continuous parameters to tune, expected a list or tuple with the range (min,max) to search
+        categorical_parameters: dict, default=None
+            Categorical parameters to tune, expected a list with the possible options to choose
+        integer_parameters: dict, default=None
+            Integers parameters to tune, expected a list or tuple with the range (min,max) to search
+        criteria: str, default='max'
+            'max' if a higher scoring metric is better, 'min' otherwise
+        algorithm: str, default='eaMuPlusLambda'
+            Evolutionary algorithm to use, accepts 'eaSimple', 'eaMuPlusLambda' or 'eaMuCommaLambda'.
+            See more details in the deap algorithms documentation
+        refit: bool, default=True
+            Refit an estimator using the best found parameters on the whole dataset.
+        n_jobs: int, default=1
+            Number of jobs to run in parallel during the cross validation scoring
         """
 
         self.estimator = clone(estimator)
@@ -110,13 +132,15 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         self.keep_top_k = keep_top_k
         self.param_grid = param_grid
         self.algorithm = algorithm
+        self.refit = refit
         self.n_jobs = n_jobs
         self.creator = creator
         self.logbook = None
         self.history = None
         self.X = None
         self.Y = None
-        self.best_params = None
+        self.best_params_ = None
+        self.best_estimator_ = None
         self.hof = None
         self.X_predict = None
 
@@ -176,8 +200,9 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
     def evaluate(self, individual):
         current_generation_params = {key: individual[n] for n, key in enumerate(self.space.parameters)}
 
-        self.estimator.set_params(**current_generation_params)
-        cv_scores = cross_val_score(self.estimator,
+        local_estimator = clone(self.estimator)
+        local_estimator.set_params(**current_generation_params)
+        cv_scores = cross_val_score(local_estimator,
                                     self.X_, self.Y_,
                                     cv=self.cv,
                                     scoring=self.scoring,
@@ -225,7 +250,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
 
         pop, log = self._select_algorithm(pop=pop, stats=stats, hof=hof)
 
-        self.best_params = {key: hof[0][n] for n, key in enumerate(self.space.parameters)}
+        self.best_params_ = {key: hof[0][n] for n, key in enumerate(self.space.parameters)}
 
         self.hof = {k: {key: hof[k][n] for n, key in enumerate(self.space.parameters)} for k in range(self.keep_top_k)}
 
@@ -235,8 +260,10 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
                         "fitness_max": log.select("fitness_max"),
                         "fitness_min": log.select("fitness_min")}
 
-        self.estimator.set_params(**self.best_params)
-        self.estimator.fit(self.X_, self.Y_)
+        if self.refit:
+            self.estimator.set_params(**self.best_params_)
+            self.estimator.fit(self.X_, self.Y_)
+            self.best_estimator_ = self.estimator
 
         del self.creator.FitnessMax
         del self.creator.Individual
@@ -293,7 +320,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
             is_fitted = False
 
         has_history = bool(self.history)
-        return all([is_fitted, has_history])
+        return all([is_fitted, has_history, self.refit])
 
     def __getitem__(self, index):
         """
@@ -308,7 +335,8 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         """
         if not self.fitted:
             raise NotFittedError(
-                f"This GASearchCV instance is not fitted yet. Call 'fit' with appropriate arguments before using this estimator.")
+                f"This GASearchCV instance is not fitted yet or used refit=False. Call 'fit' with appropriate "
+                f"arguments before using this estimator.")
 
         return {"gen": self.history['gen'][index],
                 "fitness": self.history['fitness'][index],

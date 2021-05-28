@@ -40,5 +40,5 @@ evolved_estimator.fit(X_train, y_train)
 y_predict_ga = evolved_estimator.predict(X_test)
 accuracy = accuracy_score(y_test, y_predict_ga)
 
-print(evolved_estimator.best_params)
+print(evolved_estimator.best_params_)
 print("accuracy score: ", "{:.2f}".format(accuracy))
