@@ -13,6 +13,7 @@ from sklearn.exceptions import NotFittedError
 
 from .parameters import Algorithms, Criteria
 from .space import Space, Continuous, Integer, Categorical
+from .algorithms import eaSimple, eaMuPlusLambda, eaMuCommaLambda
 
 
 def create_space(continuous_parameters, categorical_parameters, integer_parameters, param_grid):
@@ -278,36 +279,36 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
 
         if self.algorithm == Algorithms.eaSimple.value:
 
-            pop, log = algorithms.eaSimple(pop, self.toolbox,
-                                           cxpb=self.crossover_probability,
-                                           stats=stats,
-                                           mutpb=self.mutation_probability,
-                                           ngen=self.generations,
-                                           halloffame=hof,
-                                           verbose=self.verbose)
+            pop, log = eaSimple(pop, self.toolbox,
+                                cxpb=self.crossover_probability,
+                                stats=stats,
+                                mutpb=self.mutation_probability,
+                                ngen=self.generations,
+                                halloffame=hof,
+                                verbose=self.verbose)
 
         elif self.algorithm == Algorithms.eaMuPlusLambda.value:
 
-            pop, log = algorithms.eaMuPlusLambda(pop, self.toolbox,
-                                                 mu=self.pop_size,
-                                                 lambda_=2 * self.pop_size,
-                                                 cxpb=self.crossover_probability,
-                                                 stats=stats,
-                                                 mutpb=self.mutation_probability,
-                                                 ngen=self.generations,
-                                                 halloffame=hof,
-                                                 verbose=self.verbose)
+            pop, log = eaMuPlusLambda(pop, self.toolbox,
+                                      mu=self.pop_size,
+                                      lambda_=2 * self.pop_size,
+                                      cxpb=self.crossover_probability,
+                                      stats=stats,
+                                      mutpb=self.mutation_probability,
+                                      ngen=self.generations,
+                                      halloffame=hof,
+                                      verbose=self.verbose)
 
         elif self.algorithm == Algorithms.eaMuCommaLambda.value:
-            pop, log = algorithms.eaMuCommaLambda(pop, self.toolbox,
-                                                  mu=self.pop_size,
-                                                  lambda_=2 * self.pop_size,
-                                                  cxpb=self.crossover_probability,
-                                                  stats=stats,
-                                                  mutpb=self.mutation_probability,
-                                                  ngen=self.generations,
-                                                  halloffame=hof,
-                                                  verbose=self.verbose)
+            pop, log = eaMuCommaLambda(pop, self.toolbox,
+                                       mu=self.pop_size,
+                                       lambda_=2 * self.pop_size,
+                                       cxpb=self.crossover_probability,
+                                       stats=stats,
+                                       mutpb=self.mutation_probability,
+                                       ngen=self.generations,
+                                       halloffame=hof,
+                                       verbose=self.verbose)
 
         else:
             raise ValueError(
