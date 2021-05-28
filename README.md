@@ -4,7 +4,7 @@
 [![Python Version](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8%20%7C%203.9-blue)](https://www.python.org/downloads/)
 
 # Sklearn-genetic-opt
-scikit-learn models hyperparameters tuning using evolutionary algorithms.
+scikit-learn models hyperparameters tuning, using evolutionary algorithms.
 
 This is meant to be an alternative from popular methods inside scikit-learn such as Grid Search and Random Grid Search.
 
@@ -24,7 +24,8 @@ pip install sklearn-genetic-opt
 ```python
 from sklearn_genetic import GASearchCV
 from sklearn_genetic.utils import plot_fitness_evolution
-from sklearn.ensemble import RandomForestClassifier
+from sklearn_genetic.space import Continuous, Categorical
+from sklearn.linear_model import SGDClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.datasets import load_digits
 from sklearn.metrics import accuracy_score
@@ -37,20 +38,22 @@ X = data.images.reshape((n_samples, -1))
 y = data['target']
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
 
-clf = RandomForestClassifier()
+clf = SGDClassifier()
+
+param_grid = {'l1_ratio': Continuous(0, 1),
+              'alpha': Continuous(1e-4, 1, distribution='log-uniform'),
+              'average': Categorical([True, False])}
 
 evolved_estimator = GASearchCV(estimator=clf,
                                cv=3,
                                scoring='accuracy',
-                               population_size=25,
-                               generations=35,
+                               population_size=10,
+                               generations=30,
                                tournament_size=3,
                                elitism=True,
                                crossover_probability=0.8,
                                mutation_probability=0.1,
-                               continuous_parameters={'min_weight_fraction_leaf': (0, 0.5)},
-                               categorical_parameters={'criterion': ['gini', 'entropy']},
-                               integer_parameters={'max_depth': (2, 25), 'max_leaf_nodes': (2, 35)},
+                               param_grid=param_grid,
                                criteria='max',
                                algorithm='eaMuPlusLambda',
                                n_jobs=-1,
