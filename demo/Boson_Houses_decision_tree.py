@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from sklearn_genetic import GASearchCV
 from sklearn_genetic.space import Integer, Categorical, Continuous
-from sklearn_genetic.utils import plot_fitness_evolution
+from sklearn_genetic.plots import plot_fitness_evolution, plot_search_space
 from sklearn.datasets import load_boston
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeRegressor
@@ -46,6 +46,9 @@ print("r-squared: ", "{:.2f}".format(r_squared))
 
 print("Best k solutions: ", evolved_estimator.hof)
 plot = plot_fitness_evolution(evolved_estimator)
-
 plt.show()
+
+plot_search_space(evolved_estimator)
+plt.show()
+
 

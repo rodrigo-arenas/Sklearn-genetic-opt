@@ -23,7 +23,7 @@ pip install sklearn-genetic-opt
 
 ```python
 from sklearn_genetic import GASearchCV
-from sklearn_genetic.utils import plot_fitness_evolution, plot_search_space
+from sklearn_genetic.plots import plot_fitness_evolution, plot_search_space
 from sklearn_genetic.space import Continuous, Categorical, Integer
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split, StratifiedKFold

@@ -1,6 +1,6 @@
 import seaborn as sns
 
-from .logbook import logbook_to_pandas
+from .utils import logbook_to_pandas
 
 sns.set_style("whitegrid")
 
