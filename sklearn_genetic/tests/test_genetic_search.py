@@ -1,5 +1,3 @@
-import warnings
-
 import pytest
 from sklearn.datasets import load_digits, load_boston
 from sklearn.linear_model import SGDClassifier
@@ -35,42 +33,6 @@ def test_expected_ga_results():
                                                'alpha': Continuous(1e-4, 1, distribution='log-uniform'),
                                                'average': Categorical([True, False]),
                                                'max_iter': Integer(700, 1000)},
-                                   verbose=False,
-                                   algorithm='eaSimple')
-
-    evolved_estimator.fit(X_train, y_train)
-
-    assert check_is_fitted(evolved_estimator) is None
-    assert 'l1_ratio' in evolved_estimator.best_params_
-    assert 'alpha' in evolved_estimator.best_params_
-    assert 'average' in evolved_estimator.best_params_
-    assert len(evolved_estimator) == generations + 1  # +1 random initial population
-    assert len(evolved_estimator.predict(X_test)) == len(X_test)
-    assert evolved_estimator.score(X_train, y_train) >= 0
-    assert len(evolved_estimator.decision_function(X_test)) == len(X_test)
-    assert len(evolved_estimator.predict_proba(X_test)) == len(X_test)
-    assert len(evolved_estimator.predict_log_proba(X_test)) == len(X_test)
-    assert len(evolved_estimator.hof) == evolved_estimator.keep_top_k
-    assert 'gen' in evolved_estimator[0]
-    assert 'fitness_max' in evolved_estimator[0]
-    assert 'fitness' in evolved_estimator[0]
-    assert 'fitness_std' in evolved_estimator[0]
-    assert 'fitness_min' in evolved_estimator[0]
-
-
-def test_expected_ga_results_old_dicts():
-    clf = SGDClassifier(loss='log', fit_intercept=True)
-    generations = 8
-    evolved_estimator = GASearchCV(clf,
-                                   cv=3,
-                                   scoring='accuracy',
-                                   population_size=6,
-                                   generations=generations,
-                                   tournament_size=3,
-                                   elitism=False,
-                                   keep_top_k=4,
-                                   continuous_parameters={'l1_ratio': (0, 1), 'alpha': (1e-4, 1)},
-                                   categorical_parameters={'average': [True, False]},
                                    verbose=False,
                                    algorithm='eaSimple')
 
@@ -279,45 +241,6 @@ def test_wrong_algorithm():
         evolved_estimator.fit(X_train, y_train)
     assert str(
         excinfo.value) == "The algorithm genetic is not supported, please select one from ['eaSimple', 'eaMuPlusLambda', 'eaMuCommaLambda']"
-
-
-def test_ga_old_dicts_warnings():
-    clf = SGDClassifier(loss='log', fit_intercept=True)
-    generations = 8
-
-    with pytest.warns(DeprecationWarning) as record:
-        evolved_estimator = GASearchCV(clf,
-                                       cv=3,
-                                       scoring='accuracy',
-                                       population_size=5,
-                                       generations=generations,
-                                       tournament_size=3,
-                                       elitism=False,
-                                       keep_top_k=4,
-                                       continuous_parameters={'l1_ratio': (0, 1), 'alpha': (1e-4, 1)},
-                                       categorical_parameters={'average': [True, False]},
-                                       integer_parameters={'max_iter': (700, 1000)},
-                                       param_grid={'l1_ratio': Continuous(0, 1),
-                                                   'alpha': Continuous(1e-4, 1, distribution='log-uniform'),
-                                                   'average': Categorical([True, False]),
-                                                   'max_iter': Integer(700, 1000)},
-                                       verbose=False,
-                                       algorithm='eaSimple')
-
-    # check that 4 warning was raised
-    assert len(record) == 4
-    # check that the message matches
-    assert record[0].message.args[0] == "Warning, 'continuous_parameters' is deprecated and will be removed from " \
-                                        "package in version 0.4.0, you should use 'param_grid' instead"
-
-    assert record[1].message.args[0] == "Warning, 'categorical_parameters' is deprecated and will be removed from " \
-                                        "package in version 0.4.0, you should use 'param_grid' instead"
-
-    assert record[2].message.args[0] == "Warning, 'integer_parameters' is deprecated and will be removed from package " \
-                                        "in version 0.4.0, you should use 'param_grid' instead"
-
-    assert record[3].message.args[0] == "Warning, found parameters both in param_grid and older dictionary " \
-                                        "parameters, algorithm is only going to use param_grid"
 
 
 def test_no_param_grid():

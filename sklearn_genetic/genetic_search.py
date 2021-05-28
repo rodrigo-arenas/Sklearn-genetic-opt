@@ -12,43 +12,8 @@ from sklearn.metrics import check_scoring
 from sklearn.exceptions import NotFittedError
 
 from .parameters import Algorithms, Criteria
-from .space import Space, Continuous, Integer, Categorical
+from .space import Space
 from .algorithms import eaSimple, eaMuPlusLambda, eaMuCommaLambda
-
-
-def create_space(continuous_parameters, categorical_parameters, integer_parameters, param_grid):
-    local_space = {}
-
-    if continuous_parameters:
-        warnings.warn("Warning, 'continuous_parameters' is deprecated and will be removed from package in version "
-                      "0.4.0, you should use 'param_grid' instead", DeprecationWarning)
-        for key, value in continuous_parameters.items():
-            local_space[key] = Continuous(lower=value[0], upper=value[1])
-
-    if categorical_parameters:
-        warnings.warn("Warning, 'categorical_parameters' is deprecated and will be removed from package in version "
-                      "0.4.0, you should use 'param_grid' instead", DeprecationWarning)
-        for key, value in categorical_parameters.items():
-            local_space[key] = Categorical(choices=value)
-
-    if integer_parameters:
-        warnings.warn("Warning, 'integer_parameters' is deprecated and will be removed from package in version 0.4.0, "
-                      "you should use 'param_grid' instead", DeprecationWarning)
-        for key, value in integer_parameters.items():
-            local_space[key] = Integer(lower=value[0], upper=value[1])
-
-    if bool(local_space) and bool(param_grid):
-        warnings.warn("Warning, found parameters both in param_grid and older dictionary parameters, "
-                      "algorithm is only going to use param_grid")
-        space = Space(param_grid)
-    elif bool(param_grid):
-        space = Space(param_grid)
-    elif bool(local_space):
-        space = Space(local_space)
-    else:
-        space = Space()
-
-    return space
 
 
 class GASearchCV(ClassifierMixin, RegressorMixin):
@@ -67,9 +32,6 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
                  verbose: bool = True,
                  keep_top_k: int = 1,
                  param_grid: dict = None,
-                 continuous_parameters: dict = None,
-                 categorical_parameters: dict = None,
-                 integer_parameters: dict = None,
                  criteria: str = 'max',
                  algorithm: str = 'eaMuPlusLambda',
                  refit: bool = True,
@@ -105,12 +67,6 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
             Number of best solutions to keep in the hof object
         param_grid: dict, default=None
             Grid with the parameters to tune, expects as values of each key a sklearn_genetic.space Integer, Categorical or Continuous
-        continuous_parameters: dict, default=None
-            Continuous parameters to tune, expected a list or tuple with the range (min,max) to search
-        categorical_parameters: dict, default=None
-            Categorical parameters to tune, expected a list with the possible options to choose
-        integer_parameters: dict, default=None
-            Integers parameters to tune, expected a list or tuple with the range (min,max) to search
         criteria: str, default='max'
             'max' if a higher scoring metric is better, 'min' otherwise
         algorithm: str, default='eaMuPlusLambda'
@@ -159,10 +115,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         elif criteria == Criteria.min.value:
             self.criteria_sign = -1
 
-        self.space = create_space(continuous_parameters=continuous_parameters,
-                                  categorical_parameters=categorical_parameters,
-                                  integer_parameters=integer_parameters,
-                                  param_grid=param_grid)
+        self.space = Space(param_grid)
 
     def register(self):
 
