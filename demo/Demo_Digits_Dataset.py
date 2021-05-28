@@ -70,7 +70,7 @@ evolved_estimator.fit(X_train, y_train)
 y_predict_ga = evolved_estimator.predict(X_test)
 accuracy = accuracy_score(y_test, y_predict_ga)
 print("accuracy score: ", "{:.2f}".format(accuracy))
-print("genetic algorithm best params: \n", evolved_estimator.best_params)
+print("genetic algorithm best params: \n", evolved_estimator.best_params_)
 print("genetic algorithm decision function: \n", evolved_estimator.decision_function(X_test))
 
 

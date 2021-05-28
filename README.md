@@ -6,7 +6,7 @@
 # Sklearn-genetic-opt
 scikit-learn models hyperparameters tuning, using evolutionary algorithms.
 
-This is meant to be an alternative from popular methods inside scikit-learn such as Grid Search and Random Grid Search.
+This is meant to be an alternative from popular methods inside scikit-learn such as Grid Search and Randomized Grid Search.
 
 Sklearn-genetic-opt uses evolutionary algorithms from the deap package to find the "best" set of hyperparameters that optimizes (max or min) the cross validation scores, it can be used for both regression and classification problems.
 
@@ -31,8 +31,7 @@ from sklearn.datasets import load_digits
 from sklearn.metrics import accuracy_score
 import matplotlib.pyplot as plt
 
-
-data = load_digits() 
+data = load_digits()
 n_samples = len(data.images)
 X = data.images.reshape((n_samples, -1))
 y = data['target']
@@ -42,8 +41,8 @@ clf = RandomForestClassifier()
 
 param_grid = {'min_weight_fraction_leaf': Continuous(0.01, 0.5, distribution='log-uniform'),
               'bootstrap': Categorical([True, False]),
-              'max_depth': Integer(2, 30), 
-              'max_leaf_nodes': Integer(2, 35), 
+              'max_depth': Integer(2, 30),
+              'max_leaf_nodes': Integer(2, 35),
               'n_estimators': Integer(100, 300)}
 
 evolved_estimator = GASearchCV(estimator=clf,
@@ -63,12 +62,12 @@ evolved_estimator = GASearchCV(estimator=clf,
                                keep_top_k=4)
 
 # Train and optimize the estimator 
-evolved_estimator.fit(X_train,y_train)
+evolved_estimator.fit(X_train, y_train)
 # Best parameters found
-print(evolved_estimator.best_params)
+print(evolved_estimator.best_params_)
 # Use the model fitted with the best parameters
 y_predict_ga = evolved_estimator.predict(X_test)
-print(accuracy_score(y_test,y_predict_ga))
+print(accuracy_score(y_test, y_predict_ga))
 
 # See the evolution of the optimization per generation
 plot_fitness_evolution(evolved_estimator)

@@ -41,9 +41,9 @@ def test_expected_ga_results():
     evolved_estimator.fit(X_train, y_train)
 
     assert check_is_fitted(evolved_estimator) is None
-    assert 'l1_ratio' in evolved_estimator.best_params
-    assert 'alpha' in evolved_estimator.best_params
-    assert 'average' in evolved_estimator.best_params
+    assert 'l1_ratio' in evolved_estimator.best_params_
+    assert 'alpha' in evolved_estimator.best_params_
+    assert 'average' in evolved_estimator.best_params_
     assert len(evolved_estimator) == generations + 1  # +1 random initial population
     assert len(evolved_estimator.predict(X_test)) == len(X_test)
     assert evolved_estimator.score(X_train, y_train) >= 0
@@ -77,9 +77,9 @@ def test_expected_ga_results_old_dicts():
     evolved_estimator.fit(X_train, y_train)
 
     assert check_is_fitted(evolved_estimator) is None
-    assert 'l1_ratio' in evolved_estimator.best_params
-    assert 'alpha' in evolved_estimator.best_params
-    assert 'average' in evolved_estimator.best_params
+    assert 'l1_ratio' in evolved_estimator.best_params_
+    assert 'alpha' in evolved_estimator.best_params_
+    assert 'average' in evolved_estimator.best_params_
     assert len(evolved_estimator) == generations + 1  # +1 random initial population
     assert len(evolved_estimator.predict(X_test)) == len(X_test)
     assert evolved_estimator.score(X_train, y_train) >= 0
@@ -112,9 +112,9 @@ def test_expected_ga_no_continuous():
     evolved_estimator.fit(X_train, y_train)
 
     assert check_is_fitted(evolved_estimator) is None
-    assert 'criterion' in evolved_estimator.best_params
-    assert 'max_depth' in evolved_estimator.best_params
-    assert 'max_leaf_nodes' in evolved_estimator.best_params
+    assert 'criterion' in evolved_estimator.best_params_
+    assert 'max_depth' in evolved_estimator.best_params_
+    assert 'max_leaf_nodes' in evolved_estimator.best_params_
 
 
 def test_expected_ga_no_categorical():
@@ -136,9 +136,9 @@ def test_expected_ga_no_categorical():
     evolved_estimator.fit(X_train, y_train)
 
     assert check_is_fitted(evolved_estimator) is None
-    assert 'criterion' in evolved_estimator.best_params
-    assert 'max_depth' in evolved_estimator.best_params
-    assert 'max_leaf_nodes' in evolved_estimator.best_params
+    assert 'criterion' in evolved_estimator.best_params_
+    assert 'max_depth' in evolved_estimator.best_params_
+    assert 'max_leaf_nodes' in evolved_estimator.best_params_
 
 
 def test_negative_criteria():
@@ -170,10 +170,10 @@ def test_negative_criteria():
     evolved_estimator.fit(X_train_b, y_train_b)
 
     assert check_is_fitted(evolved_estimator) is None
-    assert 'ccp_alpha' in evolved_estimator.best_params
-    assert 'criterion' in evolved_estimator.best_params
-    assert 'max_depth' in evolved_estimator.best_params
-    assert 'min_samples_split' in evolved_estimator.best_params
+    assert 'ccp_alpha' in evolved_estimator.best_params_
+    assert 'criterion' in evolved_estimator.best_params_
+    assert 'max_depth' in evolved_estimator.best_params_
+    assert 'min_samples_split' in evolved_estimator.best_params_
     assert len(evolved_estimator.predict(X_test_b)) == len(X_test_b)
     assert evolved_estimator.score(X_train_b, y_train_b) >= 0
 
@@ -234,8 +234,8 @@ def test_wrong_get_item():
     with pytest.raises(Exception) as excinfo:
         value = evolved_estimator[0]
     assert str(
-        excinfo.value) == "This GASearchCV instance is not fitted yet. Call 'fit' with appropriate arguments before " \
-                          "using this estimator."
+        excinfo.value) == "This GASearchCV instance is not fitted yet or used refit=False. Call 'fit' with " \
+                          "appropriate arguments before using this estimator."
 
 
 def test_iterator():
