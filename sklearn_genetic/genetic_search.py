@@ -80,7 +80,10 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         estimator: estimator object, default=None
             scikit-learn Classifier or Regressor
         cv: int, cross-validation generator or an iterable, default=3
-            Number of splits used for calculating cross_val_score, a CV Splitter or an iterable yielding (train, test) splits as arrays of indices.
+            It can be one of these:
+            * Number of splits used for calculating cross_val_score
+            * CV Splitter as cross validation generator
+            * An iterable yielding (train, test) splits as arrays of indices.
         scoring: string, default=None
             Scoring function to use as fitness value
         population_size: int, default=20
@@ -114,6 +117,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
             See more details in the deap algorithms documentation
         refit: bool, default=True
             Refit an estimator using the best found parameters on the whole dataset.
+            If “False”, it is not possible to make predictions using this GASearchCV instance after fitting.
         n_jobs: int, default=1
             Number of jobs to run in parallel during the cross validation scoring
         """
