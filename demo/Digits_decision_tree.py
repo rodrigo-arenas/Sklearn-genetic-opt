@@ -1,7 +1,7 @@
 import warnings
 from sklearn_genetic import GASearchCV
 from sklearn_genetic.space import Categorical, Integer, Continuous
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, StratifiedKFold
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.datasets import load_digits
 from sklearn.metrics import accuracy_score
@@ -22,8 +22,10 @@ params_grid = {'min_weight_fraction_leaf': Continuous(0, 0.5),
                'criterion': Categorical(['gini', 'entropy']),
                'max_depth': Integer(2, 20), 'max_leaf_nodes': Integer(2, 30)}
 
+cv = StratifiedKFold(n_splits=3, shuffle=True)
+
 evolved_estimator = GASearchCV(clf,
-                               cv=3,
+                               cv=cv,
                                scoring='accuracy',
                                population_size=16,
                                generations=30,

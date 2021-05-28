@@ -26,7 +26,7 @@ from sklearn_genetic import GASearchCV
 from sklearn_genetic.utils import plot_fitness_evolution
 from sklearn_genetic.space import Continuous, Categorical, Integer
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, StratifiedKFold
 from sklearn.datasets import load_digits
 from sklearn.metrics import accuracy_score
 import matplotlib.pyplot as plt
@@ -45,8 +45,10 @@ param_grid = {'min_weight_fraction_leaf': Continuous(0.01, 0.5, distribution='lo
               'max_leaf_nodes': Integer(2, 35),
               'n_estimators': Integer(100, 300)}
 
+cv = StratifiedKFold(n_splits=3, shuffle=True)
+
 evolved_estimator = GASearchCV(estimator=clf,
-                               cv=3,
+                               cv=cv,
                                scoring='accuracy',
                                population_size=10,
                                generations=25,

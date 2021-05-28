@@ -79,8 +79,8 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         ----------
         estimator: estimator object, default=None
             scikit-learn Classifier or Regressor
-        cv: int, default=3
-            Number of splits used for calculating cross_val_score
+        cv: int, cross-validation generator or an iterable, default=3
+            Number of splits used for calculating cross_val_score, a CV Splitter or an iterable yielding (train, test) splits as arrays of indices.
         scoring: string, default=None
             Scoring function to use as fitness value
         population_size: int, default=20
