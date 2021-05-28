@@ -19,6 +19,12 @@ class Integer(object):
             Distribution to sample initial population and mutation values
         """
 
+        if not isinstance(lower, int):
+            raise ValueError('lower bound must be an integer')
+
+        if not isinstance(upper, int):
+            raise ValueError('upper bound must be an integer')
+
         if lower > upper:
             raise ValueError('The upper bound can not be smaller that the lower bound')
 
@@ -52,6 +58,12 @@ class Continuous(object):
         distribution: "uniform" or "log-uniform", default="uniform"
             Distribution to sample initial population and mutation values
         """
+
+        if not isinstance(lower, (int, float)):
+            raise ValueError('lower bound must be an integer or float')
+
+        if not isinstance(upper, (int, float)):
+            raise ValueError('upper bound must be an integer or float')
 
         if lower > upper:
             raise ValueError('The upper bound can not be smaller that the lower bound')
@@ -90,11 +102,11 @@ class Categorical(object):
             Distribution to sample initial population and mutation values
         """
 
-        if not choices:
-            raise ValueError("choices can not be empty")
+        if not choices or not isinstance(choices, list):
+            raise ValueError("choices must be a non empty list")
 
         if priors is None:
-            self.priors = [1 / len(choices) for _ in range(len(choices))]
+            self.priors = priors
         elif sum(priors) != 1:
             raise ValueError(f"The sum of the probabilities in the priors must be one, got {sum(priors)} instead")
         elif not len(priors) == len(choices):
@@ -152,7 +164,7 @@ class Space(object):
 
     @property
     def parameters(self):
-        return [*list(self.param_grid.keys())]
+        return list(self.param_grid.keys())
 
     def __len__(self):
         return self.dimensions

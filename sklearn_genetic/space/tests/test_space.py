@@ -54,7 +54,7 @@ def test_categorical_bad_parameters():
 
     with pytest.raises(Exception) as excinfo:
         my_categorical = Categorical(priors=[0.1, 0.9])
-    assert str(excinfo.value) == "choices can not be empty"
+    assert str(excinfo.value) == "choices must be a non empty list"
 
     with pytest.raises(Exception) as excinfo:
         my_categorical = Categorical(choices=[True, False], priors=[0.1, 0.8])
@@ -80,3 +80,26 @@ def test_check_space_fail():
     with pytest.raises(Exception) as excinfo:
         my_space = Space(param_grid)
     assert str(excinfo.value) == "max_depth must be a valid instance of Integer, Categorical or Continuous classes"
+
+
+def test_bad_data_types():
+
+    with pytest.raises(Exception) as excinfo:
+        Categorical((True, False))
+    assert str(excinfo.value) == "choices must be a non empty list"
+
+    with pytest.raises(Exception) as excinfo:
+        Integer(5.4, 10)
+    assert str(excinfo.value) == "lower bound must be an integer"
+
+    with pytest.raises(Exception) as excinfo:
+        Integer(5, 10.4)
+    assert str(excinfo.value) == "upper bound must be an integer"
+
+    with pytest.raises(Exception) as excinfo:
+        Continuous([1], 10)
+    assert str(excinfo.value) == "lower bound must be an integer or float"
+
+    with pytest.raises(Exception) as excinfo:
+        Continuous(5, [10.4])
+    assert str(excinfo.value) == "upper bound must be an integer or float"

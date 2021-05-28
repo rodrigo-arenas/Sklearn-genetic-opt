@@ -96,11 +96,11 @@ def test_expected_ga_results_old_dicts():
 
 def test_expected_ga_no_continuous():
     clf = DecisionTreeClassifier()
-    generations = 10
+    generations = 8
     evolved_estimator = GASearchCV(clf,
                                    cv=3,
                                    scoring='accuracy',
-                                   population_size=10,
+                                   population_size=5,
                                    generations=generations,
                                    tournament_size=3,
                                    elitism=True,
@@ -119,11 +119,11 @@ def test_expected_ga_no_continuous():
 
 def test_expected_ga_no_categorical():
     clf = DecisionTreeClassifier()
-    generations = 10
+    generations = 8
     evolved_estimator = GASearchCV(clf,
                                    cv=3,
                                    scoring='accuracy',
-                                   population_size=8,
+                                   population_size=5,
                                    generations=generations,
                                    tournament_size=3,
                                    elitism=True,
@@ -150,11 +150,11 @@ def test_negative_criteria():
     X_train_b, X_test_b, y_train_b, y_test_b = train_test_split(X_boston, y_boston, test_size=0.33, random_state=42)
 
     clf = DecisionTreeRegressor()
-    generations = 10
+    generations = 8
     evolved_estimator = GASearchCV(clf,
                                    cv=3,
                                    scoring='max_error',
-                                   population_size=16,
+                                   population_size=5,
                                    generations=generations,
                                    tournament_size=3,
                                    elitism=True,
@@ -185,7 +185,7 @@ def test_wrong_criteria():
         evolved_estimator = GASearchCV(clf,
                                        cv=3,
                                        scoring='accuracy',
-                                       population_size=12,
+                                       population_size=5,
                                        generations=generations,
                                        tournament_size=3,
                                        elitism=False,
@@ -204,7 +204,7 @@ def test_wrong_estimator():
         evolved_estimator = GASearchCV(clf,
                                        cv=3,
                                        scoring='accuracy',
-                                       population_size=12,
+                                       population_size=5,
                                        generations=generations,
                                        tournament_size=3,
                                        elitism=False,
@@ -222,7 +222,7 @@ def test_wrong_get_item():
     evolved_estimator = GASearchCV(clf,
                                    cv=3,
                                    scoring='accuracy',
-                                   population_size=12,
+                                   population_size=5,
                                    generations=generations,
                                    tournament_size=3,
                                    elitism=False,
@@ -240,11 +240,11 @@ def test_wrong_get_item():
 
 def test_iterator():
     clf = DecisionTreeClassifier()
-    generations = 10
+    generations = 8
     evolved_estimator = GASearchCV(clf,
                                    cv=3,
                                    scoring='accuracy',
-                                   population_size=15,
+                                   population_size=5,
                                    generations=generations,
                                    tournament_size=3,
                                    elitism=True,
@@ -265,7 +265,7 @@ def test_wrong_algorithm():
     evolved_estimator = GASearchCV(clf,
                                    cv=3,
                                    scoring='accuracy',
-                                   population_size=12,
+                                   population_size=5,
                                    generations=generations,
                                    tournament_size=3,
                                    elitism=False,
@@ -289,7 +289,7 @@ def test_ga_old_dicts_warnings():
         evolved_estimator = GASearchCV(clf,
                                        cv=3,
                                        scoring='accuracy',
-                                       population_size=6,
+                                       population_size=5,
                                        generations=generations,
                                        tournament_size=3,
                                        elitism=False,
