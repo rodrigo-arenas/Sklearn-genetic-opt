@@ -11,12 +11,12 @@ class Integer(object):
         """
         Parameters
         ----------
-        lower: int
-            lower bound of the possible values of the hyperparameter
-        upper: int
-            lower bound of the possible values of the hyperparameter
-        distribution: "uniform"
-            Distribution to sample initial population and mutation values
+        lower: int, default=None
+            Lower bound of the possible values of the hyperparameter
+        upper: int, default=None
+            Upper bound of the possible values of the hyperparameter
+        distribution: str, default="uniform"
+            Distribution to sample initial population and mutation values, currently only supports 'uniform'
         """
 
         if not isinstance(lower, int):
@@ -51,12 +51,13 @@ class Continuous(object):
         """
         Parameters
         ----------
-        lower: int
-            lower bound of the possible values of the hyperparameter
-        upper: int
-            lower bound of the possible values of the hyperparameter
-        distribution: "uniform" or "log-uniform", default="uniform"
-            Distribution to sample initial population and mutation values
+        lower: int, default=None
+            Lower bound of the possible values of the hyperparameter
+        upper: int, default=None
+            Upper bound of the possible values of the hyperparameter
+        distribution: str, , default='uniform'
+            Distribution to sample initial population and mutation values, accepts "uniform" or "log-uniform"
+
         """
 
         if not isinstance(lower, (int, float)):
@@ -94,12 +95,12 @@ class Categorical(object):
         """
         Parameters
         ----------
-        choices: list
-            list with all the possible values of the hyperparameter
-        priors: int
-            list with the probability of sampling each element of the "choices", if not set gives equals probability
-        distribution: "uniform" or "log-uniform", default="uniform"
-            Distribution to sample initial population and mutation values
+        choices: list, default=None
+            List with all the possible values of the hyperparameter
+        priors: int, default=None
+            List with the probability of sampling each element of the "choices", if not set gives equals probability
+        distribution: str, , default='choice'
+            Distribution to sample initial population and mutation values, currently only supports "choice"
         """
 
         if not choices or not isinstance(choices, list):
@@ -135,7 +136,7 @@ def check_space(param_grid: dict = None):
 
     Parameters
     ----------
-    param_grid: dict
+    param_grid: dict, default=None
         Dictionary with the for {"hyperparameter_name": SpaceInstance}
 
     Returns
@@ -154,6 +155,12 @@ class Space(object):
     """Search space for all the models hyperparameters"""
 
     def __init__(self, param_grid: dict = None):
+        """
+        Parameters
+        ----------
+        param_grid: dict, default=None
+            Grid with the parameters to tune, expects as values of each key a sklearn_genetic.space Integer, Categorical or Continuous
+        """
         check_space(param_grid)
 
         self.param_grid = param_grid
