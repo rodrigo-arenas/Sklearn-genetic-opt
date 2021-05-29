@@ -25,13 +25,15 @@ def check_callback(callback):
         return []
 
 
-def eval_callbacks(callbacks, record):
+def eval_callbacks(callbacks, record, logbook):
     """Evaluate list of callbacks on result.
     Parameters
     ----------
     callbacks : list of callables
         Callbacks to evaluate.
     record : logbook record
+    logbook:
+            Current stream logbook with the stats required
     Returns
     -------
     decision : bool
@@ -40,7 +42,7 @@ def eval_callbacks(callbacks, record):
     stop = False
     if callbacks:
         for c in callbacks:
-            decision = c(record)
+            decision = c(record, logbook)
             if decision is not None:
                 stop = stop or decision
 
@@ -89,7 +91,60 @@ class ThresholdStopping:
             stat = logbook.select(self.metric)[-1]
             return stat >= self.threshold
         else:
-            raise ValueError("At least one of record or chapter parameters must be provided")
+            raise ValueError("At least one of record or logbook parameters must be provided")
+
+    def __call__(self, record=None, logbook=None):
+        return self._check(record, logbook)
+
+
+class ConsecutiveStopping:
+    """
+    Stop the optimization if the current metric value is no greater that at least one metric from the last N generations
+    """
+
+    def __init__(self, generations: int = None, metric: str = 'fitness'):
+        """
+        Parameters
+        ----------
+        generations: int, default=None
+            Number of current generations to compare against current generation
+        metric: str, default ='fitness'
+            Name of the metric inside 'record' logged in each iteration
+        """
+
+        check_stats(metric)
+
+        self.generations = generations
+        self.metric = metric
+
+    def _check(self, record: dict = None, logbook=None):
+        """
+        Parameters
+        ----------
+        record: dict: default=None
+            A logbook record
+        logbook:
+            Current stream logbook with the stats required
+
+        Returns
+        -------
+        decision: bool
+            True if the optimization algorithm must stop, false otherwise
+        """
+        if logbook is not None:
+            if len(logbook) <= self.generations:
+                return False
+
+            if record is not None:
+                current_stat = record[self.metric]
+            else:
+                current_stat = logbook.select(self.metric)[-1]
+
+            # Compare the current metric with the last |generations| metrics
+            stats = logbook.select(self.metric)[(-self.generations - 1):-1]
+            return all(stat >= current_stat for stat in stats)
+        else:
+            raise ValueError("logbook parameter must be provided")
 
     def __call__(self, record=None, logbook=None):
         return self._check(record, logbook)

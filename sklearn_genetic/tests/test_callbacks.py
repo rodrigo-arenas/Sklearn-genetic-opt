@@ -2,7 +2,7 @@ import pytest
 
 from deap.tools import Logbook
 
-from ..callbacks import check_callback, check_stats, ThresholdStopping
+from ..callbacks import check_callback, check_stats, ThresholdStopping, ConsecutiveStopping
 
 
 def test_check_metrics():
@@ -27,6 +27,7 @@ def test_check_callback():
 
 def test_threshold_callback():
     callback = ThresholdStopping(threshold=0.8)
+    assert check_callback(callback) == [callback]
     assert not callback(record={'fitness': 0.5})
     assert callback(record={'fitness': 0.9})
 
@@ -43,4 +44,34 @@ def test_threshold_callback():
 
     with pytest.raises(Exception) as excinfo:
         callback()
-    assert str(excinfo.value) == "At least one of record or chapter parameters must be provided"
+    assert str(excinfo.value) == "At least one of record or logbook parameters must be provided"
+
+
+def test_consecutive_callback():
+    callback = ConsecutiveStopping(generations=3)
+    assert check_callback(callback) == [callback]
+
+    logbook = Logbook()
+
+    logbook.record(fitness=0.9)
+    logbook.record(fitness=0.8)
+    logbook.record(fitness=0.83)
+
+    # Not enough records to decide
+    assert not callback(logbook=logbook)
+
+    logbook.record(fitness=0.85)
+    logbook.record(fitness=0.81)
+
+    # Current record is better that at least of of the previous 3 records
+    assert not callback(logbook=logbook)
+
+    logbook.record(fitness=0.8)
+
+    # Current record is worst that the 3 previous ones
+    assert callback(logbook=logbook)
+    assert callback(logbook=logbook, record={'fitness': 0.8})
+
+    with pytest.raises(Exception) as excinfo:
+        callback()
+    assert str(excinfo.value) == "logbook parameter must be provided"
