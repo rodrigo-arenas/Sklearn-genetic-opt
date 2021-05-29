@@ -1,8 +1,14 @@
+from typing import Union
+from collections.abc import Callable
+
 from deap import tools
 from deap.algorithms import varAnd, varOr
 
+from .callbacks import eval_callbacks
 
-def eaSimple(population, toolbox, cxpb, mutpb, ngen, stats=None, halloffame=None, verbose=True):
+
+def eaSimple(population, toolbox, cxpb, mutpb, ngen, stats=None,
+             halloffame=None, callbacks: Union[list, Callable] = None, verbose=True):
     """
     The base implementation is directly taken from: https://github.com/DEAP/deap/blob/master/deap/algorithms.py
     This algorithm reproduce the simplest evolutionary algorithm as
@@ -24,6 +30,8 @@ def eaSimple(population, toolbox, cxpb, mutpb, ngen, stats=None, halloffame=None
         Object that is updated inplace, optional.
     halloffame: A :class:`~deap.tools.HallOfFame`
         Object that will contain the best individuals, optional.
+    callbacks: list or Callable
+        One or a list of the callbacks methods available in the package
     verbose: bool, default=True
         Whether or not to log the statistics.
     :returns: The final population
@@ -74,10 +82,18 @@ def eaSimple(population, toolbox, cxpb, mutpb, ngen, stats=None, halloffame=None
         if verbose:
             print(logbook.stream)
 
-    return population, logbook
+        # Check if any of the callbacks conditions are True to stop the iteration
+        if eval_callbacks(callbacks, record):
+            print("Process stopped earlier due a callback")
+            break
+
+    n_gen = gen + 1
+
+    return population, logbook, n_gen
+
 
 def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen,
-                   stats=None, halloffame=None, verbose=True):
+                   stats=None, halloffame=None, callbacks: Union[list, Callable] = None, verbose=True):
     """
     The base implementation is directly taken from: https://github.com/DEAP/deap/blob/master/deap/algorithms.py
     This is the :math:`(\mu + \lambda)` evolutionary algorithm.
@@ -98,6 +114,8 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen,
         Object that is updated inplace, optional.
     halloffame: A :class:`~deap.tools.HallOfFame`
         Object that will contain the best individuals, optional.
+    callbacks: list or Callable
+        One or a list of the callbacks methods available in the package
     verbose: bool, default=True
         Whether or not to log the statistics.
     :returns: The final population
@@ -144,11 +162,16 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen,
         if verbose:
             print(logbook.stream)
 
-    return population, logbook
+        if eval_callbacks(callbacks, record):
+            print("Process stopped earlier due a callback")
+            break
+
+    n_gen = gen + 1
+    return population, logbook, n_gen
 
 
 def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen,
-                    stats=None, halloffame=None, verbose=True):
+                    stats=None, halloffame=None, callbacks: Union[list, Callable] = None, verbose=True):
     """
     The base implementation is directly taken from: https://github.com/DEAP/deap/blob/master/deap/algorithms.py
     This is the :math:`(\mu~,~\lambda)` evolutionary algorithm.
@@ -169,6 +192,8 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen,
         Object that is updated inplace, optional.
     halloffame: A :class:`~deap.tools.HallOfFame`
         Object that will contain the best individuals, optional.
+    callbacks: list or Callable
+        One or a list of the callbacks methods available in the package
     verbose: bool, default=True
         Whether or not to log the statistics.
     :returns: The final population
@@ -217,4 +242,11 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen,
         logbook.record(gen=gen, nevals=len(invalid_ind), **record)
         if verbose:
             print(logbook.stream)
-    return population, logbook
+
+        # Check if any of the callbacks conditions are True to stop the iteration
+        if eval_callbacks(callbacks, record):
+            print("Process stopped earlier due a callback")
+            break
+
+    n_gen = gen + 1
+    return population, logbook, n_gen

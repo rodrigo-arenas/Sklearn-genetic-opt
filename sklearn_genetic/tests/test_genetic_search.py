@@ -9,6 +9,7 @@ from sklearn.cluster import KMeans
 
 from .. import GASearchCV
 from ..space import Integer, Categorical, Continuous
+from ..callbacks import ThresholdStopping
 
 data = load_digits()
 label_names = data['target_names']
@@ -49,6 +50,123 @@ def test_expected_ga_results():
     assert len(evolved_estimator.predict_proba(X_test)) == len(X_test)
     assert len(evolved_estimator.predict_log_proba(X_test)) == len(X_test)
     assert len(evolved_estimator.hof) == evolved_estimator.keep_top_k
+    assert 'gen' in evolved_estimator[0]
+    assert 'fitness_max' in evolved_estimator[0]
+    assert 'fitness' in evolved_estimator[0]
+    assert 'fitness_std' in evolved_estimator[0]
+    assert 'fitness_min' in evolved_estimator[0]
+
+
+def test_expected_eaSimple_results_early_stopping():
+    clf = SGDClassifier(loss='log', fit_intercept=True)
+    generations = 8
+    evolved_estimator = GASearchCV(clf,
+                                   cv=3,
+                                   scoring='accuracy',
+                                   population_size=6,
+                                   generations=generations,
+                                   tournament_size=3,
+                                   elitism=False,
+                                   keep_top_k=4,
+                                   param_grid={'l1_ratio': Continuous(0, 1),
+                                               'alpha': Continuous(1e-4, 1, distribution='log-uniform'),
+                                               'average': Categorical([True, False]),
+                                               'max_iter': Integer(700, 1000)},
+                                   callbacks=ThresholdStopping(threshold=0.01),
+                                   verbose=True,
+                                   algorithm='eaSimple')
+
+    evolved_estimator.fit(X_train, y_train)
+
+    assert check_is_fitted(evolved_estimator) is None
+    assert 'l1_ratio' in evolved_estimator.best_params_
+    assert 'alpha' in evolved_estimator.best_params_
+    assert 'average' in evolved_estimator.best_params_
+    assert len(evolved_estimator) <= generations + 1  # +1 random initial population
+    assert len(evolved_estimator.predict(X_test)) == len(X_test)
+    assert evolved_estimator.score(X_train, y_train) >= 0
+    assert len(evolved_estimator.decision_function(X_test)) == len(X_test)
+    assert len(evolved_estimator.predict_proba(X_test)) == len(X_test)
+    assert len(evolved_estimator.predict_log_proba(X_test)) == len(X_test)
+    assert len(evolved_estimator.hof) <= evolved_estimator.keep_top_k
+    assert 'gen' in evolved_estimator[0]
+    assert 'fitness_max' in evolved_estimator[0]
+    assert 'fitness' in evolved_estimator[0]
+    assert 'fitness_std' in evolved_estimator[0]
+    assert 'fitness_min' in evolved_estimator[0]
+
+
+def test_expected_eaMuPlusLambda_results_early_stopping():
+    clf = SGDClassifier(loss='log', fit_intercept=True)
+    generations = 8
+    evolved_estimator = GASearchCV(clf,
+                                   cv=3,
+                                   scoring='accuracy',
+                                   population_size=6,
+                                   generations=generations,
+                                   tournament_size=3,
+                                   elitism=False,
+                                   keep_top_k=4,
+                                   param_grid={'l1_ratio': Continuous(0, 1),
+                                               'alpha': Continuous(1e-4, 1, distribution='log-uniform'),
+                                               'average': Categorical([True, False]),
+                                               'max_iter': Integer(700, 1000)},
+                                   callbacks=ThresholdStopping(threshold=0.01),
+                                   verbose=True,
+                                   algorithm='eaMuPlusLambda')
+
+    evolved_estimator.fit(X_train, y_train)
+
+    assert check_is_fitted(evolved_estimator) is None
+    assert 'l1_ratio' in evolved_estimator.best_params_
+    assert 'alpha' in evolved_estimator.best_params_
+    assert 'average' in evolved_estimator.best_params_
+    assert len(evolved_estimator) <= generations + 1  # +1 random initial population
+    assert len(evolved_estimator.predict(X_test)) == len(X_test)
+    assert evolved_estimator.score(X_train, y_train) >= 0
+    assert len(evolved_estimator.decision_function(X_test)) == len(X_test)
+    assert len(evolved_estimator.predict_proba(X_test)) == len(X_test)
+    assert len(evolved_estimator.predict_log_proba(X_test)) == len(X_test)
+    assert len(evolved_estimator.hof) <= evolved_estimator.keep_top_k
+    assert 'gen' in evolved_estimator[0]
+    assert 'fitness_max' in evolved_estimator[0]
+    assert 'fitness' in evolved_estimator[0]
+    assert 'fitness_std' in evolved_estimator[0]
+    assert 'fitness_min' in evolved_estimator[0]
+
+
+def test_expected_eaMuCommaLambda_results_early_stopping():
+    clf = SGDClassifier(loss='log', fit_intercept=True)
+    generations = 8
+    evolved_estimator = GASearchCV(clf,
+                                   cv=3,
+                                   scoring='accuracy',
+                                   population_size=6,
+                                   generations=generations,
+                                   tournament_size=3,
+                                   elitism=False,
+                                   keep_top_k=4,
+                                   param_grid={'l1_ratio': Continuous(0, 1),
+                                               'alpha': Continuous(1e-4, 1, distribution='log-uniform'),
+                                               'average': Categorical([True, False]),
+                                               'max_iter': Integer(700, 1000)},
+                                   callbacks=ThresholdStopping(threshold=0.01),
+                                   verbose=True,
+                                   algorithm='eaMuCommaLambda')
+
+    evolved_estimator.fit(X_train, y_train)
+
+    assert check_is_fitted(evolved_estimator) is None
+    assert 'l1_ratio' in evolved_estimator.best_params_
+    assert 'alpha' in evolved_estimator.best_params_
+    assert 'average' in evolved_estimator.best_params_
+    assert len(evolved_estimator) <= generations + 1  # +1 random initial population
+    assert len(evolved_estimator.predict(X_test)) == len(X_test)
+    assert evolved_estimator.score(X_train, y_train) >= 0
+    assert len(evolved_estimator.decision_function(X_test)) == len(X_test)
+    assert len(evolved_estimator.predict_proba(X_test)) == len(X_test)
+    assert len(evolved_estimator.predict_log_proba(X_test)) == len(X_test)
+    assert len(evolved_estimator.hof) <= evolved_estimator.keep_top_k
     assert 'gen' in evolved_estimator[0]
     assert 'fitness_max' in evolved_estimator[0]
     assert 'fitness' in evolved_estimator[0]

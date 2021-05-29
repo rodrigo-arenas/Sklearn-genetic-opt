@@ -1,3 +1,6 @@
+from typing import Union
+from collections.abc import Callable
+
 import numpy as np
 import random
 from deap import base, creator, tools, algorithms
@@ -12,6 +15,7 @@ from sklearn.exceptions import NotFittedError
 from .parameters import Algorithms, Criteria
 from .space import Space
 from .algorithms import eaSimple, eaMuPlusLambda, eaMuCommaLambda
+from .callbacks import check_callback
 
 
 class GASearchCV(ClassifierMixin, RegressorMixin):
@@ -33,6 +37,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
                  criteria: str = 'max',
                  algorithm: str = 'eaMuPlusLambda',
                  refit: bool = True,
+                 callbacks: Union[list, Callable] = None,
                  n_jobs: int = 1):
         """
 
@@ -65,6 +70,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
             If true, shows the metrics on the optimization routine
         keep_top_k: int, default=1
             Number of best solutions to keep in the hof object
+            Note: If a callback stops the algorithm before k iterations, it will return only one set of parameters per iteration
         criteria: str, default='max'
             'max' if a higher scoring metric is better, 'min' otherwise
         algorithm: str, default='eaMuPlusLambda'
@@ -73,6 +79,9 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         refit: bool, default=True
             Refit an estimator using the best found parameters on the whole dataset.
             If “False”, it is not possible to make predictions using this GASearchCV instance after fitting.
+        callbacks: list or Callable
+            One or a list of the callbacks methods available in the package.
+            The callback is evaluated after fitting the estimators from the generation 1
         n_jobs: int, default=1
             Number of jobs to run in parallel during the cross validation scoring
         """
@@ -92,10 +101,12 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         self.param_grid = param_grid
         self.algorithm = algorithm
         self.refit = refit
+        self.callbacks = check_callback(callbacks)
         self.n_jobs = n_jobs
         self.creator = creator
         self.logbook = None
         self.history = None
+        self._n_iterations = self.generations + 1
         self.X = None
         self.Y = None
         self.best_params_ = None
@@ -204,11 +215,15 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
 
         self.logbook = tools.Logbook()
 
-        pop, log = self._select_algorithm(pop=pop, stats=stats, hof=hof)
+        pop, log, n_gen = self._select_algorithm(pop=pop, stats=stats, hof=hof)
+
+        self._n_iterations = n_gen
+        print("GENERATIONS: ", self.generations)
+        print("ITERATIONS: ", n_gen)
 
         self.best_params_ = {key: hof[0][n] for n, key in enumerate(self.space.parameters)}
 
-        self.hof = {k: {key: hof[k][n] for n, key in enumerate(self.space.parameters)} for k in range(self.keep_top_k)}
+        self.hof = {k: {key: hof[k][n] for n, key in enumerate(self.space.parameters)} for k in range(len(hof))}
 
         self.history = {"gen": log.select("gen"),
                         "fitness": log.select("fitness"),
@@ -230,42 +245,45 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
 
         if self.algorithm == Algorithms.eaSimple.value:
 
-            pop, log = eaSimple(pop, self.toolbox,
-                                cxpb=self.crossover_probability,
-                                stats=stats,
-                                mutpb=self.mutation_probability,
-                                ngen=self.generations,
-                                halloffame=hof,
-                                verbose=self.verbose)
+            pop, log, gen = eaSimple(pop, self.toolbox,
+                                     cxpb=self.crossover_probability,
+                                     stats=stats,
+                                     mutpb=self.mutation_probability,
+                                     ngen=self.generations,
+                                     halloffame=hof,
+                                     callbacks=self.callbacks,
+                                     verbose=self.verbose)
 
         elif self.algorithm == Algorithms.eaMuPlusLambda.value:
 
-            pop, log = eaMuPlusLambda(pop, self.toolbox,
-                                      mu=self.pop_size,
-                                      lambda_=2 * self.pop_size,
-                                      cxpb=self.crossover_probability,
-                                      stats=stats,
-                                      mutpb=self.mutation_probability,
-                                      ngen=self.generations,
-                                      halloffame=hof,
-                                      verbose=self.verbose)
+            pop, log, gen = eaMuPlusLambda(pop, self.toolbox,
+                                           mu=self.pop_size,
+                                           lambda_=2 * self.pop_size,
+                                           cxpb=self.crossover_probability,
+                                           stats=stats,
+                                           mutpb=self.mutation_probability,
+                                           ngen=self.generations,
+                                           halloffame=hof,
+                                           callbacks=self.callbacks,
+                                           verbose=self.verbose)
 
         elif self.algorithm == Algorithms.eaMuCommaLambda.value:
-            pop, log = eaMuCommaLambda(pop, self.toolbox,
-                                       mu=self.pop_size,
-                                       lambda_=2 * self.pop_size,
-                                       cxpb=self.crossover_probability,
-                                       stats=stats,
-                                       mutpb=self.mutation_probability,
-                                       ngen=self.generations,
-                                       halloffame=hof,
-                                       verbose=self.verbose)
+            pop, log, gen = eaMuCommaLambda(pop, self.toolbox,
+                                            mu=self.pop_size,
+                                            lambda_=2 * self.pop_size,
+                                            cxpb=self.crossover_probability,
+                                            stats=stats,
+                                            mutpb=self.mutation_probability,
+                                            ngen=self.generations,
+                                            halloffame=hof,
+                                            callbacks=self.callbacks,
+                                            verbose=self.verbose)
 
         else:
             raise ValueError(
                 f"The algorithm {self.algorithm} is not supported, please select one from {Algorithms.list()}")
 
-        return pop, log
+        return pop, log, gen
 
     @property
     def fitted(self):
@@ -310,7 +328,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         -------
         Iteration over the statistics found in each generation
         """
-        if self.n < self.generations + 1:
+        if self.n < self._n_iterations + 1:
             result = self.__getitem__(self.n)
             self.n += 1
             return result
@@ -321,9 +339,9 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         """
         Returns
         -------
-        Number of generations fitted
+        Number of generations fitted if .fit method has been called, self.generations otherwise
         """
-        return self.generations + 1
+        return self._n_iterations
 
     @if_delegate_has_method(delegate='estimator')
     def predict(self, X):
