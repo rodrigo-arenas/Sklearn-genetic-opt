@@ -13,11 +13,12 @@
 # import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
+from datetime import datetime
 
 # -- Project information -----------------------------------------------------
 
-project = 'sklean-genetic-opt'
-copyright = '2021, Rodrigo Arenas Gómez'
+project = 'sklearn genetic opt'
+copyright = f'2021--{datetime.now().year}, Rodrigo Arenas Gómez'
 author = 'Rodrigo Arenas Gómez'
 
 # The full version, including alpha/beta/rc tags
