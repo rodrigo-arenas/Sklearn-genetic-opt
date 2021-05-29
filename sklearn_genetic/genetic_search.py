@@ -218,8 +218,6 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         pop, log, n_gen = self._select_algorithm(pop=pop, stats=stats, hof=hof)
 
         self._n_iterations = n_gen
-        print("GENERATIONS: ", self.generations)
-        print("ITERATIONS: ", n_gen)
 
         self.best_params_ = {key: hof[0][n] for n, key in enumerate(self.space.parameters)}
 
