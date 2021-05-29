@@ -68,20 +68,28 @@ class ThresholdStopping:
         self.threshold = threshold
         self.metric = metric
 
-    def _check(self, record: dict = None):
+    def _check(self, record: dict = None, logbook=None):
         """
         Parameters
         ----------
         record: dict: default=None
             A logbook record
+        logbook:
+            Current stream logbook with the stats required
 
         Returns
         -------
         decision: bool
             True if the optimization algorithm must stop, false otherwise
         """
+        if record is not None:
+            return record[self.metric] >= self.threshold
+        elif logbook is not None:
+            # Get the last metric value
+            stat = logbook.select(self.metric)[-1]
+            return stat >= self.threshold
+        else:
+            raise ValueError("At least one of record or chapter parameters must be provided")
 
-        return record[self.metric] >= self.threshold
-
-    def __call__(self, record):
-        return self._check(record)
+    def __call__(self, record=None, logbook=None):
+        return self._check(record, logbook)

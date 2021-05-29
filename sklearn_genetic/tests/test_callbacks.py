@@ -1,5 +1,7 @@
 import pytest
 
+from deap.tools import Logbook
+
 from ..callbacks import check_callback, check_stats, ThresholdStopping
 
 
@@ -27,3 +29,18 @@ def test_threshold_callback():
     callback = ThresholdStopping(threshold=0.8)
     assert not callback(record={'fitness': 0.5})
     assert callback(record={'fitness': 0.9})
+
+    # test callback using LogBook instead of a record
+    logbook = Logbook()
+    logbook.record(fitness=0.93)
+    logbook.record(fitness=0.4)
+
+    assert not callback(logbook=logbook)
+
+    logbook.record(fitness=0.95)
+
+    assert callback(logbook=logbook)
+
+    with pytest.raises(Exception) as excinfo:
+        callback()
+    assert str(excinfo.value) == "At least one of record or chapter parameters must be provided"

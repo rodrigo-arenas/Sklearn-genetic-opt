@@ -86,8 +86,13 @@ print("Best k solutions: ", evolved_estimator.hof)
 
 ## Results
 Sampled distribution
+
 ![Density Distribution](https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/0.4.x/demo/images/density.png?raw=True)
+
 Fitness evolution over generations
+
 ![Fitness Evolution](https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/0.4.x/demo/images/fitness.png?raw=True)
+
 Log controlled by verbosity
+
 ![Verbosity Log](https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/0.4.x/demo/images/log.JPG?raw=True)
