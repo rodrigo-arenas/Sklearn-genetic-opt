@@ -10,6 +10,13 @@ This is meant to be an alternative from popular methods inside scikit-learn such
 
 Sklearn-genetic-opt uses evolutionary algorithms from the deap package to find the "best" set of hyperparameters that optimizes (max or min) the cross validation scores, it can be used for both regression and classification problems.
 
+# Main Features:
+
+* **GASearchCV**: Principal class of the package, holds the evolutionary cross validation optimization routine
+* **Algorithms**: Set of different evolutionary algorithms to use as optimization procedure
+* **Callbacks**: Custom evaluation strategies to generate Early Stopping rules
+* **Plots**: Generate pre-define plots to understand the optimization process
+
 # Usage:
 Install sklearn-genetic-opt
 
