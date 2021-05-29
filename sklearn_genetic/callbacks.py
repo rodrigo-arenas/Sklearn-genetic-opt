@@ -1,4 +1,6 @@
+import math
 from collections.abc import Callable
+
 from .parameters import Metrics
 
 
@@ -143,6 +145,60 @@ class ConsecutiveStopping:
             # Compare the current metric with the last |generations| metrics
             stats = logbook.select(self.metric)[(-self.generations - 1):-1]
             return all(stat >= current_stat for stat in stats)
+        else:
+            raise ValueError("logbook parameter must be provided")
+
+    def __call__(self, record=None, logbook=None):
+        return self._check(record, logbook)
+
+
+class DeltaThreshold:
+    """
+    Stop the optimization if the absolute difference between the current and last metric less or equals than a threshold
+    """
+
+    def __init__(self, threshold, metric: str = 'fitness'):
+        """
+        Parameters
+        ----------
+        threshold: float, default=None
+            Threshold to compare the differences between cross validation scores
+        metric: str, default ='fitness'
+            Name of the metric inside 'record' logged in each iteration
+        """
+
+        check_stats(metric)
+
+        self.threshold = threshold
+        self.metric = metric
+
+    def _check(self, record: dict = None, logbook=None):
+        """
+        Parameters
+        ----------
+        record: dict: default=None
+            A logbook record
+        logbook:
+            Current stream logbook with the stats required
+
+        Returns
+        -------
+        decision: bool
+            True if the optimization algorithm must stop, false otherwise
+        """
+        if logbook is not None:
+            if len(logbook) <= 1:
+                return False
+
+            if record is not None:
+                current_stat = record[self.metric]
+            else:
+                current_stat = logbook.select(self.metric)[-1]
+
+            # Compare the current metric with the last |generations| metrics
+            previous_stat = logbook.select(self.metric)[-2]
+
+            return abs(current_stat - previous_stat) <= self.threshold
         else:
             raise ValueError("logbook parameter must be provided")
 

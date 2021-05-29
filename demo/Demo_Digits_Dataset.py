@@ -3,6 +3,7 @@ import numpy as np
 import warnings
 from sklearn_genetic import GASearchCV
 from sklearn_genetic.space import Continuous, Categorical
+from sklearn_genetic.callbacks import DeltaThreshold
 from sklearn.linear_model import SGDClassifier
 from sklearn.model_selection import train_test_split, GridSearchCV, RandomizedSearchCV
 from sklearn.utils.fixes import loguniform
@@ -56,14 +57,17 @@ param_grid = {'l1_ratio': Continuous(0, 1),
               'alpha': Continuous(1e-4, 1, distribution='log-uniform'),
               'average': Categorical([True, False])}
 
+callbacks = DeltaThreshold(threshold=0.0001)
+
 evolved_estimator = GASearchCV(clf,
                                cv=3,
                                scoring='accuracy',
                                population_size=12,
-                               generations=8,
+                               generations=20,
                                tournament_size=3,
                                elitism=True,
                                param_grid=param_grid,
+                               callbacks=callbacks,
                                n_jobs=-1)
 
 evolved_estimator.fit(X_train, y_train)
