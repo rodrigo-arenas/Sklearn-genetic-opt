@@ -83,7 +83,7 @@ def eaSimple(population, toolbox, cxpb, mutpb, ngen, stats=None,
             print(logbook.stream)
 
         # Check if any of the callbacks conditions are True to stop the iteration
-        if eval_callbacks(callbacks, record):
+        if eval_callbacks(callbacks, record, logbook):
             print("Process stopped earlier due a callback")
             break
 
@@ -162,7 +162,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen,
         if verbose:
             print(logbook.stream)
 
-        if eval_callbacks(callbacks, record):
+        if eval_callbacks(callbacks, record, logbook):
             print("Process stopped earlier due a callback")
             break
 
@@ -244,7 +244,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen,
             print(logbook.stream)
 
         # Check if any of the callbacks conditions are True to stop the iteration
-        if eval_callbacks(callbacks, record):
+        if eval_callbacks(callbacks, record, logbook):
             print("Process stopped earlier due a callback")
             break
 
