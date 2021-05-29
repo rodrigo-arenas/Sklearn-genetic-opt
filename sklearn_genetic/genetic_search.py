@@ -3,7 +3,7 @@ from collections.abc import Callable
 
 import numpy as np
 import random
-from deap import base, creator, tools, algorithms
+from deap import base, creator, tools
 from sklearn.base import clone, ClassifierMixin, RegressorMixin
 from sklearn.model_selection import cross_val_score
 from sklearn.base import is_classifier, is_regressor
@@ -111,6 +111,9 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         self.Y = None
         self.best_params_ = None
         self.best_estimator_ = None
+        self._pop = None
+        self._stats = None
+        self._hof = None
         self.hof = None
         self.X_predict = None
 
@@ -154,6 +157,17 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
 
         self.toolbox.register("evaluate", self.evaluate)
 
+        self._pop = self.toolbox.population(n=self.pop_size)
+        self._hof = tools.HallOfFame(self.keep_top_k)
+
+        self._stats = tools.Statistics(lambda ind: ind.fitness.values)
+        self._stats.register("fitness", np.mean)
+        self._stats.register("fitness_std", np.std)
+        self._stats.register("fitness_max", np.max)
+        self._stats.register("fitness_min", np.min)
+
+        self.logbook = tools.Logbook()
+
     def mutate(self, individual):
 
         gen = random.randrange(0, len(self.space))
@@ -170,7 +184,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         local_estimator = clone(self.estimator)
         local_estimator.set_params(**current_generation_params)
         cv_scores = cross_val_score(local_estimator,
-                                    self.X_, self.Y_,
+                                    self.X_, self.y_,
                                     cv=self.cv,
                                     scoring=self.scoring,
                                     n_jobs=self.n_jobs)
@@ -200,28 +214,18 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         scorer = check_scoring(self.estimator, scoring=self.scoring)
 
         self.X_ = X
-        self.Y_ = y
+        self.y_ = y
 
         self.register()
 
-        pop = self.toolbox.population(n=self.pop_size)
-        hof = tools.HallOfFame(self.keep_top_k)
-
-        stats = tools.Statistics(lambda ind: ind.fitness.values)
-        stats.register("fitness", np.mean)
-        stats.register("fitness_std", np.std)
-        stats.register("fitness_max", np.max)
-        stats.register("fitness_min", np.min)
-
-        self.logbook = tools.Logbook()
-
-        pop, log, n_gen = self._select_algorithm(pop=pop, stats=stats, hof=hof)
+        pop, log, n_gen = self._select_algorithm(pop=self._pop, stats=self._stats, hof=self._hof)
 
         self._n_iterations = n_gen
 
-        self.best_params_ = {key: hof[0][n] for n, key in enumerate(self.space.parameters)}
+        self.best_params_ = {key: self._hof[0][n] for n, key in enumerate(self.space.parameters)}
 
-        self.hof = {k: {key: hof[k][n] for n, key in enumerate(self.space.parameters)} for k in range(len(hof))}
+        self.hof = {k: {key: self._hof[k][n] for n, key in enumerate(self.space.parameters)}
+                    for k in range(len(self._hof))}
 
         self.history = {"gen": log.select("gen"),
                         "fitness": log.select("fitness"),
@@ -231,7 +235,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
 
         if self.refit:
             self.estimator.set_params(**self.best_params_)
-            self.estimator.fit(self.X_, self.Y_)
+            self.estimator.fit(self.X_, self.y_)
             self.best_estimator_ = self.estimator
 
         del self.creator.FitnessMax
