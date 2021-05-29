@@ -1,6 +1,7 @@
 import pytest
 
 from ..space import Categorical, Integer, Continuous, Space
+from ..base import BaseDimension
 
 
 def test_sample_variables():
@@ -103,3 +104,14 @@ def test_bad_data_types():
     with pytest.raises(Exception) as excinfo:
         Continuous(5, [10.4])
     assert str(excinfo.value) == "upper bound must be an integer or float"
+
+
+def test_wrong_dimension():
+    with pytest.raises(Exception) as excinfo:
+        class FakeDimension(BaseDimension):
+            def __init__(self):
+                pass
+
+        FakeDimension().sample()
+
+    assert str(excinfo.value) == "The sample method must be defined according each data type handler"
