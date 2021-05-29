@@ -1,10 +1,11 @@
 import numpy as np
 from scipy import stats
 
-from ..space.space_parameters import IntegerDistributions, ContinuousDistributions, CategoricalDistributions
+from .space_parameters import IntegerDistributions, ContinuousDistributions, CategoricalDistributions
+from .base import BaseDimension
 
 
-class Integer(object):
+class Integer(BaseDimension):
     """class for hyperparameters search space of integer values"""
 
     def __init__(self, lower: int = None, upper: int = None, distribution: str = 'uniform'):
@@ -44,7 +45,7 @@ class Integer(object):
         return self.rvs(self.lower, self.upper + 1)
 
 
-class Continuous(object):
+class Continuous(BaseDimension):
     """class for hyperparameters search space of real values"""
 
     def __init__(self, lower: float = None, upper: float = None, distribution: str = 'uniform'):
@@ -88,7 +89,7 @@ class Continuous(object):
         return self.rvs(self.lower, self.upper)
 
 
-class Categorical(object):
+class Categorical(BaseDimension):
     """class for hyperparameters search space of categorical values"""
 
     def __init__(self, choices: list = None, priors: list = None, distribution: str = 'choice'):
@@ -147,7 +148,7 @@ def check_space(param_grid: dict = None):
         raise ValueError(f"param_grid can not be empty")
 
     for key, value in param_grid.items():
-        if not isinstance(value, (Integer, Categorical, Continuous)):
+        if not isinstance(value, BaseDimension):
             raise ValueError(f"{key} must be a valid instance of Integer, Categorical or Continuous classes")
 
 
