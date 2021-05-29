@@ -2,7 +2,7 @@ import pytest
 
 from deap.tools import Logbook
 
-from ..callbacks import check_callback, check_stats, ThresholdStopping, ConsecutiveStopping
+from ..callbacks import check_callback, check_stats, ThresholdStopping, ConsecutiveStopping, DeltaThreshold
 
 
 def test_check_metrics():
@@ -71,6 +71,34 @@ def test_consecutive_callback():
     # Current record is worst that the 3 previous ones
     assert callback(logbook=logbook)
     assert callback(logbook=logbook, record={'fitness': 0.8})
+
+    with pytest.raises(Exception) as excinfo:
+        callback()
+    assert str(excinfo.value) == "logbook parameter must be provided"
+
+
+def test_delta_callback():
+    callback = DeltaThreshold(0.001)
+    assert check_callback(callback) == [callback]
+
+    logbook = Logbook()
+
+    logbook.record(fitness=0.9)
+
+    # Not enough records to decide
+    assert not callback(logbook=logbook)
+
+    logbook.record(fitness=0.923)
+    logbook.record(fitness=0.914)
+
+    # Abs difference is not bigger than the threshold
+    assert not callback(logbook=logbook)
+
+    logbook.record(fitness=0.9141)
+
+    # Abs difference is bigger than the threshold
+    assert callback(logbook=logbook)
+    assert callback(logbook=logbook, record={'fitness': 0.9141})
 
     with pytest.raises(Exception) as excinfo:
         callback()
