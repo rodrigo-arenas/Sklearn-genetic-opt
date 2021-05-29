@@ -1,5 +1,3 @@
-import warnings
-
 import numpy as np
 import random
 from deap import base, creator, tools, algorithms
@@ -22,6 +20,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
     def __init__(self,
                  estimator,
                  cv: int = 3,
+                 param_grid: dict = None,
                  scoring=None,
                  population_size: int = 20,
                  generations: int = 40,
@@ -31,7 +30,6 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
                  elitism: bool = True,
                  verbose: bool = True,
                  keep_top_k: int = 1,
-                 param_grid: dict = None,
                  criteria: str = 'max',
                  algorithm: str = 'eaMuPlusLambda',
                  refit: bool = True,
@@ -46,7 +44,9 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
             It can be one of these:
             * Number of splits used for calculating cross_val_score
             * CV Splitter as cross validation generator
-            * An iterable yielding (train, test) splits as arrays of indices.
+            * An iterable yielding (train, test) splits as arrays of indices
+        param_grid: dict, default=None
+            Grid with the parameters to tune, expects as values of each key a sklearn_genetic.space Integer, Categorical or Continuous
         scoring: string, default=None
             Scoring function to use as fitness value
         population_size: int, default=20
@@ -65,8 +65,6 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
             If true, shows the metrics on the optimization routine
         keep_top_k: int, default=1
             Number of best solutions to keep in the hof object
-        param_grid: dict, default=None
-            Grid with the parameters to tune, expects as values of each key a sklearn_genetic.space Integer, Categorical or Continuous
         criteria: str, default='max'
             'max' if a higher scoring metric is better, 'min' otherwise
         algorithm: str, default='eaMuPlusLambda'
