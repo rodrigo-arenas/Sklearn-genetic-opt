@@ -26,7 +26,6 @@ setup(
     classifiers=[
         'License :: OSI Approved :: MIT License',
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
 
@@ -35,6 +34,6 @@ setup(
                   "Source Code": 'https://github.com/rodrigo-arenas/Sklearn-genetic-opt'},
     packages=find_packages(include=['sklearn_genetic', 'sklearn_genetic.*']),
     install_requires=['scikit-learn>=0.21.3', 'numpy>=1.13.3', 'seaborn>=0.11.1', 'deap>=1.3.1', 'pydantic>=1.8.2'],
-    python_requires=">=3.6",
+    python_requires=">=3.7",
     include_package_data=True,
 )
