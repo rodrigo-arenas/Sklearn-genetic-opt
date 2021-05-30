@@ -54,7 +54,7 @@ sklearn-genetic-opt requires:
    api/space
    api/algorithms
    api/plots
-
+   release_notes
 
 Indices and tables
 ==================
