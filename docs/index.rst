@@ -43,6 +43,7 @@ sklearn-genetic-opt requires:
 
    tutorials/basic_usage
    tutorials/callbacks
+   tutorials/custom_callback
 
 .. toctree::
    :maxdepth: 2
