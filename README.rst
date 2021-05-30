@@ -1,6 +1,6 @@
 .. -*- mode: rst -*-
 
-|Travis|_ |Codecov|_ |PythonVersion|_ |PyPi|_
+|Travis|_ |Codecov|_ |PythonVersion|_ |PyPi|_ |Docs|_
 
 .. |Travis| image:: https://www.travis-ci.com/rodrigo-arenas/Sklearn-genetic-opt.svg?branch=master
 .. _Travis:  https://www.travis-ci.com/rodrigo-arenas/Sklearn-genetic-opt
@@ -12,6 +12,10 @@
 .. _PythonVersion : https://www.python.org/downloads/
 .. |PyPi| image:: https://badge.fury.io/py/sklearn-genetic-opt.svg
 .. _PyPi: https://badge.fury.io/py/sklearn-genetic-opt
+
+.. |Docs| image:: https://readthedocs.org/projects/sklearn-genetic-opt/badge/?version=latest
+.. _Docs: https://sklearn-genetic-opt.readthedocs.io/en/latest/?badge=latest
+
 
 Sklearn-genetic-opt
 ########
