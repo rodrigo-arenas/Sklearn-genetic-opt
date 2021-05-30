@@ -46,4 +46,15 @@ sklearn-genetic-opt requires:
 .. toctree::
    :caption: API Reference:
 
-   api
+   api/gasearchcv
+   api/callbacks
+   api/plots
+
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
+
