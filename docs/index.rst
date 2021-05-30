@@ -48,6 +48,7 @@ sklearn-genetic-opt requires:
 
    api/gasearchcv
    api/callbacks
+   api/space
    api/plots
 
 

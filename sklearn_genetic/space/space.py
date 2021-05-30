@@ -12,12 +12,15 @@ class Integer(BaseDimension):
         """
         Parameters
         ----------
-        lower: int, default=None
-            Lower bound of the possible values of the hyperparameter
-        upper: int, default=None
-            Upper bound of the possible values of the hyperparameter
-        distribution: str, default="uniform"
-            Distribution to sample initial population and mutation values, currently only supports 'uniform'
+        lower : int, default=None
+            Lower bound of the possible values of the hyperparameter.
+
+        upper : int, default=None
+            Upper bound of the possible values of the hyperparameter.
+
+        distribution : str, default="uniform"
+            Distribution to sample initial population and mutation values, currently only supports 'uniform'.
+
         """
 
         if not isinstance(lower, int):
@@ -52,12 +55,14 @@ class Continuous(BaseDimension):
         """
         Parameters
         ----------
-        lower: int, default=None
-            Lower bound of the possible values of the hyperparameter
-        upper: int, default=None
-            Upper bound of the possible values of the hyperparameter
-        distribution: str, , default='uniform'
-            Distribution to sample initial population and mutation values, accepts "uniform" or "log-uniform"
+        lower : int, default=None
+            Lower bound of the possible values of the hyperparameter.
+
+        upper : int, default=None
+            Upper bound of the possible values of the hyperparameter.
+
+        distribution : {'uniform', 'log-uniform'}, default='uniform'
+            Distribution to sample initial population and mutation values.
 
         """
 
@@ -97,11 +102,14 @@ class Categorical(BaseDimension):
         Parameters
         ----------
         choices: list, default=None
-            List with all the possible values of the hyperparameter
+            List with all the possible values of the hyperparameter.
+
         priors: int, default=None
-            List with the probability of sampling each element of the "choices", if not set gives equals probability
-        distribution: str, , default='choice'
-            Distribution to sample initial population and mutation values, currently only supports "choice"
+            List with the probability of sampling each element of the "choices", if not set gives equals probability.
+
+        distribution: str, default='choice'
+            Distribution to sample initial population and mutation values, currently only supports "choice".
+
         """
 
         if not choices or not isinstance(choices, list):
@@ -138,7 +146,7 @@ def check_space(param_grid: dict = None):
     Parameters
     ----------
     param_grid: dict, default=None
-        Dictionary with the for {"hyperparameter_name": SpaceInstance}
+        Dictionary with the for {"hyperparameter_name": :obj:`~sklearn_genetic.space`}
 
     Returns
     -------
@@ -160,7 +168,11 @@ class Space(object):
         Parameters
         ----------
         param_grid: dict, default=None
-            Grid with the parameters to tune, expects as values of each key a sklearn_genetic.space Integer, Categorical or Continuous
+            Grid with the parameters to tune, expects keys a valid name
+            of hyperparameter based on the estimator selected and as values
+            one of :class:`~sklearn_genetic.space.Integer` ,
+            :class:`~sklearn_genetic.space.Categorical`
+            :class:`~sklearn_genetic.space.Continuous` classes
         """
         check_space(param_grid)
 
@@ -168,10 +180,23 @@ class Space(object):
 
     @property
     def dimensions(self):
+        """
+
+        Returns
+        -------
+        The number of hyperparameters defined in the param_grid
+
+        """
         return len(self.param_grid)
 
     @property
     def parameters(self):
+        """
+
+        Returns
+        -------
+        A list with all the names of the hyperparametes in the param_Grid
+        """
         return list(self.param_grid.keys())
 
     def __len__(self):

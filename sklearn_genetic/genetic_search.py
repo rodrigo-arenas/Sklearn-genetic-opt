@@ -68,8 +68,11 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
             with `shuffle=False` so the splits will be the same across calls.
 
         param_grid : dict, default=None
-            Grid with the parameters to tune, expects as values of each key a :obj:`sklearn_genetic.space`
-            Integer, Categorical or Continuous.
+            Grid with the parameters to tune, expects keys a valid name
+            of hyperparameter based on the estimator selected and as values
+            one of :class:`~sklearn_genetic.space.Integer` ,
+            :class:`~sklearn_genetic.space.Categorical`
+            :class:`~sklearn_genetic.space.Continuous` classes
 
         population_size : int, default=10
             Size of the initial population to sample randomly generated individuals.

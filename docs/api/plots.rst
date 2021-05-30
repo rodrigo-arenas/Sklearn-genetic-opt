@@ -1,5 +1,4 @@
-
-plots
+Plots
 ----------
 
 .. automodule:: sklearn_genetic.plots
