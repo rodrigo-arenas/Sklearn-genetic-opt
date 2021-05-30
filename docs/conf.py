@@ -14,11 +14,10 @@ import os
 import sys
 from datetime import datetime
 
-
 sys.path.insert(0, os.path.abspath('..'))
 
+from sklearn_genetic import __version__
 
-__version__ = "0.4.0dev0"
 # -- Project information -----------------------------------------------------
 
 project = 'sklearn genetic opt'
