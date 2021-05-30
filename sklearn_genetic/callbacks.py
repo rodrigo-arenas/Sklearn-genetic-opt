@@ -1,4 +1,3 @@
-import math
 from collections.abc import Callable
 
 from .parameters import Metrics
