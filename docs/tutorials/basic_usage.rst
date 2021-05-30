@@ -1,3 +1,5 @@
+.. _basic-usage:
+
 How to Use Sklearn-genetic-opt
 ==============================
 
@@ -51,7 +53,7 @@ Lets first read the data, split it in our training and test set and visualize so
 
 We should see something like this:
 
-.. image:: images/basic_usage_digits_0.png
+.. image:: ../images/basic_usage_digits_0.png
 
 Now, we must define our param_grid, similar to scikit-learn, is a dictionary with the models hyperparameters.
 The main difference with for example sckit-learn's GridSearchCv,
@@ -108,7 +110,7 @@ We are ready to run the optimization routine:
 
 During the training process, you should see a log like this:
 
-.. image:: images/basic_usage_train_log_1.jpeg
+.. image:: ../images/basic_usage_train_log_1.jpeg
 
 This log, shows us the metrics obtained in each iteration (generation), this is what each entry means:
 
@@ -133,7 +135,7 @@ It will use by default the best set of hyperparameters it found, based in the cr
 
 In this case, we got an accuracy score in the test set of 0.93
 
-.. image:: images/basic_usage_accuracy_2.jpeg
+.. image:: ../images/basic_usage_accuracy_2.jpeg
 
 Now lets use a couple more functions available in the package
 The first one, will help us to see the evolution of our metric over the generations
@@ -144,7 +146,7 @@ The first one, will help us to see the evolution of our metric over the generati
     plot_fitness_evolution(evolved_estimator)
     plt.show()
 
-.. image:: images/basic_usage_fitness_plot_3.png
+.. image:: ../images/basic_usage_fitness_plot_3.png
 
 At last, we can check the property called ``evolved_estimator.logbook``,
 this is a deap's logbook which stores all the results of every individual fitted model.
@@ -156,7 +158,7 @@ sklearn-genetic-opt comes with a plot function to analize this log:
     plot_search_space(evolved_estimator, features=['min_weight_fraction_leaf', 'max_depth', 'max_leaf_nodes', 'n_estimators'])
     plt.show()
 
-.. image:: images/basic_usage_plot_space_4.png
+.. image:: ../images/basic_usage_plot_space_4.png
 
 What this plot shows us, is the distribution of the sampled values for each hyperparameter.
 We can see for example in the *'min_weight_fraction_leaf'* that the algorithm mostly sampled values bellow 0.15.
