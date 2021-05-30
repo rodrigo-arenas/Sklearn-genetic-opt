@@ -1,4 +1,4 @@
-callbacks
+Callbacks
 ----------
 
 .. autoclass:: sklearn_genetic.callbacks.ConsecutiveStopping
