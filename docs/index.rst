@@ -41,9 +41,11 @@ sklearn-genetic-opt requires:
    :maxdepth: 2
    :caption: Tutorials:
 
-   basic_usage
+   tutorials/basic_usage
+   tutorials/callbacks
 
 .. toctree::
+   :maxdepth: 2
    :caption: API Reference:
 
    api/gasearchcv

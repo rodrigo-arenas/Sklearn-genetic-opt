@@ -5,7 +5,7 @@ from sklearn.model_selection import train_test_split, StratifiedKFold
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.datasets import load_digits
 from sklearn.metrics import accuracy_score
-
+from sklearn_genetic.callbacks import ThresholdStopping, DeltaThreshold
 
 warnings.filterwarnings("ignore")
 
@@ -24,6 +24,11 @@ params_grid = {'min_weight_fraction_leaf': Continuous(0, 0.5),
 
 cv = StratifiedKFold(n_splits=3, shuffle=True)
 
+threshold_callback = ThresholdStopping(threshold=0.98, metric='fitness_max')
+delta_callback = DeltaThreshold(threshold=0.001, metric='fitness')
+
+callbacks = [threshold_callback, delta_callback]
+
 evolved_estimator = GASearchCV(clf,
                                cv=cv,
                                scoring='accuracy',
@@ -38,7 +43,7 @@ evolved_estimator = GASearchCV(clf,
                                n_jobs=-1,
                                verbose=True)
 
-evolved_estimator.fit(X_train, y_train)
+evolved_estimator.fit(X_train, y_train, callbacks=callbacks)
 y_predict_ga = evolved_estimator.predict(X_test)
 accuracy = accuracy_score(y_test, y_predict_ga)
 

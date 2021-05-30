@@ -52,17 +52,18 @@ def eval_callbacks(callbacks, record, logbook):
 
 class ThresholdStopping:
     """
-    Stop the optimization if the cross validation score is greater or equals than the define threshold
+    Stop the optimization if the metric from
+    cross validation score is greater or equals than the define threshold
     """
 
-    def __init__(self, threshold: float = None, metric: str = 'fitness'):
+    def __init__(self, threshold, metric='fitness'):
         """
         Parameters
         ----------
         threshold: float, default=None
             Threshold to compare against the current cross validation average score and determine if
             the optimization process must stop
-        metric: str, default ='fitness'
+        metric: {'fitness', 'fitness_std', 'fitness_max', 'fitness_min'}, default ='fitness'
             Name of the metric inside 'record' logged in each iteration
         """
 
@@ -71,7 +72,7 @@ class ThresholdStopping:
         self.threshold = threshold
         self.metric = metric
 
-    def _check(self, record: dict = None, logbook=None):
+    def _check(self, record, logbook):
         """
         Parameters
         ----------
@@ -103,13 +104,13 @@ class ConsecutiveStopping:
     Stop the optimization if the current metric value is no greater that at least one metric from the last N generations
     """
 
-    def __init__(self, generations: int = None, metric: str = 'fitness'):
+    def __init__(self, generations, metric='fitness'):
         """
         Parameters
         ----------
         generations: int, default=None
             Number of current generations to compare against current generation
-        metric: str, default ='fitness'
+        metric: {'fitness', 'fitness_std', 'fitness_max', 'fitness_min'}, default ='fitness'
             Name of the metric inside 'record' logged in each iteration
         """
 
@@ -118,7 +119,7 @@ class ConsecutiveStopping:
         self.generations = generations
         self.metric = metric
 
-    def _check(self, record: dict = None, logbook=None):
+    def _check(self, record=None, logbook=None):
         """
         Parameters
         ----------
@@ -162,7 +163,7 @@ class DeltaThreshold:
         ----------
         threshold: float, default=None
             Threshold to compare the differences between cross validation scores
-        metric: str, default ='fitness'
+        metric: {'fitness', 'fitness_std', 'fitness_max', 'fitness_min'}, default ='fitness'
             Name of the metric inside 'record' logged in each iteration
         """
 
@@ -171,7 +172,7 @@ class DeltaThreshold:
         self.threshold = threshold
         self.metric = metric
 
-    def _check(self, record: dict = None, logbook=None):
+    def _check(self, record=None, logbook=None):
         """
         Parameters
         ----------
