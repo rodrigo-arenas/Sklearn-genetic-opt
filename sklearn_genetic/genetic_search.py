@@ -108,9 +108,9 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
             If ``True``, shows the metrics on the optimization routine.
 
         keep_top_k : int, default=1
-            Number of best solutions to keep in the hof object.\
-            **Note:** If a callback stops the algorithm before k iterations,
-            it will return only one set of parameters per iteration.
+            Number of best solutions to keep in the hof object.
+            If a callback stops the algorithm before k iterations, it will
+            return only one set of parameters per iteration.
 
         criteria : {'max', 'min'} , default='max'
             ``max`` if a higher scoring metric is better, ``min`` otherwise.
