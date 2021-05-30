@@ -15,6 +15,7 @@
 # sys.path.insert(0, os.path.abspath('.'))
 from datetime import datetime
 
+__version__ = "0.4.0dev0"
 # -- Project information -----------------------------------------------------
 
 project = 'sklearn genetic opt'
@@ -22,7 +23,8 @@ copyright = f'2021--{datetime.now().year}, Rodrigo Arenas Gómez'
 author = 'Rodrigo Arenas Gómez'
 
 # The full version, including alpha/beta/rc tags
-release = '0.4.0'
+release = __version__
+version = __version__
 
 # -- General configuration ---------------------------------------------------
 
@@ -40,7 +42,7 @@ templates_path = ['_templates']
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = []
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -55,3 +57,6 @@ html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
 
 master_doc = 'index'
+
+# generate autosummary even if no references
+autosummary_generate = True
