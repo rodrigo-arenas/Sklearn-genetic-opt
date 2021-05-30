@@ -67,10 +67,9 @@ evolved_estimator = GASearchCV(clf,
                                tournament_size=3,
                                elitism=True,
                                param_grid=param_grid,
-                               callbacks=callbacks,
                                n_jobs=-1)
 
-evolved_estimator.fit(X_train, y_train)
+evolved_estimator.fit(X_train, y_train, callbacks=callbacks)
 y_predict_ga = evolved_estimator.predict(X_test)
 accuracy = accuracy_score(y_test, y_predict_ga)
 print("accuracy score: ", "{:.2f}".format(accuracy))

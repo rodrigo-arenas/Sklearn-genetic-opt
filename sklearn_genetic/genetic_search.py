@@ -1,5 +1,3 @@
-from typing import Union
-from collections.abc import Callable
 
 import numpy as np
 import random
@@ -49,6 +47,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
                  n_jobs=1,
                  pre_dispatch='2*n_jobs',
                  error_score=np.nan):
+
         """
         Parameters
         ----------
@@ -119,7 +118,8 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
 
         refit : bool, default=True
             Refit an estimator using the best found parameters on the whole dataset.
-            If ``False``, it is not possible to make predictions using this GASearchCV instance after fitting.
+            If ``False``, it is not possible to make predictions
+            using this GASearchCV instance after fitting.
 
         pre_dispatch : int or str, default='2*n_jobs'
             Controls the number of jobs that get dispatched during parallel
