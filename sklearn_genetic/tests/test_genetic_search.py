@@ -72,11 +72,10 @@ def test_expected_eaSimple_results_early_stopping():
                                                'alpha': Continuous(1e-4, 1, distribution='log-uniform'),
                                                'average': Categorical([True, False]),
                                                'max_iter': Integer(700, 1000)},
-                                   callbacks=ThresholdStopping(threshold=0.01),
                                    verbose=True,
                                    algorithm='eaSimple')
 
-    evolved_estimator.fit(X_train, y_train)
+    evolved_estimator.fit(X_train, y_train, callbacks=ThresholdStopping(threshold=0.01))
 
     assert check_is_fitted(evolved_estimator) is None
     assert 'l1_ratio' in evolved_estimator.best_params_
@@ -111,11 +110,10 @@ def test_expected_eaMuPlusLambda_results_early_stopping():
                                                'alpha': Continuous(1e-4, 1, distribution='log-uniform'),
                                                'average': Categorical([True, False]),
                                                'max_iter': Integer(700, 1000)},
-                                   callbacks=ThresholdStopping(threshold=0.01),
                                    verbose=True,
                                    algorithm='eaMuPlusLambda')
 
-    evolved_estimator.fit(X_train, y_train)
+    evolved_estimator.fit(X_train, y_train, callbacks=ThresholdStopping(threshold=0.01),)
 
     assert check_is_fitted(evolved_estimator) is None
     assert 'l1_ratio' in evolved_estimator.best_params_
@@ -150,11 +148,10 @@ def test_expected_eaMuCommaLambda_results_early_stopping():
                                                'alpha': Continuous(1e-4, 1, distribution='log-uniform'),
                                                'average': Categorical([True, False]),
                                                'max_iter': Integer(700, 1000)},
-                                   callbacks=ThresholdStopping(threshold=0.01),
                                    verbose=True,
                                    algorithm='eaMuCommaLambda')
 
-    evolved_estimator.fit(X_train, y_train)
+    evolved_estimator.fit(X_train, y_train, callbacks=ThresholdStopping(threshold=0.01))
 
     assert check_is_fitted(evolved_estimator) is None
     assert 'l1_ratio' in evolved_estimator.best_params_

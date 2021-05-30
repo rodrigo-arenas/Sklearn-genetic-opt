@@ -13,7 +13,7 @@ This is meant to be an alternative from popular methods inside scikit-learn such
 Sklearn-genetic-opt uses evolutionary algorithms from the deap package to find the "best" set of hyperparameters that optimizes (max or min) the cross validation scores, it can be used for both regression and classification problems.
 
 Installation:
-########
+#############
 
 Install sklearn-genetic-opt
 
@@ -43,3 +43,7 @@ sklearn-genetic-opt requires:
 
    basic_usage
 
+.. toctree::
+   :caption: API Reference:
+
+   api
