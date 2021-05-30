@@ -145,14 +145,14 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         logbook : :class:`DEAP.tools.Logbook`
             Contains the logs of every set of hyperparameters fitted with its average scoring metric.
         history : dict
-            Dictionary of the form::
-                {"gen": [],
-                 "fitness": [],
-                 "fitness_std": [],
-                 "fitness_max": [],
-                 "fitness_min": []}
+            Dictionary of the form:
+            {"gen": [],
+            "fitness": [],
+            "fitness_std": [],
+            "fitness_max": [],
+            "fitness_min": []}
 
-             *gen* returns the index of the evaluated generations
+             *gen* returns the index of the evaluated generations.
              Each entry on the others lists, represent the average metric in each generation.
 
         best_estimator_ : estimator
@@ -298,7 +298,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
             supervised learning.
         callbacks: list or callable
             One or a list of the callbacks methods available in
-            :class:`sklearn_genetic.callbacks`.
+            :class:`~sklearn_genetic.callbacks`.
             The callback is evaluated after fitting the estimators from the generation 1.
 
         """
@@ -443,25 +443,73 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
 
     @if_delegate_has_method(delegate='estimator')
     def predict(self, X):
+        """
+        Call predict on the estimator with the best found parameters.
+
+        Only available if refit=True and the underlying estimator supports predict.
+
+        Parameters
+        ----------
+        X: indexable, length n_samples
+            Must fulfill the input assumptions of the underlying estimator.
+        """
+
         X = check_array(X)
         return self.estimator.predict(X)
 
     @if_delegate_has_method(delegate='estimator')
-    def score(self, X, y):
+    def score(self, X, y=None):
+        """
+        Returns the score on the given data, if the estimator has been refit.
+        This uses the score defined by scoring where provided
+
+        X : array-like of shape (n_samples, n_features)
+            Input data, where n_samples is the number of samples and n_features is the number of features.
+        y : array-like of shape (n_samples, n_output) or (n_samples,), default=None
+            Target relative to X for classification or regression; None for unsupervised learning.
+        """
+
         X = check_array(X)
         return self.estimator.score(X, y)
 
     @if_delegate_has_method(delegate='estimator')
     def decision_function(self, X):
+        """Call decision_function on the estimator with the best found parameters.
+
+        Parameters
+        ----------
+        X : indexable, length n_samples
+            Must fulfill the input assumptions of the underlying estimator.
+        """
         X = check_array(X)
         return self.estimator.decision_function(X)
 
     @if_delegate_has_method(delegate='estimator')
     def predict_proba(self, X):
+        """
+        Call predict_proba on the estimator with the best found parameters.
+
+        Only available if refit=True and the underlying estimator supports predict.
+
+        Parameters
+        ----------
+        X: indexable, length n_samples
+            Must fulfill the input assumptions of the underlying estimator.
+        """
         X = check_array(X)
         return self.estimator.predict_proba(X)
 
     @if_delegate_has_method(delegate='estimator')
     def predict_log_proba(self, X):
+        """
+        Call predict_log_proba on the estimator with the best found parameters.
+
+        Only available if refit=True and the underlying estimator supports predict.
+
+        Parameters
+        ----------
+        X: indexable, length n_samples
+            Must fulfill the input assumptions of the underlying estimator.
+        """
         X = check_array(X)
         return self.estimator.predict_log_proba(X)

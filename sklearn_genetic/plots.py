@@ -4,16 +4,21 @@ from .utils import logbook_to_pandas
 
 sns.set_style("whitegrid")
 
+"""
+This module contains some useful function to explore the results of the optimization routines
+"""
+
 
 def plot_fitness_evolution(estimator):
     """
     Parameters
     ----------
-    estimator: Fitted GASearchCV
+    estimator: estimator object
+        A fitted estimator from :class:`~sklearn_genetic.GASearchCV`
 
     Returns
-    plot with the fitness value in each generation
     -------
+    Lines plot with the fitness value in each generation
 
     """
     fitness_history = estimator.history["fitness"]
@@ -34,17 +39,18 @@ def plot_search_space(estimator, height=2, s=25, features: list = None):
     """
     Parameters
     ----------
+    estimator: estimator object
+        A fitted estimator from :class:`~sklearn_genetic.GASearchCV`
     height: float, default=2
-        Height if each facet
+        Height of each facet
     s: float, default=5
         Size of the markers in scatter plot
     features: list, default=None
-        Subset of features to plot, if 'None' it plots all the features by default
-    estimator: Fitted GASearchCV
+        Subset of features to plot, if ``None`` it plots all the features by default
 
     Returns
-    pair plot of the used hyperparameters during the search
     -------
+    Pair plot of the used hyperparameters during the search
 
     """
     df = logbook_to_pandas(estimator.logbook)
