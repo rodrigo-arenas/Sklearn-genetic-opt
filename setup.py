@@ -33,7 +33,7 @@ setup(
     project_urls={"Documentation": 'https://sklearn-genetic-opt.readthedocs.io/en/latest/',
                   "Source Code": 'https://github.com/rodrigo-arenas/Sklearn-genetic-opt'},
     packages=find_packages(include=['sklearn_genetic', 'sklearn_genetic.*']),
-    install_requires=['scikit-learn>=0.21.3', 'numpy>=1.13.3', 'seaborn>=0.11.1', 'deap>=1.3.1', 'pydantic>=1.8.2'],
+    install_requires=['scikit-learn>=0.21.3', 'numpy>=1.14.5', 'seaborn>=0.11.1', 'deap>=1.3.1', 'pydantic>=1.8.2'],
     python_requires=">=3.7",
     include_package_data=True,
 )
