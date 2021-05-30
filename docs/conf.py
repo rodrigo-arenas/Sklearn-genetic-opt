@@ -10,10 +10,13 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+import os
+import sys
 from datetime import datetime
+
+
+sys.path.insert(0, os.path.abspath('..'))
+
 
 __version__ = "0.4.0dev0"
 # -- Project information -----------------------------------------------------
@@ -32,6 +35,12 @@ version = __version__
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    "sphinx.ext.autodoc",
+    "sphinx.ext.autosummary",
+    "numpydoc",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.mathjax",
+    "sphinx.ext.viewcode",
     'sphinx_copybutton',
     "sphinx_rtd_theme",
 ]
@@ -60,3 +69,11 @@ master_doc = 'index'
 
 # generate autosummary even if no references
 autosummary_generate = True
+autosummary_imported_members = True
+
+autoclass_content = 'both'
+
+numpydoc_show_class_members = False
+numpydoc_class_members_toctree = False
+
+todo_include_todos = False

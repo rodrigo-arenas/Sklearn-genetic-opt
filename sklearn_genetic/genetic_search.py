@@ -19,71 +19,150 @@ from .callbacks import check_callback
 
 
 class GASearchCV(ClassifierMixin, RegressorMixin):
-    """Scikit-learn Hyperparameters tuning using evolutionary algorithms."""
+    """
+    Evolutionary optimization over hyperparameters.
+
+    GASearchCV implements a "fit" and a "score" method.
+    It also implements "predict", "predict_proba", "decision_function",
+    "predict_log_proba" if they are implemented in the
+    estimator used.
+    The parameters of the estimator used to apply these methods are optimized
+    by cross-validated search over parameter settings.
+    """
 
     def __init__(self,
                  estimator,
-                 cv: int = 3,
-                 param_grid: dict = None,
+                 cv=3,
+                 param_grid=None,
                  scoring=None,
-                 population_size: int = 20,
-                 generations: int = 40,
-                 crossover_probability: float = 0.8,
-                 mutation_probability: float = 0.1,
-                 tournament_size: int = 3,
-                 elitism: bool = True,
-                 verbose: bool = True,
-                 keep_top_k: int = 1,
-                 criteria: str = 'max',
-                 algorithm: str = 'eaMuPlusLambda',
-                 refit: bool = True,
-                 callbacks: Union[list, Callable] = None,
-                 n_jobs: int = 1):
+                 population_size=10,
+                 generations=40,
+                 crossover_probability=0.8,
+                 mutation_probability=0.1,
+                 tournament_size=3,
+                 elitism=True,
+                 verbose=True,
+                 keep_top_k=1,
+                 criteria='max',
+                 algorithm='eaMuPlusLambda',
+                 refit=True,
+                 n_jobs=1,
+                 pre_dispatch='2*n_jobs',
+                 error_score=np.nan):
         """
-
         Parameters
         ----------
-        estimator: estimator object, default=None
-            scikit-learn Classifier or Regressor
-        cv: int, cross-validation generator or an iterable, default=3
-            It can be one of these:
-            * Number of splits used for calculating cross_val_score
-            * CV Splitter as cross validation generator
-            * An iterable yielding (train, test) splits as arrays of indices
-        param_grid: dict, default=None
-            Grid with the parameters to tune, expects as values of each key a sklearn_genetic.space Integer, Categorical or Continuous
-        scoring: string, default=None
-            Scoring function to use as fitness value
-        population_size: int, default=20
-            Size of the population
-        generations: int, default=40
-            Number of generations to run the genetic algorithm
-        crossover_probability: float, default=0.8
-            Probability of crossover operation
-        mutation_probability: float, default=0.1
-            Probability of child mutation
-        tournament_size: int, default=3
-            Number of individuals to perform tournament selection
-        elitism: bool, default=True
-            If True takes the |tournament_size| best solution to the next generation
-        verbose: bool, default=True
-            If true, shows the metrics on the optimization routine
-        keep_top_k: int, default=1
-            Number of best solutions to keep in the hof object
-            Note: If a callback stops the algorithm before k iterations, it will return only one set of parameters per iteration
-        criteria: str, default='max'
-            'max' if a higher scoring metric is better, 'min' otherwise
-        algorithm: str, default='eaMuPlusLambda'
-            Evolutionary algorithm to use, accepts 'eaSimple', 'eaMuPlusLambda' or 'eaMuCommaLambda'.
-            See more details in the deap algorithms documentation
-        refit: bool, default=True
+        estimator : estimator object, default=None
+            estimator object implementing 'fit'
+            The object to use to fit the data.
+
+        cv : int, cross-validation generator or an iterable, default=None
+            Determines the cross-validation splitting strategy.
+            Possible inputs for cv are:
+            - None, to use the default 5-fold cross validation,
+            - int, to specify the number of folds in a `(Stratified)KFold`,
+            - CV splitter,
+            - An iterable yielding (train, test) splits as arrays of indices.
+            For int/None inputs, if the estimator is a classifier and ``y`` is
+            either binary or multiclass, :class:`StratifiedKFold` is used. In all
+            other cases, :class:`KFold` is used. These splitters are instantiated
+            with `shuffle=False` so the splits will be the same across calls.
+
+        param_grid : dict, default=None
+            Grid with the parameters to tune, expects as values of each key a :obj:`sklearn_genetic.space`
+            Integer, Categorical or Continuous.
+
+        population_size : int, default=10
+            Size of the initial population to sample randomly generated individuals.
+
+        generations : int, default=40
+            Number of generations or iterations to run the evolutionary algorithm.
+
+        crossover_probability : float, default=0.8
+            Probability of crossover operation between two individuals.
+
+        mutation_probability : float, default=0.1
+            Probability of child mutation.
+
+        tournament_size : int, default=3
+            Number of individuals to perform tournament selection.
+
+        elitism : bool, default=True
+            If True takes the *tournament_size* best solution to the next generation.
+
+        scoring : str or callable, default=None
+            A str (see model evaluation documentation) or
+            a scorer callable object / function with signature
+            ``scorer(estimator, X, y)`` which should return only
+            a single value.
+
+        n_jobs : int, default=None
+            Number of jobs to run in parallel. Training the estimator and computing
+            the score are parallelized over the cross-validation splits.
+            ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
+            ``-1`` means using all processors.
+
+        verbose : bool, default=True
+            If ``True``, shows the metrics on the optimization routine.
+
+        keep_top_k : int, default=1
+            Number of best solutions to keep in the hof object.\
+            **Note:** If a callback stops the algorithm before k iterations,
+            it will return only one set of parameters per iteration.
+
+        criteria : {'max', 'min'} , default='max'
+            ``max`` if a higher scoring metric is better, ``min`` otherwise.
+
+        algorithm : {'eaMuPlusLambda', 'eaMuCommaLambda', 'eaSimple'}, default='eaMuPlusLambda'
+            Evolutionary algorithm to use.
+            See more details in the deap algorithms documentation.
+
+        refit : bool, default=True
             Refit an estimator using the best found parameters on the whole dataset.
-            If “False”, it is not possible to make predictions using this GASearchCV instance after fitting.
-        callbacks: list or Callable
-            One or a list of the callbacks methods available in the package.
-            The callback is evaluated after fitting the estimators from the generation 1
-        n_jobs: int, default=1
-            Number of jobs to run in parallel during the cross validation scoring
+            If ``False``, it is not possible to make predictions using this GASearchCV instance after fitting.
+
+        pre_dispatch : int or str, default='2*n_jobs'
+            Controls the number of jobs that get dispatched during parallel
+            execution. Reducing this number can be useful to avoid an
+            explosion of memory consumption when more jobs get dispatched
+            than CPUs can process. This parameter can be:
+                - None, in which case all the jobs are immediately
+                  created and spawned. Use this for lightweight and
+                  fast-running jobs, to avoid delays due to on-demand
+                  spawning of the jobs
+                - An int, giving the exact number of total jobs that are
+                  spawned
+                - A str, giving an expression as a function of n_jobs,
+                  as in '2*n_jobs'
+        error_score : 'raise' or numeric, default=np.nan
+            Value to assign to the score if an error occurs in estimator fitting.
+            If set to ``'raise'``, the error is raised.
+            If a numeric value is given, FitFailedWarning is raised.
+
+        Attributes
+        ----------
+
+        logbook : :class:`DEAP.tools.Logbook`
+            Contains the logs of every set of hyperparameters fitted with its average scoring metric.
+        history : dict
+            Dictionary of the form::
+                {"gen": [],
+                 "fitness": [],
+                 "fitness_std": [],
+                 "fitness_max": [],
+                 "fitness_min": []}
+
+             *gen* returns the index of the evaluated generations
+             Each entry on the others lists, represent the average metric in each generation.
+
+        best_estimator_ : estimator
+            Estimator that was chosen by the search, i.e. estimator
+            which gave highest score
+            on the left out data. Not available if ``refit=False``.
+
+        best_params_ : dict
+            Parameter setting that gave the best results on the hold out data.
+
         """
 
         self.estimator = clone(estimator)
@@ -101,14 +180,16 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         self.param_grid = param_grid
         self.algorithm = algorithm
         self.refit = refit
-        self.callbacks = check_callback(callbacks)
         self.n_jobs = n_jobs
+        self.pre_dispatch = pre_dispatch
+        self.error_score = error_score
         self.creator = creator
         self.logbook = None
         self.history = None
         self._n_iterations = self.generations + 1
-        self.X = None
-        self.Y = None
+        self.X_ = None
+        self.y_ = None
+        self.callbacks = None
         self.best_params_ = None
         self.best_estimator_ = None
         self._pop = None
@@ -118,7 +199,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         self.X_predict = None
 
         if not is_classifier(self.estimator) and not is_regressor(self.estimator):
-            raise ValueError("{} is not a valid Sklearn classifier or regressor".format(self.estimator))
+            raise ValueError(f"{self.estimator} is not a valid Sklearn classifier or regressor")
 
         if criteria not in Criteria.list():
             raise ValueError(f"Criteria must be one of {Criteria.list()}, got {criteria} instead")
@@ -129,7 +210,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
 
         self.space = Space(param_grid)
 
-    def register(self):
+    def _register(self):
 
         self.creator.create("FitnessMax", base.Fitness, weights=[1.0])
         self.creator.create("Individual", list, fitness=creator.FitnessMax)
@@ -179,7 +260,8 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         return [individual]
 
     def evaluate(self, individual):
-        current_generation_params = {key: individual[n] for n, key in enumerate(self.space.parameters)}
+        current_generation_params = {key: individual[n]
+                                     for n, key in enumerate(self.space.parameters)}
 
         local_estimator = clone(self.estimator)
         local_estimator.set_params(**current_generation_params)
@@ -187,7 +269,10 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
                                     self.X_, self.y_,
                                     cv=self.cv,
                                     scoring=self.scoring,
-                                    n_jobs=self.n_jobs)
+                                    n_jobs=self.n_jobs,
+                                    pre_dispatch=self.pre_dispatch,
+                                    error_score=self.error_score)
+
         score = np.mean(cv_scores)
 
         current_generation_params['score'] = score
@@ -197,26 +282,34 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         return [self.criteria_sign * score]
 
     @if_delegate_has_method(delegate='estimator')
-    def fit(self, X, y):
+    def fit(self, X, y, callbacks=None):
         """
-        Main method of GASearchCV, optimize the hyper parameters of the given estimator
+        Main method of GASearchCV, starts the optimization
+        procedure with the hyperparameters of the given estimator
+
         Parameters
         ----------
-        X: training samples to learn from
-        y: training labels for each X obversation
 
-        Returns
-
-        fitted sklearn Regressor or Classifier
-        -------
+        X : array-like of shape (n_samples, n_features)
+            The data to fit. Can be for example a list, or an array.
+        y : array-like of shape (n_samples,) or (n_samples, n_outputs), \
+            default=None
+            The target variable to try to predict in the case of
+            supervised learning.
+        callbacks: list or callable
+            One or a list of the callbacks methods available in
+            :class:`sklearn_genetic.callbacks`.
+            The callback is evaluated after fitting the estimators from the generation 1.
 
         """
         scorer = check_scoring(self.estimator, scoring=self.scoring)
 
+
         self.X_ = X
         self.y_ = y
+        self.callbacks = check_callback(callbacks)
 
-        self.register()
+        self._register()
 
         pop, log, n_gen = self._select_algorithm(pop=self._pop, stats=self._stats, hof=self._hof)
 
@@ -283,12 +376,13 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
 
         else:
             raise ValueError(
-                f"The algorithm {self.algorithm} is not supported, please select one from {Algorithms.list()}")
+                f"The algorithm {self.algorithm} is not supported, "
+                f"please select one from {Algorithms.list()}")
 
         return pop, log, gen
 
     @property
-    def fitted(self):
+    def _fitted(self):
         try:
             check_is_fitted(self.estimator)
             is_fitted = True
@@ -309,9 +403,10 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         -------
         Best solution of the iteration corresponding to the index number
         """
-        if not self.fitted:
+        if not self._fitted:
             raise NotFittedError(
-                f"This GASearchCV instance is not fitted yet or used refit=False. Call 'fit' with appropriate "
+                f"This GASearchCV instance is not fitted yet "
+                f"or used refit=False. Call 'fit' with appropriate "
                 f"arguments before using this estimator.")
 
         return {"gen": self.history['gen'][index],
@@ -341,7 +436,8 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         """
         Returns
         -------
-        Number of generations fitted if .fit method has been called, self.generations otherwise
+        Number of generations fitted if .fit method has been called,
+        self.generations otherwise
         """
         return self._n_iterations
 
