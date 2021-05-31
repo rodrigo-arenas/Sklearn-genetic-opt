@@ -39,11 +39,12 @@ sklearn-genetic-opt requires:
 
 .. toctree::
    :maxdepth: 2
-   :caption: Tutorials:
+   :caption: User Guide / Tutorials:
 
    tutorials/basic_usage
    tutorials/callbacks
    tutorials/custom_callback
+   release_notes
 
 .. toctree::
    :maxdepth: 2
@@ -54,7 +55,6 @@ sklearn-genetic-opt requires:
    api/space
    api/algorithms
    api/plots
-   release_notes
 
 Indices and tables
 ==================
