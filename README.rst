@@ -30,13 +30,13 @@ optimizes (max or min) the cross validation scores, it can be used for both regr
 
 Documentation is available `here <https://sklearn-genetic-opt.readthedocs.io/>`_
 
+Sampled distribution of hyperparameters:
+
+.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/demo/images/density.png?raw=True
+
 Optimization progress in a regression problem:
 
 .. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/demo/images/fitness.png?raw=True
-
-Sampled distribution oh hyperparameters
-
-.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/demo/images/density.png?raw=True
 
 
 Main Features:
