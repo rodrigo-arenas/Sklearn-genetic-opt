@@ -3,7 +3,7 @@ import pathlib
 from setuptools import setup, find_packages
 
 # python setup.py sdist bdist_wheel
-# twine upload --skip-existing --repository-url https://test.pypi.org/legacy/ dist/*
+# twine upload --skip-existing dist/*
 
 # get __version__ from _version.py
 ver_file = os.path.join("sklearn_genetic", "_version.py")
@@ -18,7 +18,7 @@ setup(
     version=__version__,
     description="Scikit-lean models hyperparameters tuning, using evolutionary algorithms",
     long_description=README,
-    long_description_content_type="text/markdown",
+    long_description_content_type="text/x-rst",
     url="https://github.com/rodrigo-arenas/Sklearn-genetic-opt",
     author="Rodrigo Arenas",
     author_email="rodrigo.arenas456@gmail.com",

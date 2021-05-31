@@ -16,10 +16,10 @@
 .. |Docs| image:: https://readthedocs.org/projects/sklearn-genetic-opt/badge/?version=latest
 .. _Docs: https://sklearn-genetic-opt.readthedocs.io/en/latest/?badge=latest
 
-.. image:: /docs/logo.png
+.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/docs/logo.png?raw=true
 
 Sklearn-genetic-opt
-########
+###################
 
 scikit-learn models hyperparameters tuning, using evolutionary algorithms.
 
@@ -32,15 +32,15 @@ Documentation is available `here <https://sklearn-genetic-opt.readthedocs.io/>`_
 
 Sampled distribution of hyperparameters:
 
-.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/demo/images/density.png?raw=True
+.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/demo/images/density.png?raw=true
 
 Optimization progress in a regression problem:
 
-.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/demo/images/fitness.png?raw=True
+.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/demo/images/fitness.png?raw=true
 
 
 Main Features:
-########
+##############
 
 * **GASearchCV**: Principal class of the package, holds the evolutionary cross validation optimization routine
 * **Algorithms**: Set of different evolutionary algorithms to use as optimization procedure
@@ -48,7 +48,7 @@ Main Features:
 * **Plots**: Generate pre-define plots to understand the optimization process
 
 Usage:
-########
+######
 
 Install sklearn-genetic-opt
 
@@ -57,7 +57,7 @@ It's advised to install sklearn-genetic using a virtual env, inside the env use:
    pip install sklearn-genetic-opt
 
 Example
-########
+#######
 
 .. code-block:: python
 
@@ -107,19 +107,18 @@ Example
    print("Stats achieved in each generation: ", evolved_estimator.history)
    print("Best k solutions: ", evolved_estimator.hof)
 
-^^^^^^^^^
+^^^^^^^
 Results
-^^^^^^^^^
+^^^^^^^
 
 Log controlled by verbosity
 
-.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/demo/images/log.JPG?raw=True
-
+.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/demo/images/log.JPG?raw=true
 
 Contributing
 ------------
 
 Contributions are more than welcome!
 There are lots of opportunities on the on going project, so please get in touch if you would like to help out.
-Also check the `Contribution guide <CONTRIBUTING.md>`_
+Also check the `Contribution guide <https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/CONTRIBUTING.md>`_
 
