@@ -120,6 +120,6 @@ Contributing
 ------------
 
 Contributions are more than welcome!
-There are lots of opportunities on the on gong project so please get in touch if you would like to help out.
+There are lots of opportunities on the on going project, so please get in touch if you would like to help out.
 Also check the `Contribution guide <CONTRIBUTING.md>`_
 
