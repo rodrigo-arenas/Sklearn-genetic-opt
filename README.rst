@@ -16,6 +16,7 @@
 .. |Docs| image:: https://readthedocs.org/projects/sklearn-genetic-opt/badge/?version=latest
 .. _Docs: https://sklearn-genetic-opt.readthedocs.io/en/latest/?badge=latest
 
+.. image:: /docs/logo.png
 
 Sklearn-genetic-opt
 ########
@@ -24,7 +25,19 @@ scikit-learn models hyperparameters tuning, using evolutionary algorithms.
 
 This is meant to be an alternative from popular methods inside scikit-learn such as Grid Search and Randomized Grid Search.
 
-Sklearn-genetic-opt uses evolutionary algorithms from the deap package to find the "best" set of hyperparameters that optimizes (max or min) the cross validation scores, it can be used for both regression and classification problems.
+Sklearn-genetic-opt uses evolutionary algorithms from the deap package to find the "best" set of hyperparameters that
+optimizes (max or min) the cross validation scores, it can be used for both regression and classification problems.
+
+Documentation is available `here <https://sklearn-genetic-opt.readthedocs.io/>`_
+
+Optimization progress in a regression problem:
+
+.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/demo/images/fitness.png?raw=True
+
+Sampled distribution oh hyperparameters
+
+.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/demo/images/density.png?raw=True
+
 
 Main Features:
 ########
@@ -49,7 +62,6 @@ Example
 .. code-block:: python
 
    from sklearn_genetic import GASearchCV
-   from sklearn_genetic.plots import plot_fitness_evolution, plot_search_space
    from sklearn_genetic.space import Continuous, Categorical, Integer
    from sklearn.ensemble import RandomForestClassifier
    from sklearn.model_selection import train_test_split, StratifiedKFold
@@ -91,14 +103,6 @@ Example
    y_predict_ga = evolved_estimator.predict(X_test)
    print(accuracy_score(y_test, y_predict_ga))
 
-   # Check the distribution of sampled hyperparameters
-   plot_search_space(evolved_estimator, features=['min_weight_fraction_leaf', 'max_depth', 'max_leaf_nodes', 'n_estimators'])
-   plt.show()
-
-   # See the evolution of the optimization per generation
-   plot_fitness_evolution(evolved_estimator)
-   plt.show()
-
    # Saved metadata for further analysis
    print("Stats achieved in each generation: ", evolved_estimator.history)
    print("Best k solutions: ", evolved_estimator.hof)
@@ -107,17 +111,9 @@ Example
 Results
 ^^^^^^^^^
 
-Sampled distribution
-
-.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/0.4.x/demo/images/density.png?raw=True
-
-Fitness evolution over generations
-
-.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/0.4.x/demo/images/fitness.png?raw=True
-
 Log controlled by verbosity
 
-.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/0.4.x/demo/images/log.JPG?raw=True
+.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/demo/images/log.JPG?raw=True
 
 
 Contributing

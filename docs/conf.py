@@ -64,6 +64,13 @@ html_theme = "sphinx_rtd_theme"
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
 
+html_theme_options = {
+    "navigation_depth": 3,
+    "logo_only": True,
+}
+
+html_logo = "logo.png"
+
 master_doc = "index"
 
 # generate autosummary even if no references

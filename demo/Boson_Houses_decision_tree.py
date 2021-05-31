@@ -30,7 +30,7 @@ evolved_estimator = GASearchCV(
     clf,
     cv=3,
     scoring="r2",
-    population_size=12,
+    population_size=20,
     generations=30,
     tournament_size=3,
     elitism=True,

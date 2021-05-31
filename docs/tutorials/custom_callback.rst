@@ -6,7 +6,7 @@ but you can make one of your own by defining a callable with
 certain methods.
 
 The callback must be a class that implements the ``__call__`` and
-``_check`` methods, the result of them must be a bool, ``True`` means
+``on_step`` methods, the result of them must be a bool, ``True`` means
 that the optimization must stop, ``False``, means it can continue.
 
 In this example, we are going to define a dummy callback that
@@ -17,7 +17,7 @@ The callback must have two parameters: `record` and `logbook`.
 Those are a dictionary and a deap's Logbook object respectively,
 with the current iteration metrics and all the past iterations metrics.
 You can choice which to use, but both must be parameters
-on the ``_check`` and ``__call__`` methods.
+on the ``on_step`` and ``__call__`` methods.
 
 So to check inside the logbook, we could define a function like this:
 
@@ -27,7 +27,7 @@ So to check inside the logbook, we could define a function like this:
     metric='fitness'
     threshold=0.8
 
-    def _check(record, logbook, threshold):
+    def on_step(record, logbook, threshold):
         # Not enough data points
         if len(logbook) <= N:
             return False
@@ -53,7 +53,7 @@ that will have all this parameters, so we can rewrite it like this:
            self.N = N
            self.metric = metric
 
-       def _check(self, record, logbook):
+       def on_step(self, record, logbook):
            # Not enough data points
            if len(logbook) <= self.N:
                return False
@@ -68,7 +68,7 @@ that will have all this parameters, so we can rewrite it like this:
            return False
 
        def __call__(self, record, logbook):
-           return self._check(record, logbook)
+           return self.on_step(record, logbook)
 
 
 So that is it, now you can initialize the DummyThreshold

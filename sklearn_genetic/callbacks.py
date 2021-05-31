@@ -77,7 +77,7 @@ class ThresholdStopping:
         self.threshold = threshold
         self.metric = metric
 
-    def _check(self, record, logbook):
+    def on_step(self, record, logbook):
         """
         Parameters
         ----------
@@ -103,7 +103,7 @@ class ThresholdStopping:
             )
 
     def __call__(self, record=None, logbook=None):
-        return self._check(record, logbook)
+        return self.on_step(record, logbook)
 
 
 class ConsecutiveStopping:
@@ -126,7 +126,7 @@ class ConsecutiveStopping:
         self.generations = generations
         self.metric = metric
 
-    def _check(self, record=None, logbook=None):
+    def on_step(self, record=None, logbook=None):
         """
         Parameters
         ----------
@@ -156,7 +156,7 @@ class ConsecutiveStopping:
             raise ValueError("logbook parameter must be provided")
 
     def __call__(self, record=None, logbook=None):
-        return self._check(record, logbook)
+        return self.on_step(record, logbook)
 
 
 class DeltaThreshold:
@@ -179,7 +179,7 @@ class DeltaThreshold:
         self.threshold = threshold
         self.metric = metric
 
-    def _check(self, record=None, logbook=None):
+    def on_step(self, record=None, logbook=None):
         """
         Parameters
         ----------
@@ -210,4 +210,4 @@ class DeltaThreshold:
             raise ValueError("logbook parameter must be provided")
 
     def __call__(self, record=None, logbook=None):
-        return self._check(record, logbook)
+        return self.on_step(record, logbook)

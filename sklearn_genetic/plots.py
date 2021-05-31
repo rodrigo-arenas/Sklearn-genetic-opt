@@ -2,7 +2,6 @@ import seaborn as sns
 
 from .utils import logbook_to_pandas
 
-sns.set_style("whitegrid")
 
 """
 This module contains some useful function to explore the results of the optimization routines
@@ -21,6 +20,8 @@ def plot_fitness_evolution(estimator):
     Lines plot with the fitness value in each generation
 
     """
+    sns.set_style("white")
+
     fitness_history = estimator.history["fitness"]
 
     palette = sns.color_palette("rocket")
@@ -53,6 +54,8 @@ def plot_search_space(estimator, height=2, s=25, features: list = None):
     Pair plot of the used hyperparameters during the search
 
     """
+    sns.set_style("white")
+
     df = logbook_to_pandas(estimator.logbook)
     if features:
         stats = df[features]
@@ -61,7 +64,11 @@ def plot_search_space(estimator, height=2, s=25, features: list = None):
         stats = df[variables]
 
     g = sns.PairGrid(stats, diag_sharey=False, height=height)
-    g = g.map_upper(sns.scatterplot, s=s)
-    g = g.map_lower(sns.kdeplot, shade=True)
-    g = g.map_diag(sns.kdeplot, shade=True)
+    g = g.map_upper(sns.scatterplot, s=s, color="r", alpha=0.2)
+    g = g.map_lower(
+        sns.kdeplot,
+        shade=True,
+        cmap=sns.color_palette("ch:s=.25,rot=-.25", as_cmap=True),
+    )
+    g = g.map_diag(sns.kdeplot, shade=True, palette="crest", alpha=0.2, color="red")
     return g
