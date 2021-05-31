@@ -10,16 +10,19 @@ What's new in 0.4
 Features:
 ^^^^^^^^^
 
-* callbacks module to stop the optimization process based in the
+* Implemented callbacks module to stop the optimization process based in the
   current iteration metrics, currently implemented:
-  ThresholdStopping, ConsecutiveStopping and DeltaThreshold
+  :class:`~sklearn_genetic.callbacks.ThresholdStopping` ,
+  :class:`~sklearn_genetic.callbacks.ConsecutiveStopping`
+  and :class:`~sklearn_genetic.callbacks.DeltaThreshold`.
 * The algorithms 'eaSimple', 'eaMuPlusLambda', 'eaMuCommaLambda'
-  are now implemented in the module 'algorithms' for more control over their
-  options, rather that taking the deap.algorithms module
-* Implemented the plots module and added the function ``plot_search_space``,
+  are now implemented in the module :mod:`~sklearn_genetic.algorithms`
+  for more control over their options, rather that taking the deap.algorithms module
+* Implemented the :mod:`~sklearn_genetic.plots` module and added the function
+  :func:`~sklearn_genetic.plots.plot_search_space`,
   this function plots a mixed counter, scatter and histogram plots
   over all the fitted hyperparameters and their cross-validation score
-* Documentation based in rst with Sphinx to host in read the docs
+* Documentation based in rst with Sphinx to host in read the docs.
   It includes public classes and functions documentation as well
   as several tutorials on how to use the package
 * Added `best_params_` and `best_estimator_` properties
@@ -79,3 +82,16 @@ API Changes:
 * The variable `GASearchCV._best_solutions` was removed and it's meant to be
   replaced with `GASearchCV.logbook` and `GASearchCV.history`
 * Changed default parameters crossover_probability from 1 to 0.8 and generations from 50 to 40
+
+What's new in 0.1
+-----------------
+
+^^^^^^^^^
+Features:
+^^^^^^^^^
+
+* :class:`~sklearn_genetic.GASearchCV` for hyperparameters tuning
+  using custom genetic algorithm for scikit-learn
+  classification and regression models
+* :func:`~sklearn_genetic.plots.plot_fitness_evolution` function to see the average
+  fitness values over generations
