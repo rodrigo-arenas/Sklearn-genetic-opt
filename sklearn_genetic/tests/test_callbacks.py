@@ -2,17 +2,25 @@ import pytest
 
 from deap.tools import Logbook
 
-from ..callbacks import check_callback, check_stats, ThresholdStopping, ConsecutiveStopping, DeltaThreshold
+from ..callbacks import (
+    check_callback,
+    check_stats,
+    ThresholdStopping,
+    ConsecutiveStopping,
+    DeltaThreshold,
+)
 
 
 def test_check_metrics():
-    assert check_stats('fitness') is None
+    assert check_stats("fitness") is None
 
     with pytest.raises(Exception) as excinfo:
-        check_stats('accuracy')
-    assert str(
-        excinfo.value) == "metric must be one of ['fitness', 'fitness_std', 'fitness_max', 'fitness_min'], " \
-                          "but got accuracy instead"
+        check_stats("accuracy")
+    assert (
+        str(excinfo.value)
+        == "metric must be one of ['fitness', 'fitness_std', 'fitness_max', 'fitness_min'], "
+        "but got accuracy instead"
+    )
 
 
 def test_check_callback():
@@ -22,14 +30,17 @@ def test_check_callback():
 
     with pytest.raises(Exception) as excinfo:
         check_callback(1)
-    assert str(excinfo.value) == "callback should be either a callable or a list of callables."
+    assert (
+        str(excinfo.value)
+        == "callback should be either a callable or a list of callables."
+    )
 
 
 def test_threshold_callback():
     callback = ThresholdStopping(threshold=0.8)
     assert check_callback(callback) == [callback]
-    assert not callback(record={'fitness': 0.5})
-    assert callback(record={'fitness': 0.9})
+    assert not callback(record={"fitness": 0.5})
+    assert callback(record={"fitness": 0.9})
 
     # test callback using LogBook instead of a record
     logbook = Logbook()
@@ -44,7 +55,10 @@ def test_threshold_callback():
 
     with pytest.raises(Exception) as excinfo:
         callback()
-    assert str(excinfo.value) == "At least one of record or logbook parameters must be provided"
+    assert (
+        str(excinfo.value)
+        == "At least one of record or logbook parameters must be provided"
+    )
 
 
 def test_consecutive_callback():
@@ -70,7 +84,7 @@ def test_consecutive_callback():
 
     # Current record is worst that the 3 previous ones
     assert callback(logbook=logbook)
-    assert callback(logbook=logbook, record={'fitness': 0.8})
+    assert callback(logbook=logbook, record={"fitness": 0.8})
 
     with pytest.raises(Exception) as excinfo:
         callback()
@@ -98,7 +112,7 @@ def test_delta_callback():
 
     # Abs difference is bigger than the threshold
     assert callback(logbook=logbook)
-    assert callback(logbook=logbook, record={'fitness': 0.9141})
+    assert callback(logbook=logbook, record={"fitness": 0.9141})
 
     with pytest.raises(Exception) as excinfo:
         callback()

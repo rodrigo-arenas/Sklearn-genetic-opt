@@ -7,8 +7,17 @@ from deap.algorithms import varAnd, varOr
 from .callbacks import eval_callbacks
 
 
-def eaSimple(population, toolbox, cxpb, mutpb, ngen, stats=None,
-             halloffame=None, callbacks=None, verbose=True):
+def eaSimple(
+    population,
+    toolbox,
+    cxpb,
+    mutpb,
+    ngen,
+    stats=None,
+    halloffame=None,
+    callbacks=None,
+    verbose=True,
+):
     """
     The base implementation is directly taken from: https://github.com/DEAP/deap/blob/master/deap/algorithms.py
 
@@ -56,7 +65,7 @@ def eaSimple(population, toolbox, cxpb, mutpb, ngen, stats=None,
 
     """
     logbook = tools.Logbook()
-    logbook.header = ['gen', 'nevals'] + (stats.fields if stats else [])
+    logbook.header = ["gen", "nevals"] + (stats.fields if stats else [])
 
     # Evaluate the individuals with an invalid fitness
     invalid_ind = [ind for ind in population if not ind.fitness.valid]
@@ -109,8 +118,19 @@ def eaSimple(population, toolbox, cxpb, mutpb, ngen, stats=None,
     return population, logbook, n_gen
 
 
-def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen,
-                   stats=None, halloffame=None, callbacks: Union[list, Callable] = None, verbose=True):
+def eaMuPlusLambda(
+    population,
+    toolbox,
+    mu,
+    lambda_,
+    cxpb,
+    mutpb,
+    ngen,
+    stats=None,
+    halloffame=None,
+    callbacks: Union[list, Callable] = None,
+    verbose=True,
+):
     """
     The base implementation is directly taken from: https://github.com/DEAP/deap/blob/master/deap/algorithms.py
 
@@ -162,7 +182,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen,
 
     """
     logbook = tools.Logbook()
-    logbook.header = ['gen', 'nevals'] + (stats.fields if stats else [])
+    logbook.header = ["gen", "nevals"] + (stats.fields if stats else [])
 
     # Evaluate the individuals with an invalid fitness
     invalid_ind = [ind for ind in population if not ind.fitness.valid]
@@ -210,8 +230,19 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen,
     return population, logbook, n_gen
 
 
-def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen,
-                    stats=None, halloffame=None, callbacks: Union[list, Callable] = None, verbose=True):
+def eaMuCommaLambda(
+    population,
+    toolbox,
+    mu,
+    lambda_,
+    cxpb,
+    mutpb,
+    ngen,
+    stats=None,
+    halloffame=None,
+    callbacks: Union[list, Callable] = None,
+    verbose=True,
+):
     """
     The base implementation is directly taken from: https://github.com/DEAP/deap/blob/master/deap/algorithms.py
 
@@ -275,7 +306,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen,
         halloffame.update(population)
 
     logbook = tools.Logbook()
-    logbook.header = ['gen', 'nevals'] + (stats.fields if stats else [])
+    logbook.header = ["gen", "nevals"] + (stats.fields if stats else [])
 
     record = stats.compile(population) if stats is not None else {}
     logbook.record(gen=0, nevals=len(invalid_ind), **record)

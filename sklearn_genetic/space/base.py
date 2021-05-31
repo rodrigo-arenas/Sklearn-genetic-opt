@@ -1,4 +1,3 @@
-
 class BaseDimension(object):
     """
     Base class for the space definition of data types
@@ -9,4 +8,6 @@ class BaseDimension(object):
         Sample a random value from the assigned distribution
         """
 
-        raise NotImplementedError("The sample method must be defined according each data type handler")
+        raise NotImplementedError(
+            "The sample method must be defined according each data type handler"
+        )
