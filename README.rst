@@ -78,13 +78,7 @@ Example
                                   scoring='accuracy',
                                   population_size=10,
                                   generations=35,
-                                  tournament_size=3,
-                                  elitism=True,
-                                  crossover_probability=0.8,
-                                  mutation_probability=0.1,
                                   param_grid=param_grid,
-                                  criteria='max',
-                                  algorithm='eaMuPlusLambda',
                                   n_jobs=-1,
                                   verbose=True,
                                   keep_top_k=4)
@@ -124,4 +118,12 @@ Fitness evolution over generations
 Log controlled by verbosity
 
 .. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/0.4.x/demo/images/log.JPG?raw=True
+
+
+Contributing
+------------
+
+Contributions are more than welcome!
+There are lots of opportunities on the on gong project so please get in touch if you would like to help out.
+Also check the `Contribution guide <CONTRIBUTING.md>`_
 
