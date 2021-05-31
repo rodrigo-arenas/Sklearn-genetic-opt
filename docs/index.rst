@@ -3,10 +3,10 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to sklean-genetic-opt's documentation!
-==============================================
-
+sklean-genetic-opt
+==================
 scikit-learn models hyperparameters tuning, using evolutionary algorithms.
+##########################################################################
 
 This is meant to be an alternative from popular methods inside scikit-learn such as Grid Search and Randomized Grid Search.
 

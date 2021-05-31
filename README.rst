@@ -16,6 +16,7 @@
 .. |Docs| image:: https://readthedocs.org/projects/sklearn-genetic-opt/badge/?version=latest
 .. _Docs: https://sklearn-genetic-opt.readthedocs.io/en/latest/?badge=latest
 
+.. image:: /docs/logo.png
 
 Sklearn-genetic-opt
 ########
