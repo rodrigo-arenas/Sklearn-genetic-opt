@@ -70,7 +70,7 @@ using the 'fitness_min' value:
 
 ThresholdStopping
 -----------------
-IT stop the optimization if the current metric
+It stops the optimization if the current metric
 is greater or equals than the define threshold.
 
 For example, if we want to stop the optimization
