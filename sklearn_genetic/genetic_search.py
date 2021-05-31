@@ -1,4 +1,3 @@
-
 import numpy as np
 import random
 from deap import base, creator, tools
@@ -28,25 +27,27 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
     by cross-validated search over parameter settings.
     """
 
-    def __init__(self,
-                 estimator,
-                 cv=3,
-                 param_grid=None,
-                 scoring=None,
-                 population_size=10,
-                 generations=40,
-                 crossover_probability=0.8,
-                 mutation_probability=0.1,
-                 tournament_size=3,
-                 elitism=True,
-                 verbose=True,
-                 keep_top_k=1,
-                 criteria='max',
-                 algorithm='eaMuPlusLambda',
-                 refit=True,
-                 n_jobs=1,
-                 pre_dispatch='2*n_jobs',
-                 error_score=np.nan):
+    def __init__(
+        self,
+        estimator,
+        cv=3,
+        param_grid=None,
+        scoring=None,
+        population_size=10,
+        generations=40,
+        crossover_probability=0.8,
+        mutation_probability=0.1,
+        tournament_size=3,
+        elitism=True,
+        verbose=True,
+        keep_top_k=1,
+        criteria="max",
+        algorithm="eaMuPlusLambda",
+        refit=True,
+        n_jobs=1,
+        pre_dispatch="2*n_jobs",
+        error_score=np.nan,
+    ):
 
         """
         Parameters
@@ -202,10 +203,14 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         self.X_predict = None
 
         if not is_classifier(self.estimator) and not is_regressor(self.estimator):
-            raise ValueError(f"{self.estimator} is not a valid Sklearn classifier or regressor")
+            raise ValueError(
+                f"{self.estimator} is not a valid Sklearn classifier or regressor"
+            )
 
         if criteria not in Criteria.list():
-            raise ValueError(f"Criteria must be one of {Criteria.list()}, got {criteria} instead")
+            raise ValueError(
+                f"Criteria must be one of {Criteria.list()}, got {criteria} instead"
+            )
         elif criteria == Criteria.max.value:
             self.criteria_sign = 1
         elif criteria == Criteria.min.value:
@@ -226,16 +231,24 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
 
         IND_SIZE = 1
 
-        self.toolbox.register("individual",
-                              tools.initCycle, creator.Individual,
-                              tuple(attributes), n=IND_SIZE)
+        self.toolbox.register(
+            "individual",
+            tools.initCycle,
+            creator.Individual,
+            tuple(attributes),
+            n=IND_SIZE,
+        )
 
-        self.toolbox.register("population", tools.initRepeat, list, self.toolbox.individual)
+        self.toolbox.register(
+            "population", tools.initRepeat, list, self.toolbox.individual
+        )
 
         self.toolbox.register("mate", tools.cxTwoPoint)
         self.toolbox.register("mutate", self.mutate)
         if self.elitism:
-            self.toolbox.register("select", tools.selTournament, tournsize=self.tournament_size)
+            self.toolbox.register(
+                "select", tools.selTournament, tournsize=self.tournament_size
+            )
         else:
             self.toolbox.register("select", tools.selRoulette)
 
@@ -263,28 +276,32 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         return [individual]
 
     def evaluate(self, individual):
-        current_generation_params = {key: individual[n]
-                                     for n, key in enumerate(self.space.parameters)}
+        current_generation_params = {
+            key: individual[n] for n, key in enumerate(self.space.parameters)
+        }
 
         local_estimator = clone(self.estimator)
         local_estimator.set_params(**current_generation_params)
-        cv_scores = cross_val_score(local_estimator,
-                                    self.X_, self.y_,
-                                    cv=self.cv,
-                                    scoring=self.scoring,
-                                    n_jobs=self.n_jobs,
-                                    pre_dispatch=self.pre_dispatch,
-                                    error_score=self.error_score)
+        cv_scores = cross_val_score(
+            local_estimator,
+            self.X_,
+            self.y_,
+            cv=self.cv,
+            scoring=self.scoring,
+            n_jobs=self.n_jobs,
+            pre_dispatch=self.pre_dispatch,
+            error_score=self.error_score,
+        )
 
         score = np.mean(cv_scores)
 
-        current_generation_params['score'] = score
+        current_generation_params["score"] = score
 
         self.logbook.record(parameters=current_generation_params)
 
         return [self.criteria_sign * score]
 
-    @if_delegate_has_method(delegate='estimator')
+    @if_delegate_has_method(delegate="estimator")
     def fit(self, X, y, callbacks=None):
         """
         Main method of GASearchCV, starts the optimization
@@ -307,27 +324,34 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         """
         scorer = check_scoring(self.estimator, scoring=self.scoring)
 
-
         self.X_ = X
         self.y_ = y
         self.callbacks = check_callback(callbacks)
 
         self._register()
 
-        pop, log, n_gen = self._select_algorithm(pop=self._pop, stats=self._stats, hof=self._hof)
+        pop, log, n_gen = self._select_algorithm(
+            pop=self._pop, stats=self._stats, hof=self._hof
+        )
 
         self._n_iterations = n_gen
 
-        self.best_params_ = {key: self._hof[0][n] for n, key in enumerate(self.space.parameters)}
+        self.best_params_ = {
+            key: self._hof[0][n] for n, key in enumerate(self.space.parameters)
+        }
 
-        self.hof = {k: {key: self._hof[k][n] for n, key in enumerate(self.space.parameters)}
-                    for k in range(len(self._hof))}
+        self.hof = {
+            k: {key: self._hof[k][n] for n, key in enumerate(self.space.parameters)}
+            for k in range(len(self._hof))
+        }
 
-        self.history = {"gen": log.select("gen"),
-                        "fitness": log.select("fitness"),
-                        "fitness_std": log.select("fitness_std"),
-                        "fitness_max": log.select("fitness_max"),
-                        "fitness_min": log.select("fitness_min")}
+        self.history = {
+            "gen": log.select("gen"),
+            "fitness": log.select("fitness"),
+            "fitness_std": log.select("fitness_std"),
+            "fitness_max": log.select("fitness_max"),
+            "fitness_min": log.select("fitness_min"),
+        }
 
         if self.refit:
             self.estimator.set_params(**self.best_params_)
@@ -343,44 +367,54 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
 
         if self.algorithm == Algorithms.eaSimple.value:
 
-            pop, log, gen = eaSimple(pop, self.toolbox,
-                                     cxpb=self.crossover_probability,
-                                     stats=stats,
-                                     mutpb=self.mutation_probability,
-                                     ngen=self.generations,
-                                     halloffame=hof,
-                                     callbacks=self.callbacks,
-                                     verbose=self.verbose)
+            pop, log, gen = eaSimple(
+                pop,
+                self.toolbox,
+                cxpb=self.crossover_probability,
+                stats=stats,
+                mutpb=self.mutation_probability,
+                ngen=self.generations,
+                halloffame=hof,
+                callbacks=self.callbacks,
+                verbose=self.verbose,
+            )
 
         elif self.algorithm == Algorithms.eaMuPlusLambda.value:
 
-            pop, log, gen = eaMuPlusLambda(pop, self.toolbox,
-                                           mu=self.pop_size,
-                                           lambda_=2 * self.pop_size,
-                                           cxpb=self.crossover_probability,
-                                           stats=stats,
-                                           mutpb=self.mutation_probability,
-                                           ngen=self.generations,
-                                           halloffame=hof,
-                                           callbacks=self.callbacks,
-                                           verbose=self.verbose)
+            pop, log, gen = eaMuPlusLambda(
+                pop,
+                self.toolbox,
+                mu=self.pop_size,
+                lambda_=2 * self.pop_size,
+                cxpb=self.crossover_probability,
+                stats=stats,
+                mutpb=self.mutation_probability,
+                ngen=self.generations,
+                halloffame=hof,
+                callbacks=self.callbacks,
+                verbose=self.verbose,
+            )
 
         elif self.algorithm == Algorithms.eaMuCommaLambda.value:
-            pop, log, gen = eaMuCommaLambda(pop, self.toolbox,
-                                            mu=self.pop_size,
-                                            lambda_=2 * self.pop_size,
-                                            cxpb=self.crossover_probability,
-                                            stats=stats,
-                                            mutpb=self.mutation_probability,
-                                            ngen=self.generations,
-                                            halloffame=hof,
-                                            callbacks=self.callbacks,
-                                            verbose=self.verbose)
+            pop, log, gen = eaMuCommaLambda(
+                pop,
+                self.toolbox,
+                mu=self.pop_size,
+                lambda_=2 * self.pop_size,
+                cxpb=self.crossover_probability,
+                stats=stats,
+                mutpb=self.mutation_probability,
+                ngen=self.generations,
+                halloffame=hof,
+                callbacks=self.callbacks,
+                verbose=self.verbose,
+            )
 
         else:
             raise ValueError(
                 f"The algorithm {self.algorithm} is not supported, "
-                f"please select one from {Algorithms.list()}")
+                f"please select one from {Algorithms.list()}"
+            )
 
         return pop, log, gen
 
@@ -410,13 +444,16 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
             raise NotFittedError(
                 f"This GASearchCV instance is not fitted yet "
                 f"or used refit=False. Call 'fit' with appropriate "
-                f"arguments before using this estimator.")
+                f"arguments before using this estimator."
+            )
 
-        return {"gen": self.history['gen'][index],
-                "fitness": self.history['fitness'][index],
-                "fitness_std": self.history['fitness_std'][index],
-                "fitness_max": self.history['fitness_max'][index],
-                "fitness_min": self.history['fitness_min'][index]}
+        return {
+            "gen": self.history["gen"][index],
+            "fitness": self.history["fitness"][index],
+            "fitness_std": self.history["fitness_std"][index],
+            "fitness_max": self.history["fitness_max"][index],
+            "fitness_min": self.history["fitness_min"][index],
+        }
 
     def __iter__(self):
         self.n = 0
@@ -444,7 +481,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         """
         return self._n_iterations
 
-    @if_delegate_has_method(delegate='estimator')
+    @if_delegate_has_method(delegate="estimator")
     def predict(self, X):
         """
         Call predict on the estimator with the best found parameters.
@@ -460,7 +497,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         X = check_array(X)
         return self.estimator.predict(X)
 
-    @if_delegate_has_method(delegate='estimator')
+    @if_delegate_has_method(delegate="estimator")
     def score(self, X, y=None):
         """
         Returns the score on the given data, if the estimator has been refit.
@@ -475,7 +512,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         X = check_array(X)
         return self.estimator.score(X, y)
 
-    @if_delegate_has_method(delegate='estimator')
+    @if_delegate_has_method(delegate="estimator")
     def decision_function(self, X):
         """Call decision_function on the estimator with the best found parameters.
 
@@ -487,7 +524,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         X = check_array(X)
         return self.estimator.decision_function(X)
 
-    @if_delegate_has_method(delegate='estimator')
+    @if_delegate_has_method(delegate="estimator")
     def predict_proba(self, X):
         """
         Call predict_proba on the estimator with the best found parameters.
@@ -502,7 +539,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         X = check_array(X)
         return self.estimator.predict_proba(X)
 
-    @if_delegate_has_method(delegate='estimator')
+    @if_delegate_has_method(delegate="estimator")
     def predict_log_proba(self, X):
         """
         Call predict_log_proba on the estimator with the best found parameters.

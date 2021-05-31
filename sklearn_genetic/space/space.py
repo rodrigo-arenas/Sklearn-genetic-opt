@@ -1,14 +1,20 @@
 import numpy as np
 from scipy import stats
 
-from .space_parameters import IntegerDistributions, ContinuousDistributions, CategoricalDistributions
+from .space_parameters import (
+    IntegerDistributions,
+    ContinuousDistributions,
+    CategoricalDistributions,
+)
 from .base import BaseDimension
 
 
 class Integer(BaseDimension):
     """class for hyperparameters search space of integer values"""
 
-    def __init__(self, lower: int = None, upper: int = None, distribution: str = 'uniform'):
+    def __init__(
+        self, lower: int = None, upper: int = None, distribution: str = "uniform"
+    ):
         """
         Parameters
         ----------
@@ -24,16 +30,18 @@ class Integer(BaseDimension):
         """
 
         if not isinstance(lower, int):
-            raise ValueError('lower bound must be an integer')
+            raise ValueError("lower bound must be an integer")
 
         if not isinstance(upper, int):
-            raise ValueError('upper bound must be an integer')
+            raise ValueError("upper bound must be an integer")
 
         if lower > upper:
-            raise ValueError('The upper bound can not be smaller that the lower bound')
+            raise ValueError("The upper bound can not be smaller that the lower bound")
 
         if distribution not in IntegerDistributions.list():
-            raise ValueError(f"distribution must be one of {IntegerDistributions.list()}, got {distribution} instead")
+            raise ValueError(
+                f"distribution must be one of {IntegerDistributions.list()}, got {distribution} instead"
+            )
 
         self.lower = lower
         self.upper = upper
@@ -51,7 +59,9 @@ class Integer(BaseDimension):
 class Continuous(BaseDimension):
     """class for hyperparameters search space of real values"""
 
-    def __init__(self, lower: float = None, upper: float = None, distribution: str = 'uniform'):
+    def __init__(
+        self, lower: float = None, upper: float = None, distribution: str = "uniform"
+    ):
         """
         Parameters
         ----------
@@ -67,17 +77,18 @@ class Continuous(BaseDimension):
         """
 
         if not isinstance(lower, (int, float)):
-            raise ValueError('lower bound must be an integer or float')
+            raise ValueError("lower bound must be an integer or float")
 
         if not isinstance(upper, (int, float)):
-            raise ValueError('upper bound must be an integer or float')
+            raise ValueError("upper bound must be an integer or float")
 
         if lower > upper:
-            raise ValueError('The upper bound can not be smaller that the lower bound')
+            raise ValueError("The upper bound can not be smaller that the lower bound")
 
         if distribution not in ContinuousDistributions.list():
             raise ValueError(
-                f"distribution must be one of {ContinuousDistributions.list()}, got {distribution} instead")
+                f"distribution must be one of {ContinuousDistributions.list()}, got {distribution} instead"
+            )
 
         self.lower = lower
         self.upper = upper
@@ -97,7 +108,9 @@ class Continuous(BaseDimension):
 class Categorical(BaseDimension):
     """class for hyperparameters search space of categorical values"""
 
-    def __init__(self, choices: list = None, priors: list = None, distribution: str = 'choice'):
+    def __init__(
+        self, choices: list = None, priors: list = None, distribution: str = "choice"
+    ):
         """
         Parameters
         ----------
@@ -118,7 +131,9 @@ class Categorical(BaseDimension):
         if priors is None:
             self.priors = priors
         elif sum(priors) != 1:
-            raise ValueError(f"The sum of the probabilities in the priors must be one, got {sum(priors)} instead")
+            raise ValueError(
+                f"The sum of the probabilities in the priors must be one, got {sum(priors)} instead"
+            )
         elif not len(priors) == len(choices):
             raise ValueError("priors and choices must have same size")
         else:
@@ -126,7 +141,8 @@ class Categorical(BaseDimension):
 
         if distribution not in CategoricalDistributions.list():
             raise ValueError(
-                f"distribution must be one of {CategoricalDistributions.list()}, got {distribution} instead")
+                f"distribution must be one of {CategoricalDistributions.list()}, got {distribution} instead"
+            )
 
         self.choices = choices
         self.distribution = distribution
@@ -157,7 +173,9 @@ def check_space(param_grid: dict = None):
 
     for key, value in param_grid.items():
         if not isinstance(value, BaseDimension):
-            raise ValueError(f"{key} must be a valid instance of Integer, Categorical or Continuous classes")
+            raise ValueError(
+                f"{key} must be a valid instance of Integer, Categorical or Continuous classes"
+            )
 
 
 class Space(object):

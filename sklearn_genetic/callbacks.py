@@ -5,7 +5,9 @@ from .parameters import Metrics
 
 def check_stats(metric):
     if metric not in Metrics.list():
-        raise ValueError(f'metric must be one of {Metrics.list()}, but got {metric} instead')
+        raise ValueError(
+            f"metric must be one of {Metrics.list()}, but got {metric} instead"
+        )
 
 
 def check_callback(callback):
@@ -16,12 +18,15 @@ def check_callback(callback):
         if isinstance(callback, Callable):
             return [callback]
 
-        elif (isinstance(callback, list) and
-              all([isinstance(c, Callable) for c in callback])):
+        elif isinstance(callback, list) and all(
+            [isinstance(c, Callable) for c in callback]
+        ):
             return callback
 
         else:
-            raise ValueError("callback should be either a callable or a list of callables.")
+            raise ValueError(
+                "callback should be either a callable or a list of callables."
+            )
     else:
         return []
 
@@ -56,7 +61,7 @@ class ThresholdStopping:
     cross validation score is greater or equals than the define threshold
     """
 
-    def __init__(self, threshold, metric='fitness'):
+    def __init__(self, threshold, metric="fitness"):
         """
         Parameters
         ----------
@@ -93,7 +98,9 @@ class ThresholdStopping:
             stat = logbook.select(self.metric)[-1]
             return stat >= self.threshold
         else:
-            raise ValueError("At least one of record or logbook parameters must be provided")
+            raise ValueError(
+                "At least one of record or logbook parameters must be provided"
+            )
 
     def __call__(self, record=None, logbook=None):
         return self._check(record, logbook)
@@ -104,7 +111,7 @@ class ConsecutiveStopping:
     Stop the optimization if the current metric value is no greater that at least one metric from the last N generations
     """
 
-    def __init__(self, generations, metric='fitness'):
+    def __init__(self, generations, metric="fitness"):
         """
         Parameters
         ----------
@@ -143,7 +150,7 @@ class ConsecutiveStopping:
                 current_stat = logbook.select(self.metric)[-1]
 
             # Compare the current metric with the last |generations| metrics
-            stats = logbook.select(self.metric)[(-self.generations - 1):-1]
+            stats = logbook.select(self.metric)[(-self.generations - 1) : -1]
             return all(stat >= current_stat for stat in stats)
         else:
             raise ValueError("logbook parameter must be provided")
@@ -157,7 +164,7 @@ class DeltaThreshold:
     Stop the optimization if the absolute difference between the current and last metric less or equals than a threshold
     """
 
-    def __init__(self, threshold, metric: str = 'fitness'):
+    def __init__(self, threshold, metric: str = "fitness"):
         """
         Parameters
         ----------

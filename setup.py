@@ -24,16 +24,23 @@ setup(
     author_email="rodrigo.arenas456@gmail.com",
     license="MIT",
     classifiers=[
-        'License :: OSI Approved :: MIT License',
+        "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
-
     ],
-    project_urls={"Documentation": 'https://sklearn-genetic-opt.readthedocs.io/en/latest/',
-                  "Source Code": 'https://github.com/rodrigo-arenas/Sklearn-genetic-opt'},
-    packages=find_packages(include=['sklearn_genetic', 'sklearn_genetic.*']),
-    install_requires=['scikit-learn>=0.21.3', 'numpy>=1.14.5', 'seaborn>=0.9.0', 'deap>=1.3.1', 'pydantic>=1.8.2'],
+    project_urls={
+        "Documentation": "https://sklearn-genetic-opt.readthedocs.io/en/latest/",
+        "Source Code": "https://github.com/rodrigo-arenas/Sklearn-genetic-opt",
+    },
+    packages=find_packages(include=["sklearn_genetic", "sklearn_genetic.*"]),
+    install_requires=[
+        "scikit-learn>=0.21.3",
+        "numpy>=1.14.5",
+        "seaborn>=0.9.0",
+        "deap>=1.3.1",
+        "pydantic>=1.8.2",
+    ],
     python_requires=">=3.7",
     include_package_data=True,
 )
