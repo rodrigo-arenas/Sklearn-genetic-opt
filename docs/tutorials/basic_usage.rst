@@ -6,15 +6,19 @@ How to Use Sklearn-genetic-opt
 Introduction
 ------------
 
-Sklearn-genetic-opt uses evolutionary algorithms to fine-tune scikit-learns machine learning algorithms.
-It is designed to accept a `scikit-learn <http://scikit-learn.org/stable/index.html>`__ regression or classification model.
+Sklearn-genetic-opt uses evolutionary algorithms to fine-tune scikit-learn machine learning algorithms.
+It is designed to accept a `scikit-learn <http://scikit-learn.org/stable/index.html>`__
+regression or classification model (or a pipeline containing on of those).
 
-The idea behind this package is to define the set of hyperparameters we want to tune and what are their lower and uppers bounds on the values they can take.
-It is possible to define different optimization algorithms, callbacks and build-in parameters to control how the optimization is taken.
+The idea behind this package is to define the set of hyperparameters we want to tune and what are their
+lower and uppers bounds on the values they can take.
+It is possible to define different optimization algorithms, callbacks and build-in parameters to control how
+the optimization is taken.
 To get started, we'll use only the most basic features and options.
 
-The optimization is made by evolutionary algorithms with the help of the `deap package <https://deap.readthedocs.io/en/master/>`__.
-It works by defining the set of hyperparameters to tune, it starts with a randomly sampled set of options.
+The optimization is made by evolutionary algorithms with the help of the
+`deap package <https://deap.readthedocs.io/en/master/>`__.
+It works by defining the set of hyperparameters to tune, it starts with a randomly sampled set of options (population).
 Then by using evolutionary operators as the mating, mutation, selection and evaluation,
 it generates new candidates looking to improve the cross-validation score in each generation.
 It'll continue with this process until a number of generations is reached or until a callback criteria is met.
@@ -23,7 +27,7 @@ Example
 ------------
 
 First lets import some dataset and others scikit-learn standard modules, we'll use the `digits dataset <https://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_digits.html>`__.
-This is a classification problem, we'll fine-tune a Random Forest Classifier for this task
+This is a classification problem, we'll fine-tune a Random Forest Classifier for this task.
 
 .. code:: python3
 

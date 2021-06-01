@@ -16,8 +16,6 @@ from datetime import datetime
 
 sys.path.insert(0, os.path.abspath(".."))
 
-from sklearn_genetic import __version__
-
 # -- Project information -----------------------------------------------------
 
 project = "sklearn genetic opt"
@@ -25,8 +23,8 @@ copyright = f"2021--{datetime.now().year}, Rodrigo Arenas Gómez"
 author = "Rodrigo Arenas Gómez"
 
 # The full version, including alpha/beta/rc tags
-release = __version__
-version = __version__
+release = "0.5.0dev0"
+version = "0.5.0dev0"
 
 # -- General configuration ---------------------------------------------------
 
