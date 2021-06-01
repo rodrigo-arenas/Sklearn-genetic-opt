@@ -115,6 +115,18 @@ Log controlled by verbosity
 
 .. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/demo/images/log.JPG?raw=true
 
+Changelog
+#########
+
+See the `changelog <https://sklearn-genetic-opt.readthedocs.io/en/latest/release_notes.html>`__
+for notes on the changes of Sklearn-genetic-opt
+
+Important links
+###############
+
+- Official source code repo: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/
+- Download releases: https://pypi.org/project/sklearn-genetic-opt/
+- Issue tracker: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/issues
 
 Source code
 ###########
