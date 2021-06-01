@@ -6,6 +6,8 @@ from sklearn.datasets import load_boston
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.metrics import r2_score
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 
 
 data = load_boston()
@@ -19,15 +21,17 @@ X_train, X_test, y_train, y_test = train_test_split(
 
 clf = DecisionTreeRegressor()
 
+pipe = Pipeline([('scaler', StandardScaler()), ('clf', clf)])
+
 param_grid = {
-    "ccp_alpha": Continuous(0, 1),
-    "criterion": Categorical(["mse", "mae"]),
-    "max_depth": Integer(2, 20),
-    "min_samples_split": Integer(2, 30),
+    "clf__ccp_alpha": Continuous(0, 1),
+    "clf__criterion": Categorical(["mse", "mae"]),
+    "clf__max_depth": Integer(2, 20),
+    "clf__min_samples_split": Integer(2, 30),
 }
 
 evolved_estimator = GASearchCV(
-    clf,
+    estimator=pipe,
     cv=3,
     scoring="r2",
     population_size=20,

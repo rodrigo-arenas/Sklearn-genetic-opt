@@ -119,7 +119,7 @@ Log controlled by verbosity
 Source code
 ###########
 
-You can check the latest developtment version with the command::
+You can check the latest development version with the command::
 
    git clone https://github.com/rodrigo-arenas/Sklearn-genetic-opt.git
 
