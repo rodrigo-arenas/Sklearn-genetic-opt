@@ -16,7 +16,7 @@ from datetime import datetime
 
 sys.path.insert(0, os.path.abspath(".."))
 
-from sklearn_genetic import __version__
+from sklearn_genetic._version import __version__
 
 # -- Project information -----------------------------------------------------
 
