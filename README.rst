@@ -115,10 +115,27 @@ Log controlled by verbosity
 
 .. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/demo/images/log.JPG?raw=true
 
+
+Source code
+###########
+
+You can check the latest developtment version with the command::
+
+   git clone https://github.com/rodrigo-arenas/Sklearn-genetic-opt.git
+
 Contributing
-------------
+############
 
 Contributions are more than welcome!
 There are lots of opportunities on the on going project, so please get in touch if you would like to help out.
 Also check the `Contribution guide <https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/CONTRIBUTING.md>`_
+
+Testing
+#######
+
+After installation, you can launch the test suite from outside the source directory::
+
+   pytest sklearn_genetic
+
+
 
