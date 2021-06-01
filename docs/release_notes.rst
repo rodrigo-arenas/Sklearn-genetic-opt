@@ -3,6 +3,10 @@ Release Notes
 
 Some notes on new features in various releases
 
+What's new in 0.5
+-----------------
+
+
 What's new in 0.4
 -----------------
 
