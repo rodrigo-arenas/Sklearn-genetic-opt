@@ -3,9 +3,23 @@ Release Notes
 
 Some notes on new features in various releases
 
-What's new in 0.5
------------------
+What's new in 0.4.1
+-------------------
 
+^^^^^
+Docs:
+^^^^^
+
+* Added user guide on "Understanding the evaluation process"
+* Several guides on contributing, code of conduct
+* Added important links
+* Docs requirement are now independent of package requirements
+
+^^^^^^^^^
+Internal:
+^^^^^^^^^
+
+* Changed test ci from travis to Github actions
 
 What's new in 0.4
 -----------------
