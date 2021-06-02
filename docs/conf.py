@@ -23,8 +23,8 @@ copyright = f"2021--{datetime.now().year}, Rodrigo Arenas Gómez"
 author = "Rodrigo Arenas Gómez"
 
 # The full version, including alpha/beta/rc tags
-release = "0.4.1"
-version = "0.4.1"
+release = "0.5.1dev0"
+version = "0.5.1dev0"
 
 # -- General configuration ---------------------------------------------------
 
@@ -61,11 +61,6 @@ html_theme = "sphinx_rtd_theme"
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
-
-html_theme_options = {
-    "navigation_depth": 3,
-    "logo_only": True,
-}
 
 html_logo = "logo.png"
 
