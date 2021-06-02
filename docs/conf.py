@@ -23,8 +23,8 @@ copyright = f"2021--{datetime.now().year}, Rodrigo Arenas Gómez"
 author = "Rodrigo Arenas Gómez"
 
 # The full version, including alpha/beta/rc tags
-release = "0.5.0dev0"
-version = "0.5.0dev0"
+release = "0.4.1"
+version = "0.4.1"
 
 # -- General configuration ---------------------------------------------------
 
