@@ -24,7 +24,7 @@ it generates new candidates looking to improve the cross-validation score in eac
 It'll continue with this process until a number of generations is reached or until a callback criteria is met.
 
 Example
-------------
+-------
 
 First lets import some dataset and others scikit-learn standard modules, we'll use the `digits dataset <https://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_digits.html>`__.
 This is a classification problem, we'll fine-tune a Random Forest Classifier for this task.

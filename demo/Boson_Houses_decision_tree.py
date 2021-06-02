@@ -3,7 +3,7 @@ from sklearn_genetic import GASearchCV
 from sklearn_genetic.space import Integer, Categorical, Continuous
 from sklearn_genetic.plots import plot_fitness_evolution, plot_search_space
 from sklearn.datasets import load_boston
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, KFold
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.metrics import r2_score
 from sklearn.pipeline import Pipeline
@@ -18,6 +18,8 @@ X = data["data"]
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.33, random_state=42
 )
+
+cv = KFold(n_splits=5, shuffle=True)
 
 clf = DecisionTreeRegressor()
 
@@ -34,8 +36,8 @@ evolved_estimator = GASearchCV(
     estimator=pipe,
     cv=3,
     scoring="r2",
-    population_size=20,
-    generations=30,
+    population_size=15,
+    generations=20,
     tournament_size=3,
     elitism=True,
     keep_top_k=4,
