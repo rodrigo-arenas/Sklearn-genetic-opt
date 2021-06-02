@@ -1,9 +1,9 @@
 .. -*- mode: rst -*-
 
-|Travis|_ |Codecov|_ |PythonVersion|_ |PyPi|_ |Docs|_
+|Tests|_ |Codecov|_ |PythonVersion|_ |PyPi|_ |Docs|_
 
-.. |Travis| image:: https://www.travis-ci.com/rodrigo-arenas/Sklearn-genetic-opt.svg?branch=master
-.. _Travis:  https://www.travis-ci.com/rodrigo-arenas/Sklearn-genetic-opt
+.. |Tests| image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/actions/workflows/ci-tests.yml/badge.svg?branch=master
+.. _Tests: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/actions/workflows/ci-tests.yml
 
 .. |Codecov| image:: https://codecov.io/gh/rodrigo-arenas/Sklearn-genetic-opt/branch/master/graphs/badge.svg?branch=master&service=github
 .. _Codecov: https://codecov.io/github/rodrigo-arenas/Sklearn-genetic-opt?branch=master
