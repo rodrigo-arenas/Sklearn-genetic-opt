@@ -45,6 +45,7 @@ sklearn-genetic-opt requires:
    tutorials/basic_usage
    tutorials/callbacks
    tutorials/custom_callback
+   tutorials/understand_cv
    release_notes
 
 .. toctree::
