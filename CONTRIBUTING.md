@@ -29,6 +29,6 @@ We encourage you to follow these guidelines:
     ```bash
     pytest sklearn_genetic
     ```
-* We can not merge if travis is red.
+* We can not merge if the tests fails.
 
 Thank you for being part of this project!
