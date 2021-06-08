@@ -1,6 +1,7 @@
 import seaborn as sns
 
 from .utils import logbook_to_pandas
+from .parameters import Metrics
 
 
 """
@@ -8,21 +9,27 @@ This module contains some useful function to explore the results of the optimiza
 """
 
 
-def plot_fitness_evolution(estimator):
+def plot_fitness_evolution(estimator, metric="fitness"):
     """
     Parameters
     ----------
     estimator: estimator object
         A fitted estimator from :class:`~sklearn_genetic.GASearchCV`
+    metric: {"fitness", "fitness_std", "fitness_max", "fitness_min"}, default="fitness"
+        Logged metric into the estimator history to plot
 
     Returns
     -------
     Lines plot with the fitness value in each generation
 
     """
+
+    if metric not in Metrics.list():
+        raise ValueError(f"metric must be one of {Metrics.list()}, but got {metric} instead")
+
     sns.set_style("white")
 
-    fitness_history = estimator.history["fitness"]
+    fitness_history = estimator.history[metric]
 
     palette = sns.color_palette("rocket")
     sns.set(rc={"figure.figsize": (10, 10)})
@@ -30,7 +37,7 @@ def plot_fitness_evolution(estimator):
     ax = sns.lineplot(
         x=range(len(estimator)), y=fitness_history, markers=True, palette=palette
     )
-    ax.set_title("Fitness average evolution over generations")
+    ax.set_title(f"{metric.capitalize()} average evolution over generations")
 
     ax.set(xlabel="generations", ylabel=f"fitness ({estimator.scoring})")
     return ax

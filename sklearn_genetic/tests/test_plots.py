@@ -1,3 +1,4 @@
+import pytest
 from sklearn.datasets import load_boston
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeRegressor
@@ -44,8 +45,15 @@ evolved_estimator.fit(X_train, y_train)
 def test_plot_evolution():
     plot = plot_fitness_evolution(evolved_estimator)
 
+    with pytest.raises(Exception) as excinfo:
+        plot = plot_fitness_evolution(evolved_estimator, metric="accuracy")
+
+    assert str(excinfo.value) == "metric must be one of ['fitness', 'fitness_std', 'fitness_max', 'fitness_min'], " \
+                                 "but got accuracy instead"
+
 
 def test_plot_space():
+    plot = plot_search_space(evolved_estimator)
     plot = plot_search_space(evolved_estimator)
     plot = plot_search_space(
         evolved_estimator, features=["ccp_alpha", "max_depth", "min_samples_split"]
