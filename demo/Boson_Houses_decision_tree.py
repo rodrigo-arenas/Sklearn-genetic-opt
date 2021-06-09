@@ -57,7 +57,7 @@ print(evolved_estimator.best_params_)
 print("r-squared: ", "{:.2f}".format(r_squared))
 
 print("Best k solutions: ", evolved_estimator.hof)
-plot = plot_fitness_evolution(evolved_estimator)
+plot = plot_fitness_evolution(evolved_estimator, metric="fitness_sd")
 plt.show()
 
 plot_search_space(evolved_estimator)
