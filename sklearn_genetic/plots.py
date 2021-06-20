@@ -25,7 +25,9 @@ def plot_fitness_evolution(estimator, metric="fitness"):
     """
 
     if metric not in Metrics.list():
-        raise ValueError(f"metric must be one of {Metrics.list()}, but got {metric} instead")
+        raise ValueError(
+            f"metric must be one of {Metrics.list()}, but got {metric} instead"
+        )
 
     sns.set_style("white")
 
