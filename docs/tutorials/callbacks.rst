@@ -26,6 +26,8 @@ the data set and model used in :ref:`basic-usage`. The available callbacks are:
 
 * ThresholdStopping
 
+* LogbookSaver
+
 ConsecutiveStopping
 -------------------
 
@@ -65,7 +67,7 @@ using the 'fitness_min' value:
     from sklearn_genetic.callbacks import DeltaThreshold
     callback = DeltaThreshold(threshold=0.001, metric='fitness')
 
-    evolved_estimator.fit(X, y, callbacks=ConsecutiveStopping)
+    evolved_estimator.fit(X, y, callbacks=callback)
 
 
 ThresholdStopping
@@ -81,7 +83,29 @@ if the 'fitness_max' is above 0.98
     from sklearn_genetic.callbacks import ThresholdStopping
     callback = ThresholdStopping(threshold=0.98, metric='fitness_max')
 
-    evolved_estimator.fit(X, y, callbacks=ConsecutiveStopping)
+    evolved_estimator.fit(X, y, callbacks=callback)
+
+LogbookSaver
+------------
+It saves at each iteration the Logbook object with all the parameters and
+the cv score achieved by those parameters. It uses joblib.dump to save
+the file.
+
+.. code:: python3
+
+    from sklearn_genetic.callbacks import LogbookSaver
+    callback = LogbookSaver(checkpoint_path="./logbook.pkl")
+
+    evolved_estimator.fit(X, y, callbacks=callback)
+
+Then the object can be restored:
+
+.. code:: python3
+
+    from joblib import load
+
+    logbook = load("/.logbook.pkl")
+    print(logbook)
 
 Define Multiple Callbacks
 -------------------------
