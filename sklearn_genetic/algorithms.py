@@ -4,7 +4,7 @@ from collections.abc import Callable
 from deap import tools
 from deap.algorithms import varAnd, varOr
 
-from .callbacks import eval_callbacks
+from .callbacks.validations import eval_callbacks
 
 
 def eaSimple(

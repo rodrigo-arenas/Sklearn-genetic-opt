@@ -28,6 +28,7 @@ It's advised to install sklearn-genetic using a virtual env, inside the env use:
 .. |SeabornMinVersion| replace:: 0.9.0
 .. |DEAPMinVersion| replace:: 1.3.1
 .. |PydanticMinVersion| replace:: 1.8.2
+.. |MLflowMinVersion| replace:: 1.17.0
 
 sklearn-genetic-opt requires:
 
@@ -37,6 +38,7 @@ sklearn-genetic-opt requires:
 - Seaborn (>= |SeabornMinVersion|)
 - DEAP (>= |DEAPMinVersion|)
 - Pydantic (>= |PydanticMinVersion|)
+- MLflow (>= |MLflowMinVersion|)
 
 .. toctree::
    :maxdepth: 2
@@ -46,6 +48,7 @@ sklearn-genetic-opt requires:
    tutorials/callbacks
    tutorials/custom_callback
    tutorials/understand_cv
+   tutorials/mlflow
    release_notes
 
 .. toctree::
@@ -54,12 +57,14 @@ sklearn-genetic-opt requires:
 
    api/gasearchcv
    api/callbacks
+   api/plots
+   api/mlflow
    api/space
    api/algorithms
-   api/plots
+
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: External References:
 
    external_references
