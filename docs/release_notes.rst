@@ -3,6 +3,20 @@ Release Notes
 
 Some notes on new features in various releases
 
+What's new in 0.5.0
+-------------------
+
+^^^^^^^^^
+Features:
+^^^^^^^^^
+
+* Added the parameter estimator to all the functions on
+  the module :mod:`~sklearn_genetic.callbacks`
+
+* Implemented the callback :class:`~sklearn_genetic.callbacks.LogbookSaver`
+  which saves the estimator.logbook object with all the fitted hyperparameters
+  and their cross-validation score
+
 What's new in 0.4.1
 -------------------
 
