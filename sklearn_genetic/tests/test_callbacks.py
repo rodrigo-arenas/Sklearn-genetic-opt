@@ -10,13 +10,12 @@ from sklearn.model_selection import train_test_split
 from .. import GASearchCV
 from ..space import Integer, Continuous
 from ..callbacks import (
-    check_callback,
-    check_stats,
     ThresholdStopping,
     ConsecutiveStopping,
     DeltaThreshold,
     LogbookSaver,
 )
+from ..callbacks.validations import check_stats, check_callback
 
 data = load_digits()
 label_names = data["target_names"]

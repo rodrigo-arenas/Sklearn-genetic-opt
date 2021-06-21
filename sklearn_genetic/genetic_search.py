@@ -12,7 +12,7 @@ from sklearn.exceptions import NotFittedError
 from .parameters import Algorithms, Criteria
 from .space import Space
 from .algorithms import eaSimple, eaMuPlusLambda, eaMuCommaLambda
-from .callbacks import check_callback
+from .callbacks.validations import check_callback
 
 
 class GASearchCV(ClassifierMixin, RegressorMixin):
