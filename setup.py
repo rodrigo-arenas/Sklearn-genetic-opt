@@ -40,6 +40,7 @@ setup(
         "seaborn>=0.9.0",
         "deap>=1.3.1",
         "pydantic>=1.8.2",
+        "mlflow>=1.17.0",
     ],
     python_requires=">=3.7",
     include_package_data=True,

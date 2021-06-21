@@ -54,9 +54,11 @@ sklearn-genetic-opt requires:
 
    api/gasearchcv
    api/callbacks
+   api/plots
+   api/mlflow
    api/space
    api/algorithms
-   api/plots
+
 
 .. toctree::
    :maxdepth: 2

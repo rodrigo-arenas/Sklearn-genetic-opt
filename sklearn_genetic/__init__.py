@@ -4,7 +4,10 @@ from .callbacks import (
     ThresholdStopping,
     ConsecutiveStopping,
     DeltaThreshold,
+    LogbookSaver,
 )
+from .mlflow import MLflowConfig
+
 from ._version import __version__
 
 __all__ = [
@@ -14,5 +17,7 @@ __all__ = [
     "ThresholdStopping",
     "ConsecutiveStopping",
     "DeltaThreshold",
+    "LogbookSaver",
+    "MLflowConfig",
     "__version__",
 ]

@@ -47,6 +47,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         n_jobs=1,
         pre_dispatch="2*n_jobs",
         error_score=np.nan,
+        log_config=None,
     ):
 
         """
@@ -109,9 +110,8 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
             If ``True``, shows the metrics on the optimization routine.
 
         keep_top_k : int, default=1
-            Number of best solutions to keep in the hof object.
-            If a callback stops the algorithm before k iterations, it will
-            return only one set of parameters per iteration.
+            Number of best solutions to keep in the hof object. If a callback stops the algorithm before k iterations,
+            it will return only one set of parameters per iteration.
 
         criteria : {'max', 'min'} , default='max'
             ``max`` if a higher scoring metric is better, ``min`` otherwise.
@@ -138,10 +138,15 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
                   spawned
                 - A str, giving an expression as a function of n_jobs,
                   as in '2*n_jobs'
+
         error_score : 'raise' or numeric, default=np.nan
             Value to assign to the score if an error occurs in estimator fitting.
             If set to ``'raise'``, the error is raised.
             If a numeric value is given, FitFailedWarning is raised.
+
+        log_config : :class:`~sklearn_genetic.mlflow.MLflowConfig`, default = None
+            Configuration to log metrics and models to mlflow, of None,
+            no mlflow logging will be performed
 
         Attributes
         ----------
@@ -201,6 +206,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         self._hof = None
         self.hof = None
         self.X_predict = None
+        self.log_config = log_config
 
         if not is_classifier(self.estimator) and not is_regressor(self.estimator):
             raise ValueError(
@@ -294,6 +300,13 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         )
 
         score = np.mean(cv_scores)
+
+        if self.log_config is not None:
+            self.log_config.create_run(
+                parameters=current_generation_params,
+                score=score,
+                estimator=local_estimator,
+            )
 
         current_generation_params["score"] = score
 
