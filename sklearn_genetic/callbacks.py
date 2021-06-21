@@ -263,7 +263,7 @@ class LogbookSaver:
             dump_logbook = deepcopy(estimator.logbook.chapters["parameters"])
             dump(dump_logbook, self.checkpoint_path, **self.dump_options)
         except Exception as e:
-            logging.error("Could not save the Logbook in the checkpoint", e)
+            logging.error("Could not save the Logbook in the checkpoint")
 
         return False
 
