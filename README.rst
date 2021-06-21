@@ -46,6 +46,7 @@ Main Features:
 * **Algorithms**: Set of different evolutionary algorithms to use as optimization procedure
 * **Callbacks**: Custom evaluation strategies to generate Early Stopping rules
 * **Plots**: Generate pre-define plots to understand the optimization process
+* **MLflow**: Build-in integration with mlflow to log all the hyperparameters and their cv-score
 
 Usage:
 ######
