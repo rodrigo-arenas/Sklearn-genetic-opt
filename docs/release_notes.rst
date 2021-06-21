@@ -10,12 +10,22 @@ What's new in 0.5.0
 Features:
 ^^^^^^^^^
 
-* Added the parameter estimator to all the functions on
-  the module :mod:`~sklearn_genetic.callbacks`
+
+* Build-in integration with MLflow using the :class:`~sklearn_genetic.mlflow.MLflowConfig`
+  and the new parameter `log_config` from :class:`~sklearn_genetic.GASearchCV`
 
 * Implemented the callback :class:`~sklearn_genetic.callbacks.LogbookSaver`
   which saves the estimator.logbook object with all the fitted hyperparameters
   and their cross-validation score
+
+* Added the parameter `estimator` to all the functions on
+  the module :mod:`~sklearn_genetic.callbacks`
+
+^^^^^
+Docs:
+^^^^^
+
+* Added user guide "Integrating with MLflow"
 
 What's new in 0.4.1
 -------------------
