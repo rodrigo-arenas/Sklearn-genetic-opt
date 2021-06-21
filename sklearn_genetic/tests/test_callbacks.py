@@ -1,13 +1,30 @@
 import pytest
+import os
+import logging
 
 from deap.tools import Logbook
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.datasets import load_digits
+from sklearn.model_selection import train_test_split
 
+from .. import GASearchCV
+from ..space import Integer, Continuous
 from ..callbacks import (
     check_callback,
     check_stats,
     ThresholdStopping,
     ConsecutiveStopping,
     DeltaThreshold,
+    LogbookSaver,
+)
+
+data = load_digits()
+label_names = data["target_names"]
+y = data["target"]
+X = data["data"]
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.33, random_state=42
 )
 
 
@@ -117,3 +134,33 @@ def test_delta_callback():
     with pytest.raises(Exception) as excinfo:
         callback()
     assert str(excinfo.value) == "logbook parameter must be provided"
+
+
+def test_logbook_saver_callback(caplog):
+    callback = LogbookSaver("./logbook.pkl")
+    assert check_callback(callback) == [callback]
+
+    clf = DecisionTreeClassifier()
+    evolved_estimator = GASearchCV(
+        clf,
+        cv=3,
+        scoring="accuracy",
+        generations=2,
+        param_grid={
+            "min_weight_fraction_leaf": Continuous(0, 0.5),
+            "max_depth": Integer(2, 20),
+            "max_leaf_nodes": Integer(2, 30),
+        },
+        verbose=False,
+    )
+
+    evolved_estimator.fit(X_train, y_train, callbacks=callback)
+
+    assert os.path.exists("./logbook.pkl")
+
+    os.remove("./logbook.pkl")
+
+    with caplog.at_level(logging.ERROR):
+        callback = LogbookSaver(checkpoint_path="./no_folder/logbook.pkl", estimator=4)
+        callback()
+    assert "Could not save the Logbook in the checkpoint" in caplog.text

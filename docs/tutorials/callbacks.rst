@@ -6,7 +6,7 @@ Introduction
 
 Callbacks can be defined to take decisions over the optimization
 process while it is still running.
-Common callbacks includes different rules to stop the algorithm.
+Common callbacks includes different rules to stop the algorithm or log artifacts.
 
 The callbacks are passed to the ``.fit`` method
 of the :class:`~sklearn_genetic.GASearchCV` class.
