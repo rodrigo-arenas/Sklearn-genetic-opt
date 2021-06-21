@@ -17,6 +17,7 @@ def eaSimple(
     halloffame=None,
     callbacks=None,
     verbose=True,
+    estimator=None,
 ):
     """
     The base implementation is directly taken from: https://github.com/DEAP/deap/blob/master/deap/algorithms.py
@@ -50,6 +51,9 @@ def eaSimple(
 
     verbose: bool, default=True
         Whether or not to log the statistics.
+
+    estimator: :class:`~sklearn_genetic.GASearchCV`, default = None
+        Estimator that is being optimized
 
     Returns
     -------
@@ -109,7 +113,7 @@ def eaSimple(
             print(logbook.stream)
 
         # Check if any of the callbacks conditions are True to stop the iteration
-        if eval_callbacks(callbacks, record, logbook):
+        if eval_callbacks(callbacks, record, logbook, estimator):
             print("Process stopped earlier due a callback")
             break
 
@@ -130,6 +134,7 @@ def eaMuPlusLambda(
     halloffame=None,
     callbacks: Union[list, Callable] = None,
     verbose=True,
+    estimator=None,
 ):
     """
     The base implementation is directly taken from: https://github.com/DEAP/deap/blob/master/deap/algorithms.py
@@ -167,6 +172,9 @@ def eaMuPlusLambda(
 
     verbose: bool, default=True
         Whether or not to log the statistics.
+
+    estimator: :class:`~sklearn_genetic.GASearchCV`, default = None
+        Estimator that is being optimized
 
     Returns
     -------
@@ -222,7 +230,7 @@ def eaMuPlusLambda(
         if verbose:
             print(logbook.stream)
 
-        if eval_callbacks(callbacks, record, logbook):
+        if eval_callbacks(callbacks, record, logbook, estimator):
             print("Process stopped earlier due a callback")
             break
 
@@ -242,6 +250,7 @@ def eaMuCommaLambda(
     halloffame=None,
     callbacks: Union[list, Callable] = None,
     verbose=True,
+    estimator=None,
 ):
     """
     The base implementation is directly taken from: https://github.com/DEAP/deap/blob/master/deap/algorithms.py
@@ -280,6 +289,9 @@ def eaMuCommaLambda(
 
     verbose: bool, default=True
         Whether or not to log the statistics.
+
+    estimator: :class:`~sklearn_genetic.GASearchCV`, default = None
+        Estimator that is being optimized
 
     Returns
     -------
@@ -338,7 +350,7 @@ def eaMuCommaLambda(
             print(logbook.stream)
 
         # Check if any of the callbacks conditions are True to stop the iteration
-        if eval_callbacks(callbacks, record, logbook):
+        if eval_callbacks(callbacks, record, logbook, estimator):
             print("Process stopped earlier due a callback")
             break
 

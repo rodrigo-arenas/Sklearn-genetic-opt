@@ -1,4 +1,7 @@
 from collections.abc import Callable
+from joblib import dump
+from copy import deepcopy
+import logging
 
 from .parameters import Metrics
 
@@ -31,7 +34,7 @@ def check_callback(callback):
         return []
 
 
-def eval_callbacks(callbacks, record, logbook):
+def eval_callbacks(callbacks, record, logbook, estimator):
     """Evaluate list of callbacks on result.
     Parameters
     ----------
@@ -40,6 +43,9 @@ def eval_callbacks(callbacks, record, logbook):
     record : logbook record
     logbook:
             Current stream logbook with the stats required
+    estimator: :class:`~sklearn_genetic.GASearchCV`, default = None
+        Estimator that is being optimized
+
     Returns
     -------
     decision : bool
@@ -48,7 +54,7 @@ def eval_callbacks(callbacks, record, logbook):
     stop = False
     if callbacks:
         for c in callbacks:
-            decision = c(record, logbook)
+            decision = c(record, logbook, estimator)
             if decision is not None:
                 stop = stop or decision
 
@@ -77,7 +83,7 @@ class ThresholdStopping:
         self.threshold = threshold
         self.metric = metric
 
-    def on_step(self, record, logbook):
+    def on_step(self, record, logbook, estimator):
         """
         Parameters
         ----------
@@ -85,6 +91,8 @@ class ThresholdStopping:
             A logbook record
         logbook:
             Current stream logbook with the stats required
+        estimator:
+            :class:`~sklearn_genetic.GASearchCV` Estimator that is being optimized
 
         Returns
         -------
@@ -102,8 +110,8 @@ class ThresholdStopping:
                 "At least one of record or logbook parameters must be provided"
             )
 
-    def __call__(self, record=None, logbook=None):
-        return self.on_step(record, logbook)
+    def __call__(self, record=None, logbook=None, estimator=None):
+        return self.on_step(record, logbook, estimator)
 
 
 class ConsecutiveStopping:
@@ -126,7 +134,7 @@ class ConsecutiveStopping:
         self.generations = generations
         self.metric = metric
 
-    def on_step(self, record=None, logbook=None):
+    def on_step(self, record=None, logbook=None, estimator=None):
         """
         Parameters
         ----------
@@ -134,6 +142,8 @@ class ConsecutiveStopping:
             A logbook record
         logbook:
             Current stream logbook with the stats required
+        estimator:
+            :class:`~sklearn_genetic.GASearchCV` Estimator that is being optimized
 
         Returns
         -------
@@ -155,8 +165,8 @@ class ConsecutiveStopping:
         else:
             raise ValueError("logbook parameter must be provided")
 
-    def __call__(self, record=None, logbook=None):
-        return self.on_step(record, logbook)
+    def __call__(self, record=None, logbook=None, estimator=None):
+        return self.on_step(record, logbook, estimator)
 
 
 class DeltaThreshold:
@@ -179,7 +189,7 @@ class DeltaThreshold:
         self.threshold = threshold
         self.metric = metric
 
-    def on_step(self, record=None, logbook=None):
+    def on_step(self, record=None, logbook=None, estimator=None):
         """
         Parameters
         ----------
@@ -187,6 +197,8 @@ class DeltaThreshold:
             A logbook record
         logbook:
             Current stream logbook with the stats required
+        estimator:
+            :class:`~sklearn_genetic.GASearchCV` Estimator that is being optimized
 
         Returns
         -------
@@ -209,5 +221,51 @@ class DeltaThreshold:
         else:
             raise ValueError("logbook parameter must be provided")
 
-    def __call__(self, record=None, logbook=None):
-        return self.on_step(record, logbook)
+    def __call__(self, record=None, logbook=None, estimator=None):
+        return self.on_step(record, logbook, estimator)
+
+
+class LogbookSaver:
+    """
+    Saves the estimator.logbook parameter chapter object in a local file system
+    """
+
+    def __init__(self, checkpoint_path, **dump_options):
+        """
+        Parameters
+        ----------
+        checkpoint_path: str
+            Location where checkpoint will be saved to
+        dump_options, str
+            Valid kwargs from joblib :class:`~joblib.dump`
+        """
+
+        self.checkpoint_path = checkpoint_path
+        self.dump_options = dump_options
+
+    def on_step(self, record=None, logbook=None, estimator=None):
+        """
+        Parameters
+        ----------
+        record: dict: default=None
+            A logbook record
+        logbook:
+            Current stream logbook with the stats required
+        estimator:
+            :class:`~sklearn_genetic.GASearchCV` Estimator that is being optimized
+
+        Returns
+        -------
+        decision: False
+            Always returns False as this class doesn't take decisions over the optimization
+        """
+        try:
+            dump_logbook = deepcopy(estimator.logbook.chapters["parameters"])
+            dump(dump_logbook, self.checkpoint_path, **self.dump_options)
+        except Exception as e:
+            logging.error("Could not save the Logbook in the checkpoint")
+
+        return False
+
+    def __call__(self, record=None, logbook=None, estimator=None):
+        return self.on_step(record, logbook, estimator)

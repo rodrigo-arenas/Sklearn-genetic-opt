@@ -377,6 +377,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
                 halloffame=hof,
                 callbacks=self.callbacks,
                 verbose=self.verbose,
+                estimator=self,
             )
 
         elif self.algorithm == Algorithms.eaMuPlusLambda.value:
@@ -393,6 +394,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
                 halloffame=hof,
                 callbacks=self.callbacks,
                 verbose=self.verbose,
+                estimator=self,
             )
 
         elif self.algorithm == Algorithms.eaMuCommaLambda.value:
@@ -408,6 +410,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
                 halloffame=hof,
                 callbacks=self.callbacks,
                 verbose=self.verbose,
+                estimator=self,
             )
 
         else:

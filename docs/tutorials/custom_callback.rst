@@ -13,10 +13,12 @@ In this example, we are going to define a dummy callback that
 stops the process if there have been more that `N` fitness values
 bellow a threshold value.
 
-The callback must have two parameters: `record` and `logbook`.
-Those are a dictionary and a deap's Logbook object respectively,
-with the current iteration metrics and all the past iterations metrics.
-You can choice which to use, but both must be parameters
+The callback must have three parameters: `record`, `logbook` and `estimator`.
+Those are a dictionary, a deap's Logbook object respectively, and the
+current :class:`~sklearn_genetic.GASearchCV`
+with the current iteration metrics, all the past iterations metrics
+and all the properties saved in the estimator.
+You can choice which to use, but all of them must be parameters
 on the ``on_step`` and ``__call__`` methods.
 
 So to check inside the logbook, we could define a function like this:
@@ -27,7 +29,7 @@ So to check inside the logbook, we could define a function like this:
     metric='fitness'
     threshold=0.8
 
-    def on_step(record, logbook, threshold):
+    def on_step(record, logbook, threshold, estimator=None):
         # Not enough data points
         if len(logbook) <= N:
             return False
@@ -53,7 +55,7 @@ that will have all this parameters, so we can rewrite it like this:
            self.N = N
            self.metric = metric
 
-       def on_step(self, record, logbook):
+       def on_step(self, record, logbook, estimator=None):
            # Not enough data points
            if len(logbook) <= self.N:
                return False
@@ -67,8 +69,8 @@ that will have all this parameters, so we can rewrite it like this:
 
            return False
 
-       def __call__(self, record, logbook):
-           return self.on_step(record, logbook)
+       def __call__(self, record, logbook, estimator=None):
+           return self.on_step(record, logbook, estimator)
 
 
 So that is it, now you can initialize the DummyThreshold

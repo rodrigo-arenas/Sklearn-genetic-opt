@@ -12,3 +12,7 @@ Callbacks
 .. autoclass:: sklearn_genetic.callbacks.ThresholdStopping
    :members:
    :undoc-members: False
+
+.. autoclass:: sklearn_genetic.callbacks.LogbookSaver
+   :members:
+   :undoc-members: False
