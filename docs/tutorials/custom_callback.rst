@@ -5,9 +5,10 @@ sklearn-genetic-opt comes with some pre-defined callbacks,
 but you can make one of your own by defining a callable with
 certain methods.
 
-The callback must be a class that implements the ``__call__`` and
-``on_step`` methods, the result of them must be a bool, ``True`` means
-that the optimization must stop, ``False``, means it can continue.
+The callback must be a class with inheritance from the class
+:class:`~sklearn_genetic.callbacks.base.BaseCallback` that implements the
+``__call__`` and ``on_step`` methods, the result of them must be a bool,
+``True`` means that the optimization must stop, ``False``, means it can continue.
 
 In this example, we are going to define a dummy callback that
 stops the process if there have been more that `N` fitness values
@@ -49,7 +50,9 @@ that will have all this parameters, so we can rewrite it like this:
 
 .. code-block:: python
 
-   class DummyThreshold:
+   from sklearn_genetic.callbacks.base import BaseCallback
+
+   class DummyThreshold(BaseCallback):
        def __init__(self, threshold, N, metric='fitness'):
            self.threshold = threshold
            self.N = N

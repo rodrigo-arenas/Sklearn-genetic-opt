@@ -16,6 +16,7 @@ from ..callbacks import (
     LogbookSaver,
 )
 from ..callbacks.validations import check_stats, check_callback
+from ..callbacks.base import BaseCallback
 
 data = load_digits()
 label_names = data["target_names"]
@@ -40,15 +41,54 @@ def test_check_metrics():
 
 
 def test_check_callback():
-    assert check_callback(sum) == [sum]
+    callback_threshold = ThresholdStopping(threshold=0.8)
+    callback_consecutive = ConsecutiveStopping(generations=3)
+    assert check_callback(callback_threshold) == [callback_threshold]
     assert check_callback(None) == []
-    assert check_callback([sum, min]) == [sum, min]
+    assert check_callback([callback_threshold, callback_consecutive]) == [
+        callback_threshold,
+        callback_consecutive,
+    ]
 
     with pytest.raises(Exception) as excinfo:
         check_callback(1)
     assert (
         str(excinfo.value)
-        == "callback should be either a callable or a list of callables."
+        == "callback should be either a class or a list of classes with inheritance from "
+        "callbacks.base.BaseCallback"
+    )
+
+
+def test_wrong_base_callback():
+    class MyDummyCallback(BaseCallback):
+        def __init__(self, metric):
+            self.metric = metric
+
+        def validate(self):
+            print(self.metric)
+
+    with pytest.raises(Exception) as excinfo:
+        callback = MyDummyCallback()
+    assert (
+        str(excinfo.value)
+        == "Can't instantiate abstract class MyDummyCallback with abstract methods __call__, on_step"
+    )
+
+
+def test_base_callback_call():
+    class MyDummyCallback(BaseCallback):
+        def __init__(self, metric):
+            self.metric = metric
+
+        def on_step(self, record=None, logbook=None, estimator=None):
+            print(record)
+
+    with pytest.raises(Exception) as excinfo:
+        callback = MyDummyCallback(metric="fitness")
+
+    assert (
+        str(excinfo.value)
+        == "Can't instantiate abstract class MyDummyCallback with abstract methods __call__"
     )
 
 

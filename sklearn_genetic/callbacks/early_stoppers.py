@@ -1,7 +1,8 @@
 from .validations import check_stats
+from .base import BaseCallback
 
 
-class ThresholdStopping:
+class ThresholdStopping(BaseCallback):
     """
     Stop the optimization if the metric from
     cross validation score is greater or equals than the define threshold
@@ -24,21 +25,6 @@ class ThresholdStopping:
         self.metric = metric
 
     def on_step(self, record, logbook, estimator):
-        """
-        Parameters
-        ----------
-        record: dict: default=None
-            A logbook record
-        logbook:
-            Current stream logbook with the stats required
-        estimator:
-            :class:`~sklearn_genetic.GASearchCV` Estimator that is being optimized
-
-        Returns
-        -------
-        decision: bool
-            True if the optimization algorithm must stop, false otherwise
-        """
         if record is not None:
             return record[self.metric] >= self.threshold
         elif logbook is not None:
@@ -54,7 +40,7 @@ class ThresholdStopping:
         return self.on_step(record, logbook, estimator)
 
 
-class ConsecutiveStopping:
+class ConsecutiveStopping(BaseCallback):
     """
     Stop the optimization if the current metric value is no greater that at least one metric from the last N generations
     """
@@ -75,21 +61,6 @@ class ConsecutiveStopping:
         self.metric = metric
 
     def on_step(self, record=None, logbook=None, estimator=None):
-        """
-        Parameters
-        ----------
-        record: dict: default=None
-            A logbook record
-        logbook:
-            Current stream logbook with the stats required
-        estimator:
-            :class:`~sklearn_genetic.GASearchCV` Estimator that is being optimized
-
-        Returns
-        -------
-        decision: bool
-            True if the optimization algorithm must stop, false otherwise
-        """
         if logbook is not None:
             if len(logbook) <= self.generations:
                 return False
@@ -109,7 +80,7 @@ class ConsecutiveStopping:
         return self.on_step(record, logbook, estimator)
 
 
-class DeltaThreshold:
+class DeltaThreshold(BaseCallback):
     """
     Stop the optimization if the absolute difference between the current and last metric less or equals than a threshold
     """
@@ -130,21 +101,6 @@ class DeltaThreshold:
         self.metric = metric
 
     def on_step(self, record=None, logbook=None, estimator=None):
-        """
-        Parameters
-        ----------
-        record: dict: default=None
-            A logbook record
-        logbook:
-            Current stream logbook with the stats required
-        estimator:
-            :class:`~sklearn_genetic.GASearchCV` Estimator that is being optimized
-
-        Returns
-        -------
-        decision: bool
-            True if the optimization algorithm must stop, false otherwise
-        """
         if logbook is not None:
             if len(logbook) <= 1:
                 return False
