@@ -9,7 +9,7 @@ from sklearn.cluster import KMeans
 
 from .. import GASearchCV
 from ..space import Integer, Categorical, Continuous
-from ..callbacks import ThresholdStopping
+from ..callbacks import ThresholdStopping, DeltaThreshold, ConsecutiveStopping
 
 data = load_digits()
 label_names = data["target_names"]
@@ -63,7 +63,45 @@ def test_expected_ga_results():
     assert "fitness_min" in evolved_estimator[0]
 
 
-def test_expected_eaSimple_results_early_stopping():
+@pytest.mark.parametrize(
+    "algorithm, callback",
+    [
+        ("eaSimple", ThresholdStopping(threshold=0.01)),
+        ("eaMuPlusLambda", ThresholdStopping(threshold=0.01)),
+        ("eaMuCommaLambda", ThresholdStopping(threshold=0.01)),
+        ("eaSimple", ConsecutiveStopping(generations=5, metric="fitness")),
+        ("eaMuPlusLambda", ConsecutiveStopping(generations=5, metric="fitness")),
+        ("eaMuCommaLambda", ConsecutiveStopping(generations=5, metric="fitness")),
+        ("eaSimple", DeltaThreshold(threshold=0.001, metric="fitness")),
+        ("eaMuPlusLambda", DeltaThreshold(threshold=0.001, metric="fitness")),
+        ("eaMuCommaLambda", DeltaThreshold(threshold=0.001, metric="fitness")),
+        (
+            "eaSimple",
+            [
+                ThresholdStopping(threshold=0.01),
+                ConsecutiveStopping(generations=5, metric="fitness"),
+                DeltaThreshold(threshold=0.001, metric="fitness"),
+            ],
+        ),
+        (
+            "eaMuPlusLambda",
+            [
+                ThresholdStopping(threshold=0.01),
+                ConsecutiveStopping(generations=5, metric="fitness"),
+                DeltaThreshold(threshold=0.001, metric="fitness"),
+            ],
+        ),
+        (
+            "eaMuCommaLambda",
+            [
+                ThresholdStopping(threshold=0.01),
+                ConsecutiveStopping(generations=5, metric="fitness"),
+                DeltaThreshold(threshold=0.001, metric="fitness"),
+            ],
+        ),
+    ],
+)
+def test_expected_algorithms_callbacks(algorithm, callback):
     clf = SGDClassifier(loss="log", fit_intercept=True)
     generations = 8
     evolved_estimator = GASearchCV(
@@ -82,10 +120,10 @@ def test_expected_eaSimple_results_early_stopping():
             "max_iter": Integer(700, 1000),
         },
         verbose=True,
-        algorithm="eaSimple",
+        algorithm=algorithm,
     )
 
-    evolved_estimator.fit(X_train, y_train, callbacks=ThresholdStopping(threshold=0.01))
+    evolved_estimator.fit(X_train, y_train, callbacks=callback)
 
     assert check_is_fitted(evolved_estimator) is None
     assert "l1_ratio" in evolved_estimator.best_params_
@@ -105,95 +143,32 @@ def test_expected_eaSimple_results_early_stopping():
     assert "fitness_min" in evolved_estimator[0]
 
 
-def test_expected_eaMuPlusLambda_results_early_stopping():
-    clf = SGDClassifier(loss="log", fit_intercept=True)
-    generations = 8
-    evolved_estimator = GASearchCV(
-        clf,
-        cv=3,
-        scoring="accuracy",
-        population_size=6,
-        generations=generations,
-        tournament_size=3,
-        elitism=False,
-        keep_top_k=4,
-        param_grid={
-            "l1_ratio": Continuous(0, 1),
-            "alpha": Continuous(1e-4, 1, distribution="log-uniform"),
-            "average": Categorical([True, False]),
-            "max_iter": Integer(700, 1000),
-        },
-        verbose=True,
-        algorithm="eaMuPlusLambda",
-    )
-
-    evolved_estimator.fit(
-        X_train,
-        y_train,
-        callbacks=ThresholdStopping(threshold=0.01),
-    )
-
-    assert check_is_fitted(evolved_estimator) is None
-    assert "l1_ratio" in evolved_estimator.best_params_
-    assert "alpha" in evolved_estimator.best_params_
-    assert "average" in evolved_estimator.best_params_
-    assert len(evolved_estimator) <= generations + 1  # +1 random initial population
-    assert len(evolved_estimator.predict(X_test)) == len(X_test)
-    assert evolved_estimator.score(X_train, y_train) >= 0
-    assert len(evolved_estimator.decision_function(X_test)) == len(X_test)
-    assert len(evolved_estimator.predict_proba(X_test)) == len(X_test)
-    assert len(evolved_estimator.predict_log_proba(X_test)) == len(X_test)
-    assert len(evolved_estimator.hof) <= evolved_estimator.keep_top_k
-    assert "gen" in evolved_estimator[0]
-    assert "fitness_max" in evolved_estimator[0]
-    assert "fitness" in evolved_estimator[0]
-    assert "fitness_std" in evolved_estimator[0]
-    assert "fitness_min" in evolved_estimator[0]
-
-
-def test_expected_eaMuCommaLambda_results_early_stopping():
-    clf = SGDClassifier(loss="log", fit_intercept=True)
-    generations = 8
-    evolved_estimator = GASearchCV(
-        clf,
-        cv=3,
-        scoring="accuracy",
-        population_size=6,
-        generations=generations,
-        tournament_size=3,
-        elitism=False,
-        keep_top_k=4,
-        param_grid={
-            "l1_ratio": Continuous(0, 1),
-            "alpha": Continuous(1e-4, 1, distribution="log-uniform"),
-            "average": Categorical([True, False]),
-            "max_iter": Integer(700, 1000),
-        },
-        verbose=True,
-        algorithm="eaMuCommaLambda",
-    )
-
-    evolved_estimator.fit(X_train, y_train, callbacks=ThresholdStopping(threshold=0.01))
-
-    assert check_is_fitted(evolved_estimator) is None
-    assert "l1_ratio" in evolved_estimator.best_params_
-    assert "alpha" in evolved_estimator.best_params_
-    assert "average" in evolved_estimator.best_params_
-    assert len(evolved_estimator) <= generations + 1  # +1 random initial population
-    assert len(evolved_estimator.predict(X_test)) == len(X_test)
-    assert evolved_estimator.score(X_train, y_train) >= 0
-    assert len(evolved_estimator.decision_function(X_test)) == len(X_test)
-    assert len(evolved_estimator.predict_proba(X_test)) == len(X_test)
-    assert len(evolved_estimator.predict_log_proba(X_test)) == len(X_test)
-    assert len(evolved_estimator.hof) <= evolved_estimator.keep_top_k
-    assert "gen" in evolved_estimator[0]
-    assert "fitness_max" in evolved_estimator[0]
-    assert "fitness" in evolved_estimator[0]
-    assert "fitness_std" in evolved_estimator[0]
-    assert "fitness_min" in evolved_estimator[0]
-
-
-def test_expected_ga_no_continuous():
+@pytest.mark.parametrize(
+    "param_grid",
+    [
+        (
+            {
+                "criterion": Categorical(["gini", "entropy"]),
+                "max_depth": Integer(2, 20),
+                "max_leaf_nodes": Integer(2, 30),
+            }
+        ),
+        ({"ccp_alpha": Continuous(0.01, 0.5), "max_depth": Integer(2, 20)}),
+        (
+            {
+                "ccp_alpha": Continuous(0.01, 0.5),
+                "criterion": Categorical(["gini", "entropy"]),
+            }
+        ),
+        (
+            {
+                "max_depth": Integer(2, 20),
+                "max_leaf_nodes": Integer(2, 30),
+            }
+        ),
+    ],
+)
+def test_missing_data_types(param_grid):
     clf = DecisionTreeClassifier()
     generations = 8
     evolved_estimator = GASearchCV(
@@ -204,48 +179,14 @@ def test_expected_ga_no_continuous():
         generations=generations,
         tournament_size=3,
         elitism=True,
-        param_grid={
-            "criterion": Categorical(["gini", "entropy"]),
-            "max_depth": Integer(2, 20),
-            "max_leaf_nodes": Integer(2, 30),
-        },
+        param_grid=param_grid,
         verbose=False,
     )
 
     evolved_estimator.fit(X_train, y_train)
 
     assert check_is_fitted(evolved_estimator) is None
-    assert "criterion" in evolved_estimator.best_params_
-    assert "max_depth" in evolved_estimator.best_params_
-    assert "max_leaf_nodes" in evolved_estimator.best_params_
-
-
-def test_expected_ga_no_categorical():
-    clf = DecisionTreeClassifier()
-    generations = 8
-    evolved_estimator = GASearchCV(
-        clf,
-        cv=3,
-        scoring="accuracy",
-        population_size=5,
-        generations=generations,
-        tournament_size=3,
-        elitism=True,
-        param_grid={
-            "criterion": Categorical(["gini", "entropy"]),
-            "max_depth": Integer(2, 20),
-            "max_leaf_nodes": Integer(2, 30),
-        },
-        algorithm="eaMuCommaLambda",
-        verbose=False,
-    )
-
-    evolved_estimator.fit(X_train, y_train)
-
-    assert check_is_fitted(evolved_estimator) is None
-    assert "criterion" in evolved_estimator.best_params_
-    assert "max_depth" in evolved_estimator.best_params_
-    assert "max_leaf_nodes" in evolved_estimator.best_params_
+    assert set(param_grid.keys()) == set(evolved_estimator.best_params_.keys())
 
 
 def test_negative_criteria():
