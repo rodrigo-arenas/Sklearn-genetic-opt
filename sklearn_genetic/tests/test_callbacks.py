@@ -76,6 +76,11 @@ def test_wrong_base_callback():
 
 
 def test_base_callback_call():
+    possible_messages = [
+        "Can't instantiate abstract class MyDummyCallback with abstract methods __call__",
+        "Can't instantiate abstract class MyDummyCallback with abstract method __call__",
+    ]
+
     class MyDummyCallback(BaseCallback):
         def __init__(self, metric):
             self.metric = metric
@@ -86,10 +91,7 @@ def test_base_callback_call():
     with pytest.raises(Exception) as excinfo:
         callback = MyDummyCallback(metric="fitness")
 
-    assert (
-        str(excinfo.value)
-        == "Can't instantiate abstract class MyDummyCallback with abstract methods __call__"
-    )
+    assert any([str(excinfo.value) == i for i in possible_messages])
 
 
 def test_threshold_callback():
