@@ -130,6 +130,10 @@ def test_bad_data_types():
 
 
 def test_wrong_dimension():
+    possible_messages = [
+        "Can't instantiate abstract class FakeDimension with abstract methods sample",
+        "Can't instantiate abstract class FakeDimension with abstract method sample",
+    ]
     with pytest.raises(Exception) as excinfo:
 
         class FakeDimension(BaseDimension):
@@ -138,7 +142,4 @@ def test_wrong_dimension():
 
         FakeDimension().sample()
 
-    assert (
-        str(excinfo.value)
-        == "The sample method must be defined according each data type handler"
-    )
+    assert any([str(excinfo.value) == i for i in possible_messages])

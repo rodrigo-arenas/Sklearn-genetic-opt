@@ -7,16 +7,16 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.datasets import load_digits
 from sklearn.model_selection import train_test_split
 
-from .. import GASearchCV
-from ..space import Integer, Continuous
-from ..callbacks import (
+from ... import GASearchCV
+from ...space import Integer, Continuous
+from .. import (
     ThresholdStopping,
     ConsecutiveStopping,
     DeltaThreshold,
     LogbookSaver,
 )
-from ..callbacks.validations import check_stats, check_callback
-from ..callbacks.base import BaseCallback
+from ..validations import check_stats, check_callback
+from ..base import BaseCallback
 
 data = load_digits()
 label_names = data["target_names"]
