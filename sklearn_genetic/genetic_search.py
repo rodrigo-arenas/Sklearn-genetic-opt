@@ -1,5 +1,7 @@
-import numpy as np
+from datetime import datetime
 import random
+
+import numpy as np
 from deap import base, creator, tools
 from sklearn.base import clone, ClassifierMixin, RegressorMixin
 from sklearn.model_selection import cross_val_score
@@ -207,6 +209,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         self.hof = None
         self.X_predict = None
         self.log_config = log_config
+        self._initial_training_time = None
 
         if not is_classifier(self.estimator) and not is_regressor(self.estimator):
             raise ValueError(
@@ -342,6 +345,8 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
         self.callbacks = check_callback(callbacks)
 
         self._register()
+
+        self._initial_training_time = datetime.utcnow()
 
         pop, log, n_gen = self._select_algorithm(
             pop=self._pop, stats=self._stats, hof=self._hof

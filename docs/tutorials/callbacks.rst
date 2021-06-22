@@ -7,11 +7,14 @@ Introduction
 Callbacks can be defined to take decisions over the optimization
 process while it is still running.
 Common callbacks includes different rules to stop the algorithm or log artifacts.
-
 The callbacks are passed to the ``.fit`` method
 of the :class:`~sklearn_genetic.GASearchCV` class.
 
-When the callback condition is met, we should see a message
+The callbacks are evaluated at the end of each generation fit, so it looks like this:
+
+.. image:: ../images/callbacks_evaluation_0.png
+
+When a stopping callback condition is met, we should see a message
 like this and the model must stop. It will keep all the information
 until that training point.
 
@@ -24,6 +27,8 @@ the data set and model used in :ref:`basic-usage`. The available callbacks are:
 
 * DeltaThreshold
 
+* TimerStopping
+
 * ThresholdStopping
 
 * LogbookSaver
@@ -32,7 +37,7 @@ ConsecutiveStopping
 -------------------
 
 This callback stops the optimization if the current metric value
-is no greater that at least one metric from the last N generations
+is no greater that at least one metric from the last N generations.
 
 It requires us to define the number of generations to compare
 against the current generation and the name of the metric we want
@@ -69,6 +74,24 @@ using the 'fitness_min' value:
 
     evolved_estimator.fit(X, y, callbacks=callback)
 
+TimerStopping
+-------------
+This callback stops the optimization if the difference in seconds between the starting time of the
+first set of hyperparameters fit, and the current generation time is greater than a time threshold.
+
+Remember that this time is checked after each generation fit, so if the first (or any) generation fit takes
+longer that the threshold, it won't stop the fitting process until is done with the current generation
+population.
+
+It requires the total_seconds parameters, for example stopping if the time is greater
+that one minute:
+
+.. code:: python3
+
+    from sklearn_genetic.callbacks import TimerStopping
+    callback = TimerStopping(total_seconds=60)
+
+    evolved_estimator.fit(X, y, callbacks=callback)
 
 ThresholdStopping
 -----------------
@@ -76,7 +99,7 @@ It stops the optimization if the current metric
 is greater or equals than the define threshold.
 
 For example, if we want to stop the optimization
-if the 'fitness_max' is above 0.98
+if the 'fitness_max' is above 0.98:
 
 .. code:: python3
 
@@ -114,7 +137,7 @@ You can also specify more than one callback at the same time.
 The way to define it is by passing a list of callbacks in the ``.fit`` method.
 
 Then the estimator is going to check all the conditions in every iteration,
-if at least one of them is met, the callback will stop the process
+if at least one of them is met, the callback will stop the process:
 
 .. code:: python3
 
@@ -131,7 +154,7 @@ Full Example
 This example uses a ThresholdStopping and DeltaStopping callback
 It will stop if the accuracy of the generation is above 0.98 or
 if the difference between the current generation accuracy
-and the last generation accuracy is not bigger than 0.001
+and the last generation accuracy is not bigger than 0.001:
 
 .. code:: python3
 

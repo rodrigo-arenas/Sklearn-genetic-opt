@@ -9,7 +9,12 @@ from sklearn.cluster import KMeans
 
 from .. import GASearchCV
 from ..space import Integer, Categorical, Continuous
-from ..callbacks import ThresholdStopping, DeltaThreshold, ConsecutiveStopping
+from ..callbacks import (
+    ThresholdStopping,
+    DeltaThreshold,
+    ConsecutiveStopping,
+    TimerStopping,
+)
 
 data = load_digits()
 label_names = data["target_names"]
@@ -69,6 +74,9 @@ def test_expected_ga_results():
         ("eaSimple", ThresholdStopping(threshold=0.01)),
         ("eaMuPlusLambda", ThresholdStopping(threshold=0.01)),
         ("eaMuCommaLambda", ThresholdStopping(threshold=0.01)),
+        ("eaSimple", TimerStopping(total_seconds=5)),
+        ("eaMuPlusLambda", TimerStopping(total_seconds=5)),
+        ("eaMuCommaLambda", TimerStopping(total_seconds=5)),
         ("eaSimple", ConsecutiveStopping(generations=5, metric="fitness")),
         ("eaMuPlusLambda", ConsecutiveStopping(generations=5, metric="fitness")),
         ("eaMuCommaLambda", ConsecutiveStopping(generations=5, metric="fitness")),
