@@ -4,84 +4,94 @@ from ..space import Categorical, Integer, Continuous, Space
 from ..base import BaseDimension
 
 
-def test_sample_variables():
+@pytest.mark.parametrize(
+    "data_object, parameters",
+    [
+        (Continuous, {"lower": 0.01, "upper": 0.5, "distribution": "log-uniform"}),
+        (Continuous, {"lower": 0.0, "upper": 0.5, "distribution": "uniform"}),
+        (Integer, {"lower": 5, "upper": 20, "distribution": "uniform"}),
+    ],
+)
+def test_sample_variables(data_object, parameters):
     my_categorical = Categorical(
         choices=["car", "byc", "house"], priors=[0.2, 0.1, 0.7]
     )
     for _ in range(20):
         assert my_categorical.sample() in ["car", "byc", "house"]
 
-    my_continuous = Continuous(lower=0.01, upper=0.5, distribution="log-uniform")
+    my_variable = data_object(**parameters)
     for _ in range(100):
-        assert my_continuous.sample() <= 0.5
-        assert my_continuous.sample() >= 0
-
-    my_continuous = Continuous(lower=0.0, upper=0.5, distribution="uniform")
-    for _ in range(100):
-        assert my_continuous.sample() <= 0.5
-        assert my_continuous.sample() >= 0
-
-    my_integer = Integer(lower=5, upper=20, distribution="uniform")
-    for _ in range(100):
-        assert my_integer.sample() >= 5
-        assert my_integer.sample() <= 20
+        assert my_variable.sample() <= parameters["upper"]
+        assert my_variable.sample() >= parameters["lower"]
 
 
-def test_wrong_boundaries():
+@pytest.mark.parametrize(
+    "data_object, parameters, message",
+    [
+        (
+            Continuous,
+            {"lower": 10, "upper": 0.5},
+            "The upper bound can not be smaller that the lower bound",
+        ),
+        (
+            Integer,
+            {"lower": 10, "upper": 2},
+            "The upper bound can not be smaller that the lower bound",
+        ),
+    ],
+)
+def test_wrong_boundaries(data_object, parameters, message):
     with pytest.raises(Exception) as excinfo:
-        my_continuous = Continuous(lower=10, upper=0.5)
+        data_object(**parameters)
+    assert str(excinfo.value) == message
 
-    assert (
-        str(excinfo.value) == "The upper bound can not be smaller that the lower bound"
-    )
 
+@pytest.mark.parametrize(
+    "data_object, parameters, message",
+    [
+        (
+            Continuous,
+            {"lower": 10, "upper": 50, "distribution": "normal"},
+            "distribution must be one of ['uniform', 'log-uniform'], got normal instead",
+        ),
+        (
+            Categorical,
+            {"choices": [True, False], "distribution": "sample"},
+            "distribution must be one of ['choice'], got sample instead",
+        ),
+        (
+            Integer,
+            {"lower": 2, "upper": 10, "distribution": "log-uniform"},
+            "distribution must be one of ['uniform'], got log-uniform instead",
+        ),
+    ],
+)
+def test_wrong_distributions(data_object, parameters, message):
     with pytest.raises(Exception) as excinfo:
-        my_integer = Integer(lower=10, upper=2)
-
-    assert (
-        str(excinfo.value) == "The upper bound can not be smaller that the lower bound"
-    )
+        data_object(**parameters)
+    assert str(excinfo.value) == message
 
 
-def test_wrong_distributions():
+@pytest.mark.parametrize(
+    "data_object, parameters, message",
+    [
+        (Categorical, {"priors": [0.1, 0.9]}, "choices must be a non empty list"),
+        (
+            Categorical,
+            {"choices": [True, False], "priors": [0.1, 0.8]},
+            "The sum of the probabilities in the priors must be one, got 0.9 instead",
+        ),
+        (
+            Categorical,
+            {"choices": [True], "priors": [0.1, 0.9]},
+            "priors and choices must have same size",
+        ),
+    ],
+)
+def test_categorical_bad_parameters(data_object, parameters, message):
     with pytest.raises(Exception) as excinfo:
-        my_continuous = Continuous(lower=2, upper=10, distribution="normal")
-    assert (
-        str(excinfo.value)
-        == "distribution must be one of ['uniform', 'log-uniform'], got normal instead"
-    )
-
-    with pytest.raises(Exception) as excinfo:
-        my_categorical = Categorical([True, False], distribution="sample")
-    assert (
-        str(excinfo.value)
-        == "distribution must be one of ['choice'], got sample instead"
-    )
-
-    with pytest.raises(Exception) as excinfo:
-        my_integer = Integer(lower=2, upper=10, distribution="log-uniform")
-    assert (
-        str(excinfo.value)
-        == "distribution must be one of ['uniform'], got log-uniform instead"
-    )
-
-
-def test_categorical_bad_parameters():
-
-    with pytest.raises(Exception) as excinfo:
-        my_categorical = Categorical(priors=[0.1, 0.9])
-    assert str(excinfo.value) == "choices must be a non empty list"
-
-    with pytest.raises(Exception) as excinfo:
-        my_categorical = Categorical(choices=[True, False], priors=[0.1, 0.8])
-    assert (
-        str(excinfo.value)
-        == "The sum of the probabilities in the priors must be one, got 0.9 instead"
-    )
-
-    with pytest.raises(Exception) as excinfo:
-        my_categorical = Categorical([True], priors=[0.1, 0.9])
-    assert str(excinfo.value) == "priors and choices must have same size"
+        data_object(**parameters)
+    assert str(excinfo.value) == message
 
 
 def test_check_space_fail():
@@ -106,30 +116,27 @@ def test_check_space_fail():
     )
 
 
-def test_bad_data_types():
-
+@pytest.mark.parametrize(
+    "data_object, parameters, message",
+    [
+        (Categorical, (True, False), "choices must be a non empty list"),
+        (Integer, (5.4, 10), "lower bound must be an integer"),
+        (Integer, (5, 10.4), "upper bound must be an integer"),
+        (Continuous, ([1], 10), "lower bound must be an integer or float"),
+        (Continuous, (5, [10.4]), "upper bound must be an integer or float"),
+    ],
+)
+def test_bad_data_types(data_object, parameters, message):
     with pytest.raises(Exception) as excinfo:
-        Categorical((True, False))
-    assert str(excinfo.value) == "choices must be a non empty list"
-
-    with pytest.raises(Exception) as excinfo:
-        Integer(5.4, 10)
-    assert str(excinfo.value) == "lower bound must be an integer"
-
-    with pytest.raises(Exception) as excinfo:
-        Integer(5, 10.4)
-    assert str(excinfo.value) == "upper bound must be an integer"
-
-    with pytest.raises(Exception) as excinfo:
-        Continuous([1], 10)
-    assert str(excinfo.value) == "lower bound must be an integer or float"
-
-    with pytest.raises(Exception) as excinfo:
-        Continuous(5, [10.4])
-    assert str(excinfo.value) == "upper bound must be an integer or float"
+        data_object(*parameters)
+    assert str(excinfo.value) == message
 
 
 def test_wrong_dimension():
+    possible_messages = [
+        "Can't instantiate abstract class FakeDimension with abstract methods sample",
+        "Can't instantiate abstract class FakeDimension with abstract method sample",
+    ]
     with pytest.raises(Exception) as excinfo:
 
         class FakeDimension(BaseDimension):
@@ -138,7 +145,4 @@ def test_wrong_dimension():
 
         FakeDimension().sample()
 
-    assert (
-        str(excinfo.value)
-        == "The sample method must be defined according each data type handler"
-    )
+    assert any([str(excinfo.value) == i for i in possible_messages])
