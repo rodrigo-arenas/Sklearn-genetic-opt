@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from .validations import check_stats
 from .base import BaseCallback
 
@@ -116,6 +118,32 @@ class DeltaThreshold(BaseCallback):
             return abs(current_stat - previous_stat) <= self.threshold
         else:
             raise ValueError("logbook parameter must be provided")
+
+    def __call__(self, record=None, logbook=None, estimator=None):
+        return self.on_step(record, logbook, estimator)
+
+
+class TimerStopping(BaseCallback):
+    """
+    Stops the optimization process if a limit training time has been elapsed.
+    This time is checked after each generation fit
+    """
+
+    def __init__(self, total_seconds):
+        """
+        Parameters
+        ----------
+        total_seconds: int
+            Total time in seconds that the estimator is allowed to fit
+        """
+        self.total_seconds = total_seconds
+
+    def on_step(self, record=None, logbook=None, estimator=None):
+        current_time = datetime.utcnow()
+        difference = current_time - estimator._initial_training_time
+        difference_seconds = difference.total_seconds()
+
+        return difference_seconds >= self.total_seconds
 
     def __call__(self, record=None, logbook=None, estimator=None):
         return self.on_step(record, logbook, estimator)

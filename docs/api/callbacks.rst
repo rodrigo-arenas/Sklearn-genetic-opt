@@ -13,6 +13,10 @@ Callbacks
    :members:
    :undoc-members: False
 
+.. autoclass:: sklearn_genetic.callbacks.TimerStopping
+   :members:
+   :undoc-members: False
+
 .. autoclass:: sklearn_genetic.callbacks.ThresholdStopping
    :members:
    :undoc-members: False

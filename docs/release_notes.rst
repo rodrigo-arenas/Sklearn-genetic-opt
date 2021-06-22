@@ -3,6 +3,18 @@ Release Notes
 
 Some notes on new features in various releases
 
+What's new in 0.6.0dev0
+-----------------------
+
+This is the current development version, these features are not yet available through PyPI.
+
+^^^^^^^^^
+Features:
+^^^^^^^^^
+
+* Added the :class:`~sklearn_genetic.callbacks.TimerStopping` callback to stop
+  the iterations after a total (threshold) fitting time has been elapsed
+
 What's new in 0.5.0
 -------------------
 

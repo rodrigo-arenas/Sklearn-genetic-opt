@@ -2,8 +2,14 @@ from .early_stoppers import (
     DeltaThreshold,
     ThresholdStopping,
     ConsecutiveStopping,
+    TimerStopping,
 )
 from .loggers import LogbookSaver
-from ..mlflow import MLflowConfig
 
-__all__ = ["DeltaThreshold", "ThresholdStopping", "ConsecutiveStopping", "LogbookSaver"]
+__all__ = [
+    "DeltaThreshold",
+    "ThresholdStopping",
+    "ConsecutiveStopping",
+    "TimerStopping",
+    "LogbookSaver",
+]

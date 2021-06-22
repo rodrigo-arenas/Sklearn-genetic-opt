@@ -5,7 +5,7 @@ from sklearn.model_selection import train_test_split, StratifiedKFold
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.datasets import load_digits
 from sklearn.metrics import accuracy_score
-from sklearn_genetic.callbacks import ThresholdStopping, DeltaThreshold
+from sklearn_genetic.callbacks import ThresholdStopping, DeltaThreshold, TimerStopping
 
 warnings.filterwarnings("ignore")
 
@@ -31,8 +31,9 @@ cv = StratifiedKFold(n_splits=3, shuffle=True)
 
 threshold_callback = ThresholdStopping(threshold=0.98, metric="fitness_max")
 delta_callback = DeltaThreshold(threshold=0.001, metric="fitness")
+timer_callback = TimerStopping(total_seconds=60)
 
-callbacks = [threshold_callback, delta_callback]
+callbacks = [threshold_callback, delta_callback, timer_callback]
 
 evolved_estimator = GASearchCV(
     clf,
