@@ -2,8 +2,10 @@ import logging
 from copy import deepcopy
 from joblib import dump
 
+from .base import BaseCallback
 
-class LogbookSaver:
+
+class LogbookSaver(BaseCallback):
     """
     Saves the estimator.logbook parameter chapter object in a local file system
     """
@@ -22,21 +24,6 @@ class LogbookSaver:
         self.dump_options = dump_options
 
     def on_step(self, record=None, logbook=None, estimator=None):
-        """
-        Parameters
-        ----------
-        record: dict: default=None
-            A logbook record
-        logbook:
-            Current stream logbook with the stats required
-        estimator:
-            :class:`~sklearn_genetic.GASearchCV` Estimator that is being optimized
-
-        Returns
-        -------
-        decision: False
-            Always returns False as this class doesn't take decisions over the optimization
-        """
         try:
             dump_logbook = deepcopy(estimator.logbook.chapters["parameters"])
             dump(dump_logbook, self.checkpoint_path, **self.dump_options)

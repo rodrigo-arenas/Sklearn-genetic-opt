@@ -26,6 +26,16 @@ Docs:
 ^^^^^
 
 * Added user guide "Integrating with MLflow"
+* Update the tutorial "Custom Callbacks" for new API inheritance behavior
+
+^^^^^^^^^
+Internal:
+^^^^^^^^^
+
+* Added a base class :class:`~sklearn_genetic.callbacks.base.BaseCallback` from
+  which all Callbacks must inherit from
+* Now coverage report doesn't take into account the lines with # pragma: no cover
+  and # noqa
 
 What's new in 0.4.1
 -------------------

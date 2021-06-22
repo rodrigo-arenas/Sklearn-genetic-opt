@@ -486,7 +486,7 @@ class GASearchCV(ClassifierMixin, RegressorMixin):
             self.n += 1
             return result
         else:
-            raise StopIteration
+            raise StopIteration  # pragma: no cover
 
     def __len__(self):
         """
