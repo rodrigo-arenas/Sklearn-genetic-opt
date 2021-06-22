@@ -79,7 +79,7 @@ TimerStopping
 This callback stops the optimization if the difference in seconds between the starting time of the
 first set of hyperparameters fit, and the current generation time is greater than a time threshold.
 
-Remember that his time is checked after each generation fit, so if the first (or any) generation fit takes
+Remember that this time is checked after each generation fit, so if the first (or any) generation fit takes
 longer that the threshold, it won't stop the fitting process until is done with the current generation
 population.
 
