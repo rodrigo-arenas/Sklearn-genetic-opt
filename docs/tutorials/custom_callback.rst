@@ -76,6 +76,11 @@ that will have all this parameters, so we can rewrite it like this:
            return self.on_step(record, logbook, estimator)
 
 
+**Note:** The implementation of the ``__call__`` method is optional, by default
+its behavior is inherited from the :class:`~sklearn_genetic.callbacks.base.BaseCallback`.
+It's in this example for deeper understanding of how the callbacks are coded and
+to avoid unexpected overwrites.
+
 So that is it, now you can initialize the DummyThreshold
 and pass it to a in the ``fit`` method of a
 :class:`~sklearn_genetic.GASearchCV` instance:
