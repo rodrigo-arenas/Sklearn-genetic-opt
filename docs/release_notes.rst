@@ -13,7 +13,15 @@ Features:
 ^^^^^^^^^
 
 * Added the :class:`~sklearn_genetic.callbacks.TimerStopping` callback to stop
-  the iterations after a total (threshold) fitting time has been elapsed
+  the iterations after a total (threshold) fitting time has been elapsed.
+* Now if one or more callbacks decides to stop the algorithm, it will print
+  its class name to know which callbacks were responsible of the stopping.
+
+^^^^^
+Docs:
+^^^^^
+
+* Edited all demos to be in the jupyter notebook format.
 
 What's new in 0.5.0
 -------------------
