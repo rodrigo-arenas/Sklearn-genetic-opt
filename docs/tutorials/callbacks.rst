@@ -18,7 +18,7 @@ When a stopping callback condition is met, we should see a message
 like this and the model must stop. It will keep all the information
 until that training point.
 
-.. image:: ../images/callbacks_log_0.JPG
+.. image:: ../images/callbacks_log_0.png
 
 Now lets see how to use them, we'll take
 the data set and model used in :ref:`basic-usage`. The available callbacks are:

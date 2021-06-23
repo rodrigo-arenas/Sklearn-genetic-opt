@@ -32,21 +32,21 @@ Documentation is available `here <https://sklearn-genetic-opt.readthedocs.io/>`_
 
 Sampled distribution of hyperparameters:
 
-.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/demo/images/density.png?raw=true
+.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/docs/images/density.png?raw=true
 
 Optimization progress in a regression problem:
 
-.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/demo/images/fitness.png?raw=true
+.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/docs/images/fitness.png?raw=true
 
 
 Main Features:
 ##############
 
-* **GASearchCV**: Principal class of the package, holds the evolutionary cross validation optimization routine
-* **Algorithms**: Set of different evolutionary algorithms to use as optimization procedure
-* **Callbacks**: Custom evaluation strategies to generate Early Stopping rules
-* **Plots**: Generate pre-define plots to understand the optimization process
-* **MLflow**: Build-in integration with mlflow to log all the hyperparameters and their cv-score
+* **GASearchCV**: Principal class of the package, holds the evolutionary cross validation optimization routine.
+* **Algorithms**: Set of different evolutionary algorithms to use as optimization procedure.
+* **Callbacks**: Custom evaluation strategies to generate early stopping rules, logging or custom logic.
+* **Plots**: Generate pre-define plots to understand the optimization process.
+* **MLflow**: Build-in integration with mlflow to log all the hyperparameters, cv-scores and the fitted models.
 
 Usage:
 ######
@@ -114,7 +114,7 @@ Results
 
 Log controlled by verbosity
 
-.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/demo/images/log.JPG?raw=true
+.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/docs/images/log.JPG?raw=true
 
 Changelog
 #########

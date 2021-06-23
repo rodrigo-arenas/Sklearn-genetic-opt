@@ -46,6 +46,7 @@ def test_expected_ga_results():
         },
         verbose=False,
         algorithm="eaSimple",
+        n_jobs=-1,
     )
 
     evolved_estimator.fit(X_train, y_train)
@@ -114,7 +115,7 @@ def test_expected_algorithms_callbacks(algorithm, callback):
     generations = 8
     evolved_estimator = GASearchCV(
         clf,
-        cv=3,
+        cv=2,
         scoring="accuracy",
         population_size=6,
         generations=generations,
@@ -129,6 +130,7 @@ def test_expected_algorithms_callbacks(algorithm, callback):
         },
         verbose=True,
         algorithm=algorithm,
+        n_jobs=-1,
     )
 
     evolved_estimator.fit(X_train, y_train, callbacks=callback)
@@ -181,7 +183,7 @@ def test_missing_data_types(param_grid):
     generations = 8
     evolved_estimator = GASearchCV(
         clf,
-        cv=3,
+        cv=2,
         scoring="accuracy",
         population_size=5,
         generations=generations,
@@ -189,6 +191,7 @@ def test_missing_data_types(param_grid):
         elitism=True,
         param_grid=param_grid,
         verbose=False,
+        n_jobs=-1,
     )
 
     evolved_estimator.fit(X_train, y_train)
@@ -321,7 +324,7 @@ def test_wrong_get_item():
 
 def test_iterator():
     clf = DecisionTreeClassifier()
-    generations = 8
+    generations = 6
     evolved_estimator = GASearchCV(
         clf,
         cv=3,
@@ -336,6 +339,7 @@ def test_iterator():
             "max_leaf_nodes": Integer(2, 30),
         },
         verbose=False,
+        n_jobs=-1,
     )
     evolved_estimator.fit(X_train, y_train)
 
@@ -346,7 +350,7 @@ def test_iterator():
 
 def test_wrong_algorithm():
     clf = SGDClassifier(loss="log", fit_intercept=True)
-    generations = 8
+    generations = 6
     evolved_estimator = GASearchCV(
         clf,
         cv=3,
