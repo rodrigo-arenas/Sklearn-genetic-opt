@@ -62,7 +62,9 @@ def test_expected_ga_results():
     assert len(evolved_estimator.decision_function(X_test)) == len(X_test)
     assert len(evolved_estimator.predict_proba(X_test)) == len(X_test)
     assert len(evolved_estimator.predict_log_proba(X_test)) == len(X_test)
-    assert evolved_estimator.score(X_test, y_test) == accuracy_score(y_test, evolved_estimator.predict(X_test))
+    assert evolved_estimator.score(X_test, y_test) == accuracy_score(
+        y_test, evolved_estimator.predict(X_test)
+    )
     assert bool(evolved_estimator.get_params())
     assert len(evolved_estimator.hof) == evolved_estimator.keep_top_k
     assert "gen" in evolved_estimator[0]
@@ -148,7 +150,9 @@ def test_expected_algorithms_callbacks(algorithm, callback):
     assert len(evolved_estimator.decision_function(X_test)) == len(X_test)
     assert len(evolved_estimator.predict_proba(X_test)) == len(X_test)
     assert len(evolved_estimator.predict_log_proba(X_test)) == len(X_test)
-    assert evolved_estimator.score(X_test, y_test) == accuracy_score(y_test, evolved_estimator.predict(X_test))
+    assert evolved_estimator.score(X_test, y_test) == accuracy_score(
+        y_test, evolved_estimator.predict(X_test)
+    )
     assert bool(evolved_estimator.get_params())
     assert len(evolved_estimator.hof) <= evolved_estimator.keep_top_k
     assert "gen" in evolved_estimator[0]
