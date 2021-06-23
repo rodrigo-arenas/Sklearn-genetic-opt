@@ -16,6 +16,8 @@ Features:
   the iterations after a total (threshold) fitting time has been elapsed.
 * Now if one or more callbacks decides to stop the algorithm, it will print
   its class name to know which callbacks were responsible of the stopping.
+* Added support for extra methods coming from scikit-learn's BaseSearchCV, it is
+  still partial support, missing properties like `cv_results_`, `best_index_` and `multimetric_`.
 
 ^^^^^
 Docs:

@@ -4,7 +4,6 @@ GASearchCV
 
 .. autoclass:: sklearn_genetic.GASearchCV
    :members:
-   :exclude-members: evaluate, mutate
-   :undoc-members: False
-
-
+   :inherited-members:
+   :exclude-members: evaluate, mutate, n_features_in_, classes_
+   :undoc-members: True
