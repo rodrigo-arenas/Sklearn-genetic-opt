@@ -87,4 +87,4 @@ and pass it to a in the ``fit`` method of a
 
 Here there is an output example of this callback:
 
-.. image:: ../images/custom_callback_dummy_0.JPG
+.. image:: ../images/custom_callback_dummy_0.png

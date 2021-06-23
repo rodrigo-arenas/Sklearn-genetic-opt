@@ -114,7 +114,7 @@ def eaSimple(
 
         # Check if any of the callbacks conditions are True to stop the iteration
         if eval_callbacks(callbacks, record, logbook, estimator):
-            print("Process stopped earlier due a callback")
+            print("INFO: Stopping the algorithm")
             break
 
     n_gen = gen + 1
@@ -231,7 +231,7 @@ def eaMuPlusLambda(
             print(logbook.stream)
 
         if eval_callbacks(callbacks, record, logbook, estimator):
-            print("Process stopped earlier due a callback")
+            print("INFO: Stopping the algorithm")
             break
 
     n_gen = gen + 1
@@ -351,7 +351,7 @@ def eaMuCommaLambda(
 
         # Check if any of the callbacks conditions are True to stop the iteration
         if eval_callbacks(callbacks, record, logbook, estimator):
-            print("Process stopped earlier due a callback")
+            print("INFO: Stopping the algorithm")
             break
 
     n_gen = gen + 1

@@ -1,4 +1,5 @@
 from datetime import datetime
+import logging
 
 from .validations import check_stats
 from .base import BaseCallback
@@ -26,13 +27,18 @@ class ThresholdStopping(BaseCallback):
         self.threshold = threshold
         self.metric = metric
 
-    def on_step(self, record, logbook, estimator):
+    def on_step(self, record=None, logbook=None, estimator=None):
         if record is not None:
             return record[self.metric] >= self.threshold
         elif logbook is not None:
             # Get the last metric value
             stat = logbook.select(self.metric)[-1]
-            return stat >= self.threshold
+
+            if stat >= self.threshold:
+                print(f"INFO: {self.__class__.__name__} callback met its criteria")
+                return True
+            return False
+
         else:
             raise ValueError(
                 "At least one of record or logbook parameters must be provided"
@@ -74,7 +80,12 @@ class ConsecutiveStopping(BaseCallback):
 
             # Compare the current metric with the last |generations| metrics
             stats = logbook.select(self.metric)[(-self.generations - 1) : -1]
-            return all(stat >= current_stat for stat in stats)
+
+            if all(stat >= current_stat for stat in stats):
+                print(f"INFO: {self.__class__.__name__} callback met its criteria")
+                return True
+            return False
+
         else:
             raise ValueError("logbook parameter must be provided")
 
@@ -115,7 +126,11 @@ class DeltaThreshold(BaseCallback):
             # Compare the current metric with the last |generations| metrics
             previous_stat = logbook.select(self.metric)[-2]
 
-            return abs(current_stat - previous_stat) <= self.threshold
+            if abs(current_stat - previous_stat) <= self.threshold:
+                print(f"INFO: {self.__class__.__name__} callback met its criteria")
+                return True
+            return False
+
         else:
             raise ValueError("logbook parameter must be provided")
 
@@ -143,7 +158,10 @@ class TimerStopping(BaseCallback):
         difference = current_time - estimator._initial_training_time
         difference_seconds = difference.total_seconds()
 
-        return difference_seconds >= self.total_seconds
+        if difference_seconds >= self.total_seconds:
+            print(f"INFO: {self.__class__.__name__} callback met its criteria")
+            return True
+        return False
 
     def __call__(self, record=None, logbook=None, estimator=None):
         return self.on_step(record, logbook, estimator)
