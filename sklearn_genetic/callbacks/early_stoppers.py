@@ -43,9 +43,6 @@ class ThresholdStopping(BaseCallback):
                 "At least one of record or logbook parameters must be provided"
             )
 
-    def __call__(self, record=None, logbook=None, estimator=None):
-        return self.on_step(record, logbook, estimator)
-
 
 class ConsecutiveStopping(BaseCallback):
     """
@@ -133,9 +130,6 @@ class DeltaThreshold(BaseCallback):
         else:
             raise ValueError("logbook parameter must be provided")
 
-    def __call__(self, record=None, logbook=None, estimator=None):
-        return self.on_step(record, logbook, estimator)
-
 
 class TimerStopping(BaseCallback):
     """
@@ -161,6 +155,3 @@ class TimerStopping(BaseCallback):
             print(f"INFO: {self.__class__.__name__} callback met its criteria")
             return True
         return False
-
-    def __call__(self, record=None, logbook=None, estimator=None):
-        return self.on_step(record, logbook, estimator)

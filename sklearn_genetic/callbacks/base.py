@@ -26,6 +26,5 @@ class BaseCallback(ABC):
 
         pass  # pragma: no cover
 
-    @abstractmethod
     def __call__(self, record=None, logbook=None, estimator=None):
-        pass  # pragma: no cover
+        return self.on_step(record, logbook, estimator)

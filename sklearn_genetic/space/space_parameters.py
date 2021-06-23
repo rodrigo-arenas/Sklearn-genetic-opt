@@ -1,5 +1,10 @@
 import enum
 
+"""
+This module contains all the possible random distributions names
+that can be set in each of the Space variables
+"""
+
 
 class ExtendedEnum(enum.Enum):
     @classmethod
