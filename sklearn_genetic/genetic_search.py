@@ -215,6 +215,7 @@ class GASearchCV(BaseSearchCV):
         self.log_config = log_config
         self._initial_training_time = None
 
+        # Check that the estimator is compatible with scikit-learn
         if not is_classifier(self.estimator) and not is_regressor(self.estimator):
             raise ValueError(
                 f"{self.estimator} is not a valid Sklearn classifier or regressor"
@@ -224,11 +225,13 @@ class GASearchCV(BaseSearchCV):
             raise ValueError(
                 f"Criteria must be one of {Criteria.list()}, got {criteria} instead"
             )
+        # Minimization is handle like an optimization problem with a change in the score sign
         elif criteria == Criteria.max.value:
             self.criteria_sign = 1
         elif criteria == Criteria.min.value:
             self.criteria_sign = -1
 
+        # Saves the param_grid and computes some extra properties in the same object
         self.space = Space(param_grid)
 
         super(GASearchCV, self).__init__(
@@ -243,12 +246,17 @@ class GASearchCV(BaseSearchCV):
         )
 
     def _register(self):
+        """
+        This function is the responsible for registering the DEAPs necessary methods
+        and create other objects to hold the hof, logbook and stats.
+        """
 
         self.creator.create("FitnessMax", base.Fitness, weights=[1.0])
         self.creator.create("Individual", list, fitness=creator.FitnessMax)
 
         attributes = []
-
+        # Assign all the parameters defined in the param_grid
+        # It uses the distribution parameter to set the sampling function
         for parameter, dimension in self.space.param_grid.items():
             self.toolbox.register(f"{parameter}", dimension.sample)
             attributes.append(getattr(self.toolbox, parameter))
@@ -290,22 +298,52 @@ class GASearchCV(BaseSearchCV):
         self.logbook = tools.Logbook()
 
     def mutate(self, individual):
+        """
+        This function is responsible of changed a randomly selected parameter from an individual
+        Parameters
+        ----------
+        individual: Individual object
+            The individual (set of hyperparameters) that is being generated
 
+        Returns
+        -------
+            Mutated individual
+        """
+
+        # Randomly select one of the hyperparameters
         gen = random.randrange(0, len(self.space))
         parameter_idx = self.space.parameters[gen]
         parameter = self.space[parameter_idx]
 
+        # Using the defined distribution from the para_grid value
+        # Make a random sample of the parameter
         individual[gen] = parameter.sample()
 
         return [individual]
 
     def evaluate(self, individual):
+        """
+        Compute the cross-validation scores and record the logbook and mlflow (if specified)
+        Parameters
+        ----------
+        individual: Individual object
+            The individual (set of hyperparameters) that is being evaluated
+
+        Returns
+        -------
+            The fitness value of the estimator candidate, corresponding to the cv-score with the criteria sing
+
+        """
+
+        # Dictionary representation of the individual with key-> hyperparameter name, value -> value
         current_generation_params = {
             key: individual[n] for n, key in enumerate(self.space.parameters)
         }
 
         local_estimator = clone(self.estimator)
         local_estimator.set_params(**current_generation_params)
+
+        # Compute the cv-score
         cv_scores = cross_val_score(
             local_estimator,
             self.X_,
@@ -319,6 +357,7 @@ class GASearchCV(BaseSearchCV):
 
         score = np.mean(cv_scores)
 
+        # Uses the log config to save in remote log server (e.g MLflow)
         if self.log_config is not None:
             self.log_config.create_run(
                 parameters=current_generation_params,
@@ -328,6 +367,7 @@ class GASearchCV(BaseSearchCV):
 
         current_generation_params["score"] = score
 
+        # Log the hyperparameters and the cv-score
         self.logbook.record(parameters=current_generation_params)
 
         return [self.criteria_sign * score]
@@ -353,24 +393,29 @@ class GASearchCV(BaseSearchCV):
             The callback is evaluated after fitting the estimators from the generation 1.
 
         """
-        scorer = check_scoring(self.estimator, scoring=self.scoring)
 
         self.X_ = X
         self.y_ = y
-        self.callbacks = check_callback(callbacks)
-        self.scorer_ = check_scoring(
-            self.estimator, scoring=self.scoring)
 
+        # Make sure the callbacks are valid
+        self.callbacks = check_callback(callbacks)
+        self.scorer_ = check_scoring(self.estimator, scoring=self.scoring)
+
+        # Set the DEAPs necessary methods
         self._register()
 
         self._initial_training_time = datetime.utcnow()
 
+        # Optimization routine from the selected evolutionary algorithm
         pop, log, n_gen = self._select_algorithm(
             pop=self._pop, stats=self._stats, hof=self._hof
         )
 
+        # Update the _n_iterations value as the algorithm could stop earlier due a callback
         self._n_iterations = n_gen
 
+        # hof keeps the best params according to the fitness value
+        # The best one is in the position 0
         self.best_params_ = {
             key: self._hof[0][n] for n, key in enumerate(self.space.parameters)
         }
@@ -388,6 +433,7 @@ class GASearchCV(BaseSearchCV):
             "fitness_min": log.select("fitness_min"),
         }
 
+        # Imitate the logic of scikit-learn refit parameter
         if self.refit:
             self.estimator.set_params(**self.best_params_)
             self.estimator.fit(self.X_, self.y_)
@@ -399,6 +445,26 @@ class GASearchCV(BaseSearchCV):
         return self
 
     def _select_algorithm(self, pop, stats, hof):
+        """
+        It selects the algorithm to run from the sklearn_genetic.algorithms module
+        based in the parameter self.algorithm.
+
+        Parameters
+        ----------
+        pop: pop object from DEAP
+        stats: stats object from DEAP
+        hof: hof object from DEAP
+
+        Returns
+        -------
+            pop: pop object
+                The last evaluated population
+             log: Logbook object
+                It contains the calculated metrics {'fitness', 'fitness_std', 'fitness_max', 'fitness_min'}
+                the number of generations and the number of evaluated individuals per generation
+            n_gen: int
+                The number of generations that the evolutionary algorithm ran
+        """
 
         if self.algorithm == Algorithms.eaSimple.value:
 
