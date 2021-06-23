@@ -25,8 +25,8 @@ scikit-learn models hyperparameters tuning, using evolutionary algorithms.
 
 This is meant to be an alternative from popular methods inside scikit-learn such as Grid Search and Randomized Grid Search.
 
-Sklearn-genetic-opt uses evolutionary algorithms from the deap package to choose set of hyperparameters that
-optimizes (max or min) the cross validation scores, it can be used for both regression and classification problems.
+Sklearn-genetic-opt uses evolutionary algorithms from the DEAP package to choose the set of hyperparameters that
+optimizes (max or min) the cross-validation scores, it can be used for both regression and classification problems.
 
 Documentation is available `here <https://sklearn-genetic-opt.readthedocs.io/>`_
 
@@ -128,6 +128,7 @@ Important links
 - Official source code repo: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/
 - Download releases: https://pypi.org/project/sklearn-genetic-opt/
 - Issue tracker: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/issues
+- Stable documentation: https://sklearn-genetic-opt.readthedocs.io/en/stable/
 
 Source code
 ###########

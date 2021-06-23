@@ -30,7 +30,7 @@ setup(
         "Programming Language :: Python :: 3.8",
     ],
     project_urls={
-        "Documentation": "https://sklearn-genetic-opt.readthedocs.io/en/latest/",
+        "Documentation": "https://sklearn-genetic-opt.readthedocs.io/en/stable/",
         "Source Code": "https://github.com/rodrigo-arenas/Sklearn-genetic-opt",
     },
     packages=find_packages(include=["sklearn_genetic", "sklearn_genetic.*"]),
