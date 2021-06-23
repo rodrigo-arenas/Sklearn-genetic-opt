@@ -171,6 +171,7 @@ def check_space(param_grid: dict = None):
     if not param_grid:
         raise ValueError(f"param_grid can not be empty")
 
+    # Make sure that each of the param_grid values are defined using one of the available Space objects
     for key, value in param_grid.items():
         if not isinstance(value, BaseDimension):
             raise ValueError(
