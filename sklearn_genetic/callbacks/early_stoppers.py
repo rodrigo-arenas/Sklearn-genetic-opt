@@ -1,5 +1,4 @@
 from datetime import datetime
-import logging
 
 from .validations import check_stats
 from .base import BaseCallback
