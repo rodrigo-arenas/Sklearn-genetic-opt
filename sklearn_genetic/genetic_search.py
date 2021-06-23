@@ -457,7 +457,7 @@ class GASearchCV(BaseSearchCV):
         return pop, log, gen
 
     def _run_search(self, evaluate_candidates):
-        pass
+        pass  # noqa
 
     @property
     def _fitted(self):
