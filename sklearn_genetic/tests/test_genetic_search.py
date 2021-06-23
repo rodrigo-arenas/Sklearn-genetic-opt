@@ -6,6 +6,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.utils.validation import check_is_fitted
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.cluster import KMeans
+from sklearn.metrics import accuracy_score
 
 from .. import GASearchCV
 from ..space import Integer, Categorical, Continuous
@@ -61,6 +62,8 @@ def test_expected_ga_results():
     assert len(evolved_estimator.decision_function(X_test)) == len(X_test)
     assert len(evolved_estimator.predict_proba(X_test)) == len(X_test)
     assert len(evolved_estimator.predict_log_proba(X_test)) == len(X_test)
+    assert evolved_estimator.score(X_test, y_test) == accuracy_score(y_test, evolved_estimator.predict(X_test))
+    assert bool(evolved_estimator.get_params())
     assert len(evolved_estimator.hof) == evolved_estimator.keep_top_k
     assert "gen" in evolved_estimator[0]
     assert "fitness_max" in evolved_estimator[0]
@@ -145,6 +148,8 @@ def test_expected_algorithms_callbacks(algorithm, callback):
     assert len(evolved_estimator.decision_function(X_test)) == len(X_test)
     assert len(evolved_estimator.predict_proba(X_test)) == len(X_test)
     assert len(evolved_estimator.predict_log_proba(X_test)) == len(X_test)
+    assert evolved_estimator.score(X_test, y_test) == accuracy_score(y_test, evolved_estimator.predict(X_test))
+    assert bool(evolved_estimator.get_params())
     assert len(evolved_estimator.hof) <= evolved_estimator.keep_top_k
     assert "gen" in evolved_estimator[0]
     assert "fitness_max" in evolved_estimator[0]
@@ -240,7 +245,7 @@ def test_negative_criteria():
     assert "max_depth" in evolved_estimator.best_params_
     assert "min_samples_split" in evolved_estimator.best_params_
     assert len(evolved_estimator.predict(X_test_b)) == len(X_test_b)
-    assert evolved_estimator.score(X_train_b, y_train_b) >= 0
+    assert evolved_estimator.score(X_train_b, y_train_b) <= 0
 
 
 def test_wrong_criteria():
