@@ -3,3 +3,4 @@ sphinx_gallery
 sphinx_rtd_theme
 sphinx-copybutton
 numpydoc
+nbsphinx

@@ -4,7 +4,7 @@ Integrating with MLflow
 In this post, we are going to explain how setup the build-in integration
 of sklearn-genetic-opt with MLflow.
 To use this feature, we must set the parameters that will include
-the tracking server, experiment, run name, tags and others,
+the tracking server, experiment name, run name, tags and others,
 the full implementation is here: :class:`~sklearn_genetic.mlflow.MLflowConfig`
 
 Configuration
@@ -16,7 +16,7 @@ to import the main class and define some parameters, here there is its meaning:
 * **tracking_uri:** Address of local or remote tracking server.
 * **experiment:** Case sensitive name of an experiment to be activated.
 * **run_name:** Name of new run (stored as a mlflow.runName tag).
-* **save_models:** If ``True``, it will log the estimator into mlflow artifacts
+* **save_models:** If ``True``, it will log the estimator into mlflow artifacts.
 * **registry_uri:** Address of local or remote model registry server.
 * **tags:** Dictionary of tags to apply.
 
@@ -24,7 +24,7 @@ Example
 --------
 
 In this example, we are going to log the information into a mlflow server
-that is running in our local host, port 5000, we want to save each of the
+that is running in our localhost, port 5000, we want to save each of the
 trained models.
 
 .. code:: python3
@@ -96,7 +96,7 @@ Notice that we choose a small generations and population_size, just to be
 able to see the results without much verbosity.
 
 If you go to you mlflow UI and click the experiment named "Digits-sklearn-genetic-opt"
-We should see something like this (I've hidden some columns to give a better look):
+we should see something like this (I've hidden some columns to give a better look):
 
 .. image:: ../images/mlflow_experiment_0.png
 
@@ -121,10 +121,8 @@ like comparing runs, download the CSV, register a model, etc. You can see more
 on https://mlflow.org/docs/latest/index.html
 
 Now, as we set ``save_model=True``, you can see that the column "Model"
-as a file attached as an artifact, if we click on one of those, we see
+has a file attached as an artifact, if we click on one of those, we see
 a resume of that particular execution and some utils to use right away the
 model:
 
 .. image:: ../images/mlflow_artifacts_4.png
-
-
