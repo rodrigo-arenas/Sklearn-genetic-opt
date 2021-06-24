@@ -89,7 +89,7 @@ It has several options that we can use, for this first example, we'll keep it ve
     # The base classifier to tune
     clf = RandomForestClassifier()
 
-    # Our cross-validation strategy (optional)
+    # Our cross-validation strategy (it could be just an int)
     cv = StratifiedKFold(n_splits=3, shuffle=True)
 
     # The main class from sklearn-genetic-opt
@@ -123,9 +123,9 @@ This log, shows us the metrics obtained in each iteration (generation), this is 
 * **nevals:** How many hyperparameters were fitted in this generation
 * **fitness:** The average score metric in the cross-validation (validation set).
   In this case, the average accuracy across the folds of all the hyperparameters sets.
-* **fitness_std** The standard deviation of the cross-validations accuracy.
-* **fitness_max** The maximum individual score of all the models in this generation.
-* **fitness_min** The minimum individual score of all the models in this generation.
+* **fitness_std:** The standard deviation of the cross-validations accuracy.
+* **fitness_max:** The maximum individual score of all the models in this generation.
+* **fitness_min:** The minimum individual score of all the models in this generation.
 
 After fitting the model, we have some extra methos to use the model right away.
 It will use by default the best set of hyperparameters it found, based in the cross-validation score:
@@ -142,7 +142,7 @@ In this case, we got an accuracy score in the test set of 0.93
 
 .. image:: ../images/basic_usage_accuracy_2.jpeg
 
-Now lets use a couple more functions available in the package
+Now lets use a couple more functions available in the package.
 The first one, will help us to see the evolution of our metric over the generations
 
 .. code:: python3
@@ -154,8 +154,8 @@ The first one, will help us to see the evolution of our metric over the generati
 .. image:: ../images/basic_usage_fitness_plot_3.png
 
 At last, we can check the property called ``evolved_estimator.logbook``,
-this is a deap's logbook which stores all the results of every individual fitted model.
-sklearn-genetic-opt comes with a plot function to analize this log:
+this is a DEAP's logbook which stores all the results of every individual fitted model.
+sklearn-genetic-opt comes with a plot function to analyze this log:
 
 .. code:: python3
 

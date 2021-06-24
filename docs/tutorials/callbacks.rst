@@ -4,7 +4,7 @@ Using Callbacks
 Introduction
 ------------
 
-Callbacks can be defined to take decisions over the optimization
+Callbacks can be defined to take actions or decisions over the optimization
 process while it is still running.
 Common callbacks includes different rules to stop the algorithm or log artifacts.
 The callbacks are passed to the ``.fit`` method
@@ -62,7 +62,7 @@ Now we just have to pass it to the estimator during the fitting
 DeltaThreshold
 --------------
 This callback stops the optimization if the absolute difference
-between the current and last metric less or equals than a threshold.
+between the current and last metric is less or equals than a threshold.
 
 It just requires the threshold and the metric name, for example
 using the 'fitness_min' value:
@@ -79,7 +79,7 @@ TimerStopping
 This callback stops the optimization if the difference in seconds between the starting time of the
 first set of hyperparameters fit, and the current generation time is greater than a time threshold.
 
-Remember that this time is checked after each generation fit, so if the first (or any) generation fit takes
+Remember that this is checked after each generation fit, so if the first (or any) generation fit takes
 longer that the threshold, it won't stop the fitting process until is done with the current generation
 population.
 
@@ -111,7 +111,7 @@ if the 'fitness_max' is above 0.98:
 LogbookSaver
 ------------
 It saves at each iteration the Logbook object with all the parameters and
-the cv score achieved by those parameters. It uses joblib.dump to save
+the cv-score achieved by those parameters. It uses joblib.dump to save
 the file.
 
 .. code:: python3
@@ -137,7 +137,7 @@ You can also specify more than one callback at the same time.
 The way to define it is by passing a list of callbacks in the ``.fit`` method.
 
 Then the estimator is going to check all the conditions in every iteration,
-if at least one of them is met, the callback will stop the process:
+if at least one of the stopping callbacks conditions is met, the callback will stop the process:
 
 .. code:: python3
 
