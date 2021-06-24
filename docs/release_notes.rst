@@ -24,6 +24,7 @@ Docs:
 ^^^^^
 
 * Edited all demos to be in the jupyter notebook format.
+* Added embedded jupyter notebooks examples
 
 What's new in 0.5.0
 -------------------
