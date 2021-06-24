@@ -45,7 +45,7 @@ Main Features:
 * **GASearchCV**: Principal class of the package, holds the evolutionary cross validation optimization routine.
 * **Algorithms**: Set of different evolutionary algorithms to use as optimization procedure.
 * **Callbacks**: Custom evaluation strategies to generate early stopping rules, logging or custom logic.
-* **Plots**: Generate pre-define plots to understand the optimization process.
+* **Plots**: Generate pre-defined plots to understand the optimization process.
 * **MLflow**: Build-in integration with mlflow to log all the hyperparameters, cv-scores and the fitted models.
 
 Usage:
