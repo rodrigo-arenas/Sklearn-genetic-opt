@@ -18,9 +18,100 @@ it could be for example accuracy, precision, recall for a classification problem
 or r2, max_error, neg_root_mean_squared_error for a regression problem.
 To se the full list of metrics, check in `here <https://scikit-learn.org/stable/modules/model_evaluation.html>`_
 
+Evolutionary Algorithms background
+----------------------------------
+
+The Genetic algorithm (GA) is a metaheuristic inspired by the process of natural selection, they are used in optimization
+and search problems in general, and usually are based in a set of functions such as mutation, crossover and selection,
+lets call this the genetic operators.
+I'll use the following terms interchangeably in this section to make the connection between the GA and machine learning:
+
+One choice of hyperparameters→An individual,
+Population→ Several individuals,
+Generation→One fixed iteration that contains a fixed population,
+Fitness value→Cross-validation score.
+
+There are several variations, but in general the steps to follow look like this:
+
+1. Generate a randomly sampled population (different sets of hyperparameters); this is the generation 0.
+2. Evaluate the fitness value of each individual in the population, in terms of machine learning,
+   get the cross-validation scores.
+3. Generate a new generation by using several genetic operators.
+   Repeat the step 2 and 3 until a stopping criteria is met.
+
+Lets go step by step.
+
+**Create the generation 0 and evaluate it:**
+
+As mentioned you could generate a random set of several hyperparameters,
+or you could include a few manually selected ones that you already tried and think are good candidates.
+
+Each set gets usually encoded in form of a chromosome, a binary representation of the set,
+for example if we set the size of the first generation to be 3 individuals, it would look like this:
+
+.. image:: ../images/understandcv_generation0.png
+
+So in this generation, we get three individuals that are mapped to a chromosome (binary) representation,
+using a the encoding function represented as the red arrow, each box in the chromosome is a gen.
+A fixed section of the chromosome is one of the hyperparameters.
+Then we get the cross-validation score (fitness) of each candidate using an scoring function,
+its shown as the purple arrow.
+
+**Create a new generation:**
+
+Now we can create a new set of candidates, as mentioned, there are several genetic operators,
+I'm going to show the most common ones:
+
+**Crossover:**
+
+This operator consist of taking two parent chromosomes and mate them to create new children,
+the way we select the parents could be by a probability distribution function, which gives more probability to the individuals with higher fitness of the generation, lets say the individual number 1 and 3 got selected, then we can take two random points of each parent and make the crossover, like this:
+
+.. image:: ../images/understandcv_crossover.png
+
+Now the children represent a new set of hyperparameters, if we decode each child we could get for example:
+
+.. code:: bash
+
+    Child 1: {"learning_rate": 0.015, "layers": 4, "optimizer": "Adam"}
+    Child 2: {"learning_rate": 0.4, "layers": 6, "optimizer": "SGD"}
+
+But making crossover over the same sets of hyperparameters might end up giving similar result after some iterations,
+so we are stuck with the same kind of solutions, that is why we introduce others operations like the mutation.
+
+**Mutation:**
+
+This operator allows to with a low enough probability (< ~0.1), change randomly one of the gens or a whole hyperparameter to create more diverse sets.
+Lets take for example the child 1 from the previous image, lets pick up a random gen and change its value:
+
+.. image:: ../images/understandcv_mutantchild.png
+
+Or it could even change a whole parameter, for example the optimizer:
+
+.. image:: ../images/understandcv_mutantparameter.png
+
+**Elitism:**
+
+This selection strategy makes reference to the process of selecting the best individuals of each generation,
+to make sure its information is propagated across the generations. This is a very straight forward,
+just select the best k individuals based on their fitness value and copy it to the next generation.
+So after performing those operations, a new generation may look like this:
+
+.. image:: ../images/understandcv_generation1.png
+
+
+From now on, just make this process again for several generations until a stopping criteria is met,
+those could be for example:
+
+* A maximum number of generations was reached.
+* The process has run longer than a budget time.
+* There are no performances improvements (bellow a threshold) from the last n generations.
+
+
 Steps
 -----
 
+Now, moving to this package implementation.
 The way as `GASearchCV` evaluates the candidates is as follows:
 
 * It starts by selecting random sets of hyperparameters according the the `param_grid` definition,
