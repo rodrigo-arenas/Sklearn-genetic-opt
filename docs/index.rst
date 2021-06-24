@@ -42,6 +42,7 @@ sklearn-genetic-opt requires:
 
 .. toctree::
    :maxdepth: 2
+   :titlesonly:
    :caption: User Guide / Tutorials:
 
    tutorials/basic_usage
@@ -50,6 +51,17 @@ sklearn-genetic-opt requires:
    tutorials/understand_cv
    tutorials/mlflow
    release_notes
+
+.. toctree::
+   :maxdepth: 2
+   :titlesonly:
+   :caption: Jupyter notebooks examples:
+
+   notebooks/sklearn_comparison.ipynb
+   notebooks/Boston_Houses_decision_tree.ipynb
+   notebooks/Digits_decision_tree.ipynb
+   notebooks/MLflow_logger.ipynb
+
 
 .. toctree::
    :maxdepth: 2
