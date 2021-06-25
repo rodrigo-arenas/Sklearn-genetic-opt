@@ -1,4 +1,11 @@
-import mlflow
+import logging
+
+# Check if mlflow is installed as an extra requirement
+try:
+    import mlflow
+except ModuleNotFoundError:  # noqa
+    logger = logging.getLogger(__name__)  # noqa
+    logger.error("MLflow not found, pip install mlflow to use MLflowConfig")  # noqa
 
 
 class MLflowConfig:

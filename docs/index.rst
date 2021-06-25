@@ -22,6 +22,10 @@ It's advised to install sklearn-genetic using a virtual env, inside the env use:
 
    pip install sklearn-genetic-opt
 
+Or install with the extra packages to get the full functionalities::
+
+   pip install sklearn-genetic-opt[all]
+
 .. |PythonMinVersion| replace:: 3.7
 .. |ScikitLearnMinVersion| replace:: 0.21.3
 .. |NumPyMinVersion| replace:: 1.14.5
@@ -34,9 +38,15 @@ sklearn-genetic-opt requires:
 - Python (>= |PythonMinVersion|)
 - scikit-learn (>= |ScikitLearnMinVersion|)
 - NumPy (>= |NumPyMinVersion|)
-- Seaborn (>= |SeabornMinVersion|)
 - DEAP (>= |DEAPMinVersion|)
+
+extra requirements:
+
+These requirements are necessary to use the
+:mod:`~sklearn_genetic.plots` and :class:`~sklearn_genetic.mlflow.MLflowConfig` modules
+
 - MLflow (>= |MLflowMinVersion|)
+- Seaborn (>= |SeabornMinVersion|)
 
 .. toctree::
    :maxdepth: 2
@@ -48,7 +58,6 @@ sklearn-genetic-opt requires:
    tutorials/custom_callback
    tutorials/understand_cv
    tutorials/mlflow
-   release_notes
 
 .. toctree::
    :maxdepth: 2
@@ -60,6 +69,11 @@ sklearn-genetic-opt requires:
    notebooks/Digits_decision_tree.ipynb
    notebooks/MLflow_logger.ipynb
 
+.. toctree::
+   :maxdepth: 2
+   :caption: Release Notes
+
+   release_notes
 
 .. toctree::
    :maxdepth: 2

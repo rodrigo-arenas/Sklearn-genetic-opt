@@ -57,6 +57,11 @@ It's advised to install sklearn-genetic using a virtual env, inside the env use:
 
    pip install sklearn-genetic-opt
 
+If you want to get all the features, including plotting and mlflow logging capabilities,
+install all the extra packages::
+
+    pip install sklearn-genetic-opt[all]
+
 Example
 #######
 
