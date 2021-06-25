@@ -1,4 +1,3 @@
-
 from deap import tools
 from deap.algorithms import varAnd, varOr
 
