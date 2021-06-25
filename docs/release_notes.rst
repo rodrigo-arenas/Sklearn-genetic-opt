@@ -19,6 +19,14 @@ Features:
 * Added support for extra methods coming from scikit-learn's BaseSearchCV, it is
   still partial support, missing properties like `cv_results_`, `best_index_` and `multimetric_`.
 
+^^^^^^^^^^^^
+API Changes:
+^^^^^^^^^^^^
+
+* The modules :mod:`~sklearn_genetic.plots` and :class:`~sklearn_genetic.mlflow.MLflowConfig`
+  now requires an explicit installation of seaborn and mlflow, now those
+  are optionally installed using ``pip install sklearn-genetic-opt[all].``
+
 ^^^^^
 Docs:
 ^^^^^
