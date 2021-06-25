@@ -14,13 +14,13 @@ class MLflowConfig:
     """
 
     def __init__(
-            self,
-            tracking_uri,
-            experiment,
-            run_name,
-            save_models=False,
-            registry_uri=None,
-            tags=None,
+        self,
+        tracking_uri,
+        experiment,
+        run_name,
+        save_models=False,
+        registry_uri=None,
+        tags=None,
     ):
         """
 
@@ -73,7 +73,7 @@ class MLflowConfig:
         """
 
         with mlflow.start_run(
-                experiment_id=self.experiment_id, nested=True, run_name=self.run_name
+            experiment_id=self.experiment_id, nested=True, run_name=self.run_name
         ):
 
             for parameter, value in parameters.items():
