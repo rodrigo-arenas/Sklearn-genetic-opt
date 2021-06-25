@@ -1,12 +1,12 @@
 Algorithms
 ----------
 
-.. currentmodule:: sklearn_genetic
+.. currentmodule:: sklearn_genetic.algorithms
 
 .. autosummary::
-   algorithms.eaMuPlusLambda
-   algorithms.eaMuCommaLambda
-   algorithms.eaSimple
+   eaMuPlusLambda
+   eaMuCommaLambda
+   eaSimple
 
 .. automodule:: sklearn_genetic.algorithms
    :members:
