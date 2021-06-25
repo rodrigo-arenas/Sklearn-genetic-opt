@@ -1,5 +1,3 @@
-from typing import Union
-from collections.abc import Callable
 
 from deap import tools
 from deap.algorithms import varAnd, varOr
@@ -132,7 +130,7 @@ def eaMuPlusLambda(
     ngen,
     stats=None,
     halloffame=None,
-    callbacks: Union[list, Callable] = None,
+    callbacks=None,
     verbose=True,
     estimator=None,
 ):
@@ -248,7 +246,7 @@ def eaMuCommaLambda(
     ngen,
     stats=None,
     halloffame=None,
-    callbacks: Union[list, Callable] = None,
+    callbacks=None,
     verbose=True,
     estimator=None,
 ):
