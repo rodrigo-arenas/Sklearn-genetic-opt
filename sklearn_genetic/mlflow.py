@@ -1,4 +1,11 @@
-import mlflow
+import logging
+
+# Check if mlflow is installed as an extra requirement
+try:
+    import mlflow
+except ModuleNotFoundError:
+    logger = logging.getLogger(__name__)
+    logger.error("MLflow not found, pip install mlflow to use MLflowConfig")
 
 
 class MLflowConfig:
@@ -7,13 +14,13 @@ class MLflowConfig:
     """
 
     def __init__(
-        self,
-        tracking_uri,
-        experiment,
-        run_name,
-        save_models=False,
-        registry_uri=None,
-        tags=None,
+            self,
+            tracking_uri,
+            experiment,
+            run_name,
+            save_models=False,
+            registry_uri=None,
+            tags=None,
     ):
         """
 
@@ -66,7 +73,7 @@ class MLflowConfig:
         """
 
         with mlflow.start_run(
-            experiment_id=self.experiment_id, nested=True, run_name=self.run_name
+                experiment_id=self.experiment_id, nested=True, run_name=self.run_name
         ):
 
             for parameter, value in parameters.items():

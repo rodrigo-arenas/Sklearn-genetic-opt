@@ -1,8 +1,14 @@
-import seaborn as sns
+import logging
+
+# Check if seaborn is installed as an extra requirement
+try:
+    import seaborn as sns
+except ModuleNotFoundError:
+    logger = logging.getLogger(__name__)
+    logger.error("seaborn not found, pip install seaborn to use plots functions")
 
 from .utils import logbook_to_pandas
 from .parameters import Metrics
-
 
 """
 This module contains some useful function to explore the results of the optimization routines
