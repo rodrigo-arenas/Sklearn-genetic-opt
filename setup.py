@@ -33,16 +33,18 @@ setup(
         "Documentation": "https://sklearn-genetic-opt.readthedocs.io/en/stable/",
         "Source Code": "https://github.com/rodrigo-arenas/Sklearn-genetic-opt",
     },
-    packages=find_packages(include=["sklearn_genetic", "sklearn_genetic.*"], exclude=['*tests*']),
+    packages=find_packages(
+        include=["sklearn_genetic", "sklearn_genetic.*"], exclude=["*tests*"]
+    ),
     install_requires=[
         "scikit-learn>=0.21.3",
         "numpy>=1.14.5",
         "deap>=1.3.1",
     ],
     extras_require={
-        'mlflow': ["mlflow>=1.17.0"],
+        "mlflow": ["mlflow>=1.17.0"],
         "seaborn": ["seaborn>=0.9.0"],
-        "all": ["mlflow>=1.17.0", "seaborn>=0.9.0"]
+        "all": ["mlflow>=1.17.0", "seaborn>=0.9.0"],
     },
     python_requires=">=3.7",
     include_package_data=True,
