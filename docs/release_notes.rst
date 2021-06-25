@@ -25,6 +25,7 @@ Docs:
 
 * Edited all demos to be in the jupyter notebook format.
 * Added embedded jupyter notebooks examples
+* The modules of the package now have a summary of their classes/functions in the docs
 
 What's new in 0.5.0
 -------------------
