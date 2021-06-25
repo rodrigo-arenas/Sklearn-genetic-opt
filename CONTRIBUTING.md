@@ -9,7 +9,12 @@ infrastructure, and creating new tests.
 
 Code contributions are always welcome, from simple bug fixes, to new features.
 Also consider contributing to the documentation, 
-and reviewing open issues, it is the easiest way to get started 
+and reviewing open issues, it is the easiest way to get started.
+
+When working on your local computer, make sure to install the development dependencies with:
+```bash
+pip install -r dev-requirements.txt
+```
 
 If you have questions, you can open an issue (tag it as question).
 
