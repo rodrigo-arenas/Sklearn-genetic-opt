@@ -3,9 +3,11 @@ import logging
 # Check if seaborn is installed as an extra requirement
 try:
     import seaborn as sns
-except ModuleNotFoundError: # noqa
-    logger = logging.getLogger(__name__) # noqa
-    logger.error("seaborn not found, pip install seaborn to use plots functions") # noqa
+except ModuleNotFoundError:  # noqa
+    logger = logging.getLogger(__name__)  # noqa
+    logger.error(
+        "seaborn not found, pip install seaborn to use plots functions"
+    )  # noqa
 
 from .utils import logbook_to_pandas
 from .parameters import Metrics
