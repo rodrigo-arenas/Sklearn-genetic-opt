@@ -1,6 +1,8 @@
 MLflow
 ------
 
-.. autoclass:: sklearn_genetic.MLflowConfig
+.. currentmodule:: sklearn_genetic
+
+.. autoclass:: sklearn_genetic.mlflow.MLflowConfig
    :members:
    :undoc-members: False

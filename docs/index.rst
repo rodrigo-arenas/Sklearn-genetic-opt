@@ -27,7 +27,6 @@ It's advised to install sklearn-genetic using a virtual env, inside the env use:
 .. |NumPyMinVersion| replace:: 1.14.5
 .. |SeabornMinVersion| replace:: 0.9.0
 .. |DEAPMinVersion| replace:: 1.3.1
-.. |PydanticMinVersion| replace:: 1.8.2
 .. |MLflowMinVersion| replace:: 1.17.0
 
 sklearn-genetic-opt requires:
@@ -37,7 +36,6 @@ sklearn-genetic-opt requires:
 - NumPy (>= |NumPyMinVersion|)
 - Seaborn (>= |SeabornMinVersion|)
 - DEAP (>= |DEAPMinVersion|)
-- Pydantic (>= |PydanticMinVersion|)
 - MLflow (>= |MLflowMinVersion|)
 
 .. toctree::

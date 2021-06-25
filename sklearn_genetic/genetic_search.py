@@ -457,13 +457,13 @@ class GASearchCV(BaseSearchCV):
 
         Returns
         -------
-            pop: pop object
-                The last evaluated population
-             log: Logbook object
-                It contains the calculated metrics {'fitness', 'fitness_std', 'fitness_max', 'fitness_min'}
-                the number of generations and the number of evaluated individuals per generation
-            n_gen: int
-                The number of generations that the evolutionary algorithm ran
+        pop: pop object
+            The last evaluated population
+        log: Logbook object
+            It contains the calculated metrics {'fitness', 'fitness_std', 'fitness_max', 'fitness_min'}
+            the number of generations and the number of evaluated individuals per generation
+        n_gen: int
+            The number of generations that the evolutionary algorithm ran
         """
 
         if self.algorithm == Algorithms.eaSimple.value:

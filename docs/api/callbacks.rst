@@ -1,26 +1,37 @@
 Callbacks
 ----------
 
+.. currentmodule:: sklearn_genetic.callbacks
+
+.. autosummary::
+   base.BaseCallback
+   ConsecutiveStopping
+   DeltaThreshold
+   TimerStopping
+   ThresholdStopping
+   ThresholdStopping
+   LogbookSaver
+
 .. autoclass:: sklearn_genetic.callbacks.base.BaseCallback
    :members:
    :undoc-members: False
 
-.. autoclass:: sklearn_genetic.callbacks.ConsecutiveStopping
+.. autoclass:: ConsecutiveStopping
    :members:
    :undoc-members: False
 
-.. autoclass:: sklearn_genetic.callbacks.DeltaThreshold
+.. autoclass:: DeltaThreshold
    :members:
    :undoc-members: False
 
-.. autoclass:: sklearn_genetic.callbacks.TimerStopping
+.. autoclass:: TimerStopping
    :members:
    :undoc-members: False
 
-.. autoclass:: sklearn_genetic.callbacks.ThresholdStopping
+.. autoclass:: ThresholdStopping
    :members:
    :undoc-members: False
 
-.. autoclass:: sklearn_genetic.callbacks.LogbookSaver
+.. autoclass:: LogbookSaver
    :members:
    :undoc-members: False
