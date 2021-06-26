@@ -1,8 +1,20 @@
 import logging
+import os
+import time
 from copy import deepcopy
 from joblib import dump
 
 from .base import BaseCallback
+from ..parameters import Metrics
+
+logger = logging.getLogger(__name__)  # noqa
+
+try:
+    import tensorflow as tf
+except ModuleNotFoundError:  # noqa
+    logger.error(
+        "Tensorflow not found, pip install tensorflow to use TensorBoard callback"
+    )  # noqa
 
 
 class LogbookSaver(BaseCallback):
@@ -28,9 +40,46 @@ class LogbookSaver(BaseCallback):
             dump_logbook = deepcopy(estimator.logbook.chapters["parameters"])
             dump(dump_logbook, self.checkpoint_path, **self.dump_options)
         except Exception as e:
-            logging.error("Could not save the Logbook in the checkpoint")
+            logger.error("Could not save the Logbook in the checkpoint")
 
         return False
 
-    def __call__(self, record=None, logbook=None, estimator=None):
-        return self.on_step(record, logbook, estimator)
+
+class TensorBoard(BaseCallback):
+    """Log all the fitness metrics to Tensorboard into log_dir/run_id folder"""
+
+    def __init__(self, log_dir="./logs", run_id=None):
+        """
+        Parameters
+        ----------
+        log_dir: str, default="./logs"
+            Path to the main folder where the data will be log
+        run_id: str, default=None
+            Subfolder where the data will be log, if None it will create a folder
+            with the current datetime with format time.strftime("%Y_%m_%d-%H_%M_%S")
+        """
+
+        self.log_dir = log_dir
+
+        if run_id is None:
+            self.run_id = time.strftime("%Y_%m_%d-%H_%M_%S")
+        else:
+            self.run_id = run_id
+
+        self.path = os.path.join(log_dir, self.run_id)
+
+    def on_step(self, record=None, logbook=None, estimator=None):
+
+        # Get the last metric value
+        stats = logbook[-1]
+
+        # Create logs files placeholder
+        writer = tf.summary.create_file_writer(self.path)
+
+        # Log the metrics
+        with writer.as_default():
+            for metric in Metrics.list():
+                tf.summary.scalar(name=metric, data=stats[metric], step=stats["gen"])
+        writer.flush()
+
+        return False

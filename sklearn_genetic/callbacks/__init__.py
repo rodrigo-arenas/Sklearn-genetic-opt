@@ -4,7 +4,7 @@ from .early_stoppers import (
     ConsecutiveStopping,
     TimerStopping,
 )
-from .loggers import LogbookSaver
+from .loggers import LogbookSaver, TensorBoard
 
 __all__ = [
     "DeltaThreshold",
@@ -12,4 +12,5 @@ __all__ = [
     "ConsecutiveStopping",
     "TimerStopping",
     "LogbookSaver",
+    "TensorBoard",
 ]

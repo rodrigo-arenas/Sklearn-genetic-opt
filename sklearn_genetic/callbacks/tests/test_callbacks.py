@@ -1,5 +1,6 @@
 import pytest
 import os
+import shutil
 import logging
 
 from deap.tools import Logbook
@@ -14,6 +15,7 @@ from .. import (
     ConsecutiveStopping,
     DeltaThreshold,
     LogbookSaver,
+    TensorBoard,
 )
 from ..validations import check_stats, check_callback
 from ..base import BaseCallback
@@ -189,3 +191,36 @@ def test_logbook_saver_callback(caplog):
         callback = LogbookSaver(checkpoint_path="./no_folder/logbook.pkl", estimator=4)
         callback()
     assert "Could not save the Logbook in the checkpoint" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "callback, path",
+    [
+        (TensorBoard(), "./logs"),
+        (TensorBoard(log_dir="./sklearn_logs"), "./sklearn_logs"),
+        (TensorBoard(log_dir="./logs", run_id="0"), "./logs/0"),
+        (TensorBoard(log_dir="./logs", run_id="1"), "./logs/1"),
+    ],
+)
+def test_tensorboard_callback(callback, path):
+    assert check_callback(callback) == [callback]
+
+    clf = DecisionTreeClassifier()
+    evolved_estimator = GASearchCV(
+        clf,
+        cv=3,
+        scoring="accuracy",
+        generations=2,
+        param_grid={
+            "min_weight_fraction_leaf": Continuous(0, 0.5),
+            "max_depth": Integer(2, 20),
+            "max_leaf_nodes": Integer(2, 30),
+        },
+        verbose=False,
+    )
+
+    evolved_estimator.fit(X_train, y_train, callbacks=callback)
+
+    assert os.path.exists(path)
+
+    shutil.rmtree(path)

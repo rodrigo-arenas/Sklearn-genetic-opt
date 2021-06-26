@@ -48,7 +48,8 @@ Main Features:
 
 * **GASearchCV**: Principal class of the package, holds the evolutionary cross validation optimization routine.
 * **Algorithms**: Set of different evolutionary algorithms to use as optimization procedure.
-* **Callbacks**: Custom evaluation strategies to generate early stopping rules, logging or custom logic.
+* **Callbacks**: Custom evaluation strategies to generate early stopping rules,
+  logging (into TensorBoard, .pkl files, etc) or your custom logic.
 * **Plots**: Generate pre-defined plots to understand the optimization process.
 * **MLflow**: Build-in integration with mlflow to log all the hyperparameters, cv-scores and the fitted models.
 
@@ -153,16 +154,13 @@ Contributions are more than welcome!
 There are lots of opportunities on the on going project, so please get in touch if you would like to help out.
 Also check the `Contribution guide <https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/CONTRIBUTING.md>`_
 
+Big thanks to the people who are helping this project!
+
+|Contributors|_
+
 Testing
 #######
 
 After installation, you can launch the test suite from outside the source directory::
 
    pytest sklearn_genetic
-
-
-Current Contributors
-####################
-Big thanks to the people who are helping this project!
-
-|Contributors|_

@@ -31,6 +31,8 @@ the data set and model used in :ref:`basic-usage`. The available callbacks are:
 
 * ThresholdStopping
 
+* TensorBoard
+
 * LogbookSaver
 
 ConsecutiveStopping
@@ -107,6 +109,34 @@ if the 'fitness_max' is above 0.98:
     callback = ThresholdStopping(threshold=0.98, metric='fitness_max')
 
     evolved_estimator.fit(X, y, callbacks=callback)
+
+
+TensorBoard
+------------
+It saves at each iteration the fitness metrics into a log folder that can be
+read by Tensorboard.
+
+To use this callback you must install tensorflow first::
+
+    pip install tensorflow
+
+It only requires to define the folder where you want to log your run, and optionally, a run_id, so
+your consecutive runs doesn't mix up.
+If the run_id is not provided, it will create a subfolder with the current datetime of your run.
+
+.. code:: python3
+
+    from sklearn_genetic.callbacks import TensorBoard
+    callback = TensorBoard(log_dir="./logs")
+
+    evolved_estimator.fit(X, y, callbacks=callback)
+
+While the model is being trained you can see in real time the metrics in Tensorboard.
+If you have run more that 1 GASearchCV model and use the TensordBoard callback using
+the same log_dir but different run_id, you can compare the metrics of each run, it looks
+like this for the fitness in three different runs:
+
+.. image:: ../images/tensorboard_log.png
 
 LogbookSaver
 ------------
