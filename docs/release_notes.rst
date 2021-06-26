@@ -28,7 +28,7 @@ Bug Fixes:
 ^^^^^^^^^^
 
 * A missing statement was making that the callbacks starts to get evaluated from generation 1, ignoring generation 0.
-  Now this is properly handle and callbacks work from generation 0.
+  Now this is properly handled and callbacks work from generation 0.
 
 ^^^^^^^^^^^^
 API Changes:
