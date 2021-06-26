@@ -1,4 +1,5 @@
 import logging
+
 logger = logging.getLogger(__name__)  # noqa
 
 # Check if seaborn is installed as an extra requirement
@@ -109,7 +110,9 @@ def noise(score):
     score_len = len(score)
     score_std = score.std()
     noise_ratio = 1e7
-    noise = (np.random.random(score_len)*score_std/noise_ratio) - (score_std/2*noise_ratio)
+    noise = (np.random.random(score_len) * score_std / noise_ratio) - (
+        score_std / 2 * noise_ratio
+    )
     return noise
 
 
@@ -137,7 +140,10 @@ def plot_parallel_coordinates(estimator, features: list = None):
             if not isinstance(param_grid[feature], Categorical):
                 non_categorical_features.append(feature)
             else:
-               logger.warning("`%s` is Categorical variable! It was dropped from the plot feature list", feature) 
+                logger.warning(
+                    "`%s` is Categorical variable! It was dropped from the plot feature list",
+                    feature,
+                )
         stats = df[non_categorical_features]
     else:
         non_categorical_variables = []
@@ -146,8 +152,10 @@ def plot_parallel_coordinates(estimator, features: list = None):
                 non_categorical_variables.append(variable)
         non_categorical_variables.append("score")
         stats = df[non_categorical_variables]
-    
-    stats["score_quartile"] = pd.qcut(score + noise(score), 4, labels=[1,2,3,4])
-    g = pd.plotting.parallel_coordinates(stats, "score_quartile", color=("#8E8E8D", "#4ECDC4", "#C7F464", "#FF0000"))
+
+    stats["score_quartile"] = pd.qcut(score + noise(score), 4, labels=[1, 2, 3, 4])
+    g = pd.plotting.parallel_coordinates(
+        stats, "score_quartile", color=("#8E8E8D", "#4ECDC4", "#C7F464", "#FF0000")
+    )
 
     return g
