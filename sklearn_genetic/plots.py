@@ -1,16 +1,19 @@
 import logging
+logger = logging.getLogger(__name__)  # noqa
 
 # Check if seaborn is installed as an extra requirement
 try:
     import seaborn as sns
 except ModuleNotFoundError:  # noqa
-    logger = logging.getLogger(__name__)  # noqa
     logger.error(
         "seaborn not found, pip install seaborn to use plots functions"
     )  # noqa
+import pandas as pd
+import numpy as np
 
 from .utils import logbook_to_pandas
 from .parameters import Metrics
+from .space import Categorical
 
 """
 This module contains some useful function to explore the results of the optimization routines
@@ -88,4 +91,63 @@ def plot_search_space(estimator, height=2, s=25, features: list = None):
         cmap=sns.color_palette("ch:s=.25,rot=-.25", as_cmap=True),
     )
     g = g.map_diag(sns.kdeplot, shade=True, palette="crest", alpha=0.2, color="red")
+    return g
+
+
+def noise(score):
+    """
+    Parameters
+    ----------
+    estimator: Series
+        The `score` column from the logbook data of :class:`~sklearn_genetic.GASearchCV` 
+
+    Returns
+    -------
+    Noise to be added to each element of the score
+
+    """
+    score_len = len(score)
+    score_std = score.std()
+    noise_ratio = 1e7
+    noise = (np.random.random(score_len)*score_std/noise_ratio) - (score_std/2*noise_ratio)
+    return noise
+
+
+def plot_parallel_coordinates(estimator, features: list = None):
+    """
+    Parameters
+    ----------
+    estimator: estimator object
+        A fitted estimator from :class:`~sklearn_genetic.GASearchCV`
+    features: list, default=None
+        Subset of features to plot, if ``None`` it plots all the features by default
+
+    Returns
+    -------
+    Parallel Coordinates plot of the non-categorical values
+
+    """
+
+    df = logbook_to_pandas(estimator.logbook)
+    param_grid = estimator.space.param_grid
+    score = df["score"]
+    if features:
+        non_categorical_features = []
+        for feature in features:
+            if not isinstance(param_grid[feature], Categorical):
+                non_categorical_features.append(feature)
+            else:
+               logger.warning("`%s` is Categorical variable! It was dropped from the plot feature list", feature) 
+        stats = df[non_categorical_features]
+    else:
+        non_categorical_variables = []
+        for variable, var_type in param_grid.items():
+            if not isinstance(var_type, Categorical):
+                non_categorical_variables.append(variable)
+        non_categorical_variables.append("score")
+        stats = df[non_categorical_variables]
+    
+    stats["score_quartile"] = pd.qcut(score + noise(score), 4, labels=[1,2,3,4])
+    g = pd.plotting.parallel_coordinates(stats, "score_quartile", color=("#8E8E8D", "#4ECDC4", "#C7F464", "#FF0000"))
+
     return g

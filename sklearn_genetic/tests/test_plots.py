@@ -4,7 +4,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeRegressor
 
 from .. import GASearchCV
-from ..plots import plot_fitness_evolution, plot_search_space
+from ..plots import plot_fitness_evolution, plot_search_space, plot_parallel_coordinates
 from ..space import Integer, Categorical, Continuous
 
 
@@ -60,4 +60,11 @@ def test_plot_space():
     plot = plot_search_space(evolved_estimator)
     plot = plot_search_space(
         evolved_estimator, features=["ccp_alpha", "max_depth", "min_samples_split"]
+    )
+
+
+def test_plot_parallel():
+    plot = plot_parallel_coordinates(evolved_estimator)
+    plot = plot_parallel_coordinates(
+        evolved_estimator, features=["ccp_alpha", "criterion"]
     )
