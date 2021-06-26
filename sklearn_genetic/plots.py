@@ -99,8 +99,8 @@ def noise(score):
     """
     Parameters
     ----------
-    estimator: Series
-        The `score` column from the logbook data of :class:`~sklearn_genetic.GASearchCV` 
+    score: Series
+        The `score` column from the logbook data of :class:`~sklearn_genetic.GASearchCV`
 
     Returns
     -------

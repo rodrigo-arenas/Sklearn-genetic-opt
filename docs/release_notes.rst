@@ -14,6 +14,7 @@ Features:
 
 * Added the :class:`~sklearn_genetic.callbacks.TimerStopping` callback to stop
   the iterations after a total (threshold) fitting time has been elapsed.
+* Added new parallel coordinates plot in  :func:`~sklearn_genetic.plots.plot_parallel_coordinates`.
 * Now if one or more callbacks decides to stop the algorithm, it will print
   its class name to know which callbacks were responsible of the stopping.
 * Added support for extra methods coming from scikit-learn's BaseSearchCV, it is
