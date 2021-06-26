@@ -103,7 +103,7 @@ def noise(score):
 
     Returns
     -------
-    Noise to be added to each element of the score
+    Noise to be added to each element of the score to avoid non-unique bin edges
 
     """
     score_len = len(score)
