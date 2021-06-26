@@ -16,6 +16,10 @@
 .. |Docs| image:: https://readthedocs.org/projects/sklearn-genetic-opt/badge/?version=latest
 .. _Docs: https://sklearn-genetic-opt.readthedocs.io/en/latest/?badge=latest
 
+.. |Contributors| image:: https://contributors-img.web.app/image?repo=rodrigo-arenas/sklearn-genetic-opt
+.. _Contributors: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/graphs/contributors
+
+
 .. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/docs/logo.png?raw=true
 
 Sklearn-genetic-opt
@@ -161,4 +165,4 @@ Current Contributors
 ####################
 Big thanks to the people who are helping this project!
 
-.. image:: https://contributors-img.web.app/image?repo=rodrigo-arenas/sklearn-genetic-opt
+|Contributors|_
