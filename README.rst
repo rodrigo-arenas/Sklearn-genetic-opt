@@ -157,4 +157,8 @@ After installation, you can launch the test suite from outside the source direct
    pytest sklearn_genetic
 
 
+Current Contributors
+####################
+Big thanks to the people who are helping this project!
 
+.. image:: https://contributors-img.web.app/image?repo=rodrigo-arenas/sklearn-genetic-opt
