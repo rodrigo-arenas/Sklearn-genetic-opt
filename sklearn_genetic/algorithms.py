@@ -78,9 +78,17 @@ def eaSimple(
         halloffame.update(population)
 
     record = stats.compile(population) if stats else {}
-    logbook.record(gen=0, nevals=len(invalid_ind), **record)
+
+    n_gen = gen = 0
+    logbook.record(gen=n_gen, nevals=len(invalid_ind), **record)
+
     if verbose:
         print(logbook.stream)
+
+    # Check if any of the callbacks conditions are True to stop the iteration
+    if eval_callbacks(callbacks, record, logbook, estimator):
+        print("INFO: Stopping the algorithm")
+        return population, logbook, n_gen
 
     # Begin the generational process
     for gen in range(1, ngen + 1):
@@ -199,9 +207,16 @@ def eaMuPlusLambda(
         halloffame.update(population)
 
     record = stats.compile(population) if stats is not None else {}
-    logbook.record(gen=0, nevals=len(invalid_ind), **record)
+
+    n_gen = gen = 0
+    logbook.record(gen=n_gen, nevals=len(invalid_ind), **record)
     if verbose:
         print(logbook.stream)
+
+    # Check if any of the callbacks conditions are True to stop the iteration
+    if eval_callbacks(callbacks, record, logbook, estimator):
+        print("INFO: Stopping the algorithm")
+        return population, logbook, n_gen
 
     # Begin the generational process
     for gen in range(1, ngen + 1):
@@ -318,9 +333,16 @@ def eaMuCommaLambda(
     logbook.header = ["gen", "nevals"] + (stats.fields if stats else [])
 
     record = stats.compile(population) if stats is not None else {}
-    logbook.record(gen=0, nevals=len(invalid_ind), **record)
+
+    n_gen = gen = 0
+    logbook.record(gen=n_gen, nevals=len(invalid_ind), **record)
     if verbose:
         print(logbook.stream)
+
+    # Check if any of the callbacks conditions are True to stop the iteration
+    if eval_callbacks(callbacks, record, logbook, estimator):
+        print("INFO: Stopping the algorithm")
+        return population, logbook, n_gen
 
     # Begin the generational process
     for gen in range(1, ngen + 1):

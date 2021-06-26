@@ -23,6 +23,13 @@ Features:
 * Added support for extra methods coming from scikit-learn's BaseSearchCV, it is
   still partial support, missing properties like `cv_results_`, `best_index_` and `multimetric_`.
 
+^^^^^^^^^^
+Bug Fixes:
+^^^^^^^^^^
+
+* A missing statement was making that the callbacks starts to get evaluated from generation 1, ignoring generation 0.
+  Now this is properly handled and callbacks work from generation 0.
+
 ^^^^^^^^^^^^
 API Changes:
 ^^^^^^^^^^^^
