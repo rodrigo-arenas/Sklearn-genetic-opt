@@ -9,8 +9,9 @@ Callbacks
    DeltaThreshold
    TimerStopping
    ThresholdStopping
-   ThresholdStopping
+   TensorBoard
    LogbookSaver
+
 
 .. autoclass:: sklearn_genetic.callbacks.base.BaseCallback
    :members:
@@ -29,6 +30,10 @@ Callbacks
    :undoc-members: False
 
 .. autoclass:: ThresholdStopping
+   :members:
+   :undoc-members: False
+
+.. autoclass:: TensorBoard
    :members:
    :undoc-members: False
 

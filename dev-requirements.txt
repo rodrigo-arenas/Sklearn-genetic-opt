@@ -14,3 +14,4 @@ sphinx_rtd_theme
 sphinx-copybutton
 numpydoc
 nbsphinx
+tensorflow>=2.0.0

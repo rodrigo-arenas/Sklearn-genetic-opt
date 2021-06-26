@@ -15,6 +15,7 @@ from ..callbacks import (
     DeltaThreshold,
     ConsecutiveStopping,
     TimerStopping,
+    TensorBoard,
 )
 
 data = load_digits()

@@ -12,6 +12,9 @@ This is the current development version, these features are not yet available th
 Features:
 ^^^^^^^^^
 
+* Added the :class:`~sklearn_genetic.callbacks.TensorBoard` callback to log the
+  generation metrics, watch in real time while the models are trained
+  and compare different runs in your TensorBoard instance.
 * Added the :class:`~sklearn_genetic.callbacks.TimerStopping` callback to stop
   the iterations after a total (threshold) fitting time has been elapsed.
 * Added new parallel coordinates plot in  :func:`~sklearn_genetic.plots.plot_parallel_coordinates`.
@@ -33,8 +36,9 @@ Docs:
 ^^^^^
 
 * Edited all demos to be in the jupyter notebook format.
-* Added embedded jupyter notebooks examples
-* The modules of the package now have a summary of their classes/functions in the docs
+* Added embedded jupyter notebooks examples.
+* The modules of the package now have a summary of their classes/functions in the docs.
+* Updated the callbacks tutorials to add new TensorBoard callback.
 
 What's new in 0.5.0
 -------------------
