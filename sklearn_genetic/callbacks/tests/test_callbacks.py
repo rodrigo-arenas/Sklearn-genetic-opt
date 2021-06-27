@@ -30,6 +30,12 @@ X_train, X_test, y_train, y_test = train_test_split(
 )
 
 
+def test_base_callback_attributes():
+    assert hasattr(BaseCallback, 'on_start')
+    assert hasattr(BaseCallback, 'on_step')
+    assert hasattr(BaseCallback, 'on_end')
+
+
 def test_check_metrics():
     assert check_stats("fitness") is None
 
@@ -59,25 +65,6 @@ def test_check_callback():
         == "callback should be either a class or a list of classes with inheritance from "
         "callbacks.base.BaseCallback"
     )
-
-
-def test_wrong_base_callback():
-    possible_messages = [
-        "Can't instantiate abstract class MyDummyCallback with abstract methods on_step",
-        "Can't instantiate abstract class MyDummyCallback with abstract method on_step",
-    ]
-
-    class MyDummyCallback(BaseCallback):
-        def __init__(self, metric):
-            self.metric = metric
-
-        def validate(self):
-            print(self.metric)
-
-    with pytest.raises(Exception) as excinfo:
-        MyDummyCallback()
-
-    assert any([str(excinfo.value) == i for i in possible_messages])
 
 
 def test_threshold_callback():
