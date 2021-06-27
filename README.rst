@@ -46,13 +46,17 @@ Main Features:
 
 **Some explains of the packages capabilities**
 
-Sampled distribution of hyperparameters:
+Visualize the progress of your training:
 
-.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/docs/images/density.png?raw=true
+.. image:: docs/images/progress_bar.gif
 
 Real time metrics visualization and comparison across runs:
 
 .. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/docs/images/tensorboard_log.png?raw=true
+
+Sampled distribution of hyperparameters:
+
+.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/docs/images/density.png?raw=true
 
 Artifacts logging:
 
@@ -124,13 +128,6 @@ Example
    print("Stats achieved in each generation: ", evolved_estimator.history)
    print("Best k solutions: ", evolved_estimator.hof)
 
-^^^^^^^
-Results
-^^^^^^^
-
-Log controlled by verbosity
-
-.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/docs/images/log.JPG?raw=true
 
 Changelog
 #########
