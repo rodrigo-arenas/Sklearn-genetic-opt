@@ -44,7 +44,8 @@ Main Features:
 * **Plots**: Generate pre-defined plots to understand the optimization process.
 * **MLflow**: Build-in integration with mlflow to log all the hyperparameters, cv-scores and the fitted models.
 
-**Some demos of the packages capabilities**
+Demos on Features:
+##################
 
 Visualize the progress of your training:
 
