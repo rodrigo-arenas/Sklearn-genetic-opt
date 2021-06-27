@@ -34,15 +34,6 @@ optimizes (max or min) the cross-validation scores, it can be used for both regr
 
 Documentation is available `here <https://sklearn-genetic-opt.readthedocs.io/>`_
 
-Sampled distribution of hyperparameters:
-
-.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/docs/images/density.png?raw=true
-
-Optimization progress in a regression problem:
-
-.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/docs/images/fitness.png?raw=true
-
-
 Main Features:
 ##############
 
@@ -52,6 +43,21 @@ Main Features:
   logging (into TensorBoard, .pkl files, etc) or your custom logic.
 * **Plots**: Generate pre-defined plots to understand the optimization process.
 * **MLflow**: Build-in integration with mlflow to log all the hyperparameters, cv-scores and the fitted models.
+
+**Some explains of the packages capabilities**
+
+Sampled distribution of hyperparameters:
+
+.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/docs/images/density.png?raw=true
+
+Real time metrics visualization and comparison across runs:
+
+.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/docs/images/tensorboard_log.png?raw=true
+
+Artifacts logging:
+
+.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/docs/images/mlflow_artifacts_4.png?raw=true
+
 
 Usage:
 ######
