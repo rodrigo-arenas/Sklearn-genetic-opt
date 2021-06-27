@@ -44,7 +44,7 @@ Main Features:
 * **Plots**: Generate pre-defined plots to understand the optimization process.
 * **MLflow**: Build-in integration with mlflow to log all the hyperparameters, cv-scores and the fitted models.
 
-**Some explains of the packages capabilities**
+**Some demos of the packages capabilities**
 
 Visualize the progress of your training:
 
@@ -76,6 +76,10 @@ If you want to get all the features, including plotting and mlflow logging capab
 install all the extra packages::
 
     pip install sklearn-genetic-opt[all]
+
+The only optional dependency that the last command does not install, it's Tensorflow,
+it is usually advised to look further which distribution works better for you.
+
 
 Example
 #######

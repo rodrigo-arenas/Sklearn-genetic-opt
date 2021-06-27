@@ -18,13 +18,10 @@ Installation:
 
 Install sklearn-genetic-opt
 
-It's advised to install sklearn-genetic using a virtual env, inside the env use::
+It's advised to install sklearn-genetic using a virtual env, to install a light version,
+inside the env use::
 
    pip install sklearn-genetic-opt
-
-Or install with the extra packages to get the full functionalities::
-
-   pip install sklearn-genetic-opt[all]
 
 .. |PythonMinVersion| replace:: 3.7
 .. |ScikitLearnMinVersion| replace:: 0.21.3
@@ -32,6 +29,8 @@ Or install with the extra packages to get the full functionalities::
 .. |SeabornMinVersion| replace:: 0.9.0
 .. |DEAPMinVersion| replace:: 1.3.1
 .. |MLflowMinVersion| replace:: 1.17.0
+.. |TensorflowMinVersion| replace:: 2.0.0
+.. |tqdmMinVersion| replace:: 4.61.1
 
 sklearn-genetic-opt requires:
 
@@ -39,14 +38,22 @@ sklearn-genetic-opt requires:
 - scikit-learn (>= |ScikitLearnMinVersion|)
 - NumPy (>= |NumPyMinVersion|)
 - DEAP (>= |DEAPMinVersion|)
+- tqdm (>= |tqdmMinVersion|)
 
-extra requirements:
+Extra requirements:
 
-These requirements are necessary to use the
-:mod:`~sklearn_genetic.plots` and :class:`~sklearn_genetic.mlflow.MLflowConfig` modules
+These requirements are necessary to use
+:mod:`~sklearn_genetic.plots`, :class:`~sklearn_genetic.mlflow.MLflowConfig`
+and :class:`~sklearn_genetic.callbacks.TensorBoard` correspondingly.
 
-- MLflow (>= |MLflowMinVersion|)
 - Seaborn (>= |SeabornMinVersion|)
+- MLflow (>= |MLflowMinVersion|)
+- Tensorflow (>= |TensorflowMinVersion|)
+
+This command will install all the extra requirements, except for Tensorflow,
+as it is usually advised to look further which distribution works better for you::
+
+   pip install sklearn-genetic-opt[all]
 
 .. toctree::
    :maxdepth: 2
