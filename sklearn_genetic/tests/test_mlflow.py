@@ -29,6 +29,7 @@ def mlflow_resources():
     client = MlflowClient(uri)
     return (uri, client)
 
+
 @pytest.fixture
 def mlflow_run(mlflow_resources):
     _, client = mlflow_resources
@@ -37,9 +38,10 @@ def mlflow_run(mlflow_resources):
     runs = [run.run_id for run in active_run]
     return runs
 
+
 def test_mlflow_config(mlflow_resources):
     """
-    Check MLflow config creation. 
+    Check MLflow config creation.
     """
     uri, _ = mlflow_resources
     mlflow_config = MLflowConfig(
@@ -47,16 +49,9 @@ def test_mlflow_config(mlflow_resources):
         experiment="Digits-sklearn-genetic-opt",
         run_name="Decision Tree",
         save_models=True,
-        tags={"team": "sklearn-genetic-opt", "version": "0.5.0"})
+        tags={"team": "sklearn-genetic-opt", "version": "0.5.0"},
+    )
     assert isinstance(mlflow_config, MLflowConfig)
-
-
-def test_mlruns_file():
-    """
-    Check if the mlruns file is created.
-    """
-    tracking_url_type_store = urlparse(mlflow.get_tracking_uri())
-    assert 'Sklearn-genetic-opt/sklearn_genetic/tests/mlruns' in tracking_url_type_store.geturl()
 
 
 def test_runs(mlflow_resources, mlflow_run):
@@ -69,7 +64,8 @@ def test_runs(mlflow_resources, mlflow_run):
         experiment="Digits-sklearn-genetic-opt",
         run_name="Decision Tree",
         save_models=True,
-        tags={"team": "sklearn-genetic-opt", "version": "0.5.0"})
+        tags={"team": "sklearn-genetic-opt", "version": "0.5.0"},
+    )
 
     clf = DecisionTreeClassifier()
 
@@ -86,7 +82,8 @@ def test_runs(mlflow_resources, mlflow_run):
         "min_weight_fraction_leaf": Continuous(0, 0.5),
         "criterion": Categorical(["gini", "entropy"]),
         "max_depth": Integer(2, 20),
-        "max_leaf_nodes": Integer(2, 30)}
+        "max_leaf_nodes": Integer(2, 30),
+    }
 
     cv = StratifiedKFold(n_splits=3, shuffle=True)
 
@@ -104,19 +101,22 @@ def test_runs(mlflow_resources, mlflow_run):
         algorithm="eaMuPlusLambda",
         n_jobs=-1,
         verbose=True,
-        log_config=mlflow_config)
+        log_config=mlflow_config,
+    )
 
     evolved_estimator.fit(X_train, y_train)
     y_predict_ga = evolved_estimator.predict(X_test)
     accuracy = accuracy_score(y_test, y_predict_ga)
     runs = mlflow_run
-    assert len(runs) >= 1 and evolved_estimator.best_params_['min_weight_fraction_leaf']
+    assert len(runs) >= 1 and evolved_estimator.best_params_["min_weight_fraction_leaf"]
+
 
 def test_mlflow_artifacts(mlflow_resources, mlflow_run):
     _, client = mlflow_resources
     run_id = mlflow_run[0]
     run = client.get_run(run_id)
     assert client.list_artifacts(run_id)[0].path == "model"
+
 
 def test_mlflow_params(mlflow_resources, mlflow_run):
     """
@@ -127,10 +127,11 @@ def test_mlflow_params(mlflow_resources, mlflow_run):
     run = client.get_run(run_id)
     params = run.data.params
 
-    assert 0 <= float(params['min_weight_fraction_leaf']) <= 0.5
-    assert params['criterion'] == 'gini' or 'entropy'
-    assert 2 <= int(params['max_depth']) <= 20
-    assert 2 <= int(params['max_leaf_nodes']) <= 30
+    assert 0 <= float(params["min_weight_fraction_leaf"]) <= 0.5
+    assert params["criterion"] == "gini" or "entropy"
+    assert 2 <= int(params["max_depth"]) <= 20
+    assert 2 <= int(params["max_leaf_nodes"]) <= 30
+
 
 def test_mlflow_after_run(mlflow_resources, mlflow_run):
     """
@@ -138,19 +139,20 @@ def test_mlflow_after_run(mlflow_resources, mlflow_run):
     """
     run_id = mlflow_run[0]
     mlflow.end_run()
-    _, client = mlflow_resources 
+    _, client = mlflow_resources
     run = client.get_run(run_id)
     params = run.data.params
 
-    assert 0 <= float(params['min_weight_fraction_leaf']) <= 0.5
-    assert params['criterion'] == 'gini' or 'entropy'
-    assert 2 <= int(params['max_depth']) <= 20
-    assert 2 <= int(params['max_leaf_nodes']) <= 30
+    assert 0 <= float(params["min_weight_fraction_leaf"]) <= 0.5
+    assert params["criterion"] == "gini" or "entropy"
+    assert 2 <= int(params["max_depth"]) <= 20
+    assert 2 <= int(params["max_leaf_nodes"]) <= 30
     assert client.get_metric_history(run_id, "score")[0].key == "score"
+
 
 def test_cleanup():
     """
     Ensure resources are cleaned up.
     """
     shutil.rmtree("mlruns")
-    assert 'mlruns' not in os.listdir(os.getcwd())
+    assert "mlruns" not in os.listdir(os.getcwd())
