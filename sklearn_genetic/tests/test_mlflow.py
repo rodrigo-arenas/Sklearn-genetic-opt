@@ -15,12 +15,6 @@ from sklearn.model_selection import StratifiedKFold
 from ..genetic_search import GASearchCV
 from ..mlflow import MLflowConfig
 from ..space import Integer, Categorical, Continuous
-from ..callbacks import (
-    ThresholdStopping,
-    DeltaThreshold,
-    ConsecutiveStopping,
-    TimerStopping,
-)
 
 
 @pytest.fixture
