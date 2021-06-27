@@ -40,6 +40,7 @@ setup(
         "scikit-learn>=0.21.3",
         "numpy>=1.14.5",
         "deap>=1.3.1",
+        "tqdm>=4.61.1",
     ],
     extras_require={
         "mlflow": ["mlflow>=1.17.0"],

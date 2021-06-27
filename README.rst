@@ -44,15 +44,20 @@ Main Features:
 * **Plots**: Generate pre-defined plots to understand the optimization process.
 * **MLflow**: Build-in integration with mlflow to log all the hyperparameters, cv-scores and the fitted models.
 
-**Some explains of the packages capabilities**
+Demos on Features:
+##################
 
-Sampled distribution of hyperparameters:
+Visualize the progress of your training:
 
-.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/docs/images/density.png?raw=true
+.. image:: docs/images/progress_bar.gif
 
 Real time metrics visualization and comparison across runs:
 
 .. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/docs/images/tensorboard_log.png?raw=true
+
+Sampled distribution of hyperparameters:
+
+.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/docs/images/density.png?raw=true
 
 Artifacts logging:
 
@@ -72,6 +77,10 @@ If you want to get all the features, including plotting and mlflow logging capab
 install all the extra packages::
 
     pip install sklearn-genetic-opt[all]
+
+The only optional dependency that the last command does not install, it's Tensorflow,
+it is usually advised to look further which distribution works better for you.
+
 
 Example
 #######
@@ -124,13 +133,6 @@ Example
    print("Stats achieved in each generation: ", evolved_estimator.history)
    print("Best k solutions: ", evolved_estimator.hof)
 
-^^^^^^^
-Results
-^^^^^^^
-
-Log controlled by verbosity
-
-.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/docs/images/log.JPG?raw=true
 
 Changelog
 #########
