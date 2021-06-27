@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)  # noqa
 try:
     import tensorflow as tf
 except ModuleNotFoundError:  # noqa
-    tf = None # noqa
+    tf = None  # noqa
 
 
 class LogbookSaver(BaseCallback):
