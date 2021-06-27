@@ -15,3 +15,4 @@ sphinx-copybutton
 numpydoc
 nbsphinx
 tensorflow>=2.0.0
+tqdm>=4.61.1
