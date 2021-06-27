@@ -22,6 +22,8 @@ Features:
   its class name to know which callbacks were responsible of the stopping.
 * Added support for extra methods coming from scikit-learn's BaseSearchCV, it is
   still partial support, missing properties like `cv_results_`, `best_index_` and `multimetric_`.
+* tqdm progress bar is now displayed when the .fit method of `GASearchCV` is called, it shows
+  how many generations are left in the training progress.
 
 ^^^^^^^^^^
 Bug Fixes:
