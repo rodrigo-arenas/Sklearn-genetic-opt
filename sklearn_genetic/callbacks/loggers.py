@@ -4,6 +4,7 @@ import time
 from copy import deepcopy
 from joblib import dump
 
+
 from .base import BaseCallback
 from ..parameters import Metrics
 
@@ -12,9 +13,7 @@ logger = logging.getLogger(__name__)  # noqa
 try:
     import tensorflow as tf
 except ModuleNotFoundError:  # noqa
-    logger.error(
-        "Tensorflow not found, pip install tensorflow to use TensorBoard callback"
-    )  # noqa
+    tf = None # noqa
 
 
 class LogbookSaver(BaseCallback):
@@ -58,6 +57,10 @@ class TensorBoard(BaseCallback):
             Subfolder where the data will be log, if None it will create a folder
             with the current datetime with format time.strftime("%Y_%m_%d-%H_%M_%S")
         """
+        if tf is None:
+            logger.error(
+                "Tensorflow not found, pip install tensorflow to use TensorBoard callback"
+            )  # noqa
 
         self.log_dir = log_dir
 

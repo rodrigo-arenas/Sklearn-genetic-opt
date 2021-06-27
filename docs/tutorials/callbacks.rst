@@ -116,7 +116,8 @@ TensorBoard
 It saves at each iteration the fitness metrics into a log folder that can be
 read by Tensorboard.
 
-To use this callback you must install tensorflow first::
+To use this callback you must install tensorflow first, this is not installed
+within this package due it's usually a sensitive and heavy dependency::
 
     pip install tensorflow
 
