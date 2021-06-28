@@ -144,11 +144,15 @@ class TimerStopping(BaseCallback):
         total_seconds: int
             Total time in seconds that the estimator is allowed to fit
         """
+        self.initial_training_time = None
         self.total_seconds = total_seconds
+
+    def on_start(self, estimator=None):
+        self.initial_training_time = datetime.utcnow()
 
     def on_step(self, record=None, logbook=None, estimator=None):
         current_time = datetime.utcnow()
-        difference = current_time - estimator._initial_training_time
+        difference = current_time - self.initial_training_time
         difference_seconds = difference.total_seconds()
 
         if difference_seconds >= self.total_seconds:
