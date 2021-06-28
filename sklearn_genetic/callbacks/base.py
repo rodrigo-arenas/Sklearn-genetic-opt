@@ -6,14 +6,12 @@ class BaseCallback(ABC):
     Base Callback from which all Callbacks must inherit from
     """
 
-    def on_start(self, logbook=None, estimator=None):
+    def on_start(self, estimator=None):
         """
         Take actions at the start of the training
 
         Parameters
         ----------
-        logbook:
-            Current stream logbook with the stats required
         estimator:
             :class:`~sklearn_genetic.GASearchCV` Estimator that is being optimized
 
@@ -42,7 +40,7 @@ class BaseCallback(ABC):
 
         return False
 
-    def on_end(self, logbook=None, estimator=None):
+    def on_end(self, logbook=None, estimator=None, **kwargs):
         """
         Take actions at the end of the training
 

@@ -17,7 +17,7 @@ from .. import (
     LogbookSaver,
     TensorBoard,
 )
-from ..validations import check_stats, check_callback
+from ..validations import check_stats, check_callback, eval_callbacks
 from ..base import BaseCallback
 
 data = load_digits()
@@ -31,12 +31,12 @@ X_train, X_test, y_train, y_test = train_test_split(
 
 
 def test_base_callback_attributes():
-    assert hasattr(BaseCallback, 'on_start')
-    assert hasattr(BaseCallback, 'on_step')
-    assert hasattr(BaseCallback, 'on_end')
+    assert hasattr(BaseCallback, "on_start")
+    assert hasattr(BaseCallback, "on_step")
+    assert hasattr(BaseCallback, "on_end")
 
 
-def test_check_metrics():
+def test_check_metrics_and_methods():
     assert check_stats("fitness") is None
 
     with pytest.raises(Exception) as excinfo:
@@ -47,10 +47,20 @@ def test_check_metrics():
         "but got accuracy instead"
     )
 
+    with pytest.raises(Exception) as excinfo:
+        eval_callbacks(
+            callbacks=None, record=None, logbook=None, estimator=None, method="on_epoch"
+        )
+    assert (
+        str(excinfo.value)
+        == "The callback method must be one of ['on_start', 'on_step', 'on_end'], but got on_epoch instead"
+    )
+
 
 def test_check_callback():
     callback_threshold = ThresholdStopping(threshold=0.8)
     callback_consecutive = ConsecutiveStopping(generations=3)
+    assert not BaseCallback().on_step()
     assert check_callback(callback_threshold) == [callback_threshold]
     assert check_callback(None) == []
     assert check_callback([callback_threshold, callback_consecutive]) == [
