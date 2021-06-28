@@ -468,7 +468,7 @@ def eaMuCommaLambda(
         "record": None,
         "logbook": None,
         "estimator": estimator,
-        "method": "on_end",
+        "method": "on_start",
     }
 
     eval_callbacks(**callbacks_start_args)
