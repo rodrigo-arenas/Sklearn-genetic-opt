@@ -35,14 +35,17 @@ class ProgressBar(BaseCallback):
         self.progress_bar = None
 
     def on_start(self, estimator=None):
+        """Initializes the progress bar with the kwargs and total generations"""
         self.kwargs["total"] = estimator._n_iterations
         self.progress_bar = tqdm(**self.kwargs)
         self.progress_bar.update(1)
 
     def on_step(self, record=None, logbook=None, estimator=None):
+        """Increases the progress bar by one step"""
         self.progress_bar.update(1)
 
     def on_end(self, logbook=None, estimator=None):
+        """Closes the progress bar"""
         self.progress_bar.close()
 
 

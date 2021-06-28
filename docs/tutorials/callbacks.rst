@@ -25,6 +25,8 @@ until that training point.
 Now lets see how to use them, we'll take
 the data set and model used in :ref:`basic-usage`. The available callbacks are:
 
+* ProgressBar
+
 * ConsecutiveStopping
 
 * DeltaThreshold
@@ -36,6 +38,32 @@ the data set and model used in :ref:`basic-usage`. The available callbacks are:
 * TensorBoard
 
 * LogbookSaver
+
+ProgressBar
+-----------
+
+This callback display a tqdm bar with your training process, the length of the bar
+is the max number of generations (population_size + 1) that the algorithm would run,
+each step is a generation.
+
+You can pass any ``tqdm.auto.tqdm`` valid arguments as kwargs or leave it as default.
+To use this bar set:
+
+.. code:: python3
+
+    from sklearn_genetic.callbacks import ProgressBar
+    callback = ProgressBar()
+
+Now we just have to pass it to the estimator during the fitting
+
+.. code:: python3
+
+    # Already defined GASearchCV instance
+    evolved_estimator.fit(X, y, callbacks=callback)
+
+During the training it will be displayed like this:
+
+.. image:: ../images/progress_bar.gif
 
 ConsecutiveStopping
 -------------------
