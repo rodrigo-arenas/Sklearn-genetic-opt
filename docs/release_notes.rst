@@ -24,6 +24,14 @@ Features:
   still partial support, missing properties like `cv_results_`, `best_index_` and `multimetric_`.
 * tqdm progress bar is now displayed when the .fit method of `GASearchCV` is called, it shows
   how many generations are left in the training progress.
+* Added methods `on_start` and `on_end` to :class:`~sklearn_genetic.callbacks.base.BaseCallback`.
+  Now the algorithms check for the callbacks like this:
+
+  - **on_start**: When the evolutionary algorithm is called from the GASearchCV.fit method
+
+  - **on_step:** When the evolutionary algorithm finish a generation (no change here).
+
+  - **on_end:** At the end of the last generation.
 
 ^^^^^^^^^^
 Bug Fixes:
@@ -47,7 +55,8 @@ Docs:
 * Edited all demos to be in the jupyter notebook format.
 * Added embedded jupyter notebooks examples.
 * The modules of the package now have a summary of their classes/functions in the docs.
-* Updated the callbacks tutorials to add new TensorBoard callback.
+* Updated the callbacks and custom callbacks tutorials to add new TensorBoard callback and
+  the new methods on the base callback.
 
 What's new in 0.5.0
 -------------------
