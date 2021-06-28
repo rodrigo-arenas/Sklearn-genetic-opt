@@ -1,4 +1,4 @@
-from ..parameters import Metrics
+from ..parameters import Metrics, CallbackMethods
 from .base import BaseCallback
 
 
@@ -31,27 +31,47 @@ def check_callback(callback):
         return []
 
 
-def eval_callbacks(callbacks, record, logbook, estimator):
+def eval_callbacks(callbacks, record, logbook, estimator, method):
     """Evaluate list of callbacks on result.
     Parameters
     ----------
     callbacks : list of callables
         Callbacks to evaluate.
     record : logbook record
-    logbook:
+    logbook: logbook object
             Current stream logbook with the stats required
     estimator: :class:`~sklearn_genetic.GASearchCV`, default = None
         Estimator that is being optimized
+    method: {'on_start', 'on_step', 'on_end'}
+        The method to be called from the callback
 
     Returns
     -------
     decision : bool
         Decision of the callbacks whether or not to keep optimizing
     """
+
+    if method not in CallbackMethods.list():
+        raise ValueError(
+            f"The callback method must be one of {CallbackMethods.list()}, but got {method} instead"
+        )
+
     stop = False
+    decision = None
+
     if callbacks:
-        for c in callbacks:
-            decision = c(record, logbook, estimator)
+        for callback in callbacks:
+            callback_method = getattr(callback, method)
+
+            if method == CallbackMethods.on_start.value:
+                decision = callback_method(estimator)
+
+            elif method == CallbackMethods.on_step.value:
+                decision = callback_method(record, logbook, estimator)
+
+            elif method == CallbackMethods.on_end.value:
+                decision = callback_method(logbook, estimator)
+
             if decision is not None:
                 stop = stop or decision
 

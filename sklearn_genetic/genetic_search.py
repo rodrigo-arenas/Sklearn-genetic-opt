@@ -213,7 +213,6 @@ class GASearchCV(BaseSearchCV):
         self.best_index_ = None
         self.multimetric_ = False
         self.log_config = log_config
-        self._initial_training_time = None
 
         # Check that the estimator is compatible with scikit-learn
         if not is_classifier(self.estimator) and not is_regressor(self.estimator):
@@ -403,8 +402,6 @@ class GASearchCV(BaseSearchCV):
 
         # Set the DEAPs necessary methods
         self._register()
-
-        self._initial_training_time = datetime.utcnow()
 
         # Optimization routine from the selected evolutionary algorithm
         pop, log, n_gen = self._select_algorithm(

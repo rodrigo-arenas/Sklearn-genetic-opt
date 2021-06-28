@@ -5,6 +5,7 @@ Callbacks
 
 .. autosummary::
    base.BaseCallback
+   ProgressBar
    ConsecutiveStopping
    DeltaThreshold
    TimerStopping
@@ -14,6 +15,10 @@ Callbacks
 
 
 .. autoclass:: sklearn_genetic.callbacks.base.BaseCallback
+   :members:
+   :undoc-members: False
+
+.. autoclass:: ProgressBar
    :members:
    :undoc-members: False
 

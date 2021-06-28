@@ -11,13 +11,15 @@ from sklearn.model_selection import train_test_split
 from ... import GASearchCV
 from ...space import Integer, Continuous
 from .. import (
+    ProgressBar,
     ThresholdStopping,
     ConsecutiveStopping,
     DeltaThreshold,
+    TimerStopping,
     LogbookSaver,
     TensorBoard,
 )
-from ..validations import check_stats, check_callback
+from ..validations import check_stats, check_callback, eval_callbacks
 from ..base import BaseCallback
 
 data = load_digits()
@@ -30,7 +32,13 @@ X_train, X_test, y_train, y_test = train_test_split(
 )
 
 
-def test_check_metrics():
+def test_base_callback_attributes():
+    assert hasattr(BaseCallback, "on_start")
+    assert hasattr(BaseCallback, "on_step")
+    assert hasattr(BaseCallback, "on_end")
+
+
+def test_check_metrics_and_methods():
     assert check_stats("fitness") is None
 
     with pytest.raises(Exception) as excinfo:
@@ -41,10 +49,42 @@ def test_check_metrics():
         "but got accuracy instead"
     )
 
+    with pytest.raises(Exception) as excinfo:
+        eval_callbacks(
+            callbacks=None, record=None, logbook=None, estimator=None, method="on_epoch"
+        )
+    assert (
+        str(excinfo.value)
+        == "The callback method must be one of ['on_start', 'on_step', 'on_end'], but got on_epoch instead"
+    )
+
+
+@pytest.mark.parametrize(
+    "callback",
+    [
+        ProgressBar,
+        ThresholdStopping,
+        ConsecutiveStopping,
+        DeltaThreshold,
+        TimerStopping,
+        LogbookSaver,
+        TensorBoard,
+    ],
+)
+def test_check_at_least_one_method(callback):
+    assert any(
+        [
+            hasattr(callback, "on_start"),
+            hasattr(callback, "on_step"),
+            hasattr(callback, "on_end"),
+        ]
+    )
+
 
 def test_check_callback():
     callback_threshold = ThresholdStopping(threshold=0.8)
     callback_consecutive = ConsecutiveStopping(generations=3)
+    assert not BaseCallback().on_step()
     assert check_callback(callback_threshold) == [callback_threshold]
     assert check_callback(None) == []
     assert check_callback([callback_threshold, callback_consecutive]) == [
@@ -59,25 +99,6 @@ def test_check_callback():
         == "callback should be either a class or a list of classes with inheritance from "
         "callbacks.base.BaseCallback"
     )
-
-
-def test_wrong_base_callback():
-    possible_messages = [
-        "Can't instantiate abstract class MyDummyCallback with abstract methods on_step",
-        "Can't instantiate abstract class MyDummyCallback with abstract method on_step",
-    ]
-
-    class MyDummyCallback(BaseCallback):
-        def __init__(self, metric):
-            self.metric = metric
-
-        def validate(self):
-            print(self.metric)
-
-    with pytest.raises(Exception) as excinfo:
-        MyDummyCallback()
-
-    assert any([str(excinfo.value) == i for i in possible_messages])
 
 
 def test_threshold_callback():

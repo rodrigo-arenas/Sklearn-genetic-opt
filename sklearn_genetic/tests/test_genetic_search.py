@@ -15,7 +15,7 @@ from ..callbacks import (
     DeltaThreshold,
     ConsecutiveStopping,
     TimerStopping,
-    TensorBoard,
+    ProgressBar,
 )
 
 data = load_digits()
@@ -90,6 +90,12 @@ def test_expected_ga_results():
         ("eaSimple", DeltaThreshold(threshold=0.001, metric="fitness")),
         ("eaMuPlusLambda", DeltaThreshold(threshold=0.001, metric="fitness")),
         ("eaMuCommaLambda", DeltaThreshold(threshold=0.001, metric="fitness")),
+        ("eaSimple", ProgressBar()),
+        (
+            "eaMuPlusLambda",
+            ProgressBar(**{"desc": "my_custom_desc", "mininterval": 0.5}),
+        ),
+        ("eaMuCommaLambda", ProgressBar()),
         (
             "eaSimple",
             [

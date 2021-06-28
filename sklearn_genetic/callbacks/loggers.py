@@ -1,9 +1,11 @@
 import logging
 import os
+import sys
 import time
 from copy import deepcopy
 from joblib import dump
 
+from tqdm.auto import tqdm
 
 from .base import BaseCallback
 from ..parameters import Metrics
@@ -16,9 +18,40 @@ except ModuleNotFoundError:  # noqa
     tf = None  # noqa
 
 
+class ProgressBar(BaseCallback):
+    """Displays a tqdm progress bar with the training progress."""
+
+    def __init__(self, **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs: dict, default = {"file": sys.stdout}
+            A dict with valid arguments from tqdm.auto.tqdm
+        """
+        if not kwargs.get("file"):
+            kwargs["file"] = sys.stdout
+
+        self.kwargs = kwargs
+        self.progress_bar = None
+
+    def on_start(self, estimator=None):
+        """Initializes the progress bar with the kwargs and total generations"""
+        self.kwargs["total"] = estimator._n_iterations
+        self.progress_bar = tqdm(**self.kwargs)
+        self.progress_bar.update(1)
+
+    def on_step(self, record=None, logbook=None, estimator=None):
+        """Increases the progress bar by one step"""
+        self.progress_bar.update(1)
+
+    def on_end(self, logbook=None, estimator=None):
+        """Closes the progress bar"""
+        self.progress_bar.close()
+
+
 class LogbookSaver(BaseCallback):
     """
-    Saves the estimator.logbook parameter chapter object in a local file system
+    Saves the estimator.logbook parameter chapter object in a local file system.
     """
 
     def __init__(self, checkpoint_path, **dump_options):
