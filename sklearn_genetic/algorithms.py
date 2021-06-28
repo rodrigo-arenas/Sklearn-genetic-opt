@@ -5,8 +5,6 @@ from deap.algorithms import varAnd, varOr
 
 from .callbacks.validations import eval_callbacks
 
-from tqdm.auto import tqdm
-
 
 def eaSimple(
     population,
@@ -82,8 +80,6 @@ def eaSimple(
     logbook = tools.Logbook()
     logbook.header = ["gen", "nevals"] + (stats.fields if stats else [])
 
-    progress_bar = tqdm(total=ngen + 1, file=sys.stdout)
-
     # Evaluate the individuals with an invalid fitness
     invalid_ind = [ind for ind in population if not ind.fitness.valid]
     fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
@@ -97,8 +93,6 @@ def eaSimple(
 
     n_gen = gen = 0
     logbook.record(gen=n_gen, nevals=len(invalid_ind), **record)
-
-    progress_bar.update(1)
 
     if verbose:
         print(logbook.stream)
@@ -125,7 +119,6 @@ def eaSimple(
 
         # Call ending callback
         eval_callbacks(**callbacks_end_args)
-        progress_bar.close()
         print("INFO: Stopping the algorithm")
         return population, logbook, n_gen
 
@@ -154,8 +147,6 @@ def eaSimple(
         record = stats.compile(population) if stats else {}
         logbook.record(gen=gen, nevals=len(invalid_ind), **record)
 
-        progress_bar.update(1)
-
         if verbose:
             print(logbook.stream)
 
@@ -169,12 +160,10 @@ def eaSimple(
 
         # Check if any of the callbacks conditions are True to stop the iteration
         if eval_callbacks(**callbacks_step_args):
-            progress_bar.close()
             print("INFO: Stopping the algorithm")
             break
 
     n_gen = gen + 1
-    progress_bar.close()
 
     callbacks_end_args = {
         "callbacks": callbacks,
@@ -270,8 +259,6 @@ def eaMuPlusLambda(
     logbook = tools.Logbook()
     logbook.header = ["gen", "nevals"] + (stats.fields if stats else [])
 
-    progress_bar = tqdm(total=ngen + 1, file=sys.stdout)
-
     # Evaluate the individuals with an invalid fitness
     invalid_ind = [ind for ind in population if not ind.fitness.valid]
     fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
@@ -285,8 +272,6 @@ def eaMuPlusLambda(
 
     n_gen = gen = 0
     logbook.record(gen=n_gen, nevals=len(invalid_ind), **record)
-
-    progress_bar.update(1)
 
     if verbose:
         print(logbook.stream)
@@ -311,7 +296,6 @@ def eaMuPlusLambda(
         }
 
         eval_callbacks(**callbacks_end_args)
-        progress_bar.close()
         print("INFO: Stopping the algorithm")
         return population, logbook, n_gen
 
@@ -337,8 +321,6 @@ def eaMuPlusLambda(
         record = stats.compile(population) if stats is not None else {}
         logbook.record(gen=gen, nevals=len(invalid_ind), **record)
 
-        progress_bar.update(1)
-
         if verbose:
             print(logbook.stream)
 
@@ -351,12 +333,11 @@ def eaMuPlusLambda(
         }
 
         if eval_callbacks(**callbacks_step_args):
-            progress_bar.close()
+
             print("INFO: Stopping the algorithm")
             break
 
     n_gen = gen + 1
-    progress_bar.close()
 
     callbacks_end_args = {
         "callbacks": callbacks,
@@ -463,14 +444,10 @@ def eaMuCommaLambda(
     logbook = tools.Logbook()
     logbook.header = ["gen", "nevals"] + (stats.fields if stats else [])
 
-    progress_bar = tqdm(total=ngen + 1, file=sys.stdout)
-
     record = stats.compile(population) if stats is not None else {}
 
     n_gen = gen = 0
     logbook.record(gen=n_gen, nevals=len(invalid_ind), **record)
-
-    progress_bar.update(1)
 
     if verbose:
         print(logbook.stream)
@@ -495,7 +472,6 @@ def eaMuCommaLambda(
         }
 
         eval_callbacks(**callbacks_end_args)
-        progress_bar.close()
         print("INFO: Stopping the algorithm")
         return population, logbook, n_gen
 
@@ -521,8 +497,6 @@ def eaMuCommaLambda(
         record = stats.compile(population) if stats is not None else {}
         logbook.record(gen=gen, nevals=len(invalid_ind), **record)
 
-        progress_bar.update(1)
-
         if verbose:
             print(logbook.stream)
 
@@ -536,12 +510,10 @@ def eaMuCommaLambda(
 
         # Check if any of the callbacks conditions are True to stop the iteration
         if eval_callbacks(**callbacks_step_args):
-            progress_bar.close()
             print("INFO: Stopping the algorithm")
             break
 
     n_gen = gen + 1
-    progress_bar.close()
 
     callbacks_end_args = {
         "callbacks": callbacks,

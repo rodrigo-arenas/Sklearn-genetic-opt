@@ -40,7 +40,7 @@ class BaseCallback(ABC):
 
         return False
 
-    def on_end(self, logbook=None, estimator=None, **kwargs):
+    def on_end(self, logbook=None, estimator=None):
         """
         Take actions at the end of the training
 

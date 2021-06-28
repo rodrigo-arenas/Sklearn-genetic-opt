@@ -11,6 +11,7 @@ from sklearn.model_selection import train_test_split
 from ... import GASearchCV
 from ...space import Integer, Continuous
 from .. import (
+    ProgressBar,
     ThresholdStopping,
     ConsecutiveStopping,
     DeltaThreshold,
@@ -61,6 +62,7 @@ def test_check_metrics_and_methods():
 @pytest.mark.parametrize(
     "callback",
     [
+        ProgressBar,
         ThresholdStopping,
         ConsecutiveStopping,
         DeltaThreshold,
