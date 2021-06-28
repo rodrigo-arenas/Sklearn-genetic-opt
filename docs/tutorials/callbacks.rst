@@ -12,7 +12,7 @@ of the :class:`~sklearn_genetic.GASearchCV` class.
 
 The callbacks are evaluated at start of the training using the `on_start` method,
 at the end of each generation fit using `on_step` method and at the
-end of the training using `on_end', so it looks like this:
+end of the training using `on_end`, so it looks like this:
 
 .. image:: ../images/callbacks_evaluation_0.png
 
