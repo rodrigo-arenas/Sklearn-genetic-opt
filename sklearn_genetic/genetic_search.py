@@ -3,7 +3,7 @@ import random
 import numpy as np
 from deap import base, creator, tools
 from sklearn.base import clone
-from sklearn.model_selection import cross_val_score, cross_validate
+from sklearn.model_selection import cross_validate
 from sklearn.base import is_classifier, is_regressor
 from sklearn.utils.metaestimators import if_delegate_has_method
 from sklearn.utils.validation import check_is_fitted

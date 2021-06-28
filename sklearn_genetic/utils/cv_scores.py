@@ -3,7 +3,7 @@ from scipy.stats import rankdata
 
 
 def select_dict_keys(dictionary, keys):
-    return {key: dictionary[key] for key in set(keys)}
+    return {key: dictionary[key] for key in keys}
 
 
 def crete_cv_results_(logbook, space, return_train_score):
