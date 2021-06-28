@@ -169,18 +169,6 @@ def eaSimple(
 
         # Check if any of the callbacks conditions are True to stop the iteration
         if eval_callbacks(**callbacks_step_args):
-
-            callbacks_end_args = {
-                "callbacks": callbacks,
-                "record": None,
-                "logbook": logbook,
-                "estimator": estimator,
-                "method": "on_end",
-            }
-
-            # Call ending callback
-            eval_callbacks(**callbacks_end_args)
-
             progress_bar.close()
             print("INFO: Stopping the algorithm")
             break
@@ -363,16 +351,6 @@ def eaMuPlusLambda(
         }
 
         if eval_callbacks(**callbacks_step_args):
-
-            callbacks_end_args = {
-                "callbacks": callbacks,
-                "record": None,
-                "logbook": None,
-                "estimator": estimator,
-                "method": "on_end",
-            }
-
-            eval_callbacks(**callbacks_end_args)
             progress_bar.close()
             print("INFO: Stopping the algorithm")
             break
@@ -558,17 +536,6 @@ def eaMuCommaLambda(
 
         # Check if any of the callbacks conditions are True to stop the iteration
         if eval_callbacks(**callbacks_step_args):
-
-            callbacks_end_args = {
-                "callbacks": callbacks,
-                "record": None,
-                "logbook": logbook,
-                "estimator": estimator,
-                "method": "on_end",
-            }
-
-            eval_callbacks(**callbacks_end_args)
-
             progress_bar.close()
             print("INFO: Stopping the algorithm")
             break
