@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.stats import rankdata
 
 
 def select_dict_keys(dictionary, keys):
@@ -10,12 +11,12 @@ def crete_cv_results_(logbook, space, return_train_score):
     n_splits = len(logbook.chapters["parameters"].select("cv_scores")[0])
 
     for parameter in space.parameters:
-        cv_results[f"param{parameter}"] = logbook.chapters["parameters"].select(
+        cv_results[f"param_{parameter}"] = logbook.chapters["parameters"].select(
             parameter
         )
 
     for split in range(n_splits):
-        cv_results[f"split_{split}_test_score"] = [
+        cv_results[f"split{split}_test_score"] = [
             cv_scores[split]
             for cv_scores in logbook.chapters["parameters"].select("cv_scores")
         ]
@@ -25,6 +26,10 @@ def crete_cv_results_(logbook, space, return_train_score):
         np.nanstd(cv_scores)
         for cv_scores in logbook.chapters["parameters"].select("cv_scores")
     ]
+
+    cv_results["rank_test_score"] = rankdata(
+        -np.array(cv_results["mean_test_score"]), method="min"
+    ).astype(int)
 
     if return_train_score:
 
@@ -43,6 +48,10 @@ def crete_cv_results_(logbook, space, return_train_score):
             np.nanstd(cv_scores)
             for cv_scores in logbook.chapters["parameters"].select("train_score")
         ]
+
+        cv_results["rank_train_score"] = rankdata(
+            -np.array(cv_results["mean_train_score"]), method="min"
+        ).astype(int)
 
     cv_results["mean_fit_time"] = [
         np.nanmean(fit_time)
