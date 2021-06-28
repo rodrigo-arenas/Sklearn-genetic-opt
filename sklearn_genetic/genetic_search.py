@@ -123,7 +123,13 @@ class GASearchCV(BaseSearchCV):
         If a numeric value is given, FitFailedWarning is raised.
 
     return_train_score: bool, default=False
-        if `True`, the `cv_results_` attribute will include training scores.
+        If ``False``, the ``cv_results_`` attribute will not include training
+        scores.
+        Computing training scores is used to get insights on how different
+        parameter settings impact the overfitting/underfitting trade-off.
+        However computing the scores on the training set can be computationally
+        expensive and is not strictly required to select the parameters that
+        yield the best generalization performance.
 
     log_config : :class:`~sklearn_genetic.mlflow.MLflowConfig`, default = None
         Configuration to log metrics and models to mlflow, of None,
@@ -145,6 +151,51 @@ class GASearchCV(BaseSearchCV):
          *gen* returns the index of the evaluated generations.
          Each entry on the others lists, represent the average metric in each generation.
 
+    cv_results_ : dict of numpy (masked) ndarrays
+        A dict with keys as column headers and values as columns, that can be
+        imported into a pandas ``DataFrame``.
+        For instance the below given table
+        +------------+-----------+------------+-----------------+---+---------+
+        |param_kernel|param_gamma|param_degree|split0_test_score|...|rank_t...|
+        +============+===========+============+=================+===+=========+
+        |  'poly'    |     --    |      2     |       0.80      |...|    2    |
+        +------------+-----------+------------+-----------------+---+---------+
+        |  'poly'    |     --    |      3     |       0.70      |...|    4    |
+        +------------+-----------+------------+-----------------+---+---------+
+        |  'rbf'     |     0.1   |     --     |       0.80      |...|    3    |
+        +------------+-----------+------------+-----------------+---+---------+
+        |  'rbf'     |     0.2   |     --     |       0.93      |...|    1    |
+        +------------+-----------+------------+-----------------+---+---------+
+        will be represented by a ``cv_results_`` dict of::
+            {
+            'param_kernel': masked_array(data = ['poly', 'poly', 'rbf', 'rbf'],
+                                         mask = [False False False False]...)
+            'param_gamma': masked_array(data = [-- -- 0.1 0.2],
+                                        mask = [ True  True False False]...),
+            'param_degree': masked_array(data = [2.0 3.0 -- --],
+                                         mask = [False False  True  True]...),
+            'split0_test_score'  : [0.80, 0.70, 0.80, 0.93],
+            'split1_test_score'  : [0.82, 0.50, 0.70, 0.78],
+            'mean_test_score'    : [0.81, 0.60, 0.75, 0.85],
+            'std_test_score'     : [0.01, 0.10, 0.05, 0.08],
+            'rank_test_score'    : [2, 4, 3, 1],
+            'split0_train_score' : [0.80, 0.92, 0.70, 0.93],
+            'split1_train_score' : [0.82, 0.55, 0.70, 0.87],
+            'mean_train_score'   : [0.81, 0.74, 0.70, 0.90],
+            'std_train_score'    : [0.01, 0.19, 0.00, 0.03],
+            'mean_fit_time'      : [0.73, 0.63, 0.43, 0.49],
+            'std_fit_time'       : [0.01, 0.02, 0.01, 0.01],
+            'mean_score_time'    : [0.01, 0.06, 0.04, 0.04],
+            'std_score_time'     : [0.00, 0.00, 0.00, 0.01],
+            'params'             : [{'kernel': 'poly', 'degree': 2}, ...],
+            }
+        NOTE
+        The key ``'params'`` is used to store a list of parameter
+        settings dicts for all the parameter candidates.
+        The ``mean_fit_time``, ``std_fit_time``, ``mean_score_time`` and
+        ``std_score_time`` are all in seconds.
+
+
     best_estimator_ : estimator
         Estimator that was chosen by the search, i.e. estimator
         which gave highest score
@@ -152,6 +203,8 @@ class GASearchCV(BaseSearchCV):
 
     best_params_ : dict
         Parameter setting that gave the best results on the hold out data.
+
+
 
     """
 
@@ -214,6 +267,7 @@ class GASearchCV(BaseSearchCV):
         self.hof = None
         self.X_predict = None
         self.scorer_ = None
+        self.cv_results_ = None
         self.best_index_ = None
         self.multimetric_ = False
         self.log_config = log_config
@@ -440,6 +494,12 @@ class GASearchCV(BaseSearchCV):
             for k in range(len(self._hof))
         }
 
+        self.cv_results_ = crete_cv_results_(
+            logbook=self.logbook,
+            space=self.space,
+            return_train_score=self.return_train_score,
+        )
+
         self.history = {
             "gen": log.select("gen"),
             "fitness": log.select("fitness"),
@@ -550,17 +610,6 @@ class GASearchCV(BaseSearchCV):
 
         has_history = bool(self.history)
         return all([is_fitted, has_history, self.refit])
-
-    @property
-    def cv_results_(self):
-
-        cv_results_dict = crete_cv_results_(
-            logbook=self.logbook,
-            space=self.space,
-            return_train_score=self.return_train_score,
-        )
-
-        return cv_results_dict
 
     def __getitem__(self, index):
         """
