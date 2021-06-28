@@ -155,6 +155,12 @@ You can check the latest development version with the command::
 
    git clone https://github.com/rodrigo-arenas/Sklearn-genetic-opt.git
 
+Install the development dependencies::
+  
+  pip install -r dev-requirements.txt
+  
+Check the latest in-development documentation:: https://sklearn-genetic-opt.readthedocs.io/en/latest/
+
 Contributing
 ############
 
