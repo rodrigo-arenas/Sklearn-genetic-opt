@@ -70,13 +70,14 @@ def eaSimple(
 
     """
 
-    eval_callbacks(
-        callbacks=callbacks,
-        record=None,
-        logbook=None,
-        estimator=estimator,
-        method="on_start",
-    )
+    callbacks_start_args = {
+        "callbacks": callbacks,
+        "record": None,
+        "logbook": None,
+        "estimator": estimator,
+        "method": "on_start",
+    }
+    eval_callbacks(**callbacks_start_args)
 
     logbook = tools.Logbook()
     logbook.header = ["gen", "nevals"] + (stats.fields if stats else [])
@@ -103,13 +104,27 @@ def eaSimple(
         print(logbook.stream)
 
     # Check if any of the callbacks conditions are True to stop the iteration
-    if eval_callbacks(
-        callbacks=callbacks,
-        record=record,
-        logbook=logbook,
-        estimator=estimator,
-        method="on_step",
-    ):
+
+    callbacks_step_args = {
+        "callbacks": callbacks,
+        "record": record,
+        "logbook": logbook,
+        "estimator": estimator,
+        "method": "on_step",
+    }
+
+    if eval_callbacks(**callbacks_step_args):
+
+        callbacks_end_args = {
+            "callbacks": callbacks,
+            "record": None,
+            "logbook": logbook,
+            "estimator": estimator,
+            "method": "on_end",
+        }
+
+        # Call ending callback
+        eval_callbacks(**callbacks_end_args)
         progress_bar.close()
         print("INFO: Stopping the algorithm")
         return population, logbook, n_gen
@@ -144,14 +159,28 @@ def eaSimple(
         if verbose:
             print(logbook.stream)
 
+        callbacks_step_args = {
+            "callbacks": callbacks,
+            "record": record,
+            "logbook": logbook,
+            "estimator": estimator,
+            "method": "on_step",
+        }
+
         # Check if any of the callbacks conditions are True to stop the iteration
-        if eval_callbacks(
-            callbacks=callbacks,
-            record=record,
-            logbook=logbook,
-            estimator=estimator,
-            method="on_step",
-        ):
+        if eval_callbacks(**callbacks_step_args):
+
+            callbacks_end_args = {
+                "callbacks": callbacks,
+                "record": None,
+                "logbook": logbook,
+                "estimator": estimator,
+                "method": "on_end",
+            }
+
+            # Call ending callback
+            eval_callbacks(**callbacks_end_args)
+
             progress_bar.close()
             print("INFO: Stopping the algorithm")
             break
@@ -159,13 +188,16 @@ def eaSimple(
     n_gen = gen + 1
     progress_bar.close()
 
-    eval_callbacks(
-        callbacks=callbacks,
-        record=None,
-        logbook=logbook,
-        estimator=estimator,
-        method="on_end",
-    )
+    callbacks_end_args = {
+        "callbacks": callbacks,
+        "record": None,
+        "logbook": logbook,
+        "estimator": estimator,
+        "method": "on_end",
+    }
+
+    # Call ending callback
+    eval_callbacks(**callbacks_end_args)
 
     return population, logbook, n_gen
 
@@ -238,13 +270,14 @@ def eaMuPlusLambda(
 
     """
 
-    eval_callbacks(
-        callbacks=callbacks,
-        record=None,
-        logbook=None,
-        estimator=estimator,
-        method="on_start",
-    )
+    callbacks_start_args = {
+        "callbacks": callbacks,
+        "record": None,
+        "logbook": None,
+        "estimator": estimator,
+        "method": "on_start",
+    }
+    eval_callbacks(**callbacks_start_args)
 
     logbook = tools.Logbook()
     logbook.header = ["gen", "nevals"] + (stats.fields if stats else [])
@@ -271,13 +304,25 @@ def eaMuPlusLambda(
         print(logbook.stream)
 
     # Check if any of the callbacks conditions are True to stop the iteration
-    if eval_callbacks(
-        callbacks=callbacks,
-        record=record,
-        logbook=logbook,
-        estimator=estimator,
-        method="on_step",
-    ):
+    callbacks_step_args = {
+        "callbacks": callbacks,
+        "record": record,
+        "logbook": logbook,
+        "estimator": estimator,
+        "method": "on_step",
+    }
+
+    if eval_callbacks(**callbacks_step_args):
+        # Call ending callback
+        callbacks_end_args = {
+            "callbacks": callbacks,
+            "record": None,
+            "logbook": None,
+            "estimator": estimator,
+            "method": "on_end",
+        }
+
+        eval_callbacks(**callbacks_end_args)
         progress_bar.close()
         print("INFO: Stopping the algorithm")
         return population, logbook, n_gen
@@ -309,13 +354,25 @@ def eaMuPlusLambda(
         if verbose:
             print(logbook.stream)
 
-        if eval_callbacks(
-            callbacks=callbacks,
-            record=record,
-            logbook=logbook,
-            estimator=estimator,
-            method="on_step",
-        ):
+        callbacks_step_args = {
+            "callbacks": callbacks,
+            "record": record,
+            "logbook": logbook,
+            "estimator": estimator,
+            "method": "on_step",
+        }
+
+        if eval_callbacks(**callbacks_step_args):
+
+            callbacks_end_args = {
+                "callbacks": callbacks,
+                "record": None,
+                "logbook": None,
+                "estimator": estimator,
+                "method": "on_end",
+            }
+
+            eval_callbacks(**callbacks_end_args)
             progress_bar.close()
             print("INFO: Stopping the algorithm")
             break
@@ -323,13 +380,15 @@ def eaMuPlusLambda(
     n_gen = gen + 1
     progress_bar.close()
 
-    eval_callbacks(
-        callbacks=callbacks,
-        record=None,
-        logbook=logbook,
-        estimator=estimator,
-        method="on_end",
-    )
+    callbacks_end_args = {
+        "callbacks": callbacks,
+        "record": None,
+        "logbook": None,
+        "estimator": estimator,
+        "method": "on_end",
+    }
+
+    eval_callbacks(**callbacks_end_args)
 
     return population, logbook, n_gen
 
@@ -404,13 +463,15 @@ def eaMuCommaLambda(
     """
     assert lambda_ >= mu, "lambda must be greater or equal to mu."
 
-    eval_callbacks(
-        callbacks=callbacks,
-        record=None,
-        logbook=None,
-        estimator=estimator,
-        method="on_start",
-    )
+    callbacks_start_args = {
+        "callbacks": callbacks,
+        "record": None,
+        "logbook": None,
+        "estimator": estimator,
+        "method": "on_end",
+    }
+
+    eval_callbacks(**callbacks_start_args)
 
     # Evaluate the individuals with an invalid fitness
     invalid_ind = [ind for ind in population if not ind.fitness.valid]
@@ -436,14 +497,26 @@ def eaMuCommaLambda(
     if verbose:
         print(logbook.stream)
 
+    callbacks_step_args = {
+        "callbacks": callbacks,
+        "record": record,
+        "logbook": logbook,
+        "estimator": estimator,
+        "method": "on_step",
+    }
+
     # Check if any of the callbacks conditions are True to stop the iteration
-    if eval_callbacks(
-        callbacks=callbacks,
-        record=record,
-        logbook=logbook,
-        estimator=estimator,
-        method="on_step",
-    ):
+    if eval_callbacks(**callbacks_step_args):
+
+        callbacks_end_args = {
+            "callbacks": callbacks,
+            "record": None,
+            "logbook": logbook,
+            "estimator": estimator,
+            "method": "on_end",
+        }
+
+        eval_callbacks(**callbacks_end_args)
         progress_bar.close()
         print("INFO: Stopping the algorithm")
         return population, logbook, n_gen
@@ -475,14 +548,27 @@ def eaMuCommaLambda(
         if verbose:
             print(logbook.stream)
 
+        callbacks_step_args = {
+            "callbacks": callbacks,
+            "record": record,
+            "logbook": logbook,
+            "estimator": estimator,
+            "method": "on_step",
+        }
+
         # Check if any of the callbacks conditions are True to stop the iteration
-        if eval_callbacks(
-            callbacks=callbacks,
-            record=record,
-            logbook=logbook,
-            estimator=estimator,
-            method="on_step",
-        ):
+        if eval_callbacks(**callbacks_step_args):
+
+            callbacks_end_args = {
+                "callbacks": callbacks,
+                "record": None,
+                "logbook": logbook,
+                "estimator": estimator,
+                "method": "on_end",
+            }
+
+            eval_callbacks(**callbacks_end_args)
+
             progress_bar.close()
             print("INFO: Stopping the algorithm")
             break
@@ -490,12 +576,14 @@ def eaMuCommaLambda(
     n_gen = gen + 1
     progress_bar.close()
 
-    eval_callbacks(
-        callbacks=callbacks,
-        record=None,
-        logbook=logbook,
-        estimator=estimator,
-        method="on_end",
-    )
+    callbacks_end_args = {
+        "callbacks": callbacks,
+        "record": None,
+        "logbook": logbook,
+        "estimator": estimator,
+        "method": "on_end",
+    }
+
+    eval_callbacks(**callbacks_end_args)
 
     return population, logbook, n_gen
