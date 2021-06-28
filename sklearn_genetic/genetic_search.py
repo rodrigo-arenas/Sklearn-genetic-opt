@@ -1,10 +1,9 @@
-from datetime import datetime
 import random
 
 import numpy as np
 from deap import base, creator, tools
 from sklearn.base import clone
-from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import cross_val_score, cross_validate
 from sklearn.base import is_classifier, is_regressor
 from sklearn.utils.metaestimators import if_delegate_has_method
 from sklearn.utils.validation import check_is_fitted
@@ -16,6 +15,7 @@ from .parameters import Algorithms, Criteria
 from .space import Space
 from .algorithms import eaSimple, eaMuPlusLambda, eaMuCommaLambda
 from .callbacks.validations import check_callback
+from .utils.cv_scores import crete_cv_results_
 
 
 class GASearchCV(BaseSearchCV):
@@ -122,6 +122,9 @@ class GASearchCV(BaseSearchCV):
         If set to ``'raise'``, the error is raised.
         If a numeric value is given, FitFailedWarning is raised.
 
+    return_train_score: bool, default=False
+        if `True`, the `cv_results_` attribute will include training scores.
+
     log_config : :class:`~sklearn_genetic.mlflow.MLflowConfig`, default = None
         Configuration to log metrics and models to mlflow, of None,
         no mlflow logging will be performed
@@ -172,6 +175,7 @@ class GASearchCV(BaseSearchCV):
         n_jobs=1,
         pre_dispatch="2*n_jobs",
         error_score=np.nan,
+        return_train_score=False,
         log_config=None,
     ):
 
@@ -194,6 +198,7 @@ class GASearchCV(BaseSearchCV):
         self.n_jobs = n_jobs
         self.pre_dispatch = pre_dispatch
         self.error_score = error_score
+        self.return_train_score = return_train_score
         self.creator = creator
         self.logbook = None
         self.history = None
@@ -209,7 +214,6 @@ class GASearchCV(BaseSearchCV):
         self.hof = None
         self.X_predict = None
         self.scorer_ = None
-        self.cv_results_ = None
         self.best_index_ = None
         self.multimetric_ = False
         self.log_config = log_config
@@ -226,9 +230,9 @@ class GASearchCV(BaseSearchCV):
             )
         # Minimization is handle like an optimization problem with a change in the score sign
         elif criteria == Criteria.max.value:
-            self.criteria_sign = 1
+            self.criteria_sign = 1.0
         elif criteria == Criteria.min.value:
-            self.criteria_sign = -1
+            self.criteria_sign = -1.0
 
         # Saves the param_grid and computes some extra properties in the same object
         self.space = Space(param_grid)
@@ -250,7 +254,7 @@ class GASearchCV(BaseSearchCV):
         and create other objects to hold the hof, logbook and stats.
         """
 
-        self.creator.create("FitnessMax", base.Fitness, weights=[1.0])
+        self.creator.create("FitnessMax", base.Fitness, weights=[self.criteria_sign])
         self.creator.create("Individual", list, fitness=creator.FitnessMax)
 
         attributes = []
@@ -343,7 +347,7 @@ class GASearchCV(BaseSearchCV):
         local_estimator.set_params(**current_generation_params)
 
         # Compute the cv-score
-        cv_scores = cross_val_score(
+        cv_results = cross_validate(
             local_estimator,
             self.X_,
             self.y_,
@@ -352,8 +356,10 @@ class GASearchCV(BaseSearchCV):
             n_jobs=self.n_jobs,
             pre_dispatch=self.pre_dispatch,
             error_score=self.error_score,
+            return_train_score=self.return_train_score,
         )
 
+        cv_scores = cv_results["test_score"]
         score = np.mean(cv_scores)
 
         # Uses the log config to save in remote log server (e.g MLflow)
@@ -364,12 +370,24 @@ class GASearchCV(BaseSearchCV):
                 estimator=local_estimator,
             )
 
+        # These values are used to compute cv_results_ property
+        current_generation_params["cv_scores"] = cv_scores
+        current_generation_params["fit_time"] = cv_results["fit_time"]
+        current_generation_params["score_time"] = cv_results["score_time"]
         current_generation_params["score"] = score
+
+        if self.return_train_score:
+            current_generation_params["train_score"] = cv_results["train_score"]
+
+        index = len(self.logbook.chapters["parameters"])
+        current_generation_params = {"index": index, **current_generation_params}
+
+        # print(current_generation_params)
 
         # Log the hyperparameters and the cv-score
         self.logbook.record(parameters=current_generation_params)
 
-        return [self.criteria_sign * score]
+        return [score]
 
     @if_delegate_has_method(delegate="estimator")
     def fit(self, X, y, callbacks=None):
@@ -532,6 +550,17 @@ class GASearchCV(BaseSearchCV):
 
         has_history = bool(self.history)
         return all([is_fitted, has_history, self.refit])
+
+    @property
+    def cv_results_(self):
+
+        cv_results_dict = crete_cv_results_(
+            logbook=self.logbook,
+            space=self.space,
+            return_train_score=self.return_train_score,
+        )
+
+        return cv_results_dict
 
     def __getitem__(self, index):
         """
