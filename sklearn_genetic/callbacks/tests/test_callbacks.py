@@ -14,6 +14,7 @@ from .. import (
     ThresholdStopping,
     ConsecutiveStopping,
     DeltaThreshold,
+    TimerStopping,
     LogbookSaver,
     TensorBoard,
 )
@@ -54,6 +55,27 @@ def test_check_metrics_and_methods():
     assert (
         str(excinfo.value)
         == "The callback method must be one of ['on_start', 'on_step', 'on_end'], but got on_epoch instead"
+    )
+
+
+@pytest.mark.parametrize(
+    "callback",
+    [
+        ThresholdStopping,
+        ConsecutiveStopping,
+        DeltaThreshold,
+        TimerStopping,
+        LogbookSaver,
+        TensorBoard,
+    ],
+)
+def test_check_at_least_one_method(callback):
+    assert any(
+        [
+            hasattr(callback, "on_start"),
+            hasattr(callback, "on_step"),
+            hasattr(callback, "on_end"),
+        ]
     )
 
 
