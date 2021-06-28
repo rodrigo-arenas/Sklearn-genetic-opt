@@ -159,7 +159,7 @@ Install the development dependencies::
   
   pip install -r dev-requirements.txt
   
-Check the latest in-development documentation:: https://sklearn-genetic-opt.readthedocs.io/en/latest/
+Check the latest in-development documentation: https://sklearn-genetic-opt.readthedocs.io/en/latest/
 
 Contributing
 ############
