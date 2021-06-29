@@ -156,15 +156,12 @@ class GASearchCV(BaseSearchCV):
     cv_results_ : dict of numpy (masked) ndarrays
         A dict with keys as column headers and values as columns, that can be
         imported into a pandas ``DataFrame``.
-
     best_estimator_ : estimator
         Estimator that was chosen by the search, i.e. estimator
         which gave highest score
         on the left out data. Not available if ``refit=False``.
-
     best_params_ : dict
         Parameter setting that gave the best results on the hold out data.
-
     best_index_ : int
         The index (of the ``cv_results_`` arrays) which corresponds to the best
         candidate parameter setting.
@@ -176,11 +173,9 @@ class GASearchCV(BaseSearchCV):
         parameters for the model.
     n_splits_ : int
         The number of cross-validation splits (folds/iterations).
-
     refit_time_ : float
         Seconds used for refitting the best model on the whole dataset.
         This is present only if ``refit`` is not False.
-
     """
 
     def __init__(

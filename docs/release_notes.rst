@@ -47,6 +47,8 @@ API Changes:
 * The modules :mod:`~sklearn_genetic.plots` and :class:`~sklearn_genetic.mlflow.MLflowConfig`
   now requires an explicit installation of seaborn and mlflow, now those
   are optionally installed using ``pip install sklearn-genetic-opt[all].``
+* The GASearchCV.logbook property now has extra information that comes from the
+  scikit-learn cross_validate function
 
 ^^^^^
 Docs:
@@ -57,6 +59,15 @@ Docs:
 * The modules of the package now have a summary of their classes/functions in the docs.
 * Updated the callbacks and custom callbacks tutorials to add new TensorBoard callback and
   the new methods on the base callback.
+
+
+^^^^^^^^^
+Internal:
+^^^^^^^^^
+
+* Now the hof uses the `self.best_params_` for the position 0, to be consistent with the
+  scikit-learn API and parameters like `self.best_index_`
+
 
 What's new in 0.5.0
 -------------------
