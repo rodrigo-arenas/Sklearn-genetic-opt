@@ -1,4 +1,5 @@
 import random
+import time
 
 import numpy as np
 from deap import base, creator, tools
@@ -10,6 +11,7 @@ from sklearn.utils.validation import check_is_fitted
 from sklearn.metrics import check_scoring
 from sklearn.exceptions import NotFittedError
 from sklearn.model_selection._search import BaseSearchCV
+from sklearn.model_selection._split import check_cv
 
 from .parameters import Algorithms, Criteria
 from .space import Space
@@ -204,7 +206,21 @@ class GASearchCV(BaseSearchCV):
     best_params_ : dict
         Parameter setting that gave the best results on the hold out data.
 
+    best_index_ : int
+        The index (of the ``cv_results_`` arrays) which corresponds to the best
+        candidate parameter setting.
+        The dict at ``search.cv_results_['params'][search.best_index_]`` gives
+        the parameter setting for the best model, that gives the highest
+        mean score (``search.best_score_``).
+    scorer_ : function or a dict
+        Scorer function used on the held out data to choose the best
+        parameters for the model.
+    n_splits_ : int
+        The number of cross-validation splits (folds/iterations).
 
+    refit_time_ : float
+        Seconds used for refitting the best model on the whole dataset.
+        This is present only if ``refit`` is not False.
 
     """
 
@@ -269,6 +285,9 @@ class GASearchCV(BaseSearchCV):
         self.scorer_ = None
         self.cv_results_ = None
         self.best_index_ = None
+        self.best_score_ = None
+        self.n_splits_ = None
+        self.refit_time_ = None
         self.multimetric_ = False
         self.log_config = log_config
 
@@ -436,8 +455,6 @@ class GASearchCV(BaseSearchCV):
         index = len(self.logbook.chapters["parameters"])
         current_generation_params = {"index": index, **current_generation_params}
 
-        # print(current_generation_params)
-
         # Log the hyperparameters and the cv-score
         self.logbook.record(parameters=current_generation_params)
 
@@ -472,6 +489,10 @@ class GASearchCV(BaseSearchCV):
         self.callbacks = check_callback(callbacks)
         self.scorer_ = check_scoring(self.estimator, scoring=self.scoring)
 
+        # Check cv and get the n_splits
+        cv_orig = check_cv(self.cv, y, classifier=is_classifier(self.estimator))
+        self.n_splits_ = cv_orig.get_n_splits(X, y)
+
         # Set the DEAPs necessary methods
         self._register()
 
@@ -482,17 +503,6 @@ class GASearchCV(BaseSearchCV):
 
         # Update the _n_iterations value as the algorithm could stop earlier due a callback
         self._n_iterations = n_gen
-
-        # hof keeps the best params according to the fitness value
-        # The best one is in the position 0
-        self.best_params_ = {
-            key: self._hof[0][n] for n, key in enumerate(self.space.parameters)
-        }
-
-        self.hof = {
-            k: {key: self._hof[k][n] for n, key in enumerate(self.space.parameters)}
-            for k in range(len(self._hof))
-        }
 
         self.cv_results_ = crete_cv_results_(
             logbook=self.logbook,
@@ -510,9 +520,31 @@ class GASearchCV(BaseSearchCV):
 
         # Imitate the logic of scikit-learn refit parameter
         if self.refit:
+            self.best_index_ = self.cv_results_["rank_test_score"].argmin()
+            self.best_score_ = self.cv_results_["mean_test_score"][self.best_index_]
+            self.best_params_ = self.cv_results_["params"][self.best_index_]
+
             self.estimator.set_params(**self.best_params_)
+
+            refit_start_time = time.time()
+
             self.estimator.fit(self.X_, self.y_)
+            refit_end_time = time.time()
+            self.refit_time_ = refit_end_time - refit_start_time
+
             self.best_estimator_ = self.estimator
+
+            # hof keeps the best params according to the fitness value
+            # To be consistent with self.best_estimator_, if more than 1 model gets same score
+            # It could lead to differences between hof and self.best_estimator_
+            self._hof.remove(0)
+            self._hof.items.insert(0, list(self.best_params_.values()))
+            self._hof.keys.insert(0, self.best_score_)
+
+        self.hof = {
+            k: {key: self._hof[k][n] for n, key in enumerate(self.space.parameters)}
+            for k in range(len(self._hof))
+        }
 
         del self.creator.FitnessMax
         del self.creator.Individual
