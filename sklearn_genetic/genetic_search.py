@@ -1,21 +1,23 @@
-from datetime import datetime
 import random
+import time
 
 import numpy as np
 from deap import base, creator, tools
 from sklearn.base import clone
-from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import cross_validate
 from sklearn.base import is_classifier, is_regressor
 from sklearn.utils.metaestimators import if_delegate_has_method
 from sklearn.utils.validation import check_is_fitted
 from sklearn.metrics import check_scoring
 from sklearn.exceptions import NotFittedError
 from sklearn.model_selection._search import BaseSearchCV
+from sklearn.model_selection._split import check_cv
 
 from .parameters import Algorithms, Criteria
 from .space import Space
 from .algorithms import eaSimple, eaMuPlusLambda, eaMuCommaLambda
 from .callbacks.validations import check_callback
+from .utils.cv_scores import crete_cv_results_
 
 
 class GASearchCV(BaseSearchCV):
@@ -122,6 +124,15 @@ class GASearchCV(BaseSearchCV):
         If set to ``'raise'``, the error is raised.
         If a numeric value is given, FitFailedWarning is raised.
 
+    return_train_score: bool, default=False
+        If ``False``, the ``cv_results_`` attribute will not include training
+        scores.
+        Computing training scores is used to get insights on how different
+        parameter settings impact the overfitting/underfitting trade-off.
+        However computing the scores on the training set can be computationally
+        expensive and is not strictly required to select the parameters that
+        yield the best generalization performance.
+
     log_config : :class:`~sklearn_genetic.mlflow.MLflowConfig`, default = None
         Configuration to log metrics and models to mlflow, of None,
         no mlflow logging will be performed
@@ -142,14 +153,29 @@ class GASearchCV(BaseSearchCV):
          *gen* returns the index of the evaluated generations.
          Each entry on the others lists, represent the average metric in each generation.
 
+    cv_results_ : dict of numpy (masked) ndarrays
+        A dict with keys as column headers and values as columns, that can be
+        imported into a pandas ``DataFrame``.
     best_estimator_ : estimator
         Estimator that was chosen by the search, i.e. estimator
         which gave highest score
         on the left out data. Not available if ``refit=False``.
-
     best_params_ : dict
         Parameter setting that gave the best results on the hold out data.
-
+    best_index_ : int
+        The index (of the ``cv_results_`` arrays) which corresponds to the best
+        candidate parameter setting.
+        The dict at ``search.cv_results_['params'][search.best_index_]`` gives
+        the parameter setting for the best model, that gives the highest
+        mean score (``search.best_score_``).
+    scorer_ : function or a dict
+        Scorer function used on the held out data to choose the best
+        parameters for the model.
+    n_splits_ : int
+        The number of cross-validation splits (folds/iterations).
+    refit_time_ : float
+        Seconds used for refitting the best model on the whole dataset.
+        This is present only if ``refit`` is not False.
     """
 
     def __init__(
@@ -172,6 +198,7 @@ class GASearchCV(BaseSearchCV):
         n_jobs=1,
         pre_dispatch="2*n_jobs",
         error_score=np.nan,
+        return_train_score=False,
         log_config=None,
     ):
 
@@ -194,6 +221,7 @@ class GASearchCV(BaseSearchCV):
         self.n_jobs = n_jobs
         self.pre_dispatch = pre_dispatch
         self.error_score = error_score
+        self.return_train_score = return_train_score
         self.creator = creator
         self.logbook = None
         self.history = None
@@ -211,6 +239,9 @@ class GASearchCV(BaseSearchCV):
         self.scorer_ = None
         self.cv_results_ = None
         self.best_index_ = None
+        self.best_score_ = None
+        self.n_splits_ = None
+        self.refit_time_ = None
         self.multimetric_ = False
         self.log_config = log_config
 
@@ -226,9 +257,9 @@ class GASearchCV(BaseSearchCV):
             )
         # Minimization is handle like an optimization problem with a change in the score sign
         elif criteria == Criteria.max.value:
-            self.criteria_sign = 1
+            self.criteria_sign = 1.0
         elif criteria == Criteria.min.value:
-            self.criteria_sign = -1
+            self.criteria_sign = -1.0
 
         # Saves the param_grid and computes some extra properties in the same object
         self.space = Space(param_grid)
@@ -250,7 +281,7 @@ class GASearchCV(BaseSearchCV):
         and create other objects to hold the hof, logbook and stats.
         """
 
-        self.creator.create("FitnessMax", base.Fitness, weights=[1.0])
+        self.creator.create("FitnessMax", base.Fitness, weights=[self.criteria_sign])
         self.creator.create("Individual", list, fitness=creator.FitnessMax)
 
         attributes = []
@@ -343,7 +374,7 @@ class GASearchCV(BaseSearchCV):
         local_estimator.set_params(**current_generation_params)
 
         # Compute the cv-score
-        cv_scores = cross_val_score(
+        cv_results = cross_validate(
             local_estimator,
             self.X_,
             self.y_,
@@ -352,8 +383,10 @@ class GASearchCV(BaseSearchCV):
             n_jobs=self.n_jobs,
             pre_dispatch=self.pre_dispatch,
             error_score=self.error_score,
+            return_train_score=self.return_train_score,
         )
 
+        cv_scores = cv_results["test_score"]
         score = np.mean(cv_scores)
 
         # Uses the log config to save in remote log server (e.g MLflow)
@@ -364,12 +397,22 @@ class GASearchCV(BaseSearchCV):
                 estimator=local_estimator,
             )
 
+        # These values are used to compute cv_results_ property
+        current_generation_params["cv_scores"] = cv_scores
+        current_generation_params["fit_time"] = cv_results["fit_time"]
+        current_generation_params["score_time"] = cv_results["score_time"]
         current_generation_params["score"] = score
+
+        if self.return_train_score:
+            current_generation_params["train_score"] = cv_results["train_score"]
+
+        index = len(self.logbook.chapters["parameters"])
+        current_generation_params = {"index": index, **current_generation_params}
 
         # Log the hyperparameters and the cv-score
         self.logbook.record(parameters=current_generation_params)
 
-        return [self.criteria_sign * score]
+        return [score]
 
     @if_delegate_has_method(delegate="estimator")
     def fit(self, X, y, callbacks=None):
@@ -400,6 +443,10 @@ class GASearchCV(BaseSearchCV):
         self.callbacks = check_callback(callbacks)
         self.scorer_ = check_scoring(self.estimator, scoring=self.scoring)
 
+        # Check cv and get the n_splits
+        cv_orig = check_cv(self.cv, y, classifier=is_classifier(self.estimator))
+        self.n_splits_ = cv_orig.get_n_splits(X, y)
+
         # Set the DEAPs necessary methods
         self._register()
 
@@ -411,16 +458,11 @@ class GASearchCV(BaseSearchCV):
         # Update the _n_iterations value as the algorithm could stop earlier due a callback
         self._n_iterations = n_gen
 
-        # hof keeps the best params according to the fitness value
-        # The best one is in the position 0
-        self.best_params_ = {
-            key: self._hof[0][n] for n, key in enumerate(self.space.parameters)
-        }
-
-        self.hof = {
-            k: {key: self._hof[k][n] for n, key in enumerate(self.space.parameters)}
-            for k in range(len(self._hof))
-        }
+        self.cv_results_ = crete_cv_results_(
+            logbook=self.logbook,
+            space=self.space,
+            return_train_score=self.return_train_score,
+        )
 
         self.history = {
             "gen": log.select("gen"),
@@ -432,9 +474,31 @@ class GASearchCV(BaseSearchCV):
 
         # Imitate the logic of scikit-learn refit parameter
         if self.refit:
+            self.best_index_ = self.cv_results_["rank_test_score"].argmin()
+            self.best_score_ = self.cv_results_["mean_test_score"][self.best_index_]
+            self.best_params_ = self.cv_results_["params"][self.best_index_]
+
             self.estimator.set_params(**self.best_params_)
+
+            refit_start_time = time.time()
+
             self.estimator.fit(self.X_, self.y_)
+            refit_end_time = time.time()
+            self.refit_time_ = refit_end_time - refit_start_time
+
             self.best_estimator_ = self.estimator
+
+            # hof keeps the best params according to the fitness value
+            # To be consistent with self.best_estimator_, if more than 1 model gets same score
+            # It could lead to differences between hof and self.best_estimator_
+            self._hof.remove(0)
+            self._hof.items.insert(0, list(self.best_params_.values()))
+            self._hof.keys.insert(0, self.best_score_)
+
+        self.hof = {
+            k: {key: self._hof[k][n] for n, key in enumerate(self.space.parameters)}
+            for k in range(len(self._hof))
+        }
 
         del self.creator.FitnessMax
         del self.creator.Individual

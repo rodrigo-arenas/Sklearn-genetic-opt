@@ -49,6 +49,7 @@ def test_expected_ga_results():
         verbose=False,
         algorithm="eaSimple",
         n_jobs=-1,
+        return_train_score=True,
     )
 
     evolved_estimator.fit(X_train, y_train)
@@ -73,6 +74,27 @@ def test_expected_ga_results():
     assert "fitness" in evolved_estimator[0]
     assert "fitness_std" in evolved_estimator[0]
     assert "fitness_min" in evolved_estimator[0]
+
+    cv_results_ = evolved_estimator.cv_results_
+
+    assert "param_l1_ratio" in set(cv_results_.keys())
+    assert "param_alpha" in set(cv_results_.keys())
+    assert "param_average" in set(cv_results_.keys())
+    assert "split1_test_score" in set(cv_results_.keys())
+    assert "split1_test_score" in set(cv_results_.keys())
+    assert "split2_test_score" in set(cv_results_.keys())
+    assert "split0_train_score" in set(cv_results_.keys())
+    assert "split1_train_score" in set(cv_results_.keys())
+    assert "split2_train_score" in set(cv_results_.keys())
+    assert "mean_test_score" in set(cv_results_.keys())
+    assert "std_test_score" in set(cv_results_.keys())
+    assert "rank_test_score" in set(cv_results_.keys())
+    assert "mean_train_score" in set(cv_results_.keys())
+    assert "std_train_score" in set(cv_results_.keys())
+    assert "rank_train_score" in set(cv_results_.keys())
+    assert "std_fit_time" in set(cv_results_.keys())
+    assert "mean_score_time" in set(cv_results_.keys())
+    assert "params" in set(cv_results_.keys())
 
 
 @pytest.mark.parametrize(
