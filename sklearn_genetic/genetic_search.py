@@ -441,6 +441,7 @@ class GASearchCV(BaseSearchCV):
 
         # Make sure the callbacks are valid
         self.callbacks = check_callback(callbacks)
+
         self.scorer_ = check_scoring(self.estimator, scoring=self.scoring)
 
         # Check cv and get the n_splits
@@ -481,7 +482,6 @@ class GASearchCV(BaseSearchCV):
             self.estimator.set_params(**self.best_params_)
 
             refit_start_time = time.time()
-
             self.estimator.fit(self.X_, self.y_)
             refit_end_time = time.time()
             self.refit_time_ = refit_end_time - refit_start_time
@@ -489,8 +489,8 @@ class GASearchCV(BaseSearchCV):
             self.best_estimator_ = self.estimator
 
             # hof keeps the best params according to the fitness value
-            # To be consistent with self.best_estimator_, if more than 1 model gets same score
-            # It could lead to differences between hof and self.best_estimator_
+            # To be consistent with self.best_estimator_, if more than 1 model gets the
+            # same score, it could lead to differences between hof and self.best_estimator_
             self._hof.remove(0)
             self._hof.items.insert(0, list(self.best_params_.values()))
             self._hof.keys.insert(0, self.best_score_)
