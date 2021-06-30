@@ -1,7 +1,7 @@
 Understanding the evaluation process
 ====================================
 
-In this post, we are going to explain how to evaluation process happens
+In this post, we are going to explain how the evaluation process works
 and how to use different validation strategies.
 
 Parameters
@@ -14,15 +14,15 @@ You can find more about this in `scikit-learn documentation <https://scikit-lear
 
 A second parameter that comes along, is the `scoring`, this is the evaluation metric
 that the model is going to use, to decide which model is better,
-it could be for example accuracy, precision, recall for a classification problem
+it could for example be accuracy, precision, recall for a classification problem
 or r2, max_error, neg_root_mean_squared_error for a regression problem.
-To se the full list of metrics, check in `here <https://scikit-learn.org/stable/modules/model_evaluation.html>`_
+To see the full list of metrics, check in `here <https://scikit-learn.org/stable/modules/model_evaluation.html>`_
 
 Evolutionary Algorithms background
 ----------------------------------
 
-The Genetic algorithm (GA) is a metaheuristic inspired by the process of natural selection, they are used in optimization
-and search problems in general, and usually are based in a set of functions such as mutation, crossover and selection,
+The Genetic algorithm (GA) is a metaheuristic process inspired by natural selection, it's used in optimization
+and search of problems in general, and usually is based in a set of functions such as mutation, crossover and selection,
 lets call this the genetic operators.
 I'll use the following terms interchangeably in this section to make the connection between the GA and machine learning:
 
@@ -37,9 +37,9 @@ There are several variations, but in general the steps to follow look like this:
 2. Evaluate the fitness value of each individual in the population, in terms of machine learning,
    get the cross-validation scores.
 3. Generate a new generation by using several genetic operators.
-   Repeat the step 2 and 3 until a stopping criteria is met.
+   Repeat step 2 and 3 until a stopping criteria is met.
 
-Lets go step by step.
+Let's go step by step.
 
 **Create the generation 0 and evaluate it:**
 
@@ -52,9 +52,9 @@ for example if we set the size of the first generation to be 3 individuals, it w
 .. image:: ../images/understandcv_generation0.png
 
 So in this generation, we get three individuals that are mapped to a chromosome (binary) representation,
-using a the encoding function represented as the red arrow, each box in the chromosome is a gen.
+using an encoding function represented as the red arrow, each box in the chromosome is a gen.
 A fixed section of the chromosome is one of the hyperparameters.
-Then we get the cross-validation score (fitness) of each candidate using an scoring function,
+Then we get the cross-validation score (fitness) of each candidate using a scoring function,
 its shown as the purple arrow.
 
 **Create a new generation:**
@@ -64,7 +64,7 @@ I'm going to show the most common ones:
 
 **Crossover:**
 
-This operator consist of taking two parent chromosomes and mate them to create new children,
+This operator consists of taking two parent chromosomes and mates them to create new children,
 the way we select the parents could be by a probability distribution function, which gives more probability to the individuals with higher fitness of the generation, lets say the individual number 1 and 3 got selected, then we can take two random points of each parent and make the crossover, like this:
 
 .. image:: ../images/understandcv_crossover.png
@@ -76,12 +76,12 @@ Now the children represent a new set of hyperparameters, if we decode each child
     Child 1: {"learning_rate": 0.015, "layers": 4, "optimizer": "Adam"}
     Child 2: {"learning_rate": 0.4, "layers": 6, "optimizer": "SGD"}
 
-But making crossover over the same sets of hyperparameters might end up giving similar result after some iterations,
-so we are stuck with the same kind of solutions, that is why we introduce others operations like the mutation.
+But making crossovers, over the same sets of hyperparameters might end up giving similar results after some iterations,
+so we are stuck with the same kind of solutions, that is why we introduce other operations like the mutation.
 
 **Mutation:**
 
-This operator allows to with a low enough probability (< ~0.1), change randomly one of the gens or a whole hyperparameter to create more diverse sets.
+This operator allows with a low enough probability (< ~0.1), to change one of the gens or a whole hyperparameter randomly, to create more diverse sets.
 Lets take for example the child 1 from the previous image, lets pick up a random gen and change its value:
 
 .. image:: ../images/understandcv_mutantchild.png
@@ -93,29 +93,29 @@ Or it could even change a whole parameter, for example the optimizer:
 **Elitism:**
 
 This selection strategy makes reference to the process of selecting the best individuals of each generation,
-to make sure its information is propagated across the generations. This is a very straight forward,
+to make sure its information is propagated across the generations. This is very straight forward,
 just select the best k individuals based on their fitness value and copy it to the next generation.
 So after performing those operations, a new generation may look like this:
 
 .. image:: ../images/understandcv_generation1.png
 
 
-From now on, just make this process again for several generations until a stopping criteria is met,
+From now on, just repeat the process for several generations until a stopping criteria is met,
 those could be for example:
 
 * A maximum number of generations was reached.
-* The process has run longer than a budget time.
-* There are no performances improvements (bellow a threshold) from the last n generations.
+* The process has run longer than the budgeted time.
+* There are no performance improvements (below a threshold) from the last n generations.
 
 
 Steps
 -----
 
 Now, moving to this package implementation.
-The way as `GASearchCV` evaluates the candidates is as follows:
+The way `GASearchCV` evaluates the candidates is as follows:
 
 * It starts by selecting random sets of hyperparameters according the the `param_grid` definition,
-  the total number of sets is determined by the `population_size` parameter.
+  the total number of sets are determined by the `population_size` parameter.
 
 * It fits a model per each set of hyperparameters and calculates the cross validation score
   according to the `cv` and `scoring` setup.
@@ -125,25 +125,25 @@ The way as `GASearchCV` evaluates the candidates is as follows:
   `Fitness` is the way to refer to the selected metric,
   but this is calculated as the average of all the candidates of the current generation, this means that if there are
   10 different set of hyperparameters, the `fitness` value, is the average score of those 10 evaluated candidates,
-  the same goes for the others metrics.
+  the same goes for the other metrics.
 
 
-* Now it creates new sets (generation) of hyperparameters,
+* Now it creates new sets (generations) of hyperparameters,
   those are created by combining the last generation with different strategies, those strategies
   depends on the selected :mod:`~sklearn_genetic.algorithms`.
 
-* It repeats the step 2, 3 and 4 until the number of generations is met, or until a callbacks stops the process.
+* It repeats steps 2, 3 and 4 until the number of generations are met, or until callbacks stop the process.
 
-* At the end, the algorithm selects the best hyperparameters, as the one set that got the best individual
+* At the end, the algorithm selects the best hyperparameters, as the set that got the best individual
   cross validation scoring.
 
 
 Those steps could be represented like this, each line represents one of several possible
-natural process like mating, crossover, selection and mutation:
+natural processes like mating, crossover, selection and mutation:
 
 .. image:: ../images/genetic_cv.png
 
-Inside each Set, the cross validation takes place, for example using 5-Folds strategy
+Inside each set, the cross validation takes place, for example using 5-Folds strategy
 
 .. image:: ../images/k-folds.png
 
@@ -153,9 +153,9 @@ Example
 -------
 
 This example is going to use a regression problem from the Boston house prices dataset.
-We are going to use an K-Fold with 5 splits taking as evaluation metric the r-squared.
+We are going to use an K-Fold with 5 splits taking as evaluation the r-squared metric.
 
-At the end, we are going to print the top 4 best solutions and the r-squared
+At the end, we are going to print the top 4 solutions and the r-squared
 on the test set for the best set of hyperparameters.
 
 
