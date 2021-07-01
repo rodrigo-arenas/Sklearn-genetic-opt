@@ -22,12 +22,12 @@ Features:
 * Added new parallel coordinates plot in  :func:`~sklearn_genetic.plots.plot_parallel_coordinates`.
 * Now if one or more callbacks decides to stop the algorithm, it will print
   its class name to know which callbacks were responsible of the stopping.
-* Added support for extra methods coming from scikit-learn's BaseSearchCV, it is
-  still partial support, missing properties like `cv_results_`, `best_index_` and `multimetric_`.
+* Added support for extra methods coming from scikit-learn's BaseSearchCV, like `cv_results_`,
+  `best_index_` and `refit_time_` among others.
 * Added methods `on_start` and `on_end` to :class:`~sklearn_genetic.callbacks.base.BaseCallback`.
   Now the algorithms check for the callbacks like this:
 
-  - **on_start**: When the evolutionary algorithm is called from the GASearchCV.fit method
+  - **on_start**: When the evolutionary algorithm is called from the GASearchCV.fit method.
 
   - **on_step:** When the evolutionary algorithm finish a generation (no change here).
 
@@ -48,7 +48,9 @@ API Changes:
   now requires an explicit installation of seaborn and mlflow, now those
   are optionally installed using ``pip install sklearn-genetic-opt[all].``
 * The GASearchCV.logbook property now has extra information that comes from the
-  scikit-learn cross_validate function
+  scikit-learn cross_validate function.
+* An optional extra parameter was added to GASearchCV, named `return_train_score`: bool, default= ``False``.
+  As in scikit-learn, it controls if the `cv_results_` should have the training scores.
 
 ^^^^^
 Docs:

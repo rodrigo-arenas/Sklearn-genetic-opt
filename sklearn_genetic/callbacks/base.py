@@ -54,6 +54,7 @@ class BaseCallback(ABC):
 
         """
         pass  # pragma: no cover
-
+    
     def __call__(self, record=None, logbook=None, estimator=None):
         return self.on_step(record, logbook, estimator)
+    
