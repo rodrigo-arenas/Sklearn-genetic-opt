@@ -22,7 +22,7 @@ Evolutionary Algorithms background
 ----------------------------------
 
 The Genetic algorithm (GA) is a metaheuristic process inspired by natural selection, it's used in optimization
-and search of problems in general, and usually is based in a set of functions such as mutation, crossover and selection,
+and search problems in general, and is usually based in a set of functions such as mutation, crossover and selection,
 lets call this the genetic operators.
 I'll use the following terms interchangeably in this section to make the connection between the GA and machine learning:
 
