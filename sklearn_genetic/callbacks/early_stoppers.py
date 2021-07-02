@@ -27,21 +27,22 @@ class ThresholdStopping(BaseCallback):
         self.metric = metric
 
     def on_step(self, record=None, logbook=None, estimator=None):
+        stat = None
         if record is not None:
-            return record[self.metric] >= self.threshold
+            stat = record[self.metric]
         elif logbook is not None:
             # Get the last metric value
             stat = logbook.select(self.metric)[-1]
-
-            if stat >= self.threshold:
-                print(f"INFO: {self.__class__.__name__} callback met its criteria")
-                return True
-            return False
 
         else:
             raise ValueError(
                 "At least one of record or logbook parameters must be provided"
             )
+
+        if stat is not None and stat >= self.threshold:
+            print(f"INFO: {self.__class__.__name__} callback met its criteria")
+            return True
+        return False
 
 
 class ConsecutiveStopping(BaseCallback):
@@ -75,7 +76,7 @@ class ConsecutiveStopping(BaseCallback):
                 current_stat = logbook.select(self.metric)[-1]
 
             # Compare the current metric with the last |generations| metrics
-            stats = logbook.select(self.metric)[(-self.generations - 1) : -1]
+            stats = logbook.select(self.metric)[(-self.generations - 1): -1]
 
             if all(stat >= current_stat for stat in stats):
                 print(f"INFO: {self.__class__.__name__} callback met its criteria")
@@ -84,9 +85,6 @@ class ConsecutiveStopping(BaseCallback):
 
         else:
             raise ValueError("logbook parameter must be provided")
-
-    def __call__(self, record=None, logbook=None, estimator=None):
-        return self.on_step(record, logbook, estimator)
 
 
 class DeltaThreshold(BaseCallback):
