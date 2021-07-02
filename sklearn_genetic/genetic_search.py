@@ -361,7 +361,7 @@ class GASearchCV(BaseSearchCV):
 
         Returns
         -------
-            The fitness value of the estimator candidate, corresponding to the cv-score with the criteria sing
+            The fitness value of the estimator candidate, corresponding to the cv-score
 
         """
 
@@ -373,7 +373,7 @@ class GASearchCV(BaseSearchCV):
         local_estimator = clone(self.estimator)
         local_estimator.set_params(**current_generation_params)
 
-        # Compute the cv-score
+        # Compute the cv-metrics
         cv_results = cross_validate(
             local_estimator,
             self.X_,
