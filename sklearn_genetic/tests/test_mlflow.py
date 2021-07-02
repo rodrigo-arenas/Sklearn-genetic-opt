@@ -1,11 +1,10 @@
 import pytest
-import mlflow
 import shutil
 import os
-from urllib.parse import urlparse
+
+import mlflow
 from mlflow.tracking import MlflowClient
 from mlflow.entities import ViewType
-
 from sklearn.datasets import load_digits
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
@@ -21,7 +20,7 @@ from ..space import Integer, Categorical, Continuous
 def mlflow_resources():
     uri = mlflow.get_tracking_uri()
     client = MlflowClient(uri)
-    return (uri, client)
+    return uri, client
 
 
 @pytest.fixture
@@ -64,7 +63,7 @@ def test_runs(mlflow_resources, mlflow_run):
     clf = DecisionTreeClassifier()
 
     data = load_digits()
-    label_names = data["target_names"]
+
     y = data["target"]
     X = data["data"]
 
@@ -100,7 +99,7 @@ def test_runs(mlflow_resources, mlflow_run):
 
     evolved_estimator.fit(X_train, y_train)
     y_predict_ga = evolved_estimator.predict(X_test)
-    accuracy = accuracy_score(y_test, y_predict_ga)
+
     runs = mlflow_run
     assert len(runs) >= 1 and evolved_estimator.best_params_["min_weight_fraction_leaf"]
 

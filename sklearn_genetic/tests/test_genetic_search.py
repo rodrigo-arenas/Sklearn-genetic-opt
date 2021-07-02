@@ -30,7 +30,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 
 def test_expected_ga_results():
     clf = SGDClassifier(loss="log", fit_intercept=True)
-    generations = 8
+    generations = 6
     evolved_estimator = GASearchCV(
         clf,
         cv=3,
@@ -76,25 +76,26 @@ def test_expected_ga_results():
     assert "fitness_min" in evolved_estimator[0]
 
     cv_results_ = evolved_estimator.cv_results_
+    cv_result_keys = set(cv_results_.keys())
 
-    assert "param_l1_ratio" in set(cv_results_.keys())
-    assert "param_alpha" in set(cv_results_.keys())
-    assert "param_average" in set(cv_results_.keys())
-    assert "split1_test_score" in set(cv_results_.keys())
-    assert "split1_test_score" in set(cv_results_.keys())
-    assert "split2_test_score" in set(cv_results_.keys())
-    assert "split0_train_score" in set(cv_results_.keys())
-    assert "split1_train_score" in set(cv_results_.keys())
-    assert "split2_train_score" in set(cv_results_.keys())
-    assert "mean_test_score" in set(cv_results_.keys())
-    assert "std_test_score" in set(cv_results_.keys())
-    assert "rank_test_score" in set(cv_results_.keys())
-    assert "mean_train_score" in set(cv_results_.keys())
-    assert "std_train_score" in set(cv_results_.keys())
-    assert "rank_train_score" in set(cv_results_.keys())
-    assert "std_fit_time" in set(cv_results_.keys())
-    assert "mean_score_time" in set(cv_results_.keys())
-    assert "params" in set(cv_results_.keys())
+    assert "param_l1_ratio" in cv_result_keys
+    assert "param_alpha" in cv_result_keys
+    assert "param_average" in cv_result_keys
+    assert "split1_test_score" in cv_result_keys
+    assert "split1_test_score" in cv_result_keys
+    assert "split2_test_score" in cv_result_keys
+    assert "split0_train_score" in cv_result_keys
+    assert "split1_train_score" in cv_result_keys
+    assert "split2_train_score" in cv_result_keys
+    assert "mean_test_score" in cv_result_keys
+    assert "std_test_score" in cv_result_keys
+    assert "rank_test_score" in cv_result_keys
+    assert "mean_train_score" in cv_result_keys
+    assert "std_train_score" in cv_result_keys
+    assert "rank_train_score" in cv_result_keys
+    assert "std_fit_time" in cv_result_keys
+    assert "mean_score_time" in cv_result_keys
+    assert "params" in cv_result_keys
 
 
 @pytest.mark.parametrize(
@@ -106,9 +107,9 @@ def test_expected_ga_results():
         ("eaSimple", TimerStopping(total_seconds=0.5)),
         ("eaMuPlusLambda", TimerStopping(total_seconds=2)),
         ("eaMuCommaLambda", TimerStopping(total_seconds=5)),
-        ("eaSimple", ConsecutiveStopping(generations=5, metric="fitness")),
-        ("eaMuPlusLambda", ConsecutiveStopping(generations=5, metric="fitness")),
-        ("eaMuCommaLambda", ConsecutiveStopping(generations=5, metric="fitness")),
+        ("eaSimple", ConsecutiveStopping(generations=3, metric="fitness")),
+        ("eaMuPlusLambda", ConsecutiveStopping(generations=3, metric="fitness")),
+        ("eaMuCommaLambda", ConsecutiveStopping(generations=3, metric="fitness")),
         ("eaSimple", DeltaThreshold(threshold=0.001, metric="fitness")),
         ("eaMuPlusLambda", DeltaThreshold(threshold=0.001, metric="fitness")),
         ("eaMuCommaLambda", DeltaThreshold(threshold=0.001, metric="fitness")),
@@ -218,12 +219,12 @@ def test_expected_algorithms_callbacks(algorithm, callback):
 )
 def test_missing_data_types(param_grid):
     clf = DecisionTreeClassifier()
-    generations = 8
+    generations = 6
     evolved_estimator = GASearchCV(
         clf,
         cv=2,
         scoring="accuracy",
-        population_size=5,
+        population_size=3,
         generations=generations,
         tournament_size=3,
         elitism=True,
@@ -249,7 +250,7 @@ def test_negative_criteria():
     )
 
     clf = DecisionTreeRegressor()
-    generations = 8
+    generations = 6
     evolved_estimator = GASearchCV(
         clf,
         cv=3,
@@ -362,12 +363,12 @@ def test_wrong_get_item():
 
 def test_iterator():
     clf = DecisionTreeClassifier()
-    generations = 6
+    generations = 4
     evolved_estimator = GASearchCV(
         clf,
         cv=3,
         scoring="accuracy",
-        population_size=5,
+        population_size=3,
         generations=generations,
         tournament_size=3,
         elitism=True,
