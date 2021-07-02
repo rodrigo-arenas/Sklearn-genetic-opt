@@ -29,7 +29,7 @@ Features:
 
   - **on_start**: When the evolutionary algorithm is called from the GASearchCV.fit method.
 
-  - **on_step:** When the evolutionary algorithm finish a generation (no change here).
+  - **on_step:** When the evolutionary algorithm finishes a generation (no change here).
 
   - **on_end:** At the end of the last generation.
 
@@ -37,7 +37,7 @@ Features:
 Bug Fixes:
 ^^^^^^^^^^
 
-* A missing statement was making that the callbacks starts to get evaluated from generation 1, ignoring generation 0.
+* A missing statement was making that the callbacks start to get evaluated from generation 1, ignoring generation 0.
   Now this is properly handled and callbacks work from generation 0.
 
 ^^^^^^^^^^^^
@@ -115,7 +115,7 @@ Docs:
 * Added user guide on "Understanding the evaluation process"
 * Several guides on contributing, code of conduct
 * Added important links
-* Docs requirement are now independent of package requirements
+* Docs requirements are now independent of package requirements
 
 ^^^^^^^^^
 Internal:
@@ -187,7 +187,7 @@ Features:
 * Enabled deap's eaMuPlusLambda algorithm for the optimization process, now is the default routine
 * Added a logbook and history properties to the fitted GASearchCV  to make post-fit analysis
 * ``Elitism=False`` now implements a roulette selection instead of ignoring the parameter
-* Added the parameter keep_top_k to control the amount of solutions if the hall of fame (hof)
+* Added the parameter keep_top_k to control the number of solutions if the hall of fame (hof)
 
 ^^^^^^^^^^^^
 API Changes:
@@ -195,7 +195,7 @@ API Changes:
 
 * Refactored the optimization algorithm to use DEAP package instead
   of a custom implementation, this causes the removal of several methods, properties and variables inside the GASearchCV class
-* The parameter encoding_length has been removed, it's not longer required to the GASearchCV class
+* The parameter encoding_length has been removed, it's no longer required to the GASearchCV class
 * Renamed the property of the fitted estimator from `best_params_` to `best_params`
 * The verbosity now prints the deap log of the fitness function,
   it's standard deviation, max and min values from each generation

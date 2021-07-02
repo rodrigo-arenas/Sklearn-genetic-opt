@@ -19,7 +19,7 @@ or ``False``. It expects the parameter `estimator`.
 ``True`` means that the optimization must stop, ``False``, means it can continue.
 It expects the parameters `record`, `logbook` and `estimator`.
 
-**on_end:** This method is called at the end of the las generation or after an stopping
+**on_end:** This method is called at the end of the las generation or after a stopping
 callback meets its criteria. It expects the parameters `logbook` and `estimator`,
 it should return ``None`` or ``False``.
 
@@ -29,7 +29,7 @@ Example
 -------
 
 In this example, we are going to define a dummy callback that
-stops the process if there have been more that `N` fitness values
+stops the process if there have been more than `N` fitness values
 bellow a threshold value.
 
 The callback must have three parameters: `record`, `logbook` and `estimator`.
@@ -61,7 +61,7 @@ So to check inside the logbook, we could define a function like this:
         return False
 
 As sklearn-genetic-opt expects all this logic in a single object, we must define a class
-that will have all this parameters, so we can rewrite it like this:
+that will have all these parameters, so we can rewrite it like this:
 
 
 .. code-block:: python
@@ -121,7 +121,7 @@ Now, let's expend it to add the others method, just to print a message:
            print("I'm done with training!")
 
 So that is it, now you can initialize the DummyThreshold
-and pass it to a in the ``fit`` method of a
+and pass it to in the ``fit`` method of a
 :class:`~sklearn_genetic.GASearchCV` instance:
 
 .. code-block:: python

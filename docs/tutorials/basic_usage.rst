@@ -21,12 +21,12 @@ The optimization is made by evolutionary algorithms with the help of the
 It works by defining the set of hyperparameters to tune, it starts with a randomly sampled set of options (population).
 Then by using evolutionary operators as the mating, mutation, selection and evaluation,
 it generates new candidates looking to improve the cross-validation score in each generation.
-It'll continue with this process until a number of generations is reached or until a callback criteria is met.
+It'll continue with this process until a number of generations is reached or until a callback criterion is met.
 
 Example
 -------
 
-First lets import some dataset and others scikit-learn standard modules, we'll use
+First let's import some dataset and other scikit-learn standard modules, we'll use
 the `digits dataset <https://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_digits.html>`__.
 This is a classification problem, we'll fine-tune a Random Forest Classifier for this task.
 
@@ -40,7 +40,7 @@ This is a classification problem, we'll fine-tune a Random Forest Classifier for
     from sklearn.datasets import load_digits
     from sklearn.metrics import accuracy_score
 
-Lets first read the data, split it in our training and test set and visualize some of the data points:
+Let's first read the data, split it in our training and test set and visualize some of the data points:
 
 .. code:: python3
 
@@ -60,7 +60,7 @@ We should see something like this:
 
 .. image:: ../images/basic_usage_digits_0.png
 
-Now, we must define our param_grid, similar to scikit-learn, is a dictionary with the models hyperparameters.
+Now, we must define our param_grid, similar to scikit-learn, which is a dictionary with the model's hyperparameters.
 The main difference with for example sckit-learn's GridSearchCv,
 is that we don't pre-define the values to use in the search,
 but rather, the boundaries of each parameter.
@@ -81,7 +81,7 @@ Notice that in the case of *'boostrap'*, as it is a categorical variable, we do 
 As well, in the 'min_weight_fraction_leaf', we used an additional parameter named distribution,
 this is useful to tell the optimizer from which data distribution it can sample some random values during the optimization.
 
-Now, we are ready to set the GASearchCV, its the object that will allow us to run the fitting process using evolutionary algorihtms
+Now, we are ready to set the GASearchCV, its the object that will allow us to run the fitting process using evolutionary algorithms
 It has several options that we can use, for this first example, we'll keep it very simple:
 
 .. code:: python3
@@ -100,9 +100,9 @@ It has several options that we can use, for this first example, we'll keep it ve
                                   n_jobs=-1,
                                   verbose=True)
 
-So now the setup in ready, note that are others parameters that can be specified in GASearchCV,
+So now the setup is ready, note that are other parameters that can be specified in GASearchCV,
 the ones we used, are equivalents to the meaning in scikit-learn, besides the one already explained,
-is worth to mention that the "metric" is going to be used as the optimization variable,
+is worth mentioning that the "metric" is going to be used as the optimization variable,
 so the algorithm will try to find the set of parameters that maximizes this metric.
 
 We are ready to run the optimization routine:
@@ -127,8 +127,8 @@ This log, shows us the metrics obtained in each iteration (generation), this is 
 * **fitness_max:** The maximum individual score of all the models in this generation.
 * **fitness_min:** The minimum individual score of all the models in this generation.
 
-After fitting the model, we have some extra methos to use the model right away.
-It will use by default the best set of hyperparameters it found, based in the cross-validation score:
+After fitting the model, we have some extra methods to use the model right away.
+It will use by default the best set of hyperparameters it found, based on the cross-validation score:
 
 .. code:: python3
 
@@ -142,8 +142,8 @@ In this case, we got an accuracy score in the test set of 0.93
 
 .. image:: ../images/basic_usage_accuracy_2.jpeg
 
-Now lets use a couple more functions available in the package.
-The first one, will help us to see the evolution of our metric over the generations
+Now, let's use a couple more functions available in the package.
+The first one will help us to see the evolution of our metric over the generations
 
 .. code:: python3
 
@@ -165,10 +165,10 @@ sklearn-genetic-opt comes with a plot function to analyze this log:
 
 .. image:: ../images/basic_usage_plot_space_4.png
 
-What this plot shows us, is the distribution of the sampled values for each hyperparameter.
-We can see for example in the *'min_weight_fraction_leaf'* that the algorithm mostly sampled values bellow 0.15.
+What this plot shows us, is the distributione of the sampled values for each hyperparameter.
+We can see for example in the *'min_weight_fraction_leaf'* that the algorithm mostly sampled values below 0.15.
 You can also check every single combination of variables and the contour plot that represents the sampled values.
 
 This concludes our introduction to the basic sklearn-genetic-opt usage.
 Further tutorials will cover the GASearchCV parameters, callbacks,
-different optimization algorithms and more advanced usage.
+different optimization algorithms and more advanced use cases.

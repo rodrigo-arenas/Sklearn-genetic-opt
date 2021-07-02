@@ -6,11 +6,11 @@ Introduction
 
 Callbacks can be defined to take actions or decisions over the optimization
 process while it is still running.
-Common callbacks includes different rules to stop the algorithm or log artifacts.
+Common callbacks include different rules to stop the algorithm or log artifacts.
 The callbacks are passed to the ``.fit`` method
 of the :class:`~sklearn_genetic.GASearchCV` class.
 
-The callbacks are evaluated at start of the training using the `on_start` method,
+The callbacks are evaluated at the start of the training using the `on_start` method,
 at the end of each generation fit using `on_step` method and at the
 end of the training using `on_end`, so it looks like this:
 
@@ -22,7 +22,7 @@ until that training point.
 
 .. image:: ../images/callbacks_log_0.png
 
-Now lets see how to use them, we'll take
+Now let's see how to use them, we'll take
 the data set and model used in :ref:`basic-usage`. The available callbacks are:
 
 * ProgressBar
@@ -69,14 +69,14 @@ ConsecutiveStopping
 -------------------
 
 This callback stops the optimization if the current metric value
-is no greater that at least one metric from the last N generations.
+is no greater than at least one metric from the last N generations.
 
 It requires us to define the number of generations to compare
 against the current generation and the name of the metric we want
 to track.
 
 For example, if we want to stop the optimization after 5 iterations
-where the current iteration (sixth) fitness value is worst that all
+where the current iteration (sixth) fitness value is worst than all
 the previous ones (5), we define it like this:
 
 .. code:: python3
@@ -94,7 +94,7 @@ Now we just have to pass it to the estimator during the fitting
 DeltaThreshold
 --------------
 This callback stops the optimization if the absolute difference
-between the current and last metric is less or equals than a threshold.
+between the current and last metric is less or equals to a threshold.
 
 It just requires the threshold and the metric name, for example
 using the 'fitness_min' value:
@@ -112,11 +112,11 @@ This callback stops the optimization if the difference in seconds between the st
 first set of hyperparameters fit, and the current generation time is greater than a time threshold.
 
 Remember that this is checked after each generation fit, so if the first (or any) generation fit takes
-longer that the threshold, it won't stop the fitting process until is done with the current generation
+longer than the threshold, it won't stop the fitting process until is done with the current generation
 population.
 
 It requires the total_seconds parameters, for example stopping if the time is greater
-that one minute:
+than one minute:
 
 .. code:: python3
 
@@ -128,7 +128,7 @@ that one minute:
 ThresholdStopping
 -----------------
 It stops the optimization if the current metric
-is greater or equals than the define threshold.
+is greater or equals to the defined threshold.
 
 For example, if we want to stop the optimization
 if the 'fitness_max' is above 0.98:
@@ -151,9 +151,9 @@ within this package due it's usually a sensitive and heavy dependency::
 
     pip install tensorflow
 
-It only requires to define the folder where you want to log your run, and optionally, a run_id, so
-your consecutive runs doesn't mix up.
-If the run_id is not provided, it will create a subfolder with the current datetime of your run.
+It only requires defining the folder where you want to log your run, and optionally, a run_id, so
+your consecutive runs don't mix up.
+If the run_id is not provided, it will create a subfolder with the current date-time of your run.
 
 .. code:: python3
 
@@ -162,8 +162,8 @@ If the run_id is not provided, it will create a subfolder with the current datet
 
     evolved_estimator.fit(X, y, callbacks=callback)
 
-While the model is being trained you can see in real time the metrics in Tensorboard.
-If you have run more that 1 GASearchCV model and use the TensordBoard callback using
+While the model is being trained you can see in real-time the metrics in Tensorboard.
+If you have run more than one GASearchCV model and use the TensordBoard callback using
 the same log_dir but different run_id, you can compare the metrics of each run, it looks
 like this for the fitness in three different runs:
 

@@ -37,8 +37,8 @@ Documentation is available `here <https://sklearn-genetic-opt.readthedocs.io/>`_
 Main Features:
 ##############
 
-* **GASearchCV**: Principal class of the package, holds the evolutionary cross validation optimization routine.
-* **Algorithms**: Set of different evolutionary algorithms to use as optimization procedure.
+* **GASearchCV**: Principal class of the package, holds the evolutionary cross-validation optimization routine.
+* **Algorithms**: Set of different evolutionary algorithms to use as an optimization procedure.
 * **Callbacks**: Custom evaluation strategies to generate early stopping rules,
   logging (into TensorBoard, .pkl files, etc) or your custom logic.
 * **Plots**: Generate pre-defined plots to understand the optimization process.
@@ -51,7 +51,7 @@ Visualize the progress of your training:
 
 .. image:: docs/images/progress_bar.gif
 
-Real time metrics visualization and comparison across runs:
+Real-time metrics visualization and comparison across runs:
 
 .. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/docs/images/tensorboard_log.png?raw=true
 
@@ -165,10 +165,10 @@ Contributing
 ############
 
 Contributions are more than welcome!
-There are lots of opportunities on the on going project, so please get in touch if you would like to help out.
+There are lots of opportunities on the ongoing project, so please get in touch if you would like to help out.
 Also check the `Contribution guide <https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/CONTRIBUTING.md>`_
 
-Big thanks to the people who are helping this project!
+Big thanks to the people who are helping with this project!
 
 |Contributors|_
 
