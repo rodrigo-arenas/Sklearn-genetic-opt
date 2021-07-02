@@ -10,10 +10,10 @@ the full implementation is here: :class:`~sklearn_genetic.mlflow.MLflowConfig`
 Configuration
 -------------
 
-The configuration is pretty straight forward, we just need
+The configuration is pretty straightforward, we just need
 to import the main class and define some parameters, here there is its meaning:
 
-* **tracking_uri:** Address of local or remote tracking server.
+* **tracking_uri:** Address of local or remote-tracking server.
 * **experiment:** Case sensitive name of an experiment to be activated.
 * **run_name:** Name of new run (stored as a mlflow.runName tag).
 * **save_models:** If ``True``, it will log the estimator into mlflow artifacts.
@@ -92,21 +92,21 @@ in the parameter named `log_config`, for example:
 
     print(evolved_estimator.best_params_)
 
-Notice that we choose a small generations and population_size, just to be
+Notice that we choose small generations and population_size, just to be
 able to see the results without much verbosity.
 
-If you go to you mlflow UI and click the experiment named "Digits-sklearn-genetic-opt"
+If you go to your mlflow UI and click the experiment named "Digits-sklearn-genetic-opt"
 we should see something like this (I've hidden some columns to give a better look):
 
 .. image:: ../images/mlflow_experiment_0.png
 
 There we can see the user that ran the experiment, the name of the file
 which contained the source code, our tags and other metadata. Notice
-that there is "plus" symbol that will show us each of our iterations,
+that there is a "plus" symbol that will show us each of our iterations,
 this is because sklearn-genetic-opt will log each `GASearchCV.fit()` call
 in a nested way, think it like a parent run, and each child is
-one of the hyperparameters that were tested, for example if we run the
-same code again, now we see two parents runs:
+one of the hyperparameters that were tested, for example, if we run the
+same code again, now we see two parents run:
 
 .. image:: ../images/mlflow_nested_run_1.png
 
@@ -115,7 +115,7 @@ look like this (again edited the columns to display):
 
 .. image:: ../images/mlflow_children_2.png
 
-From there we can see the hyper parameters and the score (cross-validation)
+From there we can see the hyperparameters and the score (cross-validation)
 that we got in each run, from there we can use the regular mlflow functionalities
 like comparing runs, download the CSV, register a model, etc. You can see more
 on https://mlflow.org/docs/latest/index.html
