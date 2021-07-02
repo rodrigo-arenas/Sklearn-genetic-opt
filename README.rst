@@ -165,8 +165,9 @@ Contributing
 ############
 
 Contributions are more than welcome!
-There are lots of opportunities on the ongoing project, so please get in touch if you would like to help out.
-Also check the `Contribution guide <https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/CONTRIBUTING.md>`_
+There are several opportunities on the ongoing project, so please get in touch if you would like to help out.
+Make sure to check the current issues and also
+the `Contribution guide <https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/CONTRIBUTING.md>`_.
 
 Big thanks to the people who are helping with this project!
 
