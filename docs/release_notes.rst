@@ -3,10 +3,8 @@ Release Notes
 
 Some notes on new features in various releases
 
-What's new in 0.6.0dev0
------------------------
-
-This is the current development version, these features are not yet available through PyPI.
+What's new in 0.6.0
+-------------------
 
 ^^^^^^^^^
 Features:

@@ -49,7 +49,7 @@ Demos on Features:
 
 Visualize the progress of your training:
 
-.. image:: docs/images/progress_bar.gif
+.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/docs/images/progress_bar.gif?raw=true
 
 Real-time metrics visualization and comparison across runs:
 
@@ -179,3 +179,4 @@ Testing
 After installation, you can launch the test suite from outside the source directory::
 
    pytest sklearn_genetic
+
