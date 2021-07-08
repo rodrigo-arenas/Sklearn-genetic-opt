@@ -1,5 +1,6 @@
 import random
 import time
+import warnings
 
 import numpy as np
 from deap import base, creator, tools
@@ -54,7 +55,9 @@ class GASearchCV(BaseSearchCV):
         of hyperparameter based on the estimator selected and as values
         one of :class:`~sklearn_genetic.space.Integer` ,
         :class:`~sklearn_genetic.space.Categorical`
-        :class:`~sklearn_genetic.space.Continuous` classes
+        :class:`~sklearn_genetic.space.Continuous` classes.
+        At least two parameters are advised to be provided in order to successfully make
+        an optimization routine.
 
     population_size : int, default=10
         Size of the initial population to sample randomly generated individuals.
@@ -264,6 +267,12 @@ class GASearchCV(BaseSearchCV):
         # Saves the param_grid and computes some extra properties in the same object
         self.space = Space(param_grid)
 
+        if len(self.space) == 1:
+            warnings.warn(
+                "Warning, only one parameter was provided to the param_grid, the optimization routine "
+                "might not have effect, it's advised to use at least 2 parameters"
+            )
+
         super(GASearchCV, self).__init__(
             estimator=estimator,
             scoring=scoring,
@@ -305,7 +314,16 @@ class GASearchCV(BaseSearchCV):
             "population", tools.initRepeat, list, self.toolbox.individual
         )
 
-        self.toolbox.register("mate", tools.cxTwoPoint)
+        if len(self.space) == 1:
+            sampler = list(self.space.param_grid.values())[0]
+            lower, upper = sampler.lower, sampler.upper
+
+            self.toolbox.register(
+                "mate", tools.cxSimulatedBinaryBounded, low=lower, up=upper, eta=10
+            )
+        else:
+            self.toolbox.register("mate", tools.cxTwoPoint)
+
         self.toolbox.register("mutate", self.mutate)
         if self.elitism:
             self.toolbox.register(
