@@ -76,7 +76,7 @@ class ConsecutiveStopping(BaseCallback):
                 current_stat = logbook.select(self.metric)[-1]
 
             # Compare the current metric with the last |generations| metrics
-            stats = logbook.select(self.metric)[(-self.generations - 1): -1]
+            stats = logbook.select(self.metric)[(-self.generations - 1) : -1]
 
             if all(stat >= current_stat for stat in stats):
                 print(f"INFO: {self.__class__.__name__} callback met its criteria")
