@@ -93,16 +93,19 @@ Now we just have to pass it to the estimator during the fitting
 
 DeltaThreshold
 --------------
-This callback stops the optimization if the absolute difference
-between the current and last metric is less or equals to a threshold.
+Stops the optimization if the absolute difference between the maximum and minimum value from the last N generations
+is less or equals to a threshold.
 
-It just requires the threshold and the metric name, for example
-using the 'fitness_min' value:
+The threshold gets evaluated after the number of generations specified is reached;
+the default number is 2 (the current and previous one).
+
+It just requires the threshold, the metric name and the generations, for example
+using the 'fitness_min' value and comparing the last 5 generations:
 
 .. code:: python3
 
     from sklearn_genetic.callbacks import DeltaThreshold
-    callback = DeltaThreshold(threshold=0.001, metric='fitness')
+    callback = DeltaThreshold(threshold=0.001, generations=5, metric='fitness_min')
 
     evolved_estimator.fit(X, y, callbacks=callback)
 

@@ -460,7 +460,7 @@ def test_param_grid_one_param():
     assert (
         record[0].message.args[0]
         == "Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect, "
-           "it's advised to use at least 2 parameters"
+        "it's advised to use at least 2 parameters"
     )
 
     evolved_estimator.fit(X, y_labels)
@@ -488,4 +488,3 @@ def test_param_grid_one_param():
     assert "rank_test_score" in cv_result_keys
     assert "std_fit_time" in cv_result_keys
     assert "params" in cv_result_keys
-
