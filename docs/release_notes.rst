@@ -10,6 +10,15 @@ What's new in 0.7.0dev0
 This is the current in-development version, these features are not yet
 available via PyPI
 
+^^^^^^^^^
+Features:
+^^^^^^^^^
+
+* Added the parameter `generations` to the :class:`~sklearn_genetic.callbacks.DeltaThreshold`.
+  Now it compares the maximum and minimum values of a metric from the last generations, instead
+  of just the current and previous ones. The default value is 2, so the behavior remains the same
+  as in previous versions.
+
 ^^^^^^^^^^
 Bug Fixes:
 ^^^^^^^^^^

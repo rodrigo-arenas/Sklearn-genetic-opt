@@ -89,38 +89,39 @@ class ConsecutiveStopping(BaseCallback):
 
 class DeltaThreshold(BaseCallback):
     """
-    Stop the optimization if the absolute difference between the current and last metric less or equals than a threshold
+    Stops the optimization if the absolute difference between the maximum and minimum value from the last N generations
+    is less or equals to a threshold.
+    The threshold gets evaluated after the number of generations specified is reached.
     """
 
-    def __init__(self, threshold, metric: str = "fitness"):
+    def __init__(self, threshold, generations=2, metric: str = "fitness"):
         """
         Parameters
         ----------
         threshold: float, default=None
-            Threshold to compare the differences between cross validation scores
+            Threshold to compare the differences between cross-validation scores.
+        generations: int, default=2
+            Number of generations to compare, includes the current generation.
         metric: {'fitness', 'fitness_std', 'fitness_max', 'fitness_min'}, default ='fitness'
-            Name of the metric inside 'record' logged in each iteration
+            Name of the metric inside 'record' logged in each iteration.
         """
 
         check_stats(metric)
 
         self.threshold = threshold
+        self.generations = generations
         self.metric = metric
 
     def on_step(self, record=None, logbook=None, estimator=None):
         if logbook is not None:
-            if len(logbook) <= 1:
+            if len(logbook) < self.generations:
                 return False
 
-            if record is not None:
-                current_stat = record[self.metric]
-            else:
-                current_stat = logbook.select(self.metric)[-1]
+            stats = logbook.select(self.metric)[(-self.generations) :]
 
-            # Compare the current metric with the last |generations| metrics
-            previous_stat = logbook.select(self.metric)[-2]
+            diff = abs(max(stats) - min(stats))
 
-            if abs(current_stat - previous_stat) <= self.threshold:
+            if diff <= self.threshold:
                 print(f"INFO: {self.__class__.__name__} callback met its criteria")
                 return True
             return False

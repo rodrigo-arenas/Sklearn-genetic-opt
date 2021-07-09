@@ -177,7 +177,10 @@ def test_delta_callback():
 
     # Abs difference is bigger than the threshold
     assert callback(logbook=logbook)
-    assert callback(logbook=logbook, record={"fitness": 0.9141})
+
+    callback = DeltaThreshold(0.1, generations=4)
+
+    assert callback(logbook=logbook)
 
     with pytest.raises(Exception) as excinfo:
         callback()
