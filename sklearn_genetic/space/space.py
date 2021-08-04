@@ -93,16 +93,18 @@ class Continuous(BaseDimension):
         self.lower = lower
         self.upper = upper
         self.distribution = distribution
+        self.shifted_upper = self.upper
 
         if self.distribution == ContinuousDistributions.uniform.value:
             self.rvs = stats.uniform.rvs
+            self.shifted_upper = self.upper - self.lower
         elif self.distribution == ContinuousDistributions.log_uniform.value:
             self.rvs = stats.loguniform.rvs
 
     def sample(self):
         """Sample a random value from the assigned distribution"""
 
-        return self.rvs(self.lower, self.upper)
+        return self.rvs(self.lower, self.shifted_upper)
 
 
 class Categorical(BaseDimension):

@@ -3,8 +3,7 @@ Release Notes
 
 Some notes on new features in various releases
 
-
-What's new in 0.7.0dev0
+What's new in 0.6.1dev0
 -----------------------
 
 This is the current in-development version, these features are not yet
@@ -25,6 +24,9 @@ Bug Fixes:
 
 * When a param_grid of length 1 is provided, a user warning is raised instead of an error.
   Internally it will swap the crossover operation to use the DEAP's :func:`~tools.cxSimulatedBinaryBounded`.
+* When using :class:`~sklearn_genetic.space.Continuous` class with boundaries `lower` and `upper`,
+  a uniform distribution  with limits `[lower, lower + upper]` was sampled, now, it's properly sampled
+  using a `[lower, upper]` limits.
 
 
 What's new in 0.6.0
