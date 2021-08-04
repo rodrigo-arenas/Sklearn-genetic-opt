@@ -1,9 +1,7 @@
 Release Notes
 =============
 
-Some notes on new features in various releases
-
-What's new in 0.6.1dev0
+What's new in 0.6.1
 -----------------------
 
 This is the current in-development version, these features are not yet
