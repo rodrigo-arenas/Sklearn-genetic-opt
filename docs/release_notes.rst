@@ -1,11 +1,10 @@
 Release Notes
 =============
 
-What's new in 0.6.1
------------------------
+Some notes on new features in various releases
 
-This is the current in-development version, these features are not yet
-available via PyPI
+What's new in 0.6.1
+-------------------
 
 ^^^^^^^^^
 Features:
