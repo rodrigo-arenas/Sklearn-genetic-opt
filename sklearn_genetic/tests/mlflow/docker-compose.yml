@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+  mlflow:
+    build:
+      context: ""
+      dockerfile: Dockerfile
+    ports:
+      - "5000"
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:13.1-alpine
+    environment:
+      POSTGRES_DB: mlflow
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - 5432

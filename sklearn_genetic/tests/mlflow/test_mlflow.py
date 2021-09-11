@@ -1,6 +1,5 @@
 import pytest
-import shutil
-import os
+import requests
 
 import mlflow
 from mlflow.tracking import MlflowClient
@@ -8,12 +7,11 @@ from mlflow.entities import ViewType
 from sklearn.datasets import load_digits
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
 from sklearn.model_selection import StratifiedKFold
 
-from ..genetic_search import GASearchCV
-from ..mlflow import MLflowConfig
-from ..space import Integer, Categorical, Continuous
+from sklearn_genetic.genetic_search import GASearchCV
+from sklearn_genetic.mlflow import MLflowConfig
+from sklearn_genetic.space import Integer, Categorical, Continuous
 
 
 @pytest.fixture
@@ -141,11 +139,3 @@ def test_mlflow_after_run(mlflow_resources, mlflow_run):
     assert 2 <= int(params["max_depth"]) <= 20
     assert 2 <= int(params["max_leaf_nodes"]) <= 30
     assert client.get_metric_history(run_id, "score")[0].key == "score"
-
-
-def test_cleanup():
-    """
-    Ensure resources are cleaned up.
-    """
-    shutil.rmtree("mlruns")
-    assert "mlruns" not in os.listdir(os.getcwd())

@@ -10,9 +10,9 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import accuracy_score
 import numpy as np
 
-from .. import GASearchCV
-from ..space import Integer, Categorical, Continuous
-from ..callbacks import (
+from sklearn_genetic import GASearchCV
+from sklearn_genetic.space import Integer, Categorical, Continuous
+from sklearn_genetic.callbacks import (
     ThresholdStopping,
     DeltaThreshold,
     ConsecutiveStopping,

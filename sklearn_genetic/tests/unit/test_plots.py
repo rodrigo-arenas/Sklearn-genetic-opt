@@ -3,9 +3,13 @@ from sklearn.datasets import load_boston
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeRegressor
 
-from .. import GASearchCV
-from ..plots import plot_fitness_evolution, plot_search_space, plot_parallel_coordinates
-from ..space import Integer, Categorical, Continuous
+from sklearn_genetic import GASearchCV
+from sklearn_genetic.plots import (
+    plot_fitness_evolution,
+    plot_search_space,
+    plot_parallel_coordinates,
+)
+from sklearn_genetic.space import Integer, Categorical, Continuous
 
 
 data = load_boston()
