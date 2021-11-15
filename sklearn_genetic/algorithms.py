@@ -1,5 +1,3 @@
-import sys
-
 from deap import tools
 from deap.algorithms import varAnd, varOr
 
@@ -88,6 +86,7 @@ def eaSimple(
 
     if halloffame is not None:
         halloffame.update(population)
+    hof_size = len(halloffame.items) if (halloffame.items and estimator.elitism) else 0
 
     record = stats.compile(population) if stats else {}
 
@@ -125,7 +124,7 @@ def eaSimple(
     # Begin the generational process
     for gen in range(1, ngen + 1):
         # Select the next generation individuals
-        offspring = toolbox.select(population, len(population))
+        offspring = toolbox.select(population, len(population) - hof_size)
 
         # Vary the pool of individuals
         offspring = varAnd(offspring, toolbox, cxpb, mutpb)
@@ -135,6 +134,9 @@ def eaSimple(
         fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
         for ind, fit in zip(invalid_ind, fitnesses):
             ind.fitness.values = fit
+
+        if estimator.elitism:
+            offspring.extend(halloffame.items)
 
         # Update the hall of fame with the generated individuals
         if halloffame is not None:
