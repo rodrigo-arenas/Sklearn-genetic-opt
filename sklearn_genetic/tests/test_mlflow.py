@@ -8,11 +8,10 @@ from mlflow.entities import ViewType
 from sklearn.datasets import load_digits
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
 from sklearn.model_selection import StratifiedKFold
 
 from ..genetic_search import GASearchCV
-from ..mlflow import MLflowConfig
+from ..mlflow_log import MLflowConfig
 from ..space import Integer, Categorical, Continuous
 
 
