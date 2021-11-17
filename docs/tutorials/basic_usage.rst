@@ -6,7 +6,8 @@ How to Use Sklearn-genetic-opt
 Introduction
 ------------
 
-Sklearn-genetic-opt uses evolutionary algorithms to fine-tune scikit-learn machine learning algorithms.
+Sklearn-genetic-opt uses evolutionary algorithms to fine-tune scikit-learn machine learning algorithms
+and perform feature selection.
 It is designed to accept a `scikit-learn <http://scikit-learn.org/stable/index.html>`__
 regression or classification model (or a pipeline containing on of those).
 
@@ -23,8 +24,8 @@ Then by using evolutionary operators as the mating, mutation, selection and eval
 it generates new candidates looking to improve the cross-validation score in each generation.
 It'll continue with this process until a number of generations is reached or until a callback criterion is met.
 
-Example
--------
+Fine-tuning Example
+-------------------
 
 First let's import some dataset and other scikit-learn standard modules, we'll use
 the `digits dataset <https://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_digits.html>`__.
@@ -165,10 +166,109 @@ sklearn-genetic-opt comes with a plot function to analyze this log:
 
 .. image:: ../images/basic_usage_plot_space_4.png
 
-What this plot shows us, is the distributione of the sampled values for each hyperparameter.
+What this plot shows us, is the distribution of the sampled values for each hyperparameter.
 We can see for example in the *'min_weight_fraction_leaf'* that the algorithm mostly sampled values below 0.15.
 You can also check every single combination of variables and the contour plot that represents the sampled values.
 
+
+Feature Selection Example
+-------------------------
+
+For this example, we are going to use the well-known Iris dataset, it's a classification problem with four features.
+We are also going to simulate some random noise to represent non-important features:
+
+.. code:: python3
+
+    import matplotlib.pyplot as plt
+    from sklearn_genetic import GAFeatureSelectionCV
+    from sklearn_genetic.plots import plot_fitness_evolution
+    from sklearn.model_selection import train_test_split, StratifiedKFold
+    from sklearn.svm import SVC
+    from sklearn.datasets import load_iris
+    from sklearn.metrics import accuracy_score
+    import numpy as np
+
+    data = load_iris()
+    X, y = data["data"], data["target"]
+
+    noise = np.random.uniform(0, 10, size=(X.shape[0], 10))
+
+    X = np.hstack((X, noise))
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=0)
+
+This should give us 10 extra noisy features with our train and test set.
+
+Now we can create the GAFeatureSelectionCV object, it's very similar to the GASearchCV and they share
+most of the parameters, the main difference is GAFeatureSelectionCV doesn't run hyperparameters optimization
+thus the param_grid parameter it's not available, and the estimator should be defined with its hyperparameters.
+
+The way the feature selection is performed is by creating models with a subsample of features
+and evaluate its cv-score, the way the subsets are created is by using the available evolutionary algorithms.
+It also tries to minimize the number of selected features, so it's a multi-objective optimization.
+
+Let's create the feature selection object, the estimator we're going to use is a SVM:
+
+.. code:: python3
+
+    clf = SVC(gamma='auto')
+
+    evolved_estimator = GAFeatureSelectionCV(
+        estimator=clf,
+        cv=3,
+        scoring="accuracy",
+        population_size=30,
+        generations=20,
+        n_jobs=-1,
+        verbose=True,
+        keep_top_k=2,
+        elitism=True,
+    )
+
+We are ready to run the optimization routine:
+
+.. code:: python3
+
+    # Train and select the features
+    evolved_estimator.fit(X_train, y_train)
+
+During the training, the same log format is displayed as before:
+
+.. image:: ../images/basic_usage_train_log_5.png
+
+After fitting the model, we have some extra methods to use the model right away. It will use by default the best set of
+features it found, remember as the algorithm used only a subset, you have to select them from the
+``X_test array``, this is done like this:
+
+.. code:: python3
+
+    features = evolved_estimator.best_features_
+
+    # Predict only with the subset of selected features
+    y_predict_ga = evolved_estimator.predict(X_test[:, features])
+    accuracy = accuracy_score(y_test, y_predict_ga)
+
+.. image:: ../images/basic_usage_accuracy_6.png
+
+In this case, we got an accuracy score in the test set of 0.98.
+
+Notice that the ``best_features_`` is a vector of bool values, each
+position represents the index of the feature (column) and the value indicates
+if that features was selected (True) or not (False) by the algorithm.
+In this example, the algorithm, discarded all the noisy random variables we created
+and selected the original variables.
+
+We can also plot the fitness evolution:
+
+.. code:: python3
+
+    from sklearn_genetic.plots import plot_fitness_evolution
+    plot_fitness_evolution(evolved_estimator)
+    plt.show()
+
+.. image:: ../images/basic_usage_fitness_plot_7.png
+
 This concludes our introduction to the basic sklearn-genetic-opt usage.
-Further tutorials will cover the GASearchCV parameters, callbacks,
+Further tutorials will cover the GASearchCV and GAFeatureSelectionCV parameters, callbacks,
 different optimization algorithms and more advanced use cases.
+

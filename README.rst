@@ -25,9 +25,10 @@
 Sklearn-genetic-opt
 ###################
 
-scikit-learn models hyperparameters tuning, using evolutionary algorithms.
+scikit-learn models hyperparameters tuning and feature selection, using evolutionary algorithms.
 
-This is meant to be an alternative from popular methods inside scikit-learn such as Grid Search and Randomized Grid Search.
+This is meant to be an alternative from popular methods inside scikit-learn such as Grid Search and Randomized Grid Search
+for hyperparameteres tuning, and from RFE, Select From Model for feature selection.
 
 Sklearn-genetic-opt uses evolutionary algorithms from the DEAP package to choose the set of hyperparameters that
 optimizes (max or min) the cross-validation scores, it can be used for both regression and classification problems.
@@ -37,7 +38,8 @@ Documentation is available `here <https://sklearn-genetic-opt.readthedocs.io/>`_
 Main Features:
 ##############
 
-* **GASearchCV**: Principal class of the package, holds the evolutionary cross-validation optimization routine.
+* **GASearchCV**: Main class of the package for hyperparameters tuning, holds the evolutionary cross-validation optimization routine.
+* **GAFeatureSelectionCV**: Main class of the package for feature selection.
 * **Algorithms**: Set of different evolutionary algorithms to use as an optimization procedure.
 * **Callbacks**: Custom evaluation strategies to generate early stopping rules,
   logging (into TensorBoard, .pkl files, etc) or your custom logic.
@@ -82,8 +84,8 @@ The only optional dependency that the last command does not install, it's Tensor
 it is usually advised to look further which distribution works better for you.
 
 
-Example
-#######
+Example: Hyperparameters Tuning
+###############################
 
 .. code-block:: python
 
@@ -132,6 +134,49 @@ Example
    # Saved metadata for further analysis
    print("Stats achieved in each generation: ", evolved_estimator.history)
    print("Best k solutions: ", evolved_estimator.hof)
+
+
+Example: Feature Selection
+##########################
+
+.. code:: python3
+
+    import matplotlib.pyplot as plt
+    from sklearn_genetic import GAFeatureSelectionCV
+    from sklearn.model_selection import train_test_split, StratifiedKFold
+    from sklearn.svm import SVC
+    from sklearn.datasets import load_iris
+    from sklearn.metrics import accuracy_score
+    import numpy as np
+
+    data = load_iris()
+    X, y = data["data"], data["target"]
+
+    # Add random non-important features
+    noise = np.random.uniform(0, 10, size=(X.shape[0], 5))
+    X = np.hstack((X, noise))
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=0)
+
+    clf = SVC(gamma='auto')
+
+    evolved_estimator = GAFeatureSelectionCV(
+        estimator=clf,
+        scoring="accuracy",
+        population_size=30,
+        generations=20,
+        n_jobs=-1)
+
+    # Train and select the features
+    evolved_estimator.fit(X_train, y_train)
+
+    # Features selected by the algorithm
+    features = evolved_estimator.best_features_
+    print(features)
+
+    # Predict only with the subset of selected features
+    y_predict_ga = evolved_estimator.predict(X_test[:, features])
+    print(accuracy_score(y_test, y_predict_ga))
 
 
 Changelog

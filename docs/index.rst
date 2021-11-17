@@ -5,10 +5,13 @@
 
 sklean-genetic-opt
 ==================
-scikit-learn models hyperparameters tuning, using evolutionary algorithms.
-##########################################################################
+scikit-learn models hyperparameters tuning and feature selection,
+using evolutionary algorithms.
 
-This is meant to be an alternative from popular methods inside scikit-learn such as Grid Search and Randomized Grid Search.
+#################################################################
+
+This is meant to be an alternative from popular methods inside scikit-learn such as Grid Search and Randomized Grid Search
+for hyperparameteres tuning, and from RFE, Select From Model for feature selection.
 
 Sklearn-genetic-opt uses evolutionary algorithms from the deap package to choose a set of hyperparameters
 that optimizes (max or min) the cross-validation scores, it can be used for both regression and classification problems.
@@ -73,6 +76,7 @@ as it is usually advised to look further which distribution works better for you
 
    notebooks/sklearn_comparison.ipynb
    notebooks/Boston_Houses_decision_tree.ipynb
+   notebooks/Iris_feature_selection.ipynb
    notebooks/Digits_decision_tree.ipynb
    notebooks/MLflow_logger.ipynb
 
@@ -87,6 +91,7 @@ as it is usually advised to look further which distribution works better for you
    :caption: API Reference:
 
    api/gasearchcv
+   api/featureselectioncv
    api/callbacks
    api/plots
    api/mlflow
