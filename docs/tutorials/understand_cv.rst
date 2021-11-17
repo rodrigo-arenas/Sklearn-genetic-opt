@@ -2,7 +2,7 @@ Understanding the evaluation process
 ====================================
 
 In this post, we are going to explain how the evaluation process works
-and how to use different validation strategies.
+on hyperparameters tuning and how to use different validation strategies.
 
 Parameters
 ----------

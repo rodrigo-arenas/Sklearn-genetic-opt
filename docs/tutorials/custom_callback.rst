@@ -34,7 +34,7 @@ bellow a threshold value.
 
 The callback must have three parameters: `record`, `logbook` and `estimator`.
 Those are a dictionary, a deap's Logbook object and the
-current :class:`~sklearn_genetic.GASearchCV` respectively
+current :class:`~sklearn_genetic.GASearchCV` (or :class:`~sklearn_genetic.GAFeatureSelectionCV`) respectively
 with the current iteration metrics, all the past iterations metrics
 and all the properties saved in the estimator.
 

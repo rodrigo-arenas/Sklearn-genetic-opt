@@ -8,7 +8,7 @@ Callbacks can be defined to take actions or decisions over the optimization
 process while it is still running.
 Common callbacks include different rules to stop the algorithm or log artifacts.
 The callbacks are passed to the ``.fit`` method
-of the :class:`~sklearn_genetic.GASearchCV` class.
+of the :class:`~sklearn_genetic.GASearchCV` or :class:`~sklearn_genetic.GAFeatureSelectionCV` class.
 
 The callbacks are evaluated at the start of the training using the `on_start` method,
 at the end of each generation fit using `on_step` method and at the

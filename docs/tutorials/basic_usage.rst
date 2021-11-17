@@ -234,7 +234,7 @@ We are ready to run the optimization routine:
 
 During the training, the same log format is displayed as before:
 
-.. image:: ../images/basic_usage_train_log_5.png
+.. image:: ../images/basic_usage_train_log_5.PNG
 
 After fitting the model, we have some extra methods to use the model right away. It will use by default the best set of
 features it found, remember as the algorithm used only a subset, you have to select them from the
@@ -248,7 +248,7 @@ features it found, remember as the algorithm used only a subset, you have to sel
     y_predict_ga = evolved_estimator.predict(X_test[:, features])
     accuracy = accuracy_score(y_test, y_predict_ga)
 
-.. image:: ../images/basic_usage_accuracy_6.png
+.. image:: ../images/basic_usage_accuracy_6.PNG
 
 In this case, we got an accuracy score in the test set of 0.98.
 
@@ -266,7 +266,7 @@ We can also plot the fitness evolution:
     plot_fitness_evolution(evolved_estimator)
     plt.show()
 
-.. image:: ../images/basic_usage_fitness_plot_7.png
+.. image:: ../images/basic_usage_fitness_plot_7.PNG
 
 This concludes our introduction to the basic sklearn-genetic-opt usage.
 Further tutorials will cover the GASearchCV and GAFeatureSelectionCV parameters, callbacks,
