@@ -4,11 +4,8 @@ Release Notes
 Some notes on new features in various releases
 
 
-What's new in 0.7.0dev0
------------------------
-
-This is the current in-development version, these features are not yet
-available via PyPI
+What's new in 0.7.0
+-------------------
 
 ^^^^^^^^^
 Features:
