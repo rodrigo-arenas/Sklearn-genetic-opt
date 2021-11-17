@@ -15,6 +15,7 @@ import numpy as np
 from .utils import logbook_to_pandas
 from .parameters import Metrics
 from .space import Categorical
+from .genetic_search import GAFeatureSelectionCV
 
 """
 This module contains some useful function to explore the results of the optimization routines
@@ -75,6 +76,10 @@ def plot_search_space(estimator, height=2, s=25, features: list = None):
     Pair plot of the used hyperparameters during the search
 
     """
+
+    if isinstance(estimator, GAFeatureSelectionCV):
+        raise TypeError("Estimator must be a GASearchCV instance, not a GAFeatureSelectionCV instance")
+
     sns.set_style("white")
 
     df = logbook_to_pandas(estimator.logbook)
@@ -130,6 +135,9 @@ def plot_parallel_coordinates(estimator, features: list = None):
     Parallel Coordinates plot of the non-categorical values
 
     """
+
+    if isinstance(estimator, GAFeatureSelectionCV):
+        raise TypeError("Estimator must be a GASearchCV instance, not a GAFeatureSelectionCV instance")
 
     df = logbook_to_pandas(estimator.logbook)
     param_grid = estimator.space.param_grid

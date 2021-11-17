@@ -1,5 +1,4 @@
-import sys
-
+import numpy as np
 from deap import tools
 from deap.algorithms import varAnd, varOr
 
@@ -88,8 +87,11 @@ def eaSimple(
 
     if halloffame is not None:
         halloffame.update(population)
+    hof_size = len(halloffame.items) if (halloffame.items and estimator.elitism) else 0
 
     record = stats.compile(population) if stats else {}
+    if isinstance(record["fitness"], np.ndarray):
+        record = {key: value[0] for key, value in record.items()}
 
     n_gen = gen = 0
     logbook.record(gen=n_gen, nevals=len(invalid_ind), **record)
@@ -108,7 +110,6 @@ def eaSimple(
     }
 
     if eval_callbacks(**callbacks_step_args):
-
         callbacks_end_args = {
             "callbacks": callbacks,
             "record": None,
@@ -125,7 +126,7 @@ def eaSimple(
     # Begin the generational process
     for gen in range(1, ngen + 1):
         # Select the next generation individuals
-        offspring = toolbox.select(population, len(population))
+        offspring = toolbox.select(population, len(population) - hof_size)
 
         # Vary the pool of individuals
         offspring = varAnd(offspring, toolbox, cxpb, mutpb)
@@ -136,6 +137,9 @@ def eaSimple(
         for ind, fit in zip(invalid_ind, fitnesses):
             ind.fitness.values = fit
 
+        if estimator.elitism:
+            offspring.extend(halloffame.items)
+
         # Update the hall of fame with the generated individuals
         if halloffame is not None:
             halloffame.update(offspring)
@@ -145,6 +149,9 @@ def eaSimple(
 
         # Append the current generation statistics to the logbook
         record = stats.compile(population) if stats else {}
+        if isinstance(record["fitness"], np.ndarray):
+            record = {key: value[0] for key, value in record.items()}
+
         logbook.record(gen=gen, nevals=len(invalid_ind), **record)
 
         if verbose:
@@ -269,6 +276,8 @@ def eaMuPlusLambda(
         halloffame.update(population)
 
     record = stats.compile(population) if stats is not None else {}
+    if isinstance(record["fitness"], np.ndarray):
+        record = {key: value[0] for key, value in record.items()}
 
     n_gen = gen = 0
     logbook.record(gen=n_gen, nevals=len(invalid_ind), **record)
@@ -319,6 +328,9 @@ def eaMuPlusLambda(
 
         # Update the statistics with the new population
         record = stats.compile(population) if stats is not None else {}
+        if isinstance(record["fitness"], np.ndarray):
+            record = {key: value[0] for key, value in record.items()}
+
         logbook.record(gen=gen, nevals=len(invalid_ind), **record)
 
         if verbose:
@@ -333,7 +345,6 @@ def eaMuPlusLambda(
         }
 
         if eval_callbacks(**callbacks_step_args):
-
             print("INFO: Stopping the algorithm")
             break
 
@@ -445,6 +456,8 @@ def eaMuCommaLambda(
     logbook.header = ["gen", "nevals"] + (stats.fields if stats else [])
 
     record = stats.compile(population) if stats is not None else {}
+    if isinstance(record["fitness"], np.ndarray):
+        record = {key: value[0] for key, value in record.items()}
 
     n_gen = gen = 0
     logbook.record(gen=n_gen, nevals=len(invalid_ind), **record)
@@ -462,7 +475,6 @@ def eaMuCommaLambda(
 
     # Check if any of the callbacks conditions are True to stop the iteration
     if eval_callbacks(**callbacks_step_args):
-
         callbacks_end_args = {
             "callbacks": callbacks,
             "record": None,
@@ -495,6 +507,9 @@ def eaMuCommaLambda(
 
         # Update the statistics with the new population
         record = stats.compile(population) if stats is not None else {}
+        if isinstance(record["fitness"], np.ndarray):
+            record = {key: value[0] for key, value in record.items()}
+
         logbook.record(gen=gen, nevals=len(invalid_ind), **record)
 
         if verbose:

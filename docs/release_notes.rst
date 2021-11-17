@@ -3,6 +3,30 @@ Release Notes
 
 Some notes on new features in various releases
 
+
+What's new in 0.7.0dev0
+-----------------------
+
+This is the current in-development version, these features are not yet
+available via PyPI
+
+^^^^^^^^^
+Features:
+^^^^^^^^^
+
+* :class:`~sklearn_genetic.GAFeatureSelectionCV` for feature selection along
+  with any scikit-learn classifier or regressor. It optimizes the cv-score
+  while minimizing the number of features to select.
+  This class is compatible with the mlflow and tensorboard integration,
+  the Callbacks and the ``plot_fitness_evolution`` function.
+
+^^^^^^^^^^^^
+API Changes:
+^^^^^^^^^^^^
+
+* The module :mod:`~sklearn_genetic.mlflow` was renamed to :class:`~sklearn_genetic.mlflow_log`
+  to avoid unexpected errors on name resolutions
+
 What's new in 0.6.1
 -------------------
 

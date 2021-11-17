@@ -3,10 +3,9 @@ from sklearn.datasets import load_boston
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeRegressor
 
-from .. import GASearchCV
+from .. import GASearchCV, GAFeatureSelectionCV
 from ..plots import plot_fitness_evolution, plot_search_space, plot_parallel_coordinates
 from ..space import Integer, Categorical, Continuous
-
 
 data = load_boston()
 
@@ -49,9 +48,9 @@ def test_plot_evolution():
         plot = plot_fitness_evolution(evolved_estimator, metric="accuracy")
 
     assert (
-        str(excinfo.value)
-        == "metric must be one of ['fitness', 'fitness_std', 'fitness_max', 'fitness_min'], "
-        "but got accuracy instead"
+            str(excinfo.value)
+            == "metric must be one of ['fitness', 'fitness_std', 'fitness_max', 'fitness_min'], "
+               "but got accuracy instead"
     )
 
 
@@ -67,4 +66,36 @@ def test_plot_parallel():
     plot = plot_parallel_coordinates(evolved_estimator)
     plot = plot_parallel_coordinates(
         evolved_estimator, features=["ccp_alpha", "criterion"]
+    )
+
+
+def test_wrong_estimator_space():
+    estimator = GAFeatureSelectionCV(
+        clf,
+        cv=3,
+        scoring="accuracy",
+        population_size=6
+    )
+    with pytest.raises(Exception) as excinfo:
+        plot = plot_search_space(estimator)
+
+    assert (
+            str(excinfo.value)
+            == "Estimator must be a GASearchCV instance, not a GAFeatureSelectionCV instance"
+    )
+
+
+def test_wrong_estimator_parallel():
+    estimator = GAFeatureSelectionCV(
+        clf,
+        cv=3,
+        scoring="accuracy",
+        population_size=6
+    )
+    with pytest.raises(Exception) as excinfo:
+        plot = plot_parallel_coordinates(estimator)
+
+    assert (
+            str(excinfo.value)
+            == "Estimator must be a GASearchCV instance, not a GAFeatureSelectionCV instance"
     )
