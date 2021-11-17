@@ -1,3 +1,4 @@
+import numpy as np
 from deap import tools
 from deap.algorithms import varAnd, varOr
 
@@ -89,7 +90,7 @@ def eaSimple(
     hof_size = len(halloffame.items) if (halloffame.items and estimator.elitism) else 0
 
     record = stats.compile(population) if stats else {}
-    if len(record["fitness"] > 1):
+    if isinstance(record["fitness"], np.ndarray):
         record = {key: value[0] for key, value in record.items()}
 
     n_gen = gen = 0
@@ -148,7 +149,7 @@ def eaSimple(
 
         # Append the current generation statistics to the logbook
         record = stats.compile(population) if stats else {}
-        if len(record["fitness"] > 1):
+        if isinstance(record["fitness"], np.ndarray):
             record = {key: value[0] for key, value in record.items()}
 
         logbook.record(gen=gen, nevals=len(invalid_ind), **record)
@@ -275,7 +276,9 @@ def eaMuPlusLambda(
         halloffame.update(population)
 
     record = stats.compile(population) if stats is not None else {}
-    if len(record["fitness"] > 1):
+    print("INSTANCE")
+    print(isinstance(record["fitness"], np.ndarray))
+    if isinstance(record["fitness"], np.ndarray):
         record = {key: value[0] for key, value in record.items()}
 
     n_gen = gen = 0
@@ -327,7 +330,7 @@ def eaMuPlusLambda(
 
         # Update the statistics with the new population
         record = stats.compile(population) if stats is not None else {}
-        if len(record["fitness"] > 1):
+        if isinstance(record["fitness"], np.ndarray):
             record = {key: value[0] for key, value in record.items()}
 
         logbook.record(gen=gen, nevals=len(invalid_ind), **record)
@@ -455,7 +458,7 @@ def eaMuCommaLambda(
     logbook.header = ["gen", "nevals"] + (stats.fields if stats else [])
 
     record = stats.compile(population) if stats is not None else {}
-    if len(record["fitness"] > 1):
+    if isinstance(record["fitness"], np.ndarray):
         record = {key: value[0] for key, value in record.items()}
 
     n_gen = gen = 0
@@ -506,6 +509,9 @@ def eaMuCommaLambda(
 
         # Update the statistics with the new population
         record = stats.compile(population) if stats is not None else {}
+        if isinstance(record["fitness"], np.ndarray):
+            record = {key: value[0] for key, value in record.items()}
+
         logbook.record(gen=gen, nevals=len(invalid_ind), **record)
 
         if verbose:
