@@ -12,7 +12,6 @@ from sklearn.utils.metaestimators import if_delegate_has_method
 from sklearn.utils.validation import check_is_fitted
 from sklearn.metrics import check_scoring
 from sklearn.exceptions import NotFittedError
-from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection._search import BaseSearchCV
 from sklearn.model_selection._split import check_cv
 
@@ -980,11 +979,12 @@ class GAFeatureSelectionCV(BaseSearchCV):
             The second one is the number of features selected
 
         """
-        current_generation_params = {"features": individual}
-
-        local_estimator = clone(self.estimator)
 
         bool_individual = np.array(individual, dtype=bool)
+
+        current_generation_params = {"features": bool_individual}
+
+        local_estimator = clone(self.estimator)
         n_selected_features = np.sum(individual)
 
         # Compute the cv-metrics using only the selected features
@@ -1070,7 +1070,7 @@ class GAFeatureSelectionCV(BaseSearchCV):
         # Update the _n_iterations value as the algorithm could stop earlier due a callback
         self._n_iterations = n_gen
 
-        self.best_features_ = self._hof[0]
+        self.best_features_ = np.array(self._hof[0], dtype=bool)
 
         self.cv_results_ = create_feature_selection_cv_results_(
             logbook=self.logbook,

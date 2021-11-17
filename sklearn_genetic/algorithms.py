@@ -276,8 +276,6 @@ def eaMuPlusLambda(
         halloffame.update(population)
 
     record = stats.compile(population) if stats is not None else {}
-    print("INSTANCE")
-    print(isinstance(record["fitness"], np.ndarray))
     if isinstance(record["fitness"], np.ndarray):
         record = {key: value[0] for key, value in record.items()}
 
