@@ -719,6 +719,9 @@ class GAFeatureSelectionCV(BaseSearchCV):
     elitism : bool, default=True
         If True takes the *tournament_size* best solution to the next generation.
 
+    max_features : int, default=None
+        The upper bound number of features to be selected.
+
     scoring : str or callable, default=None
         A str (see model evaluation documentation) or
         a scorer callable object / function with signature
@@ -829,6 +832,7 @@ class GAFeatureSelectionCV(BaseSearchCV):
         mutation_probability=0.1,
         tournament_size=3,
         elitism=True,
+        max_features=None,
         verbose=True,
         keep_top_k=1,
         criteria="max",
@@ -851,6 +855,7 @@ class GAFeatureSelectionCV(BaseSearchCV):
         self.mutation_probability = mutation_probability
         self.tournament_size = tournament_size
         self.elitism = elitism
+        self.max_features = max_features
         self.verbose = verbose
         self.keep_top_k = keep_top_k
         self.criteria = criteria
@@ -1025,6 +1030,10 @@ class GAFeatureSelectionCV(BaseSearchCV):
 
         # Log the features and the cv-score
         self.logbook.record(parameters=current_generation_features)
+
+        # Penalize individuals with more features than the max_features parameter
+        if self.max_features and n_selected_features > self.max_features:
+            score = -self.criteria_sign*10000
 
         return [score, n_selected_features]
 

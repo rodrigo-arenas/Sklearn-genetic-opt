@@ -10,6 +10,9 @@ What's new in 0.8.0dev0
 Features:
 ^^^^^^^^^
 
+* :class:`~sklearn_genetic.GAFeatureSelectionCV` now has a parameter called `max_features`, int, default=None.
+  If it's not None, it will penalize individuals with more features than max_features, putting a "soft" upper bound
+  to the number of features to be selected.
 
 What's new in 0.7.0
 -------------------
