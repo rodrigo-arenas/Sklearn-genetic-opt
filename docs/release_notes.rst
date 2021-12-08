@@ -3,6 +3,13 @@ Release Notes
 
 Some notes on new features in various releases
 
+What's new in 0.8.0dev0
+-----------------------
+
+^^^^^^^^^
+Features:
+^^^^^^^^^
+
 
 What's new in 0.7.0
 -------------------
@@ -23,6 +30,7 @@ API Changes:
 
 * The module :mod:`~sklearn_genetic.mlflow` was renamed to :class:`~sklearn_genetic.mlflow_log`
   to avoid unexpected errors on name resolutions
+*
 
 What's new in 0.6.1
 -------------------
