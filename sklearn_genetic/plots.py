@@ -78,7 +78,9 @@ def plot_search_space(estimator, height=2, s=25, features: list = None):
     """
 
     if isinstance(estimator, GAFeatureSelectionCV):
-        raise TypeError("Estimator must be a GASearchCV instance, not a GAFeatureSelectionCV instance")
+        raise TypeError(
+            "Estimator must be a GASearchCV instance, not a GAFeatureSelectionCV instance"
+        )
 
     sns.set_style("white")
 
@@ -137,7 +139,9 @@ def plot_parallel_coordinates(estimator, features: list = None):
     """
 
     if isinstance(estimator, GAFeatureSelectionCV):
-        raise TypeError("Estimator must be a GASearchCV instance, not a GAFeatureSelectionCV instance")
+        raise TypeError(
+            "Estimator must be a GASearchCV instance, not a GAFeatureSelectionCV instance"
+        )
 
     df = logbook_to_pandas(estimator.logbook)
     param_grid = estimator.space.param_grid

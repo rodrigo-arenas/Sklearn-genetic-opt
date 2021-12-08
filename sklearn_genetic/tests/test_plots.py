@@ -48,9 +48,9 @@ def test_plot_evolution():
         plot = plot_fitness_evolution(evolved_estimator, metric="accuracy")
 
     assert (
-            str(excinfo.value)
-            == "metric must be one of ['fitness', 'fitness_std', 'fitness_max', 'fitness_min'], "
-               "but got accuracy instead"
+        str(excinfo.value)
+        == "metric must be one of ['fitness', 'fitness_std', 'fitness_max', 'fitness_min'], "
+        "but got accuracy instead"
     )
 
 
@@ -70,32 +70,22 @@ def test_plot_parallel():
 
 
 def test_wrong_estimator_space():
-    estimator = GAFeatureSelectionCV(
-        clf,
-        cv=3,
-        scoring="accuracy",
-        population_size=6
-    )
+    estimator = GAFeatureSelectionCV(clf, cv=3, scoring="accuracy", population_size=6)
     with pytest.raises(Exception) as excinfo:
         plot = plot_search_space(estimator)
 
     assert (
-            str(excinfo.value)
-            == "Estimator must be a GASearchCV instance, not a GAFeatureSelectionCV instance"
+        str(excinfo.value)
+        == "Estimator must be a GASearchCV instance, not a GAFeatureSelectionCV instance"
     )
 
 
 def test_wrong_estimator_parallel():
-    estimator = GAFeatureSelectionCV(
-        clf,
-        cv=3,
-        scoring="accuracy",
-        population_size=6
-    )
+    estimator = GAFeatureSelectionCV(clf, cv=3, scoring="accuracy", population_size=6)
     with pytest.raises(Exception) as excinfo:
         plot = plot_parallel_coordinates(estimator)
 
     assert (
-            str(excinfo.value)
-            == "Estimator must be a GASearchCV instance, not a GAFeatureSelectionCV instance"
+        str(excinfo.value)
+        == "Estimator must be a GASearchCV instance, not a GAFeatureSelectionCV instance"
     )

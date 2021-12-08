@@ -320,3 +320,67 @@ def test_wrong_algorithm():
         str(excinfo.value)
         == "The algorithm genetic is not supported, please select one from ['eaSimple', 'eaMuPlusLambda', 'eaMuCommaLambda']"
     )
+
+
+def test_expected_ga_max_features():
+    clf = SGDClassifier(loss="log", fit_intercept=True)
+    generations = 10
+    max_features = 6
+    evolved_estimator = GAFeatureSelectionCV(
+        clf,
+        cv=3,
+        scoring="accuracy",
+        population_size=6,
+        generations=generations,
+        tournament_size=3,
+        elitism=False,
+        keep_top_k=4,
+        max_features=max_features,
+        verbose=False,
+        algorithm="eaSimple",
+        n_jobs=-1,
+        return_train_score=True,
+    )
+
+    evolved_estimator.fit(X_train, y_train)
+    features = evolved_estimator.best_features_
+
+    assert check_is_fitted(evolved_estimator) is None
+    assert features.shape[0] == X.shape[1]
+    assert sum(features) <= max_features
+    assert len(evolved_estimator) == generations + 1  # +1 random initial population
+    assert len(evolved_estimator.predict(X_test[:, features])) == len(X_test)
+    assert evolved_estimator.score(X_train[:, features], y_train) >= 0
+    assert len(evolved_estimator.decision_function(X_test[:, features])) == len(X_test)
+    assert len(evolved_estimator.predict_proba(X_test[:, features])) == len(X_test)
+    assert len(evolved_estimator.predict_log_proba(X_test[:, features])) == len(X_test)
+    assert evolved_estimator.score(X_test[:, features], y_test) == accuracy_score(
+        y_test, evolved_estimator.predict(X_test[:, features])
+    )
+    assert bool(evolved_estimator.get_params())
+    assert len(evolved_estimator.hof) == evolved_estimator.keep_top_k
+    assert "gen" in evolved_estimator[0]
+    assert "fitness_max" in evolved_estimator[0]
+    assert "fitness" in evolved_estimator[0]
+    assert "fitness_std" in evolved_estimator[0]
+    assert "fitness_min" in evolved_estimator[0]
+
+    cv_results_ = evolved_estimator.cv_results_
+    cv_result_keys = set(cv_results_.keys())
+
+    assert "split0_test_score" in cv_result_keys
+    assert "split1_test_score" in cv_result_keys
+    assert "split2_test_score" in cv_result_keys
+    assert "split0_train_score" in cv_result_keys
+    assert "split1_train_score" in cv_result_keys
+    assert "split2_train_score" in cv_result_keys
+    assert "mean_test_score" in cv_result_keys
+    assert "std_test_score" in cv_result_keys
+    assert "rank_test_score" in cv_result_keys
+    assert "mean_train_score" in cv_result_keys
+    assert "std_train_score" in cv_result_keys
+    assert "rank_train_score" in cv_result_keys
+    assert "std_fit_time" in cv_result_keys
+    assert "mean_score_time" in cv_result_keys
+    assert "rank_n_features" in cv_result_keys
+    assert "features" in cv_result_keys

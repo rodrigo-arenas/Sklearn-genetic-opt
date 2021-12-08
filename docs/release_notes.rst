@@ -3,6 +3,30 @@ Release Notes
 
 Some notes on new features in various releases
 
+What's new in 0.8.0dev0
+-----------------------
+
+^^^^^^^^^
+Features:
+^^^^^^^^^
+
+* :class:`~sklearn_genetic.GAFeatureSelectionCV` now has a parameter called `max_features`, int, default=None.
+  If it's not None, it will penalize individuals with more features than max_features, putting a "soft" upper bound
+  to the number of features to be selected.
+
+^^^^^^^^^^^^
+API Changes:
+^^^^^^^^^^^^
+
+* The following parameters changed their default values to create more extensive
+  and different models with better results:
+
+  - population_size from 10 to 50
+
+  - generations from 40 to 80
+
+  - mutation_probability from 0.1 to 0.2
+
 
 What's new in 0.7.0
 -------------------
