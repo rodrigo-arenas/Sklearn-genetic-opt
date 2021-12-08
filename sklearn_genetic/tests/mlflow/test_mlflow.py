@@ -9,9 +9,9 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import StratifiedKFold
 
-from sklearn_genetic.genetic_search import GASearchCV
-from sklearn_genetic.mlflow import MLflowConfig
-from sklearn_genetic.space import Integer, Categorical, Continuous
+from ..genetic_search import GASearchCV
+from ..mlflow import MLflowConfig
+from ..space import Integer, Categorical, Continuous
 
 
 @pytest.fixture
