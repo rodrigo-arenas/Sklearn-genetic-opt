@@ -325,7 +325,7 @@ def test_wrong_algorithm():
 def test_expected_ga_max_features():
     clf = SGDClassifier(loss="log", fit_intercept=True)
     generations = 10
-    max_features = 3
+    max_features = 6
     evolved_estimator = GAFeatureSelectionCV(
         clf,
         cv=3,

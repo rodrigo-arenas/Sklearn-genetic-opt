@@ -191,10 +191,10 @@ class GASearchCV(BaseSearchCV):
         cv=3,
         param_grid=None,
         scoring=None,
-        population_size=10,
-        generations=40,
+        population_size=50,
+        generations=80,
         crossover_probability=0.8,
-        mutation_probability=0.1,
+        mutation_probability=0.2,
         tournament_size=3,
         elitism=True,
         verbose=True,
@@ -826,10 +826,10 @@ class GAFeatureSelectionCV(BaseSearchCV):
         estimator,
         cv=3,
         scoring=None,
-        population_size=10,
-        generations=40,
+        population_size=50,
+        generations=80,
         crossover_probability=0.8,
-        mutation_probability=0.1,
+        mutation_probability=0.2,
         tournament_size=3,
         elitism=True,
         max_features=None,
@@ -1032,8 +1032,10 @@ class GAFeatureSelectionCV(BaseSearchCV):
         self.logbook.record(parameters=current_generation_features)
 
         # Penalize individuals with more features than the max_features parameter
-        if self.max_features and n_selected_features > self.max_features:
-            score = -self.criteria_sign*10000
+        if self.max_features and (
+            n_selected_features > self.max_features or n_selected_features == 0
+        ):
+            score = -self.criteria_sign * 10000
 
         return [score, n_selected_features]
 

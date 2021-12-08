@@ -14,6 +14,20 @@ Features:
   If it's not None, it will penalize individuals with more features than max_features, putting a "soft" upper bound
   to the number of features to be selected.
 
+^^^^^^^^^^^^
+API Changes:
+^^^^^^^^^^^^
+
+* The following parameters changed their default values to create more extensive
+  and different models with better results:
+
+  - population_size from 10 to 50
+
+  - generations from 40 to 80
+
+  - mutation_probability from 0.1 to 0.2
+
+
 What's new in 0.7.0
 -------------------
 
@@ -33,7 +47,6 @@ API Changes:
 
 * The module :mod:`~sklearn_genetic.mlflow` was renamed to :class:`~sklearn_genetic.mlflow_log`
   to avoid unexpected errors on name resolutions
-*
 
 What's new in 0.6.1
 -------------------
