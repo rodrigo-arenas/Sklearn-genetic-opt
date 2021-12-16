@@ -1,17 +1,17 @@
-.. sklean-genetic-opt documentation master file, created by
+.. sklearn-genetic-opt documentation master file, created by
    sphinx-quickstart on Sat May 29 19:27:12 2021.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-sklean-genetic-opt
+sklearn-genetic-opt
 ==================
 scikit-learn models hyperparameters tuning and feature selection,
 using evolutionary algorithms.
 
 #################################################################
 
-This is meant to be an alternative from popular methods inside scikit-learn such as Grid Search and Randomized Grid Search
-for hyperparameteres tuning, and from RFE, Select From Model for feature selection.
+This is meant to be an alternative to popular methods inside scikit-learn such as Grid Search and Randomized Grid Search
+for hyperparameters tuning, and from RFE, Select From Model for feature selection.
 
 Sklearn-genetic-opt uses evolutionary algorithms from the deap package to choose a set of hyperparameters
 that optimizes (max or min) the cross-validation scores, it can be used for both regression and classification problems.
