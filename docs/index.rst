@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 sklearn-genetic-opt
-==================
+===================
 scikit-learn models hyperparameters tuning and feature selection,
 using evolutionary algorithms.
 

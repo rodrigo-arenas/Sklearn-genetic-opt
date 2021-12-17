@@ -27,7 +27,7 @@ Sklearn-genetic-opt
 
 scikit-learn models hyperparameters tuning and feature selection, using evolutionary algorithms.
 
-This is meant to be an alternative from popular methods inside scikit-learn such as Grid Search and Randomized Grid Search
+This is meant to be an alternative to popular methods inside scikit-learn such as Grid Search and Randomized Grid Search
 for hyperparameteres tuning, and from RFE, Select From Model for feature selection.
 
 Sklearn-genetic-opt uses evolutionary algorithms from the DEAP package to choose the set of hyperparameters that
