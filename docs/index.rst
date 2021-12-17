@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 sklearn-genetic-opt
-==================
+===================
 scikit-learn models hyperparameters tuning and feature selection,
 using evolutionary algorithms.
 
@@ -79,6 +79,7 @@ as it is usually advised to look further which distribution works better for you
    notebooks/Iris_feature_selection.ipynb
    notebooks/Digits_decision_tree.ipynb
    notebooks/MLflow_logger.ipynb
+   notebooks/Iris_multimetric.ipynb
 
 .. toctree::
    :maxdepth: 2
