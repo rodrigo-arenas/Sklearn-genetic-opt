@@ -54,7 +54,7 @@ def plot_fitness_evolution(estimator, metric="fitness"):
     )
     ax.set_title(f"{metric.capitalize()} average evolution over generations")
 
-    ax.set(xlabel="generations", ylabel=f"fitness ({estimator.scoring})")
+    ax.set(xlabel="generations", ylabel=f"fitness ({estimator.refit_metric})")
     return ax
 
 

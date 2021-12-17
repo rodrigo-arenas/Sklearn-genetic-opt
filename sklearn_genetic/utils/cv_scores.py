@@ -15,7 +15,7 @@ def create_gasearch_cv_results_(logbook, space, return_train_score, metrics):
             parameter
         )
 
-    # Keys that are extended per metric in multimetric
+    # Keys that are extended per metric in multi-metric
     for metric in metrics:
 
         for split in range(n_splits):
@@ -92,48 +92,61 @@ def create_gasearch_cv_results_(logbook, space, return_train_score, metrics):
     return cv_results
 
 
-def create_feature_selection_cv_results_(logbook, return_train_score):
+def create_feature_selection_cv_results_(logbook, return_train_score, metrics):
     cv_results = {}
     n_splits = len(logbook.chapters["parameters"].select("cv_scores")[0])
 
-    for split in range(n_splits):
-        cv_results[f"split{split}_test_score"] = [
-            cv_scores[split]
-            for cv_scores in logbook.chapters["parameters"].select("cv_scores")
-        ]
-
-    cv_results["mean_test_score"] = logbook.chapters["parameters"].select("score")
-    cv_results["std_test_score"] = [
-        np.nanstd(cv_scores)
-        for cv_scores in logbook.chapters["parameters"].select("cv_scores")
-    ]
-
-    cv_results["rank_test_score"] = rankdata(
-        -np.array(cv_results["mean_test_score"]), method="min"
-    ).astype(int)
-
-    if return_train_score:
+    # Keys that are extended per metric in multi-metric
+    for metric in metrics:
 
         for split in range(n_splits):
-            cv_results[f"split{split}_train_score"] = [
+            cv_results[f"split{split}_test_{metric}"] = [
                 cv_scores[split]
-                for cv_scores in logbook.chapters["parameters"].select("train_score")
+                for cv_scores in logbook.chapters["parameters"].select(f"test_{metric}")
             ]
 
-        cv_results["mean_train_score"] = [
+        cv_results[f"mean_test_{metric}"] = [
             np.nanmean(cv_scores)
-            for cv_scores in logbook.chapters["parameters"].select("train_score")
+            for cv_scores in logbook.chapters["parameters"].select(f"test_{metric}")
         ]
-
-        cv_results["std_train_score"] = [
+        cv_results[f"std_test_{metric}"] = [
             np.nanstd(cv_scores)
-            for cv_scores in logbook.chapters["parameters"].select("train_score")
+            for cv_scores in logbook.chapters["parameters"].select(f"test_{metric}")
         ]
 
-        cv_results["rank_train_score"] = rankdata(
-            -np.array(cv_results["mean_train_score"]), method="min"
+        cv_results[f"rank_test_{metric}"] = rankdata(
+            -np.array(cv_results[f"mean_test_{metric}"]), method="min"
         ).astype(int)
 
+        if return_train_score:
+
+            for split in range(n_splits):
+                cv_results[f"split{split}_train_{metric}"] = [
+                    cv_scores[split]
+                    for cv_scores in logbook.chapters["parameters"].select(
+                        f"train_{metric}"
+                    )
+                ]
+
+            cv_results[f"mean_train_{metric}"] = [
+                np.nanmean(cv_scores)
+                for cv_scores in logbook.chapters["parameters"].select(
+                    f"train_{metric}"
+                )
+            ]
+
+            cv_results[f"std_train_{metric}"] = [
+                np.nanstd(cv_scores)
+                for cv_scores in logbook.chapters["parameters"].select(
+                    f"train_{metric}"
+                )
+            ]
+
+            cv_results[f"rank_train_{metric}"] = rankdata(
+                -np.array(cv_results[f"mean_train_{metric}"]), method="min"
+            ).astype(int)
+
+    # These values are only one even with multi-metric
     cv_results["mean_fit_time"] = [
         np.nanmean(fit_time)
         for fit_time in logbook.chapters["parameters"].select("fit_time")

@@ -2,11 +2,11 @@ import pytest
 from sklearn.datasets import load_iris, load_boston
 from sklearn.linear_model import SGDClassifier
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
-from sklearn.svm import SVR
 from sklearn.model_selection import train_test_split
 from sklearn.utils.validation import check_is_fitted
 from sklearn.cluster import KMeans
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, balanced_accuracy_score
+from sklearn.metrics import make_scorer
 import numpy as np
 
 from .. import GAFeatureSelectionCV
@@ -348,6 +348,136 @@ def test_expected_ga_max_features():
     assert check_is_fitted(evolved_estimator) is None
     assert features.shape[0] == X.shape[1]
     assert sum(features) <= max_features
+    assert len(evolved_estimator) == generations + 1  # +1 random initial population
+    assert len(evolved_estimator.predict(X_test[:, features])) == len(X_test)
+    assert evolved_estimator.score(X_train[:, features], y_train) >= 0
+    assert len(evolved_estimator.decision_function(X_test[:, features])) == len(X_test)
+    assert len(evolved_estimator.predict_proba(X_test[:, features])) == len(X_test)
+    assert len(evolved_estimator.predict_log_proba(X_test[:, features])) == len(X_test)
+    assert evolved_estimator.score(X_test[:, features], y_test) == accuracy_score(
+        y_test, evolved_estimator.predict(X_test[:, features])
+    )
+    assert bool(evolved_estimator.get_params())
+    assert len(evolved_estimator.hof) == evolved_estimator.keep_top_k
+    assert "gen" in evolved_estimator[0]
+    assert "fitness_max" in evolved_estimator[0]
+    assert "fitness" in evolved_estimator[0]
+    assert "fitness_std" in evolved_estimator[0]
+    assert "fitness_min" in evolved_estimator[0]
+
+    cv_results_ = evolved_estimator.cv_results_
+    cv_result_keys = set(cv_results_.keys())
+
+    assert "split0_test_score" in cv_result_keys
+    assert "split1_test_score" in cv_result_keys
+    assert "split2_test_score" in cv_result_keys
+    assert "split0_train_score" in cv_result_keys
+    assert "split1_train_score" in cv_result_keys
+    assert "split2_train_score" in cv_result_keys
+    assert "mean_test_score" in cv_result_keys
+    assert "std_test_score" in cv_result_keys
+    assert "rank_test_score" in cv_result_keys
+    assert "mean_train_score" in cv_result_keys
+    assert "std_train_score" in cv_result_keys
+    assert "rank_train_score" in cv_result_keys
+    assert "std_fit_time" in cv_result_keys
+    assert "mean_score_time" in cv_result_keys
+    assert "rank_n_features" in cv_result_keys
+    assert "features" in cv_result_keys
+
+
+def test_expected_ga_multimetric():
+    clf = SGDClassifier(loss="log", fit_intercept=True)
+    scoring = {
+        "accuracy": "accuracy",
+        "balanced_accuracy": make_scorer(balanced_accuracy_score),
+    }
+
+    generations = 6
+    evolved_estimator = GAFeatureSelectionCV(
+        clf,
+        cv=3,
+        scoring=scoring,
+        population_size=6,
+        generations=generations,
+        tournament_size=3,
+        elitism=False,
+        keep_top_k=4,
+        verbose=False,
+        algorithm="eaSimple",
+        n_jobs=-1,
+        return_train_score=True,
+        refit="accuracy",
+    )
+
+    evolved_estimator.fit(X_train, y_train)
+    features = evolved_estimator.best_features_
+
+    assert check_is_fitted(evolved_estimator) is None
+    assert features.shape[0] == X.shape[1]
+    assert len(evolved_estimator) == generations + 1  # +1 random initial population
+    assert len(evolved_estimator.predict(X_test[:, features])) == len(X_test)
+    assert evolved_estimator.score(X_train[:, features], y_train) >= 0
+    assert len(evolved_estimator.decision_function(X_test[:, features])) == len(X_test)
+    assert len(evolved_estimator.predict_proba(X_test[:, features])) == len(X_test)
+    assert len(evolved_estimator.predict_log_proba(X_test[:, features])) == len(X_test)
+    assert evolved_estimator.score(X_test[:, features], y_test) == accuracy_score(
+        y_test, evolved_estimator.predict(X_test[:, features])
+    )
+    assert bool(evolved_estimator.get_params())
+    assert len(evolved_estimator.hof) == evolved_estimator.keep_top_k
+    assert "gen" in evolved_estimator[0]
+    assert "fitness_max" in evolved_estimator[0]
+    assert "fitness" in evolved_estimator[0]
+    assert "fitness_std" in evolved_estimator[0]
+    assert "fitness_min" in evolved_estimator[0]
+
+    cv_results_ = evolved_estimator.cv_results_
+    cv_result_keys = set(cv_results_.keys())
+
+    assert "std_fit_time" in cv_result_keys
+    assert "features" in cv_result_keys
+
+    for metric in scoring.keys():
+        assert f"split0_test_{metric}" in cv_result_keys
+        assert f"split1_test_{metric}" in cv_result_keys
+        assert f"split2_test_{metric}" in cv_result_keys
+        assert f"split0_train_{metric}" in cv_result_keys
+        assert f"split1_train_{metric}" in cv_result_keys
+        assert f"split2_train_{metric}" in cv_result_keys
+        assert f"mean_test_{metric}" in cv_result_keys
+        assert f"std_test_{metric}" in cv_result_keys
+        assert f"rank_test_{metric}" in cv_result_keys
+        assert f"mean_train_{metric}" in cv_result_keys
+        assert f"std_train_{metric}" in cv_result_keys
+        assert f"rank_train_{metric}" in cv_result_keys
+
+
+def test_expected_ga_callable_score():
+    clf = SGDClassifier(loss="log", fit_intercept=True)
+    scoring = make_scorer(accuracy_score)
+    generations = 6
+    evolved_estimator = GAFeatureSelectionCV(
+        clf,
+        cv=3,
+        scoring=scoring,
+        population_size=6,
+        generations=generations,
+        tournament_size=3,
+        elitism=False,
+        keep_top_k=4,
+        verbose=False,
+        algorithm="eaSimple",
+        n_jobs=-1,
+        return_train_score=True,
+        refit="accuracy",
+    )
+
+    evolved_estimator.fit(X_train, y_train)
+    features = evolved_estimator.best_features_
+
+    assert check_is_fitted(evolved_estimator) is None
+    assert features.shape[0] == X.shape[1]
     assert len(evolved_estimator) == generations + 1  # +1 random initial population
     assert len(evolved_estimator.predict(X_test[:, features])) == len(X_test)
     assert evolved_estimator.score(X_train[:, features], y_train) >= 0

@@ -768,11 +768,19 @@ class GAFeatureSelectionCV(BaseSearchCV):
     max_features : int, default=None
         The upper bound number of features to be selected.
 
-    scoring : str or callable, default=None
-        A str (see model evaluation documentation) or
-        a scorer callable object / function with signature
-        ``scorer(estimator, X, y)`` which should return only
-        a single value.
+    scoring : str, callable, list, tuple or dict, default=None
+        Strategy to evaluate the performance of the cross-validated model on
+        the test set.
+        If `scoring` represents a single score, one can use:
+
+        - a single string;
+        - a callable that returns a single value.
+        If `scoring` represents multiple scores, one can use:
+
+        - a list or tuple of unique strings;
+        - a callable returning a dictionary where the keys are the metric
+          names and the values are the metric scores;
+        - a dictionary with metric names as keys and callables a values.
 
     n_jobs : int, default=None
         Number of jobs to run in parallel. Training the estimator and computing
@@ -794,8 +802,22 @@ class GAFeatureSelectionCV(BaseSearchCV):
         Evolutionary algorithm to use.
         See more details in the deap algorithms documentation.
 
-    refit : bool, default=True
-        Refit an estimator using the best found parameters on the whole dataset.
+    refit : bool, str, or callable, default=True
+        Refit an estimator using the best found parameters on the whole
+        dataset.
+        For multiple metric evaluation, this needs to be a `str` denoting the
+        scorer that would be used to find the best parameters for refitting
+        the estimator at the end.
+        The refitted estimator is made available at the ``best_estimator_``
+        attribute and permits using ``predict`` directly on this
+        ``FeatureSelectionCV`` instance.
+        Also for multiple metric evaluation, the attributes ``best_index_``,
+        ``best_score_`` and ``best_params_`` will only be available if
+        ``refit`` is set and all of them will be determined w.r.t this specific
+        scorer.
+        See ``scoring`` parameter to know more about multiple metric
+        evaluation.
+
         If ``False``, it is not possible to make predictions
         using this GASearchCV instance after fitting.
 
@@ -931,6 +953,7 @@ class GAFeatureSelectionCV(BaseSearchCV):
         self.n_splits_ = None
         self.refit_time_ = None
         self.refit_metric = "score"
+        self.metrics_list = None
         self.multimetric_ = False
         self.log_config = log_config
 
@@ -1052,7 +1075,7 @@ class GAFeatureSelectionCV(BaseSearchCV):
             return_train_score=self.return_train_score,
         )
 
-        cv_scores = cv_results["test_score"]
+        cv_scores = cv_results[f"test_{self.refit_metric}"]
         score = np.mean(cv_scores)
 
         # Uses the log config to save in remote log server (e.g MLflow)
@@ -1064,13 +1087,18 @@ class GAFeatureSelectionCV(BaseSearchCV):
             )
 
         # These values are used to compute cv_results_ property
+        current_generation_params["score"] = score
         current_generation_params["cv_scores"] = cv_scores
         current_generation_params["fit_time"] = cv_results["fit_time"]
         current_generation_params["score_time"] = cv_results["score_time"]
-        current_generation_params["score"] = score
 
-        if self.return_train_score:
-            current_generation_params["train_score"] = cv_results["train_score"]
+        for metric in self.metrics_list:
+            current_generation_params[f"test_{metric}"] = cv_results[f"test_{metric}"]
+
+            if self.return_train_score:
+                current_generation_params[f"train_{metric}"] = cv_results[
+                    f"train_{metric}"
+                ]
 
         index = len(self.logbook.chapters["parameters"])
         current_generation_features = {"index": index, **current_generation_params}
@@ -1111,7 +1139,18 @@ class GAFeatureSelectionCV(BaseSearchCV):
         # Make sure the callbacks are valid
         self.callbacks = check_callback(callbacks)
 
-        self.scorer_ = check_scoring(self.estimator, scoring=self.scoring)
+        if callable(self.scoring):
+            self.scorer_ = self.scoring
+            self.metrics_list = [self.refit_metric]
+        elif self.scoring is None or isinstance(self.scoring, str):
+            self.scorer_ = check_scoring(self.estimator, self.scoring)
+            self.metrics_list = [self.refit_metric]
+        else:
+            self.scorer_ = _check_multimetric_scoring(self.estimator, self.scoring)
+            self._check_refit_for_multimetric(self.scorer_)
+            self.refit_metric = self.refit
+            self.metrics_list = self.scorer_.keys()
+            self.multimetric_ = True
 
         # Check cv and get the n_splits
         cv_orig = check_cv(self.cv, y, classifier=is_classifier(self.estimator))
@@ -1133,6 +1172,7 @@ class GAFeatureSelectionCV(BaseSearchCV):
         self.cv_results_ = create_feature_selection_cv_results_(
             logbook=self.logbook,
             return_train_score=self.return_train_score,
+            metrics=self.metrics_list,
         )
 
         self.history = {
