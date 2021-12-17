@@ -88,7 +88,7 @@ def plot_search_space(estimator, height=2, s=25, features: list = None):
     if features:
         stats = df[features]
     else:
-        variables = [*estimator.space.parameters, "score"]
+        variables = [*estimator.space.parameters, estimator.refit_metric]
         stats = df[variables]
 
     g = sns.PairGrid(stats, diag_sharey=False, height=height)
@@ -145,7 +145,7 @@ def plot_parallel_coordinates(estimator, features: list = None):
 
     df = logbook_to_pandas(estimator.logbook)
     param_grid = estimator.space.param_grid
-    score = df["score"]
+    score = df[estimator.refit_metric]
     if features:
         non_categorical_features = []
         for feature in features:

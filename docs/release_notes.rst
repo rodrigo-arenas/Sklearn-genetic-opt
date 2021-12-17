@@ -14,6 +14,17 @@ Features:
   If it's not None, it will penalize individuals with more features than max_features, putting a "soft" upper bound
   to the number of features to be selected.
 
+* Class :class:`~sklearn_genetic.GASearchCV` now supports multi-metric evaluation the same way scikit-learn does,
+  you will see this reflected on the `logbook` and `cv_results` objects, where now you get results for each metric.
+  As in scikit-learn, if multi-metric is used, the `refit` parameter must be a str specifying the metric to evaluate the cv-scores.
+  See more in the :class:`~sklearn_genetic.GASearchCV` API documentation.
+
+^^^^^
+Docs:
+^^^^^
+
+* A new notebook called Iris_multimetric was added to showcase the new multimetric capabilities.
+
 ^^^^^^^^^^^^
 API Changes:
 ^^^^^^^^^^^^
