@@ -66,7 +66,7 @@ def eaSimple(
         Number of generations used.
 
     """
-
+    stored_exception = None
     callbacks_start_args = {
         "callbacks": callbacks,
         "record": None,
@@ -125,50 +125,57 @@ def eaSimple(
 
     # Begin the generational process
     for gen in range(1, ngen + 1):
-        # Select the next generation individuals
-        offspring = toolbox.select(population, len(population) - hof_size)
+        try:
+            # Select the next generation individuals
+            offspring = toolbox.select(population, len(population) - hof_size)
 
-        # Vary the pool of individuals
-        offspring = varAnd(offspring, toolbox, cxpb, mutpb)
+            # Vary the pool of individuals
+            offspring = varAnd(offspring, toolbox, cxpb, mutpb)
 
-        # Evaluate the individuals with an invalid fitness
-        invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-        fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
-        for ind, fit in zip(invalid_ind, fitnesses):
-            ind.fitness.values = fit
+            # Evaluate the individuals with an invalid fitness
+            invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
+            fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
+            for ind, fit in zip(invalid_ind, fitnesses):
+                ind.fitness.values = fit
 
-        if estimator.elitism:
-            offspring.extend(halloffame.items)
+            if estimator.elitism:
+                offspring.extend(halloffame.items)
 
-        # Update the hall of fame with the generated individuals
-        if halloffame is not None:
-            halloffame.update(offspring)
+            # Update the hall of fame with the generated individuals
+            if halloffame is not None:
+                halloffame.update(offspring)
 
-        # Replace the current population by the offspring
-        population[:] = offspring
+            # Replace the current population by the offspring
+            population[:] = offspring
 
-        # Append the current generation statistics to the logbook
-        record = stats.compile(population) if stats else {}
-        if isinstance(record["fitness"], np.ndarray):
-            record = {key: value[0] for key, value in record.items()}
+            # Append the current generation statistics to the logbook
+            record = stats.compile(population) if stats else {}
+            if isinstance(record["fitness"], np.ndarray):
+                record = {key: value[0] for key, value in record.items()}
 
-        logbook.record(gen=gen, nevals=len(invalid_ind), **record)
+            logbook.record(gen=gen, nevals=len(invalid_ind), **record)
 
-        if verbose:
-            print(logbook.stream)
+            if verbose:
+                print(logbook.stream)
 
-        callbacks_step_args = {
-            "callbacks": callbacks,
-            "record": record,
-            "logbook": logbook,
-            "estimator": estimator,
-            "method": "on_step",
-        }
+            callbacks_step_args = {
+                "callbacks": callbacks,
+                "record": record,
+                "logbook": logbook,
+                "estimator": estimator,
+                "method": "on_step",
+            }
 
-        # Check if any of the callbacks conditions are True to stop the iteration
-        if eval_callbacks(**callbacks_step_args):
-            print("INFO: Stopping the algorithm")
-            break
+            # Check if any of the callbacks conditions are True to stop the iteration
+            if eval_callbacks(**callbacks_step_args) or stored_exception:
+                if stored_exception:
+                    print(
+                        f"{stored_exception}\nsklearn-genetic-opt closed prematurely. Will use the current best model."
+                    )
+                print("INFO: Stopping the algorithm")
+                break
+        except (KeyboardInterrupt, SystemExit, StopIteration) as e:
+            stored_exception = e
 
     n_gen = gen + 1
 
@@ -253,7 +260,7 @@ def eaMuPlusLambda(
         Number of generations used.
 
     """
-
+    stored_exception = None
     callbacks_start_args = {
         "callbacks": callbacks,
         "record": None,
@@ -310,43 +317,51 @@ def eaMuPlusLambda(
 
     # Begin the generational process
     for gen in range(1, ngen + 1):
-        # Vary the population
-        offspring = varOr(population, toolbox, lambda_, cxpb, mutpb)
+        try:
+            # Vary the population
+            offspring = varOr(population, toolbox, lambda_, cxpb, mutpb)
 
-        # Evaluate the individuals with an invalid fitness
-        invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-        fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
-        for ind, fit in zip(invalid_ind, fitnesses):
-            ind.fitness.values = fit
+            # Evaluate the individuals with an invalid fitness
+            invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
+            fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
+            for ind, fit in zip(invalid_ind, fitnesses):
+                ind.fitness.values = fit
 
-        # Update the hall of fame with the generated individuals
-        if halloffame is not None:
-            halloffame.update(offspring)
+            # Update the hall of fame with the generated individuals
+            if halloffame is not None:
+                halloffame.update(offspring)
 
-        # Select the next generation population
-        population[:] = toolbox.select(population + offspring, mu)
+            # Select the next generation population
+            population[:] = toolbox.select(population + offspring, mu)
 
-        # Update the statistics with the new population
-        record = stats.compile(population) if stats is not None else {}
-        if isinstance(record["fitness"], np.ndarray):
-            record = {key: value[0] for key, value in record.items()}
+            # Update the statistics with the new population
+            record = stats.compile(population) if stats is not None else {}
+            if isinstance(record["fitness"], np.ndarray):
+                record = {key: value[0] for key, value in record.items()}
 
-        logbook.record(gen=gen, nevals=len(invalid_ind), **record)
+            logbook.record(gen=gen, nevals=len(invalid_ind), **record)
 
-        if verbose:
-            print(logbook.stream)
+            if verbose:
+                print(logbook.stream)
 
-        callbacks_step_args = {
-            "callbacks": callbacks,
-            "record": record,
-            "logbook": logbook,
-            "estimator": estimator,
-            "method": "on_step",
-        }
+            callbacks_step_args = {
+                "callbacks": callbacks,
+                "record": record,
+                "logbook": logbook,
+                "estimator": estimator,
+                "method": "on_step",
+            }
 
-        if eval_callbacks(**callbacks_step_args):
-            print("INFO: Stopping the algorithm")
-            break
+            if eval_callbacks(**callbacks_step_args) or stored_exception:
+                if stored_exception:
+                    print(
+                        f"{stored_exception}\nsklearn-genetic-opt closed prematurely. Will use the current best model."
+                    )
+                print("INFO: Stopping the algorithm")
+                break
+
+        except (KeyboardInterrupt, SystemExit, StopIteration) as e:
+            stored_exception = e
 
     n_gen = gen + 1
 
@@ -433,6 +448,7 @@ def eaMuCommaLambda(
     """
     assert lambda_ >= mu, "lambda must be greater or equal to mu."
 
+    stored_exception = None
     callbacks_start_args = {
         "callbacks": callbacks,
         "record": None,
@@ -489,44 +505,52 @@ def eaMuCommaLambda(
 
     # Begin the generational process
     for gen in range(1, ngen + 1):
-        # Vary the population
-        offspring = varOr(population, toolbox, lambda_, cxpb, mutpb)
+        try:
+            # Vary the population
+            offspring = varOr(population, toolbox, lambda_, cxpb, mutpb)
 
-        # Evaluate the individuals with an invalid fitness
-        invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-        fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
-        for ind, fit in zip(invalid_ind, fitnesses):
-            ind.fitness.values = fit
+            # Evaluate the individuals with an invalid fitness
+            invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
+            fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
+            for ind, fit in zip(invalid_ind, fitnesses):
+                ind.fitness.values = fit
 
-        # Update the hall of fame with the generated individuals
-        if halloffame is not None:
-            halloffame.update(offspring)
+            # Update the hall of fame with the generated individuals
+            if halloffame is not None:
+                halloffame.update(offspring)
 
-        # Select the next generation population
-        population[:] = toolbox.select(offspring, mu)
+            # Select the next generation population
+            population[:] = toolbox.select(offspring, mu)
 
-        # Update the statistics with the new population
-        record = stats.compile(population) if stats is not None else {}
-        if isinstance(record["fitness"], np.ndarray):
-            record = {key: value[0] for key, value in record.items()}
+            # Update the statistics with the new population
+            record = stats.compile(population) if stats is not None else {}
+            if isinstance(record["fitness"], np.ndarray):
+                record = {key: value[0] for key, value in record.items()}
 
-        logbook.record(gen=gen, nevals=len(invalid_ind), **record)
+            logbook.record(gen=gen, nevals=len(invalid_ind), **record)
 
-        if verbose:
-            print(logbook.stream)
+            if verbose:
+                print(logbook.stream)
 
-        callbacks_step_args = {
-            "callbacks": callbacks,
-            "record": record,
-            "logbook": logbook,
-            "estimator": estimator,
-            "method": "on_step",
-        }
+            callbacks_step_args = {
+                "callbacks": callbacks,
+                "record": record,
+                "logbook": logbook,
+                "estimator": estimator,
+                "method": "on_step",
+            }
 
-        # Check if any of the callbacks conditions are True to stop the iteration
-        if eval_callbacks(**callbacks_step_args):
-            print("INFO: Stopping the algorithm")
-            break
+            # Check if any of the callbacks conditions are True to stop the iteration
+            if eval_callbacks(**callbacks_step_args) or stored_exception:
+                if stored_exception:
+                    print(
+                        f"{stored_exception}\nsklearn-genetic-opt closed prematurely. Will use the current best model."
+                    )
+                print("INFO: Stopping the algorithm")
+                break
+
+        except (KeyboardInterrupt, SystemExit, StopIteration) as e:
+            stored_exception = e
 
     n_gen = gen + 1
 

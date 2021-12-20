@@ -16,15 +16,14 @@ Features:
 
 * Classes :class:`~sklearn_genetic.GASearchCV` and :class:`~sklearn_genetic.GAFeatureSelectionCV`
   now support multi-metric evaluation the same way scikit-learn does,
-  you will see this reflected on the `logbook` and `cv_results` objects, where now you get results for each metric.
+  you will see this reflected on the `logbook` and `cv_results_` objects, where now you get results for each metric.
   As in scikit-learn, if multi-metric is used, the `refit` parameter must be a str specifying the metric to evaluate the cv-scores.
   See more in the :class:`~sklearn_genetic.GASearchCV` and :class:`~sklearn_genetic.GAFeatureSelectionCV` API documentation.
 
-^^^^^
-Docs:
-^^^^^
-
-* A new notebook called Iris_multimetric was added to showcase the new multi-metric capabilities.
+* Training gracefully stops if interrupted by some of these exceptions:
+  ``KeyboardInterrupt``, ``SystemExit``, ``StopIteration``.
+  When one of these exceptions is raised, the model finishes the current generation and saves the current
+  best model. It only works if at least one generation has been completed.
 
 ^^^^^^^^^^^^
 API Changes:
@@ -39,6 +38,11 @@ API Changes:
 
   - mutation_probability from 0.1 to 0.2
 
+^^^^^
+Docs:
+^^^^^
+
+* A new notebook called Iris_multimetric was added to showcase the new multi-metric capabilities.
 
 What's new in 0.7.0
 -------------------
