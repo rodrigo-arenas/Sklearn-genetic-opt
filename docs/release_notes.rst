@@ -20,7 +20,7 @@ Features:
   As in scikit-learn, if multi-metric is used, the `refit` parameter must be a str specifying the metric to evaluate the cv-scores.
   See more in the :class:`~sklearn_genetic.GASearchCV` and :class:`~sklearn_genetic.GAFeatureSelectionCV` API documentation.
 
-* Training now gracefully stops if it is interrupted from some of these exceptions:
+* Training gracefully stops if interrupted by some of these exceptions:
   ``KeyboardInterrupt``, ``SystemExit``, ``StopIteration``.
   When one of these exceptions is raised, the model finishes the current generation and saves the current
   best model. It only works if at least one generation has been completed.
