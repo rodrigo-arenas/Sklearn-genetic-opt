@@ -32,7 +32,7 @@ We encourage you to follow these guidelines:
 * Describe why you are proposing those changes 
 * Please run black on top of the package to keep the formatting style
     ```bash
-    black .
+    black sklearn_genetic/
     ```
 * Make sure all the tests are passing, by running in the root of the project
     ```bash
