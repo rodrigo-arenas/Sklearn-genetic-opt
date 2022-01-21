@@ -3,6 +3,17 @@ Release Notes
 
 Some notes on new features in various releases
 
+What's new in 0.8.1dev0
+-----------------------
+
+^^^^^^^^^
+Features:
+^^^^^^^^^
+
+* If the `max_features` parameter from :class:`~sklearn_genetic.GAFeatureSelectionCV` is set,
+  the initial population is now sampled giving more probability to solutions with less than `max_features` features.
+
+
 What's new in 0.8.0
 -------------------
 

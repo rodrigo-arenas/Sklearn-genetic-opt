@@ -24,6 +24,7 @@ from .utils.cv_scores import (
     create_gasearch_cv_results_,
     create_feature_selection_cv_results_,
 )
+from .utils.random import weighted_choice
 
 
 class GASearchCV(BaseSearchCV):
@@ -940,6 +941,7 @@ class GAFeatureSelectionCV(BaseSearchCV):
         self.n_features = None
         self.X_ = None
         self.y_ = None
+        self.features_proportion = None
         self.callbacks = None
         self.best_features_ = None
         self.best_estimator_ = None
@@ -999,7 +1001,11 @@ class GAFeatureSelectionCV(BaseSearchCV):
 
         # Register the array to choose the features
         # Each binary value represents if the feature is selected or not
-        self.toolbox.register("features", random.randint, 0, 1)
+
+        if self.features_proportion:
+            self.toolbox.register("features", weighted_choice, self.features_proportion)
+        else:
+            self.toolbox.register("features", random.randint, 0, 1)
 
         self.toolbox.register(
             "individual",
@@ -1107,10 +1113,11 @@ class GAFeatureSelectionCV(BaseSearchCV):
         self.logbook.record(parameters=current_generation_features)
 
         # Penalize individuals with more features than the max_features parameter
+
         if self.max_features and (
             n_selected_features > self.max_features or n_selected_features == 0
         ):
-            score = -self.criteria_sign * 10000
+            score = -self.criteria_sign * 100000
 
         return [score, n_selected_features]
 
@@ -1135,6 +1142,9 @@ class GAFeatureSelectionCV(BaseSearchCV):
 
         self.X_, self.y_ = check_X_y(X, y)
         self.n_features = X.shape[1]
+
+        if self.max_features:
+            self.features_proportion = self.max_features/self.n_features
 
         # Make sure the callbacks are valid
         self.callbacks = check_callback(callbacks)
