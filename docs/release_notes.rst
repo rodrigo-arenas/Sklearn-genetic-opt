@@ -3,8 +3,8 @@ Release Notes
 
 Some notes on new features in various releases
 
-What's new in 0.8.1dev0
------------------------
+What's new in 0.8.1
+-------------------
 
 ^^^^^^^^^
 Features:
