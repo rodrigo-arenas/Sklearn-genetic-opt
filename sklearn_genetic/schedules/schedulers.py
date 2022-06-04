@@ -90,7 +90,7 @@ class PotentialAdapter(BaseAdapter):
         super().__init__(initial_value, end_value, adaptive_rate)
 
     def step(self):
-        self.current_value = self.end_value + (self.initial_value - self.end_value)*math.pow(self.adaptive_rate, self.current_step)
+        self.current_value = self.end_value + (self.initial_value - self.end_value)*math.pow((1-self.adaptive_rate), self.current_step)
         self.current_step += 1
 
         return self.current_value
