@@ -7,7 +7,7 @@ from .callbacks import (
     LogbookSaver,
 )
 
-from .schedules import ExponentialAdapter, InverseAdapter
+from .schedules import ExponentialAdapter, InverseAdapter, PotentialAdapter
 
 from ._version import __version__
 
@@ -20,5 +20,6 @@ __all__ = [
     "LogbookSaver",
     "ExponentialAdapter",
     "InverseAdapter",
+    "PotentialAdapter",
     "__version__",
 ]

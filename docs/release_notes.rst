@@ -14,6 +14,7 @@ Features:
   currently, supported schedulers are:
   - :class:`~sklearn_genetic.schedules.ExponentialAdapter`
   - :class:`~sklearn_genetic.schedules.InverseAdapter`
+  - :class:`~sklearn_genetic.schedules.PotentialAdapter`
 
 * Changed the default values of `mutation_probability` and `crossover_probability`
   to 0.8 and 0.2, respectively.

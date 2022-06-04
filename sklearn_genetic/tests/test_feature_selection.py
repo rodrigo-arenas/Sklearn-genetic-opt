@@ -520,8 +520,8 @@ def test_expected_ga_callable_score():
 def test_expected_ga_schedulers():
     clf = SGDClassifier(loss="log_loss", fit_intercept=True)
     generations = 6
-    mutation_scheduler = ExponentialAdapter(initial_value=0.6, decay_rate=0.01, end_value=0.2)
-    crossover_scheduler = InverseAdapter(initial_value=0.4, decay_rate=0.01, end_value=0.3)
+    mutation_scheduler = ExponentialAdapter(initial_value=0.6, adaptive_rate=0.01, end_value=0.2)
+    crossover_scheduler = InverseAdapter(initial_value=0.4, adaptive_rate=0.01, end_value=0.3)
 
     evolved_estimator = GAFeatureSelectionCV(
         clf,

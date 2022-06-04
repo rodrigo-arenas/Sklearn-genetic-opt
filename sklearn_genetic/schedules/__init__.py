@@ -1,3 +1,3 @@
-from .schedulers import ExponentialAdapter, InverseAdapter
+from .schedulers import ExponentialAdapter, InverseAdapter, PotentialAdapter
 
-__all__ = ["ExponentialAdapter", "InverseAdapter"]
+__all__ = ["ExponentialAdapter", "InverseAdapter", "PotentialAdapter"]
