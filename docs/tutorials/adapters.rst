@@ -45,7 +45,7 @@ have the following properties:
 
    \lim_{t->0^{+}} p(t; \alpha) = p_0\\
    \\
-   \lim_{t->\infty} p(t; \alpha) = p_f
+   \lim_{t->+\infty} p(t; \alpha) = p_f
 
 The following adapters are available:
 
@@ -205,4 +205,71 @@ This is how all adapters looks like for the same value of alpha
    plt.legend()
    plt.show()
 
+
+Full Example
+------------
+
+In this example, we want to create a decay strategy for the mutation probability,
+and an ascend strategy for the crossover probability,
+lets call them :math:`p_{mt}(t; \alpha)` and :math:`p_{cr}(t; \alpha)` respectively;
+this will enable the optimizer to explore more diverse solutions in the first iterations.
+Take into account that on this scenario, we must be careful on choosing :math:`\alpha, p_0, p_f`,
+this is because the evolutionary implementation requires that:
+
+.. math::
+
+   p_{mt}(t; \alpha) + p_{cr}(t; \alpha) <= 1;  \forall t
+
+The same idea can be used for hypeparameter tuning or feature selection.
+
+.. code-block:: python
+
+   from sklearn_genetic import GASearchCV
+   from sklearn_genetic import ExponentialAdapter
+   from sklearn_genetic.space import Continuous, Categorical, Integer
+   from sklearn.ensemble import RandomForestClassifier
+   from sklearn.model_selection import train_test_split, StratifiedKFold
+   from sklearn.datasets import load_digits
+   from sklearn.metrics import accuracy_score
+
+   data = load_digits()
+   n_samples = len(data.images)
+   X = data.images.reshape((n_samples, -1))
+   y = data['target']
+   X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
+
+   clf = RandomForestClassifier()
+
+   mutation_adapter = ExponentialAdapter(initial_value=0.8, end_value=0.2, adaptive_rate=0.1)
+   crossover_adapter = ExponentialAdapter(initial_value=0.2, end_value=0.8, adaptive_rate=0.1)
+
+   param_grid = {'min_weight_fraction_leaf': Continuous(0.01, 0.5, distribution='log-uniform'),
+                 'bootstrap': Categorical([True, False]),
+                 'max_depth': Integer(2, 30),
+                 'max_leaf_nodes': Integer(2, 35),
+                 'n_estimators': Integer(100, 300)}
+
+   cv = StratifiedKFold(n_splits=3, shuffle=True)
+
+   evolved_estimator = GASearchCV(estimator=clf,
+                                  cv=cv,
+                                  scoring='accuracy',
+                                  population_size=20,
+                                  generations=25,
+                                  mutation_probability=mutation_adapter,
+                                  crossover_probability=crossover_adapter,
+                                  param_grid=param_grid,
+                                  n_jobs=-1)
+
+   # Train and optimize the estimator
+   evolved_estimator.fit(X_train, y_train)
+   # Best parameters found
+   print(evolved_estimator.best_params_)
+   # Use the model fitted with the best parameters
+   y_predict_ga = evolved_estimator.predict(X_test)
+   print(accuracy_score(y_test, y_predict_ga))
+
+   # Saved metadata for further analysis
+   print("Stats achieved in each generation: ", evolved_estimator.history)
+   print("Best k solutions: ", evolved_estimator.hof)
 
