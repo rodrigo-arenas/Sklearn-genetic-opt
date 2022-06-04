@@ -71,10 +71,10 @@ class GASearchCV(BaseSearchCV):
     generations : int, default=40
         Number of generations or iterations to run the evolutionary algorithm.
 
-    crossover_probability : float, default=0.8
+    crossover_probability : float or a Scheduler, default=0.8
         Probability of crossover operation between two individuals.
 
-    mutation_probability : float, default=0.1
+    mutation_probability : float or a Scheduler, default=0.1
         Probability of child mutation.
 
     tournament_size : int, default=3
@@ -217,8 +217,8 @@ class GASearchCV(BaseSearchCV):
         scoring=None,
         population_size=50,
         generations=80,
-        crossover_probability=0.8,
-        mutation_probability=0.2,
+        crossover_probability=0.2,
+        mutation_probability=0.8,
         tournament_size=3,
         elitism=True,
         verbose=True,
@@ -754,10 +754,10 @@ class GAFeatureSelectionCV(BaseSearchCV):
     generations : int, default=40
         Number of generations or iterations to run the evolutionary algorithm.
 
-    crossover_probability : float, default=0.8
+    crossover_probability : float or a Scheduler, default=0.2
         Probability of crossover operation between two individuals.
 
-    mutation_probability : float, default=0.1
+    mutation_probability : float or a Scheduler, default=0.8
         Probability of child mutation.
 
     tournament_size : int, default=3
@@ -897,8 +897,8 @@ class GAFeatureSelectionCV(BaseSearchCV):
         scoring=None,
         population_size=50,
         generations=80,
-        crossover_probability=0.8,
-        mutation_probability=0.2,
+        crossover_probability=0.2,
+        mutation_probability=0.8,
         tournament_size=3,
         elitism=True,
         max_features=None,
