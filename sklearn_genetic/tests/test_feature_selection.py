@@ -17,6 +17,7 @@ from ..callbacks import (
     TimerStopping,
     ProgressBar,
 )
+from ..schedules import ExponentialDecay, InverseDecay
 
 data = load_iris()
 label_names = data["target_names"]
@@ -33,7 +34,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 
 
 def test_expected_ga_results():
-    clf = SGDClassifier(loss="log", fit_intercept=True)
+    clf = SGDClassifier(loss="log_loss", fit_intercept=True)
     generations = 6
     evolved_estimator = GAFeatureSelectionCV(
         clf,
@@ -110,38 +111,38 @@ def test_expected_ga_results():
         ("eaMuCommaLambda", DeltaThreshold(threshold=0.001, metric="fitness")),
         ("eaSimple", ProgressBar()),
         (
-            "eaMuPlusLambda",
-            ProgressBar(**{"desc": "my_custom_desc", "mininterval": 0.5}),
+                "eaMuPlusLambda",
+                ProgressBar(**{"desc": "my_custom_desc", "mininterval": 0.5}),
         ),
         ("eaMuCommaLambda", ProgressBar()),
         (
-            "eaSimple",
-            [
-                ThresholdStopping(threshold=0.01),
-                ConsecutiveStopping(generations=5, metric="fitness"),
-                DeltaThreshold(threshold=0.001, metric="fitness"),
-            ],
+                "eaSimple",
+                [
+                    ThresholdStopping(threshold=0.01),
+                    ConsecutiveStopping(generations=5, metric="fitness"),
+                    DeltaThreshold(threshold=0.001, metric="fitness"),
+                ],
         ),
         (
-            "eaMuPlusLambda",
-            [
-                ThresholdStopping(threshold=0.01),
-                ConsecutiveStopping(generations=5, metric="fitness"),
-                DeltaThreshold(threshold=0.001, metric="fitness"),
-            ],
+                "eaMuPlusLambda",
+                [
+                    ThresholdStopping(threshold=0.01),
+                    ConsecutiveStopping(generations=5, metric="fitness"),
+                    DeltaThreshold(threshold=0.001, metric="fitness"),
+                ],
         ),
         (
-            "eaMuCommaLambda",
-            [
-                ThresholdStopping(threshold=0.01),
-                ConsecutiveStopping(generations=5, metric="fitness"),
-                DeltaThreshold(threshold=0.001, metric="fitness"),
-            ],
+                "eaMuCommaLambda",
+                [
+                    ThresholdStopping(threshold=0.01),
+                    ConsecutiveStopping(generations=5, metric="fitness"),
+                    DeltaThreshold(threshold=0.001, metric="fitness"),
+                ],
         ),
     ],
 )
 def test_expected_algorithms_callbacks(algorithm, callback):
-    clf = SGDClassifier(loss="log", fit_intercept=True)
+    clf = SGDClassifier(loss="log_loss", fit_intercept=True)
     generations = 8
     evolved_estimator = GAFeatureSelectionCV(
         clf,
@@ -215,7 +216,7 @@ def test_negative_criteria():
 
 
 def test_wrong_criteria():
-    clf = SGDClassifier(loss="log", fit_intercept=True)
+    clf = SGDClassifier(loss="log_loss", fit_intercept=True)
     generations = 8
     with pytest.raises(Exception) as excinfo:
         evolved_estimator = GAFeatureSelectionCV(
@@ -230,8 +231,8 @@ def test_wrong_criteria():
             criteria="maximization",
         )
     assert (
-        str(excinfo.value)
-        == "Criteria must be one of ['max', 'min'], got maximization instead"
+            str(excinfo.value)
+            == "Criteria must be one of ['max', 'min'], got maximization instead"
     )
 
 
@@ -251,12 +252,12 @@ def test_wrong_estimator():
             criteria="maximization",
         )
     assert (
-        str(excinfo.value) == "KMeans() is not a valid Sklearn classifier or regressor"
+            str(excinfo.value) == "KMeans() is not a valid Sklearn classifier or regressor"
     )
 
 
 def test_wrong_get_item():
-    clf = SGDClassifier(loss="log", fit_intercept=True)
+    clf = SGDClassifier(loss="log_loss", fit_intercept=True)
     generations = 8
     evolved_estimator = GAFeatureSelectionCV(
         clf,
@@ -272,9 +273,9 @@ def test_wrong_get_item():
     with pytest.raises(Exception) as excinfo:
         value = evolved_estimator[0]
     assert (
-        str(excinfo.value)
-        == "This GAFeatureSelectionCV instance is not fitted yet or used refit=False. Call 'fit' with "
-        "appropriate arguments before using this estimator."
+            str(excinfo.value)
+            == "This GAFeatureSelectionCV instance is not fitted yet or used refit=False. Call 'fit' with "
+               "appropriate arguments before using this estimator."
     )
 
 
@@ -300,7 +301,7 @@ def test_iterator():
 
 
 def test_wrong_algorithm():
-    clf = SGDClassifier(loss="log", fit_intercept=True)
+    clf = SGDClassifier(loss="log_loss", fit_intercept=True)
     generations = 6
     evolved_estimator = GAFeatureSelectionCV(
         clf,
@@ -317,13 +318,13 @@ def test_wrong_algorithm():
     with pytest.raises(Exception) as excinfo:
         evolved_estimator.fit(X_train, y_train)
     assert (
-        str(excinfo.value)
-        == "The algorithm genetic is not supported, please select one from ['eaSimple', 'eaMuPlusLambda', 'eaMuCommaLambda']"
+            str(excinfo.value)
+            == "The algorithm genetic is not supported, please select one from ['eaSimple', 'eaMuPlusLambda', 'eaMuCommaLambda']"
     )
 
 
 def test_expected_ga_max_features():
-    clf = SGDClassifier(loss="log", fit_intercept=True)
+    clf = SGDClassifier(loss="log_loss", fit_intercept=True)
     generations = 8
     max_features = 6
     evolved_estimator = GAFeatureSelectionCV(
@@ -387,7 +388,7 @@ def test_expected_ga_max_features():
 
 
 def test_expected_ga_multimetric():
-    clf = SGDClassifier(loss="log", fit_intercept=True)
+    clf = SGDClassifier(loss="log_loss", fit_intercept=True)
     scoring = {
         "accuracy": "accuracy",
         "balanced_accuracy": make_scorer(balanced_accuracy_score),
@@ -454,7 +455,7 @@ def test_expected_ga_multimetric():
 
 
 def test_expected_ga_callable_score():
-    clf = SGDClassifier(loss="log", fit_intercept=True)
+    clf = SGDClassifier(loss="log_loss", fit_intercept=True)
     scoring = make_scorer(accuracy_score)
     generations = 6
     evolved_estimator = GAFeatureSelectionCV(
@@ -514,3 +515,72 @@ def test_expected_ga_callable_score():
     assert "mean_score_time" in cv_result_keys
     assert "rank_n_features" in cv_result_keys
     assert "features" in cv_result_keys
+
+
+def test_expected_ga_schedulers():
+    clf = SGDClassifier(loss="log_loss", fit_intercept=True)
+    generations = 6
+    mutation_scheduler = ExponentialDecay(initial_value=0.6, decay_rate=0.01, min_value=0.2)
+    crossover_scheduler = InverseDecay(initial_value=0.4, decay_rate=0.01, min_value=0.3)
+
+    evolved_estimator = GAFeatureSelectionCV(
+        clf,
+        cv=3,
+        scoring="accuracy",
+        population_size=6,
+        generations=generations,
+        mutation_probability=mutation_scheduler,
+        crossover_probability=crossover_scheduler,
+        tournament_size=3,
+        elitism=False,
+        keep_top_k=4,
+        verbose=False,
+        algorithm="eaSimple",
+        n_jobs=-1,
+        return_train_score=True,
+        refit="accuracy",
+    )
+
+    evolved_estimator.fit(X_train, y_train)
+    features = evolved_estimator.best_features_
+
+    assert check_is_fitted(evolved_estimator) is None
+    assert features.shape[0] == X.shape[1]
+    assert len(evolved_estimator) == generations + 1  # +1 random initial population
+    assert len(evolved_estimator.predict(X_test[:, features])) == len(X_test)
+    assert evolved_estimator.score(X_train[:, features], y_train) >= 0
+    assert len(evolved_estimator.decision_function(X_test[:, features])) == len(X_test)
+    assert len(evolved_estimator.predict_proba(X_test[:, features])) == len(X_test)
+    assert len(evolved_estimator.predict_log_proba(X_test[:, features])) == len(X_test)
+    assert evolved_estimator.score(X_test[:, features], y_test) == accuracy_score(
+        y_test, evolved_estimator.predict(X_test[:, features])
+    )
+    assert bool(evolved_estimator.get_params())
+    assert len(evolved_estimator.hof) == evolved_estimator.keep_top_k
+    assert "gen" in evolved_estimator[0]
+    assert "fitness_max" in evolved_estimator[0]
+    assert "fitness" in evolved_estimator[0]
+    assert "fitness_std" in evolved_estimator[0]
+    assert "fitness_min" in evolved_estimator[0]
+
+    cv_results_ = evolved_estimator.cv_results_
+    cv_result_keys = set(cv_results_.keys())
+
+    assert "split0_test_score" in cv_result_keys
+    assert "split1_test_score" in cv_result_keys
+    assert "split2_test_score" in cv_result_keys
+    assert "split0_train_score" in cv_result_keys
+    assert "split1_train_score" in cv_result_keys
+    assert "split2_train_score" in cv_result_keys
+    assert "mean_test_score" in cv_result_keys
+    assert "std_test_score" in cv_result_keys
+    assert "rank_test_score" in cv_result_keys
+    assert "mean_train_score" in cv_result_keys
+    assert "std_train_score" in cv_result_keys
+    assert "rank_train_score" in cv_result_keys
+    assert "std_fit_time" in cv_result_keys
+    assert "mean_score_time" in cv_result_keys
+    assert "rank_n_features" in cv_result_keys
+    assert "features" in cv_result_keys
+
+    assert crossover_scheduler.current_value + mutation_scheduler.current_value <= 1

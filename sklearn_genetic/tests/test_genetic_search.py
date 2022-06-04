@@ -35,7 +35,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 
 
 def test_expected_ga_results():
-    clf = SGDClassifier(loss="log", fit_intercept=True)
+    clf = SGDClassifier(loss="log_loss", fit_intercept=True)
     generations = 6
     evolved_estimator = GASearchCV(
         clf,
@@ -152,7 +152,7 @@ def test_expected_ga_results():
     ],
 )
 def test_expected_algorithms_callbacks(algorithm, callback):
-    clf = SGDClassifier(loss="log", fit_intercept=True)
+    clf = SGDClassifier(loss="log_loss", fit_intercept=True)
     generations = 8
     evolved_estimator = GASearchCV(
         clf,
@@ -289,7 +289,7 @@ def test_negative_criteria():
 
 
 def test_wrong_criteria():
-    clf = SGDClassifier(loss="log", fit_intercept=True)
+    clf = SGDClassifier(loss="log_loss", fit_intercept=True)
     generations = 8
     with pytest.raises(Exception) as excinfo:
         evolved_estimator = GASearchCV(
@@ -340,7 +340,7 @@ def test_wrong_estimator():
 
 
 def test_wrong_get_item():
-    clf = SGDClassifier(loss="log", fit_intercept=True)
+    clf = SGDClassifier(loss="log_loss", fit_intercept=True)
     generations = 8
     evolved_estimator = GASearchCV(
         clf,
@@ -394,7 +394,7 @@ def test_iterator():
 
 
 def test_wrong_algorithm():
-    clf = SGDClassifier(loss="log", fit_intercept=True)
+    clf = SGDClassifier(loss="log_loss", fit_intercept=True)
     generations = 6
     evolved_estimator = GASearchCV(
         clf,
@@ -422,7 +422,7 @@ def test_wrong_algorithm():
 
 
 def test_no_param_grid():
-    clf = SGDClassifier(loss="log", fit_intercept=True)
+    clf = SGDClassifier(loss="log_loss", fit_intercept=True)
     generations = 8
     with pytest.raises(Exception) as excinfo:
         evolved_estimator = GASearchCV(
@@ -495,7 +495,7 @@ def test_param_grid_one_param():
 
 
 def test_expected_ga_multimetric():
-    clf = SGDClassifier(loss="log", fit_intercept=True)
+    clf = SGDClassifier(loss="log_loss", fit_intercept=True)
     scoring = {
         "accuracy": "accuracy",
         "balanced_accuracy": make_scorer(balanced_accuracy_score),
@@ -574,7 +574,7 @@ def test_expected_ga_multimetric():
 
 
 def test_expected_ga_callable_score():
-    clf = SGDClassifier(loss="log", fit_intercept=True)
+    clf = SGDClassifier(loss="log_loss", fit_intercept=True)
     generations = 6
     scoring = make_scorer(accuracy_score)
     evolved_estimator = GASearchCV(
@@ -645,7 +645,7 @@ def test_expected_ga_callable_score():
 
 
 def test_expected_ga_schedulers():
-    clf = SGDClassifier(loss="log", fit_intercept=True)
+    clf = SGDClassifier(loss="log_loss", fit_intercept=True)
     generations = 6
 
     mutation_scheduler = ExponentialDecay(initial_value=0.6, decay_rate=0.01, min_value=0.2)
