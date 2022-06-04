@@ -43,6 +43,7 @@ Main Features:
 * **Algorithms**: Set of different evolutionary algorithms to use as an optimization procedure.
 * **Callbacks**: Custom evaluation strategies to generate early stopping rules,
   logging (into TensorBoard, .pkl files, etc) or your custom logic.
+* **Schedulers**: Adaptive methods to control learning parameters.
 * **Plots**: Generate pre-defined plots to understand the optimization process.
 * **MLflow**: Build-in integration with mlflow to log all the hyperparameters, cv-scores and the fitted models.
 

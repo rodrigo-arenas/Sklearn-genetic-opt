@@ -3,6 +3,21 @@ Release Notes
 
 Some notes on new features in various releases
 
+What's new in 0.9.0dev0
+-----------------------
+
+^^^^^^^^^
+Features:
+^^^^^^^^^
+
+* Introducing Schedulers to enable adaptive mutation and crossover probabilities;
+  currently, supported schedulers are:
+  - :class:`~sklearn_genetic.schedules.ExponentialDecay`
+  - :class:`~sklearn_genetic.schedules.InverseDecay`
+
+* Changed the default values of `mutation_probability` and `crossover_probability`
+  to 0.8 and 0.2, respectively.
+
 What's new in 0.8.1
 -------------------
 
