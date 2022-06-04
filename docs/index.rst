@@ -66,6 +66,7 @@ as it is usually advised to look further which distribution works better for you
    tutorials/basic_usage
    tutorials/callbacks
    tutorials/custom_callback
+   tutorials/adapters
    tutorials/understand_cv
    tutorials/mlflow
 
@@ -94,6 +95,7 @@ as it is usually advised to look further which distribution works better for you
    api/gasearchcv
    api/featureselectioncv
    api/callbacks
+   api/schedules
    api/plots
    api/mlflow
    api/space

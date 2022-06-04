@@ -3,6 +3,26 @@ Release Notes
 
 Some notes on new features in various releases
 
+What's new in 0.9.0dev0
+-----------------------
+
+^^^^^^^^^
+Features:
+^^^^^^^^^
+
+* Introducing Adaptive Schedulers to enable adaptive mutation and crossover probabilities;
+  currently, supported schedulers are:
+
+  - :class:`~sklearn_genetic.schedules.ExponentialAdapter`
+  - :class:`~sklearn_genetic.schedules.InverseAdapter`
+  - :class:`~sklearn_genetic.schedules.PotentialAdapter`
+
+* Changed the default values of `mutation_probability` and `crossover_probability`
+  to 0.8 and 0.2, respectively.
+
+* The `weighted_choice` function used in :class:`~sklearn_genetic.GAFeatureSelectionCV` was
+  re-written to give more probability to a number of features closer to the `max_features` parameter
+
 What's new in 0.8.1
 -------------------
 

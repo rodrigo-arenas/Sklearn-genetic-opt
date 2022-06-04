@@ -8,7 +8,6 @@ from sklearn.base import clone
 from sklearn.model_selection import cross_validate
 from sklearn.base import is_classifier, is_regressor
 from sklearn.utils import check_X_y
-from sklearn.utils.metaestimators import if_delegate_has_method
 from sklearn.utils.validation import check_is_fitted
 from sklearn.metrics import check_scoring
 from sklearn.exceptions import NotFittedError
@@ -71,10 +70,10 @@ class GASearchCV(BaseSearchCV):
     generations : int, default=40
         Number of generations or iterations to run the evolutionary algorithm.
 
-    crossover_probability : float, default=0.8
+    crossover_probability : float or a Scheduler, default=0.8
         Probability of crossover operation between two individuals.
 
-    mutation_probability : float, default=0.1
+    mutation_probability : float or a Scheduler, default=0.1
         Probability of child mutation.
 
     tournament_size : int, default=3
@@ -217,8 +216,8 @@ class GASearchCV(BaseSearchCV):
         scoring=None,
         population_size=50,
         generations=80,
-        crossover_probability=0.8,
-        mutation_probability=0.2,
+        crossover_probability=0.2,
+        mutation_probability=0.8,
         tournament_size=3,
         elitism=True,
         verbose=True,
@@ -467,7 +466,6 @@ class GASearchCV(BaseSearchCV):
 
         return [score]
 
-    @if_delegate_has_method(delegate="estimator")
     def fit(self, X, y, callbacks=None):
         """
         Main method of GASearchCV, starts the optimization
@@ -754,10 +752,10 @@ class GAFeatureSelectionCV(BaseSearchCV):
     generations : int, default=40
         Number of generations or iterations to run the evolutionary algorithm.
 
-    crossover_probability : float, default=0.8
+    crossover_probability : float or a Scheduler, default=0.2
         Probability of crossover operation between two individuals.
 
-    mutation_probability : float, default=0.1
+    mutation_probability : float or a Scheduler, default=0.8
         Probability of child mutation.
 
     tournament_size : int, default=3
@@ -897,8 +895,8 @@ class GAFeatureSelectionCV(BaseSearchCV):
         scoring=None,
         population_size=50,
         generations=80,
-        crossover_probability=0.8,
-        mutation_probability=0.2,
+        crossover_probability=0.2,
+        mutation_probability=0.8,
         tournament_size=3,
         elitism=True,
         max_features=None,
@@ -1121,7 +1119,6 @@ class GAFeatureSelectionCV(BaseSearchCV):
 
         return [score, n_selected_features]
 
-    @if_delegate_has_method(delegate="estimator")
     def fit(self, X, y, callbacks=None):
         """
         Main method of GAFeatureSelectionCV, starts the optimization
@@ -1144,7 +1141,7 @@ class GAFeatureSelectionCV(BaseSearchCV):
         self.n_features = X.shape[1]
 
         if self.max_features:
-            self.features_proportion = self.max_features/self.n_features
+            self.features_proportion = self.max_features / self.n_features
 
         # Make sure the callbacks are valid
         self.callbacks = check_callback(callbacks)
