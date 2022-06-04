@@ -12,6 +12,7 @@ Features:
 
 * Introducing Adaptive Schedulers to enable adaptive mutation and crossover probabilities;
   currently, supported schedulers are:
+
   - :class:`~sklearn_genetic.schedules.ExponentialAdapter`
   - :class:`~sklearn_genetic.schedules.InverseAdapter`
   - :class:`~sklearn_genetic.schedules.PotentialAdapter`

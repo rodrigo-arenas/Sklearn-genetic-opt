@@ -94,6 +94,7 @@ as it is usually advised to look further which distribution works better for you
    api/gasearchcv
    api/featureselectioncv
    api/callbacks
+   api/schedules
    api/plots
    api/mlflow
    api/space
