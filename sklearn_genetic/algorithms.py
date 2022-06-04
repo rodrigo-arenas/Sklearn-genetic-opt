@@ -3,7 +3,7 @@ from deap import tools
 from deap.algorithms import varAnd, varOr
 
 from .callbacks.validations import eval_callbacks
-from .schedules.base import BaseScheduler
+from .schedules.base import BaseAdapter
 
 
 def eaSimple(
@@ -133,9 +133,9 @@ def eaSimple(
             offspring = toolbox.select(population, len(population) - hof_size)
 
             # Check adaptive rates
-            if isinstance(mutpb, BaseScheduler):
+            if isinstance(mutpb, BaseAdapter):
                 mutpb_value = mutpb.step()
-            if isinstance(cxpb, BaseScheduler):
+            if isinstance(cxpb, BaseAdapter):
                 cxpb_value = cxpb.step()
 
             # Vary the pool of individuals
@@ -330,9 +330,9 @@ def eaMuPlusLambda(
     for gen in range(1, ngen + 1):
         try:
             # Check adaptive rates
-            if isinstance(mutpb, BaseScheduler):
+            if isinstance(mutpb, BaseAdapter):
                 mutpb_value = mutpb.step()
-            if isinstance(cxpb, BaseScheduler):
+            if isinstance(cxpb, BaseAdapter):
                 cxpb_value = cxpb.step()
 
             # Vary the population
@@ -526,9 +526,9 @@ def eaMuCommaLambda(
     for gen in range(1, ngen + 1):
         try:
             # Check adaptive rates
-            if isinstance(mutpb, BaseScheduler):
+            if isinstance(mutpb, BaseAdapter):
                 mutpb_value = mutpb.step()
-            if isinstance(cxpb, BaseScheduler):
+            if isinstance(cxpb, BaseAdapter):
                 cxpb_value = cxpb.step()
 
             # Vary the population

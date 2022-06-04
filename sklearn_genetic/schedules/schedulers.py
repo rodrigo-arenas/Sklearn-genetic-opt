@@ -1,25 +1,25 @@
 import math
-from .base import BaseScheduler
+from .base import BaseAdapter
 
 
-class ExponentialDecay(BaseScheduler):
-    def __init__(self, initial_value, decay_rate, min_value=0.0):
-        super().__init__(initial_value, min_value, decay_rate)
+class ExponentialAdapter(BaseAdapter):
+    def __init__(self, initial_value, end_value, decay_rate):
+        super().__init__(initial_value, end_value, decay_rate)
 
     def step(self, *args, **kwargs):
-        self.current_value = ((self.initial_value - self.min_value) * math.exp(
-            -self.decay_rate * self.current_step)) + self.min_value
+        self.current_value = ((self.initial_value - self.end_value) * math.exp(
+            -self.decay_rate * self.current_step)) + self.end_value
         self.current_step += 1
 
         return self.current_value
 
 
-class InverseDecay(BaseScheduler):
-    def __init__(self, initial_value, decay_rate, min_value=0.0):
-        super().__init__(initial_value, min_value, decay_rate)
+class InverseAdapter(BaseAdapter):
+    def __init__(self, initial_value, end_value, decay_rate):
+        super().__init__(initial_value, end_value, decay_rate)
 
     def step(self, *args, **kwargs):
-        self.current_value = self.min_value + ((self.initial_value - self.min_value) / (1 + self.decay_rate * self.current_step))
+        self.current_value = self.end_value + ((self.initial_value - self.end_value) / (1 + self.decay_rate * self.current_step))
         self.current_step += 1
 
         return self.current_value

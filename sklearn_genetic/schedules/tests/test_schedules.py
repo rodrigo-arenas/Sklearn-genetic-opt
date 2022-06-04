@@ -1,25 +1,44 @@
 import pytest
-from ..schedulers import ExponentialDecay, InverseDecay
+from ..schedulers import ExponentialAdapter, InverseAdapter
 
 
 @pytest.mark.parametrize(
     "method, params",
     [
-        (ExponentialDecay, {"initial_value": 0.6, "decay_rate": 0.01}),
         (
-            ExponentialDecay,
-            {"initial_value": 0.6, "decay_rate": 0.01, "min_value": 0.4},
+                ExponentialAdapter,
+                {"initial_value": 0.6, "decay_rate": 0.01, "end_value": 0.4},
         ),
-        (ExponentialDecay, {"initial_value": 0.6, "decay_rate": 0}),
-        (InverseDecay, {"initial_value": 0.6, "decay_rate": 0.01, "min_value": 0.4}),
-        (InverseDecay, {"initial_value": 0.6, "decay_rate": 0.01}),
-        (InverseDecay, {"initial_value": 0.6, "decay_rate": 0}),
+        (ExponentialAdapter, {"initial_value": 0.6, "end_value": 0.4, "decay_rate": 0}),
+        (InverseAdapter, {"initial_value": 0.6, "end_value": 0.4, "decay_rate": 0.01}),
+        (InverseAdapter, {"initial_value": 0.6, "end_value": 0.4, "decay_rate": 0}),
     ],
 )
-def test_scheduler_limits(method, params):
+def test_scheduler_decay_limits(method, params):
     scheduler = method(**params)
     for _ in range(100):
         scheduler.step()
 
-    assert scheduler.current_value >= params.get("min_value", 0)
-    assert scheduler.current_value <= params.get("initial_value", 1)
+    assert scheduler.current_value >= params["end_value"]
+    assert scheduler.current_value <= params["initial_value"]
+
+
+@pytest.mark.parametrize(
+    "method, params",
+    [
+        (
+                ExponentialAdapter,
+                {"initial_value": 0.2, "decay_rate": 0.01, "end_value": 0.5},
+        ),
+        (ExponentialAdapter, {"initial_value": 0.2, "end_value": 0.5, "decay_rate": 0}),
+        (InverseAdapter, {"initial_value": 0.2, "end_value": 0.5, "decay_rate": 0.01}),
+        (InverseAdapter, {"initial_value": 0.2, "end_value": 0.5, "decay_rate": 0}),
+    ],
+)
+def test_scheduler_ascent_limits(method, params):
+    scheduler = method(**params)
+    for _ in range(100):
+        scheduler.step()
+
+    assert scheduler.current_value <= params["end_value"]
+    assert scheduler.current_value >= params["initial_value"]

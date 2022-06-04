@@ -22,7 +22,7 @@ from ..callbacks import (
     ProgressBar,
 )
 
-from ..schedules import ExponentialDecay, InverseDecay
+from ..schedules import ExponentialAdapter, InverseAdapter
 
 data = load_digits()
 label_names = data["target_names"]
@@ -648,8 +648,8 @@ def test_expected_ga_schedulers():
     clf = SGDClassifier(loss="log_loss", fit_intercept=True)
     generations = 6
 
-    mutation_scheduler = ExponentialDecay(initial_value=0.6, decay_rate=0.01, min_value=0.2)
-    crossover_scheduler = InverseDecay(initial_value=0.4, decay_rate=0.01, min_value=0.3)
+    mutation_scheduler = ExponentialAdapter(initial_value=0.6, decay_rate=0.01, end_value=0.2)
+    crossover_scheduler = InverseAdapter(initial_value=0.4, decay_rate=0.01, end_value=0.3)
 
     evolved_estimator = GASearchCV(
         clf,
