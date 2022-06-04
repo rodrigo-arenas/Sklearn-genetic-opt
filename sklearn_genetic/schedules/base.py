@@ -1,4 +1,4 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 
 
 class BaseAdapter(ABC):
@@ -24,6 +24,7 @@ class BaseAdapter(ABC):
         current_value : float,
             The transformed initial_value after current_steps changes
     """
+
     def __init__(self, initial_value, end_value, adaptive_rate, **kwargs):
 
         self.initial_value = initial_value
@@ -32,6 +33,7 @@ class BaseAdapter(ABC):
         self.current_value = self.initial_value
         self.current_step = 0
 
+    @abstractmethod
     def step(self):
         """
         Run one iteration of the transformation

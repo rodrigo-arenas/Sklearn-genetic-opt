@@ -648,8 +648,12 @@ def test_expected_ga_schedulers():
     clf = SGDClassifier(loss="modified_huber", fit_intercept=True)
     generations = 6
 
-    mutation_scheduler = ExponentialAdapter(initial_value=0.6, adaptive_rate=0.01, end_value=0.2)
-    crossover_scheduler = InverseAdapter(initial_value=0.4, adaptive_rate=0.01, end_value=0.3)
+    mutation_scheduler = ExponentialAdapter(
+        initial_value=0.6, adaptive_rate=0.01, end_value=0.2
+    )
+    crossover_scheduler = InverseAdapter(
+        initial_value=0.4, adaptive_rate=0.01, end_value=0.3
+    )
 
     evolved_estimator = GASearchCV(
         clf,
@@ -720,4 +724,3 @@ def test_expected_ga_schedulers():
     assert "params" in cv_result_keys
 
     assert crossover_scheduler.current_value + mutation_scheduler.current_value <= 1
-

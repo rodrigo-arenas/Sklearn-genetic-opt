@@ -8,7 +8,6 @@ from sklearn.base import clone
 from sklearn.model_selection import cross_validate
 from sklearn.base import is_classifier, is_regressor
 from sklearn.utils import check_X_y
-from sklearn.utils.metaestimators import if_delegate_has_method
 from sklearn.utils.validation import check_is_fitted
 from sklearn.metrics import check_scoring
 from sklearn.exceptions import NotFittedError
@@ -467,7 +466,6 @@ class GASearchCV(BaseSearchCV):
 
         return [score]
 
-    @if_delegate_has_method(delegate="estimator")
     def fit(self, X, y, callbacks=None):
         """
         Main method of GASearchCV, starts the optimization
@@ -1121,7 +1119,6 @@ class GAFeatureSelectionCV(BaseSearchCV):
 
         return [score, n_selected_features]
 
-    @if_delegate_has_method(delegate="estimator")
     def fit(self, X, y, callbacks=None):
         """
         Main method of GAFeatureSelectionCV, starts the optimization
@@ -1144,7 +1141,7 @@ class GAFeatureSelectionCV(BaseSearchCV):
         self.n_features = X.shape[1]
 
         if self.max_features:
-            self.features_proportion = self.max_features/self.n_features
+            self.features_proportion = self.max_features / self.n_features
 
         # Make sure the callbacks are valid
         self.callbacks = check_callback(callbacks)

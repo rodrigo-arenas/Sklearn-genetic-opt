@@ -111,33 +111,33 @@ def test_expected_ga_results():
         ("eaMuCommaLambda", DeltaThreshold(threshold=0.001, metric="fitness")),
         ("eaSimple", ProgressBar()),
         (
-                "eaMuPlusLambda",
-                ProgressBar(**{"desc": "my_custom_desc", "mininterval": 0.5}),
+            "eaMuPlusLambda",
+            ProgressBar(**{"desc": "my_custom_desc", "mininterval": 0.5}),
         ),
         ("eaMuCommaLambda", ProgressBar()),
         (
-                "eaSimple",
-                [
-                    ThresholdStopping(threshold=0.01),
-                    ConsecutiveStopping(generations=5, metric="fitness"),
-                    DeltaThreshold(threshold=0.001, metric="fitness"),
-                ],
+            "eaSimple",
+            [
+                ThresholdStopping(threshold=0.01),
+                ConsecutiveStopping(generations=5, metric="fitness"),
+                DeltaThreshold(threshold=0.001, metric="fitness"),
+            ],
         ),
         (
-                "eaMuPlusLambda",
-                [
-                    ThresholdStopping(threshold=0.01),
-                    ConsecutiveStopping(generations=5, metric="fitness"),
-                    DeltaThreshold(threshold=0.001, metric="fitness"),
-                ],
+            "eaMuPlusLambda",
+            [
+                ThresholdStopping(threshold=0.01),
+                ConsecutiveStopping(generations=5, metric="fitness"),
+                DeltaThreshold(threshold=0.001, metric="fitness"),
+            ],
         ),
         (
-                "eaMuCommaLambda",
-                [
-                    ThresholdStopping(threshold=0.01),
-                    ConsecutiveStopping(generations=5, metric="fitness"),
-                    DeltaThreshold(threshold=0.001, metric="fitness"),
-                ],
+            "eaMuCommaLambda",
+            [
+                ThresholdStopping(threshold=0.01),
+                ConsecutiveStopping(generations=5, metric="fitness"),
+                DeltaThreshold(threshold=0.001, metric="fitness"),
+            ],
         ),
     ],
 )
@@ -231,8 +231,8 @@ def test_wrong_criteria():
             criteria="maximization",
         )
     assert (
-            str(excinfo.value)
-            == "Criteria must be one of ['max', 'min'], got maximization instead"
+        str(excinfo.value)
+        == "Criteria must be one of ['max', 'min'], got maximization instead"
     )
 
 
@@ -252,7 +252,7 @@ def test_wrong_estimator():
             criteria="maximization",
         )
     assert (
-            str(excinfo.value) == "KMeans() is not a valid Sklearn classifier or regressor"
+        str(excinfo.value) == "KMeans() is not a valid Sklearn classifier or regressor"
     )
 
 
@@ -273,9 +273,9 @@ def test_wrong_get_item():
     with pytest.raises(Exception) as excinfo:
         value = evolved_estimator[0]
     assert (
-            str(excinfo.value)
-            == "This GAFeatureSelectionCV instance is not fitted yet or used refit=False. Call 'fit' with "
-               "appropriate arguments before using this estimator."
+        str(excinfo.value)
+        == "This GAFeatureSelectionCV instance is not fitted yet or used refit=False. Call 'fit' with "
+        "appropriate arguments before using this estimator."
     )
 
 
@@ -318,20 +318,24 @@ def test_wrong_algorithm():
     with pytest.raises(Exception) as excinfo:
         evolved_estimator.fit(X_train, y_train)
     assert (
-            str(excinfo.value)
-            == "The algorithm genetic is not supported, please select one from ['eaSimple', 'eaMuPlusLambda', 'eaMuCommaLambda']"
+        str(excinfo.value)
+        == "The algorithm genetic is not supported, please select one from ['eaSimple', 'eaMuPlusLambda', 'eaMuCommaLambda']"
     )
 
 
 def test_expected_ga_max_features():
     clf = SGDClassifier(loss="modified_huber", fit_intercept=True)
+    noise_train = np.random.uniform(0, 16, size=(X_train.shape[0], 16))
+    noise_test = np.random.uniform(0, 16, size=(X_test.shape[0], 16))
+    X_noise_train = np.hstack((X_train, noise_train))
+    X_noise_test = np.hstack((X_test, noise_test))
     generations = 8
-    max_features = 6
+    max_features = 10
     evolved_estimator = GAFeatureSelectionCV(
         clf,
         cv=3,
         scoring="accuracy",
-        population_size=20,
+        population_size=10,
         generations=generations,
         tournament_size=3,
         elitism=False,
@@ -343,20 +347,28 @@ def test_expected_ga_max_features():
         return_train_score=True,
     )
 
-    evolved_estimator.fit(X_train, y_train)
+    evolved_estimator.fit(X_noise_train, y_train)
     features = evolved_estimator.best_features_
 
     assert check_is_fitted(evolved_estimator) is None
-    assert features.shape[0] == X.shape[1]
+    assert features.shape[0] == X_noise_train.shape[1]
     assert sum(features) <= max_features
     assert len(evolved_estimator) == generations + 1  # +1 random initial population
-    assert len(evolved_estimator.predict(X_test[:, features])) == len(X_test)
-    assert evolved_estimator.score(X_train[:, features], y_train) >= 0
-    assert len(evolved_estimator.decision_function(X_test[:, features])) == len(X_test)
-    assert len(evolved_estimator.predict_proba(X_test[:, features])) == len(X_test)
-    assert len(evolved_estimator.predict_log_proba(X_test[:, features])) == len(X_test)
-    assert evolved_estimator.score(X_test[:, features], y_test) == accuracy_score(
-        y_test, evolved_estimator.predict(X_test[:, features])
+    assert len(evolved_estimator.predict(X_noise_test[:, features])) == len(
+        X_noise_test
+    )
+    assert evolved_estimator.score(X_noise_train[:, features], y_train) >= 0
+    assert len(evolved_estimator.decision_function(X_noise_test[:, features])) == len(
+        X_noise_test
+    )
+    assert len(evolved_estimator.predict_proba(X_noise_test[:, features])) == len(
+        X_noise_test
+    )
+    assert len(evolved_estimator.predict_log_proba(X_noise_test[:, features])) == len(
+        X_noise_test
+    )
+    assert evolved_estimator.score(X_noise_test[:, features], y_test) == accuracy_score(
+        evolved_estimator.predict(X_noise_test[:, features]), y_test
     )
     assert bool(evolved_estimator.get_params())
     assert len(evolved_estimator.hof) == evolved_estimator.keep_top_k
@@ -520,8 +532,12 @@ def test_expected_ga_callable_score():
 def test_expected_ga_schedulers():
     clf = SGDClassifier(loss="modified_huber", fit_intercept=True)
     generations = 6
-    mutation_scheduler = ExponentialAdapter(initial_value=0.6, adaptive_rate=0.01, end_value=0.2)
-    crossover_scheduler = InverseAdapter(initial_value=0.4, adaptive_rate=0.01, end_value=0.3)
+    mutation_scheduler = ExponentialAdapter(
+        initial_value=0.6, adaptive_rate=0.01, end_value=0.2
+    )
+    crossover_scheduler = InverseAdapter(
+        initial_value=0.4, adaptive_rate=0.01, end_value=0.3
+    )
 
     evolved_estimator = GAFeatureSelectionCV(
         clf,
