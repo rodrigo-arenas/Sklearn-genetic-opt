@@ -3,6 +3,9 @@ from .base import BaseAdapter
 
 
 class ExponentialAdapter(BaseAdapter):
+    """
+    Adapts the initial value towards the end value using an exponential "decay" function
+    """
     def __init__(self, initial_value, end_value, adaptive_rate):
         super().__init__(initial_value, end_value, adaptive_rate)
 
@@ -15,6 +18,9 @@ class ExponentialAdapter(BaseAdapter):
 
 
 class InverseAdapter(BaseAdapter):
+    """
+        Adapts the initial value towards the end value using a "decay" function of the for 1/x
+        """
     def __init__(self, initial_value, end_value, adaptive_rate):
         super().__init__(initial_value, end_value, adaptive_rate)
 
@@ -26,6 +32,9 @@ class InverseAdapter(BaseAdapter):
 
 
 class PotentialAdapter(BaseAdapter):
+    """
+        Adapts the initial value towards the end value using an potential "decay" function
+        """
     def __init__(self, initial_value, end_value, adaptive_rate):
         super().__init__(initial_value, end_value, adaptive_rate)
 

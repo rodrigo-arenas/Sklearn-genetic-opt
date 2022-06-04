@@ -34,7 +34,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 
 
 def test_expected_ga_results():
-    clf = SGDClassifier(loss="log_loss", fit_intercept=True)
+    clf = SGDClassifier(loss="modified_huber", fit_intercept=True)
     generations = 6
     evolved_estimator = GAFeatureSelectionCV(
         clf,
@@ -142,7 +142,7 @@ def test_expected_ga_results():
     ],
 )
 def test_expected_algorithms_callbacks(algorithm, callback):
-    clf = SGDClassifier(loss="log_loss", fit_intercept=True)
+    clf = SGDClassifier(loss="modified_huber", fit_intercept=True)
     generations = 8
     evolved_estimator = GAFeatureSelectionCV(
         clf,
@@ -216,7 +216,7 @@ def test_negative_criteria():
 
 
 def test_wrong_criteria():
-    clf = SGDClassifier(loss="log_loss", fit_intercept=True)
+    clf = SGDClassifier(loss="modified_huber", fit_intercept=True)
     generations = 8
     with pytest.raises(Exception) as excinfo:
         evolved_estimator = GAFeatureSelectionCV(
@@ -257,7 +257,7 @@ def test_wrong_estimator():
 
 
 def test_wrong_get_item():
-    clf = SGDClassifier(loss="log_loss", fit_intercept=True)
+    clf = SGDClassifier(loss="modified_huber", fit_intercept=True)
     generations = 8
     evolved_estimator = GAFeatureSelectionCV(
         clf,
@@ -301,7 +301,7 @@ def test_iterator():
 
 
 def test_wrong_algorithm():
-    clf = SGDClassifier(loss="log_loss", fit_intercept=True)
+    clf = SGDClassifier(loss="modified_huber", fit_intercept=True)
     generations = 6
     evolved_estimator = GAFeatureSelectionCV(
         clf,
@@ -324,7 +324,7 @@ def test_wrong_algorithm():
 
 
 def test_expected_ga_max_features():
-    clf = SGDClassifier(loss="log_loss", fit_intercept=True)
+    clf = SGDClassifier(loss="modified_huber", fit_intercept=True)
     generations = 8
     max_features = 6
     evolved_estimator = GAFeatureSelectionCV(
@@ -388,7 +388,7 @@ def test_expected_ga_max_features():
 
 
 def test_expected_ga_multimetric():
-    clf = SGDClassifier(loss="log_loss", fit_intercept=True)
+    clf = SGDClassifier(loss="modified_huber", fit_intercept=True)
     scoring = {
         "accuracy": "accuracy",
         "balanced_accuracy": make_scorer(balanced_accuracy_score),
@@ -455,7 +455,7 @@ def test_expected_ga_multimetric():
 
 
 def test_expected_ga_callable_score():
-    clf = SGDClassifier(loss="log_loss", fit_intercept=True)
+    clf = SGDClassifier(loss="modified_huber", fit_intercept=True)
     scoring = make_scorer(accuracy_score)
     generations = 6
     evolved_estimator = GAFeatureSelectionCV(
@@ -518,7 +518,7 @@ def test_expected_ga_callable_score():
 
 
 def test_expected_ga_schedulers():
-    clf = SGDClassifier(loss="log_loss", fit_intercept=True)
+    clf = SGDClassifier(loss="modified_huber", fit_intercept=True)
     generations = 6
     mutation_scheduler = ExponentialAdapter(initial_value=0.6, adaptive_rate=0.01, end_value=0.2)
     crossover_scheduler = InverseAdapter(initial_value=0.4, adaptive_rate=0.01, end_value=0.3)
