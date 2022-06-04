@@ -7,6 +7,7 @@ from .callbacks import (
     LogbookSaver,
 )
 
+from .schedules import ExponentialDecay, InverseDecay
 
 from ._version import __version__
 
@@ -17,5 +18,7 @@ __all__ = [
     "ConsecutiveStopping",
     "DeltaThreshold",
     "LogbookSaver",
+    "ExponentialDecay",
+    "InverseDecay",
     "__version__",
 ]

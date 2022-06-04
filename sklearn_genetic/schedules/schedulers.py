@@ -7,10 +7,12 @@ class ExponentialDecay(BaseScheduler):
         super().__init__(initial_value, min_value, decay_rate)
 
     def step(self, *args, **kwargs):
-        self.current_value = self.initial_value * math.exp(-self.decay_rate * self.current_step)
+        self.current_value = self.initial_value * math.exp(
+            -self.decay_rate * self.current_step
+        )
         self.current_step += 1
         if self.min_value:
-            return max(self.current_value, self.min_value)
+            self.current_value = max(self.current_value, self.min_value)
 
         return self.current_value
 
@@ -20,9 +22,11 @@ class InverseDecay(BaseScheduler):
         super().__init__(initial_value, min_value, decay_rate)
 
     def step(self, *args, **kwargs):
-        self.current_value = self.initial_value / (1 + self.decay_rate * self.current_step)
+        self.current_value = self.initial_value / (
+            1 + self.decay_rate * self.current_step
+        )
         self.current_step += 1
         if self.min_value:
-            return max(self.current_value, self.min_value)
+            self.current_value = max(self.current_value, self.min_value)
 
         return self.current_value
