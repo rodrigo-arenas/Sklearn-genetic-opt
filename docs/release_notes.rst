@@ -20,6 +20,9 @@ Features:
 * Changed the default values of `mutation_probability` and `crossover_probability`
   to 0.8 and 0.2, respectively.
 
+* The `weighted_choice` function used in :class:`~sklearn_genetic.GAFeatureSelectionCV` was
+  re-written to give more probability to a number of features closer to the `max_features` parameter
+
 What's new in 0.8.1
 -------------------
 
