@@ -69,6 +69,7 @@ as it is usually advised to look further which distribution works better for you
    tutorials/adapters
    tutorials/understand_cv
    tutorials/mlflow
+   tutorials/reproducibility
 
 .. toctree::
    :maxdepth: 2
