@@ -38,7 +38,7 @@ If :math:`p_0 > p_f`, you are performing a decay towards :math:`p_0`.
 
 If :math:`p_0 < p_f`, you are performing an ascend towards :math:`p_f`.
 
-All the adapters :math:`p(t; \alpha)`, for :math:`\alpha \in (0,1)`,
+All the non-constant adapters :math:`p(t; \alpha)`, for :math:`\alpha \in (0,1)`,
 have the following properties:
 
 .. math::
@@ -49,9 +49,24 @@ have the following properties:
 
 The following adapters are available:
 
+* ConstantAdapter
 * ExponentialAdapter
 * InverseAdapter
 * PotentialAdapter
+
+
+ConstantAdapter
+---------------
+
+This adapter is meant to be used internally by the package; when the user doesn't create an adapter but
+instead defines the crossover or mutation probability as a real number, the package will convert it
+to a `ConstantAdapter`, so the library can use the internal API with the same methods in both cases.
+Because of this, its definition is:
+
+.. math::
+
+   p(t; \alpha) = p_0
+
 
 ExponentialAdapter
 ------------------

@@ -73,6 +73,9 @@ html_logo = "logo.png"
 
 master_doc = "index"
 
+# Ignore Jupyter notebooks error
+nbsphinx_allow_errors = True
+
 # generate autosummary even if no references
 autosummary_generate = True
 autosummary_imported_members = True

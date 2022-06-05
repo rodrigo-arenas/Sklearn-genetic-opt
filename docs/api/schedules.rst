@@ -5,11 +5,16 @@ Schedules
 
 .. autosummary::
    base.BaseAdapter
+   ConstantAdapter
    ExponentialAdapter
    InverseAdapter
    PotentialAdapter
 
 .. autoclass:: sklearn_genetic.schedules.base.BaseAdapter
+   :members:
+   :undoc-members: False
+
+.. autoclass:: ConstantAdapter
    :members:
    :undoc-members: False
 

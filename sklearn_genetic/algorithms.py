@@ -30,11 +30,11 @@ def eaSimple(
     toolbox: A :class:`~deap.base.Toolbox`
         Contains the evolution operators.
 
-    cxpb: float or a Scheduler, default=None
-        The probability of mating two individuals.
+    cxpb: Scheduler, default=None
+        An adaptive scheduler representing the probability of mating two individuals.
 
-    mutpb: float or a Scheduler, default=None
-        The probability of mutating an individual.
+    mutpb: Scheduler, default=None
+        An adaptive scheduler representing the probability that an offspring is produced by mutation.
 
     ngen: int, default=None
         The number of generation.
@@ -124,22 +124,13 @@ def eaSimple(
         print("INFO: Stopping the algorithm")
         return population, logbook, n_gen
 
-    # Begin the generational process
-    mutpb_value = mutpb
-    cxpb_value = cxpb
     for gen in range(1, ngen + 1):
         try:
             # Select the next generation individuals
             offspring = toolbox.select(population, len(population) - hof_size)
 
-            # Check adaptive rates
-            if isinstance(mutpb, BaseAdapter):
-                mutpb_value = mutpb.step()
-            if isinstance(cxpb, BaseAdapter):
-                cxpb_value = cxpb.step()
-
             # Vary the pool of individuals
-            offspring = varAnd(offspring, toolbox, cxpb_value, mutpb_value)
+            offspring = varAnd(offspring, toolbox, cxpb.step(), mutpb.step())
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
@@ -233,11 +224,11 @@ def eaMuPlusLambda(
     lambda\_: int, default=None
         The number of children to produce at each generation.
 
-    cxpb: float or a Scheduler, default=None
+    cxpb: Scheduler, default=None
         The probability that an offspring is produced by crossover.
 
-    mutpb: float or a Scheduler, default=None
-        The probability that an offspring is produced by mutation.
+    mutpb: Scheduler, default=None
+        An adaptive scheduler representing the probability that an offspring is produced by mutation.
 
     ngen: int, default=None
         The number of generation.
@@ -324,19 +315,11 @@ def eaMuPlusLambda(
         print("INFO: Stopping the algorithm")
         return population, logbook, n_gen
 
-    # Begin the generational process
-    mutpb_value = mutpb
-    cxpb_value = cxpb
     for gen in range(1, ngen + 1):
         try:
-            # Check adaptive rates
-            if isinstance(mutpb, BaseAdapter):
-                mutpb_value = mutpb.step()
-            if isinstance(cxpb, BaseAdapter):
-                cxpb_value = cxpb.step()
 
             # Vary the population
-            offspring = varOr(population, toolbox, lambda_, cxpb_value, mutpb_value)
+            offspring = varOr(population, toolbox, lambda_, cxpb.step(), mutpb.step())
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
@@ -426,11 +409,11 @@ def eaMuCommaLambda(
     lambda\_: int, default=None
         The number of children to produce at each generation.
 
-    cxpb: float or a Scheduler, default=None
+    cxpb: Scheduler, default=None
         The probability that an offspring is produced by crossover.
 
-    mutpb: float or a Scheduler, default=None
-        The probability that an offspring is produced by mutation.
+    mutpb: Scheduler, default=None
+        An adaptive scheduler representing the probability that an offspring is produced by mutation.
 
     ngen: int, default=None
         The number of generation.
@@ -520,19 +503,11 @@ def eaMuCommaLambda(
         print("INFO: Stopping the algorithm")
         return population, logbook, n_gen
 
-    # Begin the generational process
-    mutpb_value = mutpb
-    cxpb_value = cxpb
     for gen in range(1, ngen + 1):
         try:
-            # Check adaptive rates
-            if isinstance(mutpb, BaseAdapter):
-                mutpb_value = mutpb.step()
-            if isinstance(cxpb, BaseAdapter):
-                cxpb_value = cxpb.step()
 
             # Vary the population
-            offspring = varOr(population, toolbox, lambda_, cxpb_value, mutpb_value)
+            offspring = varOr(population, toolbox, lambda_, cxpb.step(), mutpb.step())
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]

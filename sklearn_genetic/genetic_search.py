@@ -19,6 +19,7 @@ from .parameters import Algorithms, Criteria
 from .space import Space
 from .algorithms import eaSimple, eaMuPlusLambda, eaMuCommaLambda
 from .callbacks.validations import check_callback
+from .schedules.validations import check_adapter
 from .utils.cv_scores import (
     create_gasearch_cv_results_,
     create_feature_selection_cv_results_,
@@ -240,6 +241,8 @@ class GASearchCV(BaseSearchCV):
         self.generations = generations
         self.crossover_probability = crossover_probability
         self.mutation_probability = mutation_probability
+        self.crossover_adapter = check_adapter(self.crossover_probability)
+        self.mutation_adapter = check_adapter(self.mutation_probability)
         self.tournament_size = tournament_size
         self.elitism = elitism
         self.verbose = verbose
@@ -599,9 +602,9 @@ class GASearchCV(BaseSearchCV):
             pop, log, gen = eaSimple(
                 pop,
                 self.toolbox,
-                cxpb=self.crossover_probability,
+                cxpb=self.crossover_adapter,
                 stats=stats,
-                mutpb=self.mutation_probability,
+                mutpb=self.mutation_adapter,
                 ngen=self.generations,
                 halloffame=hof,
                 callbacks=self.callbacks,
@@ -616,9 +619,9 @@ class GASearchCV(BaseSearchCV):
                 self.toolbox,
                 mu=self.population_size,
                 lambda_=2 * self.population_size,
-                cxpb=self.crossover_probability,
+                cxpb=self.crossover_adapter,
                 stats=stats,
-                mutpb=self.mutation_probability,
+                mutpb=self.mutation_adapter,
                 ngen=self.generations,
                 halloffame=hof,
                 callbacks=self.callbacks,
@@ -632,9 +635,9 @@ class GASearchCV(BaseSearchCV):
                 self.toolbox,
                 mu=self.population_size,
                 lambda_=2 * self.population_size,
-                cxpb=self.crossover_probability,
+                cxpb=self.crossover_adapter,
                 stats=stats,
-                mutpb=self.mutation_probability,
+                mutpb=self.mutation_adapter,
                 ngen=self.generations,
                 halloffame=hof,
                 callbacks=self.callbacks,
@@ -920,6 +923,8 @@ class GAFeatureSelectionCV(BaseSearchCV):
         self.generations = generations
         self.crossover_probability = crossover_probability
         self.mutation_probability = mutation_probability
+        self.crossover_adapter = check_adapter(self.crossover_probability)
+        self.mutation_adapter = check_adapter(self.mutation_probability)
         self.tournament_size = tournament_size
         self.elitism = elitism
         self.max_features = max_features
@@ -1234,9 +1239,9 @@ class GAFeatureSelectionCV(BaseSearchCV):
             pop, log, gen = eaSimple(
                 pop,
                 self.toolbox,
-                cxpb=self.crossover_probability,
+                cxpb=self.crossover_adapter,
                 stats=stats,
-                mutpb=self.mutation_probability,
+                mutpb=self.mutation_adapter,
                 ngen=self.generations,
                 halloffame=hof,
                 callbacks=self.callbacks,
@@ -1251,9 +1256,9 @@ class GAFeatureSelectionCV(BaseSearchCV):
                 self.toolbox,
                 mu=self.population_size,
                 lambda_=2 * self.population_size,
-                cxpb=self.crossover_probability,
+                cxpb=self.crossover_adapter,
                 stats=stats,
-                mutpb=self.mutation_probability,
+                mutpb=self.mutation_adapter,
                 ngen=self.generations,
                 halloffame=hof,
                 callbacks=self.callbacks,
@@ -1267,9 +1272,9 @@ class GAFeatureSelectionCV(BaseSearchCV):
                 self.toolbox,
                 mu=self.population_size,
                 lambda_=2 * self.population_size,
-                cxpb=self.crossover_probability,
+                cxpb=self.crossover_adapter,
                 stats=stats,
-                mutpb=self.mutation_probability,
+                mutpb=self.mutation_adapter,
                 ngen=self.generations,
                 halloffame=hof,
                 callbacks=self.callbacks,
