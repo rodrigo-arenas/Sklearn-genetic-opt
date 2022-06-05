@@ -13,7 +13,7 @@ class Integer(BaseDimension):
     """class for hyperparameters search space of integer values"""
 
     def __init__(
-        self, lower: int = None, upper: int = None, distribution: str = "uniform"
+        self, lower: int = None, upper: int = None, distribution: str = "uniform", random_state=None
     ):
         """
         Parameters
@@ -26,7 +26,8 @@ class Integer(BaseDimension):
 
         distribution : str, default="uniform"
             Distribution to sample initial population and mutation values, currently only supports 'uniform'.
-
+        random_state : int or None, RandomState instance, default=None
+            Pseudo random number generator state used for random dimension sampling.
         """
 
         if not isinstance(lower, int):
@@ -46,6 +47,8 @@ class Integer(BaseDimension):
         self.lower = lower
         self.upper = upper
         self.distribution = distribution
+        self.random_state = random_state
+        self.rng = None if not self.random_state else np.random.default_rng(self.random_state)
 
         if self.distribution == IntegerDistributions.uniform.value:
             self.rvs = stats.randint.rvs
@@ -53,14 +56,14 @@ class Integer(BaseDimension):
     def sample(self):
         """Sample a random value from the assigned distribution"""
 
-        return self.rvs(self.lower, self.upper + 1)
+        return self.rvs(self.lower, self.upper + 1, random_state=self.rng)
 
 
 class Continuous(BaseDimension):
     """class for hyperparameters search space of real values"""
 
     def __init__(
-        self, lower: float = None, upper: float = None, distribution: str = "uniform"
+        self, lower: float = None, upper: float = None, distribution: str = "uniform", random_state=None
     ):
         """
         Parameters
@@ -73,7 +76,8 @@ class Continuous(BaseDimension):
 
         distribution : {'uniform', 'log-uniform'}, default='uniform'
             Distribution to sample initial population and mutation values.
-
+        random_state : int or None, RandomState instance, default=None
+            Pseudo random number generator state used for random dimension sampling.
         """
 
         if not isinstance(lower, (int, float)):
@@ -94,6 +98,8 @@ class Continuous(BaseDimension):
         self.upper = upper
         self.distribution = distribution
         self.shifted_upper = self.upper
+        self.random_state = random_state
+        self.rng = None if not self.random_state else np.random.default_rng(self.random_state)
 
         if self.distribution == ContinuousDistributions.uniform.value:
             self.rvs = stats.uniform.rvs
@@ -104,14 +110,14 @@ class Continuous(BaseDimension):
     def sample(self):
         """Sample a random value from the assigned distribution"""
 
-        return self.rvs(self.lower, self.shifted_upper)
+        return self.rvs(self.lower, self.shifted_upper, random_state=self.rng)
 
 
 class Categorical(BaseDimension):
     """class for hyperparameters search space of categorical values"""
 
     def __init__(
-        self, choices: list = None, priors: list = None, distribution: str = "choice"
+        self, choices: list = None, priors: list = None, distribution: str = "choice", random_state=None
     ):
         """
         Parameters
@@ -124,7 +130,8 @@ class Categorical(BaseDimension):
 
         distribution: str, default='choice'
             Distribution to sample initial population and mutation values, currently only supports "choice".
-
+        random_state : int or None, RandomState instance, default=None
+            Pseudo random number generator state used for random dimension sampling.
         """
 
         if not choices or not isinstance(choices, list):
@@ -148,9 +155,11 @@ class Categorical(BaseDimension):
 
         self.choices = choices
         self.distribution = distribution
+        self.random_state = random_state
+        self.rng = None if not self.random_state else np.random.default_rng(self.random_state)
 
         if self.distribution == CategoricalDistributions.choice.value:
-            self.rvs = np.random.choice
+            self.rvs = self.rng.choice if self.rng else np.random.choice
 
     def sample(self):
         """Sample a random value from the assigned distribution"""

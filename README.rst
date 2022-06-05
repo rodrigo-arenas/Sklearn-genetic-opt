@@ -96,7 +96,6 @@ Example: Hyperparameters Tuning
    from sklearn.model_selection import train_test_split, StratifiedKFold
    from sklearn.datasets import load_digits
    from sklearn.metrics import accuracy_score
-   import matplotlib.pyplot as plt
 
    data = load_digits()
    n_samples = len(data.images)
