@@ -3,7 +3,6 @@ from deap import tools
 from deap.algorithms import varAnd, varOr
 
 from .callbacks.validations import eval_callbacks
-from .schedules.base import BaseAdapter
 
 
 def eaSimple(

@@ -24,6 +24,12 @@ Features:
 * The `weighted_choice` function used in :class:`~sklearn_genetic.GAFeatureSelectionCV` was
   re-written to give more probability to a number of features closer to the `max_features` parameter
 
+* Add `random_state` parameter (default= ``None``) in :class:`~sklearn_genetic.space.Continuous`,
+  :class:`~sklearn_genetic.space.Categorical` and :class:`~sklearn_genetic.space.Integer` classes
+  to leave fixed the random seed during hyperparameters sampling.
+  Take into account that this only ensures that the space components are reproducible, not all the package.
+  This is due to the DEAP dependency, which doesn't seem to have a native way to set the random seed.
+
 What's new in 0.8.1
 -------------------
 
