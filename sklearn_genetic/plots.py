@@ -86,17 +86,17 @@ def plot_search_space(estimator, height=2, s=25, features: list = None):
 
     df = logbook_to_pandas(estimator.logbook)
     if features:
-        stats = df[features]
+        stats = df[features].astype(np.float64)
     else:
         variables = [*estimator.space.parameters, estimator.refit_metric]
-        stats = df[variables]
+        stats = df[variables].astype(np.float64)
 
     g = sns.PairGrid(stats, diag_sharey=False, height=height)
     g = g.map_upper(sns.scatterplot, s=s, color="r", alpha=0.2)
     g = g.map_lower(
         sns.kdeplot,
         shade=True,
-        cmap=sns.color_palette("ch:s=.25,rot=-.25", as_cmap=True),
+        cmap=sns.color_palette("ch:s=.25,rot=-.25", as_cmap=True)
     )
     g = g.map_diag(sns.kdeplot, shade=True, palette="crest", alpha=0.2, color="red")
     return g

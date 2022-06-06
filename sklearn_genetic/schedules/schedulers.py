@@ -71,7 +71,7 @@ class ExponentialAdapter(BaseAdapter):
 
 class InverseAdapter(BaseAdapter):
     """
-    Adapts the initial value towards the end value using a "decay" function of the for 1/x
+    Adapts the initial value towards the end value using a "decay" function of the form 1/x
 
     Parameters
     ----------
