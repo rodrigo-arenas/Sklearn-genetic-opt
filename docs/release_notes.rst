@@ -18,17 +18,31 @@ Features:
   - :class:`~sklearn_genetic.schedules.InverseAdapter`
   - :class:`~sklearn_genetic.schedules.PotentialAdapter`
 
-* Changed the default values of `mutation_probability` and `crossover_probability`
-  to 0.8 and 0.2, respectively.
-
-* The `weighted_choice` function used in :class:`~sklearn_genetic.GAFeatureSelectionCV` was
-  re-written to give more probability to a number of features closer to the `max_features` parameter
 
 * Add `random_state` parameter (default= ``None``) in :class:`~sklearn_genetic.space.Continuous`,
   :class:`~sklearn_genetic.space.Categorical` and :class:`~sklearn_genetic.space.Integer` classes
   to leave fixed the random seed during hyperparameters sampling.
   Take into account that this only ensures that the space components are reproducible, not all the package.
   This is due to the DEAP dependency, which doesn't seem to have a native way to set the random seed.
+
+^^^^^^^^^^^^
+API Changes:
+^^^^^^^^^^^^
+
+* Changed the default values of `mutation_probability` and `crossover_probability`
+  to 0.8 and 0.2, respectively.
+
+* The `weighted_choice` function used in :class:`~sklearn_genetic.GAFeatureSelectionCV` was
+  re-written to give more probability to a number of features closer to the `max_features` parameter
+
+* Removed unused and wrong function :func:`~sklearn_genetic.plots.plot_parallel_coordinates`
+
+^^^^^^^^^^
+Bug Fixes:
+^^^^^^^^^^
+
+* Now when using the :func:`~sklearn_genetic.plots.plot_search_space` function, all the parameters get casted
+  as np.float64 to avoid errors on seaborn package while plotting bool values.
 
 What's new in 0.8.1
 -------------------

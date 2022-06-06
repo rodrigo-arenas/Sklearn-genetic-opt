@@ -34,7 +34,7 @@ value at generation t :math:`p(t; \alpha)`
 
 Note that :math:`p_0` doesn't need to be greater than :math:`p_f`.
 
-If :math:`p_0 > p_f`, you are performing a decay towards :math:`p_0`.
+If :math:`p_0 > p_f`, you are performing a decay towards :math:`p_f`.
 
 If :math:`p_0 < p_f`, you are performing an ascend towards :math:`p_f`.
 
