@@ -35,6 +35,8 @@ API Changes:
 * The `weighted_choice` function used in :class:`~sklearn_genetic.GAFeatureSelectionCV` was
   re-written to give more probability to a number of features closer to the `max_features` parameter
 
+* Removed unused and wrong function :func:`~sklearn_genetic.plots.plot_parallel_coordinates`
+
 ^^^^^^^^^^
 Bug Fixes:
 ^^^^^^^^^^

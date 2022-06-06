@@ -4,7 +4,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeRegressor
 
 from .. import GASearchCV, GAFeatureSelectionCV
-from ..plots import plot_fitness_evolution, plot_search_space, plot_parallel_coordinates
+from ..plots import plot_fitness_evolution, plot_search_space
 from ..space import Integer, Categorical, Continuous
 
 data = load_boston()
@@ -55,17 +55,8 @@ def test_plot_evolution():
 
 
 def test_plot_space():
-    plot = plot_search_space(evolved_estimator)
-    plot = plot_search_space(evolved_estimator)
     plot = plot_search_space(
         evolved_estimator, features=["ccp_alpha", "max_depth", "min_samples_split"]
-    )
-
-
-def test_plot_parallel():
-    plot = plot_parallel_coordinates(evolved_estimator)
-    plot = plot_parallel_coordinates(
-        evolved_estimator, features=["ccp_alpha", "criterion"]
     )
 
 
@@ -73,17 +64,6 @@ def test_wrong_estimator_space():
     estimator = GAFeatureSelectionCV(clf, cv=3, scoring="accuracy", population_size=6)
     with pytest.raises(Exception) as excinfo:
         plot = plot_search_space(estimator)
-
-    assert (
-        str(excinfo.value)
-        == "Estimator must be a GASearchCV instance, not a GAFeatureSelectionCV instance"
-    )
-
-
-def test_wrong_estimator_parallel():
-    estimator = GAFeatureSelectionCV(clf, cv=3, scoring="accuracy", population_size=6)
-    with pytest.raises(Exception) as excinfo:
-        plot = plot_parallel_coordinates(estimator)
 
     assert (
         str(excinfo.value)
