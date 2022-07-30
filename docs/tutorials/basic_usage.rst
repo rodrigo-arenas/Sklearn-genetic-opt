@@ -9,7 +9,7 @@ Introduction
 Sklearn-genetic-opt uses evolutionary algorithms to fine-tune scikit-learn machine learning algorithms
 and perform feature selection.
 It is designed to accept a `scikit-learn <http://scikit-learn.org/stable/index.html>`__
-regression or classification model (or a pipeline containing on of those).
+regression or classification model (or a pipeline containing one of those).
 
 The idea behind this package is to define the set of hyperparameters we want to tune and what are their
 lower and uppers bounds on the values they can take.
