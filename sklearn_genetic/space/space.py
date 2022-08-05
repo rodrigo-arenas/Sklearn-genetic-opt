@@ -1,5 +1,6 @@
 import numpy as np
 from scipy import stats
+import random
 
 from .space_parameters import (
     IntegerDistributions,
@@ -156,15 +157,16 @@ class Categorical(BaseDimension):
         self.choices = choices
         self.distribution = distribution
         self.random_state = random_state
+        random.seed(random_state)
         self.rng = None if not self.random_state else np.random.default_rng(self.random_state)
 
         if self.distribution == CategoricalDistributions.choice.value:
-            self.rvs = self.rng.choice if self.rng else np.random.choice
+            self.rvs = self.rng.choice if self.rng else random.choice
 
     def sample(self):
         """Sample a random value from the assigned distribution"""
 
-        return self.rvs(self.choices, p=self.priors)
+        return self.rvs(self.choices)
 
 
 def check_space(param_grid: dict = None):
