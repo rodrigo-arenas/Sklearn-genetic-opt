@@ -121,7 +121,7 @@ During the training process, you should see a log like this:
 This log, shows us the metrics obtained in each iteration (generation), this is what each entry means:
 
 * **gen:** The number of the generation
-* **nevals:** How many hyperparameters were fitted in this generation
+* **nevals:** How many individuals are there in this generation
 * **fitness:** The average score metric in the cross-validation (validation set).
   In this case, the average accuracy across the folds of all the hyperparameters sets.
 * **fitness_std:** The standard deviation of the cross-validations accuracy.
