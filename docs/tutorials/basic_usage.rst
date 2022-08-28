@@ -145,7 +145,16 @@ It will use by default the best set of hyperparameters it found, based on the cr
 
 In this case, we got an accuracy score in the test set of 0.96
 
+.. code:: python3
+    y_predicy_ga = evolved_estimator.predict(X_test)
+    accuracy_score(y_test, y_predicy_ga)
+
 .. image:: ../images/basic_usage_accuracy_2.jpeg
+
+.. code:: python3
+    evolved_estimator.best_params_
+
+.. image:: ../images/basic_usage_params_0.jpeg
 
 Now, let's use a couple more functions available in the package.
 The first one will help us to see the evolution of our metric over the generations
