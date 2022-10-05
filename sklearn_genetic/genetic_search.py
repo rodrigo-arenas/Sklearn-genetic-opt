@@ -565,7 +565,7 @@ class GASearchCV(BaseSearchCV):
             self.estimator.set_params(**self.best_params_)
 
             refit_start_time = time.time()
-            self.estimator.fit(self.X_, self.y_, fit_params)
+            self.estimator.fit(self.X_, self.y_, **fit_params)
             refit_end_time = time.time()
             self.refit_time_ = refit_end_time - refit_start_time
 
