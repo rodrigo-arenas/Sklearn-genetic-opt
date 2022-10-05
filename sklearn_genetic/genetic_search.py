@@ -320,6 +320,12 @@ class GASearchCV(BaseSearchCV):
         """
         This function is the responsible for registering the DEAPs necessary methods
         and create other objects to hold the hof, logbook and stats.
+
+        Parameters
+        ----------
+         fit_params : dict, default=None
+            Parameters to pass to the fit method of the estimator.
+        ----------
         """
 
         self.creator.create("FitnessMax", base.Fitness, weights=[self.criteria_sign])
@@ -410,7 +416,8 @@ class GASearchCV(BaseSearchCV):
         ----------
         individual: Individual object
             The individual (set of hyperparameters) that is being evaluated
-
+        fit_params : dict, default=None
+                    Parameters to pass to the fit method of the estimator.
         Returns
         -------
             The fitness value of the estimator candidate, corresponding to the cv-score
@@ -490,6 +497,9 @@ class GASearchCV(BaseSearchCV):
             One or a list of the callbacks methods available in
             :class:`~sklearn_genetic.callbacks`.
             The callback is evaluated after fitting the estimators from the generation 1.
+
+        fit_params : dict, default=None
+            Parameters to pass to the fit method of the estimator.
 
         """
 
@@ -996,6 +1006,13 @@ class GAFeatureSelectionCV(BaseSearchCV):
         """
         This function is the responsible for registering the DEAPs necessary methods
         and create other objects to hold the hof, logbook and stats.
+
+        Parameters
+        ----------
+         fit_params : dict, default=None
+            Parameters to pass to the fit method of the estimator.
+        ----------
+
         """
 
         # Criteria sign to set max or min problem
@@ -1059,6 +1076,9 @@ class GAFeatureSelectionCV(BaseSearchCV):
         ----------
         individual: Individual object
             The individual (set of features) that is being evaluated
+
+        fit_params : dict, default=None
+            Parameters to pass to the fit method of the estimator.
 
         Returns
         -------
@@ -1146,6 +1166,8 @@ class GAFeatureSelectionCV(BaseSearchCV):
             One or a list of the callbacks methods available in
             :class:`~sklearn_genetic.callbacks`.
             The callback is evaluated after fitting the estimators from the generation 1.
+        fit_params : dict, default=None
+            Parameters to pass to the fit method of the estimator.
         """
 
         self.X_, self.y_ = check_X_y(X, y)
