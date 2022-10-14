@@ -9,7 +9,7 @@ Introduction
 Sklearn-genetic-opt uses evolutionary algorithms to fine-tune scikit-learn machine learning algorithms
 and perform feature selection.
 It is designed to accept a `scikit-learn <http://scikit-learn.org/stable/index.html>`__
-regression or classification model (or a pipeline containing on of those).
+regression or classification model (or a pipeline containing one of those).
 
 The idea behind this package is to define the set of hyperparameters we want to tune and what are their
 lower and uppers bounds on the values they can take.
@@ -37,7 +37,7 @@ This is a classification problem, we'll fine-tune a Random Forest Classifier for
     from sklearn_genetic import GASearchCV
     from sklearn_genetic.space import Categorical, Integer, Continuous
     from sklearn.model_selection import train_test_split, StratifiedKFold
-    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.neural_network import MLPClassifier
     from sklearn.datasets import load_digits
     from sklearn.metrics import accuracy_score
 
@@ -72,11 +72,13 @@ We must do this with all the hyperparameters we want to tune, like this:
 
 .. code:: python3
 
-    param_grid = {'min_weight_fraction_leaf': Continuous(0.01, 0.5, distribution='log-uniform'),
-                  'bootstrap': Categorical([True, False]),
-                  'max_depth': Integer(2, 30),
-                  'max_leaf_nodes': Integer(2, 35),
-                  'n_estimators': Integer(100, 300)}
+    # this library even performs well on weird ranges
+    # adjust this to better ranges for better results
+    param_grid = {'tol': Continuous(1e-2, 1e10, distribution='log-uniform'),
+                  'alpha': Continuous(1e-5, 2e-5),
+                  'activation': Categorical(['logistic', 'tanh']),
+                  'batch_size': Integer(300, 350)
+                 }
 
 Notice that in the case of *'boostrap'*, as it is a categorical variable, we do must define all its possible values.
 As well, in the 'min_weight_fraction_leaf', we used an additional parameter named distribution,
@@ -88,7 +90,7 @@ It has several options that we can use, for this first example, we'll keep it ve
 .. code:: python3
 
     # The base classifier to tune
-    clf = RandomForestClassifier()
+    clf = MLPClassifier(hidden_layer_sizes=(50, 30))
 
     # Our cross-validation strategy (it could be just an int)
     cv = StratifiedKFold(n_splits=3, shuffle=True)
@@ -99,7 +101,9 @@ It has several options that we can use, for this first example, we'll keep it ve
                                   scoring='accuracy',
                                   param_grid=param_grid,
                                   n_jobs=-1,
-                                  verbose=True)
+                                  verbose=True,
+                                  population_size=10,
+                                  generations=20)
 
 So now the setup is ready, note that are other parameters that can be specified in GASearchCV,
 the ones we used, are equivalents to the meaning in scikit-learn, besides the one already explained,
@@ -121,7 +125,7 @@ During the training process, you should see a log like this:
 This log, shows us the metrics obtained in each iteration (generation), this is what each entry means:
 
 * **gen:** The number of the generation
-* **nevals:** How many hyperparameters were fitted in this generation
+* **nevals:** How many individuals are there in this generation
 * **fitness:** The average score metric in the cross-validation (validation set).
   In this case, the average accuracy across the folds of all the hyperparameters sets.
 * **fitness_std:** The standard deviation of the cross-validations accuracy.
@@ -139,9 +143,18 @@ It will use by default the best set of hyperparameters it found, based on the cr
     y_predict_ga = evolved_estimator.predict(X_test)
     print(accuracy_score(y_test, y_predict_ga))
 
-In this case, we got an accuracy score in the test set of 0.93
+In this case, we got an accuracy score in the test set of 0.96
+
+.. code:: python3
+    y_predicy_ga = evolved_estimator.predict(X_test)
+    accuracy_score(y_test, y_predicy_ga)
 
 .. image:: ../images/basic_usage_accuracy_2.jpeg
+
+.. code:: python3
+    evolved_estimator.best_params_
+
+.. image:: ../images/basic_usage_params_0.jpeg
 
 Now, let's use a couple more functions available in the package.
 The first one will help us to see the evolution of our metric over the generations
@@ -161,14 +174,15 @@ sklearn-genetic-opt comes with a plot function to analyze this log:
 .. code:: python3
 
     from sklearn_genetic.plots import plot_search_space
-    plot_search_space(evolved_estimator, features=['min_weight_fraction_leaf', 'max_depth', 'max_leaf_nodes', 'n_estimators'])
+    plot_search_space(evolved_estimator, features=['tol', 'batch_size', 'alpha'])
     plt.show()
 
 .. image:: ../images/basic_usage_plot_space_4.png
 
 What this plot shows us, is the distribution of the sampled values for each hyperparameter.
-We can see for example in the *'min_weight_fraction_leaf'* that the algorithm mostly sampled values below 0.15.
-You can also check every single combination of variables and the contour plot that represents the sampled values.
+We can see for example in the *'tol'* that the algorithm mostly sampled very small values
+(this range would have to be adjusted in a second iteration). You can also check every single
+combination of variables and the contour plot that represents the sampled values.
 
 
 Feature Selection Example
