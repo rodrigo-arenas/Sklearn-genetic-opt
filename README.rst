@@ -196,7 +196,11 @@ Important links
 Source code
 ###########
 
-You can check the latest development version with the command::
+You can check the latest development version with the command
+##########################
+
+.. code:: python3
+
 
    git clone https://github.com/rodrigo-arenas/Sklearn-genetic-opt.git
 
