@@ -316,10 +316,16 @@ class GASearchCV(BaseSearchCV):
             error_score=error_score,
         )
 
-    def _register(self):
+    def _register(self, fit_params):
         """
         This function is the responsible for registering the DEAPs necessary methods
         and create other objects to hold the hof, logbook and stats.
+
+        Parameters
+        ----------
+         fit_params : dict, default=None
+            Parameters to pass to the fit method of the estimator.
+        ----------
         """
 
         self.creator.create("FitnessMax", base.Fitness, weights=[self.criteria_sign])
@@ -364,7 +370,9 @@ class GASearchCV(BaseSearchCV):
         else:
             self.toolbox.register("select", tools.selRoulette)
 
-        self.toolbox.register("evaluate", self.evaluate)
+        evaluate = lambda ind: self.evaluate(ind, fit_params)
+
+        self.toolbox.register("evaluate", evaluate)
 
         self._pop = self.toolbox.population(n=self.population_size)
         self._hof = tools.HallOfFame(self.keep_top_k)
@@ -401,14 +409,15 @@ class GASearchCV(BaseSearchCV):
 
         return [individual]
 
-    def evaluate(self, individual):
+    def evaluate(self, individual, fit_params):
         """
         Compute the cross-validation scores and record the logbook and mlflow (if specified)
         Parameters
         ----------
         individual: Individual object
             The individual (set of hyperparameters) that is being evaluated
-
+        fit_params : dict, default=None
+                    Parameters to pass to the fit method of the estimator.
         Returns
         -------
             The fitness value of the estimator candidate, corresponding to the cv-score
@@ -429,6 +438,7 @@ class GASearchCV(BaseSearchCV):
             self.X_,
             self.y_,
             cv=self.cv,
+            fit_params=fit_params,
             scoring=self.scoring,
             n_jobs=self.n_jobs,
             pre_dispatch=self.pre_dispatch,
@@ -469,7 +479,7 @@ class GASearchCV(BaseSearchCV):
 
         return [score]
 
-    def fit(self, X, y, callbacks=None):
+    def fit(self, X, y, callbacks=None, **fit_params):
         """
         Main method of GASearchCV, starts the optimization
         procedure with the hyperparameters of the given estimator
@@ -487,6 +497,9 @@ class GASearchCV(BaseSearchCV):
             One or a list of the callbacks methods available in
             :class:`~sklearn_genetic.callbacks`.
             The callback is evaluated after fitting the estimators from the generation 1.
+
+        fit_params : dict, default=None
+            Parameters to pass to the fit method of the estimator.
 
         """
 
@@ -514,7 +527,7 @@ class GASearchCV(BaseSearchCV):
         self.n_splits_ = cv_orig.get_n_splits(X, y)
 
         # Set the DEAPs necessary methods
-        self._register()
+        self._register(fit_params)
 
         # Optimization routine from the selected evolutionary algorithm
         pop, log, n_gen = self._select_algorithm(
@@ -552,7 +565,7 @@ class GASearchCV(BaseSearchCV):
             self.estimator.set_params(**self.best_params_)
 
             refit_start_time = time.time()
-            self.estimator.fit(self.X_, self.y_)
+            self.estimator.fit(self.X_, self.y_, **fit_params)
             refit_end_time = time.time()
             self.refit_time_ = refit_end_time - refit_start_time
 
@@ -989,10 +1002,17 @@ class GAFeatureSelectionCV(BaseSearchCV):
             error_score=error_score,
         )
 
-    def _register(self):
+    def _register(self, fit_params):
         """
         This function is the responsible for registering the DEAPs necessary methods
         and create other objects to hold the hof, logbook and stats.
+
+        Parameters
+        ----------
+         fit_params : dict, default=None
+            Parameters to pass to the fit method of the estimator.
+        ----------
+
         """
 
         # Criteria sign to set max or min problem
@@ -1032,6 +1052,8 @@ class GAFeatureSelectionCV(BaseSearchCV):
         else:
             self.toolbox.register("select", tools.selRoulette)
 
+        evaluate = lambda ind: self.evaluate(ind, fit_params)
+
         self.toolbox.register("evaluate", self.evaluate)
 
         self._pop = self.toolbox.population(n=self.population_size)
@@ -1047,13 +1069,16 @@ class GAFeatureSelectionCV(BaseSearchCV):
 
         self.logbook = tools.Logbook()
 
-    def evaluate(self, individual):
+    def evaluate(self, individual, fit_params):
         """
         Compute the cross-validation scores and record the logbook and mlflow (if specified)
         Parameters
         ----------
         individual: Individual object
             The individual (set of features) that is being evaluated
+
+        fit_params : dict, default=None
+            Parameters to pass to the fit method of the estimator.
 
         Returns
         -------
@@ -1077,6 +1102,7 @@ class GAFeatureSelectionCV(BaseSearchCV):
             self.X_[:, bool_individual],
             self.y_,
             cv=self.cv,
+            fit_params=fit_params,
             scoring=self.scoring,
             n_jobs=self.n_jobs,
             pre_dispatch=self.pre_dispatch,
@@ -1124,7 +1150,7 @@ class GAFeatureSelectionCV(BaseSearchCV):
 
         return [score, n_selected_features]
 
-    def fit(self, X, y, callbacks=None):
+    def fit(self, X, y, callbacks=None, **fit_params):
         """
         Main method of GAFeatureSelectionCV, starts the optimization
         procedure with to find the best features set
@@ -1140,6 +1166,8 @@ class GAFeatureSelectionCV(BaseSearchCV):
             One or a list of the callbacks methods available in
             :class:`~sklearn_genetic.callbacks`.
             The callback is evaluated after fitting the estimators from the generation 1.
+        fit_params : dict, default=None
+            Parameters to pass to the fit method of the estimator.
         """
 
         self.X_, self.y_ = check_X_y(X, y)
@@ -1169,7 +1197,7 @@ class GAFeatureSelectionCV(BaseSearchCV):
         self.n_splits_ = cv_orig.get_n_splits(X, y)
 
         # Set the DEAPs necessary methods
-        self._register()
+        self._register(fit_params)
 
         # Optimization routine from the selected evolutionary algorithm
         pop, log, n_gen = self._select_algorithm(
@@ -1199,7 +1227,7 @@ class GAFeatureSelectionCV(BaseSearchCV):
             bool_individual = np.array(self.best_features_, dtype=bool)
 
             refit_start_time = time.time()
-            self.estimator.fit(self.X_[:, bool_individual], self.y_)
+            self.estimator.fit(self.X_[:, bool_individual], self.y_, fit_params)
             refit_end_time = time.time()
             self.refit_time_ = refit_end_time - refit_start_time
 
