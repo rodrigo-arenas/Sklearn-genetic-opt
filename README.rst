@@ -116,7 +116,7 @@ Example: Hyperparameters Tuning
    evolved_estimator = GASearchCV(estimator=clf,
                                   cv=cv,
                                   scoring='accuracy',
-                                  population_size=10,
+                                  population_size=20,
                                   generations=35,
                                   param_grid=param_grid,
                                   n_jobs=-1,
@@ -141,9 +141,8 @@ Example: Feature Selection
 
 .. code:: python3
 
-    import matplotlib.pyplot as plt
-    from sklearn_genetic import GAFeatureSelectionCV
-    from sklearn.model_selection import train_test_split, StratifiedKFold
+    from sklearn_genetic import GAFeatureSelectionCV, ExponentialAdapter
+    from sklearn.model_selection import train_test_split
     from sklearn.svm import SVC
     from sklearn.datasets import load_iris
     from sklearn.metrics import accuracy_score
@@ -153,18 +152,22 @@ Example: Feature Selection
     X, y = data["data"], data["target"]
 
     # Add random non-important features
-    noise = np.random.uniform(0, 10, size=(X.shape[0], 5))
+    noise = np.random.uniform(5, 10, size=(X.shape[0], 5))
     X = np.hstack((X, noise))
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=0)
 
     clf = SVC(gamma='auto')
+    mutation_scheduler = ExponentialAdapter(0.8, 0.2, 0.01)
+    crossover_scheduler = ExponentialAdapter(0.2, 0.8, 0.01)
 
     evolved_estimator = GAFeatureSelectionCV(
         estimator=clf,
         scoring="accuracy",
         population_size=30,
         generations=20,
+        mutation_probability=mutation_scheduler,
+        crossover_probability=crossover_scheduler,
         n_jobs=-1)
 
     # Train and select the features
