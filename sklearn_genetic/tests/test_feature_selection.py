@@ -1,5 +1,5 @@
 import pytest
-from sklearn.datasets import load_iris, load_boston
+from sklearn.datasets import load_iris, load_diabetes
 from sklearn.linear_model import SGDClassifier
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.model_selection import train_test_split
@@ -182,13 +182,13 @@ def test_expected_algorithms_callbacks(algorithm, callback):
 
 
 def test_negative_criteria():
-    data_boston = load_boston()
+    data_boston = load_diabetes()
 
-    y_boston = data_boston["target"]
-    X_boston = data_boston["data"]
+    y_diabetes = data_boston["target"]
+    X_diabetes = data_boston["data"]
 
     X_train_b, X_test_b, y_train_b, y_test_b = train_test_split(
-        X_boston, y_boston, test_size=0.33, random_state=42
+        X_diabetes, y_diabetes, test_size=0.33, random_state=42
     )
 
     clf = DecisionTreeRegressor()

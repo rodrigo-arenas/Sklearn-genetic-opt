@@ -1,5 +1,5 @@
 import pytest
-from sklearn.datasets import load_digits, load_boston
+from sklearn.datasets import load_digits, load_diabetes
 from sklearn.linear_model import SGDClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.svm import SVR
@@ -246,13 +246,13 @@ def test_missing_data_types(param_grid):
 
 
 def test_negative_criteria():
-    data_boston = load_boston()
+    data_boston = load_diabetes()
 
-    y_boston = data_boston["target"]
-    X_boston = data_boston["data"]
+    y_diabetes = data_boston["target"]
+    X_diabetes = data_boston["data"]
 
     X_train_b, X_test_b, y_train_b, y_test_b = train_test_split(
-        X_boston, y_boston, test_size=0.33, random_state=42
+        X_diabetes, y_diabetes, test_size=0.33, random_state=42
     )
 
     clf = DecisionTreeRegressor()
@@ -269,7 +269,7 @@ def test_negative_criteria():
         mutation_probability=0.05,
         param_grid={
             "ccp_alpha": Continuous(0, 1),
-            "criterion": Categorical(["mse", "mae"]),
+            "criterion": Categorical(["squared_error", "absolute_error"]),
             "max_depth": Integer(2, 20),
             "min_samples_split": Integer(2, 30),
         },
