@@ -14,6 +14,12 @@ API Changes:
 * Update most important packages from dev-requirements.txt to more recent versions
 * Update deprecated functions in tests
 
+^^^^^^^^^^
+Bug Fixes:
+^^^^^^^^^^
+
+* Fixed the API docs of :class:`~sklearn_genetic.GAFeatureSelectionCV`, it was pointing to the wrong class
+
 What's new in 0.9.0
 -------------------
 
