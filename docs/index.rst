@@ -77,7 +77,7 @@ as it is usually advised to look further which distribution works better for you
    :caption: Jupyter notebooks examples:
 
    notebooks/sklearn_comparison.ipynb
-   notebooks/Boston_Houses_decision_tree.ipynb
+   notebooks/Pipeline_prediction.ipynb
    notebooks/Iris_feature_selection.ipynb
    notebooks/Digits_decision_tree.ipynb
    notebooks/MLflow_logger.ipynb
