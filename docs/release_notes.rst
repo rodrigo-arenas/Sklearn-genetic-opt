@@ -3,6 +3,17 @@ Release Notes
 
 Some notes on new features in various releases
 
+What's new in 0.9.1dev
+----------------------
+
+^^^^^^^^^^^^
+API Changes:
+^^^^^^^^^^^^
+
+* Dropped support for python 3.7 and add support for python 3.10+
+* Update most important packages from dev-requirements.txt to more recent versions
+* Update deprecated functions in tests
+
 What's new in 0.9.0
 -------------------
 

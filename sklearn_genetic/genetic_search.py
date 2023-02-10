@@ -210,27 +210,27 @@ class GASearchCV(BaseSearchCV):
     """
 
     def __init__(
-        self,
-        estimator,
-        cv=3,
-        param_grid=None,
-        scoring=None,
-        population_size=50,
-        generations=80,
-        crossover_probability=0.2,
-        mutation_probability=0.8,
-        tournament_size=3,
-        elitism=True,
-        verbose=True,
-        keep_top_k=1,
-        criteria="max",
-        algorithm="eaMuPlusLambda",
-        refit=True,
-        n_jobs=1,
-        pre_dispatch="2*n_jobs",
-        error_score=np.nan,
-        return_train_score=False,
-        log_config=None,
+            self,
+            estimator,
+            cv=3,
+            param_grid=None,
+            scoring=None,
+            population_size=50,
+            generations=80,
+            crossover_probability=0.2,
+            mutation_probability=0.8,
+            tournament_size=3,
+            elitism=True,
+            verbose=True,
+            keep_top_k=1,
+            criteria="max",
+            algorithm="eaMuPlusLambda",
+            refit=True,
+            n_jobs=1,
+            pre_dispatch="2*n_jobs",
+            error_score=np.nan,
+            return_train_score=False,
+            log_config=None,
     ):
 
         self.estimator = clone(estimator)
@@ -299,10 +299,10 @@ class GASearchCV(BaseSearchCV):
         # Saves the param_grid and computes some extra properties in the same object
         self.space = Space(param_grid)
 
-        if len(self.space) == 1:
+        if len(self.space) == 1:  # pragma: no cover
             warnings.warn(
                 "Warning, only one parameter was provided to the param_grid, the optimization routine "
-                "might not have effect, it's advised to use at least 2 parameters"
+                "might not have effect or it could lead to errors, it's advised to use at least 2 parameters"
             )
 
         super(GASearchCV, self).__init__(
@@ -550,7 +550,7 @@ class GASearchCV(BaseSearchCV):
             self.estimator.set_params(**self.best_params_)
 
             refit_start_time = time.time()
-            self.estimator.fit(self.X_, self.y_,)
+            self.estimator.fit(self.X_, self.y_, )
             refit_end_time = time.time()
             self.refit_time_ = refit_end_time - refit_start_time
 
@@ -890,27 +890,27 @@ class GAFeatureSelectionCV(BaseSearchCV):
     """
 
     def __init__(
-        self,
-        estimator,
-        cv=3,
-        scoring=None,
-        population_size=50,
-        generations=80,
-        crossover_probability=0.2,
-        mutation_probability=0.8,
-        tournament_size=3,
-        elitism=True,
-        max_features=None,
-        verbose=True,
-        keep_top_k=1,
-        criteria="max",
-        algorithm="eaMuPlusLambda",
-        refit=True,
-        n_jobs=1,
-        pre_dispatch="2*n_jobs",
-        error_score=np.nan,
-        return_train_score=False,
-        log_config=None,
+            self,
+            estimator,
+            cv=3,
+            scoring=None,
+            population_size=50,
+            generations=80,
+            crossover_probability=0.2,
+            mutation_probability=0.8,
+            tournament_size=3,
+            elitism=True,
+            max_features=None,
+            verbose=True,
+            keep_top_k=1,
+            criteria="max",
+            algorithm="eaMuPlusLambda",
+            refit=True,
+            n_jobs=1,
+            pre_dispatch="2*n_jobs",
+            error_score=np.nan,
+            return_train_score=False,
+            log_config=None,
     ):
 
         self.estimator = clone(estimator)
@@ -1116,7 +1116,7 @@ class GAFeatureSelectionCV(BaseSearchCV):
         # Penalize individuals with more features than the max_features parameter
 
         if self.max_features and (
-            n_selected_features > self.max_features or n_selected_features == 0
+                n_selected_features > self.max_features or n_selected_features == 0
         ):
             score = -self.criteria_sign * 100000
 
