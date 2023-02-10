@@ -26,12 +26,12 @@ inside the env use::
 
    pip install sklearn-genetic-opt
 
-.. |PythonMinVersion| replace:: 3.7
-.. |ScikitLearnMinVersion| replace:: 0.21.3
-.. |NumPyMinVersion| replace:: 1.14.5
-.. |SeabornMinVersion| replace:: 0.9.0
-.. |DEAPMinVersion| replace:: 1.3.1
-.. |MLflowMinVersion| replace:: 1.17.0
+.. |PythonMinVersion| replace:: 3.8
+.. |ScikitLearnMinVersion| replace:: 1.1.0
+.. |NumPyMinVersion| replace:: 1.19.0
+.. |SeabornMinVersion| replace:: 0.11.2
+.. |DEAPMinVersion| replace:: 1.3.3
+.. |MLflowMinVersion| replace:: 1.30.0
 .. |TensorflowMinVersion| replace:: 2.0.0
 .. |tqdmMinVersion| replace:: 4.61.1
 

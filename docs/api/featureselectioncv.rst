@@ -5,16 +5,16 @@ FeatureSelectionCV
 .. currentmodule:: sklearn_genetic
 
 .. autosummary:: GAFeatureSelectionCV
-   GASearchCV.decision_function
-   GASearchCV.fit
-   GASearchCV.get_params
-   GASearchCV.inverse_transform
-   GASearchCV.predict
-   GASearchCV.predict_proba
-   GASearchCV.score
-   GASearchCV.score_samples
-   GASearchCV.set_params
-   GASearchCV.transform
+   GAFeatureSelectionCV.decision_function
+   GAFeatureSelectionCV.fit
+   GAFeatureSelectionCV.get_params
+   GAFeatureSelectionCV.inverse_transform
+   GAFeatureSelectionCV.predict
+   GAFeatureSelectionCV.predict_proba
+   GAFeatureSelectionCV.score
+   GAFeatureSelectionCV.score_samples
+   GAFeatureSelectionCV.set_params
+   GAFeatureSelectionCV.transform
 
 .. autoclass:: sklearn_genetic.GAFeatureSelectionCV
    :members:
