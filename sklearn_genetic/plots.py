@@ -89,7 +89,7 @@ def plot_search_space(estimator, height=2, s=25, features: list = None):
         stats = df[features].astype(np.float64)
     else:
         variables = [*estimator.space.parameters, estimator.refit_metric]
-        stats = df[variables].astype(np.float64)
+        stats = df[variables].select_dtypes(['number', 'bool']).astype(np.float64)
 
     g = sns.PairGrid(stats, diag_sharey=False, height=height)
     g = g.map_upper(sns.scatterplot, s=s, color="r", alpha=0.2)
