@@ -1,5 +1,5 @@
 import pytest
-from sklearn.datasets import load_boston
+from sklearn.datasets import load_diabetes
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeRegressor
 
@@ -7,7 +7,7 @@ from .. import GASearchCV, GAFeatureSelectionCV
 from ..plots import plot_fitness_evolution, plot_search_space
 from ..space import Integer, Categorical, Continuous
 
-data = load_boston()
+data = load_diabetes()
 
 y = data["target"]
 X = data["data"]
@@ -30,7 +30,7 @@ evolved_estimator = GASearchCV(
     mutation_probability=0.05,
     param_grid={
         "ccp_alpha": Continuous(0, 1),
-        "criterion": Categorical(["mse", "mae"]),
+        "criterion": Categorical(["squared_error", "absolute_error"]),
         "max_depth": Integer(2, 20),
         "min_samples_split": Integer(2, 30),
     },

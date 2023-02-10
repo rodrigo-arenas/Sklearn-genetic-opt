@@ -26,9 +26,9 @@ setup(
     classifiers=[
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
     ],
     project_urls={
         "Documentation": "https://sklearn-genetic-opt.readthedocs.io/en/stable/",
@@ -39,16 +39,16 @@ setup(
         include=["sklearn_genetic", "sklearn_genetic.*"], exclude=["*tests*"]
     ),
     install_requires=[
-        "scikit-learn>=0.21.3",
-        "numpy>=1.14.5",
-        "deap>=1.3.1",
+        "scikit-learn>=1.1.0",
+        "numpy>=1.19.0",
+        "deap>=1.3.3",
         "tqdm>=4.61.1",
     ],
     extras_require={
         "mlflow": ["mlflow>=1.17.0"],
-        "seaborn": ["seaborn>=0.9.0"],
-        "all": ["mlflow>=1.17.0", "seaborn>=0.9.0"],
+        "seaborn": ["seaborn>=0.11.2"],
+        "all": ["mlflow>=1.30.0", "seaborn>=0.11.2"],
     },
-    python_requires=">=3.7",
+    python_requires=">=3.8",
     include_package_data=True,
 )

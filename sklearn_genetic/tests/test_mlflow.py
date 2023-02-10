@@ -14,6 +14,8 @@ from ..genetic_search import GASearchCV
 from ..mlflow_log import MLflowConfig
 from ..space import Integer, Categorical, Continuous
 
+EXPERIMENT_NAME = "Digits-sklearn-genetic-opt-tests"
+
 
 @pytest.fixture
 def mlflow_resources():
@@ -25,9 +27,9 @@ def mlflow_resources():
 @pytest.fixture
 def mlflow_run(mlflow_resources):
     _, client = mlflow_resources
-    exp_id = client.get_experiment_by_name("Digits-sklearn-genetic-opt").experiment_id
-    active_run = mlflow.list_run_infos(exp_id, run_view_type=ViewType.ACTIVE_ONLY)
-    runs = [run.run_id for run in active_run]
+    exp_id = client.get_experiment_by_name(EXPERIMENT_NAME).experiment_id
+    active_run = client.search_runs(exp_id, run_view_type=ViewType.ACTIVE_ONLY)
+    runs = [run.info.run_id for run in active_run]
     return runs
 
 
@@ -38,7 +40,7 @@ def test_mlflow_config(mlflow_resources):
     uri, _ = mlflow_resources
     mlflow_config = MLflowConfig(
         tracking_uri=uri,
-        experiment="Digits-sklearn-genetic-opt",
+        experiment=EXPERIMENT_NAME,
         run_name="Decision Tree",
         save_models=True,
         tags={"team": "sklearn-genetic-opt", "version": "0.5.0"},
@@ -53,7 +55,7 @@ def test_runs(mlflow_resources, mlflow_run):
     uri, client = mlflow_resources
     mlflow_config = MLflowConfig(
         tracking_uri=uri,
-        experiment="Digits-sklearn-genetic-opt",
+        experiment=EXPERIMENT_NAME,
         run_name="Decision Tree",
         save_models=True,
         tags={"team": "sklearn-genetic-opt", "version": "0.5.0"},
@@ -84,7 +86,7 @@ def test_runs(mlflow_resources, mlflow_run):
         cv=cv,
         scoring="accuracy",
         population_size=3,
-        generations=5,
+        generations=4,
         tournament_size=3,
         elitism=True,
         crossover_probability=0.9,

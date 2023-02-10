@@ -163,14 +163,14 @@ on the test set for the best set of hyperparameters.
 
     from sklearn_genetic import GASearchCV
     from sklearn_genetic.space import Integer, Categorical, Continuous
-    from sklearn.datasets import load_boston
+    from sklearn.datasets import load_diabetes
     from sklearn.model_selection import train_test_split, KFold
     from sklearn.tree import DecisionTreeRegressor
     from sklearn.metrics import r2_score
     from sklearn.pipeline import Pipeline
     from sklearn.preprocessing import StandardScaler
 
-    data = load_boston()
+    data = load_diabetes()
 
     y = data["target"]
     X = data["data"]
@@ -186,7 +186,7 @@ on the test set for the best set of hyperparameters.
 
     param_grid = {
         "clf__ccp_alpha": Continuous(0, 1),
-        "clf__criterion": Categorical(["mse", "mae"]),
+        "clf__criterion": Categorical(["squared_error", "absolute_error"]),
         "clf__max_depth": Integer(2, 20),
         "clf__min_samples_split": Integer(2, 30),
     }

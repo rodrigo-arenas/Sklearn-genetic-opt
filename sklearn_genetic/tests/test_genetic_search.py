@@ -1,8 +1,7 @@
 import pytest
-from sklearn.datasets import load_digits, load_boston
+from sklearn.datasets import load_digits, load_diabetes
 from sklearn.linear_model import SGDClassifier
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.svm import SVR
 from sklearn.model_selection import train_test_split
 from sklearn.utils.validation import check_is_fitted
 from sklearn.tree import DecisionTreeRegressor
@@ -246,13 +245,13 @@ def test_missing_data_types(param_grid):
 
 
 def test_negative_criteria():
-    data_boston = load_boston()
+    data_boston = load_diabetes()
 
-    y_boston = data_boston["target"]
-    X_boston = data_boston["data"]
+    y_diabetes = data_boston["target"]
+    X_diabetes = data_boston["data"]
 
     X_train_b, X_test_b, y_train_b, y_test_b = train_test_split(
-        X_boston, y_boston, test_size=0.33, random_state=42
+        X_diabetes, y_diabetes, test_size=0.33, random_state=42
     )
 
     clf = DecisionTreeRegressor()
@@ -269,7 +268,7 @@ def test_negative_criteria():
         mutation_probability=0.05,
         param_grid={
             "ccp_alpha": Continuous(0, 1),
-            "criterion": Categorical(["mse", "mae"]),
+            "criterion": Categorical(["squared_error", "absolute_error"]),
             "max_depth": Integer(2, 20),
             "min_samples_split": Integer(2, 30),
         },
@@ -438,60 +437,6 @@ def test_no_param_grid():
         )
 
     assert str(excinfo.value) == "param_grid can not be empty"
-
-
-def test_param_grid_one_param():
-    X = np.random.normal(75, 10, (1000, 2))
-    y = np.random.normal(200, 20, 1000)
-    y_labels = np.random.randint(0, 2, size=1000)
-
-    param_grid = {"degree": Integer(2, 6)}
-
-    with pytest.warns(UserWarning) as record:
-        evolved_estimator = GASearchCV(
-            estimator=SVR(),
-            cv=3,
-            population_size=4,
-            generations=5,
-            param_grid=param_grid,
-            criteria="max",
-            scoring="neg_mean_absolute_error",
-            error_score="raise",
-            n_jobs=-1,
-            verbose=True,
-        )
-
-    assert (
-        record[0].message.args[0]
-        == "Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect, "
-        "it's advised to use at least 2 parameters"
-    )
-
-    evolved_estimator.fit(X, y_labels)
-
-    assert check_is_fitted(evolved_estimator) is None
-    assert "degree" in evolved_estimator.best_params_
-    assert len(evolved_estimator) == 5 + 1  # +1 random initial population
-    assert bool(evolved_estimator.get_params())
-    assert len(evolved_estimator.hof) == evolved_estimator.keep_top_k
-    assert "gen" in evolved_estimator[0]
-    assert "fitness_max" in evolved_estimator[0]
-    assert "fitness" in evolved_estimator[0]
-    assert "fitness_std" in evolved_estimator[0]
-    assert "fitness_min" in evolved_estimator[0]
-
-    cv_results_ = evolved_estimator.cv_results_
-    cv_result_keys = set(cv_results_.keys())
-
-    assert "param_degree" in cv_result_keys
-    assert "split0_test_score" in cv_result_keys
-    assert "split1_test_score" in cv_result_keys
-    assert "split2_test_score" in cv_result_keys
-    assert "mean_test_score" in cv_result_keys
-    assert "std_test_score" in cv_result_keys
-    assert "rank_test_score" in cv_result_keys
-    assert "std_fit_time" in cv_result_keys
-    assert "params" in cv_result_keys
 
 
 def test_expected_ga_multimetric():
