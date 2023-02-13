@@ -1,21 +1,26 @@
 import random
+from .tools import check_bool_individual
 
 
-def weighted_choice(weight):
+def weighted_bool_individual(icls, weight, size):
     """
     Parameters
     ----------
     weight: float
         Weight of choosing a chromosome
+    size:
+        Number of elements create
 
     Returns
     -------
-        Bool random (not uniform) choice
+        List random (not uniform) bool values
     """
+    if weight:
+        choice = random.choices([0, 1], [1 - weight, weight], k=size)
+    else:
+        choice = random.choices([0, 1], k=size)
 
-    # This help to don't generate individuals of the same size on average
-    p = random.uniform(0.75 * weight, 1.25 * weight)
-    p = min(p, 0.98)
-    choice = random.choices([0, 1], [1 - p, p])[0]
+    # Make sure there is at least one value on true
+    choice = check_bool_individual(choice)
 
-    return choice
+    return icls(choice)

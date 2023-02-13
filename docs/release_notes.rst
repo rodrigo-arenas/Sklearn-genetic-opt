@@ -10,6 +10,10 @@ What's new in 0.9.1dev
 API Changes:
 ^^^^^^^^^^^^
 
+* Improved `GAFeatureSelectionCV` candidate generation when `max_features` is set, it also ensures
+  there is at least one feature selected
+* `crossover_probability` and `mutation_probability` are now correctly passed to the mate and mutation
+  functions inside GAFeatureSelectionCV
 * Dropped support for python 3.7 and add support for python 3.10+
 * Update most important packages from dev-requirements.txt to more recent versions
 * Update deprecated functions in tests

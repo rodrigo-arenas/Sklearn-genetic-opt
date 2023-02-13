@@ -24,7 +24,8 @@ from .utils.cv_scores import (
     create_gasearch_cv_results_,
     create_feature_selection_cv_results_,
 )
-from .utils.random import weighted_choice
+from .utils.random import weighted_bool_individual
+from .utils.tools import cxUniform, mutFlipBit
 
 
 class GASearchCV(BaseSearchCV):
@@ -379,7 +380,7 @@ class GASearchCV(BaseSearchCV):
 
     def mutate(self, individual):
         """
-        This function is responsible of changed a randomly selected parameter from an individual
+        This function is responsible for change a randomly selected parameter from an individual
         Parameters
         ----------
         individual: Individual object
@@ -1003,25 +1004,20 @@ class GAFeatureSelectionCV(BaseSearchCV):
         # Register the array to choose the features
         # Each binary value represents if the feature is selected or not
 
-        if self.features_proportion:
-            self.toolbox.register("features", weighted_choice, self.features_proportion)
-        else:
-            self.toolbox.register("features", random.randint, 0, 1)
-
         self.toolbox.register(
             "individual",
-            tools.initRepeat,
+            weighted_bool_individual,
             creator.Individual,
-            self.toolbox.features,
-            n=self.n_features,
+            weight=self.features_proportion,
+            size=self.n_features,
         )
 
         self.toolbox.register(
             "population", tools.initRepeat, list, self.toolbox.individual
         )
 
-        self.toolbox.register("mate", tools.cxUniform, indpb=0.05)
-        self.toolbox.register("mutate", tools.mutFlipBit, indpb=0.05)
+        self.toolbox.register("mate", cxUniform, indpb=self.crossover_adapter.current_value)
+        self.toolbox.register("mutate", mutFlipBit, indpb=self.mutation_adapter.current_value)
 
         if self.elitism:
             self.toolbox.register(

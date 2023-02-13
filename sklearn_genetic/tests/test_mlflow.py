@@ -92,7 +92,7 @@ def test_runs(mlflow_resources, mlflow_run):
         crossover_probability=0.9,
         mutation_probability=0.05,
         param_grid=params_grid,
-        algorithm="eaMuPlusLambda",
+        algorithm="eaSimple",
         n_jobs=-1,
         verbose=True,
         log_config=mlflow_config,
