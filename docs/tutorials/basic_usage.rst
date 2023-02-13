@@ -251,22 +251,22 @@ During the training, the same log format is displayed as before:
 .. image:: ../images/basic_usage_train_log_5.PNG
 
 After fitting the model, we have some extra methods to use the model right away. It will use by default the best set of
-features it found, remember as the algorithm used only a subset, you have to select them from the
-``X_test array``, this is done like this:
+features it found, remember as the algorithm used only a subset, once you use method as `predict`, `predict_proba`,etc
+only the ``support_`` features will be used on those methods
 
 .. code:: python3
 
-    features = evolved_estimator.best_features_
+    features = evolved_estimator.support_ 
 
     # Predict only with the subset of selected features
-    y_predict_ga = evolved_estimator.predict(X_test[:, features])
+    y_predict_ga = evolved_estimator.predict(X_test)
     accuracy = accuracy_score(y_test, y_predict_ga)
 
 .. image:: ../images/basic_usage_accuracy_6.PNG
 
 In this case, we got an accuracy score in the test set of 0.98.
 
-Notice that the ``best_features_`` is a vector of bool values, each
+Notice that the ``support_`` is a vector of bool values, each
 position represents the index of the feature (column) and the value indicates
 if that features was selected (True) or not (False) by the algorithm.
 In this example, the algorithm, discarded all the noisy random variables we created

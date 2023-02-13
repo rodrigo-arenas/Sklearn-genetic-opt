@@ -38,4 +38,4 @@ class BaseAdapter(ABC):
         """
         Run one iteration of the transformation
         """
-        raise NotImplementedError("Scheduler must override step()")
+        raise NotImplementedError("Scheduler must override step()")  # pragma: no cover

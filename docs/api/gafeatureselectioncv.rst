@@ -1,6 +1,6 @@
 
-FeatureSelectionCV
-------------------
+GAFeatureSelectionCV
+--------------------
 
 .. currentmodule:: sklearn_genetic
 

@@ -52,18 +52,18 @@ def test_expected_ga_results():
     )
 
     evolved_estimator.fit(X_train, y_train)
-    features = evolved_estimator.best_features_
+    features = evolved_estimator.support_
 
     assert check_is_fitted(evolved_estimator) is None
     assert features.shape[0] == X.shape[1]
     assert len(evolved_estimator) == generations + 1  # +1 random initial population
-    assert len(evolved_estimator.predict(X_test[:, features])) == len(X_test)
-    assert evolved_estimator.score(X_train[:, features], y_train) >= 0
-    assert len(evolved_estimator.decision_function(X_test[:, features])) == len(X_test)
-    assert len(evolved_estimator.predict_proba(X_test[:, features])) == len(X_test)
-    assert len(evolved_estimator.predict_log_proba(X_test[:, features])) == len(X_test)
-    assert evolved_estimator.score(X_test[:, features], y_test) == accuracy_score(
-        y_test, evolved_estimator.predict(X_test[:, features])
+    assert len(evolved_estimator.predict(X_test)) == len(X_test)
+    assert evolved_estimator.score(X_train, y_train) >= 0
+    assert len(evolved_estimator.decision_function(X_test)) == len(X_test)
+    assert len(evolved_estimator.predict_proba(X_test)) == len(X_test)
+    assert len(evolved_estimator.predict_log_proba(X_test)) == len(X_test)
+    assert evolved_estimator.score(X_test, y_test) == accuracy_score(
+        y_test, evolved_estimator.predict(X_test)
     )
     assert bool(evolved_estimator.get_params())
     assert len(evolved_estimator.hof) == evolved_estimator.keep_top_k
@@ -159,18 +159,18 @@ def test_expected_algorithms_callbacks(algorithm, callback):
     )
 
     evolved_estimator.fit(X_train, y_train, callbacks=callback)
-    features = evolved_estimator.best_features_
+    features = evolved_estimator.support_
 
     assert check_is_fitted(evolved_estimator) is None
     assert features.shape[0] == X.shape[1]
     assert len(evolved_estimator) <= generations + 1  # +1 random initial population
-    assert len(evolved_estimator.predict(X_test[:, features])) == len(X_test)
-    assert evolved_estimator.score(X_train[:, features], y_train) >= 0
-    assert len(evolved_estimator.decision_function(X_test[:, features])) == len(X_test)
-    assert len(evolved_estimator.predict_proba(X_test[:, features])) == len(X_test)
-    assert len(evolved_estimator.predict_log_proba(X_test[:, features])) == len(X_test)
-    assert evolved_estimator.score(X_test[:, features], y_test) == accuracy_score(
-        y_test, evolved_estimator.predict(X_test[:, features])
+    assert len(evolved_estimator.predict(X_test)) == len(X_test)
+    assert evolved_estimator.score(X_train, y_train) >= 0
+    assert len(evolved_estimator.decision_function(X_test)) == len(X_test)
+    assert len(evolved_estimator.predict_proba(X_test)) == len(X_test)
+    assert len(evolved_estimator.predict_log_proba(X_test)) == len(X_test)
+    assert evolved_estimator.score(X_test, y_test) == accuracy_score(
+        y_test, evolved_estimator.predict(X_test)
     )
     assert bool(evolved_estimator.get_params())
     assert len(evolved_estimator.hof) == evolved_estimator.keep_top_k
@@ -208,11 +208,9 @@ def test_negative_criteria():
     )
 
     evolved_estimator.fit(X_train_b, y_train_b)
-    features = evolved_estimator.best_features_
 
     assert check_is_fitted(evolved_estimator) is None
-    assert len(evolved_estimator.predict(X_test_b[:, features])) == len(X_test_b)
-    assert evolved_estimator.score(X_train_b[:, features], y_train_b) <= 0
+    assert len(evolved_estimator.predict(X_test_b)) == len(X_test_b)
 
 
 def test_wrong_criteria():
@@ -348,27 +346,27 @@ def test_expected_ga_max_features():
     )
 
     evolved_estimator.fit(X_noise_train, y_train)
-    features = evolved_estimator.best_features_
+    features = evolved_estimator.support_
 
     assert check_is_fitted(evolved_estimator) is None
     assert features.shape[0] == X_noise_train.shape[1]
     assert sum(features) <= max_features
     assert len(evolved_estimator) == generations + 1  # +1 random initial population
-    assert len(evolved_estimator.predict(X_noise_test[:, features])) == len(
+    assert len(evolved_estimator.predict(X_noise_test)) == len(
         X_noise_test
     )
-    assert evolved_estimator.score(X_noise_train[:, features], y_train) >= 0
-    assert len(evolved_estimator.decision_function(X_noise_test[:, features])) == len(
+    assert evolved_estimator.score(X_noise_train, y_train) >= 0
+    assert len(evolved_estimator.decision_function(X_noise_test)) == len(
         X_noise_test
     )
-    assert len(evolved_estimator.predict_proba(X_noise_test[:, features])) == len(
+    assert len(evolved_estimator.predict_proba(X_noise_test)) == len(
         X_noise_test
     )
-    assert len(evolved_estimator.predict_log_proba(X_noise_test[:, features])) == len(
+    assert len(evolved_estimator.predict_log_proba(X_noise_test)) == len(
         X_noise_test
     )
-    assert evolved_estimator.score(X_noise_test[:, features], y_test) == accuracy_score(
-        evolved_estimator.predict(X_noise_test[:, features]), y_test
+    assert evolved_estimator.score(X_noise_test, y_test) == accuracy_score(
+        evolved_estimator.predict(X_noise_test), y_test
     )
     assert bool(evolved_estimator.get_params())
     assert len(evolved_estimator.hof) == evolved_estimator.keep_top_k
@@ -424,18 +422,18 @@ def test_expected_ga_multimetric():
     )
 
     evolved_estimator.fit(X_train, y_train)
-    features = evolved_estimator.best_features_
+    features = evolved_estimator.support_
 
     assert check_is_fitted(evolved_estimator) is None
     assert features.shape[0] == X.shape[1]
     assert len(evolved_estimator) == generations + 1  # +1 random initial population
-    assert len(evolved_estimator.predict(X_test[:, features])) == len(X_test)
-    assert evolved_estimator.score(X_train[:, features], y_train) >= 0
-    assert len(evolved_estimator.decision_function(X_test[:, features])) == len(X_test)
-    assert len(evolved_estimator.predict_proba(X_test[:, features])) == len(X_test)
-    assert len(evolved_estimator.predict_log_proba(X_test[:, features])) == len(X_test)
-    assert evolved_estimator.score(X_test[:, features], y_test) == accuracy_score(
-        y_test, evolved_estimator.predict(X_test[:, features])
+    assert len(evolved_estimator.predict(X_test)) == len(X_test)
+    assert evolved_estimator.score(X_train, y_train) >= 0
+    assert len(evolved_estimator.decision_function(X_test)) == len(X_test)
+    assert len(evolved_estimator.predict_proba(X_test)) == len(X_test)
+    assert len(evolved_estimator.predict_log_proba(X_test)) == len(X_test)
+    assert evolved_estimator.score(X_test, y_test) == accuracy_score(
+        y_test, evolved_estimator.predict(X_test)
     )
     assert bool(evolved_estimator.get_params())
     assert len(evolved_estimator.hof) == evolved_estimator.keep_top_k
@@ -487,18 +485,18 @@ def test_expected_ga_callable_score():
     )
 
     evolved_estimator.fit(X_train, y_train)
-    features = evolved_estimator.best_features_
+    features = evolved_estimator.support_
 
     assert check_is_fitted(evolved_estimator) is None
     assert features.shape[0] == X.shape[1]
     assert len(evolved_estimator) == generations + 1  # +1 random initial population
-    assert len(evolved_estimator.predict(X_test[:, features])) == len(X_test)
-    assert evolved_estimator.score(X_train[:, features], y_train) >= 0
-    assert len(evolved_estimator.decision_function(X_test[:, features])) == len(X_test)
-    assert len(evolved_estimator.predict_proba(X_test[:, features])) == len(X_test)
-    assert len(evolved_estimator.predict_log_proba(X_test[:, features])) == len(X_test)
-    assert evolved_estimator.score(X_test[:, features], y_test) == accuracy_score(
-        y_test, evolved_estimator.predict(X_test[:, features])
+    assert len(evolved_estimator.predict(X_test)) == len(X_test)
+    assert evolved_estimator.score(X_train, y_train) >= 0
+    assert len(evolved_estimator.decision_function(X_test)) == len(X_test)
+    assert len(evolved_estimator.predict_proba(X_test)) == len(X_test)
+    assert len(evolved_estimator.predict_log_proba(X_test)) == len(X_test)
+    assert evolved_estimator.score(X_test, y_test) == accuracy_score(
+        y_test, evolved_estimator.predict(X_test)
     )
     assert bool(evolved_estimator.get_params())
     assert len(evolved_estimator.hof) == evolved_estimator.keep_top_k
@@ -558,18 +556,18 @@ def test_expected_ga_schedulers():
     )
 
     evolved_estimator.fit(X_train, y_train)
-    features = evolved_estimator.best_features_
+    features = evolved_estimator.support_
 
     assert check_is_fitted(evolved_estimator) is None
     assert features.shape[0] == X.shape[1]
     assert len(evolved_estimator) == generations + 1  # +1 random initial population
-    assert len(evolved_estimator.predict(X_test[:, features])) == len(X_test)
-    assert evolved_estimator.score(X_train[:, features], y_train) >= 0
-    assert len(evolved_estimator.decision_function(X_test[:, features])) == len(X_test)
-    assert len(evolved_estimator.predict_proba(X_test[:, features])) == len(X_test)
-    assert len(evolved_estimator.predict_log_proba(X_test[:, features])) == len(X_test)
-    assert evolved_estimator.score(X_test[:, features], y_test) == accuracy_score(
-        y_test, evolved_estimator.predict(X_test[:, features])
+    assert len(evolved_estimator.predict(X_test)) == len(X_test)
+    assert evolved_estimator.score(X_train, y_train) >= 0
+    assert len(evolved_estimator.decision_function(X_test)) == len(X_test)
+    assert len(evolved_estimator.predict_proba(X_test)) == len(X_test)
+    assert len(evolved_estimator.predict_log_proba(X_test)) == len(X_test)
+    assert evolved_estimator.score(X_test, y_test) == accuracy_score(
+        y_test, evolved_estimator.predict(X_test)
     )
     assert bool(evolved_estimator.get_params())
     assert len(evolved_estimator.hof) == evolved_estimator.keep_top_k

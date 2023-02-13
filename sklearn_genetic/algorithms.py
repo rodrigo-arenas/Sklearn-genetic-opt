@@ -16,6 +16,7 @@ def eaSimple(
     callbacks=None,
     verbose=True,
     estimator=None,
+    **kwargs
 ):
     """
     The base implementation is directly taken from: https://github.com/DEAP/deap/blob/master/deap/algorithms.py
@@ -205,6 +206,7 @@ def eaMuPlusLambda(
     callbacks=None,
     verbose=True,
     estimator=None,
+    **kwargs
 ):
     """
     The base implementation is directly taken from: https://github.com/DEAP/deap/blob/master/deap/algorithms.py
@@ -390,6 +392,7 @@ def eaMuCommaLambda(
     callbacks=None,
     verbose=True,
     estimator=None,
+    **kwargs
 ):
     """
     The base implementation is directly taken from: https://github.com/DEAP/deap/blob/master/deap/algorithms.py
@@ -564,3 +567,8 @@ def eaMuCommaLambda(
     eval_callbacks(**callbacks_end_args)
 
     return population, logbook, n_gen
+
+
+algorithms_factory = {"eaSimple": eaSimple,
+                      "eaMuPlusLambda": eaMuPlusLambda,
+                      "eaMuCommaLambda": eaMuCommaLambda}
