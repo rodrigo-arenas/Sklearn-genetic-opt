@@ -17,7 +17,7 @@ from sklearn.metrics._scorer import _check_multimetric_scoring
 
 from .parameters import Algorithms, Criteria
 from .space import Space
-from .algorithms import eaSimple, eaMuPlusLambda, eaMuCommaLambda
+from .algorithms import algorithms_factory
 from .callbacks.validations import check_callback
 from .schedules.validations import check_adapter
 from .utils.cv_scores import (
@@ -596,40 +596,9 @@ class GASearchCV(BaseSearchCV):
             The number of generations that the evolutionary algorithm ran
         """
 
-        if self.algorithm == Algorithms.eaSimple.value:
-
-            pop, log, gen = eaSimple(
-                pop,
-                self.toolbox,
-                cxpb=self.crossover_adapter,
-                stats=stats,
-                mutpb=self.mutation_adapter,
-                ngen=self.generations,
-                halloffame=hof,
-                callbacks=self.callbacks,
-                verbose=self.verbose,
-                estimator=self,
-            )
-
-        elif self.algorithm == Algorithms.eaMuPlusLambda.value:
-
-            pop, log, gen = eaMuPlusLambda(
-                pop,
-                self.toolbox,
-                mu=self.population_size,
-                lambda_=2 * self.population_size,
-                cxpb=self.crossover_adapter,
-                stats=stats,
-                mutpb=self.mutation_adapter,
-                ngen=self.generations,
-                halloffame=hof,
-                callbacks=self.callbacks,
-                verbose=self.verbose,
-                estimator=self,
-            )
-
-        elif self.algorithm == Algorithms.eaMuCommaLambda.value:
-            pop, log, gen = eaMuCommaLambda(
+        selected_algorithm = algorithms_factory.get(self.algorithm, None)
+        if selected_algorithm:
+            pop, log, gen = selected_algorithm(
                 pop,
                 self.toolbox,
                 mu=self.population_size,
@@ -1228,40 +1197,9 @@ class GAFeatureSelectionCV(BaseSearchCV):
             The number of generations that the evolutionary algorithm ran
         """
 
-        if self.algorithm == Algorithms.eaSimple.value:
-
-            pop, log, gen = eaSimple(
-                pop,
-                self.toolbox,
-                cxpb=self.crossover_adapter,
-                stats=stats,
-                mutpb=self.mutation_adapter,
-                ngen=self.generations,
-                halloffame=hof,
-                callbacks=self.callbacks,
-                verbose=self.verbose,
-                estimator=self,
-            )
-
-        elif self.algorithm == Algorithms.eaMuPlusLambda.value:
-
-            pop, log, gen = eaMuPlusLambda(
-                pop,
-                self.toolbox,
-                mu=self.population_size,
-                lambda_=2 * self.population_size,
-                cxpb=self.crossover_adapter,
-                stats=stats,
-                mutpb=self.mutation_adapter,
-                ngen=self.generations,
-                halloffame=hof,
-                callbacks=self.callbacks,
-                verbose=self.verbose,
-                estimator=self,
-            )
-
-        elif self.algorithm == Algorithms.eaMuCommaLambda.value:
-            pop, log, gen = eaMuCommaLambda(
+        selected_algorithm = algorithms_factory.get(self.algorithm, None)
+        if selected_algorithm:
+            pop, log, gen = selected_algorithm(
                 pop,
                 self.toolbox,
                 mu=self.population_size,
