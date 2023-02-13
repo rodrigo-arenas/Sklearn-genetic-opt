@@ -861,6 +861,8 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         parameters for the model.
     n_splits_ : int
         The number of cross-validation splits (folds/iterations).
+    n_features_in_ : int
+        Number of features seen (selected) during fit.
     refit_time_ : float
         Seconds used for refitting the best model on the whole dataset.
         This is present only if ``refit`` is not False.
@@ -1089,6 +1091,7 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         """
         Main method of GAFeatureSelectionCV, starts the optimization
         procedure with to find the best features set
+
         Parameters
         ----------
         X : array-like of shape (n_samples, n_features)
@@ -1334,21 +1337,108 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
 
     @available_if(_estimator_has("decision_function"))
     def decision_function(self, X):
+        """Call decision_function on the estimator with the best found features.
+       Only available if ``refit=True`` and the underlying estimator supports
+       ``decision_function``.
+
+       Parameters
+       ----------
+       X : indexable, length n_samples
+           Must fulfill the input assumptions of the
+           underlying estimator.
+
+       Returns
+       -------
+       y_score : ndarray of shape (n_samples,) or (n_samples, n_classes) \
+               or (n_samples, n_classes * (n_classes-1) / 2)
+           Result of the decision function for `X` based on the estimator with
+           the best found parameters.
+       """
         return self.estimator.decision_function(self.transform(X))
 
     @available_if(_estimator_has("predict"))
     def predict(self, X):
+        """Call predict on the estimator with the best found features.
+        Only available if ``refit=True`` and the underlying estimator supports
+        ``predict``.
+
+        Parameters
+        ----------
+        X : indexable, length n_samples
+            Must fulfill the input assumptions of the
+            underlying estimator.
+
+        Returns
+        -------
+        y_pred : ndarray of shape (n_samples,)
+            The predicted labels or values for `X` based on the estimator with
+            the best found parameters.
+        """
         return self.estimator.predict(self.transform(X))
 
     @available_if(_estimator_has("predict_log_proba"))
     def predict_log_proba(self, X):
+        """Call predict_log_proba on the estimator with the best found features.
+        Only available if ``refit=True`` and the underlying estimator supports
+        ``predict_log_proba``.
+
+        Parameters
+        ----------
+        X : indexable, length n_samples
+            Must fulfill the input assumptions of the
+            underlying estimator.
+
+        Returns
+        -------
+        y_pred : ndarray of shape (n_samples,) or (n_samples, n_classes)
+            Predicted class log-probabilities for `X` based on the estimator
+            with the best found parameters. The order of the classes
+            corresponds to that in the fitted attribute :term:`classes_`.
+        """
         return self.estimator.predict_log_proba(self.transform(X))
 
     @available_if(_estimator_has("predict_proba"))
     def predict_proba(self, X):
+        """Call predict_proba on the estimator with the best found features.
+        Only available if ``refit=True`` and the underlying estimator supports
+        ``predict_proba``.
+
+        Parameters
+        ----------
+        X : indexable, length n_samples
+            Must fulfill the input assumptions of the
+            underlying estimator.
+
+        Returns
+        -------
+        y_pred : ndarray of shape (n_samples,) or (n_samples, n_classes)
+            Predicted class probabilities for `X` based on the estimator with
+            the best found parameters. The order of the classes corresponds
+            to that in the fitted attribute :term:`classes_`.
+        """
         return self.estimator.predict_proba(self.transform(X))
 
     @available_if(_estimator_has("score"))
     def score(self, X, y):
+        """Return the score on the given data, if the estimator has been refit.
+        This uses the score defined by ``scoring`` where provided, and the
+        ``best_estimator_.score`` method otherwise.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Input data, where `n_samples` is the number of samples and
+            `n_features` is the number of features.
+        y : array-like of shape (n_samples, n_output) \
+            or (n_samples,), default=None
+            Target relative to X for classification or regression;
+            None for unsupervised learning.
+
+        Returns
+        -------
+        score : float
+            The score defined by ``scoring`` if provided, and the
+            ``best_estimator_.score`` method otherwise.
+        """
         return self.estimator.score(self.transform(X), y)
 

@@ -94,7 +94,7 @@ as it is usually advised to look further which distribution works better for you
    :caption: API Reference:
 
    api/gasearchcv
-   api/featureselectioncv
+   api/gafeatureselectioncv
    api/callbacks
    api/schedules
    api/plots
