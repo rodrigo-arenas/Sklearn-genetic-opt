@@ -6,9 +6,12 @@ import numpy as np
 from deap import base, creator, tools
 from sklearn.base import clone
 from sklearn.model_selection import cross_validate
-from sklearn.base import is_classifier, is_regressor
+from sklearn.base import is_classifier, is_regressor, BaseEstimator, MetaEstimatorMixin
+from sklearn.feature_selection import SelectorMixin
 from sklearn.utils import check_X_y
 from sklearn.utils.validation import check_is_fitted
+from sklearn.utils.metaestimators import available_if
+from sklearn.feature_selection._from_model import _estimator_has
 from sklearn.metrics import check_scoring
 from sklearn.exceptions import NotFittedError
 from sklearn.model_selection._search import BaseSearchCV
@@ -235,6 +238,7 @@ class GASearchCV(BaseSearchCV):
     ):
 
         self.estimator = clone(estimator)
+        self.estimator_ = None
         self.toolbox = base.Toolbox()
         self.cv = cv
         self.scoring = scoring
@@ -556,6 +560,7 @@ class GASearchCV(BaseSearchCV):
             self.refit_time_ = refit_end_time - refit_start_time
 
             self.best_estimator_ = self.estimator
+            self.estimator_ = self.best_estimator_
 
             # hof keeps the best params according to the fitness value
             # To be consistent with self.best_estimator_, if more than 1 model gets the
@@ -688,7 +693,7 @@ class GASearchCV(BaseSearchCV):
         return self._n_iterations
 
 
-class GAFeatureSelectionCV(BaseSearchCV):
+class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
     """
     Evolutionary optimization for feature selection.
 
@@ -849,6 +854,8 @@ class GAFeatureSelectionCV(BaseSearchCV):
     best_features_ : list
         List of bool, each index represents one feature in the same order the data was fed.
         1 means the feature was selected, 0 means the features was discarded.
+    support_ : list
+        The mask of selected features.
     scorer_ : function or a dict
         Scorer function used on the held out data to choose the best
         parameters for the model.
@@ -884,6 +891,7 @@ class GAFeatureSelectionCV(BaseSearchCV):
     ):
 
         self.estimator = clone(estimator)
+        self.estimator_ = None
         self.toolbox = base.Toolbox()
         self.cv = cv
         self.scoring = scoring
@@ -915,6 +923,7 @@ class GAFeatureSelectionCV(BaseSearchCV):
         self.features_proportion = None
         self.callbacks = None
         self.best_features_ = None
+        self.support_ = None
         self.best_estimator_ = None
         self._pop = None
         self._stats = None
@@ -945,17 +954,6 @@ class GAFeatureSelectionCV(BaseSearchCV):
             self.criteria_sign = 1.0
         elif criteria == Criteria.min.value:
             self.criteria_sign = -1.0
-
-        super(GAFeatureSelectionCV, self).__init__(
-            estimator=estimator,
-            scoring=scoring,
-            n_jobs=n_jobs,
-            refit=refit,
-            cv=cv,
-            verbose=verbose,
-            pre_dispatch=pre_dispatch,
-            error_score=error_score,
-        )
 
     def _register(self):
         """
@@ -1143,6 +1141,7 @@ class GAFeatureSelectionCV(BaseSearchCV):
         self._n_iterations = n_gen
 
         self.best_features_ = np.array(self._hof[0], dtype=bool)
+        self.support_ = self.best_features_
 
         self.cv_results_ = create_feature_selection_cv_results_(
             logbook=self.logbook,
@@ -1167,6 +1166,7 @@ class GAFeatureSelectionCV(BaseSearchCV):
             self.refit_time_ = refit_end_time - refit_start_time
 
             self.best_estimator_ = self.estimator
+            self.estimator_ = self.best_estimator_
 
         self.hof = self._hof
 
@@ -1287,3 +1287,68 @@ class GAFeatureSelectionCV(BaseSearchCV):
         self.generations otherwise
         """
         return self._n_iterations
+
+    def _check_refit_for_multimetric(self, scores):  # pragma: no cover
+        """Check `refit` is compatible with `scores` is valid"""
+        multimetric_refit_msg = (
+            "For multi-metric scoring, the parameter refit must be set to a "
+            "scorer key or a callable to refit an estimator with the best "
+            "parameter setting on the whole data and make the best_* "
+            "attributes available for that metric. If this is not needed, "
+            f"refit should be set to False explicitly. {self.refit!r} was "
+            "passed."
+        )
+
+        valid_refit_dict = isinstance(self.refit, str) and self.refit in scores
+
+        if (
+                self.refit is not False
+                and not valid_refit_dict
+                and not callable(self.refit)
+        ):
+            raise ValueError(multimetric_refit_msg)
+
+    @property
+    def n_features_in_(self):  # pragma: no cover
+        """Number of features seen during `fit`."""
+        # For consistency with other estimators we raise a AttributeError so
+        # that hasattr() fails if the estimator isn't fitted.
+        if not self._fitted:
+            raise AttributeError(
+                "{} object has no n_features_in_ attribute.".format(
+                    self.__class__.__name__
+                )
+            )
+
+        return self.n_features
+
+    def _get_support_mask(self):
+
+        if not self._fitted:
+            raise NotFittedError(
+                f"This GAFeatureSelectionCV instance is not fitted yet "
+                f"or used refit=False. Call 'fit' with appropriate "
+                f"arguments before using this estimator."
+            )
+        return self.best_features_
+
+    @available_if(_estimator_has("decision_function"))
+    def decision_function(self, X):
+        return self.estimator.decision_function(self.transform(X))
+
+    @available_if(_estimator_has("predict"))
+    def predict(self, X):
+        return self.estimator.predict(self.transform(X))
+
+    @available_if(_estimator_has("predict_log_proba"))
+    def predict_log_proba(self, X):
+        return self.estimator.predict_log_proba(self.transform(X))
+
+    @available_if(_estimator_has("predict_proba"))
+    def predict_proba(self, X):
+        return self.estimator.predict_proba(self.transform(X))
+
+    @available_if(_estimator_has("score"))
+    def score(self, X, y):
+        return self.estimator.score(self.transform(X), y)
+

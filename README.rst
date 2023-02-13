@@ -174,13 +174,15 @@ Example: Feature Selection
     evolved_estimator.fit(X_train, y_train)
 
     # Features selected by the algorithm
-    features = evolved_estimator.best_features_
+    features = evolved_estimator.support_
     print(features)
 
     # Predict only with the subset of selected features
-    y_predict_ga = evolved_estimator.predict(X_test[:, features])
+    y_predict_ga = evolved_estimator.predict(X_test)
     print(accuracy_score(y_test, y_predict_ga))
 
+    # Transform the original data to the selected features
+    X_reduced = evolved_estimator.transform(X_test)
 
 Changelog
 #########

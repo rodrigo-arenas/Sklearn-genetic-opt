@@ -10,6 +10,8 @@ What's new in 0.9.1dev
 API Changes:
 ^^^^^^^^^^^^
 
+* `GAFeatureSelectionCV` now mimics the scikit-learn FeatureSelection algorithms API instead of Grid Search, this enables
+  easier implementation as one selection method that is closer to the scikit-learn API
 * Improved `GAFeatureSelectionCV` candidate generation when `max_features` is set, it also ensures
   there is at least one feature selected
 * `crossover_probability` and `mutation_probability` are now correctly passed to the mate and mutation
