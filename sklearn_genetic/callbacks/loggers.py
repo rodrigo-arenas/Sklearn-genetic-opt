@@ -105,7 +105,6 @@ class TensorBoard(BaseCallback):
         self.path = os.path.join(log_dir, self.run_id)
 
     def on_step(self, record=None, logbook=None, estimator=None):
-
         # Get the last metric value
         stats = logbook[-1]
 

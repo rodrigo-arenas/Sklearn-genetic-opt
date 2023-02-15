@@ -68,9 +68,7 @@ def test_runs(mlflow_resources, mlflow_run):
     y = data["target"]
     X = data["data"]
 
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.33, random_state=42
-    )
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
 
     params_grid = {
         "min_weight_fraction_leaf": Continuous(0, 0.5),

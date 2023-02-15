@@ -14,7 +14,11 @@ class Integer(BaseDimension):
     """class for hyperparameters search space of integer values"""
 
     def __init__(
-        self, lower: int = None, upper: int = None, distribution: str = "uniform", random_state=None
+        self,
+        lower: int = None,
+        upper: int = None,
+        distribution: str = "uniform",
+        random_state=None,
     ):
         """
         Parameters
@@ -64,7 +68,11 @@ class Continuous(BaseDimension):
     """class for hyperparameters search space of real values"""
 
     def __init__(
-        self, lower: float = None, upper: float = None, distribution: str = "uniform", random_state=None
+        self,
+        lower: float = None,
+        upper: float = None,
+        distribution: str = "uniform",
+        random_state=None,
     ):
         """
         Parameters
@@ -118,7 +126,11 @@ class Categorical(BaseDimension):
     """class for hyperparameters search space of categorical values"""
 
     def __init__(
-        self, choices: list = None, priors: list = None, distribution: str = "choice", random_state=None
+        self,
+        choices: list = None,
+        priors: list = None,
+        distribution: str = "choice",
+        random_state=None,
     ):
         """
         Parameters
@@ -235,5 +247,4 @@ class Space(object):
         return self.dimensions
 
     def __getitem__(self, index):
-
         return self.param_grid[index]

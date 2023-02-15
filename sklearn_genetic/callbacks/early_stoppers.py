@@ -35,9 +35,7 @@ class ThresholdStopping(BaseCallback):
             stat = logbook.select(self.metric)[-1]
 
         else:
-            raise ValueError(
-                "At least one of record or logbook parameters must be provided"
-            )
+            raise ValueError("At least one of record or logbook parameters must be provided")
 
         if stat is not None and stat >= self.threshold:
             print(f"INFO: {self.__class__.__name__} callback met its criteria")

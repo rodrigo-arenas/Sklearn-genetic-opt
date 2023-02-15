@@ -13,9 +13,7 @@ from ..base import BaseDimension
     ],
 )
 def test_sample_variables(data_object, parameters):
-    my_categorical = Categorical(
-        choices=["car", "byc", "house"], priors=[0.2, 0.1, 0.7]
-    )
+    my_categorical = Categorical(choices=["car", "byc", "house"], priors=[0.2, 0.1, 0.7])
     for _ in range(20):
         assert my_categorical.sample() in ["car", "byc", "house"]
 
@@ -100,9 +98,7 @@ def test_check_space_fail():
     assert str(excinfo.value) == "param_grid can not be empty"
 
     param_grid = {
-        "min_weight_fraction_leaf": Continuous(
-            lower=0.001, upper=0.5, distribution="log-uniform"
-        ),
+        "min_weight_fraction_leaf": Continuous(lower=0.001, upper=0.5, distribution="log-uniform"),
         "max_leaf_nodes": Integer(lower=2, upper=35),
         "criterion": Categorical(choices=["gini", "entropy"]),
         "max_depth": range(10, 20),

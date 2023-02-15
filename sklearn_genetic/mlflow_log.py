@@ -52,9 +52,7 @@ class MLflowConfig:
         mlflow.set_tracking_uri(self.tracking_uri)
         mlflow.set_experiment(self.experiment)
 
-        self.experiment_id = mlflow.get_experiment_by_name(
-            self.experiment
-        ).experiment_id
+        self.experiment_id = mlflow.get_experiment_by_name(self.experiment).experiment_id
 
         if self.tags is not None:
             mlflow.set_tags(self.tags)
@@ -75,7 +73,6 @@ class MLflowConfig:
         with mlflow.start_run(
             experiment_id=self.experiment_id, nested=True, run_name=self.run_name
         ):
-
             for parameter, value in parameters.items():
                 mlflow.log_param(key=parameter, value=value)
 

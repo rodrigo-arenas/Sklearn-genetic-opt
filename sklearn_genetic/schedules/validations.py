@@ -8,12 +8,8 @@ def check_adapter(adapter):
     """
     if isinstance(adapter, BaseAdapter):
         return adapter
-    elif (isinstance(adapter, int) or isinstance(adapter, float)) and not isinstance(
-        adapter, bool
-    ):
-        return ConstantAdapter(
-            initial_value=adapter, end_value=adapter, adaptive_rate=0
-        )
+    elif (isinstance(adapter, int) or isinstance(adapter, float)) and not isinstance(adapter, bool):
+        return ConstantAdapter(initial_value=adapter, end_value=adapter, adaptive_rate=0)
     else:
         raise ValueError(
             "adapter should be either a class with inheritance from schedulers.base.BaseAdapter "

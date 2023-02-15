@@ -28,9 +28,7 @@ noise = np.random.uniform(1, 4, size=(X.shape[0], 10))
 
 X = np.hstack((X, noise))
 
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.33, random_state=42
-)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
 
 
 def test_expected_ga_results():
@@ -228,10 +226,7 @@ def test_wrong_criteria():
             verbose=False,
             criteria="maximization",
         )
-    assert (
-        str(excinfo.value)
-        == "Criteria must be one of ['max', 'min'], got maximization instead"
-    )
+    assert str(excinfo.value) == "Criteria must be one of ['max', 'min'], got maximization instead"
 
 
 def test_wrong_estimator():
@@ -249,9 +244,7 @@ def test_wrong_estimator():
             verbose=False,
             criteria="maximization",
         )
-    assert (
-        str(excinfo.value) == "KMeans() is not a valid Sklearn classifier or regressor"
-    )
+    assert str(excinfo.value) == "KMeans() is not a valid Sklearn classifier or regressor"
 
 
 def test_wrong_get_item():
@@ -352,19 +345,11 @@ def test_expected_ga_max_features():
     assert features.shape[0] == X_noise_train.shape[1]
     assert sum(features) <= max_features
     assert len(evolved_estimator) == generations + 1  # +1 random initial population
-    assert len(evolved_estimator.predict(X_noise_test)) == len(
-        X_noise_test
-    )
+    assert len(evolved_estimator.predict(X_noise_test)) == len(X_noise_test)
     assert evolved_estimator.score(X_noise_train, y_train) >= 0
-    assert len(evolved_estimator.decision_function(X_noise_test)) == len(
-        X_noise_test
-    )
-    assert len(evolved_estimator.predict_proba(X_noise_test)) == len(
-        X_noise_test
-    )
-    assert len(evolved_estimator.predict_log_proba(X_noise_test)) == len(
-        X_noise_test
-    )
+    assert len(evolved_estimator.decision_function(X_noise_test)) == len(X_noise_test)
+    assert len(evolved_estimator.predict_proba(X_noise_test)) == len(X_noise_test)
+    assert len(evolved_estimator.predict_log_proba(X_noise_test)) == len(X_noise_test)
     assert evolved_estimator.score(X_noise_test, y_test) == accuracy_score(
         evolved_estimator.predict(X_noise_test), y_test
     )
@@ -530,12 +515,8 @@ def test_expected_ga_callable_score():
 def test_expected_ga_schedulers():
     clf = SGDClassifier(loss="modified_huber", fit_intercept=True)
     generations = 6
-    mutation_scheduler = ExponentialAdapter(
-        initial_value=0.6, adaptive_rate=0.01, end_value=0.2
-    )
-    crossover_scheduler = InverseAdapter(
-        initial_value=0.4, adaptive_rate=0.01, end_value=0.3
-    )
+    mutation_scheduler = ExponentialAdapter(initial_value=0.6, adaptive_rate=0.01, end_value=0.2)
+    crossover_scheduler = InverseAdapter(initial_value=0.4, adaptive_rate=0.01, end_value=0.3)
 
     evolved_estimator = GAFeatureSelectionCV(
         clf,

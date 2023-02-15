@@ -8,7 +8,7 @@ twine==3.3.0
 seaborn>=0.11.2
 mlflow>=1.30.0
 tcl==0.2
-black==21.5b2
+black==23.1.0
 sphinx
 sphinx_gallery
 sphinx_rtd_theme

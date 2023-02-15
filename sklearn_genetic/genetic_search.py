@@ -214,29 +214,28 @@ class GASearchCV(BaseSearchCV):
     """
 
     def __init__(
-            self,
-            estimator,
-            cv=3,
-            param_grid=None,
-            scoring=None,
-            population_size=50,
-            generations=80,
-            crossover_probability=0.2,
-            mutation_probability=0.8,
-            tournament_size=3,
-            elitism=True,
-            verbose=True,
-            keep_top_k=1,
-            criteria="max",
-            algorithm="eaMuPlusLambda",
-            refit=True,
-            n_jobs=1,
-            pre_dispatch="2*n_jobs",
-            error_score=np.nan,
-            return_train_score=False,
-            log_config=None,
+        self,
+        estimator,
+        cv=3,
+        param_grid=None,
+        scoring=None,
+        population_size=50,
+        generations=80,
+        crossover_probability=0.2,
+        mutation_probability=0.8,
+        tournament_size=3,
+        elitism=True,
+        verbose=True,
+        keep_top_k=1,
+        criteria="max",
+        algorithm="eaMuPlusLambda",
+        refit=True,
+        n_jobs=1,
+        pre_dispatch="2*n_jobs",
+        error_score=np.nan,
+        return_train_score=False,
+        log_config=None,
     ):
-
         self.estimator = clone(estimator)
         self.estimator_ = None
         self.toolbox = base.Toolbox()
@@ -287,14 +286,10 @@ class GASearchCV(BaseSearchCV):
 
         # Check that the estimator is compatible with scikit-learn
         if not is_classifier(self.estimator) and not is_regressor(self.estimator):
-            raise ValueError(
-                f"{self.estimator} is not a valid Sklearn classifier or regressor"
-            )
+            raise ValueError(f"{self.estimator} is not a valid Sklearn classifier or regressor")
 
         if criteria not in Criteria.list():
-            raise ValueError(
-                f"Criteria must be one of {Criteria.list()}, got {criteria} instead"
-            )
+            raise ValueError(f"Criteria must be one of {Criteria.list()}, got {criteria} instead")
         # Minimization is handle like an optimization problem with a change in the score sign
         elif criteria == Criteria.max.value:
             self.criteria_sign = 1.0
@@ -347,9 +342,7 @@ class GASearchCV(BaseSearchCV):
             n=IND_SIZE,
         )
 
-        self.toolbox.register(
-            "population", tools.initRepeat, list, self.toolbox.individual
-        )
+        self.toolbox.register("population", tools.initRepeat, list, self.toolbox.individual)
 
         if len(self.space) == 1:
             sampler = list(self.space.param_grid.values())[0]
@@ -363,9 +356,7 @@ class GASearchCV(BaseSearchCV):
 
         self.toolbox.register("mutate", self.mutate)
         if self.elitism:
-            self.toolbox.register(
-                "select", tools.selTournament, tournsize=self.tournament_size
-            )
+            self.toolbox.register("select", tools.selTournament, tournsize=self.tournament_size)
         else:
             self.toolbox.register("select", tools.selRoulette)
 
@@ -461,9 +452,7 @@ class GASearchCV(BaseSearchCV):
             current_generation_params[f"test_{metric}"] = cv_results[f"test_{metric}"]
 
             if self.return_train_score:
-                current_generation_params[f"train_{metric}"] = cv_results[
-                    f"train_{metric}"
-                ]
+                current_generation_params[f"train_{metric}"] = cv_results[f"train_{metric}"]
 
         index = len(self.logbook.chapters["parameters"])
         current_generation_params = {"index": index, **current_generation_params}
@@ -520,9 +509,7 @@ class GASearchCV(BaseSearchCV):
         self._register()
 
         # Optimization routine from the selected evolutionary algorithm
-        pop, log, n_gen = self._select_algorithm(
-            pop=self._pop, stats=self._stats, hof=self._hof
-        )
+        pop, log, n_gen = self._select_algorithm(pop=self._pop, stats=self._stats, hof=self._hof)
 
         # Update the _n_iterations value as the algorithm could stop earlier due a callback
         self._n_iterations = n_gen
@@ -544,18 +531,17 @@ class GASearchCV(BaseSearchCV):
 
         # Imitate the logic of scikit-learn refit parameter
         if self.refit:
-            self.best_index_ = self.cv_results_[
-                f"rank_test_{self.refit_metric}"
-            ].argmin()
-            self.best_score_ = self.cv_results_[f"mean_test_{self.refit_metric}"][
-                self.best_index_
-            ]
+            self.best_index_ = self.cv_results_[f"rank_test_{self.refit_metric}"].argmin()
+            self.best_score_ = self.cv_results_[f"mean_test_{self.refit_metric}"][self.best_index_]
             self.best_params_ = self.cv_results_["params"][self.best_index_]
 
             self.estimator.set_params(**self.best_params_)
 
             refit_start_time = time.time()
-            self.estimator.fit(self.X_, self.y_, )
+            self.estimator.fit(
+                self.X_,
+                self.y_,
+            )
             refit_end_time = time.time()
             self.refit_time_ = refit_end_time - refit_start_time
 
@@ -869,29 +855,28 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
     """
 
     def __init__(
-            self,
-            estimator,
-            cv=3,
-            scoring=None,
-            population_size=50,
-            generations=80,
-            crossover_probability=0.2,
-            mutation_probability=0.8,
-            tournament_size=3,
-            elitism=True,
-            max_features=None,
-            verbose=True,
-            keep_top_k=1,
-            criteria="max",
-            algorithm="eaMuPlusLambda",
-            refit=True,
-            n_jobs=1,
-            pre_dispatch="2*n_jobs",
-            error_score=np.nan,
-            return_train_score=False,
-            log_config=None,
+        self,
+        estimator,
+        cv=3,
+        scoring=None,
+        population_size=50,
+        generations=80,
+        crossover_probability=0.2,
+        mutation_probability=0.8,
+        tournament_size=3,
+        elitism=True,
+        max_features=None,
+        verbose=True,
+        keep_top_k=1,
+        criteria="max",
+        algorithm="eaMuPlusLambda",
+        refit=True,
+        n_jobs=1,
+        pre_dispatch="2*n_jobs",
+        error_score=np.nan,
+        return_train_score=False,
+        log_config=None,
     ):
-
         self.estimator = clone(estimator)
         self.estimator_ = None
         self.toolbox = base.Toolbox()
@@ -943,14 +928,10 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
 
         # Check that the estimator is compatible with scikit-learn
         if not is_classifier(self.estimator) and not is_regressor(self.estimator):
-            raise ValueError(
-                f"{self.estimator} is not a valid Sklearn classifier or regressor"
-            )
+            raise ValueError(f"{self.estimator} is not a valid Sklearn classifier or regressor")
 
         if criteria not in Criteria.list():
-            raise ValueError(
-                f"Criteria must be one of {Criteria.list()}, got {criteria} instead"
-            )
+            raise ValueError(f"Criteria must be one of {Criteria.list()}, got {criteria} instead")
         # Minimization is handle like an optimization problem with a change in the score sign
         elif criteria == Criteria.max.value:
             self.criteria_sign = 1.0
@@ -965,9 +946,7 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
 
         # Criteria sign to set max or min problem
         # And -1.0 as second weight to minimize number of features
-        self.creator.create(
-            "FitnessMax", base.Fitness, weights=[self.criteria_sign, -1.0]
-        )
+        self.creator.create("FitnessMax", base.Fitness, weights=[self.criteria_sign, -1.0])
         self.creator.create("Individual", list, fitness=creator.FitnessMax)
 
         # Register the array to choose the features
@@ -981,17 +960,13 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
             size=self.n_features,
         )
 
-        self.toolbox.register(
-            "population", tools.initRepeat, list, self.toolbox.individual
-        )
+        self.toolbox.register("population", tools.initRepeat, list, self.toolbox.individual)
 
         self.toolbox.register("mate", cxUniform, indpb=self.crossover_adapter.current_value)
         self.toolbox.register("mutate", mutFlipBit, indpb=self.mutation_adapter.current_value)
 
         if self.elitism:
-            self.toolbox.register(
-                "select", tools.selTournament, tournsize=self.tournament_size
-            )
+            self.toolbox.register("select", tools.selTournament, tournsize=self.tournament_size)
         else:
             self.toolbox.register("select", tools.selRoulette)
 
@@ -1068,9 +1043,7 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
             current_generation_params[f"test_{metric}"] = cv_results[f"test_{metric}"]
 
             if self.return_train_score:
-                current_generation_params[f"train_{metric}"] = cv_results[
-                    f"train_{metric}"
-                ]
+                current_generation_params[f"train_{metric}"] = cv_results[f"train_{metric}"]
 
         index = len(self.logbook.chapters["parameters"])
         current_generation_features = {"index": index, **current_generation_params}
@@ -1081,7 +1054,7 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         # Penalize individuals with more features than the max_features parameter
 
         if self.max_features and (
-                n_selected_features > self.max_features or n_selected_features == 0
+            n_selected_features > self.max_features or n_selected_features == 0
         ):
             score = -self.criteria_sign * 100000
 
@@ -1136,9 +1109,7 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         self._register()
 
         # Optimization routine from the selected evolutionary algorithm
-        pop, log, n_gen = self._select_algorithm(
-            pop=self._pop, stats=self._stats, hof=self._hof
-        )
+        pop, log, n_gen = self._select_algorithm(pop=self._pop, stats=self._stats, hof=self._hof)
 
         # Update the _n_iterations value as the algorithm could stop earlier due a callback
         self._n_iterations = n_gen
@@ -1304,11 +1275,7 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
 
         valid_refit_dict = isinstance(self.refit, str) and self.refit in scores
 
-        if (
-                self.refit is not False
-                and not valid_refit_dict
-                and not callable(self.refit)
-        ):
+        if self.refit is not False and not valid_refit_dict and not callable(self.refit):
             raise ValueError(multimetric_refit_msg)
 
     @property
@@ -1318,15 +1285,12 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         # that hasattr() fails if the estimator isn't fitted.
         if not self._fitted:
             raise AttributeError(
-                "{} object has no n_features_in_ attribute.".format(
-                    self.__class__.__name__
-                )
+                "{} object has no n_features_in_ attribute.".format(self.__class__.__name__)
             )
 
         return self.n_features
 
     def _get_support_mask(self):
-
         if not self._fitted:
             raise NotFittedError(
                 f"This GAFeatureSelectionCV instance is not fitted yet "
@@ -1441,4 +1405,3 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
             ``best_estimator_.score`` method otherwise.
         """
         return self.estimator.score(self.transform(X), y)
-

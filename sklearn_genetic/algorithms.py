@@ -16,7 +16,7 @@ def eaSimple(
     callbacks=None,
     verbose=True,
     estimator=None,
-    **kwargs
+    **kwargs,
 ):
     """
     The base implementation is directly taken from: https://github.com/DEAP/deap/blob/master/deap/algorithms.py
@@ -206,7 +206,7 @@ def eaMuPlusLambda(
     callbacks=None,
     verbose=True,
     estimator=None,
-    **kwargs
+    **kwargs,
 ):
     """
     The base implementation is directly taken from: https://github.com/DEAP/deap/blob/master/deap/algorithms.py
@@ -318,7 +318,6 @@ def eaMuPlusLambda(
 
     for gen in range(1, ngen + 1):
         try:
-
             # Vary the population
             offspring = varOr(population, toolbox, lambda_, cxpb.step(), mutpb.step())
 
@@ -392,7 +391,7 @@ def eaMuCommaLambda(
     callbacks=None,
     verbose=True,
     estimator=None,
-    **kwargs
+    **kwargs,
 ):
     """
     The base implementation is directly taken from: https://github.com/DEAP/deap/blob/master/deap/algorithms.py
@@ -507,7 +506,6 @@ def eaMuCommaLambda(
 
     for gen in range(1, ngen + 1):
         try:
-
             # Vary the population
             offspring = varOr(population, toolbox, lambda_, cxpb.step(), mutpb.step())
 
@@ -569,6 +567,8 @@ def eaMuCommaLambda(
     return population, logbook, n_gen
 
 
-algorithms_factory = {"eaSimple": eaSimple,
-                      "eaMuPlusLambda": eaMuPlusLambda,
-                      "eaMuCommaLambda": eaMuCommaLambda}
+algorithms_factory = {
+    "eaSimple": eaSimple,
+    "eaMuPlusLambda": eaMuPlusLambda,
+    "eaMuCommaLambda": eaMuCommaLambda,
+}

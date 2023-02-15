@@ -26,7 +26,7 @@ def mutFlipBit(individual, indpb):
 
     individual = check_bool_individual(individual)
 
-    return individual,
+    return (individual,)
 
 
 def cxUniform(ind1, ind2, indpb):
