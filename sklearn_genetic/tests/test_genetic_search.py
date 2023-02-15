@@ -28,9 +28,7 @@ label_names = data["target_names"]
 y = data["target"]
 X = data["data"]
 
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.33, random_state=42
-)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
 
 
 def test_expected_ga_results():
@@ -307,10 +305,7 @@ def test_wrong_criteria():
             verbose=False,
             criteria="maximization",
         )
-    assert (
-        str(excinfo.value)
-        == "Criteria must be one of ['max', 'min'], got maximization instead"
-    )
+    assert str(excinfo.value) == "Criteria must be one of ['max', 'min'], got maximization instead"
 
 
 def test_wrong_estimator():
@@ -333,9 +328,7 @@ def test_wrong_estimator():
             verbose=False,
             criteria="maximization",
         )
-    assert (
-        str(excinfo.value) == "KMeans() is not a valid Sklearn classifier or regressor"
-    )
+    assert str(excinfo.value) == "KMeans() is not a valid Sklearn classifier or regressor"
 
 
 def test_wrong_get_item():
@@ -503,7 +496,6 @@ def test_expected_ga_multimetric():
     assert "params" in cv_result_keys
 
     for metric in scoring.keys():
-
         assert f"split0_test_{metric}" in cv_result_keys
         assert f"split1_test_{metric}" in cv_result_keys
         assert f"split2_test_{metric}" in cv_result_keys
@@ -593,12 +585,8 @@ def test_expected_ga_schedulers():
     clf = SGDClassifier(loss="modified_huber", fit_intercept=True)
     generations = 6
 
-    mutation_scheduler = ExponentialAdapter(
-        initial_value=0.6, adaptive_rate=0.01, end_value=0.2
-    )
-    crossover_scheduler = InverseAdapter(
-        initial_value=0.4, adaptive_rate=0.01, end_value=0.3
-    )
+    mutation_scheduler = ExponentialAdapter(initial_value=0.6, adaptive_rate=0.01, end_value=0.2)
+    crossover_scheduler = InverseAdapter(initial_value=0.4, adaptive_rate=0.01, end_value=0.3)
 
     evolved_estimator = GASearchCV(
         clf,

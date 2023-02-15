@@ -4,9 +4,7 @@ from .base import BaseCallback
 
 def check_stats(metric):
     if metric not in Metrics.list():
-        raise ValueError(
-            f"metric must be one of {Metrics.list()}, but got {metric} instead"
-        )
+        raise ValueError(f"metric must be one of {Metrics.list()}, but got {metric} instead")
 
 
 def check_callback(callback):
@@ -17,9 +15,7 @@ def check_callback(callback):
         if isinstance(callback, BaseCallback):
             return [callback]
 
-        elif isinstance(callback, list) and all(
-            [isinstance(c, BaseCallback) for c in callback]
-        ):
+        elif isinstance(callback, list) and all([isinstance(c, BaseCallback) for c in callback]):
             return callback
 
         else:

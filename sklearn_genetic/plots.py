@@ -6,9 +6,7 @@ logger = logging.getLogger(__name__)  # noqa
 try:
     import seaborn as sns
 except ModuleNotFoundError:  # noqa
-    logger.error(
-        "seaborn not found, pip install seaborn to use plots functions"
-    )  # noqa
+    logger.error("seaborn not found, pip install seaborn to use plots functions")  # noqa
 
 import numpy as np
 
@@ -38,9 +36,7 @@ def plot_fitness_evolution(estimator, metric="fitness"):
     """
 
     if metric not in Metrics.list():
-        raise ValueError(
-            f"metric must be one of {Metrics.list()}, but got {metric} instead"
-        )
+        raise ValueError(f"metric must be one of {Metrics.list()}, but got {metric} instead")
 
     sns.set_style("white")
 
@@ -49,9 +45,7 @@ def plot_fitness_evolution(estimator, metric="fitness"):
     palette = sns.color_palette("rocket")
     sns.set(rc={"figure.figsize": (10, 10)})
 
-    ax = sns.lineplot(
-        x=range(len(estimator)), y=fitness_history, markers=True, palette=palette
-    )
+    ax = sns.lineplot(x=range(len(estimator)), y=fitness_history, markers=True, palette=palette)
     ax.set_title(f"{metric.capitalize()} average evolution over generations")
 
     ax.set(xlabel="generations", ylabel=f"fitness ({estimator.refit_metric})")
@@ -89,14 +83,14 @@ def plot_search_space(estimator, height=2, s=25, features: list = None):
         stats = df[features].astype(np.float64)
     else:
         variables = [*estimator.space.parameters, estimator.refit_metric]
-        stats = df[variables].select_dtypes(['number', 'bool']).astype(np.float64)
+        stats = df[variables].select_dtypes(["number", "bool"]).astype(np.float64)
 
     g = sns.PairGrid(stats, diag_sharey=False, height=height)
     g = g.map_upper(sns.scatterplot, s=s, color="r", alpha=0.2)
     g = g.map_lower(
         sns.kdeplot,
         shade=True,
-        cmap=sns.color_palette("ch:s=.25,rot=-.25", as_cmap=True)
+        cmap=sns.color_palette("ch:s=.25,rot=-.25", as_cmap=True),
     )
     g = g.map_diag(sns.kdeplot, shade=True, palette="crest", alpha=0.2, color="red")
     return g

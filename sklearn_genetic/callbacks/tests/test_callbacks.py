@@ -27,9 +27,7 @@ label_names = data["target_names"]
 y = data["target"]
 X = data["data"]
 
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.33, random_state=42
-)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
 
 
 def test_base_callback_attributes():
@@ -50,9 +48,7 @@ def test_check_metrics_and_methods():
     )
 
     with pytest.raises(Exception) as excinfo:
-        eval_callbacks(
-            callbacks=None, record=None, logbook=None, estimator=None, method="on_epoch"
-        )
+        eval_callbacks(callbacks=None, record=None, logbook=None, estimator=None, method="on_epoch")
     assert (
         str(excinfo.value)
         == "The callback method must be one of ['on_start', 'on_step', 'on_end'], but got on_epoch instead"
@@ -120,10 +116,7 @@ def test_threshold_callback():
 
     with pytest.raises(Exception) as excinfo:
         callback()
-    assert (
-        str(excinfo.value)
-        == "At least one of record or logbook parameters must be provided"
-    )
+    assert str(excinfo.value) == "At least one of record or logbook parameters must be provided"
 
 
 def test_consecutive_callback():
