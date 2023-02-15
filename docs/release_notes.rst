@@ -3,8 +3,8 @@ Release Notes
 
 Some notes on new features in various releases
 
-What's new in 0.9.1dev
-----------------------
+What's new in 0.10.0dev
+-----------------------
 
 ^^^^^^^^^^^^
 API Changes:
