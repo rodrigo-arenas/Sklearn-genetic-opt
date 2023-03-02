@@ -236,9 +236,7 @@ class GASearchCV(BaseSearchCV):
         return_train_score=False,
         log_config=None,
     ):
-        self.estimator = clone(estimator)
-        self.estimator_ = None
-        self.toolbox = base.Toolbox()
+        self.estimator = estimator
         self.cv = cv
         self.scoring = scoring
         self.population_size = population_size
@@ -260,28 +258,6 @@ class GASearchCV(BaseSearchCV):
         self.error_score = error_score
         self.return_train_score = return_train_score
         self.creator = creator
-        self.logbook = None
-        self.history = None
-        self._n_iterations = self.generations + 1
-        self.X_ = None
-        self.y_ = None
-        self.callbacks = None
-        self.best_params_ = None
-        self.best_estimator_ = None
-        self._pop = None
-        self._stats = None
-        self._hof = None
-        self.hof = None
-        self.X_predict = None
-        self.scorer_ = None
-        self.cv_results_ = None
-        self.best_index_ = None
-        self.best_score_ = None
-        self.n_splits_ = None
-        self.refit_time_ = None
-        self.refit_metric = "score"
-        self.metrics_list = None
-        self.multimetric_ = False
         self.log_config = log_config
 
         # Check that the estimator is compatible with scikit-learn
@@ -321,6 +297,7 @@ class GASearchCV(BaseSearchCV):
         This function is the responsible for registering the DEAPs necessary methods
         and create other objects to hold the hof, logbook and stats.
         """
+        self.toolbox = base.Toolbox()
 
         self.creator.create("FitnessMax", base.Fitness, weights=[self.criteria_sign])
         self.creator.create("Individual", list, fitness=creator.FitnessMax)
@@ -484,6 +461,9 @@ class GASearchCV(BaseSearchCV):
 
         self.X_ = X
         self.y_ = y
+        self._n_iterations = self.generations + 1
+        self.refit_metric = "score"
+        self.multimetric_ = False
 
         # Make sure the callbacks are valid
         self.callbacks = check_callback(callbacks)
@@ -623,7 +603,7 @@ class GASearchCV(BaseSearchCV):
         except Exception as e:
             is_fitted = False
 
-        has_history = bool(self.history)
+        has_history = hasattr(self, "history") and bool(self.history)
         return all([is_fitted, has_history, self.refit])
 
     def __getitem__(self, index):
@@ -877,9 +857,7 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         return_train_score=False,
         log_config=None,
     ):
-        self.estimator = clone(estimator)
-        self.estimator_ = None
-        self.toolbox = base.Toolbox()
+        self.estimator = estimator
         self.cv = cv
         self.scoring = scoring
         self.population_size = population_size
@@ -901,29 +879,6 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         self.error_score = error_score
         self.return_train_score = return_train_score
         self.creator = creator
-        self.logbook = None
-        self.history = None
-        self._n_iterations = self.generations + 1
-        self.n_features = None
-        self.X_ = None
-        self.y_ = None
-        self.features_proportion = None
-        self.callbacks = None
-        self.best_features_ = None
-        self.support_ = None
-        self.best_estimator_ = None
-        self._pop = None
-        self._stats = None
-        self._hof = None
-        self.hof = None
-        self.X_predict = None
-        self.scorer_ = None
-        self.cv_results_ = None
-        self.n_splits_ = None
-        self.refit_time_ = None
-        self.refit_metric = "score"
-        self.metrics_list = None
-        self.multimetric_ = False
         self.log_config = log_config
 
         # Check that the estimator is compatible with scikit-learn
@@ -943,6 +898,7 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         This function is the responsible for registering the DEAPs necessary methods
         and create other objects to hold the hof, logbook and stats.
         """
+        self.toolbox = base.Toolbox()
 
         # Criteria sign to set max or min problem
         # And -1.0 as second weight to minimize number of features
@@ -1081,7 +1037,11 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
 
         self.X_, self.y_ = check_X_y(X, y)
         self.n_features = X.shape[1]
+        self._n_iterations = self.generations + 1
+        self.refit_metric = "score"
+        self.multimetric_ = False
 
+        self.features_proportion = None
         if self.max_features:
             self.features_proportion = self.max_features / self.n_features
 
@@ -1207,7 +1167,7 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         except Exception as e:
             is_fitted = False
 
-        has_history = bool(self.history)
+        has_history = hasattr(self, "history") and bool(self.history)
         return all([is_fitted, has_history, self.refit])
 
     def __getitem__(self, index):
