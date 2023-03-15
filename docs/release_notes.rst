@@ -3,14 +3,21 @@ Release Notes
 
 Some notes on new features in various releases
 
-What's new in 0.10.1dev
------------------------
+What's new in 0.10.1
+--------------------
+
+^^^^^^^^^
+Features:
+^^^^^^^^^
+
+* Install tensorflow when use ``pip install sklearn-genetic-opt[all]``
 
 ^^^^^^^^^^
 Bug Fixes:
 ^^^^^^^^^^
 
 * Fixed a bug that wouldn't allow to clone the GA classes when used inside a pipeline
+
 
 What's new in 0.10.0
 --------------------
