@@ -47,7 +47,8 @@ setup(
     extras_require={
         "mlflow": ["mlflow>=1.17.0"],
         "seaborn": ["seaborn>=0.11.2"],
-        "all": ["mlflow>=1.30.0", "seaborn>=0.11.2"],
+        "tensorflow": ["tensorflow>=2.0.0"],
+        "all": ["mlflow>=1.30.0", "seaborn>=0.11.2", "tensorflow>=2.0.0"],
     },
     python_requires=">=3.8",
     include_package_data=True,
