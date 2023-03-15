@@ -53,8 +53,7 @@ and :class:`~sklearn_genetic.callbacks.TensorBoard` correspondingly.
 - MLflow (>= |MLflowMinVersion|)
 - Tensorflow (>= |TensorflowMinVersion|)
 
-This command will install all the extra requirements, except for Tensorflow,
-as it is usually advised to look further which distribution works better for you::
+This command will install all the extra requirements::
 
    pip install sklearn-genetic-opt[all]
 
