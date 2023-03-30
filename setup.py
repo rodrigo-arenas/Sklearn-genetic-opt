@@ -16,7 +16,7 @@ README = (HERE / "README.rst").read_text()
 setup(
     name="sklearn-genetic-opt",
     version=__version__,
-    description="Scikit-lean models hyperparameters tuning, using evolutionary algorithms",
+    description="Scikit-learn models hyperparameters tuning and features selection, using evolutionary algorithms",
     long_description=README,
     long_description_content_type="text/x-rst",
     url="https://github.com/rodrigo-arenas/Sklearn-genetic-opt",
