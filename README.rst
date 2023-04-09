@@ -28,9 +28,9 @@ Sklearn-genetic-opt
 scikit-learn models hyperparameters tuning and feature selection, using evolutionary algorithms.
 
 This is meant to be an alternative to popular methods inside scikit-learn such as Grid Search and Randomized Grid Search
-for hyperparameteres tuning, and from RFE, Select From Model for feature selection.
+for hyperparameters tuning, and from RFE (Recursive Feature Elimination), Select From Model for feature selection.
 
-Sklearn-genetic-opt uses evolutionary algorithms from the DEAP package to choose the set of hyperparameters that
+Sklearn-genetic-opt uses evolutionary algorithms from the `DEAP <https://deap.readthedocs.io/en/master/>`_  (Distributed Evolutionary Algorithms in Python) package to choose the set of hyperparameters that
 optimizes (max or min) the cross-validation scores, it can be used for both regression and classification problems.
 
 Documentation is available `here <https://sklearn-genetic-opt.readthedocs.io/>`_
