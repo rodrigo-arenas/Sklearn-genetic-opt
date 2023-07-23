@@ -31,8 +31,8 @@ inside the env use::
 .. |NumPyMinVersion| replace:: 1.19.0
 .. |SeabornMinVersion| replace:: 0.11.2
 .. |DEAPMinVersion| replace:: 1.3.3
-.. |MLflowMinVersion| replace:: 1.30.0
-.. |TensorflowMinVersion| replace:: 2.0.0
+.. |MLflowMinVersion| replace:: 2.1.0
+.. |TensorflowMinVersion| replace:: 2.4.0
 .. |tqdmMinVersion| replace:: 4.61.1
 
 sklearn-genetic-opt requires:
