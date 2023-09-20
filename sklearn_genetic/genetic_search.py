@@ -1370,5 +1370,5 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
 # helpers
 
 
-def getter_fittness_values(ind):
+def ind_fitness_values(ind):
     return ind.fitness.values
