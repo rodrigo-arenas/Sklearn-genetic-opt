@@ -342,7 +342,7 @@ class GASearchCV(BaseSearchCV):
         self._pop = self.toolbox.population(n=self.population_size)
         self._hof = tools.HallOfFame(self.keep_top_k)
 
-        self._stats = tools.Statistics(getter_fittness_values)
+        self._stats = tools.Statistics(ind_fitness_values)
         self._stats.register("fitness", np.mean)
         self._stats.register("fitness_std", np.std)
         self._stats.register("fitness_max", np.max)
@@ -933,7 +933,7 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
 
         # Stats among axis 0 to get two values:
         # One based on the score and the other in the number of features
-        self._stats = tools.Statistics(getter_fittness_values)
+        self._stats = tools.Statistics(ind_fitness_values)
         self._stats.register("fitness", np.mean, axis=0)
         self._stats.register("fitness_std", np.std, axis=0)
         self._stats.register("fitness_max", np.max, axis=0)
