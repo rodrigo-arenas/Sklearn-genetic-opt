@@ -111,50 +111,65 @@ Example: Hyperparameters Tuning
 
 .. code-block:: python
 
-   from sklearn_genetic import GASearchCV
-   from sklearn_genetic.space import Continuous, Categorical, Integer
-   from sklearn.ensemble import RandomForestClassifier
-   from sklearn.model_selection import train_test_split, StratifiedKFold
-   from sklearn.datasets import load_digits
-   from sklearn.metrics import accuracy_score
+    # Import necessary libraries
+    from sklearn_genetic import GASearchCV
+    from sklearn_genetic.space import Continuous, Categorical, Integer
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.model_selection import train_test_split, StratifiedKFold
+    from sklearn.datasets import load_digits
+    from sklearn.metrics import accuracy_score
 
-   data = load_digits()
-   n_samples = len(data.images)
-   X = data.images.reshape((n_samples, -1))
-   y = data['target']
-   X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
+    # Load the dataset
+    data = load_digits()
+    n_samples = len(data.images)
+    X = data.images.reshape((n_samples, -1))
+    y = data['target']
 
-   clf = RandomForestClassifier()
+    # Split the dataset into training and testing sets
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
 
-   param_grid = {'min_weight_fraction_leaf': Continuous(0.01, 0.5, distribution='log-uniform'),
-                 'bootstrap': Categorical([True, False]),
-                 'max_depth': Integer(2, 30),
-                 'max_leaf_nodes': Integer(2, 35),
-                 'n_estimators': Integer(100, 300)}
+    # Define the RandomForestClassifier
+    clf = RandomForestClassifier()
 
-   cv = StratifiedKFold(n_splits=3, shuffle=True)
+    # Define the parameter grid for GASearchCV
+    param_grid = {
+        'min_weight_fraction_leaf': Continuous(0.01, 0.5, distribution='log-uniform'),
+        'bootstrap': Categorical([True, False]),
+        'max_depth': Integer(2, 30),
+        'max_leaf_nodes': Integer(2, 35),
+        'n_estimators': Integer(100, 300)
+    }
 
-   evolved_estimator = GASearchCV(estimator=clf,
-                                  cv=cv,
-                                  scoring='accuracy',
-                                  population_size=20,
-                                  generations=35,
-                                  param_grid=param_grid,
-                                  n_jobs=-1,
-                                  verbose=True,
-                                  keep_top_k=4)
+    # Configure cross-validation
+    cv = StratifiedKFold(n_splits=3, shuffle=True)
 
-   # Train and optimize the estimator
-   evolved_estimator.fit(X_train, y_train)
-   # Best parameters found
-   print(evolved_estimator.best_params_)
-   # Use the model fitted with the best parameters
-   y_predict_ga = evolved_estimator.predict(X_test)
-   print(accuracy_score(y_test, y_predict_ga))
+    # Initialize and configure GASearchCV
+    evolved_estimator = GASearchCV(
+        estimator=clf,
+        cv=cv,
+        scoring='accuracy',
+        population_size=20,
+        generations=35,
+        param_grid=param_grid,
+        n_jobs=-1,
+        verbose=True,
+        keep_top_k=4
+    )
 
-   # Saved metadata for further analysis
-   print("Stats achieved in each generation: ", evolved_estimator.history)
-   print("Best k solutions: ", evolved_estimator.hof)
+    # Train and optimize the estimator
+    evolved_estimator.fit(X_train, y_train)
+
+    # Display best parameters found
+    print("Best parameters:", evolved_estimator.best_params_)
+
+    # Use the model fitted with the best parameters to make predictions
+    y_predict_ga = evolved_estimator.predict(X_test)
+    print("Test accuracy:", accuracy_score(y_test, y_predict_ga))
+
+    # Display additional information about the optimization process
+    print("Stats achieved in each generation:", evolved_estimator.history)
+    print("Best k solutions:", evolved_estimator.hof)
+
 
 
 Example: Feature Selection
