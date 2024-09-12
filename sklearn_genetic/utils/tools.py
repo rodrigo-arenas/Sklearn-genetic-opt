@@ -1,4 +1,5 @@
 import random
+import numpy as np
 
 
 def mutFlipBit(individual, indpb):
@@ -67,3 +68,42 @@ def check_bool_individual(individual):
         individual[index] = 1
 
     return individual
+
+
+def novelty_scorer(individual, population, k=15):
+    """
+    Calculate novelty score for an individual based on its distance from other individuals in the population.
+
+    Parameters
+    ----------
+    individual: Individual object
+        The individual (set of hyperparameters) that is being evaluated.
+
+    population: List[Individual]
+        The current population of individuals.
+
+    k: int, default=15
+        The number of nearest neighbors to consider for the novelty calculation.
+
+    Returns
+    -------
+    novelty_score: float
+        The novelty score for the individual.
+    """
+    distances = []
+
+    # Calculate distances between the individual and every other individual in the population
+    for other in population:
+        if other != individual:
+            # Here we use Hamming distance to measure difference
+            distance = sum(i != o for i, o in zip(individual, other))
+            distances.append(distance)
+
+    # Sort the distances and take the average of the k nearest neighbors
+    distances = sorted(distances)
+    k_min = min(k, len(population))
+    nearest_distances = distances[:k_min]
+
+    # Novelty score is the average distance to the k-nearest neighbors
+    novelty_score = np.mean(nearest_distances) if nearest_distances else 0
+    return novelty_score

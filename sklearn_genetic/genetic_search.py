@@ -28,7 +28,7 @@ from .utils.cv_scores import (
     create_feature_selection_cv_results_,
 )
 from .utils.random import weighted_bool_individual
-from .utils.tools import cxUniform, mutFlipBit
+from .utils.tools import cxUniform, mutFlipBit, novelty_scorer
 
 
 class GASearchCV(BaseSearchCV):
@@ -308,7 +308,7 @@ class GASearchCV(BaseSearchCV):
         """
         self.toolbox = base.Toolbox()
 
-        self.creator.create("FitnessMax", base.Fitness, weights=[self.criteria_sign])
+        self.creator.create("FitnessMax", base.Fitness, weights=[self.criteria_sign, 1.0])
         self.creator.create("Individual", list, fitness=creator.FitnessMax)
 
         attributes = []
@@ -352,10 +352,10 @@ class GASearchCV(BaseSearchCV):
         self._hof = tools.HallOfFame(self.keep_top_k)
 
         self._stats = tools.Statistics(lambda ind: ind.fitness.values)
-        self._stats.register("fitness", np.mean)
-        self._stats.register("fitness_std", np.std)
-        self._stats.register("fitness_max", np.max)
-        self._stats.register("fitness_min", np.min)
+        self._stats.register("fitness", np.mean, axis=0)
+        self._stats.register("fitness_std", np.std, axis=0)
+        self._stats.register("fitness_max", np.max, axis=0)
+        self._stats.register("fitness_min", np.min, axis=0)
 
         self.logbook = tools.Logbook()
 
@@ -454,6 +454,8 @@ class GASearchCV(BaseSearchCV):
         cv_scores = cv_results[f"test_{self.refit_metric}"]
         score = np.mean(cv_scores)
 
+        novelty_score = novelty_scorer(individual, self._pop)
+
         # Uses the log config to save in remote log server (e.g MLflow)
         if self.log_config is not None:
             self.log_config.create_run(
@@ -480,7 +482,7 @@ class GASearchCV(BaseSearchCV):
         # Log the hyperparameters and the cv-score
         self.logbook.record(parameters=current_generation_params)
 
-        fitness_result = [score]
+        fitness_result = [score, novelty_score]
 
         if self.use_cache:
             # Store the fitness result and the current generation parameters in the cache

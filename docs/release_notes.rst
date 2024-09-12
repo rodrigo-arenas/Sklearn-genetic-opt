@@ -34,6 +34,15 @@ Features:
   allowing the algorithm to focus on refining known good solutions while still exploring new
   areas of the hyperparameter space. If set to ``None``, the entire population will be initialized
   randomly.
+* Introduced a **novelty search strategy** to the `GASearchCV` class. This strategy rewards solutions that are more distinct from others
+  in the population by incorporating a **novelty score** into the fitness evaluation. The novelty score encourages exploration and promotes diversity,
+  reducing the risk of premature convergence to local optima.
+
+       - **Novelty Score**: Calculated based on the distance between an individual and its nearest neighbors in the population.
+         Individuals with higher novelty scores are more distinct from the rest of the population.
+       - **Fitness Evaluation**: The overall fitness is now a combination of the traditional performance score and the novelty score,
+         allowing the algorithm to balance between exploiting known good solutions and exploring new, diverse ones.
+       - **Improved Exploration**: This strategy helps explore new areas of the hyperparameter space, increasing the likelihood of discovering better solutions and avoiding local optima.
 
 ^^^^^^^^^^^^
 API Changes:
