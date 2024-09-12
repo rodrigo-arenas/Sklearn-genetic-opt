@@ -240,7 +240,7 @@ class Space(object):
             if param in warm_start_values:
                 sampled_params[param] = warm_start_values[param]
             else:
-                sampled_params[param] = dimension.sample()  # Random sample if no warm-start value
+                sampled_params[param] = dimension.sample()
         return sampled_params
 
     @property

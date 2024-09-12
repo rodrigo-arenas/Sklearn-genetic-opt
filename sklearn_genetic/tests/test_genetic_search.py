@@ -605,6 +605,8 @@ def test_expected_ga_schedulers():
             "average": Categorical([True, False]),
             "max_iter": Integer(700, 1000),
         },
+        warm_start_configs=[{"l1_ratio": 0.5, "alpha": 0.5, "average": False, "max_iter": 400},
+                            {"l1_ratio": 0.2, "alpha": 0.8, "average": True, "max_iter": 400}],
         verbose=False,
         algorithm="eaSimple",
         n_jobs=-1,
