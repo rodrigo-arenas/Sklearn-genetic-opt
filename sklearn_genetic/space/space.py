@@ -222,6 +222,27 @@ class Space(object):
 
         self.param_grid = param_grid
 
+    def sample_warm_start(self, warm_start_values: dict):
+        """
+        Sample a predefined configuration (warm-start) or fill in random values if missing.
+
+        Parameters
+        ----------
+        warm_start_values: dict
+            Predefined configuration values for hyperparameters.
+
+        Returns
+        -------
+        A dictionary containing sampled values for each hyperparameter.
+        """
+        sampled_params = {}
+        for param, dimension in self.param_grid.items():
+            if param in warm_start_values:
+                sampled_params[param] = warm_start_values[param]
+            else:
+                sampled_params[param] = dimension.sample()  # Random sample if no warm-start value
+        return sampled_params
+
     @property
     def dimensions(self):
         """

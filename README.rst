@@ -102,11 +102,18 @@ Example: Hyperparameters Tuning
 
    clf = RandomForestClassifier()
 
+   # Defines the possible values to search
    param_grid = {'min_weight_fraction_leaf': Continuous(0.01, 0.5, distribution='log-uniform'),
                  'bootstrap': Categorical([True, False]),
                  'max_depth': Integer(2, 30),
                  'max_leaf_nodes': Integer(2, 35),
                  'n_estimators': Integer(100, 300)}
+
+   # Seed solutions
+   warm_start_configs = [
+              {"min_weight_fraction_leaf": 0.02, "bootstrap": True, "max_depth": None, "n_estimators": 100},
+              {"min_weight_fraction_leaf": 0.4, "bootstrap": True, "max_depth": 5, "n_estimators": 200},
+       ]
 
    cv = StratifiedKFold(n_splits=3, shuffle=True)
 
@@ -118,6 +125,8 @@ Example: Hyperparameters Tuning
                                   param_grid=param_grid,
                                   n_jobs=-1,
                                   verbose=True,
+                                  use_cache=True,
+                                  warm_start_configs=warm_start_configs,
                                   keep_top_k=4)
 
    # Train and optimize the estimator

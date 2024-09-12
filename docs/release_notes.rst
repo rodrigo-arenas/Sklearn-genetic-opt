@@ -10,9 +10,30 @@ What's new in 0.11.0dev0
 Features:
 ^^^^^^^^^
 
-* Added a parameter named `use_cache`, defaults to `True`, If set to true it will avoid to re-evaluating solutions that have already seen,
-  otherwise it will always evaluate the solutions to get the performance metrics
+* Added a parameter `use_cache`, which defaults to ``True``. When enabled, the algorithm will skip re-evaluating solutions that have already been evaluated, retrieving the performance metrics from the cache instead.
+  If use_cache is set to ``False``, the algorithm will always re-evaluate solutions, even if they have been seen before, to obtain fresh performance metrics.
+* Add a parameter in `GAFeatureSelectionCV` named warm_start_configs, defaults to ``None``, a list of predefined hyperparameter configurations to seed the initial population.
+  Each element in the list is a dictionary where the keys are the names of the hyperparameters,
+  and the values are the corresponding hyperparameter values to be used for the individual.
 
+  Example:
+
+    .. code-block:: python
+       :linenos:
+
+       warm_start_configs = [
+              {"min_weight_fraction_leaf": 0.02, "bootstrap": True, "max_depth": None, "n_estimators": 100},
+              {"min_weight_fraction_leaf": 0.4, "bootstrap": True, "max_depth": 5, "n_estimators": 200},
+       ]
+
+  The genetic algorithm will initialize part of the population with these configurations to
+  warm-start the optimization process. The remaining individuals in the population will
+  be initialized randomly according to the defined hyperparameter space.
+
+  This parameter is useful when prior knowledge of good hyperparameter configurations exists,
+  allowing the algorithm to focus on refining known good solutions while still exploring new
+  areas of the hyperparameter space. If set to ``None``, the entire population will be initialized
+  randomly.
 
 What's new in 0.10.1
 --------------------

@@ -240,6 +240,7 @@ class GASearchCV(BaseSearchCV):
             return_train_score=False,
             log_config=None,
             use_cache=True,
+            warm_start_configs=None,
     ):
         self.estimator = estimator
         self.cv = cv
@@ -266,6 +267,7 @@ class GASearchCV(BaseSearchCV):
         self.log_config = log_config
         self.use_cache = use_cache
         self.fitness_cache = {}
+        self.warm_start_configs = warm_start_configs or []
 
         # Check that the estimator is compatible with scikit-learn
         if not is_classifier(self.estimator) and not is_regressor(self.estimator):
@@ -346,7 +348,7 @@ class GASearchCV(BaseSearchCV):
 
         self.toolbox.register("evaluate", self.evaluate)
 
-        self._pop = self.toolbox.population(n=self.population_size)
+        self._pop = self._initialize_population()
         self._hof = tools.HallOfFame(self.keep_top_k)
 
         self._stats = tools.Statistics(lambda ind: ind.fitness.values)
@@ -356,6 +358,29 @@ class GASearchCV(BaseSearchCV):
         self._stats.register("fitness_min", np.min)
 
         self.logbook = tools.Logbook()
+
+    def _initialize_population(self):
+        """
+        Initialize the population, using warm-start configurations if provided.
+        """
+        population = []
+        # Seed part of the population with warm-start values
+        num_warm_start = min(len(self.warm_start_configs), self.population_size)
+
+        for config in self.warm_start_configs[:num_warm_start]:
+            # Sample an individual from the warm-start configuration
+            individual_values = self.space.sample_warm_start(config)
+            individual_values_list = list(individual_values.values())
+
+            # Manually create the individual and assign its fitness
+            individual = creator.Individual(individual_values_list)
+            population.append(individual)
+
+        # Fill the remaining population with random individuals
+        num_random = self.population_size - num_warm_start
+        population.extend(self.toolbox.population(n=num_random))
+
+        return population
 
     def mutate(self, individual):
         """
