@@ -15,8 +15,8 @@ sphinx_rtd_theme
 sphinx-copybutton
 numpydoc
 nbsphinx
-ipython>=8.27.0
-Pygments>=2.18.0
+ipython
+Pygments
 tensorflow>=2.4.0
 tqdm>=4.61.1
 tk
