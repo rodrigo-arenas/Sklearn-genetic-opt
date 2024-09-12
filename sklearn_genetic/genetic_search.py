@@ -263,7 +263,7 @@ class GASearchCV(BaseSearchCV):
         self.pre_dispatch = pre_dispatch
         self.error_score = error_score
         self.return_train_score = return_train_score
-        self.creator = creator
+        # self.creator = creator
         self.log_config = log_config
         self.use_cache = use_cache
         self.fitness_cache = {}
@@ -311,6 +311,7 @@ class GASearchCV(BaseSearchCV):
         self.creator.create("FitnessMax", base.Fitness, weights=[self.criteria_sign, 1.0])
         self.creator.create("Individual", list, fitness=creator.FitnessMax)
 
+
         attributes = []
         # Assign all the parameters defined in the param_grid
         # It uses the distribution parameter to set the sampling function
@@ -356,6 +357,7 @@ class GASearchCV(BaseSearchCV):
         self._stats.register("fitness_std", np.std, axis=0)
         self._stats.register("fitness_max", np.max, axis=0)
         self._stats.register("fitness_min", np.min, axis=0)
+
 
         self.logbook = tools.Logbook()
 
@@ -594,8 +596,8 @@ class GASearchCV(BaseSearchCV):
             for k in range(len(self._hof))
         }
 
-        del self.creator.FitnessMax
-        del self.creator.Individual
+        del creator.FitnessMax
+        del creator.Individual
 
         return self
 
@@ -937,7 +939,7 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         self.pre_dispatch = pre_dispatch
         self.error_score = error_score
         self.return_train_score = return_train_score
-        self.creator = creator
+        # self.creator = creator
         self.log_config = log_config
         self.use_cache = use_cache
         self.fitness_cache = {}
@@ -963,8 +965,8 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
 
         # Criteria sign to set max or min problem
         # And -1.0 as second weight to minimize number of features
-        self.creator.create("FitnessMax", base.Fitness, weights=[self.criteria_sign, -1.0])
-        self.creator.create("Individual", list, fitness=creator.FitnessMax)
+        creator.create("FitnessMax", base.Fitness, weights=[self.criteria_sign, -1.0])
+        creator.create("Individual", list, fitness=creator.FitnessMax)
 
         # Register the array to choose the features
         # Each binary value represents if the feature is selected or not
@@ -994,7 +996,7 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
 
         # Stats among axis 0 to get two values:
         # One based on the score and the other in the number of features
-        self._stats = tools.Statistics(lambda ind: ind.fitness.values)
+        self._stats = tools.Statistics(ind_fitness_values)
         self._stats.register("fitness", np.mean, axis=0)
         self._stats.register("fitness_std", np.std, axis=0)
         self._stats.register("fitness_max", np.max, axis=0)
@@ -1185,8 +1187,8 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
 
         self.hof = self._hof
 
-        del self.creator.FitnessMax
-        del self.creator.Individual
+        del creator.FitnessMax
+        del creator.Individual
 
         return self
 
@@ -1446,3 +1448,10 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
             ``best_estimator_.score`` method otherwise.
         """
         return self.estimator.score(self.transform(X), y)
+
+
+# helpers
+
+
+def ind_fitness_values(ind):
+    return ind.fitness.values
