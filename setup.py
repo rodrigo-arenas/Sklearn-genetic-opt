@@ -40,7 +40,7 @@ setup(
         include=["sklearn_genetic", "sklearn_genetic.*"], exclude=["*tests*"]
     ),
     install_requires=[
-        "scikit-learn>=1.1.0",
+        "scikit-learn>=1.3.0",
         "numpy>=1.19.0",
         "deap>=1.3.3",
         "tqdm>=4.61.1",
@@ -51,6 +51,6 @@ setup(
         "tensorflow": ["tensorflow>=2.0.0"],
         "all": ["mlflow>=1.30.0", "seaborn>=0.11.2", "tensorflow>=2.0.0"],
     },
-    python_requires=">=3.8",
+    python_requires=">=3.9",
     include_package_data=True,
 )

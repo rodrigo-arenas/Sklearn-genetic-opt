@@ -28,7 +28,7 @@ from .utils.cv_scores import (
     create_feature_selection_cv_results_,
 )
 from .utils.random import weighted_bool_individual
-from .utils.tools import cxUniform, mutFlipBit
+from .utils.tools import cxUniform, mutFlipBit, novelty_scorer
 
 
 class GASearchCV(BaseSearchCV):
@@ -172,6 +172,10 @@ class GASearchCV(BaseSearchCV):
         Configuration to log metrics and models to mlflow, of None,
         no mlflow logging will be performed
 
+    use_cache: bool, default=True
+        If set to true it will avoid to re-evaluating solutions that have already seen,
+        otherwise it will always evaluate the solutions to get the performance metrics
+
     Attributes
     ----------
 
@@ -214,27 +218,29 @@ class GASearchCV(BaseSearchCV):
     """
 
     def __init__(
-        self,
-        estimator,
-        cv=3,
-        param_grid=None,
-        scoring=None,
-        population_size=50,
-        generations=80,
-        crossover_probability=0.2,
-        mutation_probability=0.8,
-        tournament_size=3,
-        elitism=True,
-        verbose=True,
-        keep_top_k=1,
-        criteria="max",
-        algorithm="eaMuPlusLambda",
-        refit=True,
-        n_jobs=1,
-        pre_dispatch="2*n_jobs",
-        error_score=np.nan,
-        return_train_score=False,
-        log_config=None,
+            self,
+            estimator,
+            cv=3,
+            param_grid=None,
+            scoring=None,
+            population_size=50,
+            generations=80,
+            crossover_probability=0.2,
+            mutation_probability=0.8,
+            tournament_size=3,
+            elitism=True,
+            verbose=True,
+            keep_top_k=1,
+            criteria="max",
+            algorithm="eaMuPlusLambda",
+            refit=True,
+            n_jobs=1,
+            pre_dispatch="2*n_jobs",
+            error_score=np.nan,
+            return_train_score=False,
+            log_config=None,
+            use_cache=True,
+            warm_start_configs=None,
     ):
         self.estimator = estimator
         self.cv = cv
@@ -259,6 +265,9 @@ class GASearchCV(BaseSearchCV):
         self.return_train_score = return_train_score
         # self.creator = creator
         self.log_config = log_config
+        self.use_cache = use_cache
+        self.fitness_cache = {}
+        self.warm_start_configs = warm_start_configs or []
 
         # Check that the estimator is compatible with scikit-learn
         if not is_classifier(self.estimator) and not is_regressor(self.estimator):
@@ -299,8 +308,9 @@ class GASearchCV(BaseSearchCV):
         """
         self.toolbox = base.Toolbox()
 
-        creator.create("FitnessMax", base.Fitness, weights=[self.criteria_sign])
-        creator.create("Individual", list, fitness=creator.FitnessMax)
+        self.creator.create("FitnessMax", base.Fitness, weights=[self.criteria_sign, 1.0])
+        self.creator.create("Individual", list, fitness=creator.FitnessMax)
+
 
         attributes = []
         # Assign all the parameters defined in the param_grid
@@ -339,16 +349,40 @@ class GASearchCV(BaseSearchCV):
 
         self.toolbox.register("evaluate", self.evaluate)
 
-        self._pop = self.toolbox.population(n=self.population_size)
+        self._pop = self._initialize_population()
         self._hof = tools.HallOfFame(self.keep_top_k)
 
-        self._stats = tools.Statistics(ind_fitness_values)
-        self._stats.register("fitness", np.mean)
-        self._stats.register("fitness_std", np.std)
-        self._stats.register("fitness_max", np.max)
-        self._stats.register("fitness_min", np.min)
+        self._stats = tools.Statistics(lambda ind: ind.fitness.values)
+        self._stats.register("fitness", np.mean, axis=0)
+        self._stats.register("fitness_std", np.std, axis=0)
+        self._stats.register("fitness_max", np.max, axis=0)
+        self._stats.register("fitness_min", np.min, axis=0)
+
 
         self.logbook = tools.Logbook()
+
+    def _initialize_population(self):
+        """
+        Initialize the population, using warm-start configurations if provided.
+        """
+        population = []
+        # Seed part of the population with warm-start values
+        num_warm_start = min(len(self.warm_start_configs), self.population_size)
+
+        for config in self.warm_start_configs[:num_warm_start]:
+            # Sample an individual from the warm-start configuration
+            individual_values = self.space.sample_warm_start(config)
+            individual_values_list = list(individual_values.values())
+
+            # Manually create the individual and assign its fitness
+            individual = creator.Individual(individual_values_list)
+            population.append(individual)
+
+        # Fill the remaining population with random individuals
+        num_random = self.population_size - num_warm_start
+        population.extend(self.toolbox.population(n=num_random))
+
+        return population
 
     def mutate(self, individual):
         """
@@ -392,6 +426,17 @@ class GASearchCV(BaseSearchCV):
             key: individual[n] for n, key in enumerate(self.space.parameters)
         }
 
+        # Convert hyperparameters to a tuple to use as a key in the cache
+        individual_key = tuple(sorted(current_generation_params.items()))
+
+        # Check if the individual has already been evaluated
+        if individual_key in self.fitness_cache and self.use_cache:
+            # Retrieve cached result
+            cached_result = self.fitness_cache[individual_key]
+            # Ensure the logbook is updated even if the individual is cached
+            self.logbook.record(parameters=cached_result["current_generation_params"])
+            return cached_result["fitness"]
+
         local_estimator = clone(self.estimator)
         local_estimator.set_params(**current_generation_params)
 
@@ -410,6 +455,8 @@ class GASearchCV(BaseSearchCV):
 
         cv_scores = cv_results[f"test_{self.refit_metric}"]
         score = np.mean(cv_scores)
+
+        novelty_score = novelty_scorer(individual, self._pop)
 
         # Uses the log config to save in remote log server (e.g MLflow)
         if self.log_config is not None:
@@ -437,7 +484,16 @@ class GASearchCV(BaseSearchCV):
         # Log the hyperparameters and the cv-score
         self.logbook.record(parameters=current_generation_params)
 
-        return [score]
+        fitness_result = [score, novelty_score]
+
+        if self.use_cache:
+            # Store the fitness result and the current generation parameters in the cache
+            self.fitness_cache[individual_key] = {
+                "fitness": fitness_result,
+                "current_generation_params": current_generation_params
+            }
+
+        return fitness_result
 
     def fit(self, X, y, callbacks=None):
         """
@@ -794,6 +850,10 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         Configuration to log metrics and models to mlflow, of None,
         no mlflow logging will be performed
 
+    use_cache: bool, default=True
+        If set to true it will avoid to re-evaluating solutions that have already seen,
+        otherwise it will always evaluate the solutions to get the performance metrics
+
     Attributes
     ----------
 
@@ -835,27 +895,28 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
     """
 
     def __init__(
-        self,
-        estimator,
-        cv=3,
-        scoring=None,
-        population_size=50,
-        generations=80,
-        crossover_probability=0.2,
-        mutation_probability=0.8,
-        tournament_size=3,
-        elitism=True,
-        max_features=None,
-        verbose=True,
-        keep_top_k=1,
-        criteria="max",
-        algorithm="eaMuPlusLambda",
-        refit=True,
-        n_jobs=1,
-        pre_dispatch="2*n_jobs",
-        error_score=np.nan,
-        return_train_score=False,
-        log_config=None,
+            self,
+            estimator,
+            cv=3,
+            scoring=None,
+            population_size=50,
+            generations=80,
+            crossover_probability=0.2,
+            mutation_probability=0.8,
+            tournament_size=3,
+            elitism=True,
+            max_features=None,
+            verbose=True,
+            keep_top_k=1,
+            criteria="max",
+            algorithm="eaMuPlusLambda",
+            refit=True,
+            n_jobs=1,
+            pre_dispatch="2*n_jobs",
+            error_score=np.nan,
+            return_train_score=False,
+            log_config=None,
+            use_cache=True,
     ):
         self.estimator = estimator
         self.cv = cv
@@ -880,6 +941,8 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         self.return_train_score = return_train_score
         # self.creator = creator
         self.log_config = log_config
+        self.use_cache = use_cache
+        self.fitness_cache = {}
 
         # Check that the estimator is compatible with scikit-learn
         if not is_classifier(self.estimator) and not is_regressor(self.estimator):
@@ -965,6 +1028,16 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         local_estimator = clone(self.estimator)
         n_selected_features = np.sum(individual)
 
+        # Convert the individual to a tuple to use as a key in the cache
+        individual_key = tuple(individual)
+
+        # Check if the individual has already been evaluated
+        if individual_key in self.fitness_cache and self.use_cache:
+            cached_result = self.fitness_cache[individual_key]
+            # Ensure the logbook is updated even if the individual is cached
+            self.logbook.record(parameters=cached_result["current_generation_features"])
+            return cached_result["fitness"]
+
         # Compute the cv-metrics using only the selected features
         cv_results = cross_validate(
             local_estimator,
@@ -1010,11 +1083,21 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         # Penalize individuals with more features than the max_features parameter
 
         if self.max_features and (
-            n_selected_features > self.max_features or n_selected_features == 0
+                n_selected_features > self.max_features or n_selected_features == 0
         ):
             score = -self.criteria_sign * 100000
 
-        return [score, n_selected_features]
+            # Prepare the fitness result
+        fitness_result = [score, n_selected_features]
+
+        if self.use_cache:
+            # Store the fitness result and the current generation features in the cache
+            self.fitness_cache[individual_key] = {
+                "fitness": fitness_result,
+                "current_generation_features": current_generation_features
+            }
+
+        return fitness_result
 
     def fit(self, X, y, callbacks=None):
         """
