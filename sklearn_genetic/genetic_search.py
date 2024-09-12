@@ -259,6 +259,7 @@ class GASearchCV(BaseSearchCV):
         self.return_train_score = return_train_score
         self.creator = creator
         self.log_config = log_config
+        self.fitness_cache = {}
 
         # Check that the estimator is compatible with scikit-learn
         if not is_classifier(self.estimator) and not is_regressor(self.estimator):
@@ -392,6 +393,17 @@ class GASearchCV(BaseSearchCV):
             key: individual[n] for n, key in enumerate(self.space.parameters)
         }
 
+        # Convert hyperparameters to a tuple to use as a key in the cache
+        individual_key = tuple(sorted(current_generation_params.items()))
+
+        # Check if the individual has already been evaluated
+        if individual_key in self.fitness_cache:
+            # Retrieve cached result
+            cached_result = self.fitness_cache[individual_key]
+            # Ensure the logbook is updated even if the individual is cached
+            self.logbook.record(parameters=cached_result["current_generation_params"])
+            return cached_result["fitness"]
+
         local_estimator = clone(self.estimator)
         local_estimator.set_params(**current_generation_params)
 
@@ -437,7 +449,15 @@ class GASearchCV(BaseSearchCV):
         # Log the hyperparameters and the cv-score
         self.logbook.record(parameters=current_generation_params)
 
-        return [score]
+        fitness_result = [score]
+
+        # Store the fitness result and the current generation parameters in the cache
+        self.fitness_cache[individual_key] = {
+            "fitness": fitness_result,
+            "current_generation_params": current_generation_params
+        }
+
+        return fitness_result
 
     def fit(self, X, y, callbacks=None):
         """
@@ -880,6 +900,7 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         self.return_train_score = return_train_score
         self.creator = creator
         self.log_config = log_config
+        self.fitness_cache = {}
 
         # Check that the estimator is compatible with scikit-learn
         if not is_classifier(self.estimator) and not is_regressor(self.estimator):
@@ -965,6 +986,16 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         local_estimator = clone(self.estimator)
         n_selected_features = np.sum(individual)
 
+        # Convert the individual to a tuple to use as a key in the cache
+        individual_key = tuple(individual)
+
+        # Check if the individual has already been evaluated
+        if individual_key in self.fitness_cache:
+            cached_result = self.fitness_cache[individual_key]
+            # Ensure the logbook is updated even if the individual is cached
+            self.logbook.record(parameters=cached_result["current_generation_features"])
+            return cached_result["fitness"]
+
         # Compute the cv-metrics using only the selected features
         cv_results = cross_validate(
             local_estimator,
@@ -1014,7 +1045,16 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         ):
             score = -self.criteria_sign * 100000
 
-        return [score, n_selected_features]
+            # Prepare the fitness result
+        fitness_result = [score, n_selected_features]
+
+        # Store the fitness result and the current generation features in the cache
+        self.fitness_cache[individual_key] = {
+            "fitness": fitness_result,
+            "current_generation_features": current_generation_features
+        }
+
+        return fitness_result
 
     def fit(self, X, y, callbacks=None):
         """
