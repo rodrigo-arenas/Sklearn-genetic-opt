@@ -3,8 +3,8 @@ Release Notes
 
 Some notes on new features in various releases
 
-What's new in 0.11.0dev0
-------------------------
+What's new in 0.11.0
+--------------------
 
 ^^^^^^^^^
 Features:
