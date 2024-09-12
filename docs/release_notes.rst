@@ -3,6 +3,17 @@ Release Notes
 
 Some notes on new features in various releases
 
+What's new in 0.11.0dev0
+------------------------
+
+^^^^^^^^^
+Features:
+^^^^^^^^^
+
+* Added a parameter named `use_cache`, defaults to `True`, If set to true it will avoid to re-evaluating solutions that have already seen,
+  otherwise it will always evaluate the solutions to get the performance metrics
+
+
 What's new in 0.10.1
 --------------------
 

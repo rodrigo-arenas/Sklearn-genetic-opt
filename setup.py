@@ -40,7 +40,7 @@ setup(
         include=["sklearn_genetic", "sklearn_genetic.*"], exclude=["*tests*"]
     ),
     install_requires=[
-        "scikit-learn>=1.1.0",
+        "scikit-learn>=1.3.0",
         "numpy>=1.19.0",
         "deap>=1.3.3",
         "tqdm>=4.61.1",

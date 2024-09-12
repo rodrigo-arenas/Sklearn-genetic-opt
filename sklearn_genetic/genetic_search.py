@@ -172,6 +172,10 @@ class GASearchCV(BaseSearchCV):
         Configuration to log metrics and models to mlflow, of None,
         no mlflow logging will be performed
 
+    use_cache: bool, default=True
+        If set to true it will avoid to re-evaluating solutions that have already seen,
+        otherwise it will always evaluate the solutions to get the performance metrics
+
     Attributes
     ----------
 
@@ -214,27 +218,28 @@ class GASearchCV(BaseSearchCV):
     """
 
     def __init__(
-        self,
-        estimator,
-        cv=3,
-        param_grid=None,
-        scoring=None,
-        population_size=50,
-        generations=80,
-        crossover_probability=0.2,
-        mutation_probability=0.8,
-        tournament_size=3,
-        elitism=True,
-        verbose=True,
-        keep_top_k=1,
-        criteria="max",
-        algorithm="eaMuPlusLambda",
-        refit=True,
-        n_jobs=1,
-        pre_dispatch="2*n_jobs",
-        error_score=np.nan,
-        return_train_score=False,
-        log_config=None,
+            self,
+            estimator,
+            cv=3,
+            param_grid=None,
+            scoring=None,
+            population_size=50,
+            generations=80,
+            crossover_probability=0.2,
+            mutation_probability=0.8,
+            tournament_size=3,
+            elitism=True,
+            verbose=True,
+            keep_top_k=1,
+            criteria="max",
+            algorithm="eaMuPlusLambda",
+            refit=True,
+            n_jobs=1,
+            pre_dispatch="2*n_jobs",
+            error_score=np.nan,
+            return_train_score=False,
+            log_config=None,
+            use_cache=True,
     ):
         self.estimator = estimator
         self.cv = cv
@@ -259,6 +264,7 @@ class GASearchCV(BaseSearchCV):
         self.return_train_score = return_train_score
         self.creator = creator
         self.log_config = log_config
+        self.use_cache = use_cache
         self.fitness_cache = {}
 
         # Check that the estimator is compatible with scikit-learn
@@ -397,7 +403,7 @@ class GASearchCV(BaseSearchCV):
         individual_key = tuple(sorted(current_generation_params.items()))
 
         # Check if the individual has already been evaluated
-        if individual_key in self.fitness_cache:
+        if individual_key in self.fitness_cache and self.use_cache:
             # Retrieve cached result
             cached_result = self.fitness_cache[individual_key]
             # Ensure the logbook is updated even if the individual is cached
@@ -451,11 +457,12 @@ class GASearchCV(BaseSearchCV):
 
         fitness_result = [score]
 
-        # Store the fitness result and the current generation parameters in the cache
-        self.fitness_cache[individual_key] = {
-            "fitness": fitness_result,
-            "current_generation_params": current_generation_params
-        }
+        if self.use_cache:
+            # Store the fitness result and the current generation parameters in the cache
+            self.fitness_cache[individual_key] = {
+                "fitness": fitness_result,
+                "current_generation_params": current_generation_params
+            }
 
         return fitness_result
 
@@ -814,6 +821,10 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         Configuration to log metrics and models to mlflow, of None,
         no mlflow logging will be performed
 
+    use_cache: bool, default=True
+        If set to true it will avoid to re-evaluating solutions that have already seen,
+        otherwise it will always evaluate the solutions to get the performance metrics
+
     Attributes
     ----------
 
@@ -855,27 +866,28 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
     """
 
     def __init__(
-        self,
-        estimator,
-        cv=3,
-        scoring=None,
-        population_size=50,
-        generations=80,
-        crossover_probability=0.2,
-        mutation_probability=0.8,
-        tournament_size=3,
-        elitism=True,
-        max_features=None,
-        verbose=True,
-        keep_top_k=1,
-        criteria="max",
-        algorithm="eaMuPlusLambda",
-        refit=True,
-        n_jobs=1,
-        pre_dispatch="2*n_jobs",
-        error_score=np.nan,
-        return_train_score=False,
-        log_config=None,
+            self,
+            estimator,
+            cv=3,
+            scoring=None,
+            population_size=50,
+            generations=80,
+            crossover_probability=0.2,
+            mutation_probability=0.8,
+            tournament_size=3,
+            elitism=True,
+            max_features=None,
+            verbose=True,
+            keep_top_k=1,
+            criteria="max",
+            algorithm="eaMuPlusLambda",
+            refit=True,
+            n_jobs=1,
+            pre_dispatch="2*n_jobs",
+            error_score=np.nan,
+            return_train_score=False,
+            log_config=None,
+            use_cache=True,
     ):
         self.estimator = estimator
         self.cv = cv
@@ -900,6 +912,7 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         self.return_train_score = return_train_score
         self.creator = creator
         self.log_config = log_config
+        self.use_cache = use_cache
         self.fitness_cache = {}
 
         # Check that the estimator is compatible with scikit-learn
@@ -990,7 +1003,7 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         individual_key = tuple(individual)
 
         # Check if the individual has already been evaluated
-        if individual_key in self.fitness_cache:
+        if individual_key in self.fitness_cache and self.use_cache:
             cached_result = self.fitness_cache[individual_key]
             # Ensure the logbook is updated even if the individual is cached
             self.logbook.record(parameters=cached_result["current_generation_features"])
@@ -1041,18 +1054,19 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         # Penalize individuals with more features than the max_features parameter
 
         if self.max_features and (
-            n_selected_features > self.max_features or n_selected_features == 0
+                n_selected_features > self.max_features or n_selected_features == 0
         ):
             score = -self.criteria_sign * 100000
 
             # Prepare the fitness result
         fitness_result = [score, n_selected_features]
 
-        # Store the fitness result and the current generation features in the cache
-        self.fitness_cache[individual_key] = {
-            "fitness": fitness_result,
-            "current_generation_features": current_generation_features
-        }
+        if self.use_cache:
+            # Store the fitness result and the current generation features in the cache
+            self.fitness_cache[individual_key] = {
+                "fitness": fitness_result,
+                "current_generation_features": current_generation_features
+            }
 
         return fitness_result
 
