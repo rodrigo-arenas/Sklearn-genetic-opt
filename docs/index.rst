@@ -26,7 +26,7 @@ inside the env use::
 
    pip install sklearn-genetic-opt
 
-.. |PythonMinVersion| replace:: 3.8
+.. |PythonMinVersion| replace:: 3.9
 .. |ScikitLearnMinVersion| replace:: 1.3.0
 .. |NumPyMinVersion| replace:: 1.19.0
 .. |SeabornMinVersion| replace:: 0.11.2

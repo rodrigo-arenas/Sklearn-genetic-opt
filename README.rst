@@ -8,7 +8,7 @@
 .. |Codecov| image:: https://codecov.io/gh/rodrigo-arenas/Sklearn-genetic-opt/branch/master/graphs/badge.svg?branch=master&service=github
 .. _Codecov: https://codecov.io/github/rodrigo-arenas/Sklearn-genetic-opt?branch=master
 
-.. |PythonVersion| image:: https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11-blue
+.. |PythonVersion| image:: https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11-blue
 .. _PythonVersion : https://www.python.org/downloads/
 .. |PyPi| image:: https://badge.fury.io/py/sklearn-genetic-opt.svg
 .. _PyPi: https://badge.fury.io/py/sklearn-genetic-opt

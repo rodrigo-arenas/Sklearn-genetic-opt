@@ -35,6 +35,12 @@ Features:
   areas of the hyperparameter space. If set to ``None``, the entire population will be initialized
   randomly.
 
+^^^^^^^^^^^^
+API Changes:
+^^^^^^^^^^^^
+
+* Dropped support for python 3.8
+
 What's new in 0.10.1
 --------------------
 
