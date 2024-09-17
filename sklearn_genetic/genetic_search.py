@@ -263,7 +263,7 @@ class GASearchCV(BaseSearchCV):
         self.pre_dispatch = pre_dispatch
         self.error_score = error_score
         self.return_train_score = return_train_score
-        self.creator = creator
+        # self.creator = creator
         self.log_config = log_config
         self.use_cache = use_cache
         self.fitness_cache = {}
@@ -308,8 +308,8 @@ class GASearchCV(BaseSearchCV):
         """
         self.toolbox = base.Toolbox()
 
-        self.creator.create("FitnessMax", base.Fitness, weights=[self.criteria_sign, 1.0])
-        self.creator.create("Individual", list, fitness=creator.FitnessMax)
+        creator.create("FitnessMax", base.Fitness, weights=[self.criteria_sign, 1.0])
+        creator.create("Individual", list, fitness=creator.FitnessMax)
 
 
         attributes = []
@@ -939,7 +939,7 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         self.pre_dispatch = pre_dispatch
         self.error_score = error_score
         self.return_train_score = return_train_score
-        self.creator = creator
+        # self.creator = creator
         self.log_config = log_config
         self.use_cache = use_cache
         self.fitness_cache = {}
