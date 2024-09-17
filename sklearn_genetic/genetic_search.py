@@ -308,8 +308,8 @@ class GASearchCV(BaseSearchCV):
         """
         self.toolbox = base.Toolbox()
 
-        self.creator.create("FitnessMax", base.Fitness, weights=[self.criteria_sign, 1.0])
-        self.creator.create("Individual", list, fitness=creator.FitnessMax)
+        creator.create("FitnessMax", base.Fitness, weights=[self.criteria_sign, 1.0])
+        creator.create("Individual", list, fitness=creator.FitnessMax)
 
 
         attributes = []

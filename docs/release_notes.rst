@@ -3,6 +3,16 @@ Release Notes
 
 Some notes on new features in various releases
 
+What's new in 0.11.1
+--------------------
+
+^^^^^^^^^^
+Bug Fixes:
+^^^^^^^^^^
+
+* Fixed a bug that would generate AttributeError: 'GASearchCV' object has no attribute 'creator'
+
+
 What's new in 0.11.0
 --------------------
 
