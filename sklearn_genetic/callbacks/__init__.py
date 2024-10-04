@@ -5,6 +5,7 @@ from .early_stoppers import (
     TimerStopping,
 )
 from .loggers import ProgressBar, LogbookSaver, TensorBoard
+from .model_checkpoint import ModelCheckpoint
 
 __all__ = [
     "ProgressBar",
@@ -14,4 +15,5 @@ __all__ = [
     "TimerStopping",
     "LogbookSaver",
     "TensorBoard",
+    "ModelCheckpoint"
 ]
