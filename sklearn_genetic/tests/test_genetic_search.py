@@ -697,18 +697,22 @@ def test_checkpoint_functionality():
 
     assert len(checkpoint_data["logbook"]) == gen + 1
 
+    restored_estimator.save(checkpoint_path)
+
     test_estimator = GASearchCV(
         clf,
         param_grid={
             "l1_ratio": Continuous(0, 1),
             "alpha": Continuous(1e-1, 1),
-            "average": Categorical([True, False]),
+            "average": Categorical([False, True]),
         },
     )
 
-    test_estimator.load("checkpoint_path")
+    test_estimator.load(checkpoint_path)
 
     assert restored_estimator.algorithm == test_estimator.algorithm  # noqa
+    assert restored_estimator.scoring == test_estimator.scoring  # noqa
+    assert restored_estimator.generations == test_estimator.generations  # noqa
 
     if os.path.exists(checkpoint_path):
         os.remove(checkpoint_path)

@@ -532,7 +532,7 @@ class GASearchCV(BaseSearchCV):
                 if os.path.exists(callback.checkpoint_path):
                     checkpoint_data = callback.load()
                     if checkpoint_data:
-                        self.estimator.__dict__.update(checkpoint_data["estimator_state"])  # noqa
+                        self.__dict__.update(checkpoint_data["estimator_state"])  # noqa
                         self.logbook = checkpoint_data["logbook"]
                     break
 
@@ -616,22 +616,24 @@ class GASearchCV(BaseSearchCV):
     def save(self, filepath):
         """Save the current state of the GASearchCV instance to a file."""
         try:
-            checkpoint_data = self.__dict__
+            checkpoint_data = {"estimator_state": self.__dict__, "logbook": None}
+            if hasattr(self, "logbook"):
+                checkpoint_data["logbook"] = self.logbook
             with open(filepath, "wb") as f:
                 pickle.dump(checkpoint_data, f)
             print(f"GASearchCV model successfully saved to {filepath}")
         except Exception as e:
             print(f"Error saving GASearchCV: {e}")
 
-    @staticmethod
-    def load(filepath):
+    def load(self, filepath):
         """Load a GASearchCV instance from a file."""
         try:
             with open(filepath, "rb") as f:
                 checkpoint_data = pickle.load(f)
-                model = GASearchCV(**checkpoint_data)
+                for key, value in checkpoint_data["estimator_state"].items():
+                    setattr(self, key, value)
+                self.logbook = checkpoint_data["logbook"]
             print(f"GASearchCV model successfully loaded from {filepath}")
-            return model
         except Exception as e:
             print(f"Error loading GASearchCV: {e}")
 
@@ -1171,7 +1173,7 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
                 if os.path.exists(callback.checkpoint_path):
                     checkpoint_data = callback.load()
                     if checkpoint_data:
-                        self.estimator.__dict__.update(checkpoint_data["estimator_state"])  # noqa
+                        self.__dict__.update(checkpoint_data["estimator_state"])  # noqa
                         self.logbook = checkpoint_data["logbook"]
                     break
 
@@ -1239,22 +1241,25 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
     def save(self, filepath):
         """Save the current state of the GAFeatureSelectionCV instance to a file."""
         try:
-            checkpoint_data = self.__dict__
+            checkpoint_data = {"estimator_state": self.__dict__, "logbook": None}
+            if hasattr(self, "logbook"):
+                checkpoint_data["logbook"] = self.logbook
+
             with open(filepath, "wb") as f:
                 pickle.dump(checkpoint_data, f)
             print(f"GAFeatureSelectionCV model successfully saved to {filepath}")
         except Exception as e:
             print(f"Error saving GAFeatureSelectionCV: {e}")
 
-    @staticmethod
-    def load(filepath):
+    def load(self, filepath):
         """Load a GAFeatureSelectionCV instance from a file."""
         try:
             with open(filepath, "rb") as f:
                 checkpoint_data = pickle.load(f)
-                model = GAFeatureSelectionCV(**checkpoint_data)
+                for key, value in checkpoint_data["estimator_state"].items():
+                    setattr(self, key, value)
+                self.logbook = checkpoint_data["logbook"]
             print(f"GAFeatureSelectionCV model successfully loaded from {filepath}")  # noqa
-            return model
         except Exception as e:
             print(f"Error loading GAFeatureSelectionCV: {e}")
 
