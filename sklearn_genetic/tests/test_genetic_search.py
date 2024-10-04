@@ -10,6 +10,7 @@ from sklearn.metrics import accuracy_score, balanced_accuracy_score
 from sklearn.metrics import make_scorer
 
 import numpy as np
+import os
 
 from .. import GASearchCV
 from ..space import Integer, Categorical, Continuous
@@ -19,6 +20,7 @@ from ..callbacks import (
     ConsecutiveStopping,
     TimerStopping,
     ProgressBar,
+    ModelCheckpoint,
 )
 
 from ..schedules import ExponentialAdapter, InverseAdapter
@@ -605,8 +607,10 @@ def test_expected_ga_schedulers():
             "average": Categorical([True, False]),
             "max_iter": Integer(700, 1000),
         },
-        warm_start_configs=[{"l1_ratio": 0.5, "alpha": 0.5, "average": False, "max_iter": 400},
-                            {"l1_ratio": 0.2, "alpha": 0.8, "average": True, "max_iter": 400}],
+        warm_start_configs=[
+            {"l1_ratio": 0.5, "alpha": 0.5, "average": False, "max_iter": 400},
+            {"l1_ratio": 0.2, "alpha": 0.8, "average": True, "max_iter": 400},
+        ],
         verbose=False,
         algorithm="eaSimple",
         n_jobs=-1,
@@ -659,3 +663,56 @@ def test_expected_ga_schedulers():
     assert "params" in cv_result_keys
 
     assert crossover_scheduler.current_value + mutation_scheduler.current_value <= 1
+
+
+def test_checkpoint_functionality():
+    clf = SGDClassifier(loss="modified_huber", fit_intercept=True)
+    gen = 5
+    evolved_estimator = GASearchCV(
+        clf,
+        cv=3,
+        scoring="accuracy",
+        population_size=6,
+        generations=gen,
+        tournament_size=3,
+        param_grid={
+            "l1_ratio": Continuous(0, 1),
+            "alpha": Continuous(1e-4, 1),
+            "average": Categorical([True, False]),
+        },
+    )
+    checkpoint_path = "test_checkpoint.pkl"
+    checkpoint = ModelCheckpoint(checkpoint_path=checkpoint_path)  # noqa
+    evolved_estimator.fit(X_train, y_train, callbacks=checkpoint)
+
+    checkpoint_data = checkpoint.load()
+
+    assert "estimator" in checkpoint_data["estimator_state"]
+    assert "algorithm" in checkpoint_data["estimator_state"]
+    assert "logbook" in checkpoint_data
+
+    restored_estimator = GASearchCV(**checkpoint_data["estimator_state"])
+
+    assert restored_estimator.algorithm == checkpoint_data["estimator_state"]["algorithm"]  # noqa
+
+    assert len(checkpoint_data["logbook"]) == gen + 1
+
+    restored_estimator.save(checkpoint_path)
+
+    test_estimator = GASearchCV(
+        clf,
+        param_grid={
+            "l1_ratio": Continuous(0, 1),
+            "alpha": Continuous(1e-1, 1),
+            "average": Categorical([False, True]),
+        },
+    )
+
+    test_estimator.load(checkpoint_path)
+
+    assert restored_estimator.algorithm == test_estimator.algorithm  # noqa
+    assert restored_estimator.scoring == test_estimator.scoring  # noqa
+    assert restored_estimator.generations == test_estimator.generations  # noqa
+
+    if os.path.exists(checkpoint_path):
+        os.remove(checkpoint_path)
