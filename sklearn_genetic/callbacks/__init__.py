@@ -15,5 +15,5 @@ __all__ = [
     "TimerStopping",
     "LogbookSaver",
     "TensorBoard",
-    "ModelCheckpoint"
+    "ModelCheckpoint",
 ]

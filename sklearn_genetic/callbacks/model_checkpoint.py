@@ -5,7 +5,7 @@ from copy import deepcopy
 
 
 class ModelCheckpoint(BaseCallback):
-    def __init__(self,  checkpoint_path, **dump_options):
+    def __init__(self, checkpoint_path, **dump_options):
         self.checkpoint_path = checkpoint_path
         self.dump_options = dump_options
 
@@ -16,22 +16,19 @@ class ModelCheckpoint(BaseCallback):
                 logbook_saver.on_step(record, logbook, estimator)
 
             estimator_state = {
-                'estimator': estimator.estimator,
-                'cv': estimator.cv,
-                'scoring': estimator.scoring,
-                'population_size': estimator.population_size,
-                'generations': estimator.generations,
-                'crossover_probability': estimator.crossover_probability,
-                'mutation_probability': estimator.mutation_probability,
-                'param_grid': estimator.param_grid,
-                'algorithm': estimator.algorithm,
-                'param_grid': estimator.param_grid,
+                "estimator": estimator.estimator,
+                "cv": estimator.cv,
+                "scoring": estimator.scoring,
+                "population_size": estimator.population_size,
+                "generations": estimator.generations,
+                "crossover_probability": estimator.crossover_probability,
+                "mutation_probability": estimator.mutation_probability,
+                "param_grid": estimator.param_grid,
+                "algorithm": estimator.algorithm,
+                "param_grid": estimator.param_grid,
             }
-            checkpoint_data = {
-                'estimator_state': estimator_state,
-                'logbook': deepcopy(logbook)
-            }
-            with open(self.checkpoint_path, 'wb') as f:
+            checkpoint_data = {"estimator_state": estimator_state, "logbook": deepcopy(logbook)}
+            with open(self.checkpoint_path, "wb") as f:
                 pickle.dump(checkpoint_data, f)
                 print(f"Checkpoint save in {self.checkpoint_path}")
 
@@ -41,7 +38,7 @@ class ModelCheckpoint(BaseCallback):
     def load(self):
         """Load the model state from the checkpoint file."""
         try:
-            with open(self.checkpoint_path, 'rb') as f:
+            with open(self.checkpoint_path, "rb") as f:
                 checkpoint_data = pickle.load(f)
                 return checkpoint_data
         except Exception as e:
