@@ -30,6 +30,10 @@ from .utils.cv_scores import (
 from .utils.random import weighted_bool_individual
 from .utils.tools import cxUniform, mutFlipBit, novelty_scorer
 
+import pickle
+import os
+from .callbacks.model_checkpoint import ModelCheckpoint
+
 
 class GASearchCV(BaseSearchCV):
     """
@@ -218,29 +222,29 @@ class GASearchCV(BaseSearchCV):
     """
 
     def __init__(
-            self,
-            estimator,
-            cv=3,
-            param_grid=None,
-            scoring=None,
-            population_size=50,
-            generations=80,
-            crossover_probability=0.2,
-            mutation_probability=0.8,
-            tournament_size=3,
-            elitism=True,
-            verbose=True,
-            keep_top_k=1,
-            criteria="max",
-            algorithm="eaMuPlusLambda",
-            refit=True,
-            n_jobs=1,
-            pre_dispatch="2*n_jobs",
-            error_score=np.nan,
-            return_train_score=False,
-            log_config=None,
-            use_cache=True,
-            warm_start_configs=None,
+        self,
+        estimator,
+        cv=3,
+        param_grid=None,
+        scoring=None,
+        population_size=50,
+        generations=80,
+        crossover_probability=0.2,
+        mutation_probability=0.8,
+        tournament_size=3,
+        elitism=True,
+        verbose=True,
+        keep_top_k=1,
+        criteria="max",
+        algorithm="eaMuPlusLambda",
+        refit=True,
+        n_jobs=1,
+        pre_dispatch="2*n_jobs",
+        error_score=np.nan,
+        return_train_score=False,
+        log_config=None,
+        use_cache=True,
+        warm_start_configs=None,
     ):
         self.estimator = estimator
         self.cv = cv
@@ -311,7 +315,6 @@ class GASearchCV(BaseSearchCV):
         creator.create("FitnessMax", base.Fitness, weights=[self.criteria_sign, 1.0])
         creator.create("Individual", list, fitness=creator.FitnessMax)
 
-
         attributes = []
         # Assign all the parameters defined in the param_grid
         # It uses the distribution parameter to set the sampling function
@@ -357,7 +360,6 @@ class GASearchCV(BaseSearchCV):
         self._stats.register("fitness_std", np.std, axis=0)
         self._stats.register("fitness_max", np.max, axis=0)
         self._stats.register("fitness_min", np.min, axis=0)
-
 
         self.logbook = tools.Logbook()
 
@@ -490,7 +492,7 @@ class GASearchCV(BaseSearchCV):
             # Store the fitness result and the current generation parameters in the cache
             self.fitness_cache[individual_key] = {
                 "fitness": fitness_result,
-                "current_generation_params": current_generation_params
+                "current_generation_params": current_generation_params,
             }
 
         return fitness_result
@@ -523,6 +525,16 @@ class GASearchCV(BaseSearchCV):
 
         # Make sure the callbacks are valid
         self.callbacks = check_callback(callbacks)
+
+        # Load state if a checkpoint exists
+        for callback in self.callbacks:
+            if isinstance(callback, ModelCheckpoint):
+                if os.path.exists(callback.checkpoint_path):
+                    checkpoint_data = callback.load()
+                    if checkpoint_data:
+                        self.__dict__.update(checkpoint_data["estimator_state"])  # noqa
+                        self.logbook = checkpoint_data["logbook"]
+                    break
 
         if callable(self.scoring):
             self.scorer_ = self.scoring
@@ -600,6 +612,30 @@ class GASearchCV(BaseSearchCV):
         del creator.Individual
 
         return self
+
+    def save(self, filepath):
+        """Save the current state of the GASearchCV instance to a file."""
+        try:
+            checkpoint_data = {"estimator_state": self.__dict__, "logbook": None}
+            if hasattr(self, "logbook"):
+                checkpoint_data["logbook"] = self.logbook
+            with open(filepath, "wb") as f:
+                pickle.dump(checkpoint_data, f)
+            print(f"GASearchCV model successfully saved to {filepath}")
+        except Exception as e:
+            print(f"Error saving GASearchCV: {e}")
+
+    def load(self, filepath):
+        """Load a GASearchCV instance from a file."""
+        try:
+            with open(filepath, "rb") as f:
+                checkpoint_data = pickle.load(f)
+                for key, value in checkpoint_data["estimator_state"].items():
+                    setattr(self, key, value)
+                self.logbook = checkpoint_data["logbook"]
+            print(f"GASearchCV model successfully loaded from {filepath}")
+        except Exception as e:
+            print(f"Error loading GASearchCV: {e}")
 
     def _select_algorithm(self, pop, stats, hof):
         """
@@ -895,28 +931,28 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
     """
 
     def __init__(
-            self,
-            estimator,
-            cv=3,
-            scoring=None,
-            population_size=50,
-            generations=80,
-            crossover_probability=0.2,
-            mutation_probability=0.8,
-            tournament_size=3,
-            elitism=True,
-            max_features=None,
-            verbose=True,
-            keep_top_k=1,
-            criteria="max",
-            algorithm="eaMuPlusLambda",
-            refit=True,
-            n_jobs=1,
-            pre_dispatch="2*n_jobs",
-            error_score=np.nan,
-            return_train_score=False,
-            log_config=None,
-            use_cache=True,
+        self,
+        estimator,
+        cv=3,
+        scoring=None,
+        population_size=50,
+        generations=80,
+        crossover_probability=0.2,
+        mutation_probability=0.8,
+        tournament_size=3,
+        elitism=True,
+        max_features=None,
+        verbose=True,
+        keep_top_k=1,
+        criteria="max",
+        algorithm="eaMuPlusLambda",
+        refit=True,
+        n_jobs=1,
+        pre_dispatch="2*n_jobs",
+        error_score=np.nan,
+        return_train_score=False,
+        log_config=None,
+        use_cache=True,
     ):
         self.estimator = estimator
         self.cv = cv
@@ -1083,7 +1119,7 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         # Penalize individuals with more features than the max_features parameter
 
         if self.max_features and (
-                n_selected_features > self.max_features or n_selected_features == 0
+            n_selected_features > self.max_features or n_selected_features == 0
         ):
             score = -self.criteria_sign * 100000
 
@@ -1094,7 +1130,7 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
             # Store the fitness result and the current generation features in the cache
             self.fitness_cache[individual_key] = {
                 "fitness": fitness_result,
-                "current_generation_features": current_generation_features
+                "current_generation_features": current_generation_features,
             }
 
         return fitness_result
@@ -1130,6 +1166,16 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
 
         # Make sure the callbacks are valid
         self.callbacks = check_callback(callbacks)
+
+        # Load state if a checkpoint exists
+        for callback in self.callbacks:
+            if isinstance(callback, ModelCheckpoint):
+                if os.path.exists(callback.checkpoint_path):
+                    checkpoint_data = callback.load()
+                    if checkpoint_data:
+                        self.__dict__.update(checkpoint_data["estimator_state"])  # noqa
+                        self.logbook = checkpoint_data["logbook"]
+                    break
 
         if callable(self.scoring):
             self.scorer_ = self.scoring
@@ -1191,6 +1237,31 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         del creator.Individual
 
         return self
+
+    def save(self, filepath):
+        """Save the current state of the GAFeatureSelectionCV instance to a file."""
+        try:
+            checkpoint_data = {"estimator_state": self.__dict__, "logbook": None}
+            if hasattr(self, "logbook"):
+                checkpoint_data["logbook"] = self.logbook
+
+            with open(filepath, "wb") as f:
+                pickle.dump(checkpoint_data, f)
+            print(f"GAFeatureSelectionCV model successfully saved to {filepath}")
+        except Exception as e:
+            print(f"Error saving GAFeatureSelectionCV: {e}")
+
+    def load(self, filepath):
+        """Load a GAFeatureSelectionCV instance from a file."""
+        try:
+            with open(filepath, "rb") as f:
+                checkpoint_data = pickle.load(f)
+                for key, value in checkpoint_data["estimator_state"].items():
+                    setattr(self, key, value)
+                self.logbook = checkpoint_data["logbook"]
+            print(f"GAFeatureSelectionCV model successfully loaded from {filepath}")  # noqa
+        except Exception as e:
+            print(f"Error loading GAFeatureSelectionCV: {e}")
 
     def _select_algorithm(self, pop, stats, hof):
         """
