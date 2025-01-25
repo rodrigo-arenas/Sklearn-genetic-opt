@@ -194,7 +194,7 @@ def test_negative_criteria():
     evolved_estimator = GAFeatureSelectionCV(
         clf,
         cv=3,
-        scoring="max_error",
+        scoring="neg_max_error",
         population_size=5,
         generations=generations,
         tournament_size=3,
