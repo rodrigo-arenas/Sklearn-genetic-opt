@@ -244,8 +244,7 @@ def test_wrong_estimator():
             verbose=False,
             criteria="maximization",
         )
-    assert str(excinfo.value) == "KMeans() is not a valid Sklearn classifier or regressor"
-
+    assert str(excinfo.value) == "KMeans() is not a valid Sklearn classifier, regressor, or outlier detector"
 
 def test_wrong_get_item():
     clf = SGDClassifier(loss="modified_huber", fit_intercept=True)
