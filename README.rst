@@ -107,6 +107,30 @@ install all the extra packages::
 
 
 Example: Hyperparameters Tuning
+
+Quick Start (Minimal Example)
+#############################
+
+Here is a basic example of how to run GASearchCV on a scikit-learn model:
+
+.. code-block:: python
+
+    from sklearn_genetic import GASearchCV
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.datasets import load_iris
+
+    X, y = load_iris(return_X_y=True)
+
+    model = GASearchCV(estimator=RandomForestClassifier(),
+                       cv=3,
+                       scoring="accuracy",
+                       population_size=10,
+                       generations=5)
+
+    model.fit(X, y)
+    print("Best score:", model.best_score_)
+
+
 ###############################
 
 .. code-block:: python
