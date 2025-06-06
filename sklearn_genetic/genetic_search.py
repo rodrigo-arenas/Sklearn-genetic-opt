@@ -7,6 +7,13 @@ from deap import base, creator, tools
 from sklearn.base import clone
 from sklearn.model_selection import cross_validate
 from sklearn.base import is_classifier, is_regressor, BaseEstimator, MetaEstimatorMixin
+try:
+    from sklearn.base import is_outlier_detector
+except ImportError:
+    # Fallback for older sklearn versions
+    def is_outlier_detector(estimator):
+        return hasattr(estimator, 'fit_predict') and hasattr(estimator, 'decision_function')
+
 from sklearn.feature_selection import SelectorMixin
 from sklearn.utils import check_X_y
 from sklearn.utils.validation import check_is_fitted
@@ -274,8 +281,8 @@ class GASearchCV(BaseSearchCV):
         self.warm_start_configs = warm_start_configs or []
 
         # Check that the estimator is compatible with scikit-learn
-        if not is_classifier(self.estimator) and not is_regressor(self.estimator):
-            raise ValueError(f"{self.estimator} is not a valid Sklearn classifier or regressor")
+        if not (is_classifier(self.estimator) or is_regressor(self.estimator) or is_outlier_detector(self.estimator)):
+            raise ValueError(f"{self.estimator} is not a valid Sklearn classifier, regressor, or outlier detector")
 
         if criteria not in Criteria.list():
             raise ValueError(f"Criteria must be one of {Criteria.list()}, got {criteria} instead")
@@ -442,13 +449,13 @@ class GASearchCV(BaseSearchCV):
         local_estimator = clone(self.estimator)
         local_estimator.set_params(**current_generation_params)
 
-        # Compute the cv-metrics
+        # standard cross_validate for all estimator types is used
         cv_results = cross_validate(
             local_estimator,
             self.X_,
             self.y_,
             cv=self.cv,
-            scoring=self.scoring,
+            scoring=self.scorer_,
             n_jobs=self.n_jobs,
             pre_dispatch=self.pre_dispatch,
             error_score=self.error_score,
@@ -497,7 +504,7 @@ class GASearchCV(BaseSearchCV):
 
         return fitness_result
 
-    def fit(self, X, y, callbacks=None):
+    def fit(self, X, y=None, callbacks=None):
         """
         Main method of GASearchCV, starts the optimization
         procedure with the hyperparameters of the given estimator
@@ -510,7 +517,7 @@ class GASearchCV(BaseSearchCV):
         y : array-like of shape (n_samples,) or (n_samples, n_outputs), \
             default=None
             The target variable to try to predict in the case of
-            supervised learning.
+            supervised learning. For outlier detection, y can be None.
         callbacks: list or callable
             One or a list of the callbacks methods available in
             :class:`~sklearn_genetic.callbacks`.
@@ -522,6 +529,11 @@ class GASearchCV(BaseSearchCV):
         self._n_iterations = self.generations + 1
         self.refit_metric = "score"
         self.multimetric_ = False
+
+        # added a handle outlier detection jussst in case where y might be None
+        if is_outlier_detector(self.estimator) and y is None:
+            # and for unsupervised outlier detection, it will create dummy y for cv compatibility :)
+            self.y_ = np.zeros(X.shape[0])
 
         # Make sure the callbacks are valid
         self.callbacks = check_callback(callbacks)
@@ -540,8 +552,23 @@ class GASearchCV(BaseSearchCV):
             self.scorer_ = self.scoring
             self.metrics_list = [self.refit_metric]
         elif self.scoring is None or isinstance(self.scoring, str):
-            self.scorer_ = check_scoring(self.estimator, self.scoring)
-            self.metrics_list = [self.refit_metric]
+            # it will handle outlier detectors that don't have a score method
+            if is_outlier_detector(self.estimator) and self.scoring is None:
+                # this function creates a default scorer for outlier detection
+                def default_outlier_scorer(estimator, X, y=None):
+                    if hasattr(estimator, 'score_samples'):
+                        return np.mean(estimator.score_samples(X))
+                    elif hasattr(estimator, 'decision_function'):
+                        return np.mean(estimator.decision_function(X))
+                    else:
+                        predictions = estimator.fit_predict(X)
+                        return np.mean(predictions == 1)
+                
+                self.scorer_ = default_outlier_scorer
+                self.metrics_list = [self.refit_metric]
+            else:
+                self.scorer_ = check_scoring(self.estimator, self.scoring)
+                self.metrics_list = [self.refit_metric]
         else:
             self.scorer_ = _check_multimetric_scoring(self.estimator, self.scoring)
             self._check_refit_for_multimetric(self.scorer_)
@@ -549,9 +576,15 @@ class GASearchCV(BaseSearchCV):
             self.metrics_list = self.scorer_.keys()
             self.multimetric_ = True
 
-        # Check cv and get the n_splits
-        cv_orig = check_cv(self.cv, y, classifier=is_classifier(self.estimator))
-        self.n_splits_ = cv_orig.get_n_splits(X, y)
+        # Check cv and get the n_splits 
+        if is_outlier_detector(self.estimator):
+            # For outlier detectors, better to use KFold instead of classifier-based CV
+            from sklearn.model_selection import KFold
+            cv_orig = KFold(n_splits=self.cv if isinstance(self.cv, int) else 5)
+            self.n_splits_ = cv_orig.get_n_splits(X, self.y_)
+        else:
+            cv_orig = check_cv(self.cv, self.y_, classifier=is_classifier(self.estimator))
+            self.n_splits_ = cv_orig.get_n_splits(X, self.y_)
 
         # Set the DEAPs necessary methods
         self._register()
@@ -980,9 +1013,9 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         self.use_cache = use_cache
         self.fitness_cache = {}
 
-        # Check that the estimator is compatible with scikit-learn
-        if not is_classifier(self.estimator) and not is_regressor(self.estimator):
-            raise ValueError(f"{self.estimator} is not a valid Sklearn classifier or regressor")
+        # added new check for whether the estimator is compatible with scikit-learn
+        if not (is_classifier(self.estimator) or is_regressor(self.estimator) or is_outlier_detector(self.estimator)):
+            raise ValueError(f"{self.estimator} is not a valid Sklearn classifier, regressor, or outlier detector")
 
         if criteria not in Criteria.list():
             raise ValueError(f"Criteria must be one of {Criteria.list()}, got {criteria} instead")
@@ -1074,13 +1107,13 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
             self.logbook.record(parameters=cached_result["current_generation_features"])
             return cached_result["fitness"]
 
-        # Compute the cv-metrics using only the selected features
+        # Use standard cross_validate for all estimator types
         cv_results = cross_validate(
             local_estimator,
             self.X_[:, bool_individual],
             self.y_,
             cv=self.cv,
-            scoring=self.scoring,
+            scoring=self.scorer_,
             n_jobs=self.n_jobs,
             pre_dispatch=self.pre_dispatch,
             error_score=self.error_score,
@@ -1111,10 +1144,10 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
                 current_generation_params[f"train_{metric}"] = cv_results[f"train_{metric}"]
 
         index = len(self.logbook.chapters["parameters"])
-        current_generation_features = {"index": index, **current_generation_params}
+        current_generation_params = {"index": index, **current_generation_params}
 
         # Log the features and the cv-score
-        self.logbook.record(parameters=current_generation_features)
+        self.logbook.record(parameters=current_generation_params)
 
         # Penalize individuals with more features than the max_features parameter
 
@@ -1130,12 +1163,12 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
             # Store the fitness result and the current generation features in the cache
             self.fitness_cache[individual_key] = {
                 "fitness": fitness_result,
-                "current_generation_features": current_generation_features,
+                "current_generation_features": current_generation_params,
             }
 
         return fitness_result
 
-    def fit(self, X, y, callbacks=None):
+    def fit(self, X, y=None, callbacks=None):
         """
         Main method of GAFeatureSelectionCV, starts the optimization
         procedure with to find the best features set
@@ -1147,14 +1180,20 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         y : array-like of shape (n_samples,) or (n_samples, n_outputs), \
             default=None
             The target variable to try to predict in the case of
-            supervised learning.
+            supervised learning. For outlier detection, y can be None.
         callbacks: list or callable
             One or a list of the callbacks methods available in
             :class:`~sklearn_genetic.callbacks`.
             The callback is evaluated after fitting the estimators from the generation 1.
         """
 
-        self.X_, self.y_ = check_X_y(X, y)
+        self.X_, self.y_ = check_X_y(X, y, accept_sparse=True) if y is not None else (X, None)
+        
+        # Handle outlier detection case if y is none
+        if is_outlier_detector(self.estimator) and y is None:
+            self.X_ = X
+            self.y_ = np.zeros(X.shape[0])  
+
         self.n_features = X.shape[1]
         self._n_iterations = self.generations + 1
         self.refit_metric = "score"
@@ -1181,8 +1220,23 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
             self.scorer_ = self.scoring
             self.metrics_list = [self.refit_metric]
         elif self.scoring is None or isinstance(self.scoring, str):
-            self.scorer_ = check_scoring(self.estimator, self.scoring)
-            self.metrics_list = [self.refit_metric]
+            # Handle outlier detectors that don't have a score method
+            if is_outlier_detector(self.estimator) and self.scoring is None:
+                # this function creates a default scorer for outlier detection
+                def default_outlier_scorer(estimator, X, y=None):
+                    if hasattr(estimator, 'score_samples'):
+                        return np.mean(estimator.score_samples(X))
+                    elif hasattr(estimator, 'decision_function'):
+                        return np.mean(estimator.decision_function(X))
+                    else:
+                        predictions = estimator.fit_predict(X)
+                        return np.mean(predictions == 1)
+                
+                self.scorer_ = default_outlier_scorer
+                self.metrics_list = [self.refit_metric]
+            else:
+                self.scorer_ = check_scoring(self.estimator, self.scoring)
+                self.metrics_list = [self.refit_metric]
         else:
             self.scorer_ = _check_multimetric_scoring(self.estimator, self.scoring)
             self._check_refit_for_multimetric(self.scorer_)
@@ -1190,9 +1244,14 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
             self.metrics_list = self.scorer_.keys()
             self.multimetric_ = True
 
-        # Check cv and get the n_splits
-        cv_orig = check_cv(self.cv, y, classifier=is_classifier(self.estimator))
-        self.n_splits_ = cv_orig.get_n_splits(X, y)
+        # Check cv and get the n_splits   
+        if is_outlier_detector(self.estimator):
+            from sklearn.model_selection import KFold
+            cv_orig = KFold(n_splits=self.cv if isinstance(self.cv, int) else 5)
+            self.n_splits_ = cv_orig.get_n_splits(X, self.y_)
+        else:
+            cv_orig = check_cv(self.cv, self.y_, classifier=is_classifier(self.estimator))
+            self.n_splits_ = cv_orig.get_n_splits(X, self.y_)
 
         # Set the DEAPs necessary methods
         self._register()
