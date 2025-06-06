@@ -54,7 +54,7 @@ def test_isolation_forest_gasearch():
 
 
 def test_one_class_svm_gasearch_default_scoring():
-    """Test GASearchCV with OneClassSVM - SPECIFICALLY tests decision_function path"""
+    """Test GASearchCV with OneClassSVM - using default scoring"""
     estimator = OneClassSVM()
     
     param_grid = {
@@ -70,7 +70,7 @@ def test_one_class_svm_gasearch_default_scoring():
         generations=4,
         verbose=False,
         n_jobs=1,
-        scoring=None  # This will trigger default_outlier_scorer with decision_function
+        scoring=None  # This will trigger default_outlier_scorer
     )
     
     ga_search.fit(X_train)
@@ -80,84 +80,159 @@ def test_one_class_svm_gasearch_default_scoring():
     assert len(ga_search.predict(X_test)) == len(X_test)
 
 
+# Create a mock estimator that specifically only has decision_function
+class MockDecisionFunctionOnlyEstimator:
+    """Mock estimator that only has decision_function (not score_samples)"""
+    
+    def __init__(self, param_value=0.5):
+        self.param_value = param_value
+        self.is_fitted_ = False
+    
+    def fit(self, X, y=None):
+        self.is_fitted_ = True
+        return self
+    
+    def decision_function(self, X):
+        """Return mock decision scores"""
+        np.random.seed(42)
+        return np.random.randn(X.shape[0])
+    
+    def predict(self, X):
+        """Return mock predictions"""
+        return np.where(self.decision_function(X) >= 0, 1, -1)
+    
+    def get_params(self, deep=True):
+        return {'param_value': self.param_value}
+    
+    def set_params(self, **params):
+        for key, value in params.items():
+            setattr(self, key, value)
+        return self
+
+
 def test_decision_function_path_explicitly():
     """Test that specifically exercises the decision_function path in default scorer"""
-    from sklearn_genetic.genetic_search import GASearchCV
+    # Use our mock estimator that only has decision_function
+    estimator = MockDecisionFunctionOnlyEstimator()
     
-    # Create an estimator that has decision_function but not score_samples
-    estimator = OneClassSVM(nu=0.1)
-    
-    # Manually verify it has decision_function but not score_samples
+    # Verify it has decision_function but not score_samples
     assert hasattr(estimator, 'decision_function')
     assert not hasattr(estimator, 'score_samples')
     
-    param_grid = {
-        'nu': Continuous(0.05, 0.3)
-    }
+    # Temporarily patch is_outlier_detector to recognize our mock
+    import sklearn_genetic.genetic_search as sg_module
+    original_is_outlier_detector = sg_module.is_outlier_detector
     
-    ga_search = GASearchCV(
-        estimator=estimator,
-        param_grid=param_grid,
-        cv=3,
-        population_size=4,
-        generations=3,
-        verbose=False,
-        n_jobs=1,
-        scoring=None  # This MUST use decision_function path
-    )
+    def mock_is_outlier_detector(est):
+        if isinstance(est, MockDecisionFunctionOnlyEstimator):
+            return True
+        return original_is_outlier_detector(est)
     
-    ga_search.fit(X_train)
+    sg_module.is_outlier_detector = mock_is_outlier_detector
     
-    # Verify it worked
-    assert check_is_fitted(ga_search) is None
-    assert 'nu' in ga_search.best_params_
+    try:
+        param_grid = {
+            'param_value': Continuous(0.1, 0.9)
+        }
+        
+        ga_search = GASearchCV(
+            estimator=estimator,
+            param_grid=param_grid,
+            cv=3,
+            population_size=4,
+            generations=3,
+            verbose=False,
+            n_jobs=1,
+            scoring=None  # This MUST use decision_function path
+        )
+        
+        ga_search.fit(X_train)
+        
+        # Verify it worked
+        assert check_is_fitted(ga_search) is None
+        assert 'param_value' in ga_search.best_params_
+        
+    finally:
+        # Restore original function
+        sg_module.is_outlier_detector = original_is_outlier_detector
 
 
 def test_one_class_svm_feature_selection_decision_function():
-    """Test GAFeatureSelectionCV with OneClassSVM - tests decision_function path"""
-    estimator = OneClassSVM(nu=0.1)
+    """Test GAFeatureSelectionCV with mock estimator that uses decision_function path"""
+    estimator = MockDecisionFunctionOnlyEstimator()
     
     # Verify this estimator will use decision_function path
     assert hasattr(estimator, 'decision_function')
     assert not hasattr(estimator, 'score_samples')
     
-    ga_feature_selection = GAFeatureSelectionCV(
-        estimator=estimator,
-        cv=3,
-        population_size=6,
-        generations=4,
-        verbose=False,
-        n_jobs=1,
-        scoring=None  # Test default scoring with decision_function
-    )
+    # Temporarily patch is_outlier_detector
+    import sklearn_genetic.genetic_search as sg_module
+    original_is_outlier_detector = sg_module.is_outlier_detector
     
-    ga_feature_selection.fit(X_train)
+    def mock_is_outlier_detector(est):
+        if isinstance(est, MockDecisionFunctionOnlyEstimator):
+            return True
+        return original_is_outlier_detector(est)
     
-    assert check_is_fitted(ga_feature_selection) is None
-    assert hasattr(ga_feature_selection, 'support_')
-    assert len(ga_feature_selection.support_) == X_train.shape[1]
+    sg_module.is_outlier_detector = mock_is_outlier_detector
+    
+    try:
+        ga_feature_selection = GAFeatureSelectionCV(
+            estimator=estimator,
+            cv=3,
+            population_size=6,
+            generations=4,
+            verbose=False,
+            n_jobs=1,
+            scoring=None  # Test default scoring with decision_function
+        )
+        
+        ga_feature_selection.fit(X_train)
+        
+        assert check_is_fitted(ga_feature_selection) is None
+        assert hasattr(ga_feature_selection, 'support_')
+        assert len(ga_feature_selection.support_) == X_train.shape[1]
+        
+    finally:
+        # Restore original function
+        sg_module.is_outlier_detector = original_is_outlier_detector
 
 
 def test_importerror_fallback():
     """Test the ImportError fallback for is_outlier_detector"""
-    # Temporarily patch the import to simulate ImportError
     import sklearn_genetic.genetic_search as sg_module
     
     # Save original function
     original_is_outlier_detector = sg_module.is_outlier_detector
     
-    # Create a mock estimator that would be detected by fallback
+    # Create a proper mock estimator with fit method
     class MockOutlierEstimator:
+        def __init__(self, param_value=0.5):
+            self.param_value = param_value
+            self.is_fitted_ = False
+        
+        def fit(self, X, y=None):
+            self.is_fitted_ = True
+            return self
+        
         def fit_predict(self, X, y=None):
+            self.fit(X, y)
+            np.random.seed(42)
             return np.random.choice([1, -1], size=X.shape[0])
         
         def decision_function(self, X):
+            np.random.seed(42)
             return np.random.randn(X.shape[0])
         
+        def predict(self, X):
+            return np.where(self.decision_function(X) >= 0, 1, -1)
+        
         def get_params(self, deep=True):
-            return {}
+            return {'param_value': self.param_value}
         
         def set_params(self, **params):
+            for key, value in params.items():
+                setattr(self, key, value)
             return self
 
     # Create fallback function (simulating ImportError scenario)
@@ -180,12 +255,7 @@ def test_importerror_fallback():
         assert sg_module.is_outlier_detector(kmeans) == False
         
         # Test GASearchCV works with fallback detection
-        param_grid = {'dummy': Continuous(0.1, 0.9)}
-        
-        # Mock set_params to handle dummy parameter
-        def mock_set_params(**params):
-            return mock_estimator
-        mock_estimator.set_params = mock_set_params
+        param_grid = {'param_value': Continuous(0.1, 0.9)}
         
         ga_search = GASearchCV(
             estimator=mock_estimator,
@@ -199,6 +269,7 @@ def test_importerror_fallback():
         
         # This should work without raising ValueError
         ga_search.fit(X_train[:20])  # Small dataset for speed
+        assert check_is_fitted(ga_search) is None
         
     finally:
         # Restore original function
@@ -206,10 +277,11 @@ def test_importerror_fallback():
 
 
 # Mock outlier detector to test the fit_predict fallback path
-class MockOutlierDetector:
+class MockFitPredictOnlyDetector:
     """Mock outlier detector that only has fit_predict method"""
     
-    def __init__(self):
+    def __init__(self, param_value=0.5):
+        self.param_value = param_value
         self.is_fitted_ = False
     
     def fit(self, X, y=None):
@@ -222,41 +294,40 @@ class MockOutlierDetector:
         np.random.seed(42)
         return np.random.choice([1, -1], size=X.shape[0], p=[0.8, 0.2])
     
+    def predict(self, X):
+        return self.fit_predict(X)
+    
     def get_params(self, deep=True):
-        return {}
+        return {'param_value': self.param_value}
     
     def set_params(self, **params):
+        for key, value in params.items():
+            setattr(self, key, value)
         return self
 
 
 def test_mock_outlier_detector_fit_predict_path():
     """Test the fallback path in default_outlier_scorer that uses fit_predict"""
+    estimator = MockFitPredictOnlyDetector()
+    
+    # Verify it only has fit_predict (no score_samples or decision_function)
+    assert hasattr(estimator, 'fit_predict')
+    assert not hasattr(estimator, 'score_samples')
+    assert not hasattr(estimator, 'decision_function')
+    
     # Temporarily patch is_outlier_detector to recognize our mock class
-    from sklearn_genetic.genetic_search import is_outlier_detector
-    
-    # Create a mock that only has fit_predict (no score_samples or decision_function)
-    original_is_outlier_detector = is_outlier_detector
-    
-    def mock_is_outlier_detector(estimator):
-        if isinstance(estimator, MockOutlierDetector):
-            return True
-        return original_is_outlier_detector(estimator)
-    
-    # Monkey patch for this test
     import sklearn_genetic.genetic_search as sg_module
+    original_is_outlier_detector = sg_module.is_outlier_detector
+    
+    def mock_is_outlier_detector(est):
+        if isinstance(est, MockFitPredictOnlyDetector):
+            return True
+        return original_is_outlier_detector(est)
+    
     sg_module.is_outlier_detector = mock_is_outlier_detector
     
     try:
-        estimator = MockOutlierDetector()
-        
-        # We need to create a minimal param_grid that works with Space
-        from sklearn_genetic.space import Continuous
-        param_grid = {'dummy_param': Continuous(0.1, 0.9)}
-        
-        # Mock the set_params to ignore dummy_param
-        def mock_set_params(**params):
-            return estimator
-        estimator.set_params = mock_set_params
+        param_grid = {'param_value': Continuous(0.1, 0.9)}
         
         ga_search = GASearchCV(
             estimator=estimator,
