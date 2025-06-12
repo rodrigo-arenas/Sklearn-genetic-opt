@@ -40,16 +40,16 @@ setup(
         include=["sklearn_genetic", "sklearn_genetic.*"], exclude=["*tests*"]
     ),
     install_requires=[
-        "scikit-learn>=1.3.0",
-        "numpy>=1.19.0",
+        "scikit-learn>=1.5.0",
+        "numpy>=1.26.1",
         "deap>=1.3.3",
         "tqdm>=4.61.1",
     ],
     extras_require={
-        "mlflow": ["mlflow>=1.17.0"],
+        "mlflow": ["mlflow>=2.20.0"],
         "seaborn": ["seaborn>=0.11.2"],
-        "tensorflow": ["tensorflow>=2.0.0"],
-        "all": ["mlflow>=1.30.0", "seaborn>=0.11.2", "tensorflow>=2.0.0"],
+        "tensorflow": ["tensorflow>=2.17.1"],
+        "all": ["mlflow>=2.20.0", "seaborn>=0.11.2", "tensorflow>=2.17.1"],
     },
     python_requires=">=3.9",
     include_package_data=True,
