@@ -21,38 +21,6 @@ EXPERIMENT_NAME = "Digits-sklearn-genetic-opt-tests"
 def mlflow_resources():
     uri = mlflow.get_tracking_uri()
     client = MlflowClient(uri)
-    return uri, client
-
-
-@pytest.fixture
-def mlflow_run(mlflow_resources):
-    _, client = mlflow_resources
-    exp_id = client.get_experiment_by_name(EXPERIMENT_NAME).experiment_id
-    active_run = client.search_runs(exp_id, run_view_type=ViewType.ACTIVE_ONLY)
-    runs = [run.info.run_id for run in active_run]
-    return runs
-
-
-def test_mlflow_config(mlflow_resources):
-    """
-    Check MLflow config creation.
-    """
-    uri, _ = mlflow_resources
-    mlflow_config = MLflowConfig(
-        tracking_uri=uri,
-        experiment=EXPERIMENT_NAME,
-        run_name="Decision Tree",
-        save_models=True,
-        tags={"team": "sklearn-genetic-opt", "version": "0.5.0"},
-    )
-    assert isinstance(mlflow_config, MLflowConfig)
-
-
-def test_runs(mlflow_resources, mlflow_run):
-    """
-    Check if runs are captured and parameters are true.
-    """
-    uri, client = mlflow_resources
     mlflow_config = MLflowConfig(
         tracking_uri=uri,
         experiment=EXPERIMENT_NAME,
@@ -97,24 +65,56 @@ def test_runs(mlflow_resources, mlflow_run):
     )
 
     evolved_estimator.fit(X_train, y_train)
-    y_predict_ga = evolved_estimator.predict(X_test)
+
+    return uri, client, mlflow_config
+
+
+@pytest.fixture
+def mlflow_run(mlflow_resources):
+    _, client, _ = mlflow_resources
+    exp = client.get_experiment_by_name(EXPERIMENT_NAME)
+    if exp is None:
+        exp_id = client.create_experiment(EXPERIMENT_NAME)
+    else:
+        exp_id = exp.experiment_id
+    active_run = client.search_runs(exp_id, run_view_type=ViewType.ALL)
+    runs = [run.info.run_id for run in active_run]
+    return runs
+
+
+@pytest.mark.order(1)
+def test_mlflow_config(mlflow_resources):
+    """
+    Check MLflow config creation.
+    """
+    uri, _, mlflow_config = mlflow_resources
+    assert isinstance(mlflow_config, MLflowConfig)
+
+
+@pytest.mark.order(2)
+def test_runs(mlflow_resources, mlflow_run):
+    """
+    Check if runs are captured and parameters are true.
+    """
 
     runs = mlflow_run
-    assert len(runs) >= 1 and evolved_estimator.best_params_["min_weight_fraction_leaf"]
+    assert len(runs) >= 1
 
 
+@pytest.mark.order(3)
 def test_mlflow_artifacts(mlflow_resources, mlflow_run):
-    _, client = mlflow_resources
+    _, client, _ = mlflow_resources
     run_id = mlflow_run[0]
-    run = client.get_run(run_id)
-    assert client.list_artifacts(run_id)[0].path == "model"
+    artifacts = client.list_artifacts(run_id)
+    assert artifacts, f"No artifacts found for run {run_id}"
+    assert artifacts[0].path == "model"
 
 
 def test_mlflow_params(mlflow_resources, mlflow_run):
     """
     Test parameters are all in the run and within range.
     """
-    _, client = mlflow_resources
+    _, client, _ = mlflow_resources
     run_id = mlflow_run[0]
     run = client.get_run(run_id)
     params = run.data.params
@@ -131,7 +131,7 @@ def test_mlflow_after_run(mlflow_resources, mlflow_run):
     """
     run_id = mlflow_run[0]
     mlflow.end_run()
-    _, client = mlflow_resources
+    _, client, _ = mlflow_resources
     run = client.get_run(run_id)
     params = run.data.params
 

@@ -20,3 +20,4 @@ Pygments
 tensorflow>=2.17.1
 tqdm>=4.61.1
 tk
+pytest-order
