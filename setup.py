@@ -3,7 +3,7 @@ import pathlib
 from setuptools import setup, find_packages
 
 # python setup.py sdist bdist_wheel
-# twine upload --skip-existing dist/*
+# twine upload --skip-existing dist/* -u __token__ -p <token>
 
 # get __version__ from _version.py
 ver_file = os.path.join("sklearn_genetic", "_version.py")
