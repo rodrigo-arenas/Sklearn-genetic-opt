@@ -116,19 +116,28 @@ Here is a basic example of how to run GASearchCV on a scikit-learn model:
 .. code-block:: python
 
     from sklearn_genetic import GASearchCV
+    from sklearn_genetic.space import Continuous, Categorical, Integer
     from sklearn.ensemble import RandomForestClassifier
     from sklearn.datasets import load_iris
 
     X, y = load_iris(return_X_y=True)
 
-    model = GASearchCV(estimator=RandomForestClassifier(),
-                       cv=3,
-                       scoring="accuracy",
-                       population_size=10,
-                       generations=5)
+    # Defines the possible values to search
+    param_grid = {'min_weight_fraction_leaf': Continuous(0.01, 0.5, distribution='log-uniform'),
+                  'bootstrap': Categorical([True, False]),
+                  'max_depth': Integer(2, 30)}
 
-    model.fit(X, y)
-    print("Best score:", model.best_score_)
+    evolved_estimator = GASearchCV(estimator=RandomForestClassifier(),
+                                   cv=3,
+                                   scoring="accuracy",
+                                   population_size=10,
+                                   generations=5,
+                                   param_grid=param_grid)
+
+    evolved_estimator.fit(X, y)
+
+    print(evolved_estimator.best_params_)
+    print(evolved_estimator.best_score_)
 
 
 ###############################
