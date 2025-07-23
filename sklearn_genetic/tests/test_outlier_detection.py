@@ -198,7 +198,7 @@ def test_one_class_svm_feature_selection_decision_function():
         sg_module.is_outlier_detector = original_is_outlier_detector
 
 
-def test_importerror_fallback():
+def test_import_error_fallback():
     """Test the ImportError fallback for is_outlier_detector"""
     import sklearn_genetic.genetic_search as sg_module
     
