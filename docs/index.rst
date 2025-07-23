@@ -68,6 +68,7 @@ This command will install all the extra requirements::
    tutorials/adapters
    tutorials/understand_cv
    tutorials/mlflow
+   tutorials/outliers
    tutorials/reproducibility
 
 .. toctree::
