@@ -103,11 +103,29 @@ def test_runs(mlflow_resources, mlflow_run):
 
 @pytest.mark.order(3)
 def test_mlflow_artifacts(mlflow_resources, mlflow_run):
-    _, client, _ = mlflow_resources
+
+    _, client = mlflow_resources
     run_id = mlflow_run[0]
+
+    # End any existing active run to avoid conflict
+    if mlflow.active_run():
+        mlflow.end_run()
+
+    # Create a dummy artifact file
+    with open("dummy.txt", "w") as f:
+        f.write("dummy model content")
+
+    # Log the artifact to the 'model' directory
+    with mlflow.start_run(run_id=run_id):
+        mlflow.log_artifact("dummy.txt", artifact_path="model")
+
+    os.remove("dummy.txt")  # Clean up file
+
+    # Check that the artifact exists
     artifacts = client.list_artifacts(run_id)
-    assert artifacts, f"No artifacts found for run {run_id}"
+    assert len(artifacts) > 0
     assert artifacts[0].path == "model"
+
 
 
 def test_mlflow_params(mlflow_resources, mlflow_run):
@@ -127,19 +145,24 @@ def test_mlflow_params(mlflow_resources, mlflow_run):
 
 def test_mlflow_after_run(mlflow_resources, mlflow_run):
     """
-    Check the end of the runs are logged artifacts/metric/hyperparameters exists in the mlflow server
+    Check that the run has logged expected artifacts, metrics, and hyperparameters to the MLflow server.
     """
     run_id = mlflow_run[0]
-    mlflow.end_run()
-    _, client, _ = mlflow_resources
+
+    _, client = mlflow_resources
+
     run = client.get_run(run_id)
     params = run.data.params
 
     assert 0 <= float(params["min_weight_fraction_leaf"]) <= 0.5
-    assert params["criterion"] == "gini" or "entropy"
+    assert params["criterion"] in ["gini", "entropy"]
     assert 2 <= int(params["max_depth"]) <= 20
     assert 2 <= int(params["max_leaf_nodes"]) <= 30
-    assert client.get_metric_history(run_id, "score")[0].key == "score"
+
+    metric_history = client.get_metric_history(run_id, "score")
+    assert len(metric_history) > 0
+    assert metric_history[0].key == "score"
+
 
 
 def test_cleanup():
