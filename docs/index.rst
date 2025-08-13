@@ -82,6 +82,7 @@ This command will install all the extra requirements::
    notebooks/Digits_decision_tree.ipynb
    notebooks/MLflow_logger.ipynb
    notebooks/Iris_multimetric.ipynb
+   notebooks/Outlier_Detection_IsolationForest_GASearchCV.ipynb
 
 .. toctree::
    :maxdepth: 2
