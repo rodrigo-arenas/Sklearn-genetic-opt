@@ -105,6 +105,12 @@ This command will install all the extra requirements::
 
 .. toctree::
    :maxdepth: 1
+
+   notebooks/Outlier_Detection_IsolationForest_GASearchCV
+
+
+.. toctree::
+   :maxdepth: 1
    :caption: External References:
 
    external_references
