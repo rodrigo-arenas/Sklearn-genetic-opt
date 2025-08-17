@@ -1,0 +1,14 @@
+### Summary
+Adds a new docs notebook: Outlier_Detection_IsolationForest_GASearchCV.ipynb.
+
+### Motivation
+Recent Outlier Detection Support enables unsupervised tuning with scoring=None; this notebook shows a complete example (data → GA search → fitness plot → ROC-AUC).
+
+### What’s included
+- Genetic algorithm tuning of IsolationForest
+- Synthetic outlier dataset
+- Fitness evolution visualization
+- ROC-AUC, precision, recall, F1 metrics
+
+### Related issue
+Addresses: Improve documentation and examples (issue #...).
