@@ -102,6 +102,11 @@ This command will install all the extra requirements::
    api/space
    api/algorithms
 
+.. toctree::
+   :maxdepth: 1
+
+   notebooks/Outlier_Detection_IsolationForest_GASearchCV
+
 
 .. toctree::
    :maxdepth: 1
