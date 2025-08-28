@@ -146,8 +146,8 @@ It will use by default the best set of hyperparameters it found, based on the cr
 In this case, we got an accuracy score in the test set of 0.96
 
 .. code:: python3
-    y_predicy_ga = evolved_estimator.predict(X_test)
-    accuracy_score(y_test, y_predicy_ga)
+    y_predict_ga = evolved_estimator.predict(X_test)
+    accuracy_score(y_test, y_predict_ga)
 
 .. image:: ../images/basic_usage_accuracy_2.jpeg
 
