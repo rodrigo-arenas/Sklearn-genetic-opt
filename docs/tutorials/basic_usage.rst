@@ -66,7 +66,7 @@ The main difference with for example scikit-learn's GridSearchCV,
 is that we don't pre-define the values to use in the search,
 but rather, the boundaries of each parameter.
 
-So if we have a parameter named *'n_estimators'* we'll only tell to scikit-learn-genetic-opt, that is an integer value,
+So if we have a parameter named *'n_estimators'* we'll only tell to sklearn-genetic-opt, that is an integer value,
 and that we want to set a lower boundary of 100 and an upper boundary of 500, so the optimizer will set a value in this range.
 We must do this with all the hyperparameters we want to tune, like this:
 
