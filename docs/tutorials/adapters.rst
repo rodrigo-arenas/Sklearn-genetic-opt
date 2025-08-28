@@ -240,7 +240,7 @@ The same idea can be used for hypeparameter tuning or feature selection.
 .. code-block:: python
 
    from sklearn_genetic import GASearchCV
-   from sklearn_genetic import ExponentialAdapter
+   from sklearn_genetic.schedules import ExponentialAdapter
    from sklearn_genetic.space import Continuous, Categorical, Integer
    from sklearn.ensemble import RandomForestClassifier
    from sklearn.model_selection import train_test_split, StratifiedKFold
