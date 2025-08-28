@@ -62,7 +62,7 @@ We should see something like this:
 .. image:: ../images/basic_usage_digits_0.png
 
 Now, we must define our param_grid, similar to scikit-learn, which is a dictionary with the model's hyperparameters.
-The main difference with for example scikit-learn's GridSearchCv,
+The main difference with for example scikit-learn's GridSearchCV,
 is that we don't pre-define the values to use in the search,
 but rather, the boundaries of each parameter.
 
