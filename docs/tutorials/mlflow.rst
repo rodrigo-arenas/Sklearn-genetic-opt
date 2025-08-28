@@ -49,7 +49,7 @@ in the parameter named `log_config`, for example:
     from sklearn.tree import DecisionTreeClassifier
     from sklearn.datasets import load_digits
     from sklearn.metrics import accuracy_score
-    from sklearn_genetic.mlflow import MLflowConfig
+    from sklearn_genetic.mlflow_log import MLflowConfig
 
 
     data = load_digits()
