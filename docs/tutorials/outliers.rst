@@ -28,6 +28,8 @@ This scoring system is designed to maximize flexibility and compatibility with a
 
 .. code-block:: python
 
+    import numpy as np
+
     def default_outlier_scorer(estimator, X, y=None):
         if hasattr(estimator, 'score_samples'):
             return np.mean(estimator.score_samples(X))

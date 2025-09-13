@@ -191,7 +191,7 @@ Then the object can be restored:
 
     from joblib import load
 
-    logbook = load("/.logbook.pkl")
+    logbook = load("./logbook.pkl")
     print(logbook)
 
 Define Multiple Callbacks

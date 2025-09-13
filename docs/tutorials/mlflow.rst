@@ -1,7 +1,7 @@
 Integrating with MLflow
 =======================
 
-In this post, we are going to explain how setup the build-in integration
+In this post, we are going to explain how to set up the built-in integration
 of sklearn-genetic-opt with MLflow.
 To use this feature, we must set the parameters that will include
 the tracking server, experiment name, run name, tags and others,
@@ -49,7 +49,7 @@ in the parameter named `log_config`, for example:
     from sklearn.tree import DecisionTreeClassifier
     from sklearn.datasets import load_digits
     from sklearn.metrics import accuracy_score
-    from sklearn_genetic.mlflow import MLflowConfig
+    from sklearn_genetic.mlflow_log import MLflowConfig
 
 
     data = load_digits()
