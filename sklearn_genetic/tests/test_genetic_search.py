@@ -33,6 +33,22 @@ X = data["data"]
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
 
 
+def test_default_n_jobs_is_none():
+    estimator = GASearchCV(
+        SGDClassifier(loss="modified_huber", fit_intercept=True),
+        param_grid={
+            "l1_ratio": Continuous(0, 1),
+            "alpha": Continuous(1e-4, 1, distribution="log-uniform"),
+        },
+        generations=1,
+        population_size=2,
+        verbose=False,
+    )
+
+    assert estimator.n_jobs is None
+    assert estimator.get_params()["n_jobs"] is None
+
+
 def test_expected_ga_results():
     clf = SGDClassifier(loss="modified_huber", fit_intercept=True)
     generations = 6
