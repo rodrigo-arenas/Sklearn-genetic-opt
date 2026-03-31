@@ -31,6 +31,18 @@ X = np.hstack((X, noise))
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
 
 
+def test_default_n_jobs_is_none():
+    estimator = GAFeatureSelectionCV(
+        SGDClassifier(loss="modified_huber", fit_intercept=True),
+        generations=1,
+        population_size=2,
+        verbose=False,
+    )
+
+    assert estimator.n_jobs is None
+    assert estimator.get_params()["n_jobs"] is None
+
+
 def test_expected_ga_results():
     clf = SGDClassifier(loss="modified_huber", fit_intercept=True)
     generations = 6
