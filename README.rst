@@ -47,6 +47,7 @@ for hyperparameters tuning, and from RFE (Recursive Feature Elimination), Select
   - Stable
   - Latest
   - Development
+- Parallel Processing with n_jobs
 - Changelog
 - Important Links
 - Source Code
@@ -247,6 +248,44 @@ Example: Feature Selection
 
     # Transform the original data to the selected features
     X_reduced = evolved_estimator.transform(X_test)
+
+Parallel Processing with n_jobs
+###############################
+
+`GASearchCV` supports parallel processing through the `n_jobs` parameter, which is passed to
+scikit-learn’s cross-validation functions:
+
+- ``n_jobs=1`` → run sequentially (default)
+- ``n_jobs=-1`` → use all available CPU cores
+- ``n_jobs=k`` → use ``k`` workers
+
+Example:
+
+.. code-block:: python
+
+    from sklearn_genetic import GASearchCV
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.datasets import load_iris
+
+    X, y = load_iris(return_X_y=True)
+
+    param_grid = {"n_estimators": [50, 100], "max_depth": [3, None]}
+
+    evolved_estimator = GASearchCV(
+        estimator=RandomForestClassifier(),
+        cv=3,
+        param_grid=param_grid,
+        generations=5,
+        population_size=10,
+        n_jobs=-1   # parallel execution
+    )
+
+    evolved_estimator.fit(X, y)
+    print(evolved_estimator.best_params_)
+
+.. note::
+   Parallelism is limited to cross-validation splits within a single machine.
+   MPI/distributed methods are not yet supported.
 
 Changelog
 #########
