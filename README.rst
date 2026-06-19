@@ -305,9 +305,32 @@ Example:
     evolved_estimator.fit(X, y)
     print(evolved_estimator.best_params_)
 
+Set ``parallel_backend="cv"`` to keep candidate evaluation serial and pass ``n_jobs``
+to each candidate's cross-validation call. After fitting, ``fit_stats_`` contains
+counters such as cross-validation calls, cache hits, duplicate candidates, skipped
+invalid candidates, and population-level parallel batches.
+
 .. note::
    Parallelism is limited to candidate evaluations within a single machine.
    MPI/distributed methods are not yet supported.
+
+Benchmarking fit performance and model metrics
+##############################################
+
+The repository includes a benchmark script to compare fit-time mechanics and
+holdout model quality across GA classes, datasets, and parallel strategies:
+
+.. code-block:: bash
+
+    python benchmarks/benchmark_fit.py --quick
+    python benchmarks/benchmark_fit.py --scenarios classification_lr regression_ridge
+    python benchmarks/benchmark_fit.py --parallel-backends auto cv --runs 3
+    python benchmarks/benchmark_fit.py --label current --output-json benchmarks/current.json
+    python benchmarks/benchmark_fit.py --compare-json benchmarks/baseline.json
+
+The output includes wall time, actual cross-validation calls, cache/duplicate
+reuse counts, skipped invalid feature masks, and holdout metrics such as
+accuracy, ROC AUC, F1, R2, RMSE, and MAE.
 
 Common Errors & Troubleshooting
 ################################

@@ -150,7 +150,11 @@ reuse their stored fitness values. Duplicate candidates inside the same
 generation are also evaluated only once and then recorded for each occurrence.
 When ``n_jobs`` enables parallel execution, unique candidates in a generation
 are evaluated in parallel, while each candidate's own cross-validation runs
-sequentially to avoid nested parallelism.
+sequentially to avoid nested parallelism. Set ``parallel_backend="cv"`` to keep
+candidate evaluation serial and pass ``n_jobs`` to each candidate's
+cross-validation instead. After fitting, ``fit_stats_`` exposes counters for
+actual cross-validation calls, cache hits, duplicate candidates, skipped invalid
+candidates, and population-level parallel batches.
 
 The generation log contains summary metrics:
 

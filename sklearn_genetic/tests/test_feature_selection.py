@@ -43,6 +43,8 @@ def test_default_n_jobs_is_none():
 
     assert estimator.n_jobs is None
     assert estimator.get_params()["n_jobs"] is None
+    assert estimator.parallel_backend == "auto"
+    assert estimator.get_params()["parallel_backend"] == "auto"
 
 
 def test_invalid_max_features_individual_skips_cross_validation(monkeypatch):
@@ -65,6 +67,7 @@ def test_invalid_max_features_individual_skips_cross_validation(monkeypatch):
     estimator.refit_metric = "score"
     estimator.metrics_list = ["score"]
     estimator.logbook = tools.Logbook()
+    estimator.fit_stats_ = genetic_search._create_fit_stats()
 
     fitness = estimator.evaluate([1, 1])
     parameters = estimator.logbook.chapters["parameters"][0]
@@ -74,6 +77,8 @@ def test_invalid_max_features_individual_skips_cross_validation(monkeypatch):
     assert np.array_equal(parameters["fit_time"], np.zeros(3))
     assert np.array_equal(parameters["score_time"], np.zeros(3))
     assert np.array_equal(parameters["train_score"], np.full(3, -100000))
+    assert estimator.fit_stats_["cross_validate_calls"] == 0
+    assert estimator.fit_stats_["skipped_invalid_candidates"] == 1
 
 
 def test_expected_ga_results():

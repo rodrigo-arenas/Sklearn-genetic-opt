@@ -75,6 +75,50 @@ def _is_parallel_enabled(n_jobs, n_tasks):
     return n_tasks > 1 and effective_n_jobs(n_jobs) != 1
 
 
+def _create_fit_stats():
+    return {
+        "evaluated_candidates": 0,
+        "unique_candidates": 0,
+        "cross_validate_calls": 0,
+        "cache_hits": 0,
+        "duplicate_candidates": 0,
+        "skipped_invalid_candidates": 0,
+        "population_parallel_batches": 0,
+        "population_serial_batches": 0,
+    }
+
+
+def _validate_parallel_backend(parallel_backend):
+    valid_backends = {"auto", "population", "cv"}
+    if parallel_backend not in valid_backends:
+        raise ValueError(
+            f"parallel_backend must be one of {sorted(valid_backends)}, "
+            f"got {parallel_backend} instead"
+        )
+
+
+def _use_population_parallelism(estimator, n_tasks):
+    if estimator.parallel_backend == "cv":
+        return False
+
+    return (
+        estimator.log_config is None
+        and _is_parallel_enabled(estimator.n_jobs, n_tasks)
+        and estimator.parallel_backend in {"auto", "population"}
+    )
+
+
+def _record_fit_stats(
+    estimator, evaluated=0, unique=0, cv_calls=0, cache_hits=0, duplicates=0, skipped=0
+):
+    estimator.fit_stats_["evaluated_candidates"] += evaluated
+    estimator.fit_stats_["unique_candidates"] += unique
+    estimator.fit_stats_["cross_validate_calls"] += cv_calls
+    estimator.fit_stats_["cache_hits"] += cache_hits
+    estimator.fit_stats_["duplicate_candidates"] += duplicates
+    estimator.fit_stats_["skipped_invalid_candidates"] += skipped
+
+
 class GASearchCV(BaseSearchCV):
     """
     Evolutionary optimization over hyperparameters.
@@ -151,6 +195,13 @@ class GASearchCV(BaseSearchCV):
         cross-validation sequentially to avoid nested parallelism.
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
         ``-1`` means using all processors.
+
+    parallel_backend : {'auto', 'population', 'cv'}, default='auto'
+        Controls where ``n_jobs`` parallelism is applied during ``fit``.
+        ``'auto'`` and ``'population'`` evaluate unique candidates in each
+        generation in parallel when possible. ``'cv'`` keeps candidate
+        evaluation serial and passes ``n_jobs`` to each candidate's
+        cross-validation call.
 
     verbose : bool, default=True
         If ``True``, shows the metrics on the optimization routine.
@@ -260,6 +311,11 @@ class GASearchCV(BaseSearchCV):
     refit_time_ : float
         Seconds used for refitting the best model on the whole dataset.
         This is present only if ``refit`` is not False.
+    fit_stats_ : dict
+        Counters collected during the last ``fit`` call. Includes evaluated
+        candidates, unique candidates, cross-validation calls, cache hits,
+        duplicate candidates, skipped invalid candidates, and population-level
+        parallel/serial batch counts.
     """
 
     def __init__(
@@ -286,6 +342,7 @@ class GASearchCV(BaseSearchCV):
         log_config=None,
         use_cache=True,
         warm_start_configs=None,
+        parallel_backend="auto",
     ):
         self.estimator = estimator
         self.cv = cv
@@ -313,6 +370,9 @@ class GASearchCV(BaseSearchCV):
         self.use_cache = use_cache
         self.fitness_cache = {}
         self.warm_start_configs = warm_start_configs or []
+        self.parallel_backend = parallel_backend
+
+        _validate_parallel_backend(self.parallel_backend)
 
         # Check that the estimator is compatible with scikit-learn
         if not (
@@ -468,50 +528,71 @@ class GASearchCV(BaseSearchCV):
         if not individuals:
             return []
 
-        pending_individuals = {}
+        pending_items = []
+        pending_lookup_keys = []
+        seen_pending_keys = set()
+        batch_cache_hits = 0
+        batch_duplicates = 0
+
         for individual in individuals:
             individual_key = self._individual_key(individual)
-            if (
-                individual_key not in self.fitness_cache
-                and individual_key not in pending_individuals
-            ):
-                pending_individuals[individual_key] = list(individual)
+            if self.use_cache and individual_key in self.fitness_cache:
+                batch_cache_hits += 1
+                pending_lookup_keys.append(None)
+                continue
 
-        pending_items = list(pending_individuals.items())
+            if self.use_cache and individual_key in seen_pending_keys:
+                batch_duplicates += 1
+                pending_lookup_keys.append(individual_key)
+                continue
+
+            lookup_key = individual_key if self.use_cache else (individual_key, len(pending_items))
+            pending_items.append((lookup_key, list(individual)))
+            pending_lookup_keys.append(lookup_key)
+            seen_pending_keys.add(individual_key)
+
         pending_results = {}
 
         if pending_items:
-            if _is_parallel_enabled(self.n_jobs, len(pending_items)) and self.log_config is None:
+            if _use_population_parallelism(self, len(pending_items)):
+                self.fit_stats_["population_parallel_batches"] += 1
                 results = Parallel(n_jobs=self.n_jobs, prefer="threads")(
                     delayed(self._evaluate_individual)(individual, n_jobs=1)
                     for _, individual in pending_items
                 )
             else:
+                self.fit_stats_["population_serial_batches"] += 1
+                candidate_n_jobs = self.n_jobs if self.parallel_backend == "cv" else 1
                 results = [
-                    self._evaluate_individual(individual, n_jobs=self.n_jobs)
+                    self._evaluate_individual(individual, n_jobs=candidate_n_jobs)
                     for _, individual in pending_items
                 ]
 
             pending_results = {
-                individual_key: result
-                for (individual_key, _), result in zip(pending_items, results)
+                lookup_key: result for (lookup_key, _), result in zip(pending_items, results)
             }
 
         fitnesses = []
+        batch_cv_calls = 0
+        batch_skipped = 0
 
-        for individual in individuals:
+        for individual, lookup_key in zip(individuals, pending_lookup_keys):
             individual_key = self._individual_key(individual)
 
             if self.use_cache and individual_key in self.fitness_cache:
                 cached_result = self.fitness_cache[individual_key]
                 self.logbook.record(parameters=cached_result["current_generation_params"])
             else:
-                fitness, current_generation_params = pending_results[individual_key]
+                fitness, current_generation_params, used_cv, skipped_invalid = pending_results[
+                    lookup_key
+                ]
                 current_generation_params = _logbook_record(
                     self.logbook,
                     "parameters",
                     current_generation_params,
                 )
+                batch_cv_calls += int(used_cv)
+                batch_skipped += int(skipped_invalid)
                 if self.use_cache:
                     self.fitness_cache[individual_key] = {
                         "fitness": fitness,
@@ -521,6 +602,16 @@ class GASearchCV(BaseSearchCV):
             fitnesses.append(
                 self.fitness_cache[individual_key]["fitness"] if self.use_cache else fitness
             )
+
+        _record_fit_stats(
+            self,
+            evaluated=len(individuals),
+            unique=len(pending_items),
+            cv_calls=batch_cv_calls,
+            cache_hits=batch_cache_hits,
+            duplicates=batch_duplicates,
+            skipped=batch_skipped,
+        )
 
         return fitnesses
 
@@ -573,7 +664,7 @@ class GASearchCV(BaseSearchCV):
 
         fitness_result = [score, novelty_score]
 
-        return fitness_result, current_generation_params
+        return fitness_result, current_generation_params, True, False
 
     def evaluate(self, individual):
         """
@@ -597,11 +688,18 @@ class GASearchCV(BaseSearchCV):
             cached_result = self.fitness_cache[individual_key]
             # Ensure the logbook is updated even if the individual is cached
             self.logbook.record(parameters=cached_result["current_generation_params"])
+            _record_fit_stats(self, evaluated=1, cache_hits=1)
             return cached_result["fitness"]
 
-        fitness_result, current_generation_params = self._evaluate_individual(
+        candidate_n_jobs = self.n_jobs if self.parallel_backend == "cv" else 1
+        (
+            fitness_result,
+            current_generation_params,
+            used_cv,
+            skipped_invalid,
+        ) = self._evaluate_individual(
             individual,
-            n_jobs=self.n_jobs,
+            n_jobs=candidate_n_jobs,
         )
         current_generation_params = _logbook_record(
             self.logbook,
@@ -615,6 +713,14 @@ class GASearchCV(BaseSearchCV):
                 "fitness": fitness_result,
                 "current_generation_params": current_generation_params,
             }
+
+        _record_fit_stats(
+            self,
+            evaluated=1,
+            unique=1,
+            cv_calls=int(used_cv),
+            skipped=int(skipped_invalid),
+        )
 
         return fitness_result
 
@@ -661,6 +767,8 @@ class GASearchCV(BaseSearchCV):
                         self.__dict__.update(checkpoint_data["estimator_state"])  # noqa
                         self.logbook = checkpoint_data["logbook"]
                     break
+
+        self.fit_stats_ = _create_fit_stats()
 
         if callable(self.scoring):
             self.scorer_ = self.scoring
@@ -1078,6 +1186,11 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
     refit_time_ : float
         Seconds used for refitting the best model on the whole dataset.
         This is present only if ``refit`` is not False.
+    fit_stats_ : dict
+        Counters collected during the last ``fit`` call. Includes evaluated
+        candidates, unique candidates, cross-validation calls, cache hits,
+        duplicate candidates, skipped invalid candidates, and population-level
+        parallel/serial batch counts.
     """
 
     def __init__(
@@ -1103,6 +1216,7 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         return_train_score=False,
         log_config=None,
         use_cache=True,
+        parallel_backend="auto",
     ):
         self.estimator = estimator
         self.cv = cv
@@ -1129,6 +1243,9 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         self.log_config = log_config
         self.use_cache = use_cache
         self.fitness_cache = {}
+        self.parallel_backend = parallel_backend
+
+        _validate_parallel_backend(self.parallel_backend)
 
         # added new check for whether the estimator is compatible with scikit-learn
         if not (
@@ -1204,50 +1321,74 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         if not individuals:
             return []
 
-        pending_individuals = {}
+        pending_items = []
+        pending_lookup_keys = []
+        seen_pending_keys = set()
+        batch_cache_hits = 0
+        batch_duplicates = 0
+
         for individual in individuals:
             individual_key = self._individual_key(individual)
-            if (
-                individual_key not in self.fitness_cache
-                and individual_key not in pending_individuals
-            ):
-                pending_individuals[individual_key] = list(individual)
+            if self.use_cache and individual_key in self.fitness_cache:
+                batch_cache_hits += 1
+                pending_lookup_keys.append(None)
+                continue
 
-        pending_items = list(pending_individuals.items())
+            if self.use_cache and individual_key in seen_pending_keys:
+                batch_duplicates += 1
+                pending_lookup_keys.append(individual_key)
+                continue
+
+            lookup_key = individual_key if self.use_cache else (individual_key, len(pending_items))
+            pending_items.append((lookup_key, list(individual)))
+            pending_lookup_keys.append(lookup_key)
+            seen_pending_keys.add(individual_key)
+
         pending_results = {}
 
         if pending_items:
-            if _is_parallel_enabled(self.n_jobs, len(pending_items)) and self.log_config is None:
+            if _use_population_parallelism(self, len(pending_items)):
+                self.fit_stats_["population_parallel_batches"] += 1
                 results = Parallel(n_jobs=self.n_jobs, prefer="threads")(
                     delayed(self._evaluate_individual)(individual, n_jobs=1)
                     for _, individual in pending_items
                 )
             else:
+                self.fit_stats_["population_serial_batches"] += 1
+                candidate_n_jobs = self.n_jobs if self.parallel_backend == "cv" else 1
                 results = [
-                    self._evaluate_individual(individual, n_jobs=self.n_jobs)
+                    self._evaluate_individual(individual, n_jobs=candidate_n_jobs)
                     for _, individual in pending_items
                 ]
 
             pending_results = {
-                individual_key: result
-                for (individual_key, _), result in zip(pending_items, results)
+                lookup_key: result for (lookup_key, _), result in zip(pending_items, results)
             }
 
         fitnesses = []
+        batch_cv_calls = 0
+        batch_skipped = 0
 
-        for individual in individuals:
+        for individual, lookup_key in zip(individuals, pending_lookup_keys):
             individual_key = self._individual_key(individual)
 
             if self.use_cache and individual_key in self.fitness_cache:
                 cached_result = self.fitness_cache[individual_key]
                 self.logbook.record(parameters=cached_result["current_generation_features"])
             else:
-                fitness, current_generation_features = pending_results[individual_key]
+                (
+                    fitness,
+                    current_generation_features,
+                    used_cv,
+                    skipped_invalid,
+                ) = pending_results[lookup_key]
                 current_generation_features = _logbook_record(
                     self.logbook,
                     "parameters",
                     current_generation_features,
                 )
+                batch_cv_calls += int(used_cv)
+                batch_skipped += int(skipped_invalid)
                 if self.use_cache:
                     self.fitness_cache[individual_key] = {
                         "fitness": fitness,
@@ -1257,6 +1398,16 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
             fitnesses.append(
                 self.fitness_cache[individual_key]["fitness"] if self.use_cache else fitness
             )
+
+        _record_fit_stats(
+            self,
+            evaluated=len(individuals),
+            unique=len(pending_items),
+            cv_calls=batch_cv_calls,
+            cache_hits=batch_cache_hits,
+            duplicates=batch_duplicates,
+            skipped=batch_skipped,
+        )
 
         return fitnesses
 
@@ -1309,7 +1460,7 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
 
             fitness_result = [score, n_selected_features]
 
-            return fitness_result, current_generation_params
+            return fitness_result, current_generation_params, False, True
 
         local_estimator = clone(self.estimator)
 
@@ -1340,7 +1491,7 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
 
         fitness_result = [score, n_selected_features]
 
-        return fitness_result, current_generation_params
+        return fitness_result, current_generation_params, True, False
 
     def evaluate(self, individual):
         """
@@ -1367,11 +1518,18 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
             cached_result = self.fitness_cache[individual_key]
             # Ensure the logbook is updated even if the individual is cached
             self.logbook.record(parameters=cached_result["current_generation_features"])
+            _record_fit_stats(self, evaluated=1, cache_hits=1)
             return cached_result["fitness"]
 
-        fitness_result, current_generation_params = self._evaluate_individual(
+        candidate_n_jobs = self.n_jobs if self.parallel_backend == "cv" else 1
+        (
+            fitness_result,
+            current_generation_params,
+            used_cv,
+            skipped_invalid,
+        ) = self._evaluate_individual(
             individual,
-            n_jobs=self.n_jobs,
+            n_jobs=candidate_n_jobs,
         )
         current_generation_params = _logbook_record(
             self.logbook,
@@ -1385,6 +1543,14 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
                 "fitness": fitness_result,
                 "current_generation_features": current_generation_params,
             }
+
+        _record_fit_stats(
+            self,
+            evaluated=1,
+            unique=1,
+            cv_calls=int(used_cv),
+            skipped=int(skipped_invalid),
+        )
 
         return fitness_result
 
@@ -1435,6 +1601,8 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
                         self.__dict__.update(checkpoint_data["estimator_state"])  # noqa
                         self.logbook = checkpoint_data["logbook"]
                     break
+
+        self.fit_stats_ = _create_fit_stats()
 
         if callable(self.scoring):
             self.scorer_ = self.scoring
