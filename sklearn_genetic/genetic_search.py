@@ -5,6 +5,7 @@ import warnings
 import numpy as np
 from deap import base, creator, tools
 from joblib import Parallel, delayed, effective_n_jobs
+from scipy.stats import qmc
 from sklearn.base import clone
 from sklearn.model_selection import cross_validate
 from sklearn.base import is_classifier, is_regressor, BaseEstimator, MetaEstimatorMixin
@@ -48,7 +49,7 @@ from sklearn.model_selection._split import check_cv
 from sklearn.metrics._scorer import _check_multimetric_scoring
 
 from .parameters import Algorithms, Criteria
-from .space import Space
+from .space import Categorical, Continuous, Integer, Space
 from .algorithms import algorithms_factory
 from .callbacks.validations import check_callback
 from .schedules.validations import check_adapter
@@ -97,6 +98,15 @@ def _validate_parallel_backend(parallel_backend):
         )
 
 
+def _validate_population_initializer(population_initializer):
+    valid_initializers = {"random", "smart"}
+    if population_initializer not in valid_initializers:
+        raise ValueError(
+            f"population_initializer must be one of {sorted(valid_initializers)}, "
+            f"got {population_initializer} instead"
+        )
+
+
 def _use_population_parallelism(estimator, n_tasks):
     if estimator.parallel_backend == "cv":
         return False
@@ -126,6 +136,64 @@ def _reset_adapters(estimator):
 
 def _history_record(history, index):
     return {key: values[index] for key, values in history.items()}
+
+
+def _is_dimension_value_valid(dimension, value):
+    if isinstance(dimension, Integer):
+        return isinstance(value, int) and dimension.lower <= value <= dimension.upper
+
+    if isinstance(dimension, Continuous):
+        return isinstance(value, (int, float)) and dimension.lower <= value <= dimension.upper
+
+    if isinstance(dimension, Categorical):
+        return value in dimension.choices
+
+    return False
+
+
+def _default_estimator_params(estimator, space):
+    estimator_params = estimator.get_params(deep=True)
+    defaults = {}
+
+    for parameter, dimension in space.param_grid.items():
+        if parameter not in estimator_params:
+            return None
+
+        value = estimator_params[parameter]
+        if not _is_dimension_value_valid(dimension, value):
+            return None
+
+        defaults[parameter] = value
+
+    return defaults
+
+
+def _sample_dimension_from_unit(dimension, value):
+    if isinstance(dimension, Integer):
+        n_values = dimension.upper - dimension.lower + 1
+        sampled = dimension.lower + int(np.floor(value * n_values))
+        return int(np.clip(sampled, dimension.lower, dimension.upper))
+
+    if isinstance(dimension, Continuous):
+        if dimension.distribution == "log-uniform" and dimension.lower > 0:
+            log_lower = np.log(dimension.lower)
+            log_upper = np.log(dimension.upper)
+            return float(np.exp(log_lower + value * (log_upper - log_lower)))
+
+        return float(dimension.lower + value * (dimension.upper - dimension.lower))
+
+    raise TypeError("Latin hypercube sampling only supports numeric dimensions")
+
+
+def _stratified_categorical_value(dimension, index, population_size):
+    if dimension.priors is not None:
+        midpoint = (index + 0.5) / population_size
+        cumulative_priors = np.cumsum(dimension.priors)
+        choice_index = int(np.searchsorted(cumulative_priors, midpoint, side="right"))
+        choice_index = min(choice_index, len(dimension.choices) - 1)
+        return dimension.choices[choice_index]
+
+    return dimension.choices[index % len(dimension.choices)]
 
 
 class GASearchCV(BaseSearchCV):
@@ -167,7 +235,14 @@ class GASearchCV(BaseSearchCV):
         an optimization routine.
 
     population_size : int, default=10
-        Size of the initial population to sample randomly generated individuals.
+        Size of the initial population to sample generated individuals.
+
+    population_initializer : {'smart', 'random'}, default='smart'
+        Strategy used to generate the initial population. ``'smart'`` combines
+        valid warm-start configurations, valid estimator defaults, Latin
+        hypercube sampling for numeric dimensions, stratified categorical
+        values, and duplicate avoidance. ``'random'`` uses the previous random
+        sampling behavior.
 
     generations : int, default=40
         Number of generations or iterations to run the evolutionary algorithm.
@@ -360,6 +435,7 @@ class GASearchCV(BaseSearchCV):
         use_cache=True,
         warm_start_configs=None,
         parallel_backend="auto",
+        population_initializer="smart",
     ):
         self.estimator = estimator
         self.cv = cv
@@ -388,8 +464,10 @@ class GASearchCV(BaseSearchCV):
         self.fitness_cache = {}
         self.warm_start_configs = warm_start_configs or []
         self.parallel_backend = parallel_backend
+        self.population_initializer = population_initializer
 
         _validate_parallel_backend(self.parallel_backend)
+        _validate_population_initializer(self.population_initializer)
 
         # Check that the estimator is compatible with scikit-learn
         if not (
@@ -488,28 +566,101 @@ class GASearchCV(BaseSearchCV):
 
         self.logbook = tools.Logbook()
 
-    def _initialize_population(self):
-        """
-        Initialize the population, using warm-start configurations if provided.
-        """
+    def _append_unique_individual(self, population, seen_individuals, individual_values):
+        individual_key = tuple(individual_values)
+        if individual_key in seen_individuals:
+            return False
+
+        population.append(creator.Individual(individual_values))
+        seen_individuals.add(individual_key)
+        return True
+
+    def _random_population(self):
         population = []
-        # Seed part of the population with warm-start values
         num_warm_start = min(len(self.warm_start_configs), self.population_size)
 
         for config in self.warm_start_configs[:num_warm_start]:
-            # Sample an individual from the warm-start configuration
             individual_values = self.space.sample_warm_start(config)
             individual_values_list = list(individual_values.values())
-
-            # Manually create the individual and assign its fitness
             individual = creator.Individual(individual_values_list)
             population.append(individual)
 
-        # Fill the remaining population with random individuals
         num_random = self.population_size - num_warm_start
         population.extend(self.toolbox.population(n=num_random))
 
         return population
+
+    def _smart_population(self):
+        population = []
+        seen_individuals = set()
+
+        for config in self.warm_start_configs[: self.population_size]:
+            individual_values = self.space.sample_warm_start(config)
+            self._append_unique_individual(
+                population, seen_individuals, list(individual_values.values())
+            )
+
+            if len(population) == self.population_size:
+                return population
+
+        default_params = _default_estimator_params(self.estimator, self.space)
+        if default_params is not None:
+            self._append_unique_individual(
+                population,
+                seen_individuals,
+                [default_params[parameter] for parameter in self.space.parameters],
+            )
+
+        remaining = self.population_size - len(population)
+        numeric_parameters = [
+            parameter
+            for parameter, dimension in self.space.param_grid.items()
+            if isinstance(dimension, (Continuous, Integer))
+        ]
+
+        lhs_samples = None
+        if numeric_parameters and remaining > 0:
+            sampler = qmc.LatinHypercube(d=len(numeric_parameters))
+            lhs_samples = sampler.random(n=remaining)
+
+        for sample_index in range(remaining):
+            individual_values = []
+            numeric_index = 0
+            for parameter, dimension in self.space.param_grid.items():
+                if isinstance(dimension, (Continuous, Integer)):
+                    value = _sample_dimension_from_unit(
+                        dimension, lhs_samples[sample_index, numeric_index]
+                    )
+                    numeric_index += 1
+                elif isinstance(dimension, Categorical):
+                    value = _stratified_categorical_value(dimension, sample_index, remaining)
+                else:  # pragma: no cover
+                    value = dimension.sample()
+
+                individual_values.append(value)
+
+            self._append_unique_individual(population, seen_individuals, individual_values)
+
+        attempts = 0
+        max_attempts = max(100, self.population_size * 20)
+        while len(population) < self.population_size and attempts < max_attempts:
+            individual = self.toolbox.individual()
+            self._append_unique_individual(population, seen_individuals, list(individual))
+            attempts += 1
+
+        while len(population) < self.population_size:
+            population.append(self.toolbox.individual())
+
+        return population
+
+    def _initialize_population(self):
+        """
+        Initialize the population, using warm-start configurations if provided.
+        """
+        if self.population_initializer == "random":
+            return self._random_population()
+
+        return self._smart_population()
 
     def mutate(self, individual):
         """
@@ -1063,7 +1214,12 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         with `shuffle=False` so the splits will be the same across calls.
 
     population_size : int, default=10
-        Size of the initial population to sample randomly generated individuals.
+        Size of the initial population to sample generated individuals.
+
+    population_initializer : {'smart', 'random'}, default='smart'
+        Strategy used to generate the initial population. ``'smart'`` creates
+        duplicate-aware feature masks with a spread of selected-feature counts.
+        ``'random'`` uses the previous weighted random feature-mask sampling.
 
     generations : int, default=40
         Number of generations or iterations to run the evolutionary algorithm.
@@ -1250,6 +1406,7 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         log_config=None,
         use_cache=True,
         parallel_backend="auto",
+        population_initializer="smart",
     ):
         self.estimator = estimator
         self.cv = cv
@@ -1277,8 +1434,10 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         self.use_cache = use_cache
         self.fitness_cache = {}
         self.parallel_backend = parallel_backend
+        self.population_initializer = population_initializer
 
         _validate_parallel_backend(self.parallel_backend)
+        _validate_population_initializer(self.population_initializer)
 
         # added new check for whether the estimator is compatible with scikit-learn
         if not (
@@ -1334,7 +1493,7 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         self.toolbox.register("evaluate", self.evaluate)
         self.toolbox.register("evaluate_population", self.evaluate_population)
 
-        self._pop = self.toolbox.population(n=self.population_size)
+        self._pop = self._initialize_population()
         self._hof = tools.HallOfFame(self.keep_top_k)
 
         # Stats among axis 0 to get two values:
@@ -1346,6 +1505,54 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         self._stats.register("fitness_min", np.min, axis=0)
 
         self.logbook = tools.Logbook()
+
+    def _append_unique_feature_individual(self, population, seen_individuals, values):
+        individual_key = tuple(values)
+        if individual_key in seen_individuals:
+            return False
+
+        population.append(creator.Individual(values))
+        seen_individuals.add(individual_key)
+        return True
+
+    def _smart_feature_population(self):
+        population = []
+        seen_individuals = set()
+        max_selected = self.max_features or self.n_features
+        max_selected = max(1, min(max_selected, self.n_features))
+
+        selected_counts = np.linspace(1, max_selected, num=self.population_size)
+        selected_counts = np.rint(selected_counts).astype(int)
+
+        for sample_index, n_selected in enumerate(selected_counts):
+            offset = sample_index % self.n_features
+            feature_order = list(range(self.n_features))
+            random.shuffle(feature_order)
+            feature_order = feature_order[offset:] + feature_order[:offset]
+
+            values = [0] * self.n_features
+            for feature_index in feature_order[:n_selected]:
+                values[feature_index] = 1
+
+            self._append_unique_feature_individual(population, seen_individuals, values)
+
+        attempts = 0
+        max_attempts = max(100, self.population_size * 20)
+        while len(population) < self.population_size and attempts < max_attempts:
+            individual = self.toolbox.individual()
+            self._append_unique_feature_individual(population, seen_individuals, list(individual))
+            attempts += 1
+
+        while len(population) < self.population_size:
+            population.append(self.toolbox.individual())
+
+        return population
+
+    def _initialize_population(self):
+        if self.population_initializer == "random":
+            return self.toolbox.population(n=self.population_size)
+
+        return self._smart_feature_population()
 
     def _individual_key(self, individual):
         return tuple(individual)

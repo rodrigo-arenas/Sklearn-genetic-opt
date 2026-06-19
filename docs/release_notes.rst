@@ -32,10 +32,16 @@ Features:
   diversity, unique individual ratios, best-solution improvement, the first
   generation where the current best solution appeared, and stagnation length.
 
+* Added ``population_initializer`` to :class:`~sklearn_genetic.GASearchCV` and
+  :class:`~sklearn_genetic.GAFeatureSelectionCV`. The default ``'smart'``
+  strategy improves the initial population with valid warm starts, estimator
+  defaults, Latin hypercube sampling for numeric hyperparameters, stratified
+  categorical values, and duplicate-aware feature masks.
+
 * Added ``benchmarks/benchmark_fit.py`` to measure fit-time mechanics, compare
   baseline JSON results against current runs, compare parallel strategies, and
-  track optimizer telemetry and holdout model metrics across classification and
-  regression scenarios.
+  track population initializers, optimizer telemetry, and holdout model metrics
+  across classification and regression scenarios.
 
 * :class:`~sklearn_genetic.GAFeatureSelectionCV` now skips cross-validation for
   invalid feature masks when ``max_features`` is exceeded, assigning the

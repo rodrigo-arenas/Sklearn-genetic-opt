@@ -51,6 +51,8 @@ def test_default_n_jobs_is_none():
     assert estimator.get_params()["n_jobs"] is None
     assert estimator.parallel_backend == "auto"
     assert estimator.get_params()["parallel_backend"] == "auto"
+    assert estimator.population_initializer == "smart"
+    assert estimator.get_params()["population_initializer"] == "smart"
 
 
 def test_wrong_parallel_backend():
@@ -65,6 +67,48 @@ def test_wrong_parallel_backend():
         str(excinfo.value)
         == "parallel_backend must be one of ['auto', 'cv', 'population'], got workers instead"
     )
+
+
+def test_wrong_population_initializer():
+    with pytest.raises(ValueError) as excinfo:
+        GASearchCV(
+            DecisionTreeClassifier(),
+            param_grid={"max_depth": Integer(1, 3)},
+            population_initializer="lhs",
+        )
+
+    assert (
+        str(excinfo.value)
+        == "population_initializer must be one of ['random', 'smart'], got lhs instead"
+    )
+
+
+def test_smart_population_initializer_seeds_defaults_warm_starts_and_diversity():
+    estimator = GASearchCV(
+        DecisionTreeClassifier(max_depth=2, criterion="entropy", random_state=42),
+        cv=2,
+        scoring="accuracy",
+        population_size=6,
+        generations=1,
+        param_grid={
+            "max_depth": Integer(1, 6),
+            "criterion": Categorical(["gini", "entropy"]),
+        },
+        warm_start_configs=[{"max_depth": 3, "criterion": "gini"}],
+        verbose=False,
+    )
+
+    estimator._register()
+    population = [list(individual) for individual in estimator._pop]
+
+    try:
+        assert [3, "gini"] in population
+        assert [2, "entropy"] in population
+        assert len({tuple(individual) for individual in population}) == len(population)
+        assert {individual[1] for individual in population} == {"gini", "entropy"}
+    finally:
+        del genetic_search.creator.FitnessMax
+        del genetic_search.creator.Individual
 
 
 @pytest.mark.parametrize("algorithm", ["eaSimple", "eaMuPlusLambda", "eaMuCommaLambda"])

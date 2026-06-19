@@ -45,6 +45,36 @@ def test_default_n_jobs_is_none():
     assert estimator.get_params()["n_jobs"] is None
     assert estimator.parallel_backend == "auto"
     assert estimator.get_params()["parallel_backend"] == "auto"
+    assert estimator.population_initializer == "smart"
+    assert estimator.get_params()["population_initializer"] == "smart"
+
+
+def test_smart_population_initializer_creates_diverse_feature_masks():
+    estimator = GAFeatureSelectionCV(
+        DecisionTreeClassifier(random_state=42),
+        cv=2,
+        scoring="accuracy",
+        population_size=5,
+        generations=1,
+        max_features=3,
+        verbose=False,
+    )
+    estimator.n_features = 6
+    estimator.features_proportion = estimator.max_features / estimator.n_features
+
+    estimator._register()
+    population = [list(individual) for individual in estimator._pop]
+    selected_counts = [sum(individual) for individual in population]
+
+    try:
+        assert len(population) == estimator.population_size
+        assert len({tuple(individual) for individual in population}) == len(population)
+        assert max(selected_counts) <= estimator.max_features
+        assert min(selected_counts) >= 1
+        assert len(set(selected_counts)) > 1
+    finally:
+        del genetic_search.creator.FitnessMax
+        del genetic_search.creator.Individual
 
 
 def test_optimizer_telemetry_is_recorded_for_feature_selection():

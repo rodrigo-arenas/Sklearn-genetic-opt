@@ -168,6 +168,7 @@ def build_gasearch(
     generations: int,
     n_jobs: int | None,
     parallel_backend: str,
+    population_initializer: str,
 ) -> GASearchCV:
     return GASearchCV(
         estimator=scenario.estimator_builder(random_state),
@@ -181,6 +182,7 @@ def build_gasearch(
         verbose=False,
         n_jobs=n_jobs,
         parallel_backend=parallel_backend,
+        population_initializer=population_initializer,
         return_train_score=False,
         use_cache=True,
     )
@@ -195,6 +197,7 @@ def build_feature_selector(
     generations: int,
     n_jobs: int | None,
     parallel_backend: str,
+    population_initializer: str,
     max_features: int,
 ) -> GAFeatureSelectionCV:
     return GAFeatureSelectionCV(
@@ -209,6 +212,7 @@ def build_feature_selector(
         verbose=False,
         n_jobs=n_jobs,
         parallel_backend=parallel_backend,
+        population_initializer=population_initializer,
         return_train_score=False,
         use_cache=True,
     )
@@ -319,6 +323,7 @@ def run_one_benchmark(
     y_test,
     n_jobs: int | None,
     parallel_backend: str,
+    population_initializer: str,
     run_index: int,
 ) -> dict[str, Any]:
     counters = FitCounters()
@@ -337,6 +342,7 @@ def run_one_benchmark(
         "run": run_index,
         "n_jobs": n_jobs,
         "parallel_backend": parallel_backend,
+        "population_initializer": population_initializer,
         "fit_seconds": fit_seconds,
         **summarize_fit_mechanics(estimator, counters),
         **summarize_optimizer_telemetry(estimator),
@@ -350,18 +356,19 @@ def run_one_benchmark(
     return result
 
 
-def group_key(result: dict[str, Any]) -> tuple[str, str, str, str, str]:
+def group_key(result: dict[str, Any]) -> tuple[str, str, str, str, str, str]:
     return (
         result["label"],
         result["scenario"],
         result["estimator"],
         str(result["n_jobs"]),
         result["parallel_backend"],
+        result["population_initializer"],
     )
 
 
 def aggregate_results(results: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    grouped: dict[tuple[str, str, str, str, str], list[dict[str, Any]]] = {}
+    grouped: dict[tuple[str, str, str, str, str, str], list[dict[str, Any]]] = {}
     for result in results:
         grouped.setdefault(group_key(result), []).append(result)
 
@@ -370,7 +377,14 @@ def aggregate_results(results: list[dict[str, Any]]) -> list[dict[str, Any]]:
         return float(np.mean(values)) if values else None
 
     summaries = []
-    for (label, scenario, estimator, n_jobs, parallel_backend), items in grouped.items():
+    for (
+        label,
+        scenario,
+        estimator,
+        n_jobs,
+        parallel_backend,
+        population_initializer,
+    ), items in grouped.items():
         metric_names = sorted(
             {metric_name for item in items for metric_name in item["holdout_metrics"].keys()}
         )
@@ -380,6 +394,7 @@ def aggregate_results(results: list[dict[str, Any]]) -> list[dict[str, Any]]:
             "estimator": estimator,
             "n_jobs": n_jobs,
             "parallel_backend": parallel_backend,
+            "population_initializer": population_initializer,
             "runs": len(items),
             "fit_seconds_mean": float(np.mean([item["fit_seconds"] for item in items])),
             "fit_seconds_std": float(np.std([item["fit_seconds"] for item in items])),
@@ -431,6 +446,7 @@ def print_summary_table(summaries: list[dict[str, Any]]) -> None:
         "estimator",
         "n_jobs",
         "parallel_backend",
+        "population_initializer",
         "runs",
         "fit_seconds_mean",
         "actual_cross_validate_calls_mean",
@@ -463,12 +479,13 @@ def print_summary_table(summaries: list[dict[str, Any]]) -> None:
         print("\t".join(row))
 
 
-def comparison_key(summary: dict[str, Any]) -> tuple[str, str, str, str]:
+def comparison_key(summary: dict[str, Any]) -> tuple[str, str, str, str, str]:
     return (
         summary["scenario"],
         summary["estimator"],
         str(summary["n_jobs"]),
         summary["parallel_backend"],
+        summary["population_initializer"],
     )
 
 
@@ -489,6 +506,7 @@ def print_comparison_table(current: list[dict[str, Any]], baseline: list[dict[st
         "estimator",
         "n_jobs",
         "parallel_backend",
+        "population_initializer",
         "fit_seconds_delta",
         "fit_seconds_ratio",
         "accuracy_delta",
@@ -505,6 +523,7 @@ def print_comparison_table(current: list[dict[str, Any]], baseline: list[dict[st
             "estimator": summary["estimator"],
             "n_jobs": summary["n_jobs"],
             "parallel_backend": summary["parallel_backend"],
+            "population_initializer": summary["population_initializer"],
             "fit_seconds_delta": summary["fit_seconds_mean"] - base["fit_seconds_mean"],
             "fit_seconds_ratio": summary["fit_seconds_mean"] / base["fit_seconds_mean"],
         }
@@ -566,6 +585,13 @@ def parse_args() -> argparse.Namespace:
         help="Parallel strategy values to compare.",
     )
     parser.add_argument(
+        "--population-initializers",
+        nargs="+",
+        choices=["smart", "random"],
+        default=["smart"],
+        help="Initial population strategies to compare.",
+    )
+    parser.add_argument(
         "--quick",
         action="store_true",
         help="Use a smaller benchmark for quick local smoke checks.",
@@ -615,57 +641,62 @@ def main() -> None:
             cv = make_cv(scenario, args.cv_splits, random_state)
 
             for parallel_backend in args.parallel_backends:
-                for n_jobs in n_jobs_values:
-                    if "gasearch" in args.estimators:
-                        results.append(
-                            run_one_benchmark(
-                                label=args.label,
-                                scenario=scenario,
-                                estimator_name="GASearchCV",
-                                estimator=build_gasearch(
+                for population_initializer in args.population_initializers:
+                    for n_jobs in n_jobs_values:
+                        if "gasearch" in args.estimators:
+                            results.append(
+                                run_one_benchmark(
+                                    label=args.label,
                                     scenario=scenario,
-                                    random_state=random_state,
-                                    cv=cv,
-                                    population_size=args.population_size,
-                                    generations=args.generations,
+                                    estimator_name="GASearchCV",
+                                    estimator=build_gasearch(
+                                        scenario=scenario,
+                                        random_state=random_state,
+                                        cv=cv,
+                                        population_size=args.population_size,
+                                        generations=args.generations,
+                                        n_jobs=n_jobs,
+                                        parallel_backend=parallel_backend,
+                                        population_initializer=population_initializer,
+                                    ),
+                                    X_train=X_train,
+                                    X_test=X_test,
+                                    y_train=y_train,
+                                    y_test=y_test,
                                     n_jobs=n_jobs,
                                     parallel_backend=parallel_backend,
-                                ),
-                                X_train=X_train,
-                                X_test=X_test,
-                                y_train=y_train,
-                                y_test=y_test,
-                                n_jobs=n_jobs,
-                                parallel_backend=parallel_backend,
-                                run_index=run_index,
+                                    population_initializer=population_initializer,
+                                    run_index=run_index,
+                                )
                             )
-                        )
 
-                    if "feature_selection" in args.estimators:
-                        results.append(
-                            run_one_benchmark(
-                                label=args.label,
-                                scenario=scenario,
-                                estimator_name="GAFeatureSelectionCV",
-                                estimator=build_feature_selector(
+                        if "feature_selection" in args.estimators:
+                            results.append(
+                                run_one_benchmark(
+                                    label=args.label,
                                     scenario=scenario,
-                                    random_state=random_state,
-                                    cv=cv,
-                                    population_size=args.population_size,
-                                    generations=args.generations,
+                                    estimator_name="GAFeatureSelectionCV",
+                                    estimator=build_feature_selector(
+                                        scenario=scenario,
+                                        random_state=random_state,
+                                        cv=cv,
+                                        population_size=args.population_size,
+                                        generations=args.generations,
+                                        n_jobs=n_jobs,
+                                        parallel_backend=parallel_backend,
+                                        population_initializer=population_initializer,
+                                        max_features=max(2, X_train.shape[1] // 3),
+                                    ),
+                                    X_train=X_train,
+                                    X_test=X_test,
+                                    y_train=y_train,
+                                    y_test=y_test,
                                     n_jobs=n_jobs,
                                     parallel_backend=parallel_backend,
-                                    max_features=max(2, X_train.shape[1] // 3),
-                                ),
-                                X_train=X_train,
-                                X_test=X_test,
-                                y_train=y_train,
-                                y_test=y_test,
-                                n_jobs=n_jobs,
-                                parallel_backend=parallel_backend,
-                                run_index=run_index,
+                                    population_initializer=population_initializer,
+                                    run_index=run_index,
+                                )
                             )
-                        )
 
     summaries = aggregate_results(results)
     print_summary_table(summaries)

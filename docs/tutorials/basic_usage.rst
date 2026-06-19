@@ -123,9 +123,14 @@ candidate runs its cross-validation sequentially to avoid nested parallelism.
 Set ``parallel_backend="cv"`` to keep candidate evaluation serial and pass
 ``n_jobs`` to each candidate's cross-validation instead. The
 genetic-search-specific arguments ``population_size`` and ``generations``
-determine how many candidate solutions are explored. After fitting,
-``fit_stats_`` reports evaluation counters such as cache hits, duplicate
-candidates, cross-validation calls, and skipped invalid feature masks.
+determine how many candidate solutions are explored. By default,
+``population_initializer="smart"`` builds a more diverse initial population
+using estimator defaults, warm starts when provided, Latin hypercube samples for
+numeric hyperparameters, and stratified categorical values. Set
+``population_initializer="random"`` to use the previous random initialization
+behavior. After fitting, ``fit_stats_`` reports evaluation counters such as
+cache hits, duplicate candidates, cross-validation calls, and skipped invalid
+feature masks.
 
 Run the optimization:
 
