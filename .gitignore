@@ -70,6 +70,15 @@ instance/
 
 # Sphinx documentation
 docs/_build/
+sphinx_tmp_html/
+
+# sklearn-genetic-opt generated artifacts
+logs/
+sklearn_logs/
+mlruns/
+mlflow.db
+logbook.pkl
+*.tfevents.*
 
 # PyBuilder
 target/

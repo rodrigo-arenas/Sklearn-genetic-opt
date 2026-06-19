@@ -21,7 +21,6 @@ from ..schedules import ExponentialAdapter, InverseAdapter
 from joblib import dump, load
 import os
 
-
 data = load_iris()
 label_names = data["target_names"]
 y = data["target"]
