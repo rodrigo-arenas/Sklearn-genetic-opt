@@ -9,6 +9,7 @@ from .optimizer_control import (
     local_search_enabled,
     mutation_probability,
     replace_duplicate_candidates,
+    shared_fitness,
 )
 
 TELEMETRY_FIELDS = [
@@ -25,6 +26,9 @@ TELEMETRY_FIELDS = [
     "random_immigrants",
     "duplicate_replacements",
     "local_refinements",
+    "fitness_sharing_applied",
+    "mean_niche_count",
+    "max_niche_count",
 ]
 
 
@@ -121,6 +125,9 @@ def _compile_generation_record(stats, population, state, gen, control_record=Non
             "random_immigrants": 0,
             "duplicate_replacements": 0,
             "local_refinements": 0,
+            "fitness_sharing_applied": False,
+            "mean_niche_count": 0.0,
+            "max_niche_count": 0.0,
         }
     )
 
@@ -171,13 +178,23 @@ def _run_local_refinement(population, toolbox, halloffame, estimator):
     return len(neighbors)
 
 
-def _control_record(mutation_prob, diversity_triggered, random_immigrants, duplicate_replacements):
+def _control_record(
+    mutation_prob,
+    diversity_triggered,
+    random_immigrants,
+    duplicate_replacements,
+    sharing_record=None,
+):
+    sharing_record = sharing_record or {}
     return {
         "mutation_probability": mutation_prob,
         "diversity_control_triggered": diversity_triggered or random_immigrants > 0,
         "random_immigrants": random_immigrants,
         "duplicate_replacements": duplicate_replacements,
         "local_refinements": 0,
+        "fitness_sharing_applied": sharing_record.get("fitness_sharing_applied", False),
+        "mean_niche_count": sharing_record.get("mean_niche_count", 0.0),
+        "max_niche_count": sharing_record.get("max_niche_count", 0.0),
     }
 
 
@@ -301,7 +318,8 @@ def eaSimple(
     for gen in range(1, ngen + 1):
         try:
             # Select the next generation individuals
-            offspring = toolbox.select(population, len(population) - hof_size)
+            with shared_fitness(population, estimator) as sharing_record:
+                offspring = toolbox.select(population, len(population) - hof_size)
 
             mutation_prob, diversity_triggered = mutation_probability(mutpb, estimator, record)
 
@@ -340,6 +358,7 @@ def eaSimple(
                     diversity_triggered,
                     random_immigrants,
                     duplicate_replacements,
+                    sharing_record,
                 ),
             )
             logbook.record(gen=gen, nevals=len(invalid_ind), **record)
@@ -530,7 +549,9 @@ def eaMuPlusLambda(
                 halloffame.update(offspring)
 
             # Select the next generation population
-            population[:] = toolbox.select(population + offspring, mu)
+            selection_pool = population + offspring
+            with shared_fitness(selection_pool, estimator) as sharing_record:
+                population[:] = toolbox.select(selection_pool, mu)
 
             # Update the statistics with the new population
             record = _compile_generation_record(
@@ -543,6 +564,7 @@ def eaMuPlusLambda(
                     diversity_triggered,
                     random_immigrants,
                     duplicate_replacements,
+                    sharing_record,
                 ),
             )
             logbook.record(gen=gen, nevals=len(invalid_ind), **record)
@@ -735,7 +757,8 @@ def eaMuCommaLambda(
                 halloffame.update(offspring)
 
             # Select the next generation population
-            population[:] = toolbox.select(offspring, mu)
+            with shared_fitness(offspring, estimator) as sharing_record:
+                population[:] = toolbox.select(offspring, mu)
 
             # Update the statistics with the new population
             record = _compile_generation_record(
@@ -748,6 +771,7 @@ def eaMuCommaLambda(
                     diversity_triggered,
                     random_immigrants,
                     duplicate_replacements,
+                    sharing_record,
                 ),
             )
             logbook.record(gen=gen, nevals=len(invalid_ind), **record)

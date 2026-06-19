@@ -1,4 +1,5 @@
 import random
+from contextlib import contextmanager
 
 import numpy as np
 
@@ -13,6 +14,8 @@ def validate_optimizer_control(
     diversity_stagnation_generations,
     diversity_mutation_boost,
     random_immigrants_fraction,
+    sharing_radius,
+    sharing_alpha,
 ):
     if local_search_top_k < 1:
         raise ValueError("local_search_top_k must be greater than or equal to 1")
@@ -34,6 +37,12 @@ def validate_optimizer_control(
 
     if not 0 <= random_immigrants_fraction <= 1:
         raise ValueError("random_immigrants_fraction must be in the interval [0, 1]")
+
+    if not 0 < sharing_radius <= 1:
+        raise ValueError("sharing_radius must be in the interval (0, 1]")
+
+    if sharing_alpha <= 0:
+        raise ValueError("sharing_alpha must be greater than 0")
 
 
 def diversity_control_triggered(estimator, record):
@@ -178,3 +187,109 @@ def local_neighbor(estimator, parent, individual_cls):
         values = _feature_neighbor(estimator, parent)
 
     return individual_cls(values)
+
+
+def fitness_sharing_enabled(estimator):
+    return getattr(estimator, "fitness_sharing", False)
+
+
+def _search_space_distance(estimator, left, right):
+    distances = []
+
+    for index, parameter_name in enumerate(estimator.space.parameters):
+        dimension = estimator.space[parameter_name]
+        left_value = left[index]
+        right_value = right[index]
+
+        if isinstance(dimension, (Continuous, Integer)):
+            span = dimension.upper - dimension.lower
+            distance = 0.0 if span == 0 else abs(left_value - right_value) / span
+        elif isinstance(dimension, Categorical):
+            distance = 0.0 if left_value == right_value else 1.0
+        else:  # pragma: no cover
+            distance = 0.0 if left_value == right_value else 1.0
+
+        distances.append(distance)
+
+    return float(np.mean(distances)) if distances else 0.0
+
+
+def individual_distance(estimator, left, right):
+    if hasattr(estimator, "space"):
+        return _search_space_distance(estimator, left, right)
+
+    if len(left) == 0:
+        return 0.0
+
+    differences = sum(left_value != right_value for left_value, right_value in zip(left, right))
+    return differences / len(left)
+
+
+def sharing_value(distance, radius, alpha):
+    if distance >= radius:
+        return 0.0
+
+    return 1.0 - (distance / radius) ** alpha
+
+
+def niche_counts(population, estimator):
+    radius = estimator.sharing_radius
+    alpha = estimator.sharing_alpha
+    counts = []
+
+    for individual in population:
+        count = 0.0
+        for other in population:
+            distance = individual_distance(estimator, individual, other)
+            count += sharing_value(distance, radius, alpha)
+        counts.append(max(count, 1.0))
+
+    return counts
+
+
+def _shared_primary_fitness(population, counts):
+    primary_values = [individual.fitness.values[0] for individual in population]
+    if not primary_values:
+        return []
+
+    primary_weight = population[0].fitness.weights[0]
+    sign = 1.0 if primary_weight >= 0 else -1.0
+    utilities = [value * sign for value in primary_values]
+    minimum_utility = min(utilities)
+    shift = -minimum_utility + 1e-12 if minimum_utility <= 0 else 0.0
+
+    shared_values = []
+    for individual, utility, count in zip(population, utilities, counts):
+        shared_utility = (utility + shift) / count
+        shared_primary = (shared_utility - shift) * sign
+        shared_values.append((shared_primary, *individual.fitness.values[1:]))
+
+    return shared_values
+
+
+@contextmanager
+def shared_fitness(population, estimator):
+    if not fitness_sharing_enabled(estimator) or not population:
+        yield {
+            "fitness_sharing_applied": False,
+            "mean_niche_count": 0.0,
+            "max_niche_count": 0.0,
+        }
+        return
+
+    counts = niche_counts(population, estimator)
+    original_fitness = [individual.fitness.values for individual in population]
+    shared_values = _shared_primary_fitness(population, counts)
+
+    try:
+        for individual, shared_value in zip(population, shared_values):
+            individual.fitness.values = shared_value
+
+        yield {
+            "fitness_sharing_applied": True,
+            "mean_niche_count": float(np.mean(counts)),
+            "max_niche_count": float(np.max(counts)),
+        }
+    finally:
+        for individual, original_value in zip(population, original_fitness):
+            individual.fitness.values = original_value

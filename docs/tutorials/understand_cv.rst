@@ -165,9 +165,11 @@ The ``history`` attribute also includes optimizer telemetry for each generation:
 ``genotype_diversity``, ``fitness_improvement``, ``fitness_improved``,
 ``stagnation_generations``, ``best_generation``, ``mutation_probability``,
 ``diversity_control_triggered``, ``random_immigrants``,
-``duplicate_replacements``, and ``local_refinements``. These fields help
-diagnose whether the search is still exploring diverse solutions or has started
-to converge/stagnate around the same candidates.
+``duplicate_replacements``, ``local_refinements``,
+``fitness_sharing_applied``, ``mean_niche_count``, and
+``max_niche_count``. These fields help diagnose whether the search is still
+exploring diverse solutions or has started to converge/stagnate around the same
+candidates.
 
 When the search space is noisy or rugged, ``diversity_control=True`` can help
 avoid premature convergence by increasing mutation, replacing duplicate
@@ -175,6 +177,8 @@ candidates, and adding random immigrants after low-diversity or stagnant
 generations. When the search has found promising regions,
 ``local_search=True`` can run a short neighborhood refinement around the
 hall-of-fame candidates without increasing the number of GA generations.
+``fitness_sharing=True`` can reduce selection pressure on crowded niches, so
+similar high-scoring candidates do not immediately dominate the population.
 
 The generation log contains summary metrics:
 

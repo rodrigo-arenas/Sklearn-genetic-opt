@@ -8,6 +8,7 @@ from deap import base, creator, tools
 from ..algorithms import eaMuCommaLambda, eaMuPlusLambda, eaSimple
 from ..callbacks.base import BaseCallback
 from ..evaluation import create_fit_stats
+from ..optimizer_control import shared_fitness
 from ..schedules.schedulers import ConstantAdapter
 
 
@@ -153,3 +154,58 @@ def test_local_search_refines_hall_of_fame_candidates(simple_toolbox):
 
     assert logbook[-1]["local_refinements"] == 2
     assert estimator.fit_stats_["local_refinement_candidates"] == 2
+
+
+def test_shared_fitness_temporarily_penalizes_crowded_niches(simple_toolbox):
+    crowded_a = creator.IndividualAlgorithmTest([1, 1, 1, 1])
+    crowded_b = creator.IndividualAlgorithmTest([1, 1, 1, 1])
+    isolated = creator.IndividualAlgorithmTest([0, 0, 0, 0])
+
+    for individual in [crowded_a, crowded_b, isolated]:
+        individual.fitness.values = (10,)
+
+    population = [crowded_a, crowded_b, isolated]
+    estimator = SimpleNamespace(
+        fitness_sharing=True,
+        sharing_radius=0.25,
+        sharing_alpha=1.0,
+    )
+
+    with shared_fitness(population, estimator) as sharing_record:
+        selected = tools.selBest(population, 1)
+        assert selected == [isolated]
+        assert crowded_a.fitness.values[0] < isolated.fitness.values[0]
+        assert sharing_record["fitness_sharing_applied"] is True
+        assert sharing_record["max_niche_count"] == pytest.approx(2.0)
+
+    assert crowded_a.fitness.values == (10,)
+    assert crowded_b.fitness.values == (10,)
+    assert isolated.fitness.values == (10,)
+
+
+def test_algorithm_records_fitness_sharing_telemetry(simple_toolbox):
+    population = [creator.IndividualAlgorithmTest([1, 1, 1, 1]) for _ in range(4)]
+    estimator = SimpleNamespace(
+        elitism=False,
+        local_search=False,
+        fitness_sharing=True,
+        sharing_radius=0.25,
+        sharing_alpha=1.0,
+    )
+
+    _, logbook, _ = eaSimple(
+        population=population,
+        toolbox=simple_toolbox,
+        cxpb=ConstantAdapter(0.0, 0.0, 0),
+        mutpb=ConstantAdapter(0.0, 0.0, 0),
+        ngen=1,
+        stats=None,
+        halloffame=tools.HallOfFame(1),
+        callbacks=[],
+        verbose=False,
+        estimator=estimator,
+    )
+
+    assert logbook[1]["fitness_sharing_applied"] is True
+    assert logbook[1]["mean_niche_count"] >= 1.0
+    assert logbook[1]["max_niche_count"] >= 1.0

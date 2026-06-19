@@ -48,6 +48,11 @@ Features:
   mutation, replace duplicate candidates, and inject random immigrants when the
   population collapses too early.
 
+* Added optional fitness sharing with ``fitness_sharing=True``. During
+  selection, candidates in crowded niches receive a temporary shared fitness
+  penalty based on normalized candidate distance, helping multiple promising
+  regions survive longer without changing raw cross-validation scores.
+
 * Added ``benchmarks/benchmark_fit.py`` to measure fit-time mechanics, compare
   baseline JSON results against current runs, compare parallel strategies, and
   track population initializers, optimizer telemetry, and holdout model metrics

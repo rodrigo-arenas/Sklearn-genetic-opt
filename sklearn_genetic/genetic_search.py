@@ -198,6 +198,19 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         Fraction of offspring replaced by random immigrants when diversity
         control triggers.
 
+    fitness_sharing : bool, default=False
+        If ``True``, temporarily penalize candidates in crowded niches during
+        selection. Raw cross-validation scores and ``cv_results_`` are not
+        modified.
+
+    sharing_radius : float, default=0.2
+        Normalized distance below which two individuals are considered part of
+        the same niche for fitness sharing.
+
+    sharing_alpha : float, default=1.0
+        Shape parameter that controls how quickly sharing pressure decreases
+        with distance inside ``sharing_radius``.
+
     verbose : bool, default=True
         If ``True``, shows the metrics on the optimization routine.
 
@@ -291,7 +304,10 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         "diversity_control_triggered": [],
         "random_immigrants": [],
         "duplicate_replacements": [],
-        "local_refinements": []}
+        "local_refinements": [],
+        "fitness_sharing_applied": [],
+        "mean_niche_count": [],
+        "max_niche_count": []}
 
          *gen* returns the index of the evaluated generations.
          Each entry on the others lists, represent the average metric in each generation.
@@ -361,6 +377,9 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         diversity_stagnation_generations=5,
         diversity_mutation_boost=2.0,
         random_immigrants_fraction=0.1,
+        fitness_sharing=False,
+        sharing_radius=0.2,
+        sharing_alpha=1.0,
     ):
         self.estimator = estimator
         self.cv = cv
@@ -399,6 +418,9 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         self.diversity_stagnation_generations = diversity_stagnation_generations
         self.diversity_mutation_boost = diversity_mutation_boost
         self.random_immigrants_fraction = random_immigrants_fraction
+        self.fitness_sharing = fitness_sharing
+        self.sharing_radius = sharing_radius
+        self.sharing_alpha = sharing_alpha
 
         _validate_parallel_backend(self.parallel_backend)
         _validate_population_initializer(self.population_initializer)
@@ -410,6 +432,8 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
             self.diversity_stagnation_generations,
             self.diversity_mutation_boost,
             self.random_immigrants_fraction,
+            self.sharing_radius,
+            self.sharing_alpha,
         )
 
         # Check that the estimator is compatible with scikit-learn
@@ -784,6 +808,9 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
             "random_immigrants": log.select("random_immigrants"),
             "duplicate_replacements": log.select("duplicate_replacements"),
             "local_refinements": log.select("local_refinements"),
+            "fitness_sharing_applied": log.select("fitness_sharing_applied"),
+            "mean_niche_count": log.select("mean_niche_count"),
+            "max_niche_count": log.select("max_niche_count"),
         }
 
         # Imitate the logic of scikit-learn refit parameter
@@ -891,6 +918,19 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
     random_immigrants_fraction : float, default=0.1
         Fraction of offspring replaced by random immigrants when diversity
         control triggers.
+
+    fitness_sharing : bool, default=False
+        If ``True``, temporarily penalize candidates in crowded niches during
+        selection. Raw cross-validation scores and ``cv_results_`` are not
+        modified.
+
+    sharing_radius : float, default=0.2
+        Normalized distance below which two individuals are considered part of
+        the same niche for fitness sharing.
+
+    sharing_alpha : float, default=1.0
+        Shape parameter that controls how quickly sharing pressure decreases
+        with distance inside ``sharing_radius``.
 
     generations : int, default=40
         Number of generations or iterations to run the evolutionary algorithm.
@@ -1024,7 +1064,10 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         "diversity_control_triggered": [],
         "random_immigrants": [],
         "duplicate_replacements": [],
-        "local_refinements": []}
+        "local_refinements": [],
+        "fitness_sharing_applied": [],
+        "mean_niche_count": [],
+        "max_niche_count": []}
 
          *gen* returns the index of the evaluated generations.
          Each entry on the others lists, represent the average metric in each generation.
@@ -1092,6 +1135,9 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         diversity_stagnation_generations=5,
         diversity_mutation_boost=2.0,
         random_immigrants_fraction=0.1,
+        fitness_sharing=False,
+        sharing_radius=0.2,
+        sharing_alpha=1.0,
     ):
         self.estimator = estimator
         self.cv = cv
@@ -1129,6 +1175,9 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         self.diversity_stagnation_generations = diversity_stagnation_generations
         self.diversity_mutation_boost = diversity_mutation_boost
         self.random_immigrants_fraction = random_immigrants_fraction
+        self.fitness_sharing = fitness_sharing
+        self.sharing_radius = sharing_radius
+        self.sharing_alpha = sharing_alpha
 
         _validate_parallel_backend(self.parallel_backend)
         _validate_population_initializer(self.population_initializer)
@@ -1140,6 +1189,8 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
             self.diversity_stagnation_generations,
             self.diversity_mutation_boost,
             self.random_immigrants_fraction,
+            self.sharing_radius,
+            self.sharing_alpha,
         )
 
         # added new check for whether the estimator is compatible with scikit-learn
@@ -1493,6 +1544,9 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
             "random_immigrants": log.select("random_immigrants"),
             "duplicate_replacements": log.select("duplicate_replacements"),
             "local_refinements": log.select("local_refinements"),
+            "fitness_sharing_applied": log.select("fitness_sharing_applied"),
+            "mean_niche_count": log.select("mean_niche_count"),
+            "max_niche_count": log.select("max_niche_count"),
         }
 
         if self.refit:

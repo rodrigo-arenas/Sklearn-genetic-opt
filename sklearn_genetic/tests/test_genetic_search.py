@@ -92,6 +92,13 @@ def test_wrong_optimizer_control_parameters():
             diversity_threshold=1.5,
         )
 
+    with pytest.raises(ValueError, match="sharing_radius must be in the interval"):
+        GASearchCV(
+            DecisionTreeClassifier(),
+            param_grid={"max_depth": Integer(1, 3)},
+            sharing_radius=0,
+        )
+
 
 def test_smart_population_initializer_seeds_defaults_warm_starts_and_diversity():
     estimator = GASearchCV(
