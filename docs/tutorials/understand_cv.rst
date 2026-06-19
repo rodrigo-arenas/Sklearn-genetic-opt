@@ -145,6 +145,24 @@ candidate hyperparameters as follows:
 6. Select the best hyperparameters based on the best individual
    cross-validation score.
 
+If ``use_cache=True`` (the default), candidates that have already been evaluated
+reuse their stored fitness values. Duplicate candidates inside the same
+generation are also evaluated only once and then recorded for each occurrence.
+When ``n_jobs`` enables parallel execution, unique candidates in a generation
+are evaluated in parallel, while each candidate's own cross-validation runs
+sequentially to avoid nested parallelism. Set ``parallel_backend="cv"`` to keep
+candidate evaluation serial and pass ``n_jobs`` to each candidate's
+cross-validation instead. After fitting, ``fit_stats_`` exposes counters for
+actual cross-validation calls, cache hits, duplicate candidates, skipped invalid
+candidates, and population-level parallel batches.
+
+The ``history`` attribute also includes optimizer telemetry for each generation:
+``population_size``, ``unique_individuals``, ``unique_individual_ratio``,
+``genotype_diversity``, ``fitness_improvement``, ``fitness_improved``,
+``stagnation_generations``, and ``best_generation``. These fields help diagnose
+whether the search is still exploring diverse solutions or has started to
+converge/stagnate around the same candidates.
+
 The generation log contains summary metrics:
 
 ``fitness``

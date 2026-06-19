@@ -1,4 +1,5 @@
 import pytest
+from deap import tools
 from sklearn.datasets import load_digits, load_diabetes
 from sklearn.linear_model import SGDClassifier
 from sklearn.tree import DecisionTreeClassifier
@@ -14,6 +15,7 @@ import os
 
 from .. import GASearchCV
 from ..space import Integer, Categorical, Continuous
+from .. import genetic_search
 from ..callbacks import (
     ThresholdStopping,
     DeltaThreshold,
@@ -47,6 +49,264 @@ def test_default_n_jobs_is_none():
 
     assert estimator.n_jobs is None
     assert estimator.get_params()["n_jobs"] is None
+    assert estimator.parallel_backend == "auto"
+    assert estimator.get_params()["parallel_backend"] == "auto"
+
+
+def test_wrong_parallel_backend():
+    with pytest.raises(ValueError) as excinfo:
+        GASearchCV(
+            DecisionTreeClassifier(),
+            param_grid={"max_depth": Integer(1, 3)},
+            parallel_backend="workers",
+        )
+
+    assert (
+        str(excinfo.value)
+        == "parallel_backend must be one of ['auto', 'cv', 'population'], got workers instead"
+    )
+
+
+@pytest.mark.parametrize("algorithm", ["eaSimple", "eaMuPlusLambda", "eaMuCommaLambda"])
+def test_optimizer_telemetry_is_recorded_for_each_generation(algorithm):
+    generations = 2
+    estimator = GASearchCV(
+        DecisionTreeClassifier(random_state=42),
+        cv=2,
+        scoring=lambda estimator, X, y: 1.0,
+        population_size=4,
+        generations=generations,
+        param_grid={
+            "max_depth": Integer(1, 3),
+            "criterion": Categorical(["gini", "entropy"]),
+        },
+        algorithm=algorithm,
+        verbose=False,
+        n_jobs=1,
+    )
+
+    estimator.fit(X_train, y_train)
+
+    telemetry_fields = [
+        "population_size",
+        "unique_individuals",
+        "unique_individual_ratio",
+        "genotype_diversity",
+        "fitness_improvement",
+        "fitness_improved",
+        "stagnation_generations",
+        "best_generation",
+    ]
+
+    for field in telemetry_fields:
+        assert field in estimator.history
+        assert field in estimator[0]
+        assert len(estimator.history[field]) == generations + 1
+
+    assert estimator.history["population_size"][-1] == estimator.population_size
+    assert 0 <= estimator.history["unique_individual_ratio"][-1] <= 1
+    assert 0 <= estimator.history["genotype_diversity"][-1] <= 1
+    assert estimator.history["best_generation"][-1] == 0
+    assert estimator.history["stagnation_generations"][-1] == generations
+
+
+def test_evaluate_population_reuses_duplicate_individual_cache(monkeypatch):
+    calls = []
+    cv_splits = [(np.array([0, 1]), np.array([2, 3])), (np.array([2, 3]), np.array([0, 1]))]
+
+    def fake_cross_validate(*args, **kwargs):
+        calls.append(kwargs)
+        assert kwargs["cv"] is cv_splits
+        return {
+            "test_score": np.array([0.8, 0.9]),
+            "train_score": np.array([0.9, 1.0]),
+            "fit_time": np.array([0.0, 0.0]),
+            "score_time": np.array([0.0, 0.0]),
+        }
+
+    monkeypatch.setattr(genetic_search, "cross_validate", fake_cross_validate)
+
+    estimator = GASearchCV(
+        DecisionTreeClassifier(),
+        cv=2,
+        scoring="accuracy",
+        population_size=2,
+        generations=1,
+        param_grid={"max_depth": Integer(1, 3)},
+        verbose=False,
+    )
+    estimator.X_ = X_train[:4]
+    estimator.y_ = y_train[:4]
+    estimator._cv_splits = cv_splits
+    estimator.refit_metric = "score"
+    estimator.metrics_list = ["score"]
+    estimator.scorer_ = "accuracy"
+    estimator.logbook = tools.Logbook()
+    estimator._pop = []
+    estimator.fit_stats_ = genetic_search._create_fit_stats()
+
+    fitnesses = estimator.evaluate_population([[2], [2]])
+
+    assert len(calls) == 1
+    assert fitnesses[0] == fitnesses[1]
+    assert len(estimator.logbook.chapters["parameters"]) == 2
+    assert estimator.fit_stats_["evaluated_candidates"] == 2
+    assert estimator.fit_stats_["unique_candidates"] == 1
+    assert estimator.fit_stats_["cross_validate_calls"] == 1
+    assert estimator.fit_stats_["duplicate_candidates"] == 1
+
+
+def test_evaluate_population_re_evaluates_duplicates_without_cache(monkeypatch):
+    calls = []
+
+    def fake_cross_validate(*args, **kwargs):
+        calls.append(kwargs)
+        score = 0.8 + (len(calls) * 0.01)
+        return {
+            "test_score": np.array([score, score]),
+            "train_score": np.array([score, score]),
+            "fit_time": np.array([0.0, 0.0]),
+            "score_time": np.array([0.0, 0.0]),
+        }
+
+    monkeypatch.setattr(genetic_search, "cross_validate", fake_cross_validate)
+
+    estimator = GASearchCV(
+        DecisionTreeClassifier(),
+        cv=2,
+        scoring="accuracy",
+        population_size=2,
+        generations=1,
+        param_grid={"max_depth": Integer(1, 3)},
+        verbose=False,
+        use_cache=False,
+    )
+    estimator.X_ = X_train[:4]
+    estimator.y_ = y_train[:4]
+    estimator._cv_splits = [
+        (np.array([0, 1]), np.array([2, 3])),
+        (np.array([2, 3]), np.array([0, 1])),
+    ]
+    estimator.refit_metric = "score"
+    estimator.metrics_list = ["score"]
+    estimator.scorer_ = "accuracy"
+    estimator.logbook = tools.Logbook()
+    estimator._pop = []
+    estimator.fit_stats_ = genetic_search._create_fit_stats()
+
+    fitnesses = estimator.evaluate_population([[2], [2]])
+
+    assert len(calls) == 2
+    assert fitnesses[0] != fitnesses[1]
+    assert estimator.fit_stats_["cross_validate_calls"] == 2
+    assert estimator.fit_stats_["duplicate_candidates"] == 0
+
+
+def test_evaluate_population_parallelizes_unique_individuals_without_nested_cv(monkeypatch):
+    observed_cv_n_jobs = []
+    observed_parallel_n_jobs = []
+    cv_splits = [(np.array([0, 1]), np.array([2, 3])), (np.array([2, 3]), np.array([0, 1]))]
+
+    class FakeParallel:
+        def __init__(self, n_jobs, prefer=None):
+            observed_parallel_n_jobs.append(n_jobs)
+            assert prefer == "threads"
+
+        def __call__(self, jobs):
+            results = []
+            for func, args, kwargs in jobs:
+                results.append(func(*args, **kwargs))
+            return results
+
+    def fake_cross_validate(*args, **kwargs):
+        observed_cv_n_jobs.append(kwargs["n_jobs"])
+        return {
+            "test_score": np.array([0.8, 0.9]),
+            "train_score": np.array([0.9, 1.0]),
+            "fit_time": np.array([0.0, 0.0]),
+            "score_time": np.array([0.0, 0.0]),
+        }
+
+    monkeypatch.setattr(genetic_search, "Parallel", FakeParallel)
+    monkeypatch.setattr(genetic_search, "_is_parallel_enabled", lambda n_jobs, n_tasks: True)
+    monkeypatch.setattr(genetic_search, "cross_validate", fake_cross_validate)
+
+    estimator = GASearchCV(
+        DecisionTreeClassifier(),
+        cv=2,
+        scoring="accuracy",
+        population_size=2,
+        generations=1,
+        param_grid={"max_depth": Integer(1, 3)},
+        verbose=False,
+        n_jobs=2,
+    )
+    estimator.X_ = X_train[:4]
+    estimator.y_ = y_train[:4]
+    estimator._cv_splits = cv_splits
+    estimator.refit_metric = "score"
+    estimator.metrics_list = ["score"]
+    estimator.scorer_ = "accuracy"
+    estimator.logbook = tools.Logbook()
+    estimator._pop = []
+    estimator.fit_stats_ = genetic_search._create_fit_stats()
+
+    fitnesses = estimator.evaluate_population([[1], [2]])
+
+    assert observed_parallel_n_jobs == [2]
+    assert observed_cv_n_jobs == [1, 1]
+    assert len(fitnesses) == 2
+    assert len(estimator.logbook.chapters["parameters"]) == 2
+    assert estimator.fit_stats_["population_parallel_batches"] == 1
+
+
+def test_evaluate_population_cv_backend_uses_inner_cv_parallelism(monkeypatch):
+    observed_cv_n_jobs = []
+
+    def fail_parallel(*args, **kwargs):
+        raise AssertionError("population-level parallelism should not be used")
+
+    def fake_cross_validate(*args, **kwargs):
+        observed_cv_n_jobs.append(kwargs["n_jobs"])
+        return {
+            "test_score": np.array([0.8, 0.9]),
+            "train_score": np.array([0.9, 1.0]),
+            "fit_time": np.array([0.0, 0.0]),
+            "score_time": np.array([0.0, 0.0]),
+        }
+
+    monkeypatch.setattr(genetic_search, "Parallel", fail_parallel)
+    monkeypatch.setattr(genetic_search, "_is_parallel_enabled", lambda n_jobs, n_tasks: True)
+    monkeypatch.setattr(genetic_search, "cross_validate", fake_cross_validate)
+
+    estimator = GASearchCV(
+        DecisionTreeClassifier(),
+        cv=2,
+        scoring="accuracy",
+        population_size=2,
+        generations=1,
+        param_grid={"max_depth": Integer(1, 3)},
+        verbose=False,
+        n_jobs=2,
+        parallel_backend="cv",
+    )
+    estimator.X_ = X_train[:4]
+    estimator.y_ = y_train[:4]
+    estimator._cv_splits = [
+        (np.array([0, 1]), np.array([2, 3])),
+        (np.array([2, 3]), np.array([0, 1])),
+    ]
+    estimator.refit_metric = "score"
+    estimator.metrics_list = ["score"]
+    estimator.scorer_ = "accuracy"
+    estimator.logbook = tools.Logbook()
+    estimator._pop = []
+    estimator.fit_stats_ = genetic_search._create_fit_stats()
+
+    estimator.evaluate_population([[1], [2]])
+
+    assert observed_cv_n_jobs == [2, 2]
+    assert estimator.fit_stats_["population_serial_batches"] == 1
 
 
 def test_expected_ga_results():

@@ -1,4 +1,5 @@
 import pytest
+from deap import tools
 from sklearn.datasets import load_iris, load_diabetes
 from sklearn.linear_model import SGDClassifier
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
@@ -10,6 +11,7 @@ from sklearn.metrics import make_scorer
 import numpy as np
 
 from .. import GAFeatureSelectionCV
+from .. import genetic_search
 from ..callbacks import (
     ThresholdStopping,
     DeltaThreshold,
@@ -41,6 +43,80 @@ def test_default_n_jobs_is_none():
 
     assert estimator.n_jobs is None
     assert estimator.get_params()["n_jobs"] is None
+    assert estimator.parallel_backend == "auto"
+    assert estimator.get_params()["parallel_backend"] == "auto"
+
+
+def test_optimizer_telemetry_is_recorded_for_feature_selection():
+    generations = 2
+    estimator = GAFeatureSelectionCV(
+        DecisionTreeClassifier(random_state=42),
+        cv=2,
+        scoring=lambda estimator, X, y: 1.0,
+        population_size=4,
+        generations=generations,
+        algorithm="eaSimple",
+        verbose=False,
+        n_jobs=1,
+    )
+
+    estimator.fit(X_train, y_train)
+
+    telemetry_fields = [
+        "population_size",
+        "unique_individuals",
+        "unique_individual_ratio",
+        "genotype_diversity",
+        "fitness_improvement",
+        "fitness_improved",
+        "stagnation_generations",
+        "best_generation",
+    ]
+
+    for field in telemetry_fields:
+        assert field in estimator.history
+        assert field in estimator[0]
+        assert len(estimator.history[field]) == generations + 1
+
+    assert estimator.history["population_size"][-1] == estimator.population_size
+    assert 0 <= estimator.history["unique_individual_ratio"][-1] <= 1
+    assert 0 <= estimator.history["genotype_diversity"][-1] <= 1
+    assert estimator.history["best_generation"][-1] == 0
+    assert estimator.history["stagnation_generations"][-1] == generations
+
+
+def test_invalid_max_features_individual_skips_cross_validation(monkeypatch):
+    def fail_cross_validate(*args, **kwargs):
+        raise AssertionError("invalid feature masks should not be cross-validated")
+
+    monkeypatch.setattr(genetic_search, "cross_validate", fail_cross_validate)
+
+    estimator = GAFeatureSelectionCV(
+        DecisionTreeClassifier(),
+        cv=3,
+        scoring="accuracy",
+        max_features=1,
+        verbose=False,
+        return_train_score=True,
+    )
+    estimator.X_ = X_train[:6]
+    estimator.y_ = y_train[:6]
+    estimator.n_splits_ = 3
+    estimator.refit_metric = "score"
+    estimator.metrics_list = ["score"]
+    estimator.logbook = tools.Logbook()
+    estimator.fit_stats_ = genetic_search._create_fit_stats()
+
+    fitness = estimator.evaluate([1, 1])
+    parameters = estimator.logbook.chapters["parameters"][0]
+
+    assert fitness == [-100000, 2]
+    assert np.array_equal(parameters["cv_scores"], np.full(3, -100000))
+    assert np.array_equal(parameters["fit_time"], np.zeros(3))
+    assert np.array_equal(parameters["score_time"], np.zeros(3))
+    assert np.array_equal(parameters["train_score"], np.full(3, -100000))
+    assert estimator.fit_stats_["cross_validate_calls"] == 0
+    assert estimator.fit_stats_["skipped_invalid_candidates"] == 1
 
 
 def test_expected_ga_results():

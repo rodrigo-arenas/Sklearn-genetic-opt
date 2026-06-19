@@ -91,6 +91,24 @@ sphinx-build -b html docs docs/_build/html
 If the documentation build processes notebooks, make sure `pandoc` is installed
 on your system.
 
+Run a quick fit-performance benchmark smoke check:
+
+```bash
+python benchmarks/benchmark_fit.py --quick
+```
+
+For performance-sensitive changes, compare against a saved baseline:
+
+```bash
+python benchmarks/benchmark_fit.py --label baseline --output-json benchmarks/baseline.json
+python benchmarks/benchmark_fit.py --label current --compare-json benchmarks/baseline.json
+```
+
+The benchmark reports wall time, cross-validation call counts, cache/duplicate
+evaluation counters, optimizer telemetry such as diversity and stagnation, and
+model metrics. Prefer using the same machine, Python environment, random seed,
+and benchmark options when comparing results.
+
 If you have questions, you can open an issue (tag it as a question).
 
 We encourage you to follow these guidelines:

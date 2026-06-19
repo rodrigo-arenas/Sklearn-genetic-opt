@@ -4,6 +4,115 @@ from deap.algorithms import varAnd, varOr
 
 from .callbacks.validations import eval_callbacks
 
+TELEMETRY_FIELDS = [
+    "population_size",
+    "unique_individuals",
+    "unique_individual_ratio",
+    "genotype_diversity",
+    "fitness_improvement",
+    "fitness_improved",
+    "stagnation_generations",
+    "best_generation",
+]
+
+
+def _evaluate_invalid_individuals(toolbox, invalid_individuals):
+    if hasattr(toolbox, "evaluate_population"):
+        return toolbox.evaluate_population(invalid_individuals)
+
+    return toolbox.map(toolbox.evaluate, invalid_individuals)
+
+
+def _fitness_scalar(value):
+    if isinstance(value, np.ndarray):
+        return value.flat[0]
+
+    if isinstance(value, (list, tuple)):
+        return value[0]
+
+    return value
+
+
+def _flatten_record(record):
+    return {key: _fitness_scalar(value) for key, value in record.items()}
+
+
+def _individual_key(individual):
+    return tuple(individual)
+
+
+def _population_diversity(population):
+    population_size = len(population)
+    if population_size == 0:
+        return {
+            "population_size": 0,
+            "unique_individuals": 0,
+            "unique_individual_ratio": 0.0,
+            "genotype_diversity": 0.0,
+        }
+
+    unique_individuals = len({_individual_key(individual) for individual in population})
+    unique_individual_ratio = unique_individuals / population_size
+
+    if population_size == 1:
+        genotype_diversity = 0.0
+    else:
+        gene_diversities = []
+        for gene_values in zip(*population):
+            unique_gene_values = len(set(gene_values))
+            gene_diversities.append((unique_gene_values - 1) / (population_size - 1))
+        genotype_diversity = float(np.mean(gene_diversities)) if gene_diversities else 0.0
+
+    return {
+        "population_size": population_size,
+        "unique_individuals": unique_individuals,
+        "unique_individual_ratio": unique_individual_ratio,
+        "genotype_diversity": genotype_diversity,
+    }
+
+
+def _compile_generation_record(stats, population, state, gen):
+    record = stats.compile(population) if stats else {}
+    record = _flatten_record(record)
+
+    record.update(_population_diversity(population))
+
+    current_best = record.get("fitness_max")
+    if current_best is None:
+        fitness_improvement = 0.0
+        fitness_improved = False
+    elif state["best_fitness"] is None or current_best > state["best_fitness"]:
+        fitness_improvement = (
+            0.0 if state["best_fitness"] is None else current_best - state["best_fitness"]
+        )
+        fitness_improved = True
+        state["best_fitness"] = current_best
+        state["best_generation"] = gen
+        state["stagnation_generations"] = 0
+    else:
+        fitness_improvement = current_best - state["best_fitness"]
+        fitness_improved = False
+        state["stagnation_generations"] += 1
+
+    record.update(
+        {
+            "fitness_improvement": fitness_improvement,
+            "fitness_improved": fitness_improved,
+            "stagnation_generations": state["stagnation_generations"],
+            "best_generation": state["best_generation"],
+        }
+    )
+
+    return record
+
+
+def _new_telemetry_state():
+    return {
+        "best_fitness": None,
+        "best_generation": 0,
+        "stagnation_generations": 0,
+    }
+
 
 def eaSimple(
     population,
@@ -77,12 +186,13 @@ def eaSimple(
     }
     eval_callbacks(**callbacks_start_args)
 
+    telemetry_state = _new_telemetry_state()
     logbook = tools.Logbook()
-    logbook.header = ["gen", "nevals"] + (stats.fields if stats else [])
+    logbook.header = ["gen", "nevals"] + (stats.fields if stats else []) + TELEMETRY_FIELDS
 
     # Evaluate the individuals with an invalid fitness
     invalid_ind = [ind for ind in population if not ind.fitness.valid]
-    fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
+    fitnesses = _evaluate_invalid_individuals(toolbox, invalid_ind)
     for ind, fit in zip(invalid_ind, fitnesses):
         ind.fitness.values = fit
 
@@ -90,11 +200,8 @@ def eaSimple(
         halloffame.update(population)
     hof_size = len(halloffame.items) if (halloffame.items and estimator.elitism) else 0
 
-    record = stats.compile(population) if stats else {}
-    if isinstance(record["fitness"], np.ndarray):
-        record = {key: value[0] for key, value in record.items()}
-
     n_gen = gen = 0
+    record = _compile_generation_record(stats, population, telemetry_state, gen)
     logbook.record(gen=n_gen, nevals=len(invalid_ind), **record)
 
     if verbose:
@@ -134,7 +241,7 @@ def eaSimple(
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-            fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
+            fitnesses = _evaluate_invalid_individuals(toolbox, invalid_ind)
             for ind, fit in zip(invalid_ind, fitnesses):
                 ind.fitness.values = fit
 
@@ -149,10 +256,7 @@ def eaSimple(
             population[:] = offspring
 
             # Append the current generation statistics to the logbook
-            record = stats.compile(population) if stats else {}
-            if isinstance(record["fitness"], np.ndarray):
-                record = {key: value[0] for key, value in record.items()}
-
+            record = _compile_generation_record(stats, population, telemetry_state, gen)
             logbook.record(gen=gen, nevals=len(invalid_ind), **record)
 
             if verbose:
@@ -271,23 +375,21 @@ def eaMuPlusLambda(
     }
     eval_callbacks(**callbacks_start_args)
 
+    telemetry_state = _new_telemetry_state()
     logbook = tools.Logbook()
-    logbook.header = ["gen", "nevals"] + (stats.fields if stats else [])
+    logbook.header = ["gen", "nevals"] + (stats.fields if stats else []) + TELEMETRY_FIELDS
 
     # Evaluate the individuals with an invalid fitness
     invalid_ind = [ind for ind in population if not ind.fitness.valid]
-    fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
+    fitnesses = _evaluate_invalid_individuals(toolbox, invalid_ind)
     for ind, fit in zip(invalid_ind, fitnesses):
         ind.fitness.values = fit
 
     if halloffame is not None:
         halloffame.update(population)
 
-    record = stats.compile(population) if stats is not None else {}
-    if isinstance(record["fitness"], np.ndarray):
-        record = {key: value[0] for key, value in record.items()}
-
     n_gen = gen = 0
+    record = _compile_generation_record(stats, population, telemetry_state, gen)
     logbook.record(gen=n_gen, nevals=len(invalid_ind), **record)
 
     if verbose:
@@ -323,7 +425,7 @@ def eaMuPlusLambda(
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-            fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
+            fitnesses = _evaluate_invalid_individuals(toolbox, invalid_ind)
             for ind, fit in zip(invalid_ind, fitnesses):
                 ind.fitness.values = fit
 
@@ -335,10 +437,7 @@ def eaMuPlusLambda(
             population[:] = toolbox.select(population + offspring, mu)
 
             # Update the statistics with the new population
-            record = stats.compile(population) if stats is not None else {}
-            if isinstance(record["fitness"], np.ndarray):
-                record = {key: value[0] for key, value in record.items()}
-
+            record = _compile_generation_record(stats, population, telemetry_state, gen)
             logbook.record(gen=gen, nevals=len(invalid_ind), **record)
 
             if verbose:
@@ -462,21 +561,19 @@ def eaMuCommaLambda(
 
     # Evaluate the individuals with an invalid fitness
     invalid_ind = [ind for ind in population if not ind.fitness.valid]
-    fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
+    fitnesses = _evaluate_invalid_individuals(toolbox, invalid_ind)
     for ind, fit in zip(invalid_ind, fitnesses):
         ind.fitness.values = fit
 
     if halloffame is not None:
         halloffame.update(population)
 
+    telemetry_state = _new_telemetry_state()
     logbook = tools.Logbook()
-    logbook.header = ["gen", "nevals"] + (stats.fields if stats else [])
-
-    record = stats.compile(population) if stats is not None else {}
-    if isinstance(record["fitness"], np.ndarray):
-        record = {key: value[0] for key, value in record.items()}
+    logbook.header = ["gen", "nevals"] + (stats.fields if stats else []) + TELEMETRY_FIELDS
 
     n_gen = gen = 0
+    record = _compile_generation_record(stats, population, telemetry_state, gen)
     logbook.record(gen=n_gen, nevals=len(invalid_ind), **record)
 
     if verbose:
@@ -511,7 +608,7 @@ def eaMuCommaLambda(
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-            fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
+            fitnesses = _evaluate_invalid_individuals(toolbox, invalid_ind)
             for ind, fit in zip(invalid_ind, fitnesses):
                 ind.fitness.values = fit
 
@@ -523,10 +620,7 @@ def eaMuCommaLambda(
             population[:] = toolbox.select(offspring, mu)
 
             # Update the statistics with the new population
-            record = stats.compile(population) if stats is not None else {}
-            if isinstance(record["fitness"], np.ndarray):
-                record = {key: value[0] for key, value in record.items()}
-
+            record = _compile_generation_record(stats, population, telemetry_state, gen)
             logbook.record(gen=gen, nevals=len(invalid_ind), **record)
 
             if verbose:
