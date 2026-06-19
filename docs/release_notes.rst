@@ -3,6 +3,25 @@ Release Notes
 
 Some notes on new features in various releases
 
+What's new in 0.13.0
+--------------------
+
+^^^^^^^^^
+Features:
+^^^^^^^^^
+
+* Improved the performance of :class:`~sklearn_genetic.GASearchCV` and
+  :class:`~sklearn_genetic.GAFeatureSelectionCV` during ``fit``.
+  Candidate evaluations are now de-duplicated within each generation, and
+  unique candidates can be evaluated in parallel through ``n_jobs``.
+  When generation-level parallelism is active, each candidate runs
+  cross-validation sequentially to avoid nested parallelism.
+
+* :class:`~sklearn_genetic.GAFeatureSelectionCV` now skips cross-validation for
+  invalid feature masks when ``max_features`` is exceeded, assigning the
+  existing penalty directly instead of fitting models whose fitness is already
+  known.
+
 What's new in 0.12.0
 --------------------
 

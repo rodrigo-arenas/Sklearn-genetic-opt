@@ -117,9 +117,11 @@ Now create the estimator and the cross-validation strategy:
 
 Most arguments have the same meaning as in scikit-learn search estimators:
 ``cv`` controls the validation strategy, ``scoring`` controls the metric, and
-``n_jobs`` controls parallel execution. The genetic-search-specific arguments
-``population_size`` and ``generations`` determine how many candidate solutions
-are explored.
+``n_jobs`` controls parallel execution. During the genetic search, unique
+candidates in the same generation are evaluated in parallel when possible; each
+candidate runs its cross-validation sequentially to avoid nested parallelism.
+The genetic-search-specific arguments ``population_size`` and ``generations``
+determine how many candidate solutions are explored.
 
 Run the optimization:
 

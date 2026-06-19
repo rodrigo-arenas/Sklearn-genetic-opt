@@ -145,6 +145,13 @@ candidate hyperparameters as follows:
 6. Select the best hyperparameters based on the best individual
    cross-validation score.
 
+If ``use_cache=True`` (the default), candidates that have already been evaluated
+reuse their stored fitness values. Duplicate candidates inside the same
+generation are also evaluated only once and then recorded for each occurrence.
+When ``n_jobs`` enables parallel execution, unique candidates in a generation
+are evaluated in parallel, while each candidate's own cross-validation runs
+sequentially to avoid nested parallelism.
+
 The generation log contains summary metrics:
 
 ``fitness``
