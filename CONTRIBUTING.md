@@ -105,8 +105,9 @@ python benchmarks/benchmark_fit.py --label current --compare-json benchmarks/bas
 ```
 
 The benchmark reports wall time, cross-validation call counts, cache/duplicate
-evaluation counters, and model metrics. Prefer using the same machine, Python
-environment, random seed, and benchmark options when comparing results.
+evaluation counters, optimizer telemetry such as diversity and stagnation, and
+model metrics. Prefer using the same machine, Python environment, random seed,
+and benchmark options when comparing results.
 
 If you have questions, you can open an issue (tag it as a question).
 

@@ -119,6 +119,10 @@ def _record_fit_stats(
     estimator.fit_stats_["skipped_invalid_candidates"] += skipped
 
 
+def _history_record(history, index):
+    return {key: values[index] for key, values in history.items()}
+
+
 class GASearchCV(BaseSearchCV):
     """
     Evolutionary optimization over hyperparameters.
@@ -283,7 +287,15 @@ class GASearchCV(BaseSearchCV):
         "fitness": [],
         "fitness_std": [],
         "fitness_max": [],
-        "fitness_min": []}
+        "fitness_min": [],
+        "population_size": [],
+        "unique_individuals": [],
+        "unique_individual_ratio": [],
+        "genotype_diversity": [],
+        "fitness_improvement": [],
+        "fitness_improved": [],
+        "stagnation_generations": [],
+        "best_generation": []}
 
          *gen* returns the index of the evaluated generations.
          Each entry on the others lists, represent the average metric in each generation.
@@ -832,6 +844,14 @@ class GASearchCV(BaseSearchCV):
             "fitness_std": log.select("fitness_std"),
             "fitness_max": log.select("fitness_max"),
             "fitness_min": log.select("fitness_min"),
+            "population_size": log.select("population_size"),
+            "unique_individuals": log.select("unique_individuals"),
+            "unique_individual_ratio": log.select("unique_individual_ratio"),
+            "genotype_diversity": log.select("genotype_diversity"),
+            "fitness_improvement": log.select("fitness_improvement"),
+            "fitness_improved": log.select("fitness_improved"),
+            "stagnation_generations": log.select("stagnation_generations"),
+            "best_generation": log.select("best_generation"),
         }
 
         # Imitate the logic of scikit-learn refit parameter
@@ -910,7 +930,7 @@ class GASearchCV(BaseSearchCV):
         pop: pop object
             The last evaluated population
         log: Logbook object
-            It contains the calculated metrics {'fitness', 'fitness_std', 'fitness_max', 'fitness_min'}
+            It contains the calculated fitness metrics, optimizer telemetry,
             the number of generations and the number of evaluated individuals per generation
         n_gen: int
             The number of generations that the evolutionary algorithm ran
@@ -973,13 +993,7 @@ class GASearchCV(BaseSearchCV):
                 f"arguments before using this estimator."
             )
 
-        return {
-            "gen": self.history["gen"][index],
-            "fitness": self.history["fitness"][index],
-            "fitness_std": self.history["fitness_std"][index],
-            "fitness_max": self.history["fitness_max"][index],
-            "fitness_min": self.history["fitness_min"][index],
-        }
+        return _history_record(self.history, index)
 
     def __iter__(self):
         self.n = 0
@@ -1159,7 +1173,15 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         "fitness": [],
         "fitness_std": [],
         "fitness_max": [],
-        "fitness_min": []}
+        "fitness_min": [],
+        "population_size": [],
+        "unique_individuals": [],
+        "unique_individual_ratio": [],
+        "genotype_diversity": [],
+        "fitness_improvement": [],
+        "fitness_improved": [],
+        "stagnation_generations": [],
+        "best_generation": []}
 
          *gen* returns the index of the evaluated generations.
          Each entry on the others lists, represent the average metric in each generation.
@@ -1667,6 +1689,14 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
             "fitness_std": log.select("fitness_std"),
             "fitness_max": log.select("fitness_max"),
             "fitness_min": log.select("fitness_min"),
+            "population_size": log.select("population_size"),
+            "unique_individuals": log.select("unique_individuals"),
+            "unique_individual_ratio": log.select("unique_individual_ratio"),
+            "genotype_diversity": log.select("genotype_diversity"),
+            "fitness_improvement": log.select("fitness_improvement"),
+            "fitness_improved": log.select("fitness_improved"),
+            "stagnation_generations": log.select("stagnation_generations"),
+            "best_generation": log.select("best_generation"),
         }
 
         if self.refit:
@@ -1728,7 +1758,7 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         pop: pop object
             The last evaluated population
         log: Logbook object
-            It contains the calculated metrics {'fitness', 'fitness_std', 'fitness_max', 'fitness_min'}
+            It contains the calculated fitness metrics, optimizer telemetry,
             the number of generations and the number of evaluated individuals per generation
         n_gen: int
             The number of generations that the evolutionary algorithm ran
@@ -1791,13 +1821,7 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
                 f"arguments before using this estimator."
             )
 
-        return {
-            "gen": self.history["gen"][index],
-            "fitness": self.history["fitness"][index],
-            "fitness_std": self.history["fitness_std"][index],
-            "fitness_max": self.history["fitness_max"][index],
-            "fitness_min": self.history["fitness_min"][index],
-        }
+        return _history_record(self.history, index)
 
     def __iter__(self):
         self.n = 0

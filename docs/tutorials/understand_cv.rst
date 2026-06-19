@@ -156,6 +156,13 @@ cross-validation instead. After fitting, ``fit_stats_`` exposes counters for
 actual cross-validation calls, cache hits, duplicate candidates, skipped invalid
 candidates, and population-level parallel batches.
 
+The ``history`` attribute also includes optimizer telemetry for each generation:
+``population_size``, ``unique_individuals``, ``unique_individual_ratio``,
+``genotype_diversity``, ``fitness_improvement``, ``fitness_improved``,
+``stagnation_generations``, and ``best_generation``. These fields help diagnose
+whether the search is still exploring diverse solutions or has started to
+converge/stagnate around the same candidates.
+
 The generation log contains summary metrics:
 
 ``fitness``

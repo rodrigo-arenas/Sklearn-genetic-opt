@@ -329,8 +329,9 @@ holdout model quality across GA classes, datasets, and parallel strategies:
     python benchmarks/benchmark_fit.py --compare-json benchmarks/baseline.json
 
 The output includes wall time, actual cross-validation calls, cache/duplicate
-reuse counts, skipped invalid feature masks, and holdout metrics such as
-accuracy, ROC AUC, F1, R2, RMSE, and MAE.
+reuse counts, skipped invalid feature masks, optimizer telemetry such as
+diversity and stagnation, and holdout metrics such as accuracy, ROC AUC, F1, R2,
+RMSE, and MAE.
 
 Common Errors & Troubleshooting
 ################################

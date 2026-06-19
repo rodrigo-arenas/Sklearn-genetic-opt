@@ -26,9 +26,16 @@ Features:
   candidates, unique candidates, cross-validation calls, cache hits, duplicate
   candidates, skipped invalid candidates, and population-level parallel batches.
 
+* Added optimizer telemetry to ``history`` and the generation logbook for
+  :class:`~sklearn_genetic.GASearchCV` and
+  :class:`~sklearn_genetic.GAFeatureSelectionCV`. New fields track population
+  diversity, unique individual ratios, best-solution improvement, the first
+  generation where the current best solution appeared, and stagnation length.
+
 * Added ``benchmarks/benchmark_fit.py`` to measure fit-time mechanics, compare
   baseline JSON results against current runs, compare parallel strategies, and
-  track holdout model metrics across classification and regression scenarios.
+  track optimizer telemetry and holdout model metrics across classification and
+  regression scenarios.
 
 * :class:`~sklearn_genetic.GAFeatureSelectionCV` now skips cross-validation for
   invalid feature masks when ``max_features`` is exceeded, assigning the

@@ -47,6 +47,44 @@ def test_default_n_jobs_is_none():
     assert estimator.get_params()["parallel_backend"] == "auto"
 
 
+def test_optimizer_telemetry_is_recorded_for_feature_selection():
+    generations = 2
+    estimator = GAFeatureSelectionCV(
+        DecisionTreeClassifier(random_state=42),
+        cv=2,
+        scoring=lambda estimator, X, y: 1.0,
+        population_size=4,
+        generations=generations,
+        algorithm="eaSimple",
+        verbose=False,
+        n_jobs=1,
+    )
+
+    estimator.fit(X_train, y_train)
+
+    telemetry_fields = [
+        "population_size",
+        "unique_individuals",
+        "unique_individual_ratio",
+        "genotype_diversity",
+        "fitness_improvement",
+        "fitness_improved",
+        "stagnation_generations",
+        "best_generation",
+    ]
+
+    for field in telemetry_fields:
+        assert field in estimator.history
+        assert field in estimator[0]
+        assert len(estimator.history[field]) == generations + 1
+
+    assert estimator.history["population_size"][-1] == estimator.population_size
+    assert 0 <= estimator.history["unique_individual_ratio"][-1] <= 1
+    assert 0 <= estimator.history["genotype_diversity"][-1] <= 1
+    assert estimator.history["best_generation"][-1] == 0
+    assert estimator.history["stagnation_generations"][-1] == generations
+
+
 def test_invalid_max_features_individual_skips_cross_validation(monkeypatch):
     def fail_cross_validate(*args, **kwargs):
         raise AssertionError("invalid feature masks should not be cross-validated")
