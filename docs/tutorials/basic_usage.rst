@@ -113,6 +113,7 @@ Now create the estimator and the cross-validation strategy:
         verbose=True,
         population_size=10,
         generations=20,
+        population_initializer="smart",
     )
 
 Most arguments have the same meaning as in scikit-learn search estimators:
@@ -253,6 +254,7 @@ should already be configured with the hyperparameters you want to use.
         scoring="accuracy",
         population_size=30,
         generations=20,
+        population_initializer="smart",
         n_jobs=-1,
         verbose=True,
         keep_top_k=2,

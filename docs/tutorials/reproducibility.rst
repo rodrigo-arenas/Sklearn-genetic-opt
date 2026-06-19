@@ -59,6 +59,7 @@ Example:
                                   scoring='accuracy',
                                   population_size=8,
                                   generations=5,
+                                  population_initializer="smart",
                                   param_grid=param_grid,
                                   n_jobs=-1,
                                   verbose=True,

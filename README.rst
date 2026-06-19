@@ -153,6 +153,7 @@ Here is a basic example of how to run GASearchCV on a scikit-learn model:
                                    scoring="accuracy",
                                    population_size=10,
                                    generations=5,
+                                   population_initializer="smart",
                                    param_grid=param_grid)
 
     evolved_estimator.fit(X, y)
@@ -205,6 +206,7 @@ Here is a basic example of how to run GASearchCV on a scikit-learn model:
                                   n_jobs=-1,
                                   verbose=True,
                                   use_cache=True,
+                                  population_initializer="smart",
                                   warm_start_configs=warm_start_configs,
                                   keep_top_k=4)
 
@@ -253,6 +255,7 @@ Example: Feature Selection
         generations=20,
         mutation_probability=mutation_scheduler,
         crossover_probability=crossover_scheduler,
+        population_initializer="smart",
         n_jobs=-1)
 
     # Train and select the features
@@ -299,6 +302,7 @@ Example:
         param_grid=param_grid,
         generations=5,
         population_size=10,
+        population_initializer="smart",
         n_jobs=-1   # parallel execution
     )
 

@@ -286,6 +286,7 @@ The same idea can be used for hyperparameter tuning or feature selection.
                                   scoring='accuracy',
                                   population_size=20,
                                   generations=25,
+                                  population_initializer="smart",
                                   mutation_probability=mutation_adapter,
                                   crossover_probability=crossover_adapter,
                                   param_grid=param_grid,

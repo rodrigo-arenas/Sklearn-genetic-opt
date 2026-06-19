@@ -36,7 +36,9 @@ Features:
   :class:`~sklearn_genetic.GAFeatureSelectionCV`. The default ``'smart'``
   strategy improves the initial population with valid warm starts, estimator
   defaults, Latin hypercube sampling for numeric hyperparameters, stratified
-  categorical values, and duplicate-aware feature masks.
+  categorical values, and duplicate-aware feature masks. Set
+  ``population_initializer='random'`` to use the previous random initialization
+  behavior.
 
 * Added ``benchmarks/benchmark_fit.py`` to measure fit-time mechanics, compare
   baseline JSON results against current runs, compare parallel strategies, and

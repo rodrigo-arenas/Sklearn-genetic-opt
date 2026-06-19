@@ -43,7 +43,7 @@ The main concepts are:
 
 At a high level, the process is:
 
-1. Sample an initial population from the search space. This is generation 0.
+1. Build an initial population from the search space. This is generation 0.
 2. Evaluate each individual with cross-validation.
 3. Use genetic operators to create a new generation.
 4. Repeat the evaluation and generation steps until the search reaches its
@@ -52,9 +52,13 @@ At a high level, the process is:
 Creating the First Generation
 -----------------------------
 
-The first generation is usually sampled randomly from the search space defined
-by ``param_grid``. You can also provide warm-start candidates when you already
-know useful configurations.
+By default, the first generation is built with
+``population_initializer="smart"``. For :class:`~sklearn_genetic.GASearchCV`,
+this combines valid warm-start candidates, valid estimator defaults, Latin
+hypercube samples for numeric hyperparameters, stratified categorical values,
+and duplicate avoidance. For :class:`~sklearn_genetic.GAFeatureSelectionCV`, it
+creates duplicate-aware feature masks with varied selected-feature counts. Set
+``population_initializer="random"`` to use fully random initialization.
 
 Each individual can be represented as a chromosome-like structure. In the
 example below, the first generation contains three individuals. Each chromosome
@@ -245,6 +249,7 @@ test set.
         scoring="r2",
         population_size=15,
         generations=20,
+        population_initializer="smart",
         tournament_size=3,
         elitism=True,
         keep_top_k=4,

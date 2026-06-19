@@ -70,6 +70,7 @@ Using `GASearchCV` with `IsolationForest`:
                         cv=3,
                         generations=4,
                         population_size=6,
+                        population_initializer="smart",
                         n_jobs=-1)
 
     search.fit(X)
@@ -87,6 +88,7 @@ Using `GAFeatureSelectionCV` with outlier detection:
         cv=3,
         generations=4,
         population_size=6,
+        population_initializer="smart",
         n_jobs=-1
     )
 
@@ -109,6 +111,7 @@ You may override the default logic by passing your own custom scoring function:
         cv=3,
         generations=4,
         population_size=6,
+        population_initializer="smart",
         n_jobs=1
     )
 

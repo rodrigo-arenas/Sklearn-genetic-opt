@@ -76,6 +76,7 @@ in the parameter named `log_config`, for example:
         scoring="accuracy",
         population_size=3,
         generations=5,
+        population_initializer="smart",
         tournament_size=3,
         elitism=True,
         crossover_probability=0.9,

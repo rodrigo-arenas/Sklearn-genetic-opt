@@ -256,6 +256,7 @@ and the last generation accuracy is not bigger than 0.001:
                                    scoring='accuracy',
                                    population_size=16,
                                    generations=30,
+                                   population_initializer="smart",
                                    tournament_size=3,
                                    elitism=True,
                                    crossover_probability=0.9,
