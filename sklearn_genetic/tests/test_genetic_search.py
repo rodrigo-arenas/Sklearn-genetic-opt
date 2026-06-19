@@ -84,6 +84,15 @@ def test_wrong_population_initializer():
     )
 
 
+def test_wrong_optimizer_control_parameters():
+    with pytest.raises(ValueError, match="diversity_threshold must be in the interval"):
+        GASearchCV(
+            DecisionTreeClassifier(),
+            param_grid={"max_depth": Integer(1, 3)},
+            diversity_threshold=1.5,
+        )
+
+
 def test_smart_population_initializer_seeds_defaults_warm_starts_and_diversity():
     estimator = GASearchCV(
         DecisionTreeClassifier(max_depth=2, criterion="entropy", random_state=42),

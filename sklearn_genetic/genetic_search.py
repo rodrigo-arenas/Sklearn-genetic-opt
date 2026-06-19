@@ -68,6 +68,7 @@ from .population import (
     initialize_search_population,
     validate_population_initializer as _validate_population_initializer,
 )
+from .optimizer_control import validate_optimizer_control as _validate_optimizer_control
 
 import os
 from .callbacks.model_checkpoint import ModelCheckpoint
@@ -164,6 +165,39 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         evaluation serial and passes ``n_jobs`` to each candidate's
         cross-validation call.
 
+    local_search : bool, default=False
+        If ``True``, run a short local refinement phase around the current
+        hall-of-fame individuals after the genetic search finishes.
+
+    local_search_top_k : int, default=1
+        Number of hall-of-fame individuals used as local-search seeds.
+
+    local_search_steps : int, default=1
+        Number of neighbor candidates generated per local-search seed.
+
+    local_search_radius : float, default=0.1
+        Fraction of the search range used to sample local numeric neighbors.
+        For categorical parameters, a different category is sampled.
+
+    diversity_control : bool, default=False
+        If ``True``, monitor diversity and stagnation to boost mutation,
+        replace duplicate candidates, and inject random immigrants.
+
+    diversity_threshold : float, default=0.1
+        Diversity value below which diversity control can trigger.
+
+    diversity_stagnation_generations : int, default=5
+        Number of stagnant generations after which diversity control can
+        inject random immigrants.
+
+    diversity_mutation_boost : float, default=2.0
+        Multiplicative boost applied to mutation probability when diversity
+        control triggers. The boosted value is capped to DEAP's valid range.
+
+    random_immigrants_fraction : float, default=0.1
+        Fraction of offspring replaced by random immigrants when diversity
+        control triggers.
+
     verbose : bool, default=True
         If ``True``, shows the metrics on the optimization routine.
 
@@ -252,7 +286,12 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         "fitness_improvement": [],
         "fitness_improved": [],
         "stagnation_generations": [],
-        "best_generation": []}
+        "best_generation": [],
+        "mutation_probability": [],
+        "diversity_control_triggered": [],
+        "random_immigrants": [],
+        "duplicate_replacements": [],
+        "local_refinements": []}
 
          *gen* returns the index of the evaluated generations.
          Each entry on the others lists, represent the average metric in each generation.
@@ -313,6 +352,15 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         warm_start_configs=None,
         parallel_backend="auto",
         population_initializer="smart",
+        local_search=False,
+        local_search_top_k=1,
+        local_search_steps=1,
+        local_search_radius=0.1,
+        diversity_control=False,
+        diversity_threshold=0.1,
+        diversity_stagnation_generations=5,
+        diversity_mutation_boost=2.0,
+        random_immigrants_fraction=0.1,
     ):
         self.estimator = estimator
         self.cv = cv
@@ -342,9 +390,27 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         self.warm_start_configs = warm_start_configs or []
         self.parallel_backend = parallel_backend
         self.population_initializer = population_initializer
+        self.local_search = local_search
+        self.local_search_top_k = local_search_top_k
+        self.local_search_steps = local_search_steps
+        self.local_search_radius = local_search_radius
+        self.diversity_control = diversity_control
+        self.diversity_threshold = diversity_threshold
+        self.diversity_stagnation_generations = diversity_stagnation_generations
+        self.diversity_mutation_boost = diversity_mutation_boost
+        self.random_immigrants_fraction = random_immigrants_fraction
 
         _validate_parallel_backend(self.parallel_backend)
         _validate_population_initializer(self.population_initializer)
+        _validate_optimizer_control(
+            self.local_search_top_k,
+            self.local_search_steps,
+            self.local_search_radius,
+            self.diversity_threshold,
+            self.diversity_stagnation_generations,
+            self.diversity_mutation_boost,
+            self.random_immigrants_fraction,
+        )
 
         # Check that the estimator is compatible with scikit-learn
         if not (
@@ -713,6 +779,11 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
             "fitness_improved": log.select("fitness_improved"),
             "stagnation_generations": log.select("stagnation_generations"),
             "best_generation": log.select("best_generation"),
+            "mutation_probability": log.select("mutation_probability"),
+            "diversity_control_triggered": log.select("diversity_control_triggered"),
+            "random_immigrants": log.select("random_immigrants"),
+            "duplicate_replacements": log.select("duplicate_replacements"),
+            "local_refinements": log.select("local_refinements"),
         }
 
         # Imitate the logic of scikit-learn refit parameter
@@ -788,6 +859,38 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         Strategy used to generate the initial population. ``'smart'`` creates
         duplicate-aware feature masks with a spread of selected-feature counts.
         ``'random'`` uses the previous weighted random feature-mask sampling.
+
+    local_search : bool, default=False
+        If ``True``, run a short local refinement phase around the current
+        hall-of-fame feature masks after the genetic search finishes.
+
+    local_search_top_k : int, default=1
+        Number of hall-of-fame feature masks used as local-search seeds.
+
+    local_search_steps : int, default=1
+        Number of neighbor feature masks generated per local-search seed.
+
+    local_search_radius : float, default=0.1
+        Fraction of features to flip when sampling a local neighbor.
+
+    diversity_control : bool, default=False
+        If ``True``, monitor diversity and stagnation to boost mutation,
+        replace duplicate candidates, and inject random immigrants.
+
+    diversity_threshold : float, default=0.1
+        Diversity value below which diversity control can trigger.
+
+    diversity_stagnation_generations : int, default=5
+        Number of stagnant generations after which diversity control can
+        inject random immigrants.
+
+    diversity_mutation_boost : float, default=2.0
+        Multiplicative boost applied to mutation probability when diversity
+        control triggers. The boosted value is capped to DEAP's valid range.
+
+    random_immigrants_fraction : float, default=0.1
+        Fraction of offspring replaced by random immigrants when diversity
+        control triggers.
 
     generations : int, default=40
         Number of generations or iterations to run the evolutionary algorithm.
@@ -916,7 +1019,12 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         "fitness_improvement": [],
         "fitness_improved": [],
         "stagnation_generations": [],
-        "best_generation": []}
+        "best_generation": [],
+        "mutation_probability": [],
+        "diversity_control_triggered": [],
+        "random_immigrants": [],
+        "duplicate_replacements": [],
+        "local_refinements": []}
 
          *gen* returns the index of the evaluated generations.
          Each entry on the others lists, represent the average metric in each generation.
@@ -975,6 +1083,15 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         use_cache=True,
         parallel_backend="auto",
         population_initializer="smart",
+        local_search=False,
+        local_search_top_k=1,
+        local_search_steps=1,
+        local_search_radius=0.1,
+        diversity_control=False,
+        diversity_threshold=0.1,
+        diversity_stagnation_generations=5,
+        diversity_mutation_boost=2.0,
+        random_immigrants_fraction=0.1,
     ):
         self.estimator = estimator
         self.cv = cv
@@ -1003,9 +1120,27 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         self.fitness_cache = {}
         self.parallel_backend = parallel_backend
         self.population_initializer = population_initializer
+        self.local_search = local_search
+        self.local_search_top_k = local_search_top_k
+        self.local_search_steps = local_search_steps
+        self.local_search_radius = local_search_radius
+        self.diversity_control = diversity_control
+        self.diversity_threshold = diversity_threshold
+        self.diversity_stagnation_generations = diversity_stagnation_generations
+        self.diversity_mutation_boost = diversity_mutation_boost
+        self.random_immigrants_fraction = random_immigrants_fraction
 
         _validate_parallel_backend(self.parallel_backend)
         _validate_population_initializer(self.population_initializer)
+        _validate_optimizer_control(
+            self.local_search_top_k,
+            self.local_search_steps,
+            self.local_search_radius,
+            self.diversity_threshold,
+            self.diversity_stagnation_generations,
+            self.diversity_mutation_boost,
+            self.random_immigrants_fraction,
+        )
 
         # added new check for whether the estimator is compatible with scikit-learn
         if not (
@@ -1353,6 +1488,11 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
             "fitness_improved": log.select("fitness_improved"),
             "stagnation_generations": log.select("stagnation_generations"),
             "best_generation": log.select("best_generation"),
+            "mutation_probability": log.select("mutation_probability"),
+            "diversity_control_triggered": log.select("diversity_control_triggered"),
+            "random_immigrants": log.select("random_immigrants"),
+            "duplicate_replacements": log.select("duplicate_replacements"),
+            "local_refinements": log.select("local_refinements"),
         }
 
         if self.refit:

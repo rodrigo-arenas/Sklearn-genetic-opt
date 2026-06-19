@@ -40,6 +40,14 @@ Features:
   ``population_initializer='random'`` to use the previous random initialization
   behavior.
 
+* Added optional local refinement and diversity-control mechanisms to
+  :class:`~sklearn_genetic.GASearchCV` and
+  :class:`~sklearn_genetic.GAFeatureSelectionCV`. ``local_search=True`` runs a
+  short neighborhood search around hall-of-fame candidates after the genetic
+  search. ``diversity_control=True`` monitors diversity and stagnation to boost
+  mutation, replace duplicate candidates, and inject random immigrants when the
+  population collapses too early.
+
 * Added ``benchmarks/benchmark_fit.py`` to measure fit-time mechanics, compare
   baseline JSON results against current runs, compare parallel strategies, and
   track population initializers, optimizer telemetry, and holdout model metrics

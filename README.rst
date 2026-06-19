@@ -314,6 +314,11 @@ to each candidate's cross-validation call. After fitting, ``fit_stats_`` contain
 counters such as cross-validation calls, cache hits, duplicate candidates, skipped
 invalid candidates, and population-level parallel batches.
 
+For noisy or rugged spaces, ``diversity_control=True`` can increase mutation,
+replace duplicate candidates, and inject random immigrants when the population
+starts collapsing. ``local_search=True`` adds a short final refinement around
+hall-of-fame candidates.
+
 .. note::
    Parallelism is limited to candidate evaluations within a single machine.
    MPI/distributed methods are not yet supported.

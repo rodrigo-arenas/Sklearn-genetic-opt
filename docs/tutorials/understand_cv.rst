@@ -163,9 +163,18 @@ candidates, and population-level parallel batches.
 The ``history`` attribute also includes optimizer telemetry for each generation:
 ``population_size``, ``unique_individuals``, ``unique_individual_ratio``,
 ``genotype_diversity``, ``fitness_improvement``, ``fitness_improved``,
-``stagnation_generations``, and ``best_generation``. These fields help diagnose
-whether the search is still exploring diverse solutions or has started to
-converge/stagnate around the same candidates.
+``stagnation_generations``, ``best_generation``, ``mutation_probability``,
+``diversity_control_triggered``, ``random_immigrants``,
+``duplicate_replacements``, and ``local_refinements``. These fields help
+diagnose whether the search is still exploring diverse solutions or has started
+to converge/stagnate around the same candidates.
+
+When the search space is noisy or rugged, ``diversity_control=True`` can help
+avoid premature convergence by increasing mutation, replacing duplicate
+candidates, and adding random immigrants after low-diversity or stagnant
+generations. When the search has found promising regions,
+``local_search=True`` can run a short neighborhood refinement around the
+hall-of-fame candidates without increasing the number of GA generations.
 
 The generation log contains summary metrics:
 

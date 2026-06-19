@@ -3,6 +3,13 @@ from deap import tools
 from deap.algorithms import varAnd, varOr
 
 from .callbacks.validations import eval_callbacks
+from .optimizer_control import (
+    inject_random_immigrants,
+    local_neighbor,
+    local_search_enabled,
+    mutation_probability,
+    replace_duplicate_candidates,
+)
 
 TELEMETRY_FIELDS = [
     "population_size",
@@ -13,6 +20,11 @@ TELEMETRY_FIELDS = [
     "fitness_improved",
     "stagnation_generations",
     "best_generation",
+    "mutation_probability",
+    "diversity_control_triggered",
+    "random_immigrants",
+    "duplicate_replacements",
+    "local_refinements",
 ]
 
 
@@ -71,7 +83,7 @@ def _population_diversity(population):
     }
 
 
-def _compile_generation_record(stats, population, state, gen):
+def _compile_generation_record(stats, population, state, gen, control_record=None):
     record = stats.compile(population) if stats else {}
     record = _flatten_record(record)
 
@@ -102,6 +114,18 @@ def _compile_generation_record(stats, population, state, gen):
             "best_generation": state["best_generation"],
         }
     )
+    record.update(
+        {
+            "mutation_probability": None,
+            "diversity_control_triggered": False,
+            "random_immigrants": 0,
+            "duplicate_replacements": 0,
+            "local_refinements": 0,
+        }
+    )
+
+    if control_record is not None:
+        record.update(control_record)
 
     return record
 
@@ -111,6 +135,49 @@ def _new_telemetry_state():
         "best_fitness": None,
         "best_generation": 0,
         "stagnation_generations": 0,
+    }
+
+
+def _record_optimizer_control_stats(estimator, random_immigrants=0, local_refinements=0):
+    if estimator is None or not hasattr(estimator, "fit_stats_"):
+        return
+
+    estimator.fit_stats_["random_immigrants"] += random_immigrants
+    estimator.fit_stats_["local_refinement_candidates"] += local_refinements
+
+
+def _run_local_refinement(population, toolbox, halloffame, estimator):
+    if not local_search_enabled(estimator) or halloffame is None or len(halloffame.items) == 0:
+        return 0
+
+    top_k = min(estimator.local_search_top_k, len(halloffame.items))
+    neighbors = []
+
+    for parent in halloffame.items[:top_k]:
+        for _ in range(estimator.local_search_steps):
+            neighbor = local_neighbor(estimator, parent, parent.__class__)
+            neighbors.append(neighbor)
+
+    fitnesses = _evaluate_invalid_individuals(toolbox, neighbors)
+    for neighbor, fitness in zip(neighbors, fitnesses):
+        neighbor.fitness.values = fitness
+
+    if neighbors:
+        halloffame.update(neighbors)
+        population.extend(neighbors)
+        population[:] = tools.selBest(population, len(population) - len(neighbors))
+
+    _record_optimizer_control_stats(estimator, local_refinements=len(neighbors))
+    return len(neighbors)
+
+
+def _control_record(mutation_prob, diversity_triggered, random_immigrants, duplicate_replacements):
+    return {
+        "mutation_probability": mutation_prob,
+        "diversity_control_triggered": diversity_triggered or random_immigrants > 0,
+        "random_immigrants": random_immigrants,
+        "duplicate_replacements": duplicate_replacements,
+        "local_refinements": 0,
     }
 
 
@@ -236,8 +303,15 @@ def eaSimple(
             # Select the next generation individuals
             offspring = toolbox.select(population, len(population) - hof_size)
 
+            mutation_prob, diversity_triggered = mutation_probability(mutpb, estimator, record)
+
+            crossover_prob = cxpb.step()
+
             # Vary the pool of individuals
-            offspring = varAnd(offspring, toolbox, cxpb.step(), mutpb.step())
+            offspring = varAnd(offspring, toolbox, crossover_prob, mutation_prob)
+            duplicate_replacements = replace_duplicate_candidates(offspring, toolbox, estimator)
+            random_immigrants = inject_random_immigrants(offspring, toolbox, estimator, record)
+            _record_optimizer_control_stats(estimator, random_immigrants=random_immigrants)
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
@@ -256,7 +330,18 @@ def eaSimple(
             population[:] = offspring
 
             # Append the current generation statistics to the logbook
-            record = _compile_generation_record(stats, population, telemetry_state, gen)
+            record = _compile_generation_record(
+                stats,
+                population,
+                telemetry_state,
+                gen,
+                _control_record(
+                    mutation_prob,
+                    diversity_triggered,
+                    random_immigrants,
+                    duplicate_replacements,
+                ),
+            )
             logbook.record(gen=gen, nevals=len(invalid_ind), **record)
 
             if verbose:
@@ -282,6 +367,9 @@ def eaSimple(
             stored_exception = e
 
     n_gen = gen + 1
+    local_refinements = _run_local_refinement(population, toolbox, halloffame, estimator)
+    if local_refinements and len(logbook) > 0:
+        logbook[-1]["local_refinements"] = local_refinements
 
     callbacks_end_args = {
         "callbacks": callbacks,
@@ -420,8 +508,16 @@ def eaMuPlusLambda(
 
     for gen in range(1, ngen + 1):
         try:
+            mutation_prob, diversity_triggered = mutation_probability(mutpb, estimator, record)
+
+            crossover_prob = cxpb.step()
+            mutation_prob = min(mutation_prob, max(0.0, 1.0 - crossover_prob))
+
             # Vary the population
-            offspring = varOr(population, toolbox, lambda_, cxpb.step(), mutpb.step())
+            offspring = varOr(population, toolbox, lambda_, crossover_prob, mutation_prob)
+            duplicate_replacements = replace_duplicate_candidates(offspring, toolbox, estimator)
+            random_immigrants = inject_random_immigrants(offspring, toolbox, estimator, record)
+            _record_optimizer_control_stats(estimator, random_immigrants=random_immigrants)
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
@@ -437,7 +533,18 @@ def eaMuPlusLambda(
             population[:] = toolbox.select(population + offspring, mu)
 
             # Update the statistics with the new population
-            record = _compile_generation_record(stats, population, telemetry_state, gen)
+            record = _compile_generation_record(
+                stats,
+                population,
+                telemetry_state,
+                gen,
+                _control_record(
+                    mutation_prob,
+                    diversity_triggered,
+                    random_immigrants,
+                    duplicate_replacements,
+                ),
+            )
             logbook.record(gen=gen, nevals=len(invalid_ind), **record)
 
             if verbose:
@@ -463,6 +570,9 @@ def eaMuPlusLambda(
             stored_exception = e
 
     n_gen = gen + 1
+    local_refinements = _run_local_refinement(population, toolbox, halloffame, estimator)
+    if local_refinements and len(logbook) > 0:
+        logbook[-1]["local_refinements"] = local_refinements
 
     callbacks_end_args = {
         "callbacks": callbacks,
@@ -603,8 +713,16 @@ def eaMuCommaLambda(
 
     for gen in range(1, ngen + 1):
         try:
+            mutation_prob, diversity_triggered = mutation_probability(mutpb, estimator, record)
+
+            crossover_prob = cxpb.step()
+            mutation_prob = min(mutation_prob, max(0.0, 1.0 - crossover_prob))
+
             # Vary the population
-            offspring = varOr(population, toolbox, lambda_, cxpb.step(), mutpb.step())
+            offspring = varOr(population, toolbox, lambda_, crossover_prob, mutation_prob)
+            duplicate_replacements = replace_duplicate_candidates(offspring, toolbox, estimator)
+            random_immigrants = inject_random_immigrants(offspring, toolbox, estimator, record)
+            _record_optimizer_control_stats(estimator, random_immigrants=random_immigrants)
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
@@ -620,7 +738,18 @@ def eaMuCommaLambda(
             population[:] = toolbox.select(offspring, mu)
 
             # Update the statistics with the new population
-            record = _compile_generation_record(stats, population, telemetry_state, gen)
+            record = _compile_generation_record(
+                stats,
+                population,
+                telemetry_state,
+                gen,
+                _control_record(
+                    mutation_prob,
+                    diversity_triggered,
+                    random_immigrants,
+                    duplicate_replacements,
+                ),
+            )
             logbook.record(gen=gen, nevals=len(invalid_ind), **record)
 
             if verbose:
@@ -647,6 +776,9 @@ def eaMuCommaLambda(
             stored_exception = e
 
     n_gen = gen + 1
+    local_refinements = _run_local_refinement(population, toolbox, halloffame, estimator)
+    if local_refinements and len(logbook) > 0:
+        logbook[-1]["local_refinements"] = local_refinements
 
     callbacks_end_args = {
         "callbacks": callbacks,

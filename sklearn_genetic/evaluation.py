@@ -22,6 +22,8 @@ def create_fit_stats():
         "skipped_invalid_candidates": 0,
         "population_parallel_batches": 0,
         "population_serial_batches": 0,
+        "random_immigrants": 0,
+        "local_refinement_candidates": 0,
     }
 
 

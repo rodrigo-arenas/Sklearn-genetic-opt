@@ -7,6 +7,7 @@ from deap import base, creator, tools
 
 from ..algorithms import eaMuCommaLambda, eaMuPlusLambda, eaSimple
 from ..callbacks.base import BaseCallback
+from ..evaluation import create_fit_stats
 from ..schedules.schedulers import ConstantAdapter
 
 
@@ -91,3 +92,64 @@ def test_algorithm_stops_when_callback_requests_stop(simple_toolbox, algorithm, 
     assert callback.ended
     assert n_gen == 0
     assert len(logbook) == 1
+
+
+def test_diversity_control_boosts_mutation_and_adds_immigrants(simple_toolbox):
+    population = [creator.IndividualAlgorithmTest([0, 0, 0, 0]) for _ in range(4)]
+    estimator = SimpleNamespace(
+        elitism=False,
+        diversity_control=True,
+        diversity_threshold=0.5,
+        diversity_stagnation_generations=5,
+        diversity_mutation_boost=3.0,
+        random_immigrants_fraction=0.5,
+        local_search=False,
+        fit_stats_=create_fit_stats(),
+    )
+
+    _, logbook, _ = eaSimple(
+        population=population,
+        toolbox=simple_toolbox,
+        cxpb=ConstantAdapter(0.1, 0.1, 0),
+        mutpb=ConstantAdapter(0.2, 0.2, 0),
+        ngen=1,
+        stats=None,
+        halloffame=tools.HallOfFame(1),
+        callbacks=[],
+        verbose=False,
+        estimator=estimator,
+    )
+
+    assert logbook[1]["diversity_control_triggered"] is True
+    assert logbook[1]["mutation_probability"] == pytest.approx(0.6)
+    assert logbook[1]["random_immigrants"] == 2
+    assert estimator.fit_stats_["random_immigrants"] == 2
+
+
+def test_local_search_refines_hall_of_fame_candidates(simple_toolbox):
+    population = simple_toolbox.population(n=4)
+    estimator = SimpleNamespace(
+        elitism=False,
+        local_search=True,
+        local_search_top_k=1,
+        local_search_steps=2,
+        local_search_radius=0.25,
+        max_features=None,
+        fit_stats_=create_fit_stats(),
+    )
+
+    _, logbook, _ = eaSimple(
+        population=population,
+        toolbox=simple_toolbox,
+        cxpb=ConstantAdapter(0.0, 0.0, 0),
+        mutpb=ConstantAdapter(0.0, 0.0, 0),
+        ngen=1,
+        stats=None,
+        halloffame=tools.HallOfFame(1),
+        callbacks=[],
+        verbose=False,
+        estimator=estimator,
+    )
+
+    assert logbook[-1]["local_refinements"] == 2
+    assert estimator.fit_stats_["local_refinement_candidates"] == 2
