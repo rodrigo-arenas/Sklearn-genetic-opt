@@ -14,11 +14,6 @@ def test_base_scheduler_attributes():
 
 
 def test_wrong_scheduler_methods():
-    possible_messages = [
-        "Can't instantiate abstract class DummyAdapter with abstract methods step",
-        "Can't instantiate abstract class DummyAdapter with abstract method step",
-    ]
-
     class DummyAdapter(BaseAdapter):
         def __init__(self, initial_value, end_value, adaptive_rate, **kwargs):
             super().__init__(initial_value, end_value, adaptive_rate, **kwargs)
@@ -30,7 +25,9 @@ def test_wrong_scheduler_methods():
         dummy_adapter = DummyAdapter(0.1, 0.2, 0.5)
         dummy_adapter.run()
 
-    assert any([str(excinfo.value) == i for i in possible_messages])
+    message = str(excinfo.value)
+    assert "Can't instantiate abstract class DummyAdapter" in message
+    assert "step" in message
 
 
 def test_check_adapter():

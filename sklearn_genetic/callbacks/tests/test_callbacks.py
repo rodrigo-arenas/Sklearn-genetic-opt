@@ -2,6 +2,7 @@ import pytest
 import os
 import shutil
 import logging
+import importlib.util
 
 from deap.tools import Logbook
 from sklearn.tree import DecisionTreeClassifier
@@ -21,6 +22,8 @@ from .. import (
 )
 from ..validations import check_stats, check_callback, eval_callbacks
 from ..base import BaseCallback
+
+tensorflow_available = importlib.util.find_spec("tensorflow") is not None
 
 data = load_digits()
 label_names = data["target_names"]
@@ -218,6 +221,10 @@ def test_logbook_saver_callback(caplog):
         (TensorBoard(log_dir="./logs", run_id="0"), "./logs/0"),
         (TensorBoard(log_dir="./logs", run_id="1"), "./logs/1"),
     ],
+)
+@pytest.mark.skipif(
+    not tensorflow_available,
+    reason="TensorFlow is not available for this Python version",
 )
 def test_tensorboard_callback(callback, path):
     assert check_callback(callback) == [callback]

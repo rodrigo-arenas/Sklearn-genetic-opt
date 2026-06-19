@@ -7,12 +7,33 @@ from deap import base, creator, tools
 from sklearn.base import clone
 from sklearn.model_selection import cross_validate
 from sklearn.base import is_classifier, is_regressor, BaseEstimator, MetaEstimatorMixin
+
 try:
     from sklearn.base import is_outlier_detector
 except ImportError:
     # Fallback for older sklearn versions
     def is_outlier_detector(estimator):
-        return hasattr(estimator, 'fit_predict') and hasattr(estimator, 'decision_function')
+        return hasattr(estimator, "fit_predict") and hasattr(estimator, "decision_function")
+
+
+def _safe_estimator_check(check, estimator):
+    try:
+        return check(estimator)
+    except AttributeError:
+        return False
+
+
+def _is_classifier(estimator):
+    return _safe_estimator_check(is_classifier, estimator)
+
+
+def _is_regressor(estimator):
+    return _safe_estimator_check(is_regressor, estimator)
+
+
+def _is_outlier_detector(estimator):
+    return _safe_estimator_check(is_outlier_detector, estimator)
+
 
 from sklearn.feature_selection import SelectorMixin
 from sklearn.utils import check_X_y
@@ -281,8 +302,14 @@ class GASearchCV(BaseSearchCV):
         self.warm_start_configs = warm_start_configs or []
 
         # Check that the estimator is compatible with scikit-learn
-        if not (is_classifier(self.estimator) or is_regressor(self.estimator) or is_outlier_detector(self.estimator)):
-            raise ValueError(f"{self.estimator} is not a valid Sklearn classifier, regressor, or outlier detector")
+        if not (
+            _is_classifier(self.estimator)
+            or _is_regressor(self.estimator)
+            or _is_outlier_detector(self.estimator)
+        ):
+            raise ValueError(
+                f"{self.estimator} is not a valid Sklearn classifier, regressor, or outlier detector"
+            )
 
         if criteria not in Criteria.list():
             raise ValueError(f"Criteria must be one of {Criteria.list()}, got {criteria} instead")
@@ -531,7 +558,7 @@ class GASearchCV(BaseSearchCV):
         self.multimetric_ = False
 
         # added a handle outlier detection jussst in case where y might be None
-        if is_outlier_detector(self.estimator) and y is None:
+        if _is_outlier_detector(self.estimator) and y is None:
             # and for unsupervised outlier detection, it will create dummy y for cv compatibility :)
             self.y_ = np.zeros(X.shape[0])
 
@@ -553,17 +580,17 @@ class GASearchCV(BaseSearchCV):
             self.metrics_list = [self.refit_metric]
         elif self.scoring is None or isinstance(self.scoring, str):
             # it will handle outlier detectors that don't have a score method
-            if is_outlier_detector(self.estimator) and self.scoring is None:
+            if _is_outlier_detector(self.estimator) and self.scoring is None:
                 # this function creates a default scorer for outlier detection
                 def default_outlier_scorer(estimator, X, y=None):
-                    if hasattr(estimator, 'score_samples'):
+                    if hasattr(estimator, "score_samples"):
                         return np.mean(estimator.score_samples(X))
-                    elif hasattr(estimator, 'decision_function'):
+                    elif hasattr(estimator, "decision_function"):
                         return np.mean(estimator.decision_function(X))
                     else:
                         predictions = estimator.fit_predict(X)
                         return np.mean(predictions == 1)
-                
+
                 self.scorer_ = default_outlier_scorer
                 self.metrics_list = [self.refit_metric]
             else:
@@ -576,14 +603,15 @@ class GASearchCV(BaseSearchCV):
             self.metrics_list = self.scorer_.keys()
             self.multimetric_ = True
 
-        # Check cv and get the n_splits 
-        if is_outlier_detector(self.estimator):
+        # Check cv and get the n_splits
+        if _is_outlier_detector(self.estimator):
             # For outlier detectors, better to use KFold instead of classifier-based CV
             from sklearn.model_selection import KFold
+
             cv_orig = KFold(n_splits=self.cv if isinstance(self.cv, int) else 5)
             self.n_splits_ = cv_orig.get_n_splits(X, self.y_)
         else:
-            cv_orig = check_cv(self.cv, self.y_, classifier=is_classifier(self.estimator))
+            cv_orig = check_cv(self.cv, self.y_, classifier=_is_classifier(self.estimator))
             self.n_splits_ = cv_orig.get_n_splits(X, self.y_)
 
         # Set the DEAPs necessary methods
@@ -1014,8 +1042,14 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         self.fitness_cache = {}
 
         # added new check for whether the estimator is compatible with scikit-learn
-        if not (is_classifier(self.estimator) or is_regressor(self.estimator) or is_outlier_detector(self.estimator)):
-            raise ValueError(f"{self.estimator} is not a valid Sklearn classifier, regressor, or outlier detector")
+        if not (
+            _is_classifier(self.estimator)
+            or _is_regressor(self.estimator)
+            or _is_outlier_detector(self.estimator)
+        ):
+            raise ValueError(
+                f"{self.estimator} is not a valid Sklearn classifier, regressor, or outlier detector"
+            )
 
         if criteria not in Criteria.list():
             raise ValueError(f"Criteria must be one of {Criteria.list()}, got {criteria} instead")
@@ -1188,11 +1222,11 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         """
 
         self.X_, self.y_ = check_X_y(X, y, accept_sparse=True) if y is not None else (X, None)
-        
+
         # Handle outlier detection case if y is none
-        if is_outlier_detector(self.estimator) and y is None:
+        if _is_outlier_detector(self.estimator) and y is None:
             self.X_ = X
-            self.y_ = np.zeros(X.shape[0])  
+            self.y_ = np.zeros(X.shape[0])
 
         self.n_features = X.shape[1]
         self._n_iterations = self.generations + 1
@@ -1221,17 +1255,17 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
             self.metrics_list = [self.refit_metric]
         elif self.scoring is None or isinstance(self.scoring, str):
             # Handle outlier detectors that don't have a score method
-            if is_outlier_detector(self.estimator) and self.scoring is None:
+            if _is_outlier_detector(self.estimator) and self.scoring is None:
                 # this function creates a default scorer for outlier detection
                 def default_outlier_scorer(estimator, X, y=None):
-                    if hasattr(estimator, 'score_samples'):
+                    if hasattr(estimator, "score_samples"):
                         return np.mean(estimator.score_samples(X))
-                    elif hasattr(estimator, 'decision_function'):
+                    elif hasattr(estimator, "decision_function"):
                         return np.mean(estimator.decision_function(X))
                     else:
                         predictions = estimator.fit_predict(X)
                         return np.mean(predictions == 1)
-                
+
                 self.scorer_ = default_outlier_scorer
                 self.metrics_list = [self.refit_metric]
             else:
@@ -1244,13 +1278,14 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
             self.metrics_list = self.scorer_.keys()
             self.multimetric_ = True
 
-        # Check cv and get the n_splits   
-        if is_outlier_detector(self.estimator):
+        # Check cv and get the n_splits
+        if _is_outlier_detector(self.estimator):
             from sklearn.model_selection import KFold
+
             cv_orig = KFold(n_splits=self.cv if isinstance(self.cv, int) else 5)
             self.n_splits_ = cv_orig.get_n_splits(X, self.y_)
         else:
-            cv_orig = check_cv(self.cv, self.y_, classifier=is_classifier(self.estimator))
+            cv_orig = check_cv(self.cv, self.y_, classifier=_is_classifier(self.estimator))
             self.n_splits_ = cv_orig.get_n_splits(X, self.y_)
 
         # Set the DEAPs necessary methods

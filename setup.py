@@ -26,31 +26,36 @@ setup(
     classifiers=[
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.9",
-        "Programming Language :: Python :: 3.10",
-        "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
+        "Programming Language :: Python :: 3.14",
     ],
     project_urls={
         "Documentation": "https://sklearn-genetic-opt.readthedocs.io/en/stable/",
         "Source Code": "https://github.com/rodrigo-arenas/Sklearn-genetic-opt",
         "Bug Tracker": "https://github.com/rodrigo-arenas/Sklearn-genetic-opt/issues",
     },
-    packages=find_packages(
-        include=["sklearn_genetic", "sklearn_genetic.*"], exclude=["*tests*"]
-    ),
+    packages=find_packages(include=["sklearn_genetic", "sklearn_genetic.*"], exclude=["*tests*"]),
     install_requires=[
-        "scikit-learn>=1.5.0",
-        "numpy>=1.26.1",
-        "deap>=1.3.3",
-        "tqdm>=4.61.1",
+        "scikit-learn>=1.9.0",
+        "numpy>=2.4.6",
+        "deap>=1.4.4",
+        "tqdm>=4.68.3",
     ],
     extras_require={
-        "mlflow": ["mlflow>=2.20.0"],
-        "seaborn": ["seaborn>=0.11.2"],
-        "tensorflow": ["tensorflow>=2.17.1"],
-        "all": ["mlflow>=2.20.0", "seaborn>=0.11.2", "tensorflow>=2.17.1"],
+        "mlflow": ["mlflow>=3.14.0"],
+        "seaborn": ["seaborn>=0.13.2"],
+        "tensorflow": [
+            "tensorflow>=2.21.0; python_version < '3.14'",
+            "tensorboard>=2.20.0,<2.21.0; python_version < '3.14'",
+        ],
+        "all": [
+            "mlflow>=3.14.0",
+            "seaborn>=0.13.2",
+            "tensorflow>=2.21.0; python_version < '3.14'",
+            "tensorboard>=2.20.0,<2.21.0; python_version < '3.14'",
+        ],
     },
-    python_requires=">=3.9",
+    python_requires=">=3.12",
     include_package_data=True,
 )
