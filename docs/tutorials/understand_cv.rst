@@ -1,188 +1,218 @@
-Understanding the evaluation process
+Understanding the Evaluation Process
 ====================================
 
-In this post, we are going to explain how the evaluation process works
-on hyperparameters tuning and how to use different validation strategies.
+This tutorial explains how :class:`~sklearn_genetic.GASearchCV` evaluates
+candidate hyperparameters and how cross-validation fits into the evolutionary
+search process.
 
-Parameters
-----------
+Two parameters control most of the evaluation behavior:
 
-The :class:`~sklearn_genetic.GASearchCV` class, expects a parameter named `cv`.
-This stands for cross-validation and it accepts any of the scikit-learn
-strategies, such as K-fold, Repeated K-Fold, Stratified k-fold, and so on.
-You can find more about this in `scikit-learn documentation <https://scikit-learn.org/stable/modules/cross_validation.html>`_.
+``cv``
+    The cross-validation strategy. This can be an integer or any compatible
+    scikit-learn cross-validator, such as
+    :class:`~sklearn.model_selection.KFold`,
+    :class:`~sklearn.model_selection.StratifiedKFold`, or
+    :class:`~sklearn.model_selection.RepeatedKFold`. See the
+    `scikit-learn cross-validation documentation <https://scikit-learn.org/stable/modules/cross_validation.html>`__
+    for more details.
 
-A second parameter that comes along, is the `scoring`, this is the evaluation metric
-that the model is going to use, to decide which model is better,
-it could, for example be accuracy, precision, recall for a classification problem
-or r2, max_error, neg_root_mean_squared_error for a regression problem.
-To see the full list of metrics, check in `here <https://scikit-learn.org/stable/modules/model_evaluation.html>`_
+``scoring``
+    The metric used to evaluate each candidate. For classification, common
+    choices include ``"accuracy"``, ``"precision"``, and ``"recall"``. For
+    regression, common choices include ``"r2"``, ``"max_error"``, and
+    ``"neg_root_mean_squared_error"``. The full list is available in the
+    `scikit-learn model evaluation documentation <https://scikit-learn.org/stable/modules/model_evaluation.html>`__.
 
-Evolutionary Algorithms background
-----------------------------------
+Evolutionary Algorithm Background
+---------------------------------
 
-The Genetic algorithm (GA) is a metaheuristic process inspired by natural selection, it's used in optimization
-and search problems in general, and is usually based on a set of functions such as mutation, crossover and selection,
-let's call these the genetic operators.
-I'll use the following terms interchangeably in this section to make the connection between the GA and machine learning:
+A genetic algorithm is a metaheuristic optimization method inspired by natural
+selection. In sklearn-genetic-opt, the algorithm searches over possible
+hyperparameter configurations and uses their cross-validation scores as the
+fitness signal.
 
-One choice of hyperparameters→An individual,
-Population→ Several individuals,
-Generation→One fixed iteration that contains a fixed population,
-Fitness value→Cross-validation score.
+The main concepts are:
 
-There are several variations, but in general, the steps to follow look like this:
+- **Individual:** one candidate solution, such as one set of hyperparameters.
+- **Population:** a group of individuals evaluated in the same generation.
+- **Generation:** one iteration of the evolutionary process.
+- **Fitness value:** the score used to compare individuals, usually a
+  cross-validation score.
+- **Genetic operators:** operations such as selection, crossover, mutation, and
+  elitism that create the next generation.
 
-1. Generate a randomly sampled population (different sets of hyperparameters); this is generation 0.
-2. Evaluate the fitness value of each individual in the population, in terms of machine learning,
-   get the cross-validation scores.
-3. Generate a new generation by using several genetic operators.
-   Repeat steps 2 and 3 until a stopping criterion is met.
+At a high level, the process is:
 
-Let's go step by step.
+1. Sample an initial population from the search space. This is generation 0.
+2. Evaluate each individual with cross-validation.
+3. Use genetic operators to create a new generation.
+4. Repeat the evaluation and generation steps until the search reaches its
+   generation limit or a callback stops it.
 
-**Create generation 0 and evaluate it:**
+Creating the First Generation
+-----------------------------
 
-As mentioned you could generate a random set of several hyperparameters,
-or you could include a few manually selected ones that you already tried and think are good candidates.
+The first generation is usually sampled randomly from the search space defined
+by ``param_grid``. You can also provide warm-start candidates when you already
+know useful configurations.
 
-Each set gets usually encoded in form of a chromosome, a binary representation of the set,
-for example, if we set the size of the first generation to be 3 individuals, it would look like this:
+Each individual can be represented as a chromosome-like structure. In the
+example below, the first generation contains three individuals. Each chromosome
+encodes one candidate set of hyperparameters:
 
 .. image:: ../images/understandcv_generation0.png
 
-So in this generation, we get three individuals that are mapped to a chromosome (binary) representation,
-using an encoding function represented as the red arrow, each box in the chromosome is a gen.
-A fixed section of the chromosome is one of the hyperparameters.
-Then we get the cross-validation score (fitness) of each candidate using a scoring function,
-its shown as the purple arrow.
+The red arrow represents the encoding step, where hyperparameter values are
+mapped into a chromosome representation. Each block is a gene, and groups of
+genes represent hyperparameters. The purple arrow represents scoring: each
+candidate is decoded, evaluated with cross-validation, and assigned a fitness
+value.
 
-**Create a new generation:**
+Creating New Generations
+------------------------
 
-Now we can create a new set of candidates, as mentioned, there are several genetic operators,
-I'm going to show the most common ones:
+After the initial population is evaluated, the algorithm creates a new
+generation. The exact process depends on the selected
+:mod:`~sklearn_genetic.algorithms` strategy, but the most common operations are
+crossover, mutation, selection, and elitism.
 
-**Crossover:**
+Crossover
+^^^^^^^^^
 
-This operator consists of taking two parent chromosomes and mates them to create new children,
-the way we select the parents could be by a probability distribution function, which gives more probability to the individuals with higher fitness of the generation, let's say the individual number 1 and 3 got selected, then we can take two random points of each parent and make the crossover, like this:
+Crossover combines information from two parent chromosomes to create new
+children. Parent selection usually favors individuals with better fitness, so
+stronger candidates have a higher chance of contributing to the next generation.
+
+For example, if individuals 1 and 3 are selected as parents, the algorithm can
+split their chromosomes and exchange sections:
 
 .. image:: ../images/understandcv_crossover.png
 
-Now the children represent a new set of hyperparameters, if we decode each child we could get for example:
+After decoding the child chromosomes, the resulting candidates might look like
+this:
 
 .. code:: bash
 
     Child 1: {"learning_rate": 0.015, "layers": 4, "optimizer": "Adam"}
     Child 2: {"learning_rate": 0.4, "layers": 6, "optimizer": "SGD"}
 
-But making crossovers, over the same sets of hyperparameters might end up giving similar results after some iterations,
-so we are stuck with the same kind of solutions, that is why we introduce other operations like the mutation.
+Mutation
+^^^^^^^^
 
-**Mutation:**
+Crossover alone can make the search converge too quickly around similar
+solutions. Mutation introduces diversity by randomly changing part of a
+chromosome. It can alter a single gene or an entire hyperparameter value.
 
-This operator allows with a low enough probability (< ~0.1), to change one of the gens or a whole hyperparameter randomly, to create more diverse sets.
-Let's take, for example, child 1 from the previous image, let's pick up a random gen and change its value:
+For example, a single gene in a child chromosome can change:
 
 .. image:: ../images/understandcv_mutantchild.png
 
-Or it could even change a whole parameter, for example, the optimizer:
+Or the mutation can change a complete hyperparameter, such as the optimizer:
 
 .. image:: ../images/understandcv_mutantparameter.png
 
-**Elitism:**
+Elitism
+^^^^^^^
 
-This selection strategy refers to the process of selecting the best individuals of each generation,
-to make sure its information is propagated across the generations. This is very straightforward,
-just select the best k individuals based on their fitness value and copy it to the next generation.
-So after performing those operations, a new generation may look like this:
+Elitism keeps the best individuals from one generation and copies them into the
+next generation. This helps preserve strong candidates while the rest of the
+population continues exploring.
+
+After crossover, mutation, selection, and elitism, a new generation may look
+like this:
 
 .. image:: ../images/understandcv_generation1.png
 
+The search repeats this cycle until one of the stopping conditions is met:
 
-From now on, just repeat the process for several generations until a stopping criteria is met,
-those could be for example:
+- The maximum number of generations is reached.
+- The search exceeds a time budget.
+- An early-stopping callback detects that the score has reached a threshold or
+  stopped improving.
 
-* A maximum number of generations was reached.
-* The process has run longer than the budgeted time.
-* There are no performance improvements (below a threshold) from the last n generations.
+How GASearchCV Evaluates Candidates
+-----------------------------------
 
+In sklearn-genetic-opt, :class:`~sklearn_genetic.GASearchCV` evaluates
+candidate hyperparameters as follows:
 
-Steps
------
+1. Sample ``population_size`` candidate configurations from ``param_grid``.
+2. Fit and score one estimator for each candidate using the configured ``cv``
+   and ``scoring`` values.
+3. Log generation-level metrics when ``verbose=True``.
+4. Create the next generation using the selected evolutionary algorithm.
+5. Repeat until ``generations`` is reached or callbacks stop the search.
+6. Select the best hyperparameters based on the best individual
+   cross-validation score.
 
-Now, moving to this package implementation.
-The way `GASearchCV` evaluates the candidates is as follows:
+The generation log contains summary metrics:
 
-* It starts by selecting random sets of hyperparameters according to the `param_grid` definition,
-  the total number of sets is determined by the `population_size` parameter.
+``fitness``
+    The average score across the individuals in the current generation.
 
-* It fits a model per each sets of hyperparameters and calculates the cross validation score
-  according to the `cv` and `scoring` setup.
+``fitness_std``
+    The standard deviation of the individual scores in the current generation.
 
-* After evaluating each candidate, the fitness, fitness_std, fitness_max and fitness_min are computed
-  and are logged into the console if ``verbose=True``.
-  `Fitness` is the way to refer to the selected metric,
-  but this is calculated as the average of all the candidates of the current generation, this means that if there are
-  10 different sets of hyperparameters, the `fitness` value, is the average score of those 10 evaluated candidates,
-  the same goes for the other metrics.
+``fitness_max``
+    The best individual score in the current generation.
 
+``fitness_min``
+    The worst individual score in the current generation.
 
-* Now it creates new sets (generations) of hyperparameters,
-  those are created by combining the last generation with different strategies, those strategies
-  depends on the selected :mod:`~sklearn_genetic.algorithms`.
+These values summarize the population, not just the final selected model. For
+example, if ``population_size=10``, the ``fitness`` value is the average score
+of the 10 candidates evaluated in that generation.
 
-* It repeats steps 2, 3 and 4 until the number of generations is met, or until callbacks stop the process.
-
-* At the end, the algorithm selects the best hyperparameters, as the set that got the best individual
-  cross-validation scoring.
-
-
-Those steps could be represented like this, each line represents one of several possible
-natural processes like mating, crossover, selection and mutation:
+The complete flow can be represented like this:
 
 .. image:: ../images/genetic_cv.png
 
-Inside each set, the cross validation takes place, for example, using the 5-Folds strategy
+Each candidate is evaluated with cross-validation. For example, a 5-fold
+strategy splits the data into five train/validation rotations:
 
 .. image:: ../images/k-folds.png
 
-Image is taken from `scikit-learn <https://scikit-learn.org/stable/modules/cross_validation.html>`_
+Image taken from
+`scikit-learn <https://scikit-learn.org/stable/modules/cross_validation.html>`__.
 
 Example
 -------
 
-This example is going to use a regression problem from the Boston house prices dataset.
-We are going to use a K-Fold with 5 splits taking as evaluation the r-squared metric.
+This example tunes a :class:`~sklearn.tree.DecisionTreeRegressor` inside a
+scikit-learn :class:`~sklearn.pipeline.Pipeline` on the diabetes regression
+dataset. The search uses 5-fold cross-validation and optimizes the ``"r2"``
+metric.
 
-In the end, we are going to print the top 4 solutions and the r-squared
-on the test set for the best set of hyperparameters.
-
+At the end, we print the best hyperparameters and the R-squared score on the
+test set.
 
 .. code:: python3
 
-    from sklearn_genetic import GASearchCV
-    from sklearn_genetic.space import Integer, Categorical, Continuous
     from sklearn.datasets import load_diabetes
-    from sklearn.model_selection import train_test_split, KFold
-    from sklearn.tree import DecisionTreeRegressor
     from sklearn.metrics import r2_score
+    from sklearn.model_selection import KFold, train_test_split
     from sklearn.pipeline import Pipeline
     from sklearn.preprocessing import StandardScaler
+    from sklearn.tree import DecisionTreeRegressor
+
+    from sklearn_genetic import GASearchCV
+    from sklearn_genetic.space import Categorical, Continuous, Integer
 
     data = load_diabetes()
-
-    y = data["target"]
-    X = data["data"]
+    X, y = data["data"], data["target"]
 
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.33, random_state=42)
+        X, y, test_size=0.33, random_state=42
+    )
 
-    cv = KFold(n_splits=5, shuffle=True)
+    cv = KFold(n_splits=5, shuffle=True, random_state=42)
 
-    clf = DecisionTreeRegressor()
-
-    pipe = Pipeline([('scaler', StandardScaler()), ('clf', clf)])
+    pipe = Pipeline(
+        [
+            ("scaler", StandardScaler()),
+            ("clf", DecisionTreeRegressor(random_state=42)),
+        ]
+    )
 
     param_grid = {
         "clf__ccp_alpha": Continuous(0, 1),
@@ -193,7 +223,7 @@ on the test set for the best set of hyperparameters.
 
     evolved_estimator = GASearchCV(
         estimator=pipe,
-        cv=3,
+        cv=cv,
         scoring="r2",
         population_size=15,
         generations=20,
@@ -209,8 +239,9 @@ on the test set for the best set of hyperparameters.
     )
 
     evolved_estimator.fit(X_train, y_train)
+
     y_predict_ga = evolved_estimator.predict(X_test)
     r_squared = r2_score(y_test, y_predict_ga)
 
     print(evolved_estimator.best_params_)
-    print("r-squared: ", "{:.2f}".format(r_squared))
+    print("R-squared:", "{:.2f}".format(r_squared))
