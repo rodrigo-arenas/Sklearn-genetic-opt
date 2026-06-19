@@ -1,231 +1,240 @@
 .. _basic-usage:
 
-How to Use Sklearn-genetic-opt
+How to Use sklearn-genetic-opt
 ==============================
 
 Introduction
 ------------
 
-Sklearn-genetic-opt uses evolutionary algorithms to fine-tune scikit-learn machine learning algorithms
-and perform feature selection.
-It is designed to accept a `scikit-learn <http://scikit-learn.org/stable/index.html>`__
-regression or classification model (or a pipeline containing one of those).
+sklearn-genetic-opt uses evolutionary algorithms to tune scikit-learn
+estimators and select informative features. It works with classification and
+regression estimators, including estimators inside a scikit-learn
+``Pipeline``.
 
-The idea behind this package is to define the set of hyperparameters we want to tune and what are their
-lower and uppers bounds on the values they can take.
-It is possible to define different optimization algorithms, callbacks and build-in parameters to control how
-the optimization is taken.
-To get started, we'll use only the most basic features and options.
+The package follows the familiar scikit-learn search API, but the search space
+is defined differently from :class:`~sklearn.model_selection.GridSearchCV`.
+Instead of listing every candidate value, you define the allowed range or
+choices for each hyperparameter. The optimizer samples candidates from that
+space, evaluates them with cross-validation, and uses evolutionary operators to
+produce new candidates over several generations.
 
-The optimization is made by evolutionary algorithms with the help of the
-`deap package <https://deap.readthedocs.io/en/master/>`__.
-It works by defining the set of hyperparameters to tune, it starts with a randomly sampled set of options (population).
-Then by using evolutionary operators as the mating, mutation, selection and evaluation,
-it generates new candidates looking to improve the cross-validation score in each generation.
-It'll continue with this process until a number of generations is reached or until a callback criterion is met.
+Internally, sklearn-genetic-opt uses the
+`DEAP package <https://deap.readthedocs.io/en/master/>`__. A population is a
+set of candidate solutions. Each candidate is evaluated, selected, crossed over,
+or mutated to create the next generation. The process continues until the
+configured number of generations is reached or a callback stops the search.
 
-Fine-tuning Example
--------------------
+This tutorial covers the two most common workflows:
 
-First let's import some dataset and other scikit-learn standard modules, we'll use
-the `digits dataset <https://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_digits.html>`__.
-This is a classification problem, we'll fine-tune a Random Forest Classifier for this task.
+- Hyperparameter tuning with :class:`~sklearn_genetic.GASearchCV`.
+- Feature selection with :class:`~sklearn_genetic.GAFeatureSelectionCV`.
+
+Hyperparameter Tuning
+---------------------
+
+For the first example, we will tune an
+:class:`~sklearn.neural_network.MLPClassifier` on the
+`digits dataset <https://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_digits.html>`__.
+The digits dataset is a multi-class classification problem.
 
 .. code:: python3
 
     import matplotlib.pyplot as plt
-    from sklearn_genetic import GASearchCV
-    from sklearn_genetic.space import Categorical, Integer, Continuous
-    from sklearn.model_selection import train_test_split, StratifiedKFold
-    from sklearn.neural_network import MLPClassifier
     from sklearn.datasets import load_digits
     from sklearn.metrics import accuracy_score
+    from sklearn.model_selection import StratifiedKFold, train_test_split
+    from sklearn.neural_network import MLPClassifier
 
-Let's first read the data, split it in our training and test set and visualize some of the data points:
+    from sklearn_genetic import GASearchCV
+    from sklearn_genetic.space import Categorical, Continuous, Integer
+
+Load the data, split it into training and test sets, and visualize a few
+examples:
 
 .. code:: python3
 
    data = load_digits()
    n_samples = len(data.images)
    X = data.images.reshape((n_samples, -1))
-   y = data['target']
-   X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
+   y = data["target"]
+
+   X_train, X_test, y_train, y_test = train_test_split(
+       X, y, test_size=0.33, random_state=42
+   )
 
    _, axes = plt.subplots(nrows=1, ncols=4, figsize=(10, 3))
    for ax, image, label in zip(axes, data.images, data.target):
        ax.set_axis_off()
-       ax.imshow(image, cmap=plt.cm.gray_r, interpolation='nearest')
-       ax.set_title('Training: %i' % label)
+       ax.imshow(image, cmap=plt.cm.gray_r, interpolation="nearest")
+       ax.set_title("Training: %i" % label)
 
-We should see something like this:
+The samples should look like this:
 
 .. image:: ../images/basic_usage_digits_0.png
 
-Now, we must define our param_grid, similar to scikit-learn, which is a dictionary with the model's hyperparameters.
-The main difference with for example scikit-learn's GridSearchCV,
-is that we don't pre-define the values to use in the search,
-but rather, the boundaries of each parameter.
+Next, define the hyperparameter search space. The keys in ``param_grid`` must
+match valid estimator parameters. The values are search-space dimensions:
 
-So if we have a parameter named *'n_estimators'* we'll only tell to sklearn-genetic-opt, that is an integer value,
-and that we want to set a lower boundary of 100 and an upper boundary of 500, so the optimizer will set a value in this range.
-We must do this with all the hyperparameters we want to tune, like this:
-
-.. code:: python3
-
-    # this library even performs well on weird ranges
-    # adjust this to better ranges for better results
-    param_grid = {'tol': Continuous(1e-2, 1e10, distribution='log-uniform'),
-                  'alpha': Continuous(1e-5, 2e-5),
-                  'activation': Categorical(['logistic', 'tanh']),
-                  'batch_size': Integer(300, 350)
-                 }
-
-Notice that in the case of *'boostrap'*, as it is a categorical variable, we do must define all its possible values.
-As well, in the 'min_weight_fraction_leaf', we used an additional parameter named distribution,
-this is useful to tell the optimizer from which data distribution it can sample some random values during the optimization.
-
-Now, we are ready to set the GASearchCV, its the object that will allow us to run the fitting process using evolutionary algorithms
-It has several options that we can use, for this first example, we'll keep it very simple:
+- :class:`~sklearn_genetic.space.Integer` samples integer values from a range.
+- :class:`~sklearn_genetic.space.Continuous` samples floating-point values from
+  a range.
+- :class:`~sklearn_genetic.space.Categorical` samples from a fixed list of
+  choices.
 
 .. code:: python3
 
-    # The base classifier to tune
+    param_grid = {
+        "tol": Continuous(1e-2, 1e10, distribution="log-uniform"),
+        "alpha": Continuous(1e-5, 2e-5),
+        "activation": Categorical(["logistic", "tanh"]),
+        "batch_size": Integer(300, 350),
+    }
+
+For example, ``batch_size`` can take any integer value from 300 to 350, while
+``activation`` must be either ``"logistic"`` or ``"tanh"``. The
+``distribution`` argument controls how random values are sampled from a
+dimension. A log-uniform distribution is useful when a parameter spans several
+orders of magnitude.
+
+Now create the estimator and the cross-validation strategy:
+
+.. code:: python3
+
     clf = MLPClassifier(hidden_layer_sizes=(50, 30))
 
-    # Our cross-validation strategy (it could be just an int)
-    cv = StratifiedKFold(n_splits=3, shuffle=True)
+    cv = StratifiedKFold(n_splits=3, shuffle=True, random_state=42)
 
-    # The main class from sklearn-genetic-opt
-    evolved_estimator = GASearchCV(estimator=clf,
-                                  cv=cv,
-                                  scoring='accuracy',
-                                  param_grid=param_grid,
-                                  n_jobs=-1,
-                                  verbose=True,
-                                  population_size=10,
-                                  generations=20)
+    evolved_estimator = GASearchCV(
+        estimator=clf,
+        cv=cv,
+        scoring="accuracy",
+        param_grid=param_grid,
+        n_jobs=-1,
+        verbose=True,
+        population_size=10,
+        generations=20,
+    )
 
-So now the setup is ready, note that are other parameters that can be specified in GASearchCV,
-the ones we used, are equivalents to the meaning in scikit-learn, besides the one already explained,
-is worth mentioning that the "metric" is going to be used as the optimization variable,
-so the algorithm will try to find the set of parameters that maximizes this metric.
+Most arguments have the same meaning as in scikit-learn search estimators:
+``cv`` controls the validation strategy, ``scoring`` controls the metric, and
+``n_jobs`` controls parallel execution. The genetic-search-specific arguments
+``population_size`` and ``generations`` determine how many candidate solutions
+are explored.
 
-We are ready to run the optimization routine:
+Run the optimization:
 
 .. code:: python3
 
-    # Train and optimize the estimator
-   evolved_estimator.fit(X_train, y_train)
+    evolved_estimator.fit(X_train, y_train)
 
-
-During the training process, you should see a log like this:
+During training, you should see a generation-by-generation log:
 
 .. image:: ../images/basic_usage_train_log_1.jpeg
 
-This log, shows us the metrics obtained in each iteration (generation), this is what each entry means:
+Each row summarizes one generation:
 
-* **gen:** The number of the generation
-* **nevals:** How many individuals are there in this generation
-* **fitness:** The average score metric in the cross-validation (validation set).
-  In this case, the average accuracy across the folds of all the hyperparameters sets.
-* **fitness_std:** The standard deviation of the cross-validations accuracy.
-* **fitness_max:** The maximum individual score of all the models in this generation.
-* **fitness_min:** The minimum individual score of all the models in this generation.
+* **gen:** generation number.
+* **nevals:** number of evaluated individuals in the generation.
+* **fitness:** average cross-validation score for the generation.
+* **fitness_std:** standard deviation of the cross-validation scores.
+* **fitness_max:** best individual score in the generation.
+* **fitness_min:** worst individual score in the generation.
 
-After fitting the model, we have some extra methods to use the model right away.
-It will use by default the best set of hyperparameters it found, based on the cross-validation score:
+After fitting, ``GASearchCV`` behaves like a fitted scikit-learn estimator. It
+uses the best hyperparameters found during the search:
 
 .. code:: python3
 
-    # Best parameters found
     print(evolved_estimator.best_params_)
-    # Use the model fitted with the best parameters
+
     y_predict_ga = evolved_estimator.predict(X_test)
     print(accuracy_score(y_test, y_predict_ga))
 
-In this case, we got an accuracy score in the test set of 0.96
+In this run, the test accuracy was approximately 0.96.
 
 .. code:: python3
+
     y_predict_ga = evolved_estimator.predict(X_test)
     accuracy_score(y_test, y_predict_ga)
 
 .. image:: ../images/basic_usage_accuracy_2.jpeg
 
 .. code:: python3
+
     evolved_estimator.best_params_
 
 .. image:: ../images/basic_usage_params_0.jpeg
 
-Now, let's use a couple more functions available in the package.
-The first one will help us to see the evolution of our metric over the generations
+You can also inspect the optimization process. The
+:func:`~sklearn_genetic.plots.plot_fitness_evolution` helper shows how the
+fitness score changed over generations:
 
 .. code:: python3
 
     from sklearn_genetic.plots import plot_fitness_evolution
+
     plot_fitness_evolution(evolved_estimator)
     plt.show()
 
 .. image:: ../images/basic_usage_fitness_plot_3.png
 
-At last, we can check the property called ``evolved_estimator.logbook``,
-this is a DEAP's logbook which stores all the results of every individual fitted model.
-sklearn-genetic-opt comes with a plot function to analyze this log:
+The ``evolved_estimator.logbook`` attribute stores the results generated during
+the search. You can use :func:`~sklearn_genetic.plots.plot_search_space` to see
+which hyperparameter values were sampled:
 
 .. code:: python3
 
     from sklearn_genetic.plots import plot_search_space
-    plot_search_space(evolved_estimator, features=['tol', 'batch_size', 'alpha'])
+
+    plot_search_space(evolved_estimator, features=["tol", "batch_size", "alpha"])
     plt.show()
 
 .. image:: ../images/basic_usage_plot_space_4.png
 
-What this plot shows us, is the distribution of the sampled values for each hyperparameter.
-We can see for example in the *'tol'* that the algorithm mostly sampled very small values
-(this range would have to be adjusted in a second iteration). You can also check every single
-combination of variables and the contour plot that represents the sampled values.
+In this plot, each axis represents a sampled hyperparameter value. For example,
+the ``tol`` range is intentionally broad in this tutorial, and the plot can help
+you decide whether to narrow that range in a second search.
 
+Feature Selection
+-----------------
 
-Feature Selection Example
--------------------------
-
-For this example, we are going to use the well-known Iris dataset, it's a classification problem with four features.
-We are also going to simulate some random noise to represent non-important features:
+For the second example, we will use the Iris dataset and add random noise
+features. The goal is to recover a useful subset of features while ignoring the
+noise.
 
 .. code:: python3
 
     import matplotlib.pyplot as plt
-    from sklearn_genetic import GAFeatureSelectionCV
-    from sklearn_genetic.plots import plot_fitness_evolution
-    from sklearn.model_selection import train_test_split, StratifiedKFold
-    from sklearn.svm import SVC
+    import numpy as np
     from sklearn.datasets import load_iris
     from sklearn.metrics import accuracy_score
-    import numpy as np
+    from sklearn.model_selection import train_test_split
+    from sklearn.svm import SVC
+
+    from sklearn_genetic import GAFeatureSelectionCV
+    from sklearn_genetic.plots import plot_fitness_evolution
 
     data = load_iris()
     X, y = data["data"], data["target"]
 
     noise = np.random.uniform(0, 10, size=(X.shape[0], 10))
-
     X = np.hstack((X, noise))
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=0)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.33, random_state=0
+    )
 
-This should give us 10 extra noisy features with our train and test set.
+The resulting dataset contains the original Iris features plus 10 noisy
+features.
 
-Now we can create the GAFeatureSelectionCV object, it's very similar to the GASearchCV and they share
-most of the parameters, the main difference is GAFeatureSelectionCV doesn't run hyperparameters optimization
-thus the param_grid parameter it's not available, and the estimator should be defined with its hyperparameters.
-
-The way the feature selection is performed is by creating models with a subsample of features
-and evaluate its cv-score, the way the subsets are created is by using the available evolutionary algorithms.
-It also tries to minimize the number of selected features, so it's a multi-objective optimization.
-
-Let's create the feature selection object, the estimator we're going to use is a SVM:
+``GAFeatureSelectionCV`` is similar to ``GASearchCV``, but it does not optimize
+hyperparameters. Instead, it evaluates subsets of columns and tries to maximize
+the cross-validation score while selecting a compact feature set. The estimator
+should already be configured with the hyperparameters you want to use.
 
 .. code:: python3
 
-    clf = SVC(gamma='auto')
+    clf = SVC(gamma="auto")
 
     evolved_estimator = GAFeatureSelectionCV(
         estimator=clf,
@@ -239,50 +248,45 @@ Let's create the feature selection object, the estimator we're going to use is a
         elitism=True,
     )
 
-We are ready to run the optimization routine:
+Run the feature-selection search:
 
 .. code:: python3
 
-    # Train and select the features
     evolved_estimator.fit(X_train, y_train)
 
-During the training, the same log format is displayed as before:
+During training, the same log format is displayed:
 
 .. image:: ../images/basic_usage_train_log_5.PNG
 
-After fitting the model, we have some extra methods to use the model right away. It will use by default the best set of
-features it found, remember as the algorithm used only a subset, once you use method as `predict`, `predict_proba`,etc
-only the ``support_`` features will be used on those methods
+After fitting, ``GAFeatureSelectionCV`` also behaves like a scikit-learn
+estimator. Prediction methods such as ``predict`` and ``predict_proba`` use only
+the selected columns.
 
 .. code:: python3
 
-    features = evolved_estimator.support_ 
+    features = evolved_estimator.support_
 
-    # Predict only with the subset of selected features
     y_predict_ga = evolved_estimator.predict(X_test)
     accuracy = accuracy_score(y_test, y_predict_ga)
 
 .. image:: ../images/basic_usage_accuracy_6.PNG
 
-In this case, we got an accuracy score in the test set of 0.98.
+In this run, the test accuracy was approximately 0.98.
 
-Notice that the ``support_`` is a vector of bool values, each
-position represents the index of the feature (column) and the value indicates
-if that features was selected (True) or not (False) by the algorithm.
-In this example, the algorithm, discarded all the noisy random variables we created
-and selected the original variables.
+The ``support_`` attribute is a boolean mask. Each position corresponds to a
+column in the input data: ``True`` means the feature was selected, and ``False``
+means it was discarded. In this example, the optimizer selected the informative
+Iris features and ignored the random noise features.
 
-We can also plot the fitness evolution:
+You can plot the fitness evolution for the feature-selection search too:
 
 .. code:: python3
 
-    from sklearn_genetic.plots import plot_fitness_evolution
     plot_fitness_evolution(evolved_estimator)
     plt.show()
 
 .. image:: ../images/basic_usage_fitness_plot_7.PNG
 
-This concludes our introduction to the basic sklearn-genetic-opt usage.
-Further tutorials will cover the GASearchCV and GAFeatureSelectionCV parameters, callbacks,
-different optimization algorithms and more advanced use cases.
-
+This concludes the basic sklearn-genetic-opt workflow. The next tutorials cover
+callbacks, custom callbacks, schedulers, reproducibility, MLflow integration,
+outlier detection, and cross-validation behavior in more detail.
