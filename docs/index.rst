@@ -69,6 +69,7 @@ This command will install all the extra requirements::
    tutorials/custom_callback
    tutorials/adapters
    tutorials/understand_cv
+   tutorials/advanced_optimizer_control
    tutorials/mlflow
    tutorials/outliers
    tutorials/reproducibility

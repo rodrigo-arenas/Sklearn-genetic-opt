@@ -94,10 +94,12 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
     cv : int, cross-validation generator or an iterable, default=None
         Determines the cross-validation splitting strategy.
         Possible inputs for cv are:
+
         - None, to use the default 5-fold cross validation,
         - int, to specify the number of folds in a `(Stratified)KFold`,
         - CV splitter,
         - An iterable yielding (train, test) splits as arrays of indices.
+
         For int/None inputs, if the estimator is a classifier and ``y`` is
         either binary or multiclass, :class:`StratifiedKFold` is used. In all
         other cases, :class:`KFold` is used. These splitters are instantiated
@@ -144,6 +146,7 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
 
         - a single string;
         - a callable that returns a single value.
+
         If `scoring` represents multiple scores, one can use:
 
         - a list or tuple of unique strings;
@@ -248,15 +251,9 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         Controls the number of jobs that get dispatched during parallel
         execution. Reducing this number can be useful to avoid an
         explosion of memory consumption when more jobs get dispatched
-        than CPUs can process. This parameter can be:
-            - None, in which case all the jobs are immediately
-              created and spawned. Use this for lightweight and
-              fast-running jobs, to avoid delays due to on-demand
-              spawning of the jobs
-            - An int, giving the exact number of total jobs that are
-              spawned
-            - A str, giving an expression as a function of n_jobs,
-              as in '2*n_jobs'
+        than CPUs can process. This parameter can be ``None`` to dispatch all
+        jobs immediately, an integer number of total jobs to spawn, or a string
+        expression as a function of ``n_jobs``, such as ``'2*n_jobs'``.
 
     error_score : 'raise' or numeric, default=np.nan
         Value to assign to the score if an error occurs in estimator fitting.
@@ -286,31 +283,10 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
     logbook : :class:`DEAP.tools.Logbook`
         Contains the logs of every set of hyperparameters fitted with its average scoring metric.
     history : dict
-        Dictionary of the form:
-        {"gen": [],
-        "fitness": [],
-        "fitness_std": [],
-        "fitness_max": [],
-        "fitness_min": [],
-        "population_size": [],
-        "unique_individuals": [],
-        "unique_individual_ratio": [],
-        "genotype_diversity": [],
-        "fitness_improvement": [],
-        "fitness_improved": [],
-        "stagnation_generations": [],
-        "best_generation": [],
-        "mutation_probability": [],
-        "diversity_control_triggered": [],
-        "random_immigrants": [],
-        "duplicate_replacements": [],
-        "local_refinements": [],
-        "fitness_sharing_applied": [],
-        "mean_niche_count": [],
-        "max_niche_count": []}
-
-         *gen* returns the index of the evaluated generations.
-         Each entry on the others lists, represent the average metric in each generation.
+        Dictionary with one list per generation. It includes ``gen``,
+        ``fitness``, ``fitness_std``, ``fitness_max``, ``fitness_min``,
+        population diversity fields, stagnation fields, optimizer-control
+        telemetry, and local-refinement telemetry.
 
     cv_results_ : dict of numpy (masked) ndarrays
         A dict with keys as column headers and values as columns, that can be
@@ -870,10 +846,12 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
     cv : int, cross-validation generator or an iterable, default=None
         Determines the cross-validation splitting strategy.
         Possible inputs for cv are:
+
         - None, to use the default 5-fold cross validation,
         - int, to specify the number of folds in a `(Stratified)KFold`,
         - CV splitter,
         - An iterable yielding (train, test) splits as arrays of indices.
+
         For int/None inputs, if the estimator is a classifier and ``y`` is
         either binary or multiclass, :class:`StratifiedKFold` is used. In all
         other cases, :class:`KFold` is used. These splitters are instantiated
@@ -957,6 +935,7 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
 
         - a single string;
         - a callable that returns a single value.
+
         If `scoring` represents multiple scores, one can use:
 
         - a list or tuple of unique strings;
@@ -1008,15 +987,9 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         Controls the number of jobs that get dispatched during parallel
         execution. Reducing this number can be useful to avoid an
         explosion of memory consumption when more jobs get dispatched
-        than CPUs can process. This parameter can be:
-            - None, in which case all the jobs are immediately
-              created and spawned. Use this for lightweight and
-              fast-running jobs, to avoid delays due to on-demand
-              spawning of the jobs
-            - An int, giving the exact number of total jobs that are
-              spawned
-            - A str, giving an expression as a function of n_jobs,
-              as in '2*n_jobs'
+        than CPUs can process. This parameter can be ``None`` to dispatch all
+        jobs immediately, an integer number of total jobs to spawn, or a string
+        expression as a function of ``n_jobs``, such as ``'2*n_jobs'``.
 
     error_score : 'raise' or numeric, default=np.nan
         Value to assign to the score if an error occurs in estimator fitting.
@@ -1046,31 +1019,10 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
     logbook : :class:`DEAP.tools.Logbook`
         Contains the logs of every set of hyperparameters fitted with its average scoring metric.
     history : dict
-        Dictionary of the form:
-        {"gen": [],
-        "fitness": [],
-        "fitness_std": [],
-        "fitness_max": [],
-        "fitness_min": [],
-        "population_size": [],
-        "unique_individuals": [],
-        "unique_individual_ratio": [],
-        "genotype_diversity": [],
-        "fitness_improvement": [],
-        "fitness_improved": [],
-        "stagnation_generations": [],
-        "best_generation": [],
-        "mutation_probability": [],
-        "diversity_control_triggered": [],
-        "random_immigrants": [],
-        "duplicate_replacements": [],
-        "local_refinements": [],
-        "fitness_sharing_applied": [],
-        "mean_niche_count": [],
-        "max_niche_count": []}
-
-         *gen* returns the index of the evaluated generations.
-         Each entry on the others lists, represent the average metric in each generation.
+        Dictionary with one list per generation. It includes ``gen``,
+        ``fitness``, ``fitness_std``, ``fitness_max``, ``fitness_min``,
+        population diversity fields, stagnation fields, optimizer-control
+        telemetry, and local-refinement telemetry.
 
     cv_results_ : dict of numpy (masked) ndarrays
         A dict with keys as column headers and values as columns, that can be
