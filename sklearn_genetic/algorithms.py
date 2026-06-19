@@ -5,6 +5,13 @@ from deap.algorithms import varAnd, varOr
 from .callbacks.validations import eval_callbacks
 
 
+def _evaluate_invalid_individuals(toolbox, invalid_individuals):
+    if hasattr(toolbox, "evaluate_population"):
+        return toolbox.evaluate_population(invalid_individuals)
+
+    return toolbox.map(toolbox.evaluate, invalid_individuals)
+
+
 def eaSimple(
     population,
     toolbox,
@@ -82,7 +89,7 @@ def eaSimple(
 
     # Evaluate the individuals with an invalid fitness
     invalid_ind = [ind for ind in population if not ind.fitness.valid]
-    fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
+    fitnesses = _evaluate_invalid_individuals(toolbox, invalid_ind)
     for ind, fit in zip(invalid_ind, fitnesses):
         ind.fitness.values = fit
 
@@ -134,7 +141,7 @@ def eaSimple(
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-            fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
+            fitnesses = _evaluate_invalid_individuals(toolbox, invalid_ind)
             for ind, fit in zip(invalid_ind, fitnesses):
                 ind.fitness.values = fit
 
@@ -276,7 +283,7 @@ def eaMuPlusLambda(
 
     # Evaluate the individuals with an invalid fitness
     invalid_ind = [ind for ind in population if not ind.fitness.valid]
-    fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
+    fitnesses = _evaluate_invalid_individuals(toolbox, invalid_ind)
     for ind, fit in zip(invalid_ind, fitnesses):
         ind.fitness.values = fit
 
@@ -323,7 +330,7 @@ def eaMuPlusLambda(
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-            fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
+            fitnesses = _evaluate_invalid_individuals(toolbox, invalid_ind)
             for ind, fit in zip(invalid_ind, fitnesses):
                 ind.fitness.values = fit
 
@@ -462,7 +469,7 @@ def eaMuCommaLambda(
 
     # Evaluate the individuals with an invalid fitness
     invalid_ind = [ind for ind in population if not ind.fitness.valid]
-    fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
+    fitnesses = _evaluate_invalid_individuals(toolbox, invalid_ind)
     for ind, fit in zip(invalid_ind, fitnesses):
         ind.fitness.values = fit
 
@@ -511,7 +518,7 @@ def eaMuCommaLambda(
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-            fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
+            fitnesses = _evaluate_invalid_individuals(toolbox, invalid_ind)
             for ind, fit in zip(invalid_ind, fitnesses):
                 ind.fitness.values = fit
 

@@ -385,6 +385,7 @@ class GASearchCV(BaseSearchCV):
             self.toolbox.register("select", tools.selRoulette)
 
         self.toolbox.register("evaluate", self.evaluate)
+        self.toolbox.register("evaluate_population", self.evaluate_population)
 
         self._pop = self._initialize_population()
         self._hof = tools.HallOfFame(self.keep_top_k)
@@ -444,6 +445,32 @@ class GASearchCV(BaseSearchCV):
 
         return [individual]
 
+    def _individual_key(self, individual):
+        current_generation_params = {
+            key: individual[n] for n, key in enumerate(self.space.parameters)
+        }
+        return tuple(sorted(current_generation_params.items()))
+
+    def evaluate_population(self, individuals):
+        generation_cache = {}
+        fitnesses = []
+
+        for individual in individuals:
+            individual_key = self._individual_key(individual)
+
+            if self.use_cache and individual_key in generation_cache:
+                cached_result = self.fitness_cache[individual_key]
+                self.logbook.record(parameters=cached_result["current_generation_params"])
+                fitness = generation_cache[individual_key]
+            else:
+                fitness = self.evaluate(individual)
+                if self.use_cache:
+                    generation_cache[individual_key] = fitness
+
+            fitnesses.append(fitness)
+
+        return fitnesses
+
     def evaluate(self, individual):
         """
         Compute the cross-validation scores and record the logbook and mlflow (if specified)
@@ -463,7 +490,7 @@ class GASearchCV(BaseSearchCV):
         }
 
         # Convert hyperparameters to a tuple to use as a key in the cache
-        individual_key = tuple(sorted(current_generation_params.items()))
+        individual_key = self._individual_key(individual)
 
         # Check if the individual has already been evaluated
         if individual_key in self.fitness_cache and self.use_cache:
@@ -481,7 +508,7 @@ class GASearchCV(BaseSearchCV):
             local_estimator,
             self.X_,
             self.y_,
-            cv=self.cv,
+            cv=self._cv_splits,
             scoring=self.scorer_,
             n_jobs=self.n_jobs,
             pre_dispatch=self.pre_dispatch,
@@ -613,6 +640,7 @@ class GASearchCV(BaseSearchCV):
         else:
             cv_orig = check_cv(self.cv, self.y_, classifier=_is_classifier(self.estimator))
             self.n_splits_ = cv_orig.get_n_splits(X, self.y_)
+        self._cv_splits = list(cv_orig.split(self.X_, self.y_))
 
         # Set the DEAPs necessary methods
         self._register()
@@ -1093,6 +1121,7 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
             self.toolbox.register("select", tools.selRoulette)
 
         self.toolbox.register("evaluate", self.evaluate)
+        self.toolbox.register("evaluate_population", self.evaluate_population)
 
         self._pop = self.toolbox.population(n=self.population_size)
         self._hof = tools.HallOfFame(self.keep_top_k)
@@ -1106,6 +1135,65 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         self._stats.register("fitness_min", np.min, axis=0)
 
         self.logbook = tools.Logbook()
+
+    def _individual_key(self, individual):
+        return tuple(individual)
+
+    def evaluate_population(self, individuals):
+        generation_cache = {}
+        fitnesses = []
+
+        for individual in individuals:
+            individual_key = self._individual_key(individual)
+
+            if self.use_cache and individual_key in generation_cache:
+                cached_result = self.fitness_cache[individual_key]
+                self.logbook.record(parameters=cached_result["current_generation_features"])
+                fitness = generation_cache[individual_key]
+            else:
+                fitness = self.evaluate(individual)
+                if self.use_cache:
+                    generation_cache[individual_key] = fitness
+
+            fitnesses.append(fitness)
+
+        return fitnesses
+
+    def _record_feature_evaluation(self, current_generation_params, cv_results):
+        cv_scores = cv_results[f"test_{self.refit_metric}"]
+        score = np.mean(cv_scores)
+
+        current_generation_params["score"] = score
+        current_generation_params["cv_scores"] = cv_scores
+        current_generation_params["fit_time"] = cv_results["fit_time"]
+        current_generation_params["score_time"] = cv_results["score_time"]
+
+        for metric in self.metrics_list:
+            current_generation_params[f"test_{metric}"] = cv_results[f"test_{metric}"]
+
+            if self.return_train_score:
+                current_generation_params[f"train_{metric}"] = cv_results[f"train_{metric}"]
+
+        index = len(self.logbook.chapters["parameters"])
+        current_generation_params = {"index": index, **current_generation_params}
+
+        self.logbook.record(parameters=current_generation_params)
+
+        return score, current_generation_params
+
+    def _penalized_feature_cv_results(self, score):
+        cv_results = {
+            "fit_time": np.zeros(self.n_splits_),
+            "score_time": np.zeros(self.n_splits_),
+        }
+
+        for metric in self.metrics_list:
+            cv_results[f"test_{metric}"] = np.full(self.n_splits_, score)
+
+            if self.return_train_score:
+                cv_results[f"train_{metric}"] = np.full(self.n_splits_, score)
+
+        return cv_results
 
     def evaluate(self, individual):
         """
@@ -1128,11 +1216,10 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
 
         current_generation_params = {"features": bool_individual}
 
-        local_estimator = clone(self.estimator)
         n_selected_features = np.sum(individual)
 
         # Convert the individual to a tuple to use as a key in the cache
-        individual_key = tuple(individual)
+        individual_key = self._individual_key(individual)
 
         # Check if the individual has already been evaluated
         if individual_key in self.fitness_cache and self.use_cache:
@@ -1141,12 +1228,33 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
             self.logbook.record(parameters=cached_result["current_generation_features"])
             return cached_result["fitness"]
 
+        if self.max_features and (
+            n_selected_features > self.max_features or n_selected_features == 0
+        ):
+            score = -self.criteria_sign * 100000
+            cv_results = self._penalized_feature_cv_results(score)
+            _, current_generation_params = self._record_feature_evaluation(
+                current_generation_params, cv_results
+            )
+
+            fitness_result = [score, n_selected_features]
+
+            if self.use_cache:
+                self.fitness_cache[individual_key] = {
+                    "fitness": fitness_result,
+                    "current_generation_features": current_generation_params,
+                }
+
+            return fitness_result
+
+        local_estimator = clone(self.estimator)
+
         # Use standard cross_validate for all estimator types
         cv_results = cross_validate(
             local_estimator,
             self.X_[:, bool_individual],
             self.y_,
-            cv=self.cv,
+            cv=self._cv_splits,
             scoring=self.scorer_,
             n_jobs=self.n_jobs,
             pre_dispatch=self.pre_dispatch,
@@ -1154,8 +1262,9 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
             return_train_score=self.return_train_score,
         )
 
-        cv_scores = cv_results[f"test_{self.refit_metric}"]
-        score = np.mean(cv_scores)
+        score, current_generation_params = self._record_feature_evaluation(
+            current_generation_params, cv_results
+        )
 
         # Uses the log config to save in remote log server (e.g MLflow)
         if self.log_config is not None:
@@ -1165,32 +1274,6 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
                 estimator=local_estimator,
             )
 
-        # These values are used to compute cv_results_ property
-        current_generation_params["score"] = score
-        current_generation_params["cv_scores"] = cv_scores
-        current_generation_params["fit_time"] = cv_results["fit_time"]
-        current_generation_params["score_time"] = cv_results["score_time"]
-
-        for metric in self.metrics_list:
-            current_generation_params[f"test_{metric}"] = cv_results[f"test_{metric}"]
-
-            if self.return_train_score:
-                current_generation_params[f"train_{metric}"] = cv_results[f"train_{metric}"]
-
-        index = len(self.logbook.chapters["parameters"])
-        current_generation_params = {"index": index, **current_generation_params}
-
-        # Log the features and the cv-score
-        self.logbook.record(parameters=current_generation_params)
-
-        # Penalize individuals with more features than the max_features parameter
-
-        if self.max_features and (
-            n_selected_features > self.max_features or n_selected_features == 0
-        ):
-            score = -self.criteria_sign * 100000
-
-            # Prepare the fitness result
         fitness_result = [score, n_selected_features]
 
         if self.use_cache:
@@ -1287,6 +1370,7 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         else:
             cv_orig = check_cv(self.cv, self.y_, classifier=_is_classifier(self.estimator))
             self.n_splits_ = cv_orig.get_n_splits(X, self.y_)
+        self._cv_splits = list(cv_orig.split(self.X_, self.y_))
 
         # Set the DEAPs necessary methods
         self._register()

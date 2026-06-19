@@ -1,4 +1,5 @@
 import pytest
+from deap import tools
 from sklearn.datasets import load_iris, load_diabetes
 from sklearn.linear_model import SGDClassifier
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
@@ -10,6 +11,7 @@ from sklearn.metrics import make_scorer
 import numpy as np
 
 from .. import GAFeatureSelectionCV
+from .. import genetic_search
 from ..callbacks import (
     ThresholdStopping,
     DeltaThreshold,
@@ -41,6 +43,37 @@ def test_default_n_jobs_is_none():
 
     assert estimator.n_jobs is None
     assert estimator.get_params()["n_jobs"] is None
+
+
+def test_invalid_max_features_individual_skips_cross_validation(monkeypatch):
+    def fail_cross_validate(*args, **kwargs):
+        raise AssertionError("invalid feature masks should not be cross-validated")
+
+    monkeypatch.setattr(genetic_search, "cross_validate", fail_cross_validate)
+
+    estimator = GAFeatureSelectionCV(
+        DecisionTreeClassifier(),
+        cv=3,
+        scoring="accuracy",
+        max_features=1,
+        verbose=False,
+        return_train_score=True,
+    )
+    estimator.X_ = X_train[:6]
+    estimator.y_ = y_train[:6]
+    estimator.n_splits_ = 3
+    estimator.refit_metric = "score"
+    estimator.metrics_list = ["score"]
+    estimator.logbook = tools.Logbook()
+
+    fitness = estimator.evaluate([1, 1])
+    parameters = estimator.logbook.chapters["parameters"][0]
+
+    assert fitness == [-100000, 2]
+    assert np.array_equal(parameters["cv_scores"], np.full(3, -100000))
+    assert np.array_equal(parameters["fit_time"], np.zeros(3))
+    assert np.array_equal(parameters["score_time"], np.zeros(3))
+    assert np.array_equal(parameters["train_score"], np.full(3, -100000))
 
 
 def test_expected_ga_results():

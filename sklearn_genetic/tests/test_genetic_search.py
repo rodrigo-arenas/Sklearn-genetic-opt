@@ -1,4 +1,5 @@
 import pytest
+from deap import tools
 from sklearn.datasets import load_digits, load_diabetes
 from sklearn.linear_model import SGDClassifier
 from sklearn.tree import DecisionTreeClassifier
@@ -14,6 +15,7 @@ import os
 
 from .. import GASearchCV
 from ..space import Integer, Categorical, Continuous
+from .. import genetic_search
 from ..callbacks import (
     ThresholdStopping,
     DeltaThreshold,
@@ -47,6 +49,47 @@ def test_default_n_jobs_is_none():
 
     assert estimator.n_jobs is None
     assert estimator.get_params()["n_jobs"] is None
+
+
+def test_evaluate_population_reuses_duplicate_individual_cache(monkeypatch):
+    calls = []
+    cv_splits = [(np.array([0, 1]), np.array([2, 3])), (np.array([2, 3]), np.array([0, 1]))]
+
+    def fake_cross_validate(*args, **kwargs):
+        calls.append(kwargs)
+        assert kwargs["cv"] is cv_splits
+        return {
+            "test_score": np.array([0.8, 0.9]),
+            "train_score": np.array([0.9, 1.0]),
+            "fit_time": np.array([0.0, 0.0]),
+            "score_time": np.array([0.0, 0.0]),
+        }
+
+    monkeypatch.setattr(genetic_search, "cross_validate", fake_cross_validate)
+
+    estimator = GASearchCV(
+        DecisionTreeClassifier(),
+        cv=2,
+        scoring="accuracy",
+        population_size=2,
+        generations=1,
+        param_grid={"max_depth": Integer(1, 3)},
+        verbose=False,
+    )
+    estimator.X_ = X_train[:4]
+    estimator.y_ = y_train[:4]
+    estimator._cv_splits = cv_splits
+    estimator.refit_metric = "score"
+    estimator.metrics_list = ["score"]
+    estimator.scorer_ = "accuracy"
+    estimator.logbook = tools.Logbook()
+    estimator._pop = []
+
+    fitnesses = estimator.evaluate_population([[2], [2]])
+
+    assert len(calls) == 1
+    assert fitnesses[0] == fitnesses[1]
+    assert len(estimator.logbook.chapters["parameters"]) == 2
 
 
 def test_expected_ga_results():
