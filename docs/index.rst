@@ -26,14 +26,15 @@ inside the env use::
 
    pip install sklearn-genetic-opt
 
-.. |PythonMinVersion| replace:: 3.9
-.. |ScikitLearnMinVersion| replace:: 1.5.0
-.. |NumPyMinVersion| replace:: 1.26.1
-.. |SeabornMinVersion| replace:: 0.11.2
-.. |DEAPMinVersion| replace:: 1.3.3
-.. |MLflowMinVersion| replace:: 2.20.0
-.. |TensorflowMinVersion| replace:: 2.17.1
-.. |tqdmMinVersion| replace:: 4.61.1
+.. |PythonMinVersion| replace:: 3.12
+.. |ScikitLearnMinVersion| replace:: 1.9.0
+.. |NumPyMinVersion| replace:: 2.4.6
+.. |SeabornMinVersion| replace:: 0.13.2
+.. |DEAPMinVersion| replace:: 1.4.4
+.. |MLflowMinVersion| replace:: 3.14.0
+.. |TensorflowMinVersion| replace:: 2.21.0
+.. |TensorBoardMinVersion| replace:: 2.20.0
+.. |tqdmMinVersion| replace:: 4.68.3
 
 sklearn-genetic-opt requires:
 
@@ -51,7 +52,8 @@ and :class:`~sklearn_genetic.callbacks.TensorBoard` correspondingly.
 
 - Seaborn (>= |SeabornMinVersion|)
 - MLflow (>= |MLflowMinVersion|)
-- Tensorflow (>= |TensorflowMinVersion|)
+- TensorFlow (>= |TensorflowMinVersion|, available for Python < 3.14)
+- TensorBoard (>= |TensorBoardMinVersion|, < 2.21.0, available for Python < 3.14)
 
 This command will install all the extra requirements::
 

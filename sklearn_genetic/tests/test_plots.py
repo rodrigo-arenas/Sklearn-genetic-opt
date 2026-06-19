@@ -1,7 +1,10 @@
 import pytest
+import matplotlib
 from sklearn.datasets import load_diabetes
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeRegressor
+
+matplotlib.use("Agg")
 
 from .. import GASearchCV, GAFeatureSelectionCV
 from ..plots import plot_fitness_evolution, plot_search_space
@@ -56,6 +59,10 @@ def test_plot_space():
     plot = plot_search_space(
         evolved_estimator, features=["ccp_alpha", "max_depth", "min_samples_split"]
     )
+
+
+def test_plot_space_defaults_to_numeric_parameters():
+    plot = plot_search_space(evolved_estimator)
 
 
 def test_wrong_estimator_space():

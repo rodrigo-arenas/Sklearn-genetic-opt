@@ -1,0 +1,159 @@
+from types import SimpleNamespace
+
+import pytest
+from sklearn.exceptions import NotFittedError
+from sklearn.tree import DecisionTreeClassifier
+
+from ..callbacks.model_checkpoint import ModelCheckpoint
+from ..genetic_search import GAFeatureSelectionCV, GASearchCV, _safe_estimator_check
+from ..space import Integer, Space
+
+
+def test_safe_estimator_check_returns_false_for_attribute_errors():
+    def check(_estimator):
+        raise AttributeError("missing estimator tag")
+
+    assert _safe_estimator_check(check, DecisionTreeClassifier()) is False
+
+
+def test_space_sample_warm_start_fills_missing_parameters():
+    space = Space({"provided": Integer(1, 1), "sampled": Integer(2, 2)})
+
+    sampled_params = space.sample_warm_start({"provided": 10})
+
+    assert sampled_params == {"provided": 10, "sampled": 2}
+
+
+def test_ga_search_save_and_load_round_trip(tmp_path, capsys):
+    search = GASearchCV(
+        estimator=DecisionTreeClassifier(),
+        param_grid={"max_depth": Integer(1, 2)},
+        cv=2,
+        scoring="accuracy",
+    )
+    search.extra_state = "persisted"
+    search.logbook = [{"generation": 0}]
+    checkpoint_path = tmp_path / "ga_search.pkl"
+
+    search.save(checkpoint_path)
+
+    restored = GASearchCV(
+        estimator=DecisionTreeClassifier(),
+        param_grid={"max_depth": Integer(1, 2)},
+        cv=2,
+        scoring="accuracy",
+    )
+    restored.load(checkpoint_path)
+    output = capsys.readouterr().out
+
+    assert "GASearchCV model successfully saved" in output
+    assert "GASearchCV model successfully loaded" in output
+    assert restored.extra_state == "persisted"
+    assert restored.logbook == [{"generation": 0}]
+
+
+def test_ga_search_save_and_load_errors_are_reported(tmp_path, capsys):
+    search = GASearchCV(
+        estimator=DecisionTreeClassifier(),
+        param_grid={"max_depth": Integer(1, 2)},
+        cv=2,
+        scoring="accuracy",
+    )
+
+    search.save(tmp_path / "missing" / "ga_search.pkl")
+    search.load(tmp_path / "missing.pkl")
+    output = capsys.readouterr().out
+
+    assert "Error saving GASearchCV" in output
+    assert "Error loading GASearchCV" in output
+
+
+def test_ga_feature_selection_save_and_load_round_trip(tmp_path, capsys):
+    selector = GAFeatureSelectionCV(
+        estimator=DecisionTreeClassifier(),
+        cv=2,
+        scoring="accuracy",
+        population_size=4,
+        generations=2,
+    )
+    selector.extra_state = "persisted"
+    selector.logbook = [{"generation": 0}]
+    checkpoint_path = tmp_path / "ga_feature_selection.pkl"
+
+    selector.save(checkpoint_path)
+
+    restored = GAFeatureSelectionCV(
+        estimator=DecisionTreeClassifier(),
+        cv=2,
+        scoring="accuracy",
+        population_size=4,
+        generations=2,
+    )
+    restored.load(checkpoint_path)
+    output = capsys.readouterr().out
+
+    assert "GAFeatureSelectionCV model successfully saved" in output
+    assert "GAFeatureSelectionCV model successfully loaded" in output
+    assert restored.extra_state == "persisted"
+    assert restored.logbook == [{"generation": 0}]
+
+
+def test_ga_feature_selection_save_and_load_errors_are_reported(tmp_path, capsys):
+    selector = GAFeatureSelectionCV(
+        estimator=DecisionTreeClassifier(),
+        cv=2,
+        scoring="accuracy",
+        population_size=4,
+        generations=2,
+    )
+
+    selector.save(tmp_path / "missing" / "ga_feature_selection.pkl")
+    selector.load(tmp_path / "missing.pkl")
+    output = capsys.readouterr().out
+
+    assert "Error saving GAFeatureSelectionCV" in output
+    assert "Error loading GAFeatureSelectionCV" in output
+
+
+def test_ga_feature_selection_support_mask_requires_fit():
+    selector = GAFeatureSelectionCV(
+        estimator=DecisionTreeClassifier(),
+        cv=2,
+        scoring="accuracy",
+        population_size=4,
+        generations=2,
+    )
+
+    with pytest.raises(NotFittedError, match="not fitted yet"):
+        selector._get_support_mask()
+
+
+def test_model_checkpoint_save_load_and_error_paths(tmp_path, capsys):
+    estimator = SimpleNamespace(
+        estimator=DecisionTreeClassifier(),
+        cv=2,
+        scoring="accuracy",
+        population_size=4,
+        generations=2,
+        crossover_probability=0.8,
+        mutation_probability=0.1,
+        param_grid={"max_depth": Integer(1, 2)},
+        algorithm="eaSimple",
+    )
+    checkpoint_path = tmp_path / "checkpoint.pkl"
+    checkpoint = ModelCheckpoint(checkpoint_path)
+
+    checkpoint.on_step(logbook=None, estimator=estimator)
+    loaded_checkpoint = checkpoint.load()
+
+    failing_checkpoint = ModelCheckpoint(tmp_path / "missing" / "checkpoint.pkl")
+    failing_checkpoint.on_step(logbook=None, estimator=estimator)
+    missing_checkpoint = ModelCheckpoint(tmp_path / "missing.pkl").load()
+    output = capsys.readouterr().out
+
+    assert "Checkpoint save in" in output
+    assert "Error saving checkpoint" in output
+    assert "Error loading checkpoint" in output
+    assert loaded_checkpoint["estimator_state"]["scoring"] == "accuracy"
+    assert loaded_checkpoint["logbook"] is None
+    assert missing_checkpoint is None

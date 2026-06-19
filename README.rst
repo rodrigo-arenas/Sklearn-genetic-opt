@@ -8,7 +8,7 @@
 .. |Codecov| image:: https://codecov.io/gh/rodrigo-arenas/Sklearn-genetic-opt/branch/master/graphs/badge.svg?branch=master&service=github
 .. _Codecov: https://codecov.io/github/rodrigo-arenas/Sklearn-genetic-opt?branch=master
 
-.. |PythonVersion| image:: https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11-blue
+.. |PythonVersion| image:: https://img.shields.io/badge/python-3.12%20%7C%203.13%20%7C%203.14-blue
 .. _PythonVersion : https://www.python.org/downloads/
 
 .. |PyPi| image:: https://badge.fury.io/py/sklearn-genetic-opt.svg
@@ -106,6 +106,25 @@ If you want to get all the features, including plotting, tensorboard and mlflow 
 install all the extra packages::
 
     pip install sklearn-genetic-opt[all]
+
+Requirements:
+#############
+
+sklearn-genetic-opt supports Python 3.12 and newer.
+
+Core dependencies:
+
+* Python >= 3.12
+* scikit-learn >= 1.9.0
+* NumPy >= 2.4.6
+* DEAP >= 1.4.4
+* tqdm >= 4.68.3
+
+Optional extras:
+
+* Seaborn >= 0.13.2 for plotting
+* MLflow >= 3.14.0 for experiment logging
+* TensorFlow >= 2.21.0 and TensorBoard >= 2.20.0,<2.21.0 for TensorBoard logging on Python < 3.14
 
 
 Example: Hyperparameters Tuning

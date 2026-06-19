@@ -4,23 +4,26 @@ Using Adapters
 Introduction
 ------------
 
-You can define adapters to have a dynamic mutation and crossover probabilities over the optimization
-instead of a fixed value. The idea is to make these probabilities a function of the generations;
-this definition can enable different training strategies, for example:
+Adapters let you change the mutation and crossover probabilities as the
+optimization progresses, instead of keeping them fixed for every generation.
+In practice, an adapter is a small schedule that returns a new probability at
+each generation.
 
-* Start with a high probability mutation to explore more diverse solutions and slowly reduce it
-  to stay with the more promising ones.
-* Start with a low crossover and end with a higher probability
-* Combine different strategies for each parameter
+This makes it possible to express different search strategies, for example:
 
-All the methods uses three parameters:
+* Start with a high mutation probability to explore more diverse solutions, then
+  slowly reduce it to refine the most promising candidates.
+* Start with a low crossover probability and increase it over time.
+* Use different schedules for mutation and crossover.
 
-* **initial_value:** This is the value used at generation 0
-* **end_value:** It's the limit value that the parameter can take, starting from initial_value
-* **adaptive_rate**: Controls how fast the value approaches the end_value;
-  greater values increase the speed of convergence
+All adapters use three parameters:
 
-For the following sections, it's important to understand this notation:
+* **initial_value:** value used at generation 0.
+* **end_value:** target value approached by the schedule.
+* **adaptive_rate:** controls how quickly the schedule approaches ``end_value``.
+  Larger values make the schedule change faster.
+
+The following notation is used throughout this tutorial:
 
 ===================== ===============
 Name                  Notation
@@ -32,20 +35,21 @@ adaptive_rate         :math:`\alpha`
 value at generation t :math:`p(t; \alpha)`
 ===================== ===============
 
-Note that :math:`p_0` doesn't need to be greater than :math:`p_f`.
+The initial value :math:`p_0` does not need to be greater than the final value
+:math:`p_f`.
 
-If :math:`p_0 > p_f`, you are performing a decay towards :math:`p_f`.
+If :math:`p_0 > p_f`, the adapter defines a decay toward :math:`p_f`.
 
-If :math:`p_0 < p_f`, you are performing an ascend towards :math:`p_f`.
+If :math:`p_0 < p_f`, the adapter defines an ascent toward :math:`p_f`.
 
-All the non-constant adapters :math:`p(t; \alpha)`, for :math:`\alpha \in (0,1)`,
-have the following properties:
+All non-constant adapters :math:`p(t; \alpha)`, for
+:math:`\alpha \in (0,1)`, have the following properties:
 
 .. math::
 
-   \lim_{t->0^{+}} p(t; \alpha) = p_0\\
+   \lim_{t \to 0^{+}} p(t; \alpha) = p_0\\
    \\
-   \lim_{t->+\infty} p(t; \alpha) = p_f
+   \lim_{t \to +\infty} p(t; \alpha) = p_f
 
 The following adapters are available:
 
@@ -58,10 +62,12 @@ The following adapters are available:
 ConstantAdapter
 ---------------
 
-This adapter is meant to be used internally by the package; when the user doesn't create an adapter but
-instead defines the crossover or mutation probability as a real number, the package will convert it
-to a `ConstantAdapter`, so the library can use the internal API with the same methods in both cases.
-Because of this, its definition is:
+This adapter is mainly used internally by the package. When you pass the
+crossover or mutation probability as a real number, the package converts that
+number into a ``ConstantAdapter``. This lets the optimization code use the same
+internal API for both fixed probabilities and scheduled probabilities.
+
+Its definition is:
 
 .. math::
 
@@ -71,7 +77,7 @@ Because of this, its definition is:
 ExponentialAdapter
 ------------------
 
-The Exponential Adapter uses the following form to change the initial value
+The ``ExponentialAdapter`` changes the probability exponentially:
 
 .. math::
 
@@ -83,20 +89,22 @@ Usage example:
 
     from sklearn_genetic.schedules import ExponentialAdapter
 
-    # Decay over initial_value
+    # Decay from initial_value toward end_value
     adapter = ExponentialAdapter(initial_value=0.8, end_value=0.2, adaptive_rate=0.1)
 
     # Run a few iterations
     for _ in range(3):
         adapter.step()  # 0.8, 0.74, 0.69
 
-This is how the adapter looks for different values of alpha
+The following plots show the adapter for different values of
+:math:`\alpha`. Larger values of :math:`\alpha` move toward the target value
+more quickly.
 
 **decay:**
 
 .. image:: ../images/schedules_exponential_0.png
 
-**ascend:**
+**ascent:**
 
 .. image:: ../images/schedules_exponential_1.png
 
@@ -106,7 +114,7 @@ This is how the adapter looks for different values of alpha
    from sklearn_genetic.schedules import ExponentialAdapter
 
    values = [{"initial_value": 0.8, "end_value": 0.2},  # Decay
-             {"initial_value": 0.2, "end_value": 0.8}]  # Ascend
+             {"initial_value": 0.2, "end_value": 0.8}]  # Ascent
    alphas = [0.8, 0.4, 0.1, 0.05]
 
    for value in values:
@@ -126,7 +134,7 @@ This is how the adapter looks for different values of alpha
 InverseAdapter
 --------------
 
-The Inverse Adapter uses the following form to change the initial value
+The ``InverseAdapter`` changes the probability with inverse decay:
 
 .. math::
 
@@ -138,27 +146,28 @@ Usage example:
 
     from sklearn_genetic.schedules import InverseAdapter
 
-    # Decay over initial_value
+    # Decay from initial_value toward end_value
     adapter = InverseAdapter(initial_value=0.8, end_value=0.2, adaptive_rate=0.1)
 
     # Run a few iterations
     for _ in range(3):
         adapter.step()  # 0.8, 0.75, 0.7
 
-This is how the adapter looks for different values of alpha
+The following plots show the adapter for different values of
+:math:`\alpha`.
 
 **decay:**
 
 .. image:: ../images/schedules_inverse_0.png
 
-**ascend:**
+**ascent:**
 
 .. image:: ../images/schedules_inverse_1.png
 
 PotentialAdapter
 ----------------
 
-The Inverse Adapter uses the following form to change the initial value
+The ``PotentialAdapter`` changes the probability with the following form:
 
 .. math::
 
@@ -170,35 +179,37 @@ Usage example:
 
     from sklearn_genetic.schedules import PotentialAdapter
 
-    # Decay over initial_value
+    # Decay from initial_value toward end_value
     adapter = PotentialAdapter(initial_value=0.8, end_value=0.2, adaptive_rate=0.1)
 
     # Run a few iterations
     for _ in range(3):
         adapter.step()  # 0.8, 0.26, 0.206
 
-This is how the adapter looks for different values of alpha
+The following plots show the adapter for different values of
+:math:`\alpha`.
 
 **decay:**
 
 .. image:: ../images/schedules_potential_0.png
 
-**ascend:**
+**ascent:**
 
 .. image:: ../images/schedules_potential_1.png
 
 Compare
 -------
 
-This is how all adapters looks like for the same value of alpha
+The following plots compare all adapters using the same value of
+:math:`\alpha`.
 
 **decay:**
 
 .. image:: ../images/schedules_comparison_0.png
 
-**ascend:**
+**ascent:**
 
-.. image:: ../images/schedules_comparison_0.png
+.. image:: ../images/schedules_comparison_1.png
 
 .. code:: python3
 
@@ -206,7 +217,7 @@ This is how all adapters looks like for the same value of alpha
    from sklearn_genetic.schedules import ExponentialAdapter, PotentialAdapter, InverseAdapter
 
 
-   params = {"initial_value": 0.2, "end_value": 0.8, "adaptive_rate": 0.15}  # Ascend
+   params = {"initial_value": 0.2, "end_value": 0.8, "adaptive_rate": 0.15}  # Ascent
    adapters = [ExponentialAdapter(**params), PotentialAdapter(**params), InverseAdapter(**params)]
 
    for adapter in adapters:
@@ -224,18 +235,22 @@ This is how all adapters looks like for the same value of alpha
 Full Example
 ------------
 
-In this example, we want to create a decay strategy for the mutation probability,
-and an ascend strategy for the crossover probability,
-lets call them :math:`p_{mt}(t; \alpha)` and :math:`p_{cr}(t; \alpha)` respectively;
-this will enable the optimizer to explore more diverse solutions in the first iterations.
-Take into account that on this scenario, we must be careful on choosing :math:`\alpha, p_0, p_f`,
-this is because the evolutionary implementation requires that:
+In this example, we create a decay schedule for the mutation probability and an
+ascent schedule for the crossover probability. Let us call them
+:math:`p_{mt}(t; \alpha)` and :math:`p_{cr}(t; \alpha)`, respectively.
+
+This strategy encourages the optimizer to explore more diverse solutions in the
+first generations, then rely more on crossover as the population improves.
+
+When choosing :math:`\alpha`, :math:`p_0`, and :math:`p_f`, make sure the
+mutation and crossover probabilities remain compatible with the evolutionary
+algorithm. The implementation requires:
 
 .. math::
 
    p_{mt}(t; \alpha) + p_{cr}(t; \alpha) <= 1;  \forall t
 
-The same idea can be used for hypeparameter tuning or feature selection.
+The same idea can be used for hyperparameter tuning or feature selection.
 
 .. code-block:: python
 
