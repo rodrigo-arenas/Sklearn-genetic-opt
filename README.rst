@@ -48,6 +48,7 @@ for hyperparameters tuning, and from RFE (Recursive Feature Elimination), Select
   - Latest
   - Development
 - Parallel Processing with n_jobs
+- Common Errors & Troubleshooting
 - Changelog
 - Important Links
 - Source Code
@@ -253,7 +254,7 @@ Parallel Processing with n_jobs
 ###############################
 
 `GASearchCV` supports parallel processing through the `n_jobs` parameter, which is passed to
-scikit-learn’s cross-validation functions:
+scikit-learn's cross-validation functions:
 
 - ``n_jobs=1`` → run sequentially (default)
 - ``n_jobs=-1`` → use all available CPU cores
@@ -286,6 +287,58 @@ Example:
 .. note::
    Parallelism is limited to cross-validation splits within a single machine.
    MPI/distributed methods are not yet supported.
+
+Common Errors & Troubleshooting
+################################
+
+**1. ImportError: No module named 'sklearn_genetic'**
+
+Make sure the package is installed correctly::
+
+   pip install sklearn-genetic-opt
+
+**2. ModuleNotFoundError for optional dependencies**
+
+If you need plotting, tensorboard or mlflow features, install extras::
+
+   pip install sklearn-genetic-opt[all]
+
+**3. TypeError: param_grid values must be instances of Integer, Continuous or Categorical**
+
+Incorrect usage::
+
+   param_grid = {'max_depth': [2, 5, 10]}  # Wrong — plain list not accepted
+
+Correct usage::
+
+   from sklearn_genetic.space import Integer
+   param_grid = {'max_depth': Integer(2, 10)}  # Correct
+
+**4. ValueError during cross-validation**
+
+Make sure your dataset is properly split before passing to GASearchCV::
+
+   from sklearn.model_selection import train_test_split
+   X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
+**5. Dependency conflict between TensorFlow and MLflow via protobuf**
+
+If you face protobuf version conflicts, pin the version::
+
+   pip install protobuf==3.20.3
+
+Then reinstall sklearn-genetic-opt extras::
+
+   pip install sklearn-genetic-opt[all]
+
+**6. Installation takes too long or fails**
+
+Use a virtual environment to avoid conflicts::
+
+   python -m venv env
+   env\Scripts\activate        # Windows
+   source env/bin/activate     # Mac/Linux
+   pip install sklearn-genetic-opt
 
 Changelog
 #########
@@ -332,4 +385,4 @@ Testing
 After installation, you can launch the test suite from outside the source directory::
 
    pytest sklearn_genetic
-
+   
