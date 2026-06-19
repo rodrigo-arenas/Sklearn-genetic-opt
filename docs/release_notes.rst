@@ -58,6 +58,13 @@ Features:
   track population initializers, optimizer telemetry, and holdout model metrics
   across classification and regression scenarios.
 
+* Added ``benchmarks/benchmark_search_methods.py`` to compare
+  :class:`~sklearn_genetic.GASearchCV` against scikit-learn hyperparameter
+  search methods, including ``GridSearchCV``, ``RandomizedSearchCV``,
+  ``HalvingGridSearchCV``, and ``HalvingRandomSearchCV``. The benchmark reports
+  solution time, evaluated candidates, estimated cross-validation effort, best
+  CV score, holdout metrics, and best parameters.
+
 * :class:`~sklearn_genetic.GAFeatureSelectionCV` now skips cross-validation for
   invalid feature masks when ``max_features`` is exceeded, assigning the
   existing penalty directly instead of fitting models whose fitness is already

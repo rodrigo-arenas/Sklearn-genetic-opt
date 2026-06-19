@@ -344,6 +344,25 @@ reuse counts, skipped invalid feature masks, population initializer comparisons,
 optimizer telemetry such as diversity and stagnation, and holdout metrics such
 as accuracy, ROC AUC, F1, R2, RMSE, and MAE.
 
+To compare :class:`~sklearn_genetic.GASearchCV` against scikit-learn
+hyperparameter search methods, use:
+
+.. code-block:: bash
+
+    python benchmarks/benchmark_search_methods.py --quick
+    python benchmarks/benchmark_search_methods.py --methods gasearch randomized grid
+    python benchmarks/benchmark_search_methods.py --methods gasearch randomized grid halving_random halving_grid
+    python benchmarks/benchmark_search_methods.py --scenarios classification_lr regression_ridge --runs 3
+    python benchmarks/benchmark_search_methods.py --ga-population-size 8 --ga-generations 4 --n-iter 40 --grid-points 5
+    python benchmarks/benchmark_search_methods.py --label current --output-json benchmarks/search-current.json
+    python benchmarks/benchmark_search_methods.py --compare-json benchmarks/search-baseline.json
+
+The search-method benchmark reports solution time, evaluated candidates,
+estimated candidate cross-validation evaluations, best CV score, holdout
+classification/regression metrics, and best parameters for ``GASearchCV``,
+``GridSearchCV``, ``RandomizedSearchCV``, ``HalvingGridSearchCV``, and
+``HalvingRandomSearchCV``.
+
 Common Errors & Troubleshooting
 ################################
 
