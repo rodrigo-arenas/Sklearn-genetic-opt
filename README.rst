@@ -272,8 +272,10 @@ Example: Feature Selection
 Parallel Processing with n_jobs
 ###############################
 
-`GASearchCV` supports parallel processing through the `n_jobs` parameter, which is passed to
-scikit-learn's cross-validation functions:
+`GASearchCV` supports parallel processing through the `n_jobs` parameter. During the
+genetic optimization, unique candidate evaluations in the same generation are evaluated
+in parallel when possible; each candidate runs its own cross-validation sequentially to
+avoid nested parallelism:
 
 - ``n_jobs=1`` → run sequentially (default)
 - ``n_jobs=-1`` → use all available CPU cores
@@ -304,7 +306,7 @@ Example:
     print(evolved_estimator.best_params_)
 
 .. note::
-   Parallelism is limited to cross-validation splits within a single machine.
+   Parallelism is limited to candidate evaluations within a single machine.
    MPI/distributed methods are not yet supported.
 
 Common Errors & Troubleshooting

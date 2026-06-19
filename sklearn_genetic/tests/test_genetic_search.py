@@ -92,6 +92,62 @@ def test_evaluate_population_reuses_duplicate_individual_cache(monkeypatch):
     assert len(estimator.logbook.chapters["parameters"]) == 2
 
 
+def test_evaluate_population_parallelizes_unique_individuals_without_nested_cv(monkeypatch):
+    observed_cv_n_jobs = []
+    observed_parallel_n_jobs = []
+    cv_splits = [(np.array([0, 1]), np.array([2, 3])), (np.array([2, 3]), np.array([0, 1]))]
+
+    class FakeParallel:
+        def __init__(self, n_jobs, prefer=None):
+            observed_parallel_n_jobs.append(n_jobs)
+            assert prefer == "threads"
+
+        def __call__(self, jobs):
+            results = []
+            for func, args, kwargs in jobs:
+                results.append(func(*args, **kwargs))
+            return results
+
+    def fake_cross_validate(*args, **kwargs):
+        observed_cv_n_jobs.append(kwargs["n_jobs"])
+        return {
+            "test_score": np.array([0.8, 0.9]),
+            "train_score": np.array([0.9, 1.0]),
+            "fit_time": np.array([0.0, 0.0]),
+            "score_time": np.array([0.0, 0.0]),
+        }
+
+    monkeypatch.setattr(genetic_search, "Parallel", FakeParallel)
+    monkeypatch.setattr(genetic_search, "_is_parallel_enabled", lambda n_jobs, n_tasks: True)
+    monkeypatch.setattr(genetic_search, "cross_validate", fake_cross_validate)
+
+    estimator = GASearchCV(
+        DecisionTreeClassifier(),
+        cv=2,
+        scoring="accuracy",
+        population_size=2,
+        generations=1,
+        param_grid={"max_depth": Integer(1, 3)},
+        verbose=False,
+        n_jobs=2,
+    )
+    estimator.X_ = X_train[:4]
+    estimator.y_ = y_train[:4]
+    estimator._cv_splits = cv_splits
+    estimator.refit_metric = "score"
+    estimator.metrics_list = ["score"]
+    estimator.scorer_ = "accuracy"
+    estimator.logbook = tools.Logbook()
+    estimator._pop = []
+
+    fitnesses = estimator.evaluate_population([[1], [2]])
+
+    assert observed_parallel_n_jobs == [2]
+    assert observed_cv_n_jobs == [1, 1]
+    assert len(fitnesses) == 2
+    assert len(estimator.logbook.chapters["parameters"]) == 2
+
+
 def test_expected_ga_results():
     clf = SGDClassifier(loss="modified_huber", fit_intercept=True)
     generations = 6

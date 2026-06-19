@@ -4,6 +4,7 @@ import warnings
 
 import numpy as np
 from deap import base, creator, tools
+from joblib import Parallel, delayed, effective_n_jobs
 from sklearn.base import clone
 from sklearn.model_selection import cross_validate
 from sklearn.base import is_classifier, is_regressor, BaseEstimator, MetaEstimatorMixin
@@ -61,6 +62,17 @@ from .utils.tools import cxUniform, mutFlipBit, novelty_scorer
 import pickle
 import os
 from .callbacks.model_checkpoint import ModelCheckpoint
+
+
+def _logbook_record(logbook, chapter_name, parameters):
+    index = len(logbook.chapters[chapter_name])
+    parameters = {"index": index, **parameters}
+    logbook.record(**{chapter_name: parameters})
+    return parameters
+
+
+def _is_parallel_enabled(n_jobs, n_tasks):
+    return n_tasks > 1 and effective_n_jobs(n_jobs) != 1
 
 
 class GASearchCV(BaseSearchCV):
@@ -134,8 +146,9 @@ class GASearchCV(BaseSearchCV):
         - a dictionary with metric names as keys and callables a values.
 
     n_jobs : int, default=None
-        Number of jobs to run in parallel. Training the estimator and computing
-        the score are parallelized over the cross-validation splits.
+        Number of jobs to run in parallel. Candidate evaluations in each
+        generation are parallelized when possible; each candidate then runs
+        cross-validation sequentially to avoid nested parallelism.
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
         ``-1`` means using all processors.
 
@@ -452,53 +465,70 @@ class GASearchCV(BaseSearchCV):
         return tuple(sorted(current_generation_params.items()))
 
     def evaluate_population(self, individuals):
-        generation_cache = {}
+        if not individuals:
+            return []
+
+        pending_individuals = {}
+        for individual in individuals:
+            individual_key = self._individual_key(individual)
+            if (
+                individual_key not in self.fitness_cache
+                and individual_key not in pending_individuals
+            ):
+                pending_individuals[individual_key] = list(individual)
+
+        pending_items = list(pending_individuals.items())
+        pending_results = {}
+
+        if pending_items:
+            if _is_parallel_enabled(self.n_jobs, len(pending_items)) and self.log_config is None:
+                results = Parallel(n_jobs=self.n_jobs, prefer="threads")(
+                    delayed(self._evaluate_individual)(individual, n_jobs=1)
+                    for _, individual in pending_items
+                )
+            else:
+                results = [
+                    self._evaluate_individual(individual, n_jobs=self.n_jobs)
+                    for _, individual in pending_items
+                ]
+
+            pending_results = {
+                individual_key: result
+                for (individual_key, _), result in zip(pending_items, results)
+            }
+
         fitnesses = []
 
         for individual in individuals:
             individual_key = self._individual_key(individual)
 
-            if self.use_cache and individual_key in generation_cache:
+            if self.use_cache and individual_key in self.fitness_cache:
                 cached_result = self.fitness_cache[individual_key]
                 self.logbook.record(parameters=cached_result["current_generation_params"])
-                fitness = generation_cache[individual_key]
             else:
-                fitness = self.evaluate(individual)
+                fitness, current_generation_params = pending_results[individual_key]
+                current_generation_params = _logbook_record(
+                    self.logbook,
+                    "parameters",
+                    current_generation_params,
+                )
                 if self.use_cache:
-                    generation_cache[individual_key] = fitness
+                    self.fitness_cache[individual_key] = {
+                        "fitness": fitness,
+                        "current_generation_params": current_generation_params,
+                    }
 
-            fitnesses.append(fitness)
+            fitnesses.append(
+                self.fitness_cache[individual_key]["fitness"] if self.use_cache else fitness
+            )
 
         return fitnesses
 
-    def evaluate(self, individual):
-        """
-        Compute the cross-validation scores and record the logbook and mlflow (if specified)
-        Parameters
-        ----------
-        individual: Individual object
-            The individual (set of hyperparameters) that is being evaluated
-        Returns
-        -------
-            The fitness value of the estimator candidate, corresponding to the cv-score
-
-        """
-
+    def _evaluate_individual(self, individual, n_jobs=None):
         # Dictionary representation of the individual with key-> hyperparameter name, value -> value
         current_generation_params = {
             key: individual[n] for n, key in enumerate(self.space.parameters)
         }
-
-        # Convert hyperparameters to a tuple to use as a key in the cache
-        individual_key = self._individual_key(individual)
-
-        # Check if the individual has already been evaluated
-        if individual_key in self.fitness_cache and self.use_cache:
-            # Retrieve cached result
-            cached_result = self.fitness_cache[individual_key]
-            # Ensure the logbook is updated even if the individual is cached
-            self.logbook.record(parameters=cached_result["current_generation_params"])
-            return cached_result["fitness"]
 
         local_estimator = clone(self.estimator)
         local_estimator.set_params(**current_generation_params)
@@ -510,7 +540,7 @@ class GASearchCV(BaseSearchCV):
             self.y_,
             cv=self._cv_splits,
             scoring=self.scorer_,
-            n_jobs=self.n_jobs,
+            n_jobs=n_jobs,
             pre_dispatch=self.pre_dispatch,
             error_score=self.error_score,
             return_train_score=self.return_train_score,
@@ -541,13 +571,43 @@ class GASearchCV(BaseSearchCV):
             if self.return_train_score:
                 current_generation_params[f"train_{metric}"] = cv_results[f"train_{metric}"]
 
-        index = len(self.logbook.chapters["parameters"])
-        current_generation_params = {"index": index, **current_generation_params}
-
-        # Log the hyperparameters and the cv-score
-        self.logbook.record(parameters=current_generation_params)
-
         fitness_result = [score, novelty_score]
+
+        return fitness_result, current_generation_params
+
+    def evaluate(self, individual):
+        """
+        Compute the cross-validation scores and record the logbook and mlflow (if specified)
+        Parameters
+        ----------
+        individual: Individual object
+            The individual (set of hyperparameters) that is being evaluated
+        Returns
+        -------
+            The fitness value of the estimator candidate, corresponding to the cv-score
+
+        """
+
+        # Convert hyperparameters to a tuple to use as a key in the cache
+        individual_key = self._individual_key(individual)
+
+        # Check if the individual has already been evaluated
+        if individual_key in self.fitness_cache and self.use_cache:
+            # Retrieve cached result
+            cached_result = self.fitness_cache[individual_key]
+            # Ensure the logbook is updated even if the individual is cached
+            self.logbook.record(parameters=cached_result["current_generation_params"])
+            return cached_result["fitness"]
+
+        fitness_result, current_generation_params = self._evaluate_individual(
+            individual,
+            n_jobs=self.n_jobs,
+        )
+        current_generation_params = _logbook_record(
+            self.logbook,
+            "parameters",
+            current_generation_params,
+        )
 
         if self.use_cache:
             # Store the fitness result and the current generation parameters in the cache
@@ -905,8 +965,9 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         - a dictionary with metric names as keys and callables a values.
 
     n_jobs : int, default=None
-        Number of jobs to run in parallel. Training the estimator and computing
-        the score are parallelized over the cross-validation splits.
+        Number of jobs to run in parallel. Candidate evaluations in each
+        generation are parallelized when possible; each candidate then runs
+        cross-validation sequentially to avoid nested parallelism.
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
         ``-1`` means using all processors.
 
@@ -1140,26 +1201,66 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         return tuple(individual)
 
     def evaluate_population(self, individuals):
-        generation_cache = {}
+        if not individuals:
+            return []
+
+        pending_individuals = {}
+        for individual in individuals:
+            individual_key = self._individual_key(individual)
+            if (
+                individual_key not in self.fitness_cache
+                and individual_key not in pending_individuals
+            ):
+                pending_individuals[individual_key] = list(individual)
+
+        pending_items = list(pending_individuals.items())
+        pending_results = {}
+
+        if pending_items:
+            if _is_parallel_enabled(self.n_jobs, len(pending_items)) and self.log_config is None:
+                results = Parallel(n_jobs=self.n_jobs, prefer="threads")(
+                    delayed(self._evaluate_individual)(individual, n_jobs=1)
+                    for _, individual in pending_items
+                )
+            else:
+                results = [
+                    self._evaluate_individual(individual, n_jobs=self.n_jobs)
+                    for _, individual in pending_items
+                ]
+
+            pending_results = {
+                individual_key: result
+                for (individual_key, _), result in zip(pending_items, results)
+            }
+
         fitnesses = []
 
         for individual in individuals:
             individual_key = self._individual_key(individual)
 
-            if self.use_cache and individual_key in generation_cache:
+            if self.use_cache and individual_key in self.fitness_cache:
                 cached_result = self.fitness_cache[individual_key]
                 self.logbook.record(parameters=cached_result["current_generation_features"])
-                fitness = generation_cache[individual_key]
             else:
-                fitness = self.evaluate(individual)
+                fitness, current_generation_features = pending_results[individual_key]
+                current_generation_features = _logbook_record(
+                    self.logbook,
+                    "parameters",
+                    current_generation_features,
+                )
                 if self.use_cache:
-                    generation_cache[individual_key] = fitness
+                    self.fitness_cache[individual_key] = {
+                        "fitness": fitness,
+                        "current_generation_features": current_generation_features,
+                    }
 
-            fitnesses.append(fitness)
+            fitnesses.append(
+                self.fitness_cache[individual_key]["fitness"] if self.use_cache else fitness
+            )
 
         return fitnesses
 
-    def _record_feature_evaluation(self, current_generation_params, cv_results):
+    def _build_feature_evaluation_record(self, current_generation_params, cv_results):
         cv_scores = cv_results[f"test_{self.refit_metric}"]
         score = np.mean(cv_scores)
 
@@ -1173,11 +1274,6 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
 
             if self.return_train_score:
                 current_generation_params[f"train_{metric}"] = cv_results[f"train_{metric}"]
-
-        index = len(self.logbook.chapters["parameters"])
-        current_generation_params = {"index": index, **current_generation_params}
-
-        self.logbook.record(parameters=current_generation_params)
 
         return score, current_generation_params
 
@@ -1194,6 +1290,57 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
                 cv_results[f"train_{metric}"] = np.full(self.n_splits_, score)
 
         return cv_results
+
+    def _evaluate_individual(self, individual, n_jobs=None):
+        bool_individual = np.array(individual, dtype=bool)
+
+        current_generation_params = {"features": bool_individual}
+
+        n_selected_features = np.sum(individual)
+
+        if self.max_features and (
+            n_selected_features > self.max_features or n_selected_features == 0
+        ):
+            score = -self.criteria_sign * 100000
+            cv_results = self._penalized_feature_cv_results(score)
+            _, current_generation_params = self._build_feature_evaluation_record(
+                current_generation_params, cv_results
+            )
+
+            fitness_result = [score, n_selected_features]
+
+            return fitness_result, current_generation_params
+
+        local_estimator = clone(self.estimator)
+
+        # Use standard cross_validate for all estimator types
+        cv_results = cross_validate(
+            local_estimator,
+            self.X_[:, bool_individual],
+            self.y_,
+            cv=self._cv_splits,
+            scoring=self.scorer_,
+            n_jobs=n_jobs,
+            pre_dispatch=self.pre_dispatch,
+            error_score=self.error_score,
+            return_train_score=self.return_train_score,
+        )
+
+        score, current_generation_params = self._build_feature_evaluation_record(
+            current_generation_params, cv_results
+        )
+
+        # Uses the log config to save in remote log server (e.g MLflow)
+        if self.log_config is not None:
+            self.log_config.create_run(
+                parameters=current_generation_params,
+                score=score,
+                estimator=local_estimator,
+            )
+
+        fitness_result = [score, n_selected_features]
+
+        return fitness_result, current_generation_params
 
     def evaluate(self, individual):
         """
@@ -1212,12 +1359,6 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
 
         """
 
-        bool_individual = np.array(individual, dtype=bool)
-
-        current_generation_params = {"features": bool_individual}
-
-        n_selected_features = np.sum(individual)
-
         # Convert the individual to a tuple to use as a key in the cache
         individual_key = self._individual_key(individual)
 
@@ -1228,53 +1369,15 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
             self.logbook.record(parameters=cached_result["current_generation_features"])
             return cached_result["fitness"]
 
-        if self.max_features and (
-            n_selected_features > self.max_features or n_selected_features == 0
-        ):
-            score = -self.criteria_sign * 100000
-            cv_results = self._penalized_feature_cv_results(score)
-            _, current_generation_params = self._record_feature_evaluation(
-                current_generation_params, cv_results
-            )
-
-            fitness_result = [score, n_selected_features]
-
-            if self.use_cache:
-                self.fitness_cache[individual_key] = {
-                    "fitness": fitness_result,
-                    "current_generation_features": current_generation_params,
-                }
-
-            return fitness_result
-
-        local_estimator = clone(self.estimator)
-
-        # Use standard cross_validate for all estimator types
-        cv_results = cross_validate(
-            local_estimator,
-            self.X_[:, bool_individual],
-            self.y_,
-            cv=self._cv_splits,
-            scoring=self.scorer_,
+        fitness_result, current_generation_params = self._evaluate_individual(
+            individual,
             n_jobs=self.n_jobs,
-            pre_dispatch=self.pre_dispatch,
-            error_score=self.error_score,
-            return_train_score=self.return_train_score,
         )
-
-        score, current_generation_params = self._record_feature_evaluation(
-            current_generation_params, cv_results
+        current_generation_params = _logbook_record(
+            self.logbook,
+            "parameters",
+            current_generation_params,
         )
-
-        # Uses the log config to save in remote log server (e.g MLflow)
-        if self.log_config is not None:
-            self.log_config.create_run(
-                parameters=current_generation_params,
-                score=score,
-                estimator=local_estimator,
-            )
-
-        fitness_result = [score, n_selected_features]
 
         if self.use_cache:
             # Store the fitness result and the current generation features in the cache
