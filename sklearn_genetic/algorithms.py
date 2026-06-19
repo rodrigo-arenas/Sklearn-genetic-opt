@@ -208,7 +208,7 @@ def eaMuPlusLambda(
     estimator=None,
     **kwargs,
 ):
-    """
+    r"""
     The base implementation is directly taken from: https://github.com/DEAP/deap/blob/master/deap/algorithms.py
 
     This is the :math:`(\mu + \lambda)` evolutionary algorithm.
@@ -393,7 +393,7 @@ def eaMuCommaLambda(
     estimator=None,
     **kwargs,
 ):
-    """
+    r"""
     The base implementation is directly taken from: https://github.com/DEAP/deap/blob/master/deap/algorithms.py
 
     This is the :math:`(\mu~,~\lambda)` evolutionary algorithm.
