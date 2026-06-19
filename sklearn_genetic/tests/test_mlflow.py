@@ -1,6 +1,7 @@
 import pytest
-import shutil
 import os
+import shutil
+from pathlib import Path
 
 import mlflow
 from mlflow.tracking import MlflowClient
@@ -17,9 +18,39 @@ from ..space import Integer, Categorical, Continuous
 EXPERIMENT_NAME = "Digits-sklearn-genetic-opt-tests"
 
 
+@pytest.fixture(scope="module")
+def mlflow_tracking_uri(tmp_path_factory):
+    mlflow_path = tmp_path_factory.mktemp("mlflow")
+    tracking_path = mlflow_path / "mlflow.db"
+    artifact_path = mlflow_path / "artifacts"
+    tracking_uri = f"sqlite:///{tracking_path.as_posix()}"
+    previous_tracking_uri = mlflow.get_tracking_uri()
+    previous_tracking_env = os.environ.get("MLFLOW_TRACKING_URI")
+
+    os.environ["MLFLOW_TRACKING_URI"] = tracking_uri
+    mlflow.set_tracking_uri(tracking_uri)
+    client = MlflowClient(tracking_uri)
+    if client.get_experiment_by_name(EXPERIMENT_NAME) is None:
+        client.create_experiment(
+            EXPERIMENT_NAME,
+            artifact_location=artifact_path.resolve().as_uri(),
+        )
+
+    yield tracking_uri, tracking_path, artifact_path
+
+    if mlflow.active_run():
+        mlflow.end_run()
+
+    mlflow.set_tracking_uri(previous_tracking_uri)
+    if previous_tracking_env is None:
+        os.environ.pop("MLFLOW_TRACKING_URI", None)
+    else:
+        os.environ["MLFLOW_TRACKING_URI"] = previous_tracking_env
+
+
 @pytest.fixture
-def mlflow_resources():
-    uri = mlflow.get_tracking_uri()
+def mlflow_resources(mlflow_tracking_uri):
+    uri, _, _ = mlflow_tracking_uri
     client = MlflowClient(uri)
     return uri, client
 
@@ -99,7 +130,12 @@ def test_runs(mlflow_resources, mlflow_run):
     evolved_estimator.fit(X_train, y_train)
     y_predict_ga = evolved_estimator.predict(X_test)
 
-    runs = mlflow_run
+    runs = [
+        run.info.run_id
+        for run in client.search_runs(
+            mlflow_config.experiment_id, run_view_type=ViewType.ACTIVE_ONLY
+        )
+    ]
     assert len(runs) >= 1 and evolved_estimator.best_params_["min_weight_fraction_leaf"]
 
 
@@ -128,8 +164,6 @@ def test_mlflow_artifacts(mlflow_resources, mlflow_run):
     artifacts = client.list_artifacts(run_id)
     assert len(artifacts) > 0
     assert artifacts[0].path == "model"
-
-
 
 
 def test_mlflow_params(mlflow_resources, mlflow_run):
@@ -167,10 +201,22 @@ def test_mlflow_after_run(mlflow_resources, mlflow_run):
     assert metric_history[0].key == "score"
 
 
-
-def test_cleanup():
+def test_cleanup(mlflow_tracking_uri):
     """
     Ensure resources are cleaned up.
     """
-    shutil.rmtree("mlruns")
-    assert "mlruns" not in os.listdir(os.getcwd())
+    _, tracking_path, artifact_path = mlflow_tracking_uri
+    workspace_path = Path.cwd().resolve()
+    tracking_path = tracking_path.resolve()
+    artifact_path = artifact_path.resolve()
+
+    assert workspace_path not in tracking_path.parents
+    assert workspace_path not in artifact_path.parents
+
+    if tracking_path.exists():
+        try:
+            tracking_path.unlink()
+        except PermissionError:
+            pass
+    if artifact_path.exists():
+        shutil.rmtree(artifact_path)

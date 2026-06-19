@@ -8,7 +8,7 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     env:
-      MLFLOW_TRACKING_URI: file:./mlruns
+      MLFLOW_TRACKING_URI: sqlite:///${{ runner.temp }}/mlflow.db
       MPLBACKEND: Agg
     strategy:
       matrix:
