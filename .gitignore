@@ -79,6 +79,7 @@ mlruns/
 mlflow.db
 logbook.pkl
 *.tfevents.*
+benchmarks/*.json
 
 # PyBuilder
 target/
