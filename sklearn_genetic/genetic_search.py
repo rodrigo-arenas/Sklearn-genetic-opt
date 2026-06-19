@@ -119,6 +119,11 @@ def _record_fit_stats(
     estimator.fit_stats_["skipped_invalid_candidates"] += skipped
 
 
+def _reset_adapters(estimator):
+    estimator.crossover_adapter.reset()
+    estimator.mutation_adapter.reset()
+
+
 def _history_record(history, index):
     return {key: values[index] for key, values in history.items()}
 
@@ -770,6 +775,8 @@ class GASearchCV(BaseSearchCV):
         # Make sure the callbacks are valid
         self.callbacks = check_callback(callbacks)
 
+        checkpoint_loaded = False
+
         # Load state if a checkpoint exists
         for callback in self.callbacks:
             if isinstance(callback, ModelCheckpoint):
@@ -778,7 +785,11 @@ class GASearchCV(BaseSearchCV):
                     if checkpoint_data:
                         self.__dict__.update(checkpoint_data["estimator_state"])  # noqa
                         self.logbook = checkpoint_data["logbook"]
+                        checkpoint_loaded = True
                     break
+
+        if not checkpoint_loaded:
+            _reset_adapters(self)
 
         self.fit_stats_ = _create_fit_stats()
 
@@ -1614,6 +1625,8 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         # Make sure the callbacks are valid
         self.callbacks = check_callback(callbacks)
 
+        checkpoint_loaded = False
+
         # Load state if a checkpoint exists
         for callback in self.callbacks:
             if isinstance(callback, ModelCheckpoint):
@@ -1622,7 +1635,11 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
                     if checkpoint_data:
                         self.__dict__.update(checkpoint_data["estimator_state"])  # noqa
                         self.logbook = checkpoint_data["logbook"]
+                        checkpoint_loaded = True
                     break
+
+        if not checkpoint_loaded:
+            _reset_adapters(self)
 
         self.fit_stats_ = _create_fit_stats()
 

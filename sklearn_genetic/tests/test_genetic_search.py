@@ -110,6 +110,37 @@ def test_optimizer_telemetry_is_recorded_for_each_generation(algorithm):
     assert estimator.history["stagnation_generations"][-1] == generations
 
 
+def test_schedulers_reset_on_fresh_fit():
+    generations = 2
+    mutation_scheduler = ExponentialAdapter(initial_value=0.8, end_value=0.2, adaptive_rate=0.1)
+    crossover_scheduler = ExponentialAdapter(initial_value=0.1, end_value=0.3, adaptive_rate=0.1)
+    estimator = GASearchCV(
+        DecisionTreeClassifier(random_state=42),
+        cv=2,
+        scoring="accuracy",
+        population_size=4,
+        generations=generations,
+        param_grid={
+            "max_depth": Integer(1, 3),
+            "criterion": Categorical(["gini", "entropy"]),
+        },
+        mutation_probability=mutation_scheduler,
+        crossover_probability=crossover_scheduler,
+        verbose=False,
+        n_jobs=1,
+    )
+
+    estimator.fit(X_train, y_train)
+    first_mutation_value = mutation_scheduler.current_value
+    assert mutation_scheduler.current_step == generations
+    assert crossover_scheduler.current_step == generations
+
+    estimator.fit(X_train, y_train)
+    assert mutation_scheduler.current_step == generations
+    assert crossover_scheduler.current_step == generations
+    assert mutation_scheduler.current_value == first_mutation_value
+
+
 def test_evaluate_population_reuses_duplicate_individual_cache(monkeypatch):
     calls = []
     cv_splits = [(np.array([0, 1]), np.array([2, 3])), (np.array([2, 3]), np.array([0, 1]))]
