@@ -4,8 +4,6 @@ import warnings
 
 import numpy as np
 from deap import base, creator, tools
-from joblib import Parallel, delayed, effective_n_jobs
-from scipy.stats import qmc
 from sklearn.base import clone
 from sklearn.model_selection import cross_validate
 from sklearn.base import is_classifier, is_regressor, BaseEstimator, MetaEstimatorMixin
@@ -39,7 +37,6 @@ def _is_outlier_detector(estimator):
 
 from sklearn.feature_selection import SelectorMixin
 from sklearn.utils import check_X_y
-from sklearn.utils.validation import check_is_fitted
 from sklearn.utils.metaestimators import available_if
 from sklearn.feature_selection._from_model import _estimator_has
 from sklearn.metrics import check_scoring
@@ -48,9 +45,9 @@ from sklearn.model_selection._search import BaseSearchCV
 from sklearn.model_selection._split import check_cv
 from sklearn.metrics._scorer import _check_multimetric_scoring
 
-from .parameters import Algorithms, Criteria
-from .space import Categorical, Continuous, Integer, Space
-from .algorithms import algorithms_factory
+from .parameters import Criteria
+from .space import Space
+from ._base import GeneticEstimatorMixin, reset_adapters as _reset_adapters
 from .callbacks.validations import check_callback
 from .schedules.validations import check_adapter
 from .utils.cv_scores import (
@@ -59,144 +56,24 @@ from .utils.cv_scores import (
 )
 from .utils.random import weighted_bool_individual
 from .utils.tools import cxUniform, mutFlipBit, novelty_scorer
+from .evaluation import (
+    create_fit_stats as _create_fit_stats,
+    evaluate_population as _evaluate_population_batch,
+    logbook_record as _logbook_record,
+    record_fit_stats as _record_fit_stats,
+    validate_parallel_backend as _validate_parallel_backend,
+)
+from .population import (
+    initialize_feature_population,
+    initialize_search_population,
+    validate_population_initializer as _validate_population_initializer,
+)
 
-import pickle
 import os
 from .callbacks.model_checkpoint import ModelCheckpoint
 
 
-def _logbook_record(logbook, chapter_name, parameters):
-    index = len(logbook.chapters[chapter_name])
-    parameters = {"index": index, **parameters}
-    logbook.record(**{chapter_name: parameters})
-    return parameters
-
-
-def _is_parallel_enabled(n_jobs, n_tasks):
-    return n_tasks > 1 and effective_n_jobs(n_jobs) != 1
-
-
-def _create_fit_stats():
-    return {
-        "evaluated_candidates": 0,
-        "unique_candidates": 0,
-        "cross_validate_calls": 0,
-        "cache_hits": 0,
-        "duplicate_candidates": 0,
-        "skipped_invalid_candidates": 0,
-        "population_parallel_batches": 0,
-        "population_serial_batches": 0,
-    }
-
-
-def _validate_parallel_backend(parallel_backend):
-    valid_backends = {"auto", "population", "cv"}
-    if parallel_backend not in valid_backends:
-        raise ValueError(
-            f"parallel_backend must be one of {sorted(valid_backends)}, "
-            f"got {parallel_backend} instead"
-        )
-
-
-def _validate_population_initializer(population_initializer):
-    valid_initializers = {"random", "smart"}
-    if population_initializer not in valid_initializers:
-        raise ValueError(
-            f"population_initializer must be one of {sorted(valid_initializers)}, "
-            f"got {population_initializer} instead"
-        )
-
-
-def _use_population_parallelism(estimator, n_tasks):
-    if estimator.parallel_backend == "cv":
-        return False
-
-    return (
-        estimator.log_config is None
-        and _is_parallel_enabled(estimator.n_jobs, n_tasks)
-        and estimator.parallel_backend in {"auto", "population"}
-    )
-
-
-def _record_fit_stats(
-    estimator, evaluated=0, unique=0, cv_calls=0, cache_hits=0, duplicates=0, skipped=0
-):
-    estimator.fit_stats_["evaluated_candidates"] += evaluated
-    estimator.fit_stats_["unique_candidates"] += unique
-    estimator.fit_stats_["cross_validate_calls"] += cv_calls
-    estimator.fit_stats_["cache_hits"] += cache_hits
-    estimator.fit_stats_["duplicate_candidates"] += duplicates
-    estimator.fit_stats_["skipped_invalid_candidates"] += skipped
-
-
-def _reset_adapters(estimator):
-    estimator.crossover_adapter.reset()
-    estimator.mutation_adapter.reset()
-
-
-def _history_record(history, index):
-    return {key: values[index] for key, values in history.items()}
-
-
-def _is_dimension_value_valid(dimension, value):
-    if isinstance(dimension, Integer):
-        return isinstance(value, int) and dimension.lower <= value <= dimension.upper
-
-    if isinstance(dimension, Continuous):
-        return isinstance(value, (int, float)) and dimension.lower <= value <= dimension.upper
-
-    if isinstance(dimension, Categorical):
-        return value in dimension.choices
-
-    return False
-
-
-def _default_estimator_params(estimator, space):
-    estimator_params = estimator.get_params(deep=True)
-    defaults = {}
-
-    for parameter, dimension in space.param_grid.items():
-        if parameter not in estimator_params:
-            return None
-
-        value = estimator_params[parameter]
-        if not _is_dimension_value_valid(dimension, value):
-            return None
-
-        defaults[parameter] = value
-
-    return defaults
-
-
-def _sample_dimension_from_unit(dimension, value):
-    if isinstance(dimension, Integer):
-        n_values = dimension.upper - dimension.lower + 1
-        sampled = dimension.lower + int(np.floor(value * n_values))
-        return int(np.clip(sampled, dimension.lower, dimension.upper))
-
-    if isinstance(dimension, Continuous):
-        if dimension.distribution == "log-uniform" and dimension.lower > 0:
-            log_lower = np.log(dimension.lower)
-            log_upper = np.log(dimension.upper)
-            return float(np.exp(log_lower + value * (log_upper - log_lower)))
-
-        return float(dimension.lower + value * (dimension.upper - dimension.lower))
-
-    raise TypeError("Latin hypercube sampling only supports numeric dimensions")
-
-
-def _stratified_categorical_value(dimension, index, population_size):
-    if dimension.priors is not None:
-        midpoint = (index + 0.5) / population_size
-        cumulative_priors = np.cumsum(dimension.priors)
-        choice_index = int(np.searchsorted(cumulative_priors, midpoint, side="right"))
-        choice_index = min(choice_index, len(dimension.choices) - 1)
-        return dimension.choices[choice_index]
-
-    return dimension.choices[index % len(dimension.choices)]
-
-
-class GASearchCV(BaseSearchCV):
+class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
     """
     Evolutionary optimization over hyperparameters.
 
@@ -566,101 +443,11 @@ class GASearchCV(BaseSearchCV):
 
         self.logbook = tools.Logbook()
 
-    def _append_unique_individual(self, population, seen_individuals, individual_values):
-        individual_key = tuple(individual_values)
-        if individual_key in seen_individuals:
-            return False
-
-        population.append(creator.Individual(individual_values))
-        seen_individuals.add(individual_key)
-        return True
-
-    def _random_population(self):
-        population = []
-        num_warm_start = min(len(self.warm_start_configs), self.population_size)
-
-        for config in self.warm_start_configs[:num_warm_start]:
-            individual_values = self.space.sample_warm_start(config)
-            individual_values_list = list(individual_values.values())
-            individual = creator.Individual(individual_values_list)
-            population.append(individual)
-
-        num_random = self.population_size - num_warm_start
-        population.extend(self.toolbox.population(n=num_random))
-
-        return population
-
-    def _smart_population(self):
-        population = []
-        seen_individuals = set()
-
-        for config in self.warm_start_configs[: self.population_size]:
-            individual_values = self.space.sample_warm_start(config)
-            self._append_unique_individual(
-                population, seen_individuals, list(individual_values.values())
-            )
-
-            if len(population) == self.population_size:
-                return population
-
-        default_params = _default_estimator_params(self.estimator, self.space)
-        if default_params is not None:
-            self._append_unique_individual(
-                population,
-                seen_individuals,
-                [default_params[parameter] for parameter in self.space.parameters],
-            )
-
-        remaining = self.population_size - len(population)
-        numeric_parameters = [
-            parameter
-            for parameter, dimension in self.space.param_grid.items()
-            if isinstance(dimension, (Continuous, Integer))
-        ]
-
-        lhs_samples = None
-        if numeric_parameters and remaining > 0:
-            sampler = qmc.LatinHypercube(d=len(numeric_parameters))
-            lhs_samples = sampler.random(n=remaining)
-
-        for sample_index in range(remaining):
-            individual_values = []
-            numeric_index = 0
-            for parameter, dimension in self.space.param_grid.items():
-                if isinstance(dimension, (Continuous, Integer)):
-                    value = _sample_dimension_from_unit(
-                        dimension, lhs_samples[sample_index, numeric_index]
-                    )
-                    numeric_index += 1
-                elif isinstance(dimension, Categorical):
-                    value = _stratified_categorical_value(dimension, sample_index, remaining)
-                else:  # pragma: no cover
-                    value = dimension.sample()
-
-                individual_values.append(value)
-
-            self._append_unique_individual(population, seen_individuals, individual_values)
-
-        attempts = 0
-        max_attempts = max(100, self.population_size * 20)
-        while len(population) < self.population_size and attempts < max_attempts:
-            individual = self.toolbox.individual()
-            self._append_unique_individual(population, seen_individuals, list(individual))
-            attempts += 1
-
-        while len(population) < self.population_size:
-            population.append(self.toolbox.individual())
-
-        return population
-
     def _initialize_population(self):
         """
         Initialize the population, using warm-start configurations if provided.
         """
-        if self.population_initializer == "random":
-            return self._random_population()
-
-        return self._smart_population()
+        return initialize_search_population(self, self.toolbox, creator.Individual)
 
     def mutate(self, individual):
         """
@@ -693,95 +480,7 @@ class GASearchCV(BaseSearchCV):
         return tuple(sorted(current_generation_params.items()))
 
     def evaluate_population(self, individuals):
-        if not individuals:
-            return []
-
-        pending_items = []
-        pending_lookup_keys = []
-        seen_pending_keys = set()
-        batch_cache_hits = 0
-        batch_duplicates = 0
-
-        for individual in individuals:
-            individual_key = self._individual_key(individual)
-            if self.use_cache and individual_key in self.fitness_cache:
-                batch_cache_hits += 1
-                pending_lookup_keys.append(None)
-                continue
-
-            if self.use_cache and individual_key in seen_pending_keys:
-                batch_duplicates += 1
-                pending_lookup_keys.append(individual_key)
-                continue
-
-            lookup_key = individual_key if self.use_cache else (individual_key, len(pending_items))
-            pending_items.append((lookup_key, list(individual)))
-            pending_lookup_keys.append(lookup_key)
-            seen_pending_keys.add(individual_key)
-
-        pending_results = {}
-
-        if pending_items:
-            if _use_population_parallelism(self, len(pending_items)):
-                self.fit_stats_["population_parallel_batches"] += 1
-                results = Parallel(n_jobs=self.n_jobs, prefer="threads")(
-                    delayed(self._evaluate_individual)(individual, n_jobs=1)
-                    for _, individual in pending_items
-                )
-            else:
-                self.fit_stats_["population_serial_batches"] += 1
-                candidate_n_jobs = self.n_jobs if self.parallel_backend == "cv" else 1
-                results = [
-                    self._evaluate_individual(individual, n_jobs=candidate_n_jobs)
-                    for _, individual in pending_items
-                ]
-
-            pending_results = {
-                lookup_key: result for (lookup_key, _), result in zip(pending_items, results)
-            }
-
-        fitnesses = []
-        batch_cv_calls = 0
-        batch_skipped = 0
-
-        for individual, lookup_key in zip(individuals, pending_lookup_keys):
-            individual_key = self._individual_key(individual)
-
-            if self.use_cache and individual_key in self.fitness_cache:
-                cached_result = self.fitness_cache[individual_key]
-                self.logbook.record(parameters=cached_result["current_generation_params"])
-            else:
-                fitness, current_generation_params, used_cv, skipped_invalid = pending_results[
-                    lookup_key
-                ]
-                current_generation_params = _logbook_record(
-                    self.logbook,
-                    "parameters",
-                    current_generation_params,
-                )
-                batch_cv_calls += int(used_cv)
-                batch_skipped += int(skipped_invalid)
-                if self.use_cache:
-                    self.fitness_cache[individual_key] = {
-                        "fitness": fitness,
-                        "current_generation_params": current_generation_params,
-                    }
-
-            fitnesses.append(
-                self.fitness_cache[individual_key]["fitness"] if self.use_cache else fitness
-            )
-
-        _record_fit_stats(
-            self,
-            evaluated=len(individuals),
-            unique=len(pending_items),
-            cv_calls=batch_cv_calls,
-            cache_hits=batch_cache_hits,
-            duplicates=batch_duplicates,
-            skipped=batch_skipped,
-        )
-
-        return fitnesses
+        return _evaluate_population_batch(self, individuals, "current_generation_params")
 
     def _evaluate_individual(self, individual, n_jobs=None):
         # Dictionary representation of the individual with key-> hyperparameter name, value -> value
@@ -1052,139 +751,8 @@ class GASearchCV(BaseSearchCV):
 
         return self
 
-    def save(self, filepath):
-        """Save the current state of the GASearchCV instance to a file."""
-        try:
-            checkpoint_data = {"estimator_state": self.__dict__, "logbook": None}
-            if hasattr(self, "logbook"):
-                checkpoint_data["logbook"] = self.logbook
-            with open(filepath, "wb") as f:
-                pickle.dump(checkpoint_data, f)
-            print(f"GASearchCV model successfully saved to {filepath}")
-        except Exception as e:
-            print(f"Error saving GASearchCV: {e}")
 
-    def load(self, filepath):
-        """Load a GASearchCV instance from a file."""
-        try:
-            with open(filepath, "rb") as f:
-                checkpoint_data = pickle.load(f)
-                for key, value in checkpoint_data["estimator_state"].items():
-                    setattr(self, key, value)
-                self.logbook = checkpoint_data["logbook"]
-            print(f"GASearchCV model successfully loaded from {filepath}")
-        except Exception as e:
-            print(f"Error loading GASearchCV: {e}")
-
-    def _select_algorithm(self, pop, stats, hof):
-        """
-        It selects the algorithm to run from the sklearn_genetic.algorithms module
-        based in the parameter self.algorithm.
-
-        Parameters
-        ----------
-        pop: pop object from DEAP
-        stats: stats object from DEAP
-        hof: hof object from DEAP
-
-        Returns
-        -------
-        pop: pop object
-            The last evaluated population
-        log: Logbook object
-            It contains the calculated fitness metrics, optimizer telemetry,
-            the number of generations and the number of evaluated individuals per generation
-        n_gen: int
-            The number of generations that the evolutionary algorithm ran
-        """
-
-        selected_algorithm = algorithms_factory.get(self.algorithm, None)
-        if selected_algorithm:
-            pop, log, gen = selected_algorithm(
-                pop,
-                self.toolbox,
-                mu=self.population_size,
-                lambda_=2 * self.population_size,
-                cxpb=self.crossover_adapter,
-                stats=stats,
-                mutpb=self.mutation_adapter,
-                ngen=self.generations,
-                halloffame=hof,
-                callbacks=self.callbacks,
-                verbose=self.verbose,
-                estimator=self,
-            )
-
-        else:
-            raise ValueError(
-                f"The algorithm {self.algorithm} is not supported, "
-                f"please select one from {Algorithms.list()}"
-            )
-
-        return pop, log, gen
-
-    def _run_search(self, evaluate_candidates):
-        pass  # noqa
-
-    @property
-    def _fitted(self):
-        try:
-            check_is_fitted(self.estimator)
-            is_fitted = True
-        except Exception as e:
-            is_fitted = False
-
-        has_history = hasattr(self, "history") and bool(self.history)
-        return all([is_fitted, has_history, self.refit])
-
-    def __getitem__(self, index):
-        """
-
-        Parameters
-        ----------
-        index: slice required to get
-
-        Returns
-        -------
-        Best solution of the iteration corresponding to the index number
-        """
-        if not self._fitted:
-            raise NotFittedError(
-                f"This GASearchCV instance is not fitted yet "
-                f"or used refit=False. Call 'fit' with appropriate "
-                f"arguments before using this estimator."
-            )
-
-        return _history_record(self.history, index)
-
-    def __iter__(self):
-        self.n = 0
-        return self
-
-    def __next__(self):
-        """
-        Returns
-        -------
-        Iteration over the statistics found in each generation
-        """
-        if self.n < self._n_iterations + 1:
-            result = self.__getitem__(self.n)
-            self.n += 1
-            return result
-        else:
-            raise StopIteration  # pragma: no cover
-
-    def __len__(self):
-        """
-        Returns
-        -------
-        Number of generations fitted if .fit method has been called,
-        self.generations otherwise
-        """
-        return self._n_iterations
-
-
-class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
+class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMixin, BaseEstimator):
     """
     Evolutionary optimization for feature selection.
 
@@ -1506,150 +1074,14 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
 
         self.logbook = tools.Logbook()
 
-    def _append_unique_feature_individual(self, population, seen_individuals, values):
-        individual_key = tuple(values)
-        if individual_key in seen_individuals:
-            return False
-
-        population.append(creator.Individual(values))
-        seen_individuals.add(individual_key)
-        return True
-
-    def _smart_feature_population(self):
-        population = []
-        seen_individuals = set()
-        max_selected = self.max_features or self.n_features
-        max_selected = max(1, min(max_selected, self.n_features))
-
-        selected_counts = np.linspace(1, max_selected, num=self.population_size)
-        selected_counts = np.rint(selected_counts).astype(int)
-
-        for sample_index, n_selected in enumerate(selected_counts):
-            offset = sample_index % self.n_features
-            feature_order = list(range(self.n_features))
-            random.shuffle(feature_order)
-            feature_order = feature_order[offset:] + feature_order[:offset]
-
-            values = [0] * self.n_features
-            for feature_index in feature_order[:n_selected]:
-                values[feature_index] = 1
-
-            self._append_unique_feature_individual(population, seen_individuals, values)
-
-        attempts = 0
-        max_attempts = max(100, self.population_size * 20)
-        while len(population) < self.population_size and attempts < max_attempts:
-            individual = self.toolbox.individual()
-            self._append_unique_feature_individual(population, seen_individuals, list(individual))
-            attempts += 1
-
-        while len(population) < self.population_size:
-            population.append(self.toolbox.individual())
-
-        return population
-
     def _initialize_population(self):
-        if self.population_initializer == "random":
-            return self.toolbox.population(n=self.population_size)
-
-        return self._smart_feature_population()
+        return initialize_feature_population(self, self.toolbox, creator.Individual)
 
     def _individual_key(self, individual):
         return tuple(individual)
 
     def evaluate_population(self, individuals):
-        if not individuals:
-            return []
-
-        pending_items = []
-        pending_lookup_keys = []
-        seen_pending_keys = set()
-        batch_cache_hits = 0
-        batch_duplicates = 0
-
-        for individual in individuals:
-            individual_key = self._individual_key(individual)
-            if self.use_cache and individual_key in self.fitness_cache:
-                batch_cache_hits += 1
-                pending_lookup_keys.append(None)
-                continue
-
-            if self.use_cache and individual_key in seen_pending_keys:
-                batch_duplicates += 1
-                pending_lookup_keys.append(individual_key)
-                continue
-
-            lookup_key = individual_key if self.use_cache else (individual_key, len(pending_items))
-            pending_items.append((lookup_key, list(individual)))
-            pending_lookup_keys.append(lookup_key)
-            seen_pending_keys.add(individual_key)
-
-        pending_results = {}
-
-        if pending_items:
-            if _use_population_parallelism(self, len(pending_items)):
-                self.fit_stats_["population_parallel_batches"] += 1
-                results = Parallel(n_jobs=self.n_jobs, prefer="threads")(
-                    delayed(self._evaluate_individual)(individual, n_jobs=1)
-                    for _, individual in pending_items
-                )
-            else:
-                self.fit_stats_["population_serial_batches"] += 1
-                candidate_n_jobs = self.n_jobs if self.parallel_backend == "cv" else 1
-                results = [
-                    self._evaluate_individual(individual, n_jobs=candidate_n_jobs)
-                    for _, individual in pending_items
-                ]
-
-            pending_results = {
-                lookup_key: result for (lookup_key, _), result in zip(pending_items, results)
-            }
-
-        fitnesses = []
-        batch_cv_calls = 0
-        batch_skipped = 0
-
-        for individual, lookup_key in zip(individuals, pending_lookup_keys):
-            individual_key = self._individual_key(individual)
-
-            if self.use_cache and individual_key in self.fitness_cache:
-                cached_result = self.fitness_cache[individual_key]
-                self.logbook.record(parameters=cached_result["current_generation_features"])
-            else:
-                (
-                    fitness,
-                    current_generation_features,
-                    used_cv,
-                    skipped_invalid,
-                ) = pending_results[lookup_key]
-                current_generation_features = _logbook_record(
-                    self.logbook,
-                    "parameters",
-                    current_generation_features,
-                )
-                batch_cv_calls += int(used_cv)
-                batch_skipped += int(skipped_invalid)
-                if self.use_cache:
-                    self.fitness_cache[individual_key] = {
-                        "fitness": fitness,
-                        "current_generation_features": current_generation_features,
-                    }
-
-            fitnesses.append(
-                self.fitness_cache[individual_key]["fitness"] if self.use_cache else fitness
-            )
-
-        _record_fit_stats(
-            self,
-            evaluated=len(individuals),
-            unique=len(pending_items),
-            cv_calls=batch_cv_calls,
-            cache_hits=batch_cache_hits,
-            duplicates=batch_duplicates,
-            skipped=batch_skipped,
-        )
-
-        return fitnesses
+        return _evaluate_population_batch(self, individuals, "current_generation_features")
 
     def _build_feature_evaluation_record(self, current_generation_params, cv_results):
         cv_scores = cv_results[f"test_{self.refit_metric}"]
@@ -1940,138 +1372,6 @@ class GAFeatureSelectionCV(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         del creator.Individual
 
         return self
-
-    def save(self, filepath):
-        """Save the current state of the GAFeatureSelectionCV instance to a file."""
-        try:
-            checkpoint_data = {"estimator_state": self.__dict__, "logbook": None}
-            if hasattr(self, "logbook"):
-                checkpoint_data["logbook"] = self.logbook
-
-            with open(filepath, "wb") as f:
-                pickle.dump(checkpoint_data, f)
-            print(f"GAFeatureSelectionCV model successfully saved to {filepath}")
-        except Exception as e:
-            print(f"Error saving GAFeatureSelectionCV: {e}")
-
-    def load(self, filepath):
-        """Load a GAFeatureSelectionCV instance from a file."""
-        try:
-            with open(filepath, "rb") as f:
-                checkpoint_data = pickle.load(f)
-                for key, value in checkpoint_data["estimator_state"].items():
-                    setattr(self, key, value)
-                self.logbook = checkpoint_data["logbook"]
-            print(f"GAFeatureSelectionCV model successfully loaded from {filepath}")  # noqa
-        except Exception as e:
-            print(f"Error loading GAFeatureSelectionCV: {e}")
-
-    def _select_algorithm(self, pop, stats, hof):
-        """
-        It selects the algorithm to run from the sklearn_genetic.algorithms module
-        based in the parameter self.algorithm.
-
-        Parameters
-        ----------
-        pop: pop object from DEAP
-        stats: stats object from DEAP
-        hof: hof object from DEAP
-
-        Returns
-        -------
-        pop: pop object
-            The last evaluated population
-        log: Logbook object
-            It contains the calculated fitness metrics, optimizer telemetry,
-            the number of generations and the number of evaluated individuals per generation
-        n_gen: int
-            The number of generations that the evolutionary algorithm ran
-        """
-
-        selected_algorithm = algorithms_factory.get(self.algorithm, None)
-        if selected_algorithm:
-            pop, log, gen = selected_algorithm(
-                pop,
-                self.toolbox,
-                mu=self.population_size,
-                lambda_=2 * self.population_size,
-                cxpb=self.crossover_adapter,
-                stats=stats,
-                mutpb=self.mutation_adapter,
-                ngen=self.generations,
-                halloffame=hof,
-                callbacks=self.callbacks,
-                verbose=self.verbose,
-                estimator=self,
-            )
-
-        else:
-            raise ValueError(
-                f"The algorithm {self.algorithm} is not supported, "
-                f"please select one from {Algorithms.list()}"
-            )
-
-        return pop, log, gen
-
-    def _run_search(self, evaluate_candidates):
-        pass  # noqa
-
-    @property
-    def _fitted(self):
-        try:
-            check_is_fitted(self.estimator)
-            is_fitted = True
-        except Exception as e:
-            is_fitted = False
-
-        has_history = hasattr(self, "history") and bool(self.history)
-        return all([is_fitted, has_history, self.refit])
-
-    def __getitem__(self, index):
-        """
-
-        Parameters
-        ----------
-        index: slice required to get
-
-        Returns
-        -------
-        Best solution of the iteration corresponding to the index number
-        """
-        if not self._fitted:
-            raise NotFittedError(
-                f"This GAFeatureSelectionCV instance is not fitted yet "
-                f"or used refit=False. Call 'fit' with appropriate "
-                f"arguments before using this estimator."
-            )
-
-        return _history_record(self.history, index)
-
-    def __iter__(self):
-        self.n = 0
-        return self
-
-    def __next__(self):
-        """
-        Returns
-        -------
-        Iteration over the statistics found in each generation
-        """
-        if self.n < self._n_iterations + 1:
-            result = self.__getitem__(self.n)
-            self.n += 1
-            return result
-        else:
-            raise StopIteration  # pragma: no cover
-
-    def __len__(self):
-        """
-        Returns
-        -------
-        Number of generations fitted if .fit method has been called,
-        self.generations otherwise
-        """
-        return self._n_iterations
 
     def _check_refit_for_multimetric(self, scores):  # pragma: no cover
         """Check `refit` is compatible with `scores` is valid"""

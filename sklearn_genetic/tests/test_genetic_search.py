@@ -16,6 +16,7 @@ import os
 from .. import GASearchCV
 from ..space import Integer, Categorical, Continuous
 from .. import genetic_search
+from .. import evaluation
 from ..callbacks import (
     ThresholdStopping,
     DeltaThreshold,
@@ -302,8 +303,8 @@ def test_evaluate_population_parallelizes_unique_individuals_without_nested_cv(m
             "score_time": np.array([0.0, 0.0]),
         }
 
-    monkeypatch.setattr(genetic_search, "Parallel", FakeParallel)
-    monkeypatch.setattr(genetic_search, "_is_parallel_enabled", lambda n_jobs, n_tasks: True)
+    monkeypatch.setattr(evaluation, "Parallel", FakeParallel)
+    monkeypatch.setattr(evaluation, "is_parallel_enabled", lambda n_jobs, n_tasks: True)
     monkeypatch.setattr(genetic_search, "cross_validate", fake_cross_validate)
 
     estimator = GASearchCV(
@@ -350,8 +351,8 @@ def test_evaluate_population_cv_backend_uses_inner_cv_parallelism(monkeypatch):
             "score_time": np.array([0.0, 0.0]),
         }
 
-    monkeypatch.setattr(genetic_search, "Parallel", fail_parallel)
-    monkeypatch.setattr(genetic_search, "_is_parallel_enabled", lambda n_jobs, n_tasks: True)
+    monkeypatch.setattr(evaluation, "Parallel", fail_parallel)
+    monkeypatch.setattr(evaluation, "is_parallel_enabled", lambda n_jobs, n_tasks: True)
     monkeypatch.setattr(genetic_search, "cross_validate", fake_cross_validate)
 
     estimator = GASearchCV(
