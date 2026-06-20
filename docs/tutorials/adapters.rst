@@ -254,7 +254,7 @@ The same idea can be used for hyperparameter tuning or feature selection.
 
 .. code-block:: python
 
-   from sklearn_genetic import GASearchCV
+   from sklearn_genetic import EvolutionConfig, GASearchCV, PopulationConfig, RuntimeConfig
    from sklearn_genetic.schedules import ExponentialAdapter
    from sklearn_genetic.space import Continuous, Categorical, Integer
    from sklearn.ensemble import RandomForestClassifier
@@ -284,13 +284,15 @@ The same idea can be used for hyperparameter tuning or feature selection.
    evolved_estimator = GASearchCV(estimator=clf,
                                   cv=cv,
                                   scoring='accuracy',
-                                  population_size=20,
-                                  generations=25,
-                                  population_initializer="smart",
-                                  mutation_probability=mutation_adapter,
-                                  crossover_probability=crossover_adapter,
                                   param_grid=param_grid,
-                                  n_jobs=-1)
+                                  evolution_config=EvolutionConfig(
+                                      population_size=20,
+                                      generations=25,
+                                      mutation_probability=mutation_adapter,
+                                      crossover_probability=crossover_adapter,
+                                  ),
+                                  population_config=PopulationConfig(initializer="smart"),
+                                  runtime_config=RuntimeConfig(n_jobs=-1))
 
    # Train and optimize the estimator
    evolved_estimator.fit(X_train, y_train)

@@ -47,7 +47,7 @@ Using `GASearchCV` with `IsolationForest`:
 .. code-block:: python
 
     from sklearn.ensemble import IsolationForest
-    from sklearn_genetic import GASearchCV
+    from sklearn_genetic import EvolutionConfig, GASearchCV, PopulationConfig, RuntimeConfig
     from sklearn_genetic.space import Integer, Continuous
     from sklearn.datasets import make_blobs
     import numpy as np
@@ -68,10 +68,9 @@ Using `GASearchCV` with `IsolationForest`:
                         param_grid=param_grid,
                         scoring=None,  # triggers default_outlier_scorer
                         cv=3,
-                        generations=4,
-                        population_size=6,
-                        population_initializer="smart",
-                        n_jobs=-1)
+                        evolution_config=EvolutionConfig(generations=4, population_size=6),
+                        population_config=PopulationConfig(initializer="smart"),
+                        runtime_config=RuntimeConfig(n_jobs=-1))
 
     search.fit(X)
 
@@ -79,17 +78,21 @@ Using `GAFeatureSelectionCV` with outlier detection:
 
 .. code-block:: python
 
-    from sklearn_genetic import GAFeatureSelectionCV
+    from sklearn_genetic import (
+        EvolutionConfig,
+        GAFeatureSelectionCV,
+        PopulationConfig,
+        RuntimeConfig,
+    )
     from sklearn.ensemble import IsolationForest
 
     selector = GAFeatureSelectionCV(
         estimator=IsolationForest(random_state=42),
         scoring=None,  # default_outlier_scorer used
         cv=3,
-        generations=4,
-        population_size=6,
-        population_initializer="smart",
-        n_jobs=-1
+        evolution_config=EvolutionConfig(generations=4, population_size=6),
+        population_config=PopulationConfig(initializer="smart"),
+        runtime_config=RuntimeConfig(n_jobs=-1),
     )
 
     selector.fit(X)
@@ -109,10 +112,9 @@ You may override the default logic by passing your own custom scoring function:
         param_grid=param_grid,
         scoring=custom_score,
         cv=3,
-        generations=4,
-        population_size=6,
-        population_initializer="smart",
-        n_jobs=1
+        evolution_config=EvolutionConfig(generations=4, population_size=6),
+        population_config=PopulationConfig(initializer="smart"),
+        runtime_config=RuntimeConfig(n_jobs=1),
     )
 
     search.fit(X)

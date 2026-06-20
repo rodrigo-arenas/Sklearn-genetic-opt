@@ -53,12 +53,12 @@ Creating the First Generation
 -----------------------------
 
 By default, the first generation is built with
-``population_initializer="smart"``. For :class:`~sklearn_genetic.GASearchCV`,
+``PopulationConfig(initializer="smart")``. For :class:`~sklearn_genetic.GASearchCV`,
 this combines valid warm-start candidates, valid estimator defaults, Latin
 hypercube samples for numeric hyperparameters, stratified categorical values,
 and duplicate avoidance. For :class:`~sklearn_genetic.GAFeatureSelectionCV`, it
 creates duplicate-aware feature masks with varied selected-feature counts. Set
-``population_initializer="random"`` to use fully random initialization.
+``PopulationConfig(initializer="random")`` to use fully random initialization.
 
 Each individual can be represented as a chromosome-like structure. In the
 example below, the first generation contains three individuals. Each chromosome
@@ -154,7 +154,7 @@ reuse their stored fitness values. Duplicate candidates inside the same
 generation are also evaluated only once and then recorded for each occurrence.
 When ``n_jobs`` enables parallel execution, unique candidates in a generation
 are evaluated in parallel, while each candidate's own cross-validation runs
-sequentially to avoid nested parallelism. Set ``parallel_backend="cv"`` to keep
+sequentially to avoid nested parallelism. Set ``RuntimeConfig(parallel_backend="cv")`` to keep
 candidate evaluation serial and pass ``n_jobs`` to each candidate's
 cross-validation instead. After fitting, ``fit_stats_`` exposes counters for
 actual cross-validation calls, cache hits, duplicate candidates, skipped invalid
@@ -171,13 +171,13 @@ The ``history`` attribute also includes optimizer telemetry for each generation:
 exploring diverse solutions or has started to converge/stagnate around the same
 candidates.
 
-When the search space is noisy or rugged, ``diversity_control=True`` can help
+When the search space is noisy or rugged, ``OptimizationConfig(diversity_control=True)`` can help
 avoid premature convergence by increasing mutation, replacing duplicate
 candidates, and adding random immigrants after low-diversity or stagnant
 generations. When the search has found promising regions,
-``local_search=True`` can run a short neighborhood refinement around the
+``OptimizationConfig(local_search=True)`` can run a short neighborhood refinement around the
 hall-of-fame candidates without increasing the number of GA generations.
-``fitness_sharing=True`` can reduce selection pressure on crowded niches, so
+``OptimizationConfig(fitness_sharing=True)`` can reduce selection pressure on crowded niches, so
 similar high-scoring candidates do not immediately dominate the population.
 
 The generation log contains summary metrics:
@@ -199,7 +199,7 @@ The generation log contains summary metrics:
     The worst individual score in the current generation.
 
 Except for ``fitness_best``, these values summarize the current population, not
-just the final selected model. For example, if ``population_size=10``, the
+just the final selected model. For example, if ``EvolutionConfig(population_size=10)``, the
 ``fitness`` value is the average score of the 10 candidates evaluated in that
 generation.
 
@@ -235,7 +235,7 @@ test set.
     from sklearn.preprocessing import StandardScaler
     from sklearn.tree import DecisionTreeRegressor
 
-    from sklearn_genetic import GASearchCV
+    from sklearn_genetic import EvolutionConfig, GASearchCV, PopulationConfig, RuntimeConfig
     from sklearn_genetic.space import Categorical, Continuous, Integer
 
     data = load_diabetes()
@@ -265,18 +265,20 @@ test set.
         estimator=pipe,
         cv=cv,
         scoring="r2",
-        population_size=15,
-        generations=20,
-        population_initializer="smart",
-        tournament_size=3,
-        elitism=True,
-        keep_top_k=4,
-        crossover_probability=0.9,
-        mutation_probability=0.05,
         param_grid=param_grid,
-        criteria="max",
-        algorithm="eaMuCommaLambda",
-        n_jobs=-1,
+        evolution_config=EvolutionConfig(
+            population_size=15,
+            generations=20,
+            tournament_size=3,
+            elitism=True,
+            keep_top_k=4,
+            crossover_probability=0.9,
+            mutation_probability=0.05,
+            criteria="max",
+            algorithm="eaMuCommaLambda",
+        ),
+        population_config=PopulationConfig(initializer="smart"),
+        runtime_config=RuntimeConfig(n_jobs=-1),
     )
 
     evolved_estimator.fit(X_train, y_train)

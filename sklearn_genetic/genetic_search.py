@@ -75,6 +75,14 @@ from .optimizer_control import (
 
 import os
 from .callbacks.model_checkpoint import ModelCheckpoint
+from .config import EvolutionConfig, OptimizationConfig, PopulationConfig, RuntimeConfig
+
+
+def _resolve_config_value(config, field_name, fallback):
+    if config is None:
+        return fallback
+
+    return getattr(config, field_name, fallback)
 
 
 class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
@@ -119,6 +127,23 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
 
     population_size : int, default=10
         Size of the initial population to sample generated individuals.
+
+    evolution_config : :class:`~sklearn_genetic.config.EvolutionConfig`, default=None
+        Optional grouped configuration for core genetic algorithm controls such
+        as population size, generation count, crossover, mutation, tournament
+        size, elitism, hall-of-fame size, criteria, and algorithm.
+
+    population_config : :class:`~sklearn_genetic.config.PopulationConfig`, default=None
+        Optional grouped configuration for initial population behavior,
+        including ``initializer`` and ``warm_start_configs``.
+
+    runtime_config : :class:`~sklearn_genetic.config.RuntimeConfig`, default=None
+        Optional grouped configuration for parallelism, caching, train-score
+        collection, error handling, and verbose output.
+
+    optimization_config : :class:`~sklearn_genetic.config.OptimizationConfig`, default=None
+        Optional grouped configuration for local refinement, diversity control,
+        adaptive selection, fitness sharing, and robust final selection.
 
     population_initializer : {'smart', 'random'}, default='smart'
         Strategy used to generate the initial population. ``'smart'`` combines
@@ -375,6 +400,10 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         log_config=None,
         use_cache=True,
         warm_start_configs=None,
+        evolution_config=None,
+        population_config=None,
+        runtime_config=None,
+        optimization_config=None,
         parallel_backend="auto",
         population_initializer="smart",
         local_search=False,
@@ -397,6 +426,105 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         final_selection_top_k=3,
         final_selection_cv=None,
     ):
+        legacy_warm_start_configs = warm_start_configs
+
+        population_size = _resolve_config_value(
+            evolution_config, "population_size", population_size
+        )
+        generations = _resolve_config_value(evolution_config, "generations", generations)
+        crossover_probability = _resolve_config_value(
+            evolution_config, "crossover_probability", crossover_probability
+        )
+        mutation_probability = _resolve_config_value(
+            evolution_config, "mutation_probability", mutation_probability
+        )
+        tournament_size = _resolve_config_value(
+            evolution_config, "tournament_size", tournament_size
+        )
+        elitism = _resolve_config_value(evolution_config, "elitism", elitism)
+        keep_top_k = _resolve_config_value(evolution_config, "keep_top_k", keep_top_k)
+        criteria = _resolve_config_value(evolution_config, "criteria", criteria)
+        algorithm = _resolve_config_value(evolution_config, "algorithm", algorithm)
+
+        population_initializer = _resolve_config_value(
+            population_config, "initializer", population_initializer
+        )
+        warm_start_configs = _resolve_config_value(
+            population_config, "warm_start_configs", warm_start_configs
+        )
+
+        n_jobs = _resolve_config_value(runtime_config, "n_jobs", n_jobs)
+        pre_dispatch = _resolve_config_value(runtime_config, "pre_dispatch", pre_dispatch)
+        error_score = _resolve_config_value(runtime_config, "error_score", error_score)
+        return_train_score = _resolve_config_value(
+            runtime_config, "return_train_score", return_train_score
+        )
+        use_cache = _resolve_config_value(runtime_config, "use_cache", use_cache)
+        parallel_backend = _resolve_config_value(
+            runtime_config, "parallel_backend", parallel_backend
+        )
+        verbose = _resolve_config_value(runtime_config, "verbose", verbose)
+
+        local_search = _resolve_config_value(optimization_config, "local_search", local_search)
+        local_search_top_k = _resolve_config_value(
+            optimization_config, "local_search_top_k", local_search_top_k
+        )
+        local_search_steps = _resolve_config_value(
+            optimization_config, "local_search_steps", local_search_steps
+        )
+        local_search_radius = _resolve_config_value(
+            optimization_config, "local_search_radius", local_search_radius
+        )
+        diversity_control = _resolve_config_value(
+            optimization_config, "diversity_control", diversity_control
+        )
+        diversity_threshold = _resolve_config_value(
+            optimization_config, "diversity_threshold", diversity_threshold
+        )
+        diversity_stagnation_generations = _resolve_config_value(
+            optimization_config,
+            "diversity_stagnation_generations",
+            diversity_stagnation_generations,
+        )
+        diversity_mutation_boost = _resolve_config_value(
+            optimization_config, "diversity_mutation_boost", diversity_mutation_boost
+        )
+        random_immigrants_fraction = _resolve_config_value(
+            optimization_config, "random_immigrants_fraction", random_immigrants_fraction
+        )
+        adaptive_selection = _resolve_config_value(
+            optimization_config, "adaptive_selection", adaptive_selection
+        )
+        selection_pressure_min = _resolve_config_value(
+            optimization_config, "selection_pressure_min", selection_pressure_min
+        )
+        selection_pressure_max = _resolve_config_value(
+            optimization_config, "selection_pressure_max", selection_pressure_max
+        )
+        offspring_diversity_retries = _resolve_config_value(
+            optimization_config, "offspring_diversity_retries", offspring_diversity_retries
+        )
+        fitness_sharing = _resolve_config_value(
+            optimization_config, "fitness_sharing", fitness_sharing
+        )
+        sharing_radius = _resolve_config_value(
+            optimization_config, "sharing_radius", sharing_radius
+        )
+        sharing_alpha = _resolve_config_value(optimization_config, "sharing_alpha", sharing_alpha)
+        final_selection = _resolve_config_value(
+            optimization_config, "final_selection", final_selection
+        )
+        final_selection_top_k = _resolve_config_value(
+            optimization_config, "final_selection_top_k", final_selection_top_k
+        )
+        final_selection_cv = _resolve_config_value(
+            optimization_config, "final_selection_cv", final_selection_cv
+        )
+
+        self.evolution_config = evolution_config
+        self.population_config = population_config
+        self.runtime_config = runtime_config
+        self.optimization_config = optimization_config
         self.estimator = estimator
         self.cv = cv
         self.scoring = scoring
@@ -422,7 +550,8 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         self.log_config = log_config
         self.use_cache = use_cache
         self.fitness_cache = {}
-        self.warm_start_configs = warm_start_configs or []
+        self.warm_start_configs = legacy_warm_start_configs
+        self._warm_start_configs = warm_start_configs
         self.parallel_backend = parallel_backend
         self.population_initializer = population_initializer
         self.local_search = local_search
@@ -1072,6 +1201,23 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
     population_size : int, default=10
         Size of the initial population to sample generated individuals.
 
+    evolution_config : :class:`~sklearn_genetic.config.EvolutionConfig`, default=None
+        Optional grouped configuration for core genetic algorithm controls such
+        as population size, generation count, crossover, mutation, tournament
+        size, elitism, hall-of-fame size, criteria, and algorithm.
+
+    population_config : :class:`~sklearn_genetic.config.PopulationConfig`, default=None
+        Optional grouped configuration for the initial feature-mask population.
+
+    runtime_config : :class:`~sklearn_genetic.config.RuntimeConfig`, default=None
+        Optional grouped configuration for parallelism, caching, train-score
+        collection, error handling, and verbose output.
+
+    optimization_config : :class:`~sklearn_genetic.config.OptimizationConfig`, default=None
+        Optional grouped configuration for local refinement, diversity control,
+        adaptive selection, and fitness sharing. Final-selection fields are
+        ignored by :class:`~sklearn_genetic.GAFeatureSelectionCV`.
+
     population_initializer : {'smart', 'random'}, default='smart'
         Strategy used to generate the initial population. ``'smart'`` creates
         duplicate-aware feature masks with a spread of selected-feature counts.
@@ -1305,6 +1451,10 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         return_train_score=False,
         log_config=None,
         use_cache=True,
+        evolution_config=None,
+        population_config=None,
+        runtime_config=None,
+        optimization_config=None,
         parallel_backend="auto",
         population_initializer="smart",
         local_search=False,
@@ -1324,6 +1474,91 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         sharing_radius=0.2,
         sharing_alpha=1.0,
     ):
+        population_size = _resolve_config_value(
+            evolution_config, "population_size", population_size
+        )
+        generations = _resolve_config_value(evolution_config, "generations", generations)
+        crossover_probability = _resolve_config_value(
+            evolution_config, "crossover_probability", crossover_probability
+        )
+        mutation_probability = _resolve_config_value(
+            evolution_config, "mutation_probability", mutation_probability
+        )
+        tournament_size = _resolve_config_value(
+            evolution_config, "tournament_size", tournament_size
+        )
+        elitism = _resolve_config_value(evolution_config, "elitism", elitism)
+        keep_top_k = _resolve_config_value(evolution_config, "keep_top_k", keep_top_k)
+        criteria = _resolve_config_value(evolution_config, "criteria", criteria)
+        algorithm = _resolve_config_value(evolution_config, "algorithm", algorithm)
+
+        population_initializer = _resolve_config_value(
+            population_config, "initializer", population_initializer
+        )
+
+        n_jobs = _resolve_config_value(runtime_config, "n_jobs", n_jobs)
+        pre_dispatch = _resolve_config_value(runtime_config, "pre_dispatch", pre_dispatch)
+        error_score = _resolve_config_value(runtime_config, "error_score", error_score)
+        return_train_score = _resolve_config_value(
+            runtime_config, "return_train_score", return_train_score
+        )
+        use_cache = _resolve_config_value(runtime_config, "use_cache", use_cache)
+        parallel_backend = _resolve_config_value(
+            runtime_config, "parallel_backend", parallel_backend
+        )
+        verbose = _resolve_config_value(runtime_config, "verbose", verbose)
+
+        local_search = _resolve_config_value(optimization_config, "local_search", local_search)
+        local_search_top_k = _resolve_config_value(
+            optimization_config, "local_search_top_k", local_search_top_k
+        )
+        local_search_steps = _resolve_config_value(
+            optimization_config, "local_search_steps", local_search_steps
+        )
+        local_search_radius = _resolve_config_value(
+            optimization_config, "local_search_radius", local_search_radius
+        )
+        diversity_control = _resolve_config_value(
+            optimization_config, "diversity_control", diversity_control
+        )
+        diversity_threshold = _resolve_config_value(
+            optimization_config, "diversity_threshold", diversity_threshold
+        )
+        diversity_stagnation_generations = _resolve_config_value(
+            optimization_config,
+            "diversity_stagnation_generations",
+            diversity_stagnation_generations,
+        )
+        diversity_mutation_boost = _resolve_config_value(
+            optimization_config, "diversity_mutation_boost", diversity_mutation_boost
+        )
+        random_immigrants_fraction = _resolve_config_value(
+            optimization_config, "random_immigrants_fraction", random_immigrants_fraction
+        )
+        adaptive_selection = _resolve_config_value(
+            optimization_config, "adaptive_selection", adaptive_selection
+        )
+        selection_pressure_min = _resolve_config_value(
+            optimization_config, "selection_pressure_min", selection_pressure_min
+        )
+        selection_pressure_max = _resolve_config_value(
+            optimization_config, "selection_pressure_max", selection_pressure_max
+        )
+        offspring_diversity_retries = _resolve_config_value(
+            optimization_config, "offspring_diversity_retries", offspring_diversity_retries
+        )
+        fitness_sharing = _resolve_config_value(
+            optimization_config, "fitness_sharing", fitness_sharing
+        )
+        sharing_radius = _resolve_config_value(
+            optimization_config, "sharing_radius", sharing_radius
+        )
+        sharing_alpha = _resolve_config_value(optimization_config, "sharing_alpha", sharing_alpha)
+
+        self.evolution_config = evolution_config
+        self.population_config = population_config
+        self.runtime_config = runtime_config
+        self.optimization_config = optimization_config
         self.estimator = estimator
         self.cv = cv
         self.scoring = scoring

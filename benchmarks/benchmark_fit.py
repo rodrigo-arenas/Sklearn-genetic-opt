@@ -47,7 +47,14 @@ os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
 os.environ.setdefault("TF_ENABLE_ONEDNN_OPTS", "0")
 os.environ.setdefault("MPLCONFIGDIR", tempfile.mkdtemp(prefix="sklearn-genetic-bench-mpl-"))
 
-from sklearn_genetic import GAFeatureSelectionCV, GASearchCV
+from sklearn_genetic import (
+    EvolutionConfig,
+    GAFeatureSelectionCV,
+    GASearchCV,
+    OptimizationConfig,
+    PopulationConfig,
+    RuntimeConfig,
+)
 from sklearn_genetic import genetic_search
 from sklearn_genetic.space import Categorical, Continuous, Integer
 
@@ -220,21 +227,21 @@ def build_gasearch(
     final_selection_top_k: int = 3,
     final_selection_cv=None,
 ) -> GASearchCV:
-    return GASearchCV(
-        estimator=scenario.estimator_builder(random_state),
-        cv=cv,
-        scoring=scenario.scoring,
+    evolution_config = EvolutionConfig(
         population_size=population_size,
         generations=generations,
         tournament_size=3,
         elitism=True,
-        param_grid=scenario.param_grid_builder(),
-        verbose=False,
+    )
+    population_config = PopulationConfig(initializer=population_initializer)
+    runtime_config = RuntimeConfig(
         n_jobs=n_jobs,
         parallel_backend=parallel_backend,
-        population_initializer=population_initializer,
+        verbose=False,
         return_train_score=False,
         use_cache=True,
+    )
+    optimization_config = OptimizationConfig(
         local_search=True,
         local_search_top_k=2,
         local_search_steps=1,
@@ -254,6 +261,16 @@ def build_gasearch(
         final_selection_top_k=final_selection_top_k,
         final_selection_cv=final_selection_cv,
     )
+    return GASearchCV(
+        estimator=scenario.estimator_builder(random_state),
+        cv=cv,
+        scoring=scenario.scoring,
+        param_grid=scenario.param_grid_builder(),
+        evolution_config=evolution_config,
+        population_config=population_config,
+        runtime_config=runtime_config,
+        optimization_config=optimization_config,
+    )
 
 
 def build_feature_selector(
@@ -268,21 +285,21 @@ def build_feature_selector(
     population_initializer: str,
     max_features: int,
 ) -> GAFeatureSelectionCV:
-    return GAFeatureSelectionCV(
-        estimator=scenario.estimator_builder(random_state),
-        cv=cv,
-        scoring=scenario.scoring,
+    evolution_config = EvolutionConfig(
         population_size=population_size,
         generations=generations,
         tournament_size=3,
         elitism=True,
-        max_features=max_features,
-        verbose=False,
+    )
+    population_config = PopulationConfig(initializer=population_initializer)
+    runtime_config = RuntimeConfig(
         n_jobs=n_jobs,
         parallel_backend=parallel_backend,
-        population_initializer=population_initializer,
+        verbose=False,
         return_train_score=False,
         use_cache=True,
+    )
+    optimization_config = OptimizationConfig(
         local_search=True,
         local_search_top_k=2,
         local_search_steps=1,
@@ -298,6 +315,16 @@ def build_feature_selector(
         offspring_diversity_retries=3,
         fitness_sharing=True,
         sharing_radius=0.35,
+    )
+    return GAFeatureSelectionCV(
+        estimator=scenario.estimator_builder(random_state),
+        cv=cv,
+        scoring=scenario.scoring,
+        max_features=max_features,
+        evolution_config=evolution_config,
+        population_config=population_config,
+        runtime_config=runtime_config,
+        optimization_config=optimization_config,
     )
 
 

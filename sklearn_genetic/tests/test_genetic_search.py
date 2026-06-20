@@ -1,5 +1,6 @@
 import pytest
 from deap import tools
+from sklearn.base import clone
 from sklearn.datasets import load_digits, load_diabetes
 from sklearn.linear_model import SGDClassifier
 from sklearn.tree import DecisionTreeClassifier
@@ -13,7 +14,13 @@ from sklearn.metrics import make_scorer
 import numpy as np
 import os
 
-from .. import GASearchCV
+from .. import (
+    EvolutionConfig,
+    GASearchCV,
+    OptimizationConfig,
+    PopulationConfig,
+    RuntimeConfig,
+)
 from ..space import Integer, Categorical, Continuous
 from .. import genetic_search
 from .. import evaluation
@@ -55,6 +62,82 @@ def test_default_n_jobs_is_none():
     assert estimator.get_params()["parallel_backend"] == "auto"
     assert estimator.population_initializer == "smart"
     assert estimator.get_params()["population_initializer"] == "smart"
+
+
+def test_gasearch_accepts_grouped_config_objects():
+    evolution_config = EvolutionConfig(
+        population_size=4,
+        generations=2,
+        tournament_size=2,
+        algorithm="eaMuPlusLambda",
+    )
+    population_config = PopulationConfig(
+        initializer="smart",
+        warm_start_configs=[{"max_depth": 2, "criterion": "entropy"}],
+    )
+    runtime_config = RuntimeConfig(
+        n_jobs=1,
+        parallel_backend="auto",
+        verbose=False,
+        use_cache=True,
+    )
+    optimization_config = OptimizationConfig(
+        diversity_control=True,
+        adaptive_selection=True,
+        offspring_diversity_retries=2,
+        final_selection=True,
+        final_selection_top_k=2,
+    )
+
+    estimator = GASearchCV(
+        DecisionTreeClassifier(random_state=42),
+        cv=2,
+        scoring="accuracy",
+        param_grid={
+            "max_depth": Integer(1, 4),
+            "criterion": Categorical(["gini", "entropy"]),
+        },
+        evolution_config=evolution_config,
+        population_config=population_config,
+        runtime_config=runtime_config,
+        optimization_config=optimization_config,
+    )
+
+    assert estimator.population_size == 4
+    assert estimator.generations == 2
+    assert estimator.tournament_size == 2
+    assert estimator.population_initializer == "smart"
+    assert estimator.warm_start_configs is None
+    assert estimator._warm_start_configs == [{"max_depth": 2, "criterion": "entropy"}]
+    assert estimator.n_jobs == 1
+    assert estimator.verbose is False
+    assert estimator.diversity_control is True
+    assert estimator.adaptive_selection is True
+    assert estimator.offspring_diversity_retries == 2
+    assert estimator.final_selection is True
+    assert estimator.final_selection_top_k == 2
+    assert estimator.get_params()["evolution_config"] is evolution_config
+    assert estimator.get_params()["optimization_config"] is optimization_config
+
+
+def test_gasearch_grouped_config_is_sklearn_clone_compatible():
+    estimator = GASearchCV(
+        DecisionTreeClassifier(random_state=42),
+        cv=2,
+        scoring="accuracy",
+        param_grid={"max_depth": Integer(1, 3)},
+        evolution_config=EvolutionConfig(population_size=4, generations=1),
+        population_config=PopulationConfig(initializer="smart"),
+        runtime_config=RuntimeConfig(verbose=False),
+    )
+
+    cloned = clone(estimator)
+
+    assert cloned.population_size == 4
+    assert cloned.generations == 1
+    assert cloned.population_initializer == "smart"
+    assert cloned.verbose is False
+    assert "evolution_config" in cloned.get_params()
 
 
 def test_wrong_parallel_backend():

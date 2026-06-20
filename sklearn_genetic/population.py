@@ -96,9 +96,11 @@ def _bounded_feature_mask(n_features, max_selected):
 
 def random_search_population(estimator, toolbox, individual_cls):
     population = []
-    num_warm_start = min(len(estimator.warm_start_configs), estimator.population_size)
+    warm_start_configs = getattr(estimator, "_warm_start_configs", estimator.warm_start_configs)
+    warm_start_configs = warm_start_configs or []
+    num_warm_start = min(len(warm_start_configs), estimator.population_size)
 
-    for config in estimator.warm_start_configs[:num_warm_start]:
+    for config in warm_start_configs[:num_warm_start]:
         individual_values = estimator.space.sample_warm_start(config)
         population.append(individual_cls(list(individual_values.values())))
 
@@ -111,8 +113,10 @@ def random_search_population(estimator, toolbox, individual_cls):
 def smart_search_population(estimator, toolbox, individual_cls):
     population = []
     seen_individuals = set()
+    warm_start_configs = getattr(estimator, "_warm_start_configs", estimator.warm_start_configs)
+    warm_start_configs = warm_start_configs or []
 
-    for config in estimator.warm_start_configs[: estimator.population_size]:
+    for config in warm_start_configs[: estimator.population_size]:
         individual_values = estimator.space.sample_warm_start(config)
         _append_unique_individual(
             population,

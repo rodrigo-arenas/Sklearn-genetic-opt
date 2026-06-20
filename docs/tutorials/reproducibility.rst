@@ -22,7 +22,7 @@ Example:
 
    import numpy as np
    import random
-   from sklearn_genetic import GASearchCV
+   from sklearn_genetic import EvolutionConfig, GASearchCV, PopulationConfig, RuntimeConfig
    from sklearn_genetic.space import Continuous, Categorical, Integer
    from sklearn.ensemble import RandomForestClassifier
    from sklearn.model_selection import train_test_split, StratifiedKFold
@@ -57,13 +57,14 @@ Example:
    evolved_estimator = GASearchCV(estimator=clf,
                                   cv=cv,
                                   scoring='accuracy',
-                                  population_size=8,
-                                  generations=5,
-                                  population_initializer="smart",
                                   param_grid=param_grid,
-                                  n_jobs=-1,
-                                  verbose=True,
-                                  keep_top_k=4)
+                                  evolution_config=EvolutionConfig(
+                                      population_size=8,
+                                      generations=5,
+                                      keep_top_k=4,
+                                  ),
+                                  population_config=PopulationConfig(initializer="smart"),
+                                  runtime_config=RuntimeConfig(n_jobs=-1, verbose=True))
 
    # Train and optimize the estimator
    evolved_estimator.fit(X_train, y_train)

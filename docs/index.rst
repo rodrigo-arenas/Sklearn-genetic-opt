@@ -25,7 +25,12 @@ Highlights
 * :class:`~sklearn_genetic.GAFeatureSelectionCV` for wrapper-based feature
   selection with cross-validation.
 * Search spaces for integer, continuous, and categorical parameters.
-* Smart initial populations with ``population_initializer="smart"``, including
+* Grouped configuration objects for readable advanced setups:
+  :class:`~sklearn_genetic.EvolutionConfig`,
+  :class:`~sklearn_genetic.PopulationConfig`,
+  :class:`~sklearn_genetic.RuntimeConfig`, and
+  :class:`~sklearn_genetic.OptimizationConfig`.
+* Smart initial populations with ``PopulationConfig(initializer="smart")``, including
   warm-start seeds, estimator defaults, Latin-hypercube numeric coverage,
   stratified categorical coverage, and duplicate avoidance.
 * Adaptive mutation and crossover schedules.
@@ -92,7 +97,7 @@ Quick Start
    from sklearn.ensemble import RandomForestClassifier
    from sklearn.model_selection import StratifiedKFold
 
-   from sklearn_genetic import GASearchCV
+   from sklearn_genetic import EvolutionConfig, GASearchCV, PopulationConfig, RuntimeConfig
    from sklearn_genetic.space import Categorical, Continuous, Integer
 
    X, y = load_iris(return_X_y=True)
@@ -109,12 +114,9 @@ Quick Start
        param_grid=param_grid,
        cv=StratifiedKFold(n_splits=3, shuffle=True, random_state=42),
        scoring="accuracy",
-       population_size=12,
-       generations=8,
-       population_initializer="smart",
-       n_jobs=-1,
-       parallel_backend="auto",
-       use_cache=True,
+       evolution_config=EvolutionConfig(population_size=12, generations=8),
+       population_config=PopulationConfig(initializer="smart"),
+       runtime_config=RuntimeConfig(n_jobs=-1, parallel_backend="auto", use_cache=True),
    )
 
    search.fit(X, y)
@@ -173,6 +175,7 @@ Recommended Next Steps
 
    api/gasearchcv
    api/gafeatureselectioncv
+   api/config
    api/callbacks
    api/schedules
    api/plots

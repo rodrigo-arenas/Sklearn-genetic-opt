@@ -68,6 +68,14 @@ Features:
   ``offspring_diversity_retries`` retry logic helps replace duplicate or
   parent-matching offspring with novel candidates.
 
+* Added grouped configuration objects:
+  :class:`~sklearn_genetic.EvolutionConfig`,
+  :class:`~sklearn_genetic.PopulationConfig`,
+  :class:`~sklearn_genetic.RuntimeConfig`, and
+  :class:`~sklearn_genetic.OptimizationConfig`. These objects provide the
+  preferred API for advanced optimizer settings while the previous flat keyword
+  parameters remain supported for backward compatibility.
+
 * Added optional robust final selection to :class:`~sklearn_genetic.GASearchCV`.
   With ``final_selection=True``, the search re-evaluates the top
   ``final_selection_top_k`` candidates after the GA and selects the final

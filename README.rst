@@ -47,7 +47,7 @@ Highlights
 * ``GAFeatureSelectionCV`` for wrapper-based feature selection with
   cross-validation.
 * Search spaces for integer, continuous, and categorical parameters.
-* Smart initial populations with ``population_initializer="smart"``, including
+* Smart initial populations with ``PopulationConfig(initializer="smart")``, including
   warm-start seeds, estimator defaults, Latin-hypercube numeric coverage,
   stratified categorical coverage, and duplicate avoidance.
 * Adaptive mutation and crossover schedules.
@@ -103,7 +103,7 @@ Quick Start: Hyperparameter Search
    from sklearn.ensemble import RandomForestClassifier
    from sklearn.model_selection import StratifiedKFold, train_test_split
 
-   from sklearn_genetic import GASearchCV
+   from sklearn_genetic import EvolutionConfig, GASearchCV, PopulationConfig, RuntimeConfig
    from sklearn_genetic.space import Categorical, Continuous, Integer
 
    X, y = load_iris(return_X_y=True)
@@ -127,13 +127,14 @@ Quick Start: Hyperparameter Search
        param_grid=param_grid,
        cv=StratifiedKFold(n_splits=3, shuffle=True, random_state=42),
        scoring="accuracy",
-       population_size=12,
-       generations=8,
-       population_initializer="smart",
-       n_jobs=-1,
-       parallel_backend="auto",
-       use_cache=True,
-       verbose=True,
+       evolution_config=EvolutionConfig(population_size=12, generations=8),
+       population_config=PopulationConfig(initializer="smart"),
+       runtime_config=RuntimeConfig(
+           n_jobs=-1,
+           parallel_backend="auto",
+           use_cache=True,
+           verbose=True,
+       ),
    )
 
    search.fit(X_train, y_train)
@@ -154,7 +155,12 @@ Quick Start: Feature Selection
    from sklearn.model_selection import train_test_split
    from sklearn.svm import SVC
 
-   from sklearn_genetic import GAFeatureSelectionCV
+   from sklearn_genetic import (
+       EvolutionConfig,
+       GAFeatureSelectionCV,
+       PopulationConfig,
+       RuntimeConfig,
+   )
    from sklearn_genetic.schedules import ExponentialAdapter
 
    X, y = load_iris(return_X_y=True)
@@ -173,13 +179,14 @@ Quick Start: Feature Selection
        estimator=SVC(gamma="auto"),
        cv=3,
        scoring="accuracy",
-       population_size=12,
-       generations=8,
-       population_initializer="smart",
-       mutation_probability=ExponentialAdapter(0.8, 0.2, 0.05),
-       crossover_probability=ExponentialAdapter(0.2, 0.8, 0.05),
-       n_jobs=-1,
-       verbose=True,
+       evolution_config=EvolutionConfig(
+           population_size=12,
+           generations=8,
+           mutation_probability=ExponentialAdapter(0.8, 0.2, 0.05),
+           crossover_probability=ExponentialAdapter(0.2, 0.8, 0.05),
+       ),
+       population_config=PopulationConfig(initializer="smart"),
+       runtime_config=RuntimeConfig(n_jobs=-1, verbose=True),
    )
 
    selector.fit(X_train, y_train)
@@ -191,7 +198,7 @@ Quick Start: Feature Selection
 Improving Search Quality
 ########################
 
-The default ``population_initializer="smart"`` is recommended for most runs.
+The default ``PopulationConfig(initializer="smart")`` is recommended for most runs.
 It improves early search coverage without reducing the number of generations
 or population size.
 
@@ -199,6 +206,7 @@ For harder spaces, combine it with optimizer controls:
 
 .. code-block:: python
 
+   from sklearn_genetic import EvolutionConfig, OptimizationConfig, PopulationConfig, RuntimeConfig
    from sklearn_genetic.schedules import ExponentialAdapter, InverseAdapter
 
    search = GASearchCV(
@@ -206,29 +214,33 @@ For harder spaces, combine it with optimizer controls:
        param_grid=param_grid,
        scoring="roc_auc",
        cv=3,
-       population_size=16,
-       generations=12,
-       population_initializer="smart",
-       warm_start_configs=[{"C": 1.0, "class_weight": None}],
-       crossover_probability=ExponentialAdapter(0.85, 0.45, 0.08),
-       mutation_probability=InverseAdapter(0.18, 0.55, 0.12),
-       local_search=True,
-       local_search_top_k=2,
-       local_search_steps=2,
-       diversity_control=True,
-       random_immigrants_fraction=0.15,
-       fitness_sharing=True,
-       n_jobs=-1,
-       parallel_backend="auto",
-       use_cache=True,
+       evolution_config=EvolutionConfig(
+           population_size=16,
+           generations=12,
+           crossover_probability=ExponentialAdapter(0.85, 0.45, 0.08),
+           mutation_probability=InverseAdapter(0.18, 0.55, 0.12),
+       ),
+       population_config=PopulationConfig(
+           initializer="smart",
+           warm_start_configs=[{"C": 1.0, "class_weight": None}],
+       ),
+       runtime_config=RuntimeConfig(n_jobs=-1, parallel_backend="auto", use_cache=True),
+       optimization_config=OptimizationConfig(
+           local_search=True,
+           local_search_top_k=2,
+           local_search_steps=2,
+           diversity_control=True,
+           random_immigrants_fraction=0.15,
+           fitness_sharing=True,
+       ),
    )
 
 Use:
 
-* ``warm_start_configs`` when you already know useful candidate settings.
-* ``local_search=True`` to refine the best candidates near the end of the run.
-* ``diversity_control=True`` to react when the population collapses too early.
-* ``fitness_sharing=True`` to keep multiple promising regions alive.
+* ``PopulationConfig.warm_start_configs`` when you already know useful candidate settings.
+* ``OptimizationConfig(local_search=True)`` to refine the best candidates near the end of the run.
+* ``OptimizationConfig(diversity_control=True)`` to react when the population collapses too early.
+* ``OptimizationConfig(fitness_sharing=True)`` to keep multiple promising regions alive.
 * ``fit_stats_`` to understand evaluation cost, cache hits, and skipped work.
 * ``history`` to inspect fitness, diversity, stagnation, and optimizer
   telemetry by generation.
@@ -236,17 +248,18 @@ Use:
 Parallelism
 ###########
 
-``n_jobs`` controls parallel execution:
+``RuntimeConfig.n_jobs`` controls parallel execution:
 
-* ``n_jobs=1`` runs sequentially.
-* ``n_jobs=-1`` uses all available CPU cores.
-* ``n_jobs=k`` uses ``k`` workers.
+* ``RuntimeConfig(n_jobs=1)`` runs sequentially.
+* ``RuntimeConfig(n_jobs=-1)`` uses all available CPU cores.
+* ``RuntimeConfig(n_jobs=k)`` uses ``k`` workers.
 
-With ``parallel_backend="auto"`` or ``"population"``, unique candidates in the
-same generation are evaluated in parallel and each candidate runs
-cross-validation sequentially to avoid nested parallelism. Use
-``parallel_backend="cv"`` to evaluate candidates serially while passing
-``n_jobs`` to each candidate's cross-validation call.
+With ``RuntimeConfig(parallel_backend="auto")`` or
+``RuntimeConfig(parallel_backend="population")``, unique candidates in the same
+generation are evaluated in parallel and each candidate runs cross-validation
+sequentially to avoid nested parallelism. Use
+``RuntimeConfig(parallel_backend="cv")`` to evaluate candidates serially while
+passing ``n_jobs`` to each candidate's cross-validation call.
 
 Persistence and Checkpointing
 #############################

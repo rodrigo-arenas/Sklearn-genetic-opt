@@ -45,7 +45,7 @@ The digits dataset is a multi-class classification problem.
     from sklearn.model_selection import StratifiedKFold, train_test_split
     from sklearn.neural_network import MLPClassifier
 
-    from sklearn_genetic import GASearchCV
+    from sklearn_genetic import EvolutionConfig, GASearchCV, PopulationConfig, RuntimeConfig
     from sklearn_genetic.space import Categorical, Continuous, Integer
 
 Load the data, split it into training and test sets, and visualize a few
@@ -109,26 +109,24 @@ Now create the estimator and the cross-validation strategy:
         cv=cv,
         scoring="accuracy",
         param_grid=param_grid,
-        n_jobs=-1,
-        verbose=True,
-        population_size=10,
-        generations=20,
-        population_initializer="smart",
+        evolution_config=EvolutionConfig(population_size=10, generations=20),
+        population_config=PopulationConfig(initializer="smart"),
+        runtime_config=RuntimeConfig(n_jobs=-1, verbose=True),
     )
 
 Most arguments have the same meaning as in scikit-learn search estimators:
 ``cv`` controls the validation strategy, ``scoring`` controls the metric, and
-``n_jobs`` controls parallel execution. During the genetic search, unique
+``RuntimeConfig.n_jobs`` controls parallel execution. During the genetic search, unique
 candidates in the same generation are evaluated in parallel when possible; each
 candidate runs its cross-validation sequentially to avoid nested parallelism.
-Set ``parallel_backend="cv"`` to keep candidate evaluation serial and pass
-``n_jobs`` to each candidate's cross-validation instead. The
-genetic-search-specific arguments ``population_size`` and ``generations``
+Set ``RuntimeConfig(parallel_backend="cv")`` to keep candidate evaluation
+serial and pass ``n_jobs`` to each candidate's cross-validation instead. The
+genetic-search-specific values ``EvolutionConfig.population_size`` and ``EvolutionConfig.generations``
 determine how many candidate solutions are explored. By default,
-``population_initializer="smart"`` builds a more diverse initial population
+``PopulationConfig(initializer="smart")`` builds a more diverse initial population
 using estimator defaults, warm starts when provided, Latin hypercube samples for
 numeric hyperparameters, and stratified categorical values. Set
-``population_initializer="random"`` to use the previous random initialization
+``PopulationConfig(initializer="random")`` to use the previous random initialization
 behavior. After fitting, ``fit_stats_`` reports evaluation counters such as
 cache hits, duplicate candidates, cross-validation calls, and skipped invalid
 feature masks.
@@ -224,7 +222,12 @@ noise.
     from sklearn.model_selection import train_test_split
     from sklearn.svm import SVC
 
-    from sklearn_genetic import GAFeatureSelectionCV
+    from sklearn_genetic import (
+        EvolutionConfig,
+        GAFeatureSelectionCV,
+        PopulationConfig,
+        RuntimeConfig,
+    )
     from sklearn_genetic.plots import plot_fitness_evolution
 
     data = load_iris()
@@ -253,13 +256,14 @@ should already be configured with the hyperparameters you want to use.
         estimator=clf,
         cv=3,
         scoring="accuracy",
-        population_size=30,
-        generations=20,
-        population_initializer="smart",
-        n_jobs=-1,
-        verbose=True,
-        keep_top_k=2,
-        elitism=True,
+        evolution_config=EvolutionConfig(
+            population_size=30,
+            generations=20,
+            keep_top_k=2,
+            elitism=True,
+        ),
+        population_config=PopulationConfig(initializer="smart"),
+        runtime_config=RuntimeConfig(n_jobs=-1, verbose=True),
     )
 
 Run the feature-selection search:

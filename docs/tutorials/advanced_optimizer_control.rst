@@ -12,11 +12,14 @@ or early population collapse.
 
 The tools covered here are:
 
-* ``population_initializer="smart"`` to start with better coverage.
+* ``PopulationConfig(initializer="smart")`` to start with better coverage.
 * Adaptive mutation and crossover schedules.
-* ``diversity_control=True`` to react when the population becomes too similar.
-* ``fitness_sharing=True`` to reduce selection pressure on crowded niches.
-* ``local_search=True`` to refine the best candidates after the genetic search.
+* ``OptimizationConfig(diversity_control=True)`` to react when the population
+  becomes too similar.
+* ``OptimizationConfig(fitness_sharing=True)`` to reduce selection pressure on
+  crowded niches.
+* ``OptimizationConfig(local_search=True)`` to refine the best candidates after
+  the genetic search.
 
 These features are optional. The default behavior remains conservative, and the
 advanced controls are best introduced one at a time when telemetry shows that
@@ -61,7 +64,13 @@ uses a broad search space where multiple different regions can perform well.
     from sklearn.metrics import accuracy_score, roc_auc_score
     from sklearn.model_selection import StratifiedKFold, train_test_split
 
-    from sklearn_genetic import GASearchCV
+    from sklearn_genetic import (
+        EvolutionConfig,
+        GASearchCV,
+        OptimizationConfig,
+        PopulationConfig,
+        RuntimeConfig,
+    )
     from sklearn_genetic.schedules import ExponentialAdapter, InverseAdapter
     from sklearn_genetic.space import Categorical, Integer
 
@@ -97,29 +106,31 @@ uses a broad search space where multiple different regions can perform well.
         param_grid=param_grid,
         cv=cv,
         scoring="roc_auc",
-        population_size=24,
-        generations=18,
-        population_initializer="smart",
-        mutation_probability=mutation_schedule,
-        crossover_probability=crossover_schedule,
-        tournament_size=3,
-        elitism=True,
-        keep_top_k=4,
-        n_jobs=-1,
-        parallel_backend="auto",
-        diversity_control=True,
-        diversity_threshold=0.18,
-        diversity_stagnation_generations=4,
-        diversity_mutation_boost=1.8,
-        random_immigrants_fraction=0.15,
-        fitness_sharing=True,
-        sharing_radius=0.25,
-        sharing_alpha=1.0,
-        local_search=True,
-        local_search_top_k=2,
-        local_search_steps=4,
-        local_search_radius=0.08,
-        verbose=True,
+        evolution_config=EvolutionConfig(
+            population_size=24,
+            generations=18,
+            mutation_probability=mutation_schedule,
+            crossover_probability=crossover_schedule,
+            tournament_size=3,
+            elitism=True,
+            keep_top_k=4,
+        ),
+        population_config=PopulationConfig(initializer="smart"),
+        runtime_config=RuntimeConfig(n_jobs=-1, parallel_backend="auto", verbose=True),
+        optimization_config=OptimizationConfig(
+            diversity_control=True,
+            diversity_threshold=0.18,
+            diversity_stagnation_generations=4,
+            diversity_mutation_boost=1.8,
+            random_immigrants_fraction=0.15,
+            fitness_sharing=True,
+            sharing_radius=0.25,
+            sharing_alpha=1.0,
+            local_search=True,
+            local_search_top_k=2,
+            local_search_steps=4,
+            local_search_radius=0.08,
+        ),
     )
 
     search.fit(X_train, y_train)
@@ -207,7 +218,13 @@ creating local neighbors.
     from sklearn.ensemble import RandomForestClassifier
     from sklearn.model_selection import StratifiedKFold, train_test_split
 
-    from sklearn_genetic import GAFeatureSelectionCV
+    from sklearn_genetic import (
+        EvolutionConfig,
+        GAFeatureSelectionCV,
+        OptimizationConfig,
+        PopulationConfig,
+        RuntimeConfig,
+    )
     from sklearn_genetic.schedules import ExponentialAdapter
 
     X, y = load_breast_cancer(return_X_y=True)
@@ -221,26 +238,28 @@ creating local neighbors.
         estimator=RandomForestClassifier(random_state=42, n_jobs=1),
         cv=cv,
         scoring="roc_auc",
-        population_size=30,
-        generations=16,
         max_features=18,
-        population_initializer="smart",
-        mutation_probability=ExponentialAdapter(0.7, 0.2, 0.08),
-        crossover_probability=0.35,
-        keep_top_k=4,
-        n_jobs=-1,
-        parallel_backend="auto",
-        diversity_control=True,
-        diversity_threshold=0.2,
-        diversity_stagnation_generations=4,
-        random_immigrants_fraction=0.15,
-        fitness_sharing=True,
-        sharing_radius=0.2,
-        local_search=True,
-        local_search_top_k=2,
-        local_search_steps=5,
-        local_search_radius=0.1,
-        verbose=True,
+        evolution_config=EvolutionConfig(
+            population_size=30,
+            generations=16,
+            mutation_probability=ExponentialAdapter(0.7, 0.2, 0.08),
+            crossover_probability=0.35,
+            keep_top_k=4,
+        ),
+        population_config=PopulationConfig(initializer="smart"),
+        runtime_config=RuntimeConfig(n_jobs=-1, parallel_backend="auto", verbose=True),
+        optimization_config=OptimizationConfig(
+            diversity_control=True,
+            diversity_threshold=0.2,
+            diversity_stagnation_generations=4,
+            random_immigrants_fraction=0.15,
+            fitness_sharing=True,
+            sharing_radius=0.2,
+            local_search=True,
+            local_search_top_k=2,
+            local_search_steps=5,
+            local_search_radius=0.1,
+        ),
     )
 
     selector.fit(X_train, y_train)
@@ -253,15 +272,15 @@ Recommended Workflow
 
 Start from the simplest useful setup and add controls based on telemetry:
 
-1. Use ``population_initializer="smart"`` and a reasonable adaptive mutation
+1. Use ``PopulationConfig(initializer="smart")`` and a reasonable adaptive mutation
    schedule.
 2. Inspect ``unique_individual_ratio``, ``genotype_diversity``, and
    ``stagnation_generations``.
-3. If diversity collapses early, enable ``diversity_control=True``.
+3. If diversity collapses early, enable ``OptimizationConfig(diversity_control=True)``.
 4. If one candidate family dominates too quickly, enable
-   ``fitness_sharing=True``.
+   ``OptimizationConfig(fitness_sharing=True)``.
 5. If the final region looks promising but not fully refined, enable
-   ``local_search=True``.
+   ``OptimizationConfig(local_search=True)``.
 
 Tuning Guidelines
 -----------------

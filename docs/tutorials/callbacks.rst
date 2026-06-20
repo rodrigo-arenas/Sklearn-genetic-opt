@@ -222,7 +222,7 @@ and the last generation accuracy is not bigger than 0.001:
 
 .. code:: python3
 
-    from sklearn_genetic import GASearchCV
+    from sklearn_genetic import EvolutionConfig, GASearchCV, PopulationConfig, RuntimeConfig
     from sklearn_genetic.space import Categorical, Integer, Continuous
     from sklearn.model_selection import train_test_split, StratifiedKFold
     from sklearn.tree import DecisionTreeClassifier
@@ -254,17 +254,18 @@ and the last generation accuracy is not bigger than 0.001:
     evolved_estimator = GASearchCV(clf,
                                    cv=cv,
                                    scoring='accuracy',
-                                   population_size=16,
-                                   generations=30,
-                                   population_initializer="smart",
-                                   tournament_size=3,
-                                   elitism=True,
-                                   crossover_probability=0.9,
-                                   mutation_probability=0.05,
                                    param_grid=params_grid,
-                                   algorithm='eaMuPlusLambda',
-                                   n_jobs=-1,
-                                   verbose=True)
+                                   evolution_config=EvolutionConfig(
+                                       population_size=16,
+                                       generations=30,
+                                       tournament_size=3,
+                                       elitism=True,
+                                       crossover_probability=0.9,
+                                       mutation_probability=0.05,
+                                       algorithm='eaMuPlusLambda',
+                                   ),
+                                   population_config=PopulationConfig(initializer="smart"),
+                                   runtime_config=RuntimeConfig(n_jobs=-1, verbose=True))
 
     evolved_estimator.fit(X_train, y_train, callbacks=callbacks)
     y_predict_ga = evolved_estimator.predict(X_test)
