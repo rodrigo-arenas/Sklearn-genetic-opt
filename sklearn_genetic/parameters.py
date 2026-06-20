@@ -21,6 +21,7 @@ class Criteria(ExtendedEnum):
 class Metrics(ExtendedEnum):
     fitness = "fitness"
     fitness_std = "fitness_std"
+    fitness_best = "fitness_best"
     fitness_max = "fitness_max"
     fitness_min = "fitness_min"
 

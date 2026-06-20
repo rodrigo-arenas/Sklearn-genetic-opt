@@ -33,7 +33,14 @@ from sklearn.model_selection import (
     train_test_split,
 )
 
-from benchmark_fit import SCENARIOS, Scenario, build_gasearch, holdout_metrics, make_cv
+from benchmark_fit import (
+    SCENARIOS,
+    Scenario,
+    build_gasearch,
+    holdout_metrics,
+    make_cv,
+    metric_gap,
+)
 from sklearn_genetic.space import Categorical, Continuous, Integer
 
 
@@ -221,6 +228,8 @@ def run_one_benchmark(
 
     candidates = evaluated_candidates(searcher)
     best_estimator = getattr(searcher, "best_estimator_", searcher)
+    train_metrics = holdout_metrics(best_estimator, X_train, y_train, scenario.task)
+    test_metrics = holdout_metrics(best_estimator, X_test, y_test, scenario.task)
 
     result = {
         "label": label,
@@ -236,7 +245,9 @@ def run_one_benchmark(
         "best_score": getattr(searcher, "best_score_", None),
         "best_params": to_jsonable(getattr(searcher, "best_params_", None)),
         "refit_time": getattr(searcher, "refit_time_", None),
-        "holdout_metrics": holdout_metrics(best_estimator, X_test, y_test, scenario.task),
+        "train_metrics": train_metrics,
+        "holdout_metrics": test_metrics,
+        "generalization_gap": metric_gap(train_metrics, test_metrics),
         **cv_fit_time_summary(searcher),
     }
 
@@ -249,6 +260,33 @@ def run_one_benchmark(
                 "cache_hits": fit_stats["cache_hits"],
                 "duplicate_candidates": fit_stats["duplicate_candidates"],
                 "skipped_invalid_candidates": fit_stats["skipped_invalid_candidates"],
+                "random_immigrants": fit_stats["random_immigrants"],
+                "local_refinement_candidates": fit_stats["local_refinement_candidates"],
+            }
+        )
+
+    history = getattr(searcher, "history", None)
+    if history:
+        fitness_best = history.get("fitness_best", [])
+        unique_ratios = history.get("unique_individual_ratio", [])
+        genotype_diversities = history.get("genotype_diversity", [])
+        result.update(
+            {
+                "generations_ran": int(history["gen"][-1]) if history.get("gen") else None,
+                "best_generation": (
+                    int(history["best_generation"][-1]) if history.get("best_generation") else None
+                ),
+                "initial_fitness_best": float(fitness_best[0]) if fitness_best else None,
+                "final_fitness_best": float(fitness_best[-1]) if fitness_best else None,
+                "fitness_best_improvement": (
+                    float(fitness_best[-1] - fitness_best[0]) if len(fitness_best) >= 2 else None
+                ),
+                "final_unique_individual_ratio": (
+                    float(unique_ratios[-1]) if unique_ratios else None
+                ),
+                "mean_genotype_diversity": (
+                    float(np.mean(genotype_diversities)) if genotype_diversities else None
+                ),
             }
         )
 
@@ -278,6 +316,12 @@ def aggregate_results(results: list[dict[str, Any]]) -> list[dict[str, Any]]:
         metric_names = sorted(
             {metric_name for item in items for metric_name in item["holdout_metrics"].keys()}
         )
+        train_metric_names = sorted(
+            {metric_name for item in items for metric_name in item.get("train_metrics", {}).keys()}
+        )
+        gap_metric_names = sorted(
+            {metric_name for item in items for metric_name in item.get("generalization_gap", {})}
+        )
         summary = {
             "label": label,
             "scenario": scenario,
@@ -293,6 +337,16 @@ def aggregate_results(results: list[dict[str, Any]]) -> list[dict[str, Any]]:
             "refit_time_mean": mean_optional(items, "refit_time"),
             "unique_candidates_mean": mean_optional(items, "unique_candidates"),
             "cache_hits_mean": mean_optional(items, "cache_hits"),
+            "random_immigrants_mean": mean_optional(items, "random_immigrants"),
+            "local_refinement_candidates_mean": mean_optional(items, "local_refinement_candidates"),
+            "generations_ran_mean": mean_optional(items, "generations_ran"),
+            "best_generation_mean": mean_optional(items, "best_generation"),
+            "final_fitness_best_mean": mean_optional(items, "final_fitness_best"),
+            "fitness_best_improvement_mean": mean_optional(items, "fitness_best_improvement"),
+            "final_unique_individual_ratio_mean": mean_optional(
+                items, "final_unique_individual_ratio"
+            ),
+            "mean_genotype_diversity_mean": mean_optional(items, "mean_genotype_diversity"),
         }
 
         for metric_name in metric_names:
@@ -300,6 +354,24 @@ def aggregate_results(results: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 item["holdout_metrics"][metric_name]
                 for item in items
                 if metric_name in item["holdout_metrics"]
+            ]
+            summary[f"{metric_name}_mean"] = float(np.mean(values))
+            summary[f"{metric_name}_std"] = float(np.std(values))
+
+        for metric_name in train_metric_names:
+            values = [
+                item["train_metrics"][metric_name]
+                for item in items
+                if metric_name in item.get("train_metrics", {})
+            ]
+            summary[f"train_{metric_name}_mean"] = float(np.mean(values))
+            summary[f"train_{metric_name}_std"] = float(np.std(values))
+
+        for metric_name in gap_metric_names:
+            values = [
+                item["generalization_gap"][metric_name]
+                for item in items
+                if metric_name in item.get("generalization_gap", {})
             ]
             summary[f"{metric_name}_mean"] = float(np.mean(values))
             summary[f"{metric_name}_std"] = float(np.std(values))
@@ -320,12 +392,17 @@ def print_summary_table(summaries: list[dict[str, Any]]) -> None:
         "evaluated_candidates_mean",
         "candidate_cv_evaluations_mean",
         "best_score_mean",
+        "final_fitness_best_mean",
+        "fitness_best_improvement_mean",
+        "final_unique_individual_ratio_mean",
+        "mean_genotype_diversity_mean",
         "accuracy_mean",
         "roc_auc_mean",
         "balanced_accuracy_mean",
         "f1_mean",
         "r2_mean",
         "rmse_mean",
+        "rmse_gap_mean",
         "mae_mean",
     ]
 
@@ -408,28 +485,28 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--label", default="current", help="Label stored in benchmark results.")
     parser.add_argument("--runs", type=int, default=1, help="Number of repeated runs per scenario.")
-    parser.add_argument("--n-iter", type=int, default=15, help="Random search candidate budget.")
+    parser.add_argument("--n-iter", type=int, default=60, help="Random search candidate budget.")
     parser.add_argument(
         "--ga-population-size",
         type=int,
-        default=5,
+        default=12,
         help="GASearchCV population size.",
     )
     parser.add_argument(
         "--ga-generations",
         type=int,
-        default=2,
+        default=10,
         help="GASearchCV generation count.",
     )
     parser.add_argument(
-        "--grid-points", type=int, default=4, help="Grid points per numeric dimension."
+        "--grid-points", type=int, default=5, help="Grid points per numeric dimension."
     )
     parser.add_argument("--cv-splits", type=int, default=3, help="Cross-validation splits.")
     parser.add_argument(
         "--scenarios",
         nargs="+",
         choices=sorted(SCENARIOS),
-        default=["classification_lr"],
+        default=["classification_lr", "regression_ridge"],
         help="Benchmark scenarios to run.",
     )
     parser.add_argument(
@@ -442,7 +519,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--n-jobs",
         nargs="+",
-        default=["1"],
+        default=["-1"],
         help="One or more n_jobs values to compare. Use 'none' for None.",
     )
     parser.add_argument(

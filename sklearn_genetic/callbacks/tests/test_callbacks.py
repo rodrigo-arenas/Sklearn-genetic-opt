@@ -45,8 +45,8 @@ def test_check_metrics_and_methods():
     with pytest.raises(Exception) as excinfo:
         check_stats("accuracy")
     assert (
-        str(excinfo.value)
-        == "metric must be one of ['fitness', 'fitness_std', 'fitness_max', 'fitness_min'], "
+        str(excinfo.value) == "metric must be one of "
+        "['fitness', 'fitness_std', 'fitness_best', 'fitness_max', 'fitness_min'], "
         "but got accuracy instead"
     )
 

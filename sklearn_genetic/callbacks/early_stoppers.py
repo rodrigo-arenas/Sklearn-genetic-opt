@@ -17,7 +17,7 @@ class ThresholdStopping(BaseCallback):
         threshold: float, default=None
             Threshold to compare against the current cross validation average score and determine if
             the optimization process must stop
-        metric: {'fitness', 'fitness_std', 'fitness_max', 'fitness_min'}, default ='fitness'
+        metric: {'fitness', 'fitness_std', 'fitness_best', 'fitness_max', 'fitness_min'}, default ='fitness'
             Name of the metric inside 'record' logged in each iteration
         """
 
@@ -54,7 +54,7 @@ class ConsecutiveStopping(BaseCallback):
         ----------
         generations: int, default=None
             Number of current generations to compare against current generation
-        metric: {'fitness', 'fitness_std', 'fitness_max', 'fitness_min'}, default ='fitness'
+        metric: {'fitness', 'fitness_std', 'fitness_best', 'fitness_max', 'fitness_min'}, default ='fitness'
             Name of the metric inside 'record' logged in each iteration
         """
 
@@ -100,7 +100,7 @@ class DeltaThreshold(BaseCallback):
             Threshold to compare the differences between cross-validation scores.
         generations: int, default=2
             Number of generations to compare, includes the current generation.
-        metric: {'fitness', 'fitness_std', 'fitness_max', 'fitness_min'}, default ='fitness'
+        metric: {'fitness', 'fitness_std', 'fitness_best', 'fitness_max', 'fitness_min'}, default ='fitness'
             Name of the metric inside 'record' logged in each iteration.
         """
 

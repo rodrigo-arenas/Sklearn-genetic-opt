@@ -27,7 +27,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 import numpy as np
-from sklearn.datasets import load_breast_cancer, load_diabetes
+from sklearn.datasets import load_breast_cancer, load_diabetes, make_classification, make_friedman1
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression, Ridge
 from sklearn.metrics import (
@@ -90,6 +90,24 @@ def regression_data() -> tuple[np.ndarray, np.ndarray]:
     return load_diabetes(return_X_y=True)
 
 
+def synthetic_classification_data() -> tuple[np.ndarray, np.ndarray]:
+    return make_classification(
+        n_samples=1800,
+        n_features=45,
+        n_informative=14,
+        n_redundant=10,
+        n_repeated=2,
+        n_clusters_per_class=3,
+        class_sep=0.9,
+        flip_y=0.03,
+        random_state=42,
+    )
+
+
+def synthetic_regression_data() -> tuple[np.ndarray, np.ndarray]:
+    return make_friedman1(n_samples=1800, n_features=25, noise=1.0, random_state=42)
+
+
 def logistic_pipeline(random_state: int) -> Pipeline:
     return Pipeline(
         [
@@ -122,7 +140,7 @@ SCENARIOS = {
         loader=classification_data,
         estimator_builder=logistic_pipeline,
         param_grid_builder=lambda: {
-            "clf__C": Continuous(1e-3, 10.0, distribution="log-uniform"),
+            "clf__C": Continuous(1e-4, 100.0, distribution="log-uniform"),
             "clf__class_weight": Categorical([None, "balanced"]),
         },
     ),
@@ -133,9 +151,12 @@ SCENARIOS = {
         loader=classification_data,
         estimator_builder=random_forest_classifier,
         param_grid_builder=lambda: {
-            "n_estimators": Integer(20, 80),
-            "max_depth": Integer(2, 10),
+            "n_estimators": Integer(80, 240),
+            "max_depth": Integer(2, 14),
             "min_samples_split": Integer(2, 12),
+            "min_samples_leaf": Integer(1, 8),
+            "max_features": Categorical(["sqrt", "log2", None]),
+            "ccp_alpha": Continuous(0.0, 0.03),
         },
     ),
     "regression_ridge": Scenario(
@@ -145,7 +166,33 @@ SCENARIOS = {
         loader=regression_data,
         estimator_builder=ridge_pipeline,
         param_grid_builder=lambda: {
-            "ridge__alpha": Continuous(1e-3, 100.0, distribution="log-uniform"),
+            "ridge__alpha": Continuous(1e-4, 1000.0, distribution="log-uniform"),
+            "ridge__fit_intercept": Categorical([True, False]),
+        },
+    ),
+    "classification_rf_synthetic": Scenario(
+        name="classification_rf_synthetic",
+        task="classification",
+        scoring="roc_auc",
+        loader=synthetic_classification_data,
+        estimator_builder=random_forest_classifier,
+        param_grid_builder=lambda: {
+            "n_estimators": Integer(100, 320),
+            "max_depth": Integer(3, 18),
+            "min_samples_split": Integer(2, 16),
+            "min_samples_leaf": Integer(1, 10),
+            "max_features": Categorical(["sqrt", "log2", None]),
+            "ccp_alpha": Continuous(0.0, 0.02),
+        },
+    ),
+    "regression_friedman_ridge": Scenario(
+        name="regression_friedman_ridge",
+        task="regression",
+        scoring="r2",
+        loader=synthetic_regression_data,
+        estimator_builder=ridge_pipeline,
+        param_grid_builder=lambda: {
+            "ridge__alpha": Continuous(1e-4, 1000.0, distribution="log-uniform"),
             "ridge__fit_intercept": Categorical([True, False]),
         },
     ),
@@ -185,6 +232,17 @@ def build_gasearch(
         population_initializer=population_initializer,
         return_train_score=False,
         use_cache=True,
+        local_search=True,
+        local_search_top_k=2,
+        local_search_steps=1,
+        local_search_radius=0.15,
+        diversity_control=True,
+        diversity_threshold=0.25,
+        diversity_stagnation_generations=4,
+        diversity_mutation_boost=1.5,
+        random_immigrants_fraction=0.10,
+        fitness_sharing=True,
+        sharing_radius=0.35,
     )
 
 
@@ -215,6 +273,17 @@ def build_feature_selector(
         population_initializer=population_initializer,
         return_train_score=False,
         use_cache=True,
+        local_search=True,
+        local_search_top_k=2,
+        local_search_steps=1,
+        local_search_radius=0.15,
+        diversity_control=True,
+        diversity_threshold=0.25,
+        diversity_stagnation_generations=4,
+        diversity_mutation_boost=1.5,
+        random_immigrants_fraction=0.10,
+        fitness_sharing=True,
+        sharing_radius=0.35,
     )
 
 
@@ -241,6 +310,20 @@ def holdout_metrics(estimator, X_test, y_test, task: str) -> dict[str, float]:
             metrics["roc_auc"] = roc_auc_score(y_test, probabilities[:, 1])
 
     return metrics
+
+
+def metric_gap(train_metrics: dict[str, float], holdout: dict[str, float]) -> dict[str, float]:
+    gaps = {}
+    for metric_name, train_value in train_metrics.items():
+        if metric_name not in holdout:
+            continue
+
+        if metric_name == "rmse":
+            gaps[f"{metric_name}_gap"] = holdout[metric_name] - train_value
+        else:
+            gaps[f"{metric_name}_gap"] = train_value - holdout[metric_name]
+
+    return gaps
 
 
 def get_log_records(estimator) -> list[dict[str, Any]]:
@@ -293,10 +376,20 @@ def summarize_optimizer_telemetry(estimator) -> dict[str, float | int | None]:
     genotype_diversities = history.get("genotype_diversity", [])
     stagnation_generations = history.get("stagnation_generations", [])
     best_generations = history.get("best_generation", [])
+    fitness_best = history.get("fitness_best", [])
+    fitness = history.get("fitness", [])
+    fitness_max = history.get("fitness_max", [])
 
     return {
         "generations_ran": int(generations[-1]) if generations else None,
         "best_generation": int(best_generations[-1]) if best_generations else None,
+        "initial_fitness_best": float(fitness_best[0]) if fitness_best else None,
+        "final_fitness_best": float(fitness_best[-1]) if fitness_best else None,
+        "fitness_best_improvement": (
+            float(fitness_best[-1] - fitness_best[0]) if len(fitness_best) >= 2 else None
+        ),
+        "final_population_fitness": float(fitness[-1]) if fitness else None,
+        "final_population_fitness_max": float(fitness_max[-1]) if fitness_max else None,
         "final_unique_individual_ratio": (float(unique_ratios[-1]) if unique_ratios else None),
         "mean_unique_individual_ratio": (float(np.mean(unique_ratios)) if unique_ratios else None),
         "final_genotype_diversity": (
@@ -333,6 +426,8 @@ def run_one_benchmark(
         estimator.fit(X_train, y_train)
 
     fit_seconds = time.perf_counter() - started_at
+    train_metrics = holdout_metrics(estimator, X_train, y_train, scenario.task)
+    test_metrics = holdout_metrics(estimator, X_test, y_test, scenario.task)
 
     result = {
         "label": label,
@@ -347,7 +442,9 @@ def run_one_benchmark(
         **summarize_fit_mechanics(estimator, counters),
         **summarize_optimizer_telemetry(estimator),
         "best_score": getattr(estimator, "best_score_", None),
-        "holdout_metrics": holdout_metrics(estimator, X_test, y_test, scenario.task),
+        "train_metrics": train_metrics,
+        "holdout_metrics": test_metrics,
+        "generalization_gap": metric_gap(train_metrics, test_metrics),
     }
 
     if hasattr(estimator, "support_"):
@@ -388,6 +485,12 @@ def aggregate_results(results: list[dict[str, Any]]) -> list[dict[str, Any]]:
         metric_names = sorted(
             {metric_name for item in items for metric_name in item["holdout_metrics"].keys()}
         )
+        train_metric_names = sorted(
+            {metric_name for item in items for metric_name in item.get("train_metrics", {}).keys()}
+        )
+        gap_metric_names = sorted(
+            {metric_name for item in items for metric_name in item.get("generalization_gap", {})}
+        )
         summary = {
             "label": label,
             "scenario": scenario,
@@ -412,6 +515,13 @@ def aggregate_results(results: list[dict[str, Any]]) -> list[dict[str, Any]]:
             ),
             "generations_ran_mean": mean_optional(items, "generations_ran"),
             "best_generation_mean": mean_optional(items, "best_generation"),
+            "initial_fitness_best_mean": mean_optional(items, "initial_fitness_best"),
+            "final_fitness_best_mean": mean_optional(items, "final_fitness_best"),
+            "fitness_best_improvement_mean": mean_optional(items, "fitness_best_improvement"),
+            "final_population_fitness_mean": mean_optional(items, "final_population_fitness"),
+            "final_population_fitness_max_mean": mean_optional(
+                items, "final_population_fitness_max"
+            ),
             "final_unique_individual_ratio_mean": mean_optional(
                 items, "final_unique_individual_ratio"
             ),
@@ -430,6 +540,24 @@ def aggregate_results(results: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 item["holdout_metrics"][metric_name]
                 for item in items
                 if metric_name in item["holdout_metrics"]
+            ]
+            summary[f"{metric_name}_mean"] = float(np.mean(values))
+            summary[f"{metric_name}_std"] = float(np.std(values))
+
+        for metric_name in train_metric_names:
+            values = [
+                item["train_metrics"][metric_name]
+                for item in items
+                if metric_name in item.get("train_metrics", {})
+            ]
+            summary[f"train_{metric_name}_mean"] = float(np.mean(values))
+            summary[f"train_{metric_name}_std"] = float(np.std(values))
+
+        for metric_name in gap_metric_names:
+            values = [
+                item["generalization_gap"][metric_name]
+                for item in items
+                if metric_name in item.get("generalization_gap", {})
             ]
             summary[f"{metric_name}_mean"] = float(np.mean(values))
             summary[f"{metric_name}_std"] = float(np.std(values))
@@ -454,6 +582,8 @@ def print_summary_table(summaries: list[dict[str, Any]]) -> None:
         "skipped_invalid_candidates_mean",
         "generations_ran_mean",
         "best_generation_mean",
+        "final_fitness_best_mean",
+        "fitness_best_improvement_mean",
         "final_unique_individual_ratio_mean",
         "mean_genotype_diversity_mean",
         "final_stagnation_generations_mean",
@@ -463,6 +593,7 @@ def print_summary_table(summaries: list[dict[str, Any]]) -> None:
         "f1_mean",
         "r2_mean",
         "rmse_mean",
+        "rmse_gap_mean",
         "mae_mean",
     ]
 
@@ -554,14 +685,20 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--label", default="current", help="Label stored in benchmark results.")
     parser.add_argument("--runs", type=int, default=1, help="Number of repeated runs per scenario.")
-    parser.add_argument("--generations", type=int, default=4, help="GA generations per run.")
-    parser.add_argument("--population-size", type=int, default=8, help="GA population size.")
+    parser.add_argument("--generations", type=int, default=10, help="GA generations per run.")
+    parser.add_argument("--population-size", type=int, default=12, help="GA population size.")
     parser.add_argument("--cv-splits", type=int, default=3, help="Cross-validation splits.")
     parser.add_argument(
         "--scenarios",
         nargs="+",
         choices=sorted(SCENARIOS),
-        default=["classification_lr"],
+        default=[
+            "classification_lr",
+            "classification_rf",
+            "regression_ridge",
+            "classification_rf_synthetic",
+            "regression_friedman_ridge",
+        ],
         help="Benchmark scenarios to run.",
     )
     parser.add_argument(
@@ -574,7 +711,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--n-jobs",
         nargs="+",
-        default=["1", "-1"],
+        default=["-1"],
         help="One or more n_jobs values to compare. Use 'none' for None.",
     )
     parser.add_argument(

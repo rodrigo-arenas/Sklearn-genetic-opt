@@ -284,7 +284,7 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         Contains the logs of every set of hyperparameters fitted with its average scoring metric.
     history : dict
         Dictionary with one list per generation. It includes ``gen``,
-        ``fitness``, ``fitness_std``, ``fitness_max``, ``fitness_min``,
+        ``fitness``, ``fitness_std``, ``fitness_best``, ``fitness_max``, ``fitness_min``,
         population diversity fields, stagnation fields, optimizer-control
         telemetry, and local-refinement telemetry.
 
@@ -813,6 +813,7 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
             "gen": log.select("gen"),
             "fitness": log.select("fitness"),
             "fitness_std": log.select("fitness_std"),
+            "fitness_best": log.select("fitness_best"),
             "fitness_max": log.select("fitness_max"),
             "fitness_min": log.select("fitness_min"),
             "population_size": log.select("population_size"),
@@ -1064,7 +1065,7 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         Contains the logs of every set of hyperparameters fitted with its average scoring metric.
     history : dict
         Dictionary with one list per generation. It includes ``gen``,
-        ``fitness``, ``fitness_std``, ``fitness_max``, ``fitness_min``,
+        ``fitness``, ``fitness_std``, ``fitness_best``, ``fitness_max``, ``fitness_min``,
         population diversity fields, stagnation fields, optimizer-control
         telemetry, and local-refinement telemetry.
 
@@ -1223,17 +1224,20 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         # Each binary value represents if the feature is selected or not
 
         self.toolbox.register(
-            "individual",
+            "individual_raw",
             weighted_bool_individual,
             creator.Individual,
             weight=self.features_proportion,
             size=self.n_features,
         )
+        self.toolbox.register("individual", self._new_feature_individual)
 
         self.toolbox.register("population", tools.initRepeat, list, self.toolbox.individual)
 
-        self.toolbox.register("mate", cxUniform, indpb=self.crossover_adapter.current_value)
-        self.toolbox.register("mutate", mutFlipBit, indpb=self.mutation_adapter.current_value)
+        self.toolbox.register("mate_raw", cxUniform, indpb=self.crossover_adapter.current_value)
+        self.toolbox.register("mutate_raw", mutFlipBit, indpb=self.mutation_adapter.current_value)
+        self.toolbox.register("mate", self.mate)
+        self.toolbox.register("mutate", self.mutate)
 
         if self.elitism:
             self.toolbox.register("select", tools.selTournament, tournsize=self.tournament_size)
@@ -1257,12 +1261,46 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         self.logbook = tools.Logbook()
 
     def _initialize_population(self):
-        return initialize_feature_population(self, self.toolbox, creator.Individual)
+        population = initialize_feature_population(self, self.toolbox, creator.Individual)
+        for individual in population:
+            self._repair_individual(individual)
+        return population
+
+    def _repair_individual(self, individual):
+        for index, value in enumerate(individual):
+            individual[index] = 1 if value else 0
+
+        if self.max_features and sum(individual) > self.max_features:
+            selected = [index for index, value in enumerate(individual) if value]
+            random.shuffle(selected)
+            for index in selected[self.max_features :]:
+                individual[index] = 0
+
+        if sum(individual) == 0:
+            individual[random.randrange(0, len(individual))] = 1
+
+        return individual
+
+    def _new_feature_individual(self):
+        return self._repair_individual(self.toolbox.individual_raw())
+
+    def mate(self, individual_1, individual_2):
+        offspring_1, offspring_2 = self.toolbox.mate_raw(individual_1, individual_2)
+        self._repair_individual(offspring_1)
+        self._repair_individual(offspring_2)
+        return offspring_1, offspring_2
+
+    def mutate(self, individual):
+        (mutated,) = self.toolbox.mutate_raw(individual)
+        self._repair_individual(mutated)
+        return (mutated,)
 
     def _individual_key(self, individual):
         return tuple(individual)
 
     def evaluate_population(self, individuals):
+        for individual in individuals:
+            self._repair_individual(individual)
         return _evaluate_population_batch(self, individuals, "current_generation_features")
 
     def _build_feature_evaluation_record(self, current_generation_params, cv_results):
@@ -1297,6 +1335,7 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         return cv_results
 
     def _evaluate_individual(self, individual, n_jobs=None):
+        self._repair_individual(individual)
         bool_individual = np.array(individual, dtype=bool)
 
         current_generation_params = {"features": bool_individual}
@@ -1365,6 +1404,7 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         """
 
         # Convert the individual to a tuple to use as a key in the cache
+        self._repair_individual(individual)
         individual_key = self._individual_key(individual)
 
         # Check if the individual has already been evaluated
@@ -1525,6 +1565,7 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
             "gen": log.select("gen"),
             "fitness": log.select("fitness"),
             "fitness_std": log.select("fitness_std"),
+            "fitness_best": log.select("fitness_best"),
             "fitness_max": log.select("fitness_max"),
             "fitness_min": log.select("fitness_min"),
             "population_size": log.select("population_size"),

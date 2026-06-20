@@ -20,13 +20,14 @@ This module contains some useful function to explore the results of the optimiza
 """
 
 
-def plot_fitness_evolution(estimator, metric="fitness"):
+def plot_fitness_evolution(estimator, metric="fitness_best"):
     """
     Parameters
     ----------
     estimator: estimator object
         A fitted estimator from :class:`~sklearn_genetic.GASearchCV`
-    metric: {"fitness", "fitness_std", "fitness_max", "fitness_min"}, default="fitness"
+    metric: {"fitness", "fitness_std", "fitness_best", "fitness_max", "fitness_min"},
+        default="fitness_best"
         Logged metric into the estimator history to plot
 
     Returns
@@ -46,7 +47,8 @@ def plot_fitness_evolution(estimator, metric="fitness"):
     sns.set(rc={"figure.figsize": (10, 10)})
 
     ax = sns.lineplot(x=range(len(estimator)), y=fitness_history, markers=True, palette=palette)
-    ax.set_title(f"{metric.capitalize()} average evolution over generations")
+    title = "Best fitness so far" if metric == "fitness_best" else metric.capitalize()
+    ax.set_title(f"{title} evolution over generations")
 
     ax.set(xlabel="generations", ylabel=f"fitness ({estimator.refit_metric})")
     return ax

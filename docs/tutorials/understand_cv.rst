@@ -188,15 +188,20 @@ The generation log contains summary metrics:
 ``fitness_std``
     The standard deviation of the individual scores in the current generation.
 
+``fitness_best``
+    The best score found so far. This is the most useful metric for convergence
+    plots and early-stopping callbacks because it is cumulative.
+
 ``fitness_max``
     The best individual score in the current generation.
 
 ``fitness_min``
     The worst individual score in the current generation.
 
-These values summarize the population, not just the final selected model. For
-example, if ``population_size=10``, the ``fitness`` value is the average score
-of the 10 candidates evaluated in that generation.
+Except for ``fitness_best``, these values summarize the current population, not
+just the final selected model. For example, if ``population_size=10``, the
+``fitness`` value is the average score of the 10 candidates evaluated in that
+generation.
 
 The complete flow can be represented like this:
 

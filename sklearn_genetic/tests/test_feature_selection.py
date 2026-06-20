@@ -94,6 +94,7 @@ def test_optimizer_telemetry_is_recorded_for_feature_selection():
 
     telemetry_fields = [
         "population_size",
+        "fitness_best",
         "unique_individuals",
         "unique_individual_ratio",
         "genotype_diversity",
@@ -115,12 +116,7 @@ def test_optimizer_telemetry_is_recorded_for_feature_selection():
     assert estimator.history["stagnation_generations"][-1] == generations
 
 
-def test_invalid_max_features_individual_skips_cross_validation(monkeypatch):
-    def fail_cross_validate(*args, **kwargs):
-        raise AssertionError("invalid feature masks should not be cross-validated")
-
-    monkeypatch.setattr(genetic_search, "cross_validate", fail_cross_validate)
-
+def test_feature_masks_are_repaired_before_evaluation():
     estimator = GAFeatureSelectionCV(
         DecisionTreeClassifier(),
         cv=3,
@@ -137,16 +133,41 @@ def test_invalid_max_features_individual_skips_cross_validation(monkeypatch):
     estimator.logbook = tools.Logbook()
     estimator.fit_stats_ = genetic_search._create_fit_stats()
 
-    fitness = estimator.evaluate([1, 1])
-    parameters = estimator.logbook.chapters["parameters"][0]
+    individual = [1, 1]
+    estimator._repair_individual(individual)
 
-    assert fitness == [-100000, 2]
-    assert np.array_equal(parameters["cv_scores"], np.full(3, -100000))
-    assert np.array_equal(parameters["fit_time"], np.zeros(3))
-    assert np.array_equal(parameters["score_time"], np.zeros(3))
-    assert np.array_equal(parameters["train_score"], np.full(3, -100000))
-    assert estimator.fit_stats_["cross_validate_calls"] == 0
-    assert estimator.fit_stats_["skipped_invalid_candidates"] == 1
+    assert sum(individual) == 1
+    assert set(individual).issubset({0, 1})
+
+
+def test_feature_selection_genetic_operations_respect_max_features():
+    estimator = GAFeatureSelectionCV(
+        DecisionTreeClassifier(random_state=42),
+        cv=2,
+        scoring="accuracy",
+        population_size=4,
+        generations=1,
+        max_features=2,
+        verbose=False,
+    )
+    estimator.n_features = 6
+    estimator.features_proportion = estimator.max_features / estimator.n_features
+
+    estimator._register()
+
+    try:
+        first = genetic_search.creator.Individual([1, 1, 1, 0, 0, 0])
+        second = genetic_search.creator.Individual([0, 0, 0, 1, 1, 1])
+
+        offspring = estimator.mate(first, second)
+        mutated = estimator.mutate(genetic_search.creator.Individual([1, 1, 1, 1, 1, 1]))
+
+        for individual in (*offspring, *mutated, estimator.toolbox.individual()):
+            assert 1 <= sum(individual) <= estimator.max_features
+            assert set(individual).issubset({0, 1})
+    finally:
+        del genetic_search.creator.FitnessMax
+        del genetic_search.creator.Individual
 
 
 def test_expected_ga_results():

@@ -29,8 +29,10 @@ Features:
 * Added optimizer telemetry to ``history`` and the generation logbook for
   :class:`~sklearn_genetic.GASearchCV` and
   :class:`~sklearn_genetic.GAFeatureSelectionCV`. New fields track population
-  diversity, unique individual ratios, best-solution improvement, the first
-  generation where the current best solution appeared, and stagnation length.
+  diversity, unique individual ratios, current-generation fitness, cumulative
+  best-so-far fitness through ``fitness_best``, best-solution improvement, the
+  first generation where the current best solution appeared, and stagnation
+  length.
 
 * Improved verbose fit output so real-time progress is shown as a compact
   generation summary with fitness, diversity, uniqueness, stagnation, mutation
@@ -70,10 +72,10 @@ Features:
   solution time, evaluated candidates, estimated cross-validation effort, best
   CV score, holdout metrics, and best parameters.
 
-* :class:`~sklearn_genetic.GAFeatureSelectionCV` now skips cross-validation for
-  invalid feature masks when ``max_features`` is exceeded, assigning the
-  existing penalty directly instead of fitting models whose fitness is already
-  known.
+* :class:`~sklearn_genetic.GAFeatureSelectionCV` now repairs feature masks
+  created by initialization, crossover, mutation, duplicate replacement, random
+  immigrants, and direct evaluation so masks keep at least one selected feature
+  and respect ``max_features``.
 
 ^^^^^
 Docs:
@@ -108,6 +110,10 @@ Bug Fixes:
 * Fixed smart feature-selection initialization so fallback masks used to fill
   duplicate populations respect ``max_features`` and always select at least one
   feature.
+
+* Fixed convergence telemetry so local refinement updates the final generation
+  history row and the default fitness plot shows ``fitness_best`` rather than a
+  noisy population average.
 
 What's new in 0.12.0
 --------------------

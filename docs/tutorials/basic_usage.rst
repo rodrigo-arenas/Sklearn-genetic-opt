@@ -149,6 +149,7 @@ Each row summarizes one generation:
 * **nevals:** number of evaluated individuals in the generation.
 * **fitness:** average cross-validation score for the generation.
 * **fitness_std:** standard deviation of the cross-validation scores.
+* **fitness_best:** best score found so far during the full search.
 * **fitness_max:** best individual score in the generation.
 * **fitness_min:** worst individual score in the generation.
 
@@ -179,7 +180,7 @@ In this run, the test accuracy was approximately 0.96.
 
 You can also inspect the optimization process. The
 :func:`~sklearn_genetic.plots.plot_fitness_evolution` helper shows how the
-fitness score changed over generations:
+best score found so far changed over generations:
 
 .. code:: python3
 

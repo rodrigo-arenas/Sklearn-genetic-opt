@@ -142,6 +142,7 @@ After fitting, convert ``history`` to a dataframe to inspect the search:
 
     columns = [
         "gen",
+        "fitness_best",
         "fitness_max",
         "unique_individual_ratio",
         "genotype_diversity",

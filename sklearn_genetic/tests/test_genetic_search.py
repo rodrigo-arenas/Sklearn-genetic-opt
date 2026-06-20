@@ -198,6 +198,7 @@ def test_optimizer_telemetry_is_recorded_for_each_generation(algorithm):
 
     telemetry_fields = [
         "population_size",
+        "fitness_best",
         "unique_individuals",
         "unique_individual_ratio",
         "genotype_diversity",

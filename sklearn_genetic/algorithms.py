@@ -13,6 +13,7 @@ from .optimizer_control import (
 )
 
 TELEMETRY_FIELDS = [
+    "fitness_best",
     "population_size",
     "unique_individuals",
     "unique_individual_ratio",
@@ -36,7 +37,7 @@ VERBOSE_COLUMNS = [
     ("gen", "gen", 4, "int"),
     ("nevals", "evals", 5, "int"),
     ("fitness", "avg", 13, "score"),
-    ("fitness_max", "best", 13, "score"),
+    ("fitness_best", "best", 13, "score"),
     ("genotype_diversity", "div", 7, "ratio"),
     ("unique_individual_ratio", "unique", 7, "ratio"),
     ("stagnation_generations", "stag", 5, "int"),
@@ -137,6 +138,31 @@ def _individual_key(individual):
     return tuple(individual)
 
 
+def _primary_fitness_weight(population):
+    if not population:
+        return 1.0
+
+    return population[0].fitness.weights[0]
+
+
+def _is_fitness_improvement(candidate, best, primary_weight):
+    if best is None:
+        return True
+
+    if primary_weight >= 0:
+        return candidate > best
+
+    return candidate < best
+
+
+def _fitness_delta(candidate, best, primary_weight):
+    if best is None:
+        return 0.0
+
+    delta = candidate - best
+    return delta if primary_weight >= 0 else -delta
+
+
 def _population_diversity(population):
     population_size = len(population)
     if population_size == 0:
@@ -173,25 +199,26 @@ def _compile_generation_record(stats, population, state, gen, control_record=Non
 
     record.update(_population_diversity(population))
 
-    current_best = record.get("fitness_max")
+    primary_weight = _primary_fitness_weight(population)
+    current_best_key = "fitness_max" if primary_weight >= 0 else "fitness_min"
+    current_best = record.get(current_best_key)
     if current_best is None:
         fitness_improvement = 0.0
         fitness_improved = False
-    elif state["best_fitness"] is None or current_best > state["best_fitness"]:
-        fitness_improvement = (
-            0.0 if state["best_fitness"] is None else current_best - state["best_fitness"]
-        )
+    elif _is_fitness_improvement(current_best, state["best_fitness"], primary_weight):
+        fitness_improvement = _fitness_delta(current_best, state["best_fitness"], primary_weight)
         fitness_improved = True
         state["best_fitness"] = current_best
         state["best_generation"] = gen
         state["stagnation_generations"] = 0
     else:
-        fitness_improvement = current_best - state["best_fitness"]
+        fitness_improvement = _fitness_delta(current_best, state["best_fitness"], primary_weight)
         fitness_improved = False
         state["stagnation_generations"] += 1
 
     record.update(
         {
+            "fitness_best": state["best_fitness"],
             "fitness_improvement": fitness_improvement,
             "fitness_improved": fitness_improved,
             "stagnation_generations": state["stagnation_generations"],
@@ -215,6 +242,46 @@ def _compile_generation_record(stats, population, state, gen, control_record=Non
         record.update(control_record)
 
     return record
+
+
+def _refresh_last_record_after_local_refinement(
+    logbook, stats, population, state, local_refinements
+):
+    if not local_refinements or len(logbook) == 0:
+        return
+
+    previous_record = dict(logbook[-1])
+    gen = previous_record.get("gen", len(logbook) - 1)
+    control_record = {
+        field: previous_record.get(field)
+        for field in TELEMETRY_FIELDS
+        if field
+        not in {
+            "fitness_best",
+            "population_size",
+            "unique_individuals",
+            "unique_individual_ratio",
+            "genotype_diversity",
+            "fitness_improvement",
+            "fitness_improved",
+            "stagnation_generations",
+            "best_generation",
+            "local_refinements",
+        }
+    }
+    control_record["local_refinements"] = local_refinements
+
+    refreshed_record = _compile_generation_record(
+        stats, population, state.copy(), gen, control_record
+    )
+    logbook[-1].clear()
+    logbook[-1].update(
+        {
+            "gen": previous_record.get("gen"),
+            "nevals": previous_record.get("nevals"),
+            **refreshed_record,
+        }
+    )
 
 
 def _new_telemetry_state():
@@ -467,8 +534,9 @@ def eaSimple(
 
     n_gen = gen + 1
     local_refinements = _run_local_refinement(population, toolbox, halloffame, estimator)
-    if local_refinements and len(logbook) > 0:
-        logbook[-1]["local_refinements"] = local_refinements
+    _refresh_last_record_after_local_refinement(
+        logbook, stats, population, telemetry_state, local_refinements
+    )
 
     callbacks_end_args = {
         "callbacks": callbacks,
@@ -673,8 +741,9 @@ def eaMuPlusLambda(
 
     n_gen = gen + 1
     local_refinements = _run_local_refinement(population, toolbox, halloffame, estimator)
-    if local_refinements and len(logbook) > 0:
-        logbook[-1]["local_refinements"] = local_refinements
+    _refresh_last_record_after_local_refinement(
+        logbook, stats, population, telemetry_state, local_refinements
+    )
 
     callbacks_end_args = {
         "callbacks": callbacks,
@@ -881,8 +950,9 @@ def eaMuCommaLambda(
 
     n_gen = gen + 1
     local_refinements = _run_local_refinement(population, toolbox, halloffame, estimator)
-    if local_refinements and len(logbook) > 0:
-        logbook[-1]["local_refinements"] = local_refinements
+    _refresh_last_record_after_local_refinement(
+        logbook, stats, population, telemetry_state, local_refinements
+    )
 
     callbacks_end_args = {
         "callbacks": callbacks,

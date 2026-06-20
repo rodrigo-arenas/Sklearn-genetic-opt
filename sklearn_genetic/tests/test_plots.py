@@ -49,8 +49,8 @@ def test_plot_evolution():
         plot = plot_fitness_evolution(evolved_estimator, metric="accuracy")
 
     assert (
-        str(excinfo.value)
-        == "metric must be one of ['fitness', 'fitness_std', 'fitness_max', 'fitness_min'], "
+        str(excinfo.value) == "metric must be one of "
+        "['fitness', 'fitness_std', 'fitness_best', 'fitness_max', 'fitness_min'], "
         "but got accuracy instead"
     )
 

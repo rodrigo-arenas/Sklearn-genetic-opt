@@ -127,6 +127,36 @@ def test_verbose_output_uses_compact_generation_summary(simple_toolbox, capsys):
     assert len({len(line) for line in table_lines}) == 1
 
 
+def test_algorithm_records_monotonic_best_fitness(simple_toolbox):
+    population = [
+        creator.IndividualAlgorithmTest([1, 0, 0, 0]),
+        creator.IndividualAlgorithmTest([1, 1, 0, 0]),
+        creator.IndividualAlgorithmTest([0, 0, 0, 0]),
+        creator.IndividualAlgorithmTest([0, 1, 0, 0]),
+    ]
+    stats = tools.Statistics(lambda individual: individual.fitness.values)
+    stats.register("fitness", np.mean)
+    stats.register("fitness_max", np.max)
+    stats.register("fitness_min", np.min)
+
+    _, logbook, _ = eaSimple(
+        population=population,
+        toolbox=simple_toolbox,
+        cxpb=ConstantAdapter(1.0, 1.0, 0),
+        mutpb=ConstantAdapter(1.0, 1.0, 0),
+        ngen=4,
+        stats=stats,
+        halloffame=tools.HallOfFame(1),
+        callbacks=[],
+        verbose=False,
+        estimator=SimpleNamespace(elitism=False),
+    )
+
+    best_history = logbook.select("fitness_best")
+
+    assert all(current >= previous for previous, current in zip(best_history, best_history[1:]))
+
+
 def test_diversity_control_boosts_mutation_and_adds_immigrants(simple_toolbox):
     population = [creator.IndividualAlgorithmTest([0, 0, 0, 0]) for _ in range(4)]
     estimator = SimpleNamespace(
