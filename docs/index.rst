@@ -82,7 +82,7 @@ This command will install all the extra requirements::
    notebooks/sklearn_comparison.ipynb
    notebooks/Pipeline_prediction.ipynb
    notebooks/Iris_feature_selection.ipynb
-   notebooks/Digits_decision_tree.ipynb
+   notebooks/Advanced_breast_cancer_random_forest.ipynb
    notebooks/MLflow_logger.ipynb
    notebooks/Iris_multimetric.ipynb
 
