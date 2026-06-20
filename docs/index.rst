@@ -162,6 +162,7 @@ Recommended Next Steps
    notebooks/MLflow_logger.ipynb
    notebooks/Checkpointing_and_persistence.ipynb
    notebooks/Iris_multimetric.ipynb
+   notebooks/Plotting_gallery.ipynb
 
 .. toctree::
    :maxdepth: 2

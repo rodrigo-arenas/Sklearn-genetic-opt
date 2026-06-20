@@ -34,6 +34,12 @@ Features:
   first generation where the current best solution appeared, and stagnation
   length.
 
+* Expanded :mod:`~sklearn_genetic.plots` with clearer and more flexible
+  plotting helpers. ``plot_fitness_evolution`` now supports multiple metrics
+  and smoothing, ``plot_history`` can visualize arbitrary telemetry fields
+  from ``history`` or ``logbook``, and ``plot_search_space`` now includes a
+  pair-plot mode and a correlation heatmap for sampled parameters.
+
 * Improved verbose fit output so real-time progress is shown as a compact
   generation summary with fitness, diversity, uniqueness, stagnation, mutation
   probability, and optimizer-control events. Full telemetry remains available
@@ -110,6 +116,10 @@ Docs:
 * Added a checkpointing and persistence notebook covering
   :class:`~sklearn_genetic.callbacks.ModelCheckpoint` and fitted estimator
   ``save``/``load`` workflows.
+
+* Added a plotting gallery notebook demonstrating the full plotting surface
+  for fitness evolution, optimizer telemetry, logbook data, and search-space
+  inspection.
 
 * Simplified the project README and documentation index to emphasize core
   usage, smart initialization, optimizer controls, persistence, benchmarks,
