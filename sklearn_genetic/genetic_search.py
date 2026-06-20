@@ -483,7 +483,9 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
             sampler = list(self.space.param_grid.values())[0]
             lower, upper = sampler.lower, sampler.upper
 
-            self.toolbox.register("mate_raw", tools.cxSimulatedBinaryBounded, low=lower, up=upper, eta=10)
+            self.toolbox.register(
+                "mate_raw", tools.cxSimulatedBinaryBounded, low=lower, up=upper, eta=10
+            )
         else:
             self.toolbox.register("mate_raw", tools.cxTwoPoint)
 
