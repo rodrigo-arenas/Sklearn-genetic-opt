@@ -43,6 +43,8 @@ from benchmark_fit import (
 )
 from sklearn_genetic.space import Categorical, Continuous, Integer
 
+HALVING_MIN_RESOURCES = 100
+
 
 def numeric_grid(lower: float, upper: float, grid_points: int, log_scale: bool) -> list[float]:
     if log_scale:
@@ -154,7 +156,7 @@ def build_searcher(
             refit=True,
             factor=2,
             aggressive_elimination=False,
-            min_resources="exhaust",
+            min_resources=HALVING_MIN_RESOURCES,
             random_state=random_state,
         )
 
@@ -169,7 +171,7 @@ def build_searcher(
             refit=True,
             factor=2,
             aggressive_elimination=False,
-            min_resources="exhaust",
+            min_resources=HALVING_MIN_RESOURCES,
             random_state=random_state,
         )
 
