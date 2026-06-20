@@ -5,26 +5,54 @@
 
 sklearn-genetic-opt
 ===================
-scikit-learn models hyperparameters tuning and feature selection,
-using evolutionary algorithms.
 
-#################################################################
+``sklearn-genetic-opt`` adds evolutionary optimization tools to the
+scikit-learn workflow. It can tune hyperparameters with
+:class:`~sklearn_genetic.GASearchCV` and select feature subsets with
+:class:`~sklearn_genetic.GAFeatureSelectionCV` using algorithms powered by
+DEAP.
 
-This is meant to be an alternative to popular methods inside scikit-learn such as Grid Search and Randomized Grid Search
-for hyperparameters tuning, and from RFE, Select From Model for feature selection.
+The project is useful when a search space is mixed, irregular, expensive, or
+not well served by an exhaustive grid. It follows familiar scikit-learn
+patterns: define an estimator, define a search space, call ``fit``, inspect
+``best_params_`` or ``support_``, and use the fitted object for prediction.
 
-Sklearn-genetic-opt uses evolutionary algorithms from the deap package to choose a set of hyperparameters
-that optimizes (max or min) the cross-validation scores, it can be used for both regression and classification problems.
+Highlights
+##########
 
-Installation:
-#############
+* :class:`~sklearn_genetic.GASearchCV` for hyperparameter search across
+  classification, regression, and supported outlier-detection estimators.
+* :class:`~sklearn_genetic.GAFeatureSelectionCV` for wrapper-based feature
+  selection with cross-validation.
+* Search spaces for integer, continuous, and categorical parameters.
+* Smart initial populations with ``population_initializer="smart"``, including
+  warm-start seeds, estimator defaults, Latin-hypercube numeric coverage,
+  stratified categorical coverage, and duplicate avoidance.
+* Adaptive mutation and crossover schedules.
+* Optional local search, diversity control, random immigrants, and fitness
+  sharing to improve exploration, avoid premature convergence, and refine good
+  solutions.
+* Parallel candidate evaluation with ``n_jobs`` and ``parallel_backend``.
+* Evaluation caching, optimizer telemetry through ``history``, and fit-cost
+  counters through ``fit_stats_``.
+* Callbacks for early stopping, progress reporting, checkpoints, TensorBoard,
+  and custom logic.
+* Plotting helpers plus MLflow 3 logging support.
 
-Install sklearn-genetic-opt
+Installation
+############
 
-It's advised to install sklearn-genetic using a virtual env, to install a light version,
-inside the env use::
+Install the core package:
+
+.. code-block:: bash
 
    pip install sklearn-genetic-opt
+
+Install optional plotting, MLflow, and TensorBoard integrations:
+
+.. code-block:: bash
+
+   pip install sklearn-genetic-opt[all]
 
 .. |PythonMinVersion| replace:: 3.12
 .. |ScikitLearnMinVersion| replace:: 1.9.0
@@ -36,7 +64,10 @@ inside the env use::
 .. |TensorBoardMinVersion| replace:: 2.20.0
 .. |tqdmMinVersion| replace:: 4.68.3
 
-sklearn-genetic-opt requires:
+Requirements
+############
+
+Core requirements:
 
 - Python (>= |PythonMinVersion|)
 - scikit-learn (>= |ScikitLearnMinVersion|)
@@ -44,20 +75,63 @@ sklearn-genetic-opt requires:
 - DEAP (>= |DEAPMinVersion|)
 - tqdm (>= |tqdmMinVersion|)
 
-Extra requirements:
+Optional extras:
 
-These requirements are necessary to use
-:mod:`~sklearn_genetic.plots`, :class:`~sklearn_genetic.mlflow.MLflowConfig`
-and :class:`~sklearn_genetic.callbacks.TensorBoard` correspondingly.
+- Seaborn (>= |SeabornMinVersion|) for plots
+- MLflow (>= |MLflowMinVersion|) for experiment logging
+- TensorFlow (>= |TensorflowMinVersion|) and TensorBoard
+  (>= |TensorBoardMinVersion|, < 2.21.0) for TensorBoard logging on Python <
+  3.14
 
-- Seaborn (>= |SeabornMinVersion|)
-- MLflow (>= |MLflowMinVersion|)
-- TensorFlow (>= |TensorflowMinVersion|, available for Python < 3.14)
-- TensorBoard (>= |TensorBoardMinVersion|, < 2.21.0, available for Python < 3.14)
+Quick Start
+###########
 
-This command will install all the extra requirements::
+.. code-block:: python
 
-   pip install sklearn-genetic-opt[all]
+   from sklearn.datasets import load_iris
+   from sklearn.ensemble import RandomForestClassifier
+   from sklearn.model_selection import StratifiedKFold
+
+   from sklearn_genetic import GASearchCV
+   from sklearn_genetic.space import Categorical, Continuous, Integer
+
+   X, y = load_iris(return_X_y=True)
+
+   param_grid = {
+       "n_estimators": Integer(50, 200),
+       "max_depth": Integer(2, 12),
+       "max_features": Continuous(0.3, 1.0),
+       "criterion": Categorical(["gini", "entropy", "log_loss"]),
+   }
+
+   search = GASearchCV(
+       estimator=RandomForestClassifier(random_state=42),
+       param_grid=param_grid,
+       cv=StratifiedKFold(n_splits=3, shuffle=True, random_state=42),
+       scoring="accuracy",
+       population_size=12,
+       generations=8,
+       population_initializer="smart",
+       n_jobs=-1,
+       parallel_backend="auto",
+       use_cache=True,
+   )
+
+   search.fit(X, y)
+
+   print(search.best_params_)
+   print(search.best_score_)
+   print(search.fit_stats_)
+
+Recommended Next Steps
+######################
+
+* Start with :doc:`tutorials/basic_usage` for the core workflow.
+* Read :doc:`tutorials/advanced_optimizer_control` for local search, diversity
+  control, fitness sharing, and optimizer telemetry.
+* Use the notebook examples for richer, executed workflows covering pipelines,
+  feature selection, MLflow 3 logging, persistence, and comparisons against
+  scikit-learn search methods.
 
 .. toctree::
    :maxdepth: 2
