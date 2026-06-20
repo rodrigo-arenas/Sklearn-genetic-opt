@@ -119,8 +119,8 @@ def test_plot_space_heatmap():
 def test_plot_space_with_hue():
     plot = plot_search_space(
         evolved_estimator,
-        features=["ccp_alpha", "max_depth", "min_samples_split", "fitness_best"],
-        hue="fitness_best",
+        features=["ccp_alpha", "max_depth", "min_samples_split", "criterion"],
+        hue="criterion",
     )
     assert hasattr(plot, "fig")
 
