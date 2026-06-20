@@ -123,6 +123,9 @@ def test_verbose_output_uses_compact_generation_summary(simple_toolbox, capsys):
     assert "unique_individual_ratio" not in output
     assert "fitness_sharing_applied" not in output
 
+    table_lines = [line for line in output.splitlines() if line.strip()]
+    assert len({len(line) for line in table_lines}) == 1
+
 
 def test_diversity_control_boosts_mutation_and_adds_immigrants(simple_toolbox):
     population = [creator.IndividualAlgorithmTest([0, 0, 0, 0]) for _ in range(4)]

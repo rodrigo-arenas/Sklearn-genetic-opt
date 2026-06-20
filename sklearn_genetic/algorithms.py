@@ -33,32 +33,38 @@ TELEMETRY_FIELDS = [
 
 
 VERBOSE_COLUMNS = [
-    ("gen", "gen", 4),
-    ("nevals", "evals", 5),
-    ("fitness", "avg", 12),
-    ("fitness_max", "best", 12),
-    ("genotype_diversity", "div", 7),
-    ("unique_individual_ratio", "unique", 7),
-    ("stagnation_generations", "stag", 5),
-    ("mutation_probability", "mut", 7),
-    ("events", "events", 18),
+    ("gen", "gen", 4, "int"),
+    ("nevals", "evals", 5, "int"),
+    ("fitness", "avg", 13, "score"),
+    ("fitness_max", "best", 13, "score"),
+    ("genotype_diversity", "div", 7, "ratio"),
+    ("unique_individual_ratio", "unique", 7, "ratio"),
+    ("stagnation_generations", "stag", 5, "int"),
+    ("mutation_probability", "mut", 7, "ratio"),
+    ("events", "events", 18, "text"),
 ]
 
 
-def _format_verbose_value(value):
+def _format_verbose_value(value, value_type, width):
     if value is None:
-        return "-"
+        return "-".rjust(width)
 
     if isinstance(value, (bool, np.bool_)):
-        return "yes" if value else "no"
+        return ("yes" if value else "no").rjust(width)
 
-    if isinstance(value, (int, np.integer)):
-        return str(value)
+    if value_type == "text":
+        return str(value)[:width].ljust(width)
 
-    if isinstance(value, (float, np.floating)):
-        return f"{value:.6g}"
+    if value_type == "int":
+        return f"{int(value):>{width}d}"
 
-    return str(value)
+    if value_type == "score":
+        return f"{float(value):>{width}.5f}"
+
+    if value_type == "ratio":
+        return f"{float(value):>{width}.3f}"
+
+    return str(value)[:width].rjust(width)
 
 
 def _verbose_events(record):
@@ -94,14 +100,14 @@ def _print_verbose_record(gen, nevals, record):
     }
 
     if gen == 0:
-        header = " ".join(label.rjust(width) for _, label, width in VERBOSE_COLUMNS)
-        separator = " ".join("-" * width for _, _, width in VERBOSE_COLUMNS)
+        header = " ".join(label.rjust(width) for _, label, width, _ in VERBOSE_COLUMNS)
+        separator = " ".join("-" * width for _, _, width, _ in VERBOSE_COLUMNS)
         print(header)
         print(separator)
 
     row = " ".join(
-        _format_verbose_value(display_record.get(key)).rjust(width)
-        for key, _, width in VERBOSE_COLUMNS
+        _format_verbose_value(display_record.get(key), value_type, width)
+        for key, _, width, value_type in VERBOSE_COLUMNS
     )
     print(row)
 
