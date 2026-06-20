@@ -70,6 +70,26 @@ Features:
   existing penalty directly instead of fitting models whose fitness is already
   known.
 
+^^^^^
+Docs:
+^^^^^
+
+* Refreshed the Jupyter notebook tutorials with richer end-to-end workflows,
+  top-level index menus, holdout metric reporting, optimizer telemetry, and
+  examples using the latest ``0.13.0`` controls.
+
+* Added a checkpointing and persistence notebook covering
+  :class:`~sklearn_genetic.callbacks.ModelCheckpoint` and fitted estimator
+  ``save``/``load`` workflows.
+
+^^^^^^^^^^
+Bug Fixes:
+^^^^^^^^^^
+
+* Fixed fitted estimator persistence for :class:`~sklearn_genetic.GASearchCV`
+  and :class:`~sklearn_genetic.GAFeatureSelectionCV` by excluding volatile DEAP
+  runtime objects from the saved state.
+
 What's new in 0.12.0
 --------------------
 

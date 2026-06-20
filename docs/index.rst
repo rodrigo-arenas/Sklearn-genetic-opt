@@ -84,6 +84,7 @@ This command will install all the extra requirements::
    notebooks/Iris_feature_selection.ipynb
    notebooks/Advanced_breast_cancer_random_forest.ipynb
    notebooks/MLflow_logger.ipynb
+   notebooks/Checkpointing_and_persistence.ipynb
    notebooks/Iris_multimetric.ipynb
 
 .. toctree::

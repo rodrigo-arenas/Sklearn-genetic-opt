@@ -17,16 +17,26 @@ def history_record(history, index):
 
 
 class GeneticEstimatorMixin:
+    _volatile_pickle_attrs = {"toolbox", "_stats", "_pop", "_hof", "hof"}
+
+    def _serializable_state(self):
+        return {
+            key: value
+            for key, value in self.__dict__.items()
+            if key not in self._volatile_pickle_attrs
+        }
+
     def save(self, filepath):
         """Save the current state of the estimator instance to a file."""
         class_name = self.__class__.__name__
         try:
-            checkpoint_data = {"estimator_state": self.__dict__, "logbook": None}
+            checkpoint_data = {"estimator_state": self._serializable_state(), "logbook": None}
             if hasattr(self, "logbook"):
                 checkpoint_data["logbook"] = self.logbook
 
+            serialized_checkpoint = pickle.dumps(checkpoint_data)
             with open(filepath, "wb") as f:
-                pickle.dump(checkpoint_data, f)
+                f.write(serialized_checkpoint)
             print(f"{class_name} model successfully saved to {filepath}")
         except Exception as e:
             print(f"Error saving {class_name}: {e}")
