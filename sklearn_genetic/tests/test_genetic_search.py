@@ -128,6 +128,54 @@ def test_smart_population_initializer_seeds_defaults_warm_starts_and_diversity()
         del genetic_search.creator.Individual
 
 
+def test_integer_search_space_is_repaired_after_single_dimension_crossover():
+    estimator = GASearchCV(
+        DecisionTreeClassifier(random_state=42),
+        cv=2,
+        scoring="accuracy",
+        population_size=4,
+        generations=1,
+        param_grid={"max_depth": Integer(1, 3)},
+        verbose=False,
+    )
+    estimator._register()
+
+    try:
+        first = genetic_search.creator.Individual([1])
+        second = genetic_search.creator.Individual([3])
+
+        for _ in range(25):
+            child_1, child_2 = estimator.mate(
+                genetic_search.creator.Individual(first),
+                genetic_search.creator.Individual(second),
+            )
+
+            assert isinstance(child_1[0], int)
+            assert isinstance(child_2[0], int)
+            assert 1 <= child_1[0] <= 3
+            assert 1 <= child_2[0] <= 3
+    finally:
+        del genetic_search.creator.FitnessMax
+        del genetic_search.creator.Individual
+
+
+def test_integer_search_space_fit_never_passes_float_to_estimator():
+    estimator = GASearchCV(
+        DecisionTreeClassifier(random_state=42),
+        cv=2,
+        scoring="accuracy",
+        population_size=3,
+        generations=2,
+        param_grid={"max_depth": Integer(1, 3)},
+        error_score="raise",
+        verbose=False,
+    )
+
+    estimator.fit(X_train, y_train)
+
+    assert isinstance(estimator.best_params_["max_depth"], int)
+
+
 @pytest.mark.parametrize("algorithm", ["eaSimple", "eaMuPlusLambda", "eaMuCommaLambda"])
 def test_optimizer_telemetry_is_recorded_for_each_generation(algorithm):
     generations = 2

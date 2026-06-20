@@ -95,6 +95,35 @@ def test_algorithm_stops_when_callback_requests_stop(simple_toolbox, algorithm, 
     assert len(logbook) == 1
 
 
+def test_verbose_output_uses_compact_generation_summary(simple_toolbox, capsys):
+    population = simple_toolbox.population(n=4)
+    stats = tools.Statistics(lambda individual: individual.fitness.values)
+    stats.register("fitness", np.mean)
+    stats.register("fitness_max", np.max)
+
+    eaSimple(
+        population=population,
+        toolbox=simple_toolbox,
+        cxpb=ConstantAdapter(0.5, 0.5, 0),
+        mutpb=ConstantAdapter(0.5, 0.5, 0),
+        ngen=1,
+        stats=stats,
+        halloffame=tools.HallOfFame(1),
+        callbacks=[],
+        verbose=True,
+        estimator=SimpleNamespace(elitism=False),
+    )
+
+    output = capsys.readouterr().out
+
+    assert " gen evals" in output
+    assert "best" in output
+    assert "unique" in output
+    assert "events" in output
+    assert "unique_individual_ratio" not in output
+    assert "fitness_sharing_applied" not in output
+
+
 def test_diversity_control_boosts_mutation_and_adds_immigrants(simple_toolbox):
     population = [creator.IndividualAlgorithmTest([0, 0, 0, 0]) for _ in range(4)]
     estimator = SimpleNamespace(

@@ -46,7 +46,7 @@ from sklearn.model_selection._split import check_cv
 from sklearn.metrics._scorer import _check_multimetric_scoring
 
 from .parameters import Criteria
-from .space import Space
+from .space import Categorical, Continuous, Integer, Space
 from ._base import GeneticEstimatorMixin, reset_adapters as _reset_adapters
 from .callbacks.validations import check_callback
 from .schedules.validations import check_adapter
@@ -479,16 +479,15 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
 
         self.toolbox.register("population", tools.initRepeat, list, self.toolbox.individual)
 
-        if len(self.space) == 1:
+        if len(self.space) == 1 and hasattr(list(self.space.param_grid.values())[0], "lower"):
             sampler = list(self.space.param_grid.values())[0]
             lower, upper = sampler.lower, sampler.upper
 
-            self.toolbox.register(
-                "mate", tools.cxSimulatedBinaryBounded, low=lower, up=upper, eta=10
-            )
+            self.toolbox.register("mate_raw", tools.cxSimulatedBinaryBounded, low=lower, up=upper, eta=10)
         else:
-            self.toolbox.register("mate", tools.cxTwoPoint)
+            self.toolbox.register("mate_raw", tools.cxTwoPoint)
 
+        self.toolbox.register("mate", self.mate)
         self.toolbox.register("mutate", self.mutate)
         if self.elitism:
             self.toolbox.register("select", tools.selTournament, tournsize=self.tournament_size)
@@ -513,7 +512,45 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         """
         Initialize the population, using warm-start configurations if provided.
         """
-        return initialize_search_population(self, self.toolbox, creator.Individual)
+        population = initialize_search_population(self, self.toolbox, creator.Individual)
+        for individual in population:
+            self._repair_individual(individual)
+        return population
+
+    def _repair_value(self, dimension, value):
+        if isinstance(dimension, Integer):
+            if value is None:
+                return dimension.sample()
+
+            repaired = int(round(float(value)))
+            return int(np.clip(repaired, dimension.lower, dimension.upper))
+
+        if isinstance(dimension, Continuous):
+            if value is None:
+                return dimension.sample()
+
+            repaired = float(value)
+            return float(np.clip(repaired, dimension.lower, dimension.upper))
+
+        if isinstance(dimension, Categorical):
+            return value if value in dimension.choices else dimension.sample()
+
+        return value
+
+    def _repair_individual(self, individual):
+        if not hasattr(self, "space"):
+            return individual
+
+        for index, parameter in enumerate(self.space.parameters):
+            individual[index] = self._repair_value(self.space[parameter], individual[index])
+
+        return individual
+
+    def mate(self, individual_1, individual_2):
+        offspring_1, offspring_2 = self.toolbox.mate_raw(individual_1, individual_2)
+        self._repair_individual(offspring_1)
+        self._repair_individual(offspring_2)
+        return offspring_1, offspring_2
 
     def mutate(self, individual):
         """
@@ -536,6 +573,7 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         # Using the defined distribution from the para_grid value
         # Make a random sample of the parameter
         individual[gen] = parameter.sample()
+        self._repair_individual(individual)
 
         return [individual]
 
@@ -546,9 +584,12 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         return tuple(sorted(current_generation_params.items()))
 
     def evaluate_population(self, individuals):
+        for individual in individuals:
+            self._repair_individual(individual)
         return _evaluate_population_batch(self, individuals, "current_generation_params")
 
     def _evaluate_individual(self, individual, n_jobs=None):
+        self._repair_individual(individual)
         # Dictionary representation of the individual with key-> hyperparameter name, value -> value
         current_generation_params = {
             key: individual[n] for n, key in enumerate(self.space.parameters)
@@ -613,6 +654,7 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         """
 
         # Convert hyperparameters to a tuple to use as a key in the cache
+        self._repair_individual(individual)
         individual_key = self._individual_key(individual)
 
         # Check if the individual has already been evaluated

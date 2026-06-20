@@ -112,6 +112,8 @@ def local_search_enabled(estimator):
 
 
 def _bounded_integer_neighbor(dimension, value, radius):
+    value = int(round(float(value)))
+    value = int(np.clip(value, dimension.lower, dimension.upper))
     step = max(1, int(np.ceil((dimension.upper - dimension.lower) * radius)))
     candidates = [
         candidate

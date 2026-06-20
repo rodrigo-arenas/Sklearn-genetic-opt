@@ -32,6 +32,80 @@ TELEMETRY_FIELDS = [
 ]
 
 
+VERBOSE_COLUMNS = [
+    ("gen", "gen", 4),
+    ("nevals", "evals", 5),
+    ("fitness", "avg", 12),
+    ("fitness_max", "best", 12),
+    ("genotype_diversity", "div", 7),
+    ("unique_individual_ratio", "unique", 7),
+    ("stagnation_generations", "stag", 5),
+    ("mutation_probability", "mut", 7),
+    ("events", "events", 18),
+]
+
+
+def _format_verbose_value(value):
+    if value is None:
+        return "-"
+
+    if isinstance(value, (bool, np.bool_)):
+        return "yes" if value else "no"
+
+    if isinstance(value, (int, np.integer)):
+        return str(value)
+
+    if isinstance(value, (float, np.floating)):
+        return f"{value:.6g}"
+
+    return str(value)
+
+
+def _verbose_events(record):
+    events = []
+
+    if record.get("diversity_control_triggered"):
+        events.append("div")
+
+    random_immigrants = record.get("random_immigrants", 0)
+    if random_immigrants:
+        events.append(f"imm={random_immigrants}")
+
+    duplicate_replacements = record.get("duplicate_replacements", 0)
+    if duplicate_replacements:
+        events.append(f"dup={duplicate_replacements}")
+
+    local_refinements = record.get("local_refinements", 0)
+    if local_refinements:
+        events.append(f"local={local_refinements}")
+
+    if record.get("fitness_sharing_applied"):
+        events.append("share")
+
+    return ",".join(events) if events else "-"
+
+
+def _print_verbose_record(gen, nevals, record):
+    display_record = {
+        "gen": gen,
+        "nevals": nevals,
+        "events": _verbose_events(record),
+        **record,
+    }
+
+    if gen == 0:
+        header = " ".join(label.rjust(width) for _, label, width in VERBOSE_COLUMNS)
+        separator = " ".join("-" * width for _, _, width in VERBOSE_COLUMNS)
+        print(header)
+        print(separator)
+
+    row = " ".join(
+        _format_verbose_value(display_record.get(key)).rjust(width)
+        for key, _, width in VERBOSE_COLUMNS
+    )
+    print(row)
+
+
 def _evaluate_invalid_individuals(toolbox, invalid_individuals):
     if hasattr(toolbox, "evaluate_population"):
         return toolbox.evaluate_population(invalid_individuals)
@@ -289,7 +363,7 @@ def eaSimple(
     logbook.record(gen=n_gen, nevals=len(invalid_ind), **record)
 
     if verbose:
-        print(logbook.stream)
+        _print_verbose_record(n_gen, len(invalid_ind), record)
 
     # Check if any of the callbacks conditions are True to stop the iteration
 
@@ -364,7 +438,7 @@ def eaSimple(
             logbook.record(gen=gen, nevals=len(invalid_ind), **record)
 
             if verbose:
-                print(logbook.stream)
+                _print_verbose_record(gen, len(invalid_ind), record)
 
             callbacks_step_args = {
                 "callbacks": callbacks,
@@ -500,7 +574,7 @@ def eaMuPlusLambda(
     logbook.record(gen=n_gen, nevals=len(invalid_ind), **record)
 
     if verbose:
-        print(logbook.stream)
+        _print_verbose_record(n_gen, len(invalid_ind), record)
 
     # Check if any of the callbacks conditions are True to stop the iteration
     callbacks_step_args = {
@@ -570,7 +644,7 @@ def eaMuPlusLambda(
             logbook.record(gen=gen, nevals=len(invalid_ind), **record)
 
             if verbose:
-                print(logbook.stream)
+                _print_verbose_record(gen, len(invalid_ind), record)
 
             callbacks_step_args = {
                 "callbacks": callbacks,
@@ -709,7 +783,7 @@ def eaMuCommaLambda(
     logbook.record(gen=n_gen, nevals=len(invalid_ind), **record)
 
     if verbose:
-        print(logbook.stream)
+        _print_verbose_record(n_gen, len(invalid_ind), record)
 
     callbacks_step_args = {
         "callbacks": callbacks,
@@ -777,7 +851,7 @@ def eaMuCommaLambda(
             logbook.record(gen=gen, nevals=len(invalid_ind), **record)
 
             if verbose:
-                print(logbook.stream)
+                _print_verbose_record(gen, len(invalid_ind), record)
 
             callbacks_step_args = {
                 "callbacks": callbacks,

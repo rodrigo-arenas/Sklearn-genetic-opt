@@ -32,6 +32,11 @@ Features:
   diversity, unique individual ratios, best-solution improvement, the first
   generation where the current best solution appeared, and stagnation length.
 
+* Improved verbose fit output so real-time progress is shown as a compact
+  generation summary with fitness, diversity, uniqueness, stagnation, mutation
+  probability, and optimizer-control events. Full telemetry remains available
+  through ``history`` and the generation logbook.
+
 * Added ``population_initializer`` to :class:`~sklearn_genetic.GASearchCV` and
   :class:`~sklearn_genetic.GAFeatureSelectionCV`. The default ``'smart'``
   strategy improves the initial population with valid warm starts, estimator
@@ -76,11 +81,15 @@ Docs:
 
 * Refreshed the Jupyter notebook tutorials with richer end-to-end workflows,
   top-level index menus, holdout metric reporting, optimizer telemetry, and
-  examples using the latest ``0.13.0`` controls.
+  examples using the current optimizer controls.
 
 * Added a checkpointing and persistence notebook covering
   :class:`~sklearn_genetic.callbacks.ModelCheckpoint` and fitted estimator
   ``save``/``load`` workflows.
+
+* Simplified the project README and documentation index to emphasize core
+  usage, smart initialization, optimizer controls, persistence, benchmarks,
+  and notebook examples.
 
 ^^^^^^^^^^
 Bug Fixes:
@@ -89,6 +98,16 @@ Bug Fixes:
 * Fixed fitted estimator persistence for :class:`~sklearn_genetic.GASearchCV`
   and :class:`~sklearn_genetic.GAFeatureSelectionCV` by excluding volatile DEAP
   runtime objects from the saved state.
+
+* Fixed type preservation for :class:`~sklearn_genetic.GASearchCV`
+  hyperparameter candidates. Integer, continuous, and categorical dimensions
+  are repaired against their declared search-space types after initialization,
+  warm starts, crossover, mutation, random immigrants, duplicate replacement,
+  local search, and before evaluation.
+
+* Fixed smart feature-selection initialization so fallback masks used to fill
+  duplicate populations respect ``max_features`` and always select at least one
+  feature.
 
 What's new in 0.12.0
 --------------------
