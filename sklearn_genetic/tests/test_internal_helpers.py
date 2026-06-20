@@ -118,6 +118,9 @@ def test_validate_population_initializer_rejects_unknown_strategy():
         ("random_immigrants_fraction", 1.1, "random_immigrants_fraction"),
         ("sharing_radius", 0, "sharing_radius"),
         ("sharing_alpha", 0, "sharing_alpha"),
+        ("selection_pressure_min", 0, "selection_pressure_min"),
+        ("selection_pressure_max", 1, "selection_pressure_max"),
+        ("offspring_diversity_retries", -1, "offspring_diversity_retries"),
     ],
 )
 def test_validate_optimizer_control_rejects_invalid_values(parameter, value, message):
@@ -131,6 +134,9 @@ def test_validate_optimizer_control_rejects_invalid_values(parameter, value, mes
         "random_immigrants_fraction": 0.1,
         "sharing_radius": 0.1,
         "sharing_alpha": 1.0,
+        "selection_pressure_min": 2,
+        "selection_pressure_max": 4,
+        "offspring_diversity_retries": 0,
     }
     kwargs[parameter] = value
 

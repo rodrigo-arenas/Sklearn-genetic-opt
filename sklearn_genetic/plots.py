@@ -71,6 +71,18 @@ def _select_numeric_columns(frame, excluded_columns=None):
     return numeric
 
 
+def _plottable_values(values):
+    normalized = []
+    for value in values:
+        if isinstance(value, (list, tuple, np.ndarray)):
+            array = np.asarray(value, dtype=float)
+            normalized.append(float(np.nanmean(array)) if array.size else np.nan)
+        else:
+            normalized.append(value)
+
+    return normalized
+
+
 def _plot_single_series(ax, series, kind="line", label=None, alpha=0.9, color=None):
     if kind == "bar":
         ax.bar(series.index, series.values, label=label, alpha=alpha, color=color)
@@ -259,7 +271,7 @@ def plot_history(
         )
         axes = np.atleast_1d(axes)
         for axis, color, field in zip(axes, colors, fields):
-            series = pd.Series(plotted[field].to_numpy(), index=x_values)
+            series = pd.Series(_plottable_values(plotted[field]), index=x_values)
             _plot_single_series(axis, series, kind=kind, label=field, alpha=0.9, color=color)
             axis.set_ylabel(field)
         axes[-1].set_xlabel(x_label)
@@ -273,7 +285,7 @@ def plot_history(
         figsize = (10, 6)
     _, ax = plt.subplots(figsize=figsize)
     for color, field in zip(colors, fields):
-        series = pd.Series(plotted[field].to_numpy(), index=x_values)
+        series = pd.Series(_plottable_values(plotted[field]), index=x_values)
         _plot_single_series(ax, series, kind=kind, label=field, alpha=0.9, color=color)
 
     ax.set_title(title or f"{source.capitalize()} fields")
