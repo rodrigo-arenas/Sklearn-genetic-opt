@@ -1710,10 +1710,12 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         for index, value in enumerate(individual):
             individual[index] = 1 if value else 0
 
-        if self.max_features and sum(individual) > self.max_features:
+        max_features = getattr(self, "max_features", None)
+
+        if max_features and sum(individual) > max_features:
             selected = [index for index, value in enumerate(individual) if value]
             random.shuffle(selected)
-            for index in selected[self.max_features :]:
+            for index in selected[max_features:]:
                 individual[index] = 0
 
         if sum(individual) == 0:
@@ -1782,9 +1784,9 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
 
         n_selected_features = np.sum(individual)
 
-        if self.max_features and (
-            n_selected_features > self.max_features or n_selected_features == 0
-        ):
+        max_features = getattr(self, "max_features", None)
+
+        if max_features and (n_selected_features > max_features or n_selected_features == 0):
             score = -self.criteria_sign * 100000
             cv_results = self._penalized_feature_cv_results(score)
             _, current_generation_params = self._build_feature_evaluation_record(
@@ -1920,8 +1922,9 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         self.multimetric_ = False
 
         self.features_proportion = None
-        if self.max_features:
-            self.features_proportion = self.max_features / self.n_features
+        max_features = getattr(self, "max_features", None)
+        if max_features:
+            self.features_proportion = max_features / self.n_features
 
         # Make sure the callbacks are valid
         self.callbacks = check_callback(callbacks)

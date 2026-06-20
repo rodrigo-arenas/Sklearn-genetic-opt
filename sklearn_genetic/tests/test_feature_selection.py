@@ -206,6 +206,24 @@ def test_feature_masks_are_repaired_before_evaluation():
     assert set(individual).issubset({0, 1})
 
 
+def test_feature_masks_are_repaired_when_max_features_is_missing():
+    estimator = GAFeatureSelectionCV(
+        DecisionTreeClassifier(),
+        cv=3,
+        scoring="accuracy",
+        verbose=False,
+    )
+    if hasattr(estimator, "max_features"):
+        delattr(estimator, "max_features")
+
+    individual = [1, 1, 0]
+    repaired = estimator._repair_individual(individual)
+
+    assert repaired is individual
+    assert sum(individual) >= 1
+    assert set(individual).issubset({0, 1})
+
+
 def test_feature_selection_genetic_operations_respect_max_features():
     estimator = GAFeatureSelectionCV(
         DecisionTreeClassifier(random_state=42),
