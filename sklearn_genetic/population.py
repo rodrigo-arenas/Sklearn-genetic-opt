@@ -83,6 +83,17 @@ def _append_unique_individual(population, seen_individuals, individual_values, i
     return True
 
 
+def _bounded_feature_mask(n_features, max_selected):
+    n_selected = random.randint(1, max_selected)
+    selected_features = random.sample(range(n_features), k=n_selected)
+    values = [0] * n_features
+
+    for feature_index in selected_features:
+        values[feature_index] = 1
+
+    return values
+
+
 def random_search_population(estimator, toolbox, individual_cls):
     population = []
     num_warm_start = min(len(estimator.warm_start_configs), estimator.population_size)
@@ -196,12 +207,13 @@ def smart_feature_population(estimator, toolbox, individual_cls):
     attempts = 0
     max_attempts = max(100, estimator.population_size * 20)
     while len(population) < estimator.population_size and attempts < max_attempts:
-        individual = toolbox.individual()
-        _append_unique_individual(population, seen_individuals, list(individual), individual_cls)
+        values = _bounded_feature_mask(estimator.n_features, max_selected)
+        _append_unique_individual(population, seen_individuals, values, individual_cls)
         attempts += 1
 
     while len(population) < estimator.population_size:
-        population.append(toolbox.individual())
+        values = _bounded_feature_mask(estimator.n_features, max_selected)
+        population.append(individual_cls(values))
 
     return population
 
