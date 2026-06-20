@@ -60,6 +60,12 @@ Features:
   penalty based on normalized candidate distance, helping multiple promising
   regions survive longer without changing raw cross-validation scores.
 
+* Added optional robust final selection to :class:`~sklearn_genetic.GASearchCV`.
+  With ``final_selection=True``, the search re-evaluates the top
+  ``final_selection_top_k`` candidates after the GA and selects the final
+  ``best_params_`` from those scores before refitting. Results are stored in
+  ``final_selection_results_``.
+
 * Added ``benchmarks/benchmark_fit.py`` to measure fit-time mechanics, compare
   baseline JSON results against current runs, compare parallel strategies, and
   track population initializers, optimizer telemetry, and holdout model metrics

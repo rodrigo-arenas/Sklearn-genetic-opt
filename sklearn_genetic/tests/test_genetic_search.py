@@ -84,6 +84,50 @@ def test_wrong_population_initializer():
     )
 
 
+def test_wrong_final_selection_top_k():
+    with pytest.raises(ValueError) as excinfo:
+        GASearchCV(
+            DecisionTreeClassifier(),
+            param_grid={"max_depth": Integer(1, 3)},
+            final_selection_top_k=0,
+        )
+
+    assert str(excinfo.value) == "final_selection_top_k must be greater than or equal to 1"
+
+
+def test_final_selection_can_replace_original_best_candidate(monkeypatch):
+    estimator = GASearchCV(
+        DecisionTreeClassifier(random_state=42),
+        param_grid={"max_depth": Integer(1, 3)},
+        final_selection=True,
+        final_selection_top_k=2,
+        verbose=False,
+    )
+    estimator.refit_metric = "score"
+    estimator.cv_results_ = {
+        "rank_test_score": np.array([1, 2, 3]),
+        "mean_test_score": np.array([0.90, 0.89, 0.70]),
+        "params": [{"max_depth": 1}, {"max_depth": 2}, {"max_depth": 3}],
+    }
+
+    monkeypatch.setattr(estimator, "_final_selection_splits", lambda: ["split"])
+
+    def score_candidate(params, cv_splits):
+        if params["max_depth"] == 2:
+            return 0.95, np.array([0.94, 0.96])
+        return 0.80, np.array([0.79, 0.81])
+
+    monkeypatch.setattr(estimator, "_score_final_candidate", score_candidate)
+
+    best_index, best_score, best_params = estimator._select_final_candidate()
+
+    assert best_index == 1
+    assert best_score == pytest.approx(0.95)
+    assert best_params == {"max_depth": 2}
+    assert estimator.final_selection_results_["changed"] is True
+    assert len(estimator.final_selection_results_["candidates"]) == 2
+
+
 def test_wrong_optimizer_control_parameters():
     with pytest.raises(ValueError, match="diversity_threshold must be in the interval"):
         GASearchCV(

@@ -106,6 +106,9 @@ def build_searcher(
     grid_points: int,
     ga_population_size: int,
     ga_generations: int,
+    final_selection: bool,
+    final_selection_top_k: int,
+    final_selection_cv=None,
 ):
     estimator = scenario.estimator_builder(random_state)
     ga_space = scenario.param_grid_builder()
@@ -120,6 +123,9 @@ def build_searcher(
             n_jobs=n_jobs,
             parallel_backend="auto",
             population_initializer="smart",
+            final_selection=final_selection,
+            final_selection_top_k=final_selection_top_k,
+            final_selection_cv=final_selection_cv,
         )
 
     if method == "grid":
@@ -267,6 +273,20 @@ def run_one_benchmark(
             }
         )
 
+    final_selection_results = getattr(searcher, "final_selection_results_", None)
+    if final_selection_results is not None:
+        result.update(
+            {
+                "final_selection_enabled": final_selection_results["enabled"],
+                "final_selection_changed": final_selection_results["changed"],
+                "final_selection_top_k": final_selection_results["top_k"],
+                "final_selection_cv": final_selection_results["cv"],
+                "final_selection_time_seconds": final_selection_results["time_seconds"],
+                "final_selection_original_score": final_selection_results["original_best_score"],
+                "final_selection_selected_score": final_selection_results["selected_score"],
+            }
+        )
+
     history = getattr(searcher, "history", None)
     if history:
         fitness_best = history.get("fitness_best", [])
@@ -349,6 +369,10 @@ def aggregate_results(results: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 items, "final_unique_individual_ratio"
             ),
             "mean_genotype_diversity_mean": mean_optional(items, "mean_genotype_diversity"),
+            "final_selection_changed_mean": mean_optional(items, "final_selection_changed"),
+            "final_selection_time_seconds_mean": mean_optional(
+                items, "final_selection_time_seconds"
+            ),
         }
 
         for metric_name in metric_names:
@@ -398,6 +422,8 @@ def print_summary_table(summaries: list[dict[str, Any]]) -> None:
         "fitness_best_improvement_mean",
         "final_unique_individual_ratio_mean",
         "mean_genotype_diversity_mean",
+        "final_selection_changed_mean",
+        "final_selection_time_seconds_mean",
         "accuracy_mean",
         "roc_auc_mean",
         "balanced_accuracy_mean",
@@ -525,6 +551,26 @@ def parse_args() -> argparse.Namespace:
         help="One or more n_jobs values to compare. Use 'none' for None.",
     )
     parser.add_argument(
+        "--final-selection",
+        action="store_true",
+        help="Re-evaluate the top GA candidates before selecting the final estimator.",
+    )
+    parser.add_argument(
+        "--final-selection-top-k",
+        type=int,
+        default=3,
+        help="Number of top GA candidates to re-evaluate when final selection is enabled.",
+    )
+    parser.add_argument(
+        "--final-selection-cv-splits",
+        type=int,
+        default=None,
+        help=(
+            "Optional CV split count for the final GA candidate re-evaluation. "
+            "Defaults to the main CV splitter."
+        ),
+    )
+    parser.add_argument(
         "--quick",
         action="store_true",
         help="Use a smaller benchmark for quick local smoke checks.",
@@ -587,6 +633,9 @@ def main() -> None:
                         grid_points=args.grid_points,
                         ga_population_size=args.ga_population_size,
                         ga_generations=args.ga_generations,
+                        final_selection=args.final_selection,
+                        final_selection_top_k=args.final_selection_top_k,
+                        final_selection_cv=args.final_selection_cv_splits,
                     )
                     results.append(
                         run_one_benchmark(

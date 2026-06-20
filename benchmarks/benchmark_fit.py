@@ -216,6 +216,9 @@ def build_gasearch(
     n_jobs: int | None,
     parallel_backend: str,
     population_initializer: str,
+    final_selection: bool = False,
+    final_selection_top_k: int = 3,
+    final_selection_cv=None,
 ) -> GASearchCV:
     return GASearchCV(
         estimator=scenario.estimator_builder(random_state),
@@ -243,6 +246,9 @@ def build_gasearch(
         random_immigrants_fraction=0.10,
         fitness_sharing=True,
         sharing_radius=0.35,
+        final_selection=final_selection,
+        final_selection_top_k=final_selection_top_k,
+        final_selection_cv=final_selection_cv,
     )
 
 
@@ -447,6 +453,20 @@ def run_one_benchmark(
         "generalization_gap": metric_gap(train_metrics, test_metrics),
     }
 
+    final_selection_results = getattr(estimator, "final_selection_results_", None)
+    if final_selection_results is not None:
+        result.update(
+            {
+                "final_selection_enabled": final_selection_results["enabled"],
+                "final_selection_changed": final_selection_results["changed"],
+                "final_selection_top_k": final_selection_results["top_k"],
+                "final_selection_cv": final_selection_results["cv"],
+                "final_selection_time_seconds": final_selection_results["time_seconds"],
+                "final_selection_original_score": final_selection_results["original_best_score"],
+                "final_selection_selected_score": final_selection_results["selected_score"],
+            }
+        )
+
     if hasattr(estimator, "support_"):
         result["selected_features"] = int(np.sum(estimator.support_))
 
@@ -470,7 +490,7 @@ def aggregate_results(results: list[dict[str, Any]]) -> list[dict[str, Any]]:
         grouped.setdefault(group_key(result), []).append(result)
 
     def mean_optional(items: list[dict[str, Any]], key: str) -> float | None:
-        values = [item[key] for item in items if item[key] is not None]
+        values = [item[key] for item in items if item.get(key) is not None]
         return float(np.mean(values)) if values else None
 
     summaries = []
@@ -533,6 +553,10 @@ def aggregate_results(results: list[dict[str, Any]]) -> list[dict[str, Any]]:
             "final_stagnation_generations_mean": mean_optional(
                 items, "final_stagnation_generations"
             ),
+            "final_selection_changed_mean": mean_optional(items, "final_selection_changed"),
+            "final_selection_time_seconds_mean": mean_optional(
+                items, "final_selection_time_seconds"
+            ),
         }
 
         for metric_name in metric_names:
@@ -587,6 +611,8 @@ def print_summary_table(summaries: list[dict[str, Any]]) -> None:
         "final_unique_individual_ratio_mean",
         "mean_genotype_diversity_mean",
         "final_stagnation_generations_mean",
+        "final_selection_changed_mean",
+        "final_selection_time_seconds_mean",
         "accuracy_mean",
         "roc_auc_mean",
         "balanced_accuracy_mean",
@@ -729,6 +755,26 @@ def parse_args() -> argparse.Namespace:
         help="Initial population strategies to compare.",
     )
     parser.add_argument(
+        "--final-selection",
+        action="store_true",
+        help="Re-evaluate the top GA candidates before selecting the final estimator.",
+    )
+    parser.add_argument(
+        "--final-selection-top-k",
+        type=int,
+        default=3,
+        help="Number of top GA candidates to re-evaluate when final selection is enabled.",
+    )
+    parser.add_argument(
+        "--final-selection-cv-splits",
+        type=int,
+        default=None,
+        help=(
+            "Optional CV split count for the final GA candidate re-evaluation. "
+            "Defaults to the main CV splitter."
+        ),
+    )
+    parser.add_argument(
         "--quick",
         action="store_true",
         help="Use a smaller benchmark for quick local smoke checks.",
@@ -795,6 +841,9 @@ def main() -> None:
                                         n_jobs=n_jobs,
                                         parallel_backend=parallel_backend,
                                         population_initializer=population_initializer,
+                                        final_selection=args.final_selection,
+                                        final_selection_top_k=args.final_selection_top_k,
+                                        final_selection_cv=args.final_selection_cv_splits,
                                     ),
                                     X_train=X_train,
                                     X_test=X_test,
