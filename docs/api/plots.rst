@@ -6,6 +6,7 @@ Plots
 
 .. autosummary::
    plot_fitness_evolution
+   plot_history
    plot_search_space
 
 .. automodule:: sklearn_genetic.plots

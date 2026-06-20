@@ -54,6 +54,20 @@ def test_check_adapter():
     )
 
 
+def test_scheduler_reset():
+    scheduler = ExponentialAdapter(initial_value=0.8, end_value=0.2, adaptive_rate=0.1)
+
+    scheduler.step()
+    scheduler.step()
+
+    assert scheduler.current_step == 2
+    assert scheduler.current_value != scheduler.initial_value
+
+    assert scheduler.reset() is scheduler
+    assert scheduler.current_step == 0
+    assert scheduler.current_value == scheduler.initial_value
+
+
 @pytest.mark.parametrize(
     "method, params",
     [

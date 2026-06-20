@@ -1,5 +1,6 @@
 import pytest
 from deap import tools
+from sklearn.base import clone
 from sklearn.datasets import load_digits, load_diabetes
 from sklearn.linear_model import SGDClassifier
 from sklearn.tree import DecisionTreeClassifier
@@ -13,9 +14,17 @@ from sklearn.metrics import make_scorer
 import numpy as np
 import os
 
-from .. import GASearchCV
+from .. import (
+    EvolutionConfig,
+    GASearchCV,
+    OptimizationConfig,
+    PopulationConfig,
+    RuntimeConfig,
+)
 from ..space import Integer, Categorical, Continuous
 from .. import genetic_search
+from .. import evaluation
+from ..optimizer_control import replace_duplicate_candidates
 from ..callbacks import (
     ThresholdStopping,
     DeltaThreshold,
@@ -51,6 +60,84 @@ def test_default_n_jobs_is_none():
     assert estimator.get_params()["n_jobs"] is None
     assert estimator.parallel_backend == "auto"
     assert estimator.get_params()["parallel_backend"] == "auto"
+    assert estimator.population_initializer == "smart"
+    assert estimator.get_params()["population_initializer"] == "smart"
+
+
+def test_gasearch_accepts_grouped_config_objects():
+    evolution_config = EvolutionConfig(
+        population_size=4,
+        generations=2,
+        tournament_size=2,
+        algorithm="eaMuPlusLambda",
+    )
+    population_config = PopulationConfig(
+        initializer="smart",
+        warm_start_configs=[{"max_depth": 2, "criterion": "entropy"}],
+    )
+    runtime_config = RuntimeConfig(
+        n_jobs=1,
+        parallel_backend="auto",
+        verbose=False,
+        use_cache=True,
+    )
+    optimization_config = OptimizationConfig(
+        diversity_control=True,
+        adaptive_selection=True,
+        offspring_diversity_retries=2,
+        final_selection=True,
+        final_selection_top_k=2,
+    )
+
+    estimator = GASearchCV(
+        DecisionTreeClassifier(random_state=42),
+        cv=2,
+        scoring="accuracy",
+        param_grid={
+            "max_depth": Integer(1, 4),
+            "criterion": Categorical(["gini", "entropy"]),
+        },
+        evolution_config=evolution_config,
+        population_config=population_config,
+        runtime_config=runtime_config,
+        optimization_config=optimization_config,
+    )
+
+    assert estimator.population_size == 4
+    assert estimator.generations == 2
+    assert estimator.tournament_size == 2
+    assert estimator.population_initializer == "smart"
+    assert estimator.warm_start_configs is None
+    assert estimator._warm_start_configs == [{"max_depth": 2, "criterion": "entropy"}]
+    assert estimator.n_jobs == 1
+    assert estimator.verbose is False
+    assert estimator.diversity_control is True
+    assert estimator.adaptive_selection is True
+    assert estimator.offspring_diversity_retries == 2
+    assert estimator.final_selection is True
+    assert estimator.final_selection_top_k == 2
+    assert estimator.get_params()["evolution_config"] is evolution_config
+    assert estimator.get_params()["optimization_config"] is optimization_config
+
+
+def test_gasearch_grouped_config_is_sklearn_clone_compatible():
+    estimator = GASearchCV(
+        DecisionTreeClassifier(random_state=42),
+        cv=2,
+        scoring="accuracy",
+        param_grid={"max_depth": Integer(1, 3)},
+        evolution_config=EvolutionConfig(population_size=4, generations=1),
+        population_config=PopulationConfig(initializer="smart"),
+        runtime_config=RuntimeConfig(verbose=False),
+    )
+
+    cloned = clone(estimator)
+
+    assert cloned.population_size == 4
+    assert cloned.generations == 1
+    assert cloned.population_initializer == "smart"
+    assert cloned.verbose is False
+    assert "evolution_config" in cloned.get_params()
 
 
 def test_wrong_parallel_backend():
@@ -65,6 +152,249 @@ def test_wrong_parallel_backend():
         str(excinfo.value)
         == "parallel_backend must be one of ['auto', 'cv', 'population'], got workers instead"
     )
+
+
+def test_wrong_population_initializer():
+    with pytest.raises(ValueError) as excinfo:
+        GASearchCV(
+            DecisionTreeClassifier(),
+            param_grid={"max_depth": Integer(1, 3)},
+            population_initializer="lhs",
+        )
+
+    assert (
+        str(excinfo.value)
+        == "population_initializer must be one of ['random', 'smart'], got lhs instead"
+    )
+
+
+def test_wrong_final_selection_top_k():
+    with pytest.raises(ValueError) as excinfo:
+        GASearchCV(
+            DecisionTreeClassifier(),
+            param_grid={"max_depth": Integer(1, 3)},
+            final_selection_top_k=0,
+        )
+
+    assert str(excinfo.value) == "final_selection_top_k must be greater than or equal to 1"
+
+
+def test_final_selection_can_replace_original_best_candidate(monkeypatch):
+    estimator = GASearchCV(
+        DecisionTreeClassifier(random_state=42),
+        param_grid={"max_depth": Integer(1, 3)},
+        final_selection=True,
+        final_selection_top_k=2,
+        verbose=False,
+    )
+    estimator.refit_metric = "score"
+    estimator.cv_results_ = {
+        "rank_test_score": np.array([1, 2, 3]),
+        "mean_test_score": np.array([0.90, 0.89, 0.70]),
+        "params": [{"max_depth": 1}, {"max_depth": 2}, {"max_depth": 3}],
+    }
+
+    monkeypatch.setattr(estimator, "_final_selection_splits", lambda: ["split"])
+
+    def score_candidate(params, cv_splits):
+        if params["max_depth"] == 2:
+            return 0.95, np.array([0.94, 0.96])
+        return 0.80, np.array([0.79, 0.81])
+
+    monkeypatch.setattr(estimator, "_score_final_candidate", score_candidate)
+
+    best_index, best_score, best_params = estimator._select_final_candidate()
+
+    assert best_index == 1
+    assert best_score == pytest.approx(0.95)
+    assert best_params == {"max_depth": 2}
+    assert estimator.final_selection_results_["changed"] is True
+    assert len(estimator.final_selection_results_["candidates"]) == 2
+
+
+def test_wrong_optimizer_control_parameters():
+    with pytest.raises(ValueError, match="diversity_threshold must be in the interval"):
+        GASearchCV(
+            DecisionTreeClassifier(),
+            param_grid={"max_depth": Integer(1, 3)},
+            diversity_threshold=1.5,
+        )
+
+    with pytest.raises(ValueError, match="sharing_radius must be in the interval"):
+        GASearchCV(
+            DecisionTreeClassifier(),
+            param_grid={"max_depth": Integer(1, 3)},
+            sharing_radius=0,
+        )
+
+    with pytest.raises(ValueError, match="selection_pressure_max"):
+        GASearchCV(
+            DecisionTreeClassifier(),
+            param_grid={"max_depth": Integer(1, 3)},
+            selection_pressure_min=4,
+            selection_pressure_max=3,
+        )
+
+    with pytest.raises(ValueError, match="offspring_diversity_retries"):
+        GASearchCV(
+            DecisionTreeClassifier(),
+            param_grid={"max_depth": Integer(1, 3)},
+            offspring_diversity_retries=-1,
+        )
+
+
+def test_adaptive_selection_reduces_pressure_when_diversity_is_low():
+    estimator = GASearchCV(
+        DecisionTreeClassifier(random_state=42),
+        cv=2,
+        scoring="accuracy",
+        population_size=5,
+        generations=1,
+        param_grid={
+            "max_depth": Integer(1, 5),
+            "criterion": Categorical(["gini", "entropy"]),
+        },
+        tournament_size=4,
+        adaptive_selection=True,
+        selection_pressure_min=2,
+        selection_pressure_max=5,
+        diversity_control=True,
+        diversity_threshold=0.5,
+        verbose=False,
+    )
+    estimator._register()
+
+    try:
+        estimator._last_generation_record = {
+            "unique_individual_ratio": 0.2,
+            "genotype_diversity": 0.2,
+            "stagnation_generations": 0,
+            "fitness_improved": False,
+        }
+        estimator.select(estimator._pop, 3)
+
+        assert estimator._selection_pressure_ == 2
+    finally:
+        del genetic_search.creator.FitnessMax
+        del genetic_search.creator.Individual
+
+
+def test_offspring_generation_replaces_parent_duplicates():
+    estimator = GASearchCV(
+        DecisionTreeClassifier(random_state=42),
+        cv=2,
+        scoring="accuracy",
+        population_size=4,
+        generations=1,
+        param_grid={
+            "max_depth": Integer(1, 6),
+            "criterion": Categorical(["gini", "entropy"]),
+        },
+        diversity_control=True,
+        offspring_diversity_retries=10,
+        verbose=False,
+    )
+    estimator._register()
+
+    try:
+        parent = genetic_search.creator.Individual([1, "gini"])
+        offspring = [
+            genetic_search.creator.Individual([1, "gini"]),
+            genetic_search.creator.Individual([1, "gini"]),
+        ]
+
+        replacements = replace_duplicate_candidates(
+            offspring,
+            estimator.toolbox,
+            estimator,
+            reference_population=[parent],
+        )
+
+        assert replacements == 2
+        assert all(
+            estimator._individual_key(individual) != estimator._individual_key(parent)
+            for individual in offspring
+        )
+        assert len({estimator._individual_key(individual) for individual in offspring}) == 2
+    finally:
+        del genetic_search.creator.FitnessMax
+        del genetic_search.creator.Individual
+
+
+def test_smart_population_initializer_seeds_defaults_warm_starts_and_diversity():
+    estimator = GASearchCV(
+        DecisionTreeClassifier(max_depth=2, criterion="entropy", random_state=42),
+        cv=2,
+        scoring="accuracy",
+        population_size=6,
+        generations=1,
+        param_grid={
+            "max_depth": Integer(1, 6),
+            "criterion": Categorical(["gini", "entropy"]),
+        },
+        warm_start_configs=[{"max_depth": 3, "criterion": "gini"}],
+        verbose=False,
+    )
+
+    estimator._register()
+    population = [list(individual) for individual in estimator._pop]
+
+    try:
+        assert [3, "gini"] in population
+        assert [2, "entropy"] in population
+        assert len({tuple(individual) for individual in population}) == len(population)
+        assert {individual[1] for individual in population} == {"gini", "entropy"}
+    finally:
+        del genetic_search.creator.FitnessMax
+        del genetic_search.creator.Individual
+
+
+def test_integer_search_space_is_repaired_after_single_dimension_crossover():
+    estimator = GASearchCV(
+        DecisionTreeClassifier(random_state=42),
+        cv=2,
+        scoring="accuracy",
+        population_size=4,
+        generations=1,
+        param_grid={"max_depth": Integer(1, 3)},
+        verbose=False,
+    )
+    estimator._register()
+
+    try:
+        first = genetic_search.creator.Individual([1])
+        second = genetic_search.creator.Individual([3])
+
+        for _ in range(25):
+            child_1, child_2 = estimator.mate(
+                genetic_search.creator.Individual(first),
+                genetic_search.creator.Individual(second),
+            )
+
+            assert isinstance(child_1[0], int)
+            assert isinstance(child_2[0], int)
+            assert 1 <= child_1[0] <= 3
+            assert 1 <= child_2[0] <= 3
+    finally:
+        del genetic_search.creator.FitnessMax
+        del genetic_search.creator.Individual
+
+
+def test_integer_search_space_fit_never_passes_float_to_estimator():
+    estimator = GASearchCV(
+        DecisionTreeClassifier(random_state=42),
+        cv=2,
+        scoring="accuracy",
+        population_size=3,
+        generations=2,
+        param_grid={"max_depth": Integer(1, 3)},
+        error_score="raise",
+        verbose=False,
+    )
+
+    estimator.fit(X_train, y_train)
+
+    assert isinstance(estimator.best_params_["max_depth"], int)
 
 
 @pytest.mark.parametrize("algorithm", ["eaSimple", "eaMuPlusLambda", "eaMuCommaLambda"])
@@ -89,6 +419,7 @@ def test_optimizer_telemetry_is_recorded_for_each_generation(algorithm):
 
     telemetry_fields = [
         "population_size",
+        "fitness_best",
         "unique_individuals",
         "unique_individual_ratio",
         "genotype_diversity",
@@ -96,6 +427,7 @@ def test_optimizer_telemetry_is_recorded_for_each_generation(algorithm):
         "fitness_improved",
         "stagnation_generations",
         "best_generation",
+        "selection_pressure",
     ]
 
     for field in telemetry_fields:
@@ -108,6 +440,37 @@ def test_optimizer_telemetry_is_recorded_for_each_generation(algorithm):
     assert 0 <= estimator.history["genotype_diversity"][-1] <= 1
     assert estimator.history["best_generation"][-1] == 0
     assert estimator.history["stagnation_generations"][-1] == generations
+
+
+def test_schedulers_reset_on_fresh_fit():
+    generations = 2
+    mutation_scheduler = ExponentialAdapter(initial_value=0.8, end_value=0.2, adaptive_rate=0.1)
+    crossover_scheduler = ExponentialAdapter(initial_value=0.1, end_value=0.3, adaptive_rate=0.1)
+    estimator = GASearchCV(
+        DecisionTreeClassifier(random_state=42),
+        cv=2,
+        scoring="accuracy",
+        population_size=4,
+        generations=generations,
+        param_grid={
+            "max_depth": Integer(1, 3),
+            "criterion": Categorical(["gini", "entropy"]),
+        },
+        mutation_probability=mutation_scheduler,
+        crossover_probability=crossover_scheduler,
+        verbose=False,
+        n_jobs=1,
+    )
+
+    estimator.fit(X_train, y_train)
+    first_mutation_value = mutation_scheduler.current_value
+    assert mutation_scheduler.current_step == generations
+    assert crossover_scheduler.current_step == generations
+
+    estimator.fit(X_train, y_train)
+    assert mutation_scheduler.current_step == generations
+    assert crossover_scheduler.current_step == generations
+    assert mutation_scheduler.current_value == first_mutation_value
 
 
 def test_evaluate_population_reuses_duplicate_individual_cache(monkeypatch):
@@ -227,8 +590,8 @@ def test_evaluate_population_parallelizes_unique_individuals_without_nested_cv(m
             "score_time": np.array([0.0, 0.0]),
         }
 
-    monkeypatch.setattr(genetic_search, "Parallel", FakeParallel)
-    monkeypatch.setattr(genetic_search, "_is_parallel_enabled", lambda n_jobs, n_tasks: True)
+    monkeypatch.setattr(evaluation, "Parallel", FakeParallel)
+    monkeypatch.setattr(evaluation, "is_parallel_enabled", lambda n_jobs, n_tasks: True)
     monkeypatch.setattr(genetic_search, "cross_validate", fake_cross_validate)
 
     estimator = GASearchCV(
@@ -275,8 +638,8 @@ def test_evaluate_population_cv_backend_uses_inner_cv_parallelism(monkeypatch):
             "score_time": np.array([0.0, 0.0]),
         }
 
-    monkeypatch.setattr(genetic_search, "Parallel", fail_parallel)
-    monkeypatch.setattr(genetic_search, "_is_parallel_enabled", lambda n_jobs, n_tasks: True)
+    monkeypatch.setattr(evaluation, "Parallel", fail_parallel)
+    monkeypatch.setattr(evaluation, "is_parallel_enabled", lambda n_jobs, n_tasks: True)
     monkeypatch.setattr(genetic_search, "cross_validate", fake_cross_validate)
 
     estimator = GASearchCV(

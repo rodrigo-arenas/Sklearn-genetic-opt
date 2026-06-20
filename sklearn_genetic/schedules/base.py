@@ -38,3 +38,11 @@ class BaseAdapter(ABC):
         Run one iteration of the transformation
         """
         raise NotImplementedError("Scheduler must override step()")  # pragma: no cover
+
+    def reset(self):
+        """
+        Restore the adapter to its initial value and first step.
+        """
+        self.current_value = self.initial_value
+        self.current_step = 0
+        return self

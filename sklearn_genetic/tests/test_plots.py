@@ -1,5 +1,5 @@
-import pytest
 import matplotlib
+import pytest
 from sklearn.datasets import load_diabetes
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeRegressor
@@ -7,8 +7,8 @@ from sklearn.tree import DecisionTreeRegressor
 matplotlib.use("Agg")
 
 from .. import GASearchCV, GAFeatureSelectionCV
-from ..plots import plot_fitness_evolution, plot_search_space
-from ..space import Integer, Categorical, Continuous
+from ..plots import plot_fitness_evolution, plot_history, plot_search_space
+from ..space import Categorical, Continuous, Integer
 
 data = load_diabetes()
 
@@ -44,31 +44,96 @@ evolved_estimator.fit(X_train, y_train)
 
 def test_plot_evolution():
     plot = plot_fitness_evolution(evolved_estimator)
+    assert plot.get_xlabel() == "generations"
+    assert "fitness" in plot.get_ylabel()
+
+    plot = plot_fitness_evolution(
+        evolved_estimator,
+        metrics=["fitness_best", "fitness"],
+        window=2,
+        kind="line",
+    )
+    assert len(plot.lines) == 2
 
     with pytest.raises(Exception) as excinfo:
-        plot = plot_fitness_evolution(evolved_estimator, metric="accuracy")
+        plot_fitness_evolution(evolved_estimator, metric="accuracy")
 
     assert (
-        str(excinfo.value)
-        == "metric must be one of ['fitness', 'fitness_std', 'fitness_max', 'fitness_min'], "
+        str(excinfo.value) == "metric must be one of "
+        "['fitness', 'fitness_std', 'fitness_best', 'fitness_max', 'fitness_min'], "
         "but got accuracy instead"
     )
+
+    with pytest.raises(ValueError, match="kind must be one of"):
+        plot_fitness_evolution(evolved_estimator, kind="scatter")
+
+
+def test_plot_history():
+    plot = plot_history(
+        evolved_estimator,
+        fields=["fitness_best", "unique_individual_ratio"],
+        kind="line",
+    )
+    assert plot.get_xlabel() == "generations"
+
+    axes = plot_history(
+        evolved_estimator,
+        fields=["fitness_best", "fitness_max", "fitness_min", "genotype_diversity"],
+        kind="area",
+        subplots=True,
+    )
+    assert len(axes) == 4
+
+    logbook_plot = plot_history(
+        evolved_estimator,
+        fields=["score", "fit_time"],
+        source="logbook",
+        kind="step",
+    )
+    assert logbook_plot.get_xlabel() == "record index"
+
+    with pytest.raises(ValueError, match="fields not found in history"):
+        plot_history(evolved_estimator, fields=["missing_field"])
+
+    with pytest.raises(ValueError, match="kind must be one of"):
+        plot_history(evolved_estimator, kind="scatter")
 
 
 def test_plot_space():
     plot = plot_search_space(
-        evolved_estimator, features=["ccp_alpha", "max_depth", "min_samples_split"]
+        evolved_estimator,
+        features=["ccp_alpha", "max_depth", "min_samples_split"],
     )
+    assert hasattr(plot, "fig")
+
+
+def test_plot_space_heatmap():
+    plot = plot_search_space(
+        evolved_estimator,
+        features=["ccp_alpha", "max_depth", "min_samples_split"],
+        kind="heatmap",
+    )
+    assert plot.get_title() == "Search-space correlation heatmap"
+
+
+def test_plot_space_with_hue():
+    plot = plot_search_space(
+        evolved_estimator,
+        features=["ccp_alpha", "max_depth", "min_samples_split", "criterion"],
+        hue="criterion",
+    )
+    assert hasattr(plot, "fig")
 
 
 def test_plot_space_defaults_to_numeric_parameters():
     plot = plot_search_space(evolved_estimator)
+    assert hasattr(plot, "fig")
 
 
 def test_wrong_estimator_space():
     estimator = GAFeatureSelectionCV(clf, cv=3, scoring="accuracy", population_size=6)
     with pytest.raises(Exception) as excinfo:
-        plot = plot_search_space(estimator)
+        plot_search_space(estimator)
 
     assert (
         str(excinfo.value)

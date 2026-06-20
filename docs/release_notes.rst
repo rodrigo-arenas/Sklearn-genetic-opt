@@ -29,18 +29,123 @@ Features:
 * Added optimizer telemetry to ``history`` and the generation logbook for
   :class:`~sklearn_genetic.GASearchCV` and
   :class:`~sklearn_genetic.GAFeatureSelectionCV`. New fields track population
-  diversity, unique individual ratios, best-solution improvement, the first
-  generation where the current best solution appeared, and stagnation length.
+  diversity, unique individual ratios, current-generation fitness, cumulative
+  best-so-far fitness through ``fitness_best``, best-solution improvement, the
+  first generation where the current best solution appeared, and stagnation
+  length.
+
+* Expanded :mod:`~sklearn_genetic.plots` with clearer and more flexible
+  plotting helpers. ``plot_fitness_evolution`` now supports multiple metrics
+  and smoothing, ``plot_history`` can visualize arbitrary telemetry fields
+  from ``history`` or ``logbook``, and ``plot_search_space`` now includes a
+  pair-plot mode and a correlation heatmap for sampled parameters.
+
+* Improved verbose fit output so real-time progress is shown as a compact
+  generation summary with fitness, diversity, uniqueness, stagnation, mutation
+  probability, and optimizer-control events. Full telemetry remains available
+  through ``history`` and the generation logbook.
+
+* Added ``population_initializer`` to :class:`~sklearn_genetic.GASearchCV` and
+  :class:`~sklearn_genetic.GAFeatureSelectionCV`. The default ``'smart'``
+  strategy improves the initial population with valid warm starts, estimator
+  defaults, Latin hypercube sampling for numeric hyperparameters, stratified
+  categorical values, and duplicate-aware feature masks. Set
+  ``population_initializer='random'`` to use the previous random initialization
+  behavior.
+
+* Added optional local refinement and diversity-control mechanisms to
+  :class:`~sklearn_genetic.GASearchCV` and
+  :class:`~sklearn_genetic.GAFeatureSelectionCV`. ``local_search=True`` runs a
+  short neighborhood search around hall-of-fame candidates after the genetic
+  search. ``diversity_control=True`` monitors diversity and stagnation to boost
+  mutation, replace duplicate candidates, and inject random immigrants when the
+  population collapses too early.
+
+* Added optional fitness sharing with ``fitness_sharing=True``. During
+  selection, candidates in crowded niches receive a temporary shared fitness
+  penalty based on normalized candidate distance, helping multiple promising
+  regions survive longer without changing raw cross-validation scores.
+
+* Added optional adaptive tournament selection and diversity-aware offspring
+  generation to :class:`~sklearn_genetic.GASearchCV` and
+  :class:`~sklearn_genetic.GAFeatureSelectionCV`. ``adaptive_selection=True``
+  reduces selection pressure when diversity is low or the search stagnates and
+  can increase pressure when the population is improving. New
+  ``offspring_diversity_retries`` retry logic helps replace duplicate or
+  parent-matching offspring with novel candidates.
+
+* Added grouped configuration objects:
+  :class:`~sklearn_genetic.EvolutionConfig`,
+  :class:`~sklearn_genetic.PopulationConfig`,
+  :class:`~sklearn_genetic.RuntimeConfig`, and
+  :class:`~sklearn_genetic.OptimizationConfig`. These objects provide the
+  preferred API for advanced optimizer settings while the previous flat keyword
+  parameters remain supported for backward compatibility.
+
+* Added optional robust final selection to :class:`~sklearn_genetic.GASearchCV`.
+  With ``final_selection=True``, the search re-evaluates the top
+  ``final_selection_top_k`` candidates after the GA and selects the final
+  ``best_params_`` from those scores before refitting. Results are stored in
+  ``final_selection_results_``.
 
 * Added ``benchmarks/benchmark_fit.py`` to measure fit-time mechanics, compare
   baseline JSON results against current runs, compare parallel strategies, and
-  track optimizer telemetry and holdout model metrics across classification and
-  regression scenarios.
+  track population initializers, optimizer telemetry, and holdout model metrics
+  across classification and regression scenarios.
 
-* :class:`~sklearn_genetic.GAFeatureSelectionCV` now skips cross-validation for
-  invalid feature masks when ``max_features`` is exceeded, assigning the
-  existing penalty directly instead of fitting models whose fitness is already
-  known.
+* Added ``benchmarks/benchmark_search_methods.py`` to compare
+  :class:`~sklearn_genetic.GASearchCV` against scikit-learn hyperparameter
+  search methods, including ``GridSearchCV``, ``RandomizedSearchCV``,
+  ``HalvingGridSearchCV``, and ``HalvingRandomSearchCV``. The benchmark reports
+  solution time, evaluated candidates, estimated cross-validation effort, best
+  CV score, holdout metrics, and best parameters.
+
+* :class:`~sklearn_genetic.GAFeatureSelectionCV` now repairs feature masks
+  created by initialization, crossover, mutation, duplicate replacement, random
+  immigrants, and direct evaluation so masks keep at least one selected feature
+  and respect ``max_features``.
+
+^^^^^
+Docs:
+^^^^^
+
+* Refreshed the Jupyter notebook tutorials with richer end-to-end workflows,
+  top-level index menus, holdout metric reporting, optimizer telemetry, and
+  examples using the current optimizer controls.
+
+* Added a checkpointing and persistence notebook covering
+  :class:`~sklearn_genetic.callbacks.ModelCheckpoint` and fitted estimator
+  ``save``/``load`` workflows.
+
+* Added a plotting gallery notebook demonstrating the full plotting surface
+  for fitness evolution, optimizer telemetry, logbook data, and search-space
+  inspection.
+
+* Simplified the project README and documentation index to emphasize core
+  usage, smart initialization, optimizer controls, persistence, benchmarks,
+  and notebook examples.
+
+^^^^^^^^^^
+Bug Fixes:
+^^^^^^^^^^
+
+* Fixed fitted estimator persistence for :class:`~sklearn_genetic.GASearchCV`
+  and :class:`~sklearn_genetic.GAFeatureSelectionCV` by excluding volatile DEAP
+  runtime objects from the saved state.
+
+* Fixed type preservation for :class:`~sklearn_genetic.GASearchCV`
+  hyperparameter candidates. Integer, continuous, and categorical dimensions
+  are repaired against their declared search-space types after initialization,
+  warm starts, crossover, mutation, random immigrants, duplicate replacement,
+  local search, and before evaluation.
+
+* Fixed smart feature-selection initialization so fallback masks used to fill
+  duplicate populations respect ``max_features`` and always select at least one
+  feature.
+
+* Fixed convergence telemetry so local refinement updates the final generation
+  history row and the default fitness plot shows ``fitness_best`` rather than a
+  noisy population average.
 
 What's new in 0.12.0
 --------------------

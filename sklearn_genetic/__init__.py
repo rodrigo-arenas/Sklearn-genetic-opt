@@ -1,4 +1,5 @@
 from .genetic_search import GASearchCV, GAFeatureSelectionCV
+from .config import EvolutionConfig, OptimizationConfig, PopulationConfig, RuntimeConfig
 
 from .callbacks import (
     ThresholdStopping,
@@ -19,6 +20,10 @@ from ._version import __version__
 __all__ = [
     "GASearchCV",
     "GAFeatureSelectionCV",
+    "EvolutionConfig",
+    "OptimizationConfig",
+    "PopulationConfig",
+    "RuntimeConfig",
     "ThresholdStopping",
     "ConsecutiveStopping",
     "DeltaThreshold",

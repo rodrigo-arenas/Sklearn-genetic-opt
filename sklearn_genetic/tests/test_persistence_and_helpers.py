@@ -1,7 +1,9 @@
 from types import SimpleNamespace
 
 import pytest
+from sklearn.datasets import load_iris
 from sklearn.exceptions import NotFittedError
+from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
 
 from ..callbacks.model_checkpoint import ModelCheckpoint
@@ -50,6 +52,43 @@ def test_ga_search_save_and_load_round_trip(tmp_path, capsys):
     assert "GASearchCV model successfully loaded" in output
     assert restored.extra_state == "persisted"
     assert restored.logbook == [{"generation": 0}]
+
+
+def test_fitted_ga_search_save_and_load_round_trip(tmp_path):
+    X, y = load_iris(return_X_y=True)
+    X_train, X_test, y_train, _ = train_test_split(
+        X,
+        y,
+        test_size=0.25,
+        stratify=y,
+        random_state=0,
+    )
+
+    search = GASearchCV(
+        estimator=DecisionTreeClassifier(random_state=0),
+        param_grid={"max_depth": Integer(1, 3)},
+        cv=2,
+        scoring="accuracy",
+        population_size=3,
+        generations=1,
+        verbose=False,
+    )
+    search.fit(X_train, y_train)
+    checkpoint_path = tmp_path / "fitted_ga_search.pkl"
+
+    search.save(checkpoint_path)
+
+    restored = GASearchCV(
+        estimator=DecisionTreeClassifier(random_state=0),
+        param_grid={"max_depth": Integer(1, 3)},
+        cv=2,
+        scoring="accuracy",
+    )
+    restored.load(checkpoint_path)
+
+    assert restored.best_score_ == search.best_score_
+    assert restored.best_params_ == search.best_params_
+    assert restored.predict(X_test).shape[0] == X_test.shape[0]
 
 
 def test_ga_search_save_and_load_errors_are_reported(tmp_path, capsys):

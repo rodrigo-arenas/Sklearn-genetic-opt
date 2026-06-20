@@ -76,6 +76,11 @@ master_doc = "index"
 # Ignore Jupyter notebooks error
 nbsphinx_allow_errors = True
 
+# Execute notebooks with the standard Jupyter kernel and allow enough time for
+# the longer tutorial notebooks to finish in CI.
+nbsphinx_kernel_name = "python3"
+nbsphinx_timeout = 600
+
 # generate autosummary even if no references
 autosummary_generate = True
 autosummary_imported_members = True

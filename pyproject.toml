@@ -49,6 +49,7 @@ docs = [
     "numpydoc>=1.10.0",
     "nbsphinx>=0.9.8",
     "ipython>=9.14.1",
+    "ipykernel>=6.30.0",
     "Pygments>=2.20.0",
     "seaborn>=0.13.2",
     "mlflow>=3.14.0",
@@ -77,6 +78,7 @@ dev = [
     "numpydoc>=1.10.0",
     "nbsphinx>=0.9.8",
     "ipython>=9.14.1",
+    "ipykernel>=6.30.0",
     "Pygments>=2.20.0",
     "seaborn>=0.13.2",
     "mlflow>=3.14.0",
@@ -115,6 +117,7 @@ omit = [
 [tool.coverage.report]
 precision = 2
 show_missing = true
+fail_under = 95
 exclude_lines = [
     "pragma: no cover",
     "noqa",

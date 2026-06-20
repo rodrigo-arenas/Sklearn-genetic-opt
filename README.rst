@@ -9,7 +9,7 @@
 .. _Codecov: https://codecov.io/github/rodrigo-arenas/Sklearn-genetic-opt?branch=master
 
 .. |PythonVersion| image:: https://img.shields.io/badge/python-3.12%20%7C%203.13%20%7C%203.14-blue
-.. _PythonVersion : https://www.python.org/downloads/
+.. _PythonVersion: https://www.python.org/downloads/
 
 .. |PyPi| image:: https://badge.fury.io/py/sklearn-genetic-opt.svg
 .. _PyPi: https://badge.fury.io/py/sklearn-genetic-opt
@@ -23,96 +23,63 @@
 
 .. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/docs/logo.png?raw=true
 
-Sklearn-genetic-opt
+sklearn-genetic-opt
 ###################
 
-scikit-learn models hyperparameters tuning and feature selection, using evolutionary algorithms.
+``sklearn-genetic-opt`` adds evolutionary optimization tools to the
+scikit-learn workflow. It can tune hyperparameters with
+``GASearchCV`` and select feature subsets with ``GAFeatureSelectionCV`` using
+algorithms powered by `DEAP <https://deap.readthedocs.io/en/master/>`_.
 
-This is meant to be an alternative to popular methods inside scikit-learn such as Grid Search and Randomized Grid Search
-for hyperparameters tuning, and from RFE (Recursive Feature Elimination), Select From Model for feature selection.
+The project is useful when a search space is mixed, irregular, expensive, or
+not well served by an exhaustive grid. It follows familiar scikit-learn
+patterns: define an estimator, define a search space, call ``fit``, inspect
+``best_params_`` or ``support_``, and use the fitted object for prediction.
 
-**Table of Contents**
-######################
+Documentation is available at
+`sklearn-genetic-opt.readthedocs.io <https://sklearn-genetic-opt.readthedocs.io/>`_.
 
-- Sklearn-genetic-opt Overview
-  - Main Features
-  - Demos on Features
-- Installation
-  - Basic Installation
-  - Full Installation with Extras
-- Usage
-  - Hyperparameters Tuning
-  - Feature Selection
-- Documentation
-  - Stable
-  - Latest
-  - Development
-- Parallel Processing with n_jobs
-- Common Errors & Troubleshooting
-- Changelog
-- Important Links
-- Source Code
-- Contributing
-- Testing
+Highlights
+##########
 
+* ``GASearchCV`` for hyperparameter search across classification, regression,
+  and supported outlier-detection estimators.
+* ``GAFeatureSelectionCV`` for wrapper-based feature selection with
+  cross-validation.
+* Search spaces for integer, continuous, and categorical parameters.
+* Smart initial populations with ``PopulationConfig(initializer="smart")``, including
+  warm-start seeds, estimator defaults, Latin-hypercube numeric coverage,
+  stratified categorical coverage, and duplicate avoidance.
+* Adaptive mutation and crossover schedules.
+* Optional local search, diversity control, random immigrants, and fitness
+  sharing to improve exploration, avoid premature convergence, and refine good
+  solutions.
+* Parallel candidate evaluation with ``n_jobs`` and ``parallel_backend``.
+* Evaluation caching, optimizer telemetry through ``history``, and fit-cost
+  counters through ``fit_stats_``.
+* Callbacks for early stopping, progress reporting, checkpoints, TensorBoard,
+  and custom logic.
+* Plotting helpers plus MLflow 3 logging support.
 
-Sklearn-genetic-opt uses evolutionary algorithms from the `DEAP <https://deap.readthedocs.io/en/master/>`_  (Distributed Evolutionary Algorithms in Python) package to choose the set of hyperparameters that
-optimizes (max or min) the cross-validation scores, it can be used for both regression and classification problems.
+Installation
+############
 
-Documentation is available `here <https://sklearn-genetic-opt.readthedocs.io/>`_
+Install the core package:
 
-Main Features:
-##############
-
-* **GASearchCV**: Main class of the package for hyperparameters tuning, holds the evolutionary cross-validation optimization routine.
-* **GAFeatureSelectionCV**: Main class of the package for feature selection.
-* **Algorithms**: Set of different evolutionary algorithms to use as an optimization procedure.
-* **Callbacks**: Custom evaluation strategies to generate early stopping rules,
-  logging (into TensorBoard, .pkl files, etc) or your custom logic.
-* **Schedulers**: Adaptive methods to control learning parameters.
-* **Plots**: Generate pre-defined plots to understand the optimization process.
-* **MLflow**: Build-in integration with mlflow to log all the hyperparameters, cv-scores and the fitted models.
-
-Demos on Features:
-##################
-
-Visualize the progress of your training:
-
-.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/docs/images/progress_bar.gif?raw=true
-
-Real-time metrics visualization and comparison across runs:
-
-.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/docs/images/tensorboard_log.png?raw=true
-
-Sampled distribution of hyperparameters:
-
-.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/docs/images/density.png?raw=true
-
-Artifacts logging:
-
-.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/docs/images/mlflow_artifacts_4.png?raw=true
-
-
-Usage:
-######
-
-Install sklearn-genetic-opt
-
-It's advised to install sklearn-genetic using a virtual env, inside the env use::
+.. code-block:: bash
 
    pip install sklearn-genetic-opt
 
-If you want to get all the features, including plotting, tensorboard and mlflow logging capabilities,
-install all the extra packages::
+Install optional plotting, MLflow, and TensorBoard integrations:
 
-    pip install sklearn-genetic-opt[all]
+.. code-block:: bash
 
-Requirements:
-#############
+   pip install sklearn-genetic-opt[all]
 
-sklearn-genetic-opt supports Python 3.12 and newer.
+Requirements
+############
 
-Core dependencies:
+Core requirements:
 
 * Python >= 3.12
 * scikit-learn >= 1.9.0
@@ -122,312 +89,276 @@ Core dependencies:
 
 Optional extras:
 
-* Seaborn >= 0.13.2 for plotting
+* Seaborn >= 0.13.2 for plots
 * MLflow >= 3.14.0 for experiment logging
-* TensorFlow >= 2.21.0 and TensorBoard >= 2.20.0,<2.21.0 for TensorBoard logging on Python < 3.14
+* TensorFlow >= 2.21.0 and TensorBoard >= 2.20.0,<2.21.0 for TensorBoard
+  logging on Python < 3.14
 
+Quick Start: Hyperparameter Search
+##################################
 
-Example: Hyperparameters Tuning
+.. code-block:: python
 
-Quick Start (Minimal Example)
+   from sklearn.datasets import load_iris
+   from sklearn.ensemble import RandomForestClassifier
+   from sklearn.model_selection import StratifiedKFold, train_test_split
+
+   from sklearn_genetic import EvolutionConfig, GASearchCV, PopulationConfig, RuntimeConfig
+   from sklearn_genetic.space import Categorical, Continuous, Integer
+
+   X, y = load_iris(return_X_y=True)
+   X_train, X_test, y_train, y_test = train_test_split(
+       X,
+       y,
+       test_size=0.25,
+       stratify=y,
+       random_state=42,
+   )
+
+   param_grid = {
+       "n_estimators": Integer(50, 200),
+       "max_depth": Integer(2, 12),
+       "max_features": Continuous(0.3, 1.0),
+       "criterion": Categorical(["gini", "entropy", "log_loss"]),
+   }
+
+   search = GASearchCV(
+       estimator=RandomForestClassifier(random_state=42),
+       param_grid=param_grid,
+       cv=StratifiedKFold(n_splits=3, shuffle=True, random_state=42),
+       scoring="accuracy",
+       evolution_config=EvolutionConfig(population_size=12, generations=8),
+       population_config=PopulationConfig(initializer="smart"),
+       runtime_config=RuntimeConfig(
+           n_jobs=-1,
+           parallel_backend="auto",
+           use_cache=True,
+           verbose=True,
+       ),
+   )
+
+   search.fit(X_train, y_train)
+
+   print(search.best_params_)
+   print(search.best_score_)
+   print(search.score(X_test, y_test))
+   print(search.fit_stats_)
+
+Quick Start: Feature Selection
+##############################
+
+.. code-block:: python
+
+   import numpy as np
+   from sklearn.datasets import load_iris
+   from sklearn.metrics import accuracy_score
+   from sklearn.model_selection import train_test_split
+   from sklearn.svm import SVC
+
+   from sklearn_genetic import (
+       EvolutionConfig,
+       GAFeatureSelectionCV,
+       PopulationConfig,
+       RuntimeConfig,
+   )
+   from sklearn_genetic.schedules import ExponentialAdapter
+
+   X, y = load_iris(return_X_y=True)
+   noise = np.random.default_rng(42).uniform(0, 1, size=(X.shape[0], 8))
+   X = np.hstack([X, noise])
+
+   X_train, X_test, y_train, y_test = train_test_split(
+       X,
+       y,
+       test_size=0.25,
+       stratify=y,
+       random_state=42,
+   )
+
+   selector = GAFeatureSelectionCV(
+       estimator=SVC(gamma="auto"),
+       cv=3,
+       scoring="accuracy",
+       evolution_config=EvolutionConfig(
+           population_size=12,
+           generations=8,
+           mutation_probability=ExponentialAdapter(0.8, 0.2, 0.05),
+           crossover_probability=ExponentialAdapter(0.2, 0.8, 0.05),
+       ),
+       population_config=PopulationConfig(initializer="smart"),
+       runtime_config=RuntimeConfig(n_jobs=-1, verbose=True),
+   )
+
+   selector.fit(X_train, y_train)
+
+   print(selector.support_)
+   print(accuracy_score(y_test, selector.predict(X_test)))
+   print(selector.transform(X_test).shape)
+
+Improving Search Quality
+########################
+
+The default ``PopulationConfig(initializer="smart")`` is recommended for most runs.
+It improves early search coverage without reducing the number of generations
+or population size.
+
+For harder spaces, combine it with optimizer controls:
+
+.. code-block:: python
+
+   from sklearn_genetic import EvolutionConfig, OptimizationConfig, PopulationConfig, RuntimeConfig
+   from sklearn_genetic.schedules import ExponentialAdapter, InverseAdapter
+
+   search = GASearchCV(
+       estimator=estimator,
+       param_grid=param_grid,
+       scoring="roc_auc",
+       cv=3,
+       evolution_config=EvolutionConfig(
+           population_size=16,
+           generations=12,
+           crossover_probability=ExponentialAdapter(0.85, 0.45, 0.08),
+           mutation_probability=InverseAdapter(0.18, 0.55, 0.12),
+       ),
+       population_config=PopulationConfig(
+           initializer="smart",
+           warm_start_configs=[{"C": 1.0, "class_weight": None}],
+       ),
+       runtime_config=RuntimeConfig(n_jobs=-1, parallel_backend="auto", use_cache=True),
+       optimization_config=OptimizationConfig(
+           local_search=True,
+           local_search_top_k=2,
+           local_search_steps=2,
+           diversity_control=True,
+           random_immigrants_fraction=0.15,
+           fitness_sharing=True,
+       ),
+   )
+
+Use:
+
+* ``PopulationConfig.warm_start_configs`` when you already know useful candidate settings.
+* ``OptimizationConfig(local_search=True)`` to refine the best candidates near the end of the run.
+* ``OptimizationConfig(diversity_control=True)`` to react when the population collapses too early.
+* ``OptimizationConfig(fitness_sharing=True)`` to keep multiple promising regions alive.
+* ``fit_stats_`` to understand evaluation cost, cache hits, and skipped work.
+* ``history`` to inspect fitness, diversity, stagnation, and optimizer
+  telemetry by generation.
+
+Parallelism
+###########
+
+``RuntimeConfig.n_jobs`` controls parallel execution:
+
+* ``RuntimeConfig(n_jobs=1)`` runs sequentially.
+* ``RuntimeConfig(n_jobs=-1)`` uses all available CPU cores.
+* ``RuntimeConfig(n_jobs=k)`` uses ``k`` workers.
+
+With ``RuntimeConfig(parallel_backend="auto")`` or
+``RuntimeConfig(parallel_backend="population")``, unique candidates in the same
+generation are evaluated in parallel and each candidate runs cross-validation
+sequentially to avoid nested parallelism. Use
+``RuntimeConfig(parallel_backend="cv")`` to evaluate candidates serially while
+passing ``n_jobs`` to each candidate's cross-validation call.
+
+Persistence and Checkpointing
 #############################
 
-Here is a basic example of how to run GASearchCV on a scikit-learn model:
+Use ``ModelCheckpoint`` to write progress during long searches:
 
 .. code-block:: python
 
-    from sklearn_genetic import GASearchCV
-    from sklearn_genetic.space import Continuous, Categorical, Integer
-    from sklearn.ensemble import RandomForestClassifier
-    from sklearn.datasets import load_iris
+   from sklearn_genetic.callbacks import ModelCheckpoint
 
-    X, y = load_iris(return_X_y=True)
+   search.fit(X_train, y_train, callbacks=[ModelCheckpoint("checkpoint.pkl")])
 
-    # Defines the possible values to search
-    param_grid = {'min_weight_fraction_leaf': Continuous(0.01, 0.5, distribution='log-uniform'),
-                  'bootstrap': Categorical([True, False]),
-                  'max_depth': Integer(2, 30)}
-
-    evolved_estimator = GASearchCV(estimator=RandomForestClassifier(),
-                                   cv=3,
-                                   scoring="accuracy",
-                                   population_size=10,
-                                   generations=5,
-                                   param_grid=param_grid)
-
-    evolved_estimator.fit(X, y)
-
-    print(evolved_estimator.best_params_)
-    print(evolved_estimator.best_score_)
-
-
-###############################
+Use ``save`` and ``load`` when you want to persist a fitted search object:
 
 .. code-block:: python
 
+   search.save("ga_search.pkl")
+   restored = GASearchCV(estimator=estimator, param_grid=param_grid)
+   restored.load("ga_search.pkl")
 
-   from sklearn_genetic import GASearchCV
-   from sklearn_genetic.space import Continuous, Categorical, Integer
-   from sklearn.ensemble import RandomForestClassifier
-   from sklearn.model_selection import train_test_split, StratifiedKFold
-   from sklearn.datasets import load_digits
-   from sklearn.metrics import accuracy_score
+Benchmarks
+##########
 
-   data = load_digits()
-   n_samples = len(data.images)
-   X = data.images.reshape((n_samples, -1))
-   y = data['target']
-   X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
-
-   clf = RandomForestClassifier()
-
-   # Defines the possible values to search
-   param_grid = {'min_weight_fraction_leaf': Continuous(0.01, 0.5, distribution='log-uniform'),
-                 'bootstrap': Categorical([True, False]),
-                 'max_depth': Integer(2, 30),
-                 'max_leaf_nodes': Integer(2, 35),
-                 'n_estimators': Integer(100, 300)}
-
-   # Seed solutions
-   warm_start_configs = [
-              {"min_weight_fraction_leaf": 0.02, "bootstrap": True, "max_depth": None, "n_estimators": 100},
-              {"min_weight_fraction_leaf": 0.4, "bootstrap": True, "max_depth": 5, "n_estimators": 200},
-       ]
-
-   cv = StratifiedKFold(n_splits=3, shuffle=True)
-
-   evolved_estimator = GASearchCV(estimator=clf,
-                                  cv=cv,
-                                  scoring='accuracy',
-                                  population_size=20,
-                                  generations=35,
-                                  param_grid=param_grid,
-                                  n_jobs=-1,
-                                  verbose=True,
-                                  use_cache=True,
-                                  warm_start_configs=warm_start_configs,
-                                  keep_top_k=4)
-
-   # Train and optimize the estimator
-   evolved_estimator.fit(X_train, y_train)
-   # Best parameters found
-   print(evolved_estimator.best_params_)
-   # Use the model fitted with the best parameters
-   y_predict_ga = evolved_estimator.predict(X_test)
-   print(accuracy_score(y_test, y_predict_ga))
-
-   # Saved metadata for further analysis
-   print("Stats achieved in each generation: ", evolved_estimator.history)
-   print("Best k solutions: ", evolved_estimator.hof)
-
-
-Example: Feature Selection
-##########################
-
-.. code:: python3
-
-    from sklearn_genetic import GAFeatureSelectionCV, ExponentialAdapter
-    from sklearn.model_selection import train_test_split
-    from sklearn.svm import SVC
-    from sklearn.datasets import load_iris
-    from sklearn.metrics import accuracy_score
-    import numpy as np
-
-    data = load_iris()
-    X, y = data["data"], data["target"]
-
-    # Add random non-important features
-    noise = np.random.uniform(5, 10, size=(X.shape[0], 5))
-    X = np.hstack((X, noise))
-
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=0)
-
-    clf = SVC(gamma='auto')
-    mutation_scheduler = ExponentialAdapter(0.8, 0.2, 0.01)
-    crossover_scheduler = ExponentialAdapter(0.2, 0.8, 0.01)
-
-    evolved_estimator = GAFeatureSelectionCV(
-        estimator=clf,
-        scoring="accuracy",
-        population_size=30,
-        generations=20,
-        mutation_probability=mutation_scheduler,
-        crossover_probability=crossover_scheduler,
-        n_jobs=-1)
-
-    # Train and select the features
-    evolved_estimator.fit(X_train, y_train)
-
-    # Features selected by the algorithm
-    features = evolved_estimator.support_
-    print(features)
-
-    # Predict only with the subset of selected features
-    y_predict_ga = evolved_estimator.predict(X_test)
-    print(accuracy_score(y_test, y_predict_ga))
-
-    # Transform the original data to the selected features
-    X_reduced = evolved_estimator.transform(X_test)
-
-Parallel Processing with n_jobs
-###############################
-
-`GASearchCV` supports parallel processing through the `n_jobs` parameter. During the
-genetic optimization, unique candidate evaluations in the same generation are evaluated
-in parallel when possible; each candidate runs its own cross-validation sequentially to
-avoid nested parallelism:
-
-- ``n_jobs=1`` → run sequentially (default)
-- ``n_jobs=-1`` → use all available CPU cores
-- ``n_jobs=k`` → use ``k`` workers
-
-Example:
-
-.. code-block:: python
-
-    from sklearn_genetic import GASearchCV
-    from sklearn.ensemble import RandomForestClassifier
-    from sklearn.datasets import load_iris
-
-    X, y = load_iris(return_X_y=True)
-
-    param_grid = {"n_estimators": [50, 100], "max_depth": [3, None]}
-
-    evolved_estimator = GASearchCV(
-        estimator=RandomForestClassifier(),
-        cv=3,
-        param_grid=param_grid,
-        generations=5,
-        population_size=10,
-        n_jobs=-1   # parallel execution
-    )
-
-    evolved_estimator.fit(X, y)
-    print(evolved_estimator.best_params_)
-
-Set ``parallel_backend="cv"`` to keep candidate evaluation serial and pass ``n_jobs``
-to each candidate's cross-validation call. After fitting, ``fit_stats_`` contains
-counters such as cross-validation calls, cache hits, duplicate candidates, skipped
-invalid candidates, and population-level parallel batches.
-
-.. note::
-   Parallelism is limited to candidate evaluations within a single machine.
-   MPI/distributed methods are not yet supported.
-
-Benchmarking fit performance and model metrics
-##############################################
-
-The repository includes a benchmark script to compare fit-time mechanics and
-holdout model quality across GA classes, datasets, and parallel strategies:
+The repository includes benchmark scripts for optimizer mechanics, model
+metrics, and comparisons against scikit-learn search methods:
 
 .. code-block:: bash
 
-    python benchmarks/benchmark_fit.py --quick
-    python benchmarks/benchmark_fit.py --scenarios classification_lr regression_ridge
-    python benchmarks/benchmark_fit.py --parallel-backends auto cv --runs 3
-    python benchmarks/benchmark_fit.py --label current --output-json benchmarks/current.json
-    python benchmarks/benchmark_fit.py --compare-json benchmarks/baseline.json
+   python benchmarks/benchmark_fit.py --quick
+   python benchmarks/benchmark_fit.py --parallel-backends auto cv --runs 3
+   python benchmarks/benchmark_search_methods.py --quick
+   python benchmarks/benchmark_search_methods.py --methods gasearch randomized grid --runs 3
 
-The output includes wall time, actual cross-validation calls, cache/duplicate
-reuse counts, skipped invalid feature masks, optimizer telemetry such as
-diversity and stagnation, and holdout metrics such as accuracy, ROC AUC, F1, R2,
-RMSE, and MAE.
+The reports include runtime, evaluated candidates, cross-validation effort,
+cache/duplicate counts, optimizer telemetry, holdout metrics, and best
+parameters.
 
-Common Errors & Troubleshooting
-################################
+Documentation and Examples
+##########################
 
-**1. ImportError: No module named 'sklearn_genetic'**
+Useful links:
 
-Make sure the package is installed correctly::
+* Documentation: https://sklearn-genetic-opt.readthedocs.io/
+* Release notes: https://sklearn-genetic-opt.readthedocs.io/en/latest/release_notes.html
+* PyPI: https://pypi.org/project/sklearn-genetic-opt/
+* Source code: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/
+* Issues: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/issues
 
-   pip install sklearn-genetic-opt
+The documentation includes tutorials and executed notebooks for:
 
-**2. ModuleNotFoundError for optional dependencies**
+* comparing ``GASearchCV`` with sklearn search methods
+* pipeline tuning and prediction
+* feature selection
+* multi-metric optimization
+* MLflow 3 logging
+* checkpointing and persistence
+* advanced optimizer controls
 
-If you need plotting, tensorboard or mlflow features, install extras::
-
-   pip install sklearn-genetic-opt[all]
-
-**3. TypeError: param_grid values must be instances of Integer, Continuous or Categorical**
-
-Incorrect usage::
-
-   param_grid = {'max_depth': [2, 5, 10]}  # Wrong — plain list not accepted
-
-Correct usage::
-
-   from sklearn_genetic.space import Integer
-   param_grid = {'max_depth': Integer(2, 10)}  # Correct
-
-**4. ValueError during cross-validation**
-
-Make sure your dataset is properly split before passing to GASearchCV::
-
-   from sklearn.model_selection import train_test_split
-   X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
-
-**5. Dependency conflict between TensorFlow and MLflow via protobuf**
-
-If you face protobuf version conflicts, pin the version::
-
-   pip install protobuf==3.20.3
-
-Then reinstall sklearn-genetic-opt extras::
-
-   pip install sklearn-genetic-opt[all]
-
-**6. Installation takes too long or fails**
-
-Use a virtual environment to avoid conflicts::
-
-   python -m venv env
-   env\Scripts\activate        # Windows
-   source env/bin/activate     # Mac/Linux
-   pip install sklearn-genetic-opt
-
-Changelog
-#########
-
-See the `changelog <https://sklearn-genetic-opt.readthedocs.io/en/latest/release_notes.html>`__
-for notes on the changes of Sklearn-genetic-opt
-
-Important links
+Troubleshooting
 ###############
 
-- Official source code repo: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/
-- Download releases: https://pypi.org/project/sklearn-genetic-opt/
-- Issue tracker: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/issues
-- Stable documentation: https://sklearn-genetic-opt.readthedocs.io/en/stable/
+``TypeError: param_grid values must be instances of Integer, Continuous or Categorical``
+    Use ``sklearn_genetic.space`` objects instead of plain lists.
 
-Source code
-###########
+    .. code-block:: python
 
-You can check the latest development version with the command::
+       from sklearn_genetic.space import Integer
 
-   git clone https://github.com/rodrigo-arenas/Sklearn-genetic-opt.git
+       param_grid = {"max_depth": Integer(2, 10)}
 
-Install the development dependencies::
-  
-  pip install -r dev-requirements.txt
-  
-Check the latest in-development documentation: https://sklearn-genetic-opt.readthedocs.io/en/latest/
+Missing optional dependencies
+    Install the optional extras:
+
+    .. code-block:: bash
+
+       pip install sklearn-genetic-opt[all]
+
+TensorFlow, TensorBoard, or MLflow dependency conflicts
+    Install only the extras you need, or use a clean virtual environment.
+    TensorFlow/TensorBoard support is only available on Python versions
+    supported by those projects.
 
 Contributing
 ############
 
-Contributions are more than welcome!
-There are several opportunities on the ongoing project, so please get in touch if you would like to help out.
-Make sure to check the current issues and also
-the `Contribution guide <https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/CONTRIBUTING.md>`_.
+Contributions are welcome. Please read the
+`contribution guide <https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/CONTRIBUTING.md>`_,
+open issues for bugs or proposals, and include tests and documentation when
+changing behavior.
 
-Big thanks to the people who are helping with this project!
+For local development:
+
+.. code-block:: bash
+
+   git clone https://github.com/rodrigo-arenas/Sklearn-genetic-opt.git
+   cd Sklearn-genetic-opt
+   pip install -r dev-requirements.txt
+   pytest sklearn_genetic
+
+Big thanks to everyone helping improve the project.
 
 |Contributors|_
-
-Testing
-#######
-
-After installation, you can launch the test suite from outside the source directory::
-
-   pytest sklearn_genetic
-   

@@ -43,7 +43,7 @@ in the parameter named `log_config`, for example:
 
 .. code:: python3
 
-    from sklearn_genetic import GASearchCV
+    from sklearn_genetic import EvolutionConfig, GASearchCV, PopulationConfig, RuntimeConfig
     from sklearn_genetic.space import Categorical, Integer, Continuous
     from sklearn.model_selection import train_test_split, StratifiedKFold
     from sklearn.tree import DecisionTreeClassifier
@@ -74,16 +74,18 @@ in the parameter named `log_config`, for example:
         clf,
         cv=cv,
         scoring="accuracy",
-        population_size=3,
-        generations=5,
-        tournament_size=3,
-        elitism=True,
-        crossover_probability=0.9,
-        mutation_probability=0.05,
         param_grid=params_grid,
-        algorithm="eaMuPlusLambda",
-        n_jobs=-1,
-        verbose=True,
+        evolution_config=EvolutionConfig(
+            population_size=3,
+            generations=5,
+            tournament_size=3,
+            elitism=True,
+            crossover_probability=0.9,
+            mutation_probability=0.05,
+            algorithm="eaMuPlusLambda",
+        ),
+        population_config=PopulationConfig(initializer="smart"),
+        runtime_config=RuntimeConfig(n_jobs=-1, verbose=True),
         log_config=mlflow_config)
 
     evolved_estimator.fit(X_train, y_train)
