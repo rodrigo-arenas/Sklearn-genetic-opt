@@ -309,6 +309,19 @@ def run_one_benchmark(
                 "mean_genotype_diversity": (
                     float(np.mean(genotype_diversities)) if genotype_diversities else None
                 ),
+                "mean_selection_pressure": (
+                    float(
+                        np.mean(
+                            [
+                                value
+                                for value in history.get("selection_pressure", [])
+                                if value is not None
+                            ]
+                        )
+                    )
+                    if any(value is not None for value in history.get("selection_pressure", []))
+                    else None
+                ),
             }
         )
 
@@ -369,6 +382,7 @@ def aggregate_results(results: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 items, "final_unique_individual_ratio"
             ),
             "mean_genotype_diversity_mean": mean_optional(items, "mean_genotype_diversity"),
+            "mean_selection_pressure_mean": mean_optional(items, "mean_selection_pressure"),
             "final_selection_changed_mean": mean_optional(items, "final_selection_changed"),
             "final_selection_time_seconds_mean": mean_optional(
                 items, "final_selection_time_seconds"
@@ -422,6 +436,7 @@ def print_summary_table(summaries: list[dict[str, Any]]) -> None:
         "fitness_best_improvement_mean",
         "final_unique_individual_ratio_mean",
         "mean_genotype_diversity_mean",
+        "mean_selection_pressure_mean",
         "final_selection_changed_mean",
         "final_selection_time_seconds_mean",
         "accuracy_mean",

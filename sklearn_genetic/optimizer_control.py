@@ -16,6 +16,9 @@ def validate_optimizer_control(
     random_immigrants_fraction,
     sharing_radius,
     sharing_alpha,
+    selection_pressure_min,
+    selection_pressure_max,
+    offspring_diversity_retries,
 ):
     if local_search_top_k < 1:
         raise ValueError("local_search_top_k must be greater than or equal to 1")
@@ -44,6 +47,17 @@ def validate_optimizer_control(
     if sharing_alpha <= 0:
         raise ValueError("sharing_alpha must be greater than 0")
 
+    if selection_pressure_min < 1:
+        raise ValueError("selection_pressure_min must be greater than or equal to 1")
+
+    if selection_pressure_max is not None and selection_pressure_max < selection_pressure_min:
+        raise ValueError(
+            "selection_pressure_max must be greater than or equal to selection_pressure_min"
+        )
+
+    if offspring_diversity_retries < 0:
+        raise ValueError("offspring_diversity_retries must be greater than or equal to 0")
+
 
 def diversity_control_triggered(estimator, record):
     if not getattr(estimator, "diversity_control", False) or record is None:
@@ -64,6 +78,40 @@ def mutation_probability(mutpb, estimator, record):
         probability = min(1.0, probability * estimator.diversity_mutation_boost)
 
     return probability, triggered
+
+
+def adaptive_tournament_size(estimator, record, population_size):
+    base_size = int(getattr(estimator, "tournament_size", 3))
+    if not getattr(estimator, "adaptive_selection", False):
+        return min(base_size, population_size)
+
+    minimum = int(getattr(estimator, "selection_pressure_min", 2))
+    maximum = getattr(estimator, "selection_pressure_max", None)
+    if maximum is None:
+        maximum = max(base_size + 1, minimum)
+
+    minimum = min(max(1, minimum), population_size)
+    maximum = min(max(minimum, int(maximum)), population_size)
+    base_size = min(max(base_size, minimum), maximum)
+
+    if diversity_control_triggered(estimator, record):
+        return minimum
+
+    if record is None:
+        return base_size
+
+    if record.get("fitness_improved", False):
+        diversity = min(
+            record.get("unique_individual_ratio", 1.0),
+            record.get("genotype_diversity", 1.0),
+        )
+        if diversity >= max(getattr(estimator, "diversity_threshold", 0.0), 0.2):
+            return min(maximum, base_size + 1)
+
+    if record.get("stagnation_generations", 0) > 0:
+        return max(minimum, base_size - 1)
+
+    return base_size
 
 
 def random_immigrant_count(estimator, population_size):
@@ -88,20 +136,46 @@ def inject_random_immigrants(offspring, toolbox, estimator, record):
     return count
 
 
-def replace_duplicate_candidates(population, toolbox, estimator):
-    if not getattr(estimator, "diversity_control", False):
+def _candidate_key(estimator, individual):
+    if hasattr(estimator, "_individual_key"):
+        return estimator._individual_key(individual)
+
+    return tuple(individual)
+
+
+def _new_unique_individual(toolbox, estimator, seen):
+    retries = getattr(estimator, "offspring_diversity_retries", 0)
+    candidate = None
+    candidate_key = None
+
+    for _ in range(retries + 1):
+        candidate = toolbox.individual()
+        candidate_key = _candidate_key(estimator, candidate)
+        if candidate_key not in seen:
+            break
+
+    return candidate, candidate_key
+
+
+def replace_duplicate_candidates(population, toolbox, estimator, reference_population=None):
+    if not getattr(estimator, "diversity_control", False) and not getattr(
+        estimator, "offspring_diversity_retries", 0
+    ):
         return 0
 
     seen = set()
     replacements = 0
+    if reference_population is not None:
+        seen.update(_candidate_key(estimator, individual) for individual in reference_population)
 
     for index, individual in enumerate(population):
-        key = tuple(individual)
+        key = _candidate_key(estimator, individual)
         if key not in seen:
             seen.add(key)
             continue
 
-        population[index] = toolbox.individual()
+        population[index], replacement_key = _new_unique_individual(toolbox, estimator, seen)
+        seen.add(replacement_key)
         replacements += 1
 
     return replacements

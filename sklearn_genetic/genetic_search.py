@@ -68,7 +68,10 @@ from .population import (
     initialize_search_population,
     validate_population_initializer as _validate_population_initializer,
 )
-from .optimizer_control import validate_optimizer_control as _validate_optimizer_control
+from .optimizer_control import (
+    adaptive_tournament_size,
+    validate_optimizer_control as _validate_optimizer_control,
+)
 
 import os
 from .callbacks.model_checkpoint import ModelCheckpoint
@@ -185,6 +188,23 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
     diversity_control : bool, default=False
         If ``True``, monitor diversity and stagnation to boost mutation,
         replace duplicate candidates, and inject random immigrants.
+
+    adaptive_selection : bool, default=False
+        If ``True``, adapt tournament size from generation telemetry. Selection
+        pressure is reduced when diversity is low or the search is stagnant,
+        and slightly increased when the population is improving with enough
+        diversity.
+
+    selection_pressure_min : int, default=2
+        Minimum tournament size used by adaptive selection.
+
+    selection_pressure_max : int, default=None
+        Maximum tournament size used by adaptive selection. If ``None``, the
+        maximum is one larger than ``tournament_size``.
+
+    offspring_diversity_retries : int, default=0
+        Number of retries used when replacing duplicate or parent-matching
+        offspring with new random candidates.
 
     diversity_threshold : float, default=0.1
         Diversity value below which diversity control can trigger.
@@ -366,6 +386,10 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         diversity_stagnation_generations=5,
         diversity_mutation_boost=2.0,
         random_immigrants_fraction=0.1,
+        adaptive_selection=False,
+        selection_pressure_min=2,
+        selection_pressure_max=None,
+        offspring_diversity_retries=0,
         fitness_sharing=False,
         sharing_radius=0.2,
         sharing_alpha=1.0,
@@ -410,6 +434,10 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         self.diversity_stagnation_generations = diversity_stagnation_generations
         self.diversity_mutation_boost = diversity_mutation_boost
         self.random_immigrants_fraction = random_immigrants_fraction
+        self.adaptive_selection = adaptive_selection
+        self.selection_pressure_min = selection_pressure_min
+        self.selection_pressure_max = selection_pressure_max
+        self.offspring_diversity_retries = offspring_diversity_retries
         self.fitness_sharing = fitness_sharing
         self.sharing_radius = sharing_radius
         self.sharing_alpha = sharing_alpha
@@ -431,6 +459,9 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
             self.random_immigrants_fraction,
             self.sharing_radius,
             self.sharing_alpha,
+            self.selection_pressure_min,
+            self.selection_pressure_max,
+            self.offspring_diversity_retries,
         )
 
         # Check that the estimator is compatible with scikit-learn
@@ -512,10 +543,7 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
 
         self.toolbox.register("mate", self.mate)
         self.toolbox.register("mutate", self.mutate)
-        if self.elitism:
-            self.toolbox.register("select", tools.selTournament, tournsize=self.tournament_size)
-        else:
-            self.toolbox.register("select", tools.selRoulette)
+        self.toolbox.register("select", self.select)
 
         self.toolbox.register("evaluate", self.evaluate)
         self.toolbox.register("evaluate_population", self.evaluate_population)
@@ -539,6 +567,19 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         for individual in population:
             self._repair_individual(individual)
         return population
+
+    def select(self, population, k):
+        if not self.elitism:
+            self._selection_pressure_ = None
+            return tools.selRoulette(population, k)
+
+        tournament_size = adaptive_tournament_size(
+            self,
+            getattr(self, "_last_generation_record", None),
+            len(population),
+        )
+        self._selection_pressure_ = tournament_size
+        return tools.selTournament(population, k, tournsize=tournament_size)
 
     def _repair_value(self, dimension, value):
         if isinstance(dimension, Integer):
@@ -952,6 +993,7 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
             "stagnation_generations": log.select("stagnation_generations"),
             "best_generation": log.select("best_generation"),
             "mutation_probability": log.select("mutation_probability"),
+            "selection_pressure": log.select("selection_pressure"),
             "diversity_control_triggered": log.select("diversity_control_triggered"),
             "random_immigrants": log.select("random_immigrants"),
             "duplicate_replacements": log.select("duplicate_replacements"),
@@ -1066,6 +1108,23 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
     random_immigrants_fraction : float, default=0.1
         Fraction of offspring replaced by random immigrants when diversity
         control triggers.
+
+    adaptive_selection : bool, default=False
+        If ``True``, adapt tournament size from generation telemetry. Selection
+        pressure is reduced when diversity is low or the search is stagnant,
+        and slightly increased when the population is improving with enough
+        diversity.
+
+    selection_pressure_min : int, default=2
+        Minimum tournament size used by adaptive selection.
+
+    selection_pressure_max : int, default=None
+        Maximum tournament size used by adaptive selection. If ``None``, the
+        maximum is one larger than ``tournament_size``.
+
+    offspring_diversity_retries : int, default=0
+        Number of retries used when replacing duplicate or parent-matching
+        offspring with new random feature masks.
 
     fitness_sharing : bool, default=False
         If ``True``, temporarily penalize candidates in crowded niches during
@@ -1257,6 +1316,10 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         diversity_stagnation_generations=5,
         diversity_mutation_boost=2.0,
         random_immigrants_fraction=0.1,
+        adaptive_selection=False,
+        selection_pressure_min=2,
+        selection_pressure_max=None,
+        offspring_diversity_retries=0,
         fitness_sharing=False,
         sharing_radius=0.2,
         sharing_alpha=1.0,
@@ -1297,6 +1360,10 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         self.diversity_stagnation_generations = diversity_stagnation_generations
         self.diversity_mutation_boost = diversity_mutation_boost
         self.random_immigrants_fraction = random_immigrants_fraction
+        self.adaptive_selection = adaptive_selection
+        self.selection_pressure_min = selection_pressure_min
+        self.selection_pressure_max = selection_pressure_max
+        self.offspring_diversity_retries = offspring_diversity_retries
         self.fitness_sharing = fitness_sharing
         self.sharing_radius = sharing_radius
         self.sharing_alpha = sharing_alpha
@@ -1313,6 +1380,9 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
             self.random_immigrants_fraction,
             self.sharing_radius,
             self.sharing_alpha,
+            self.selection_pressure_min,
+            self.selection_pressure_max,
+            self.offspring_diversity_retries,
         )
 
         # added new check for whether the estimator is compatible with scikit-learn
@@ -1364,10 +1434,7 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         self.toolbox.register("mate", self.mate)
         self.toolbox.register("mutate", self.mutate)
 
-        if self.elitism:
-            self.toolbox.register("select", tools.selTournament, tournsize=self.tournament_size)
-        else:
-            self.toolbox.register("select", tools.selRoulette)
+        self.toolbox.register("select", self.select)
 
         self.toolbox.register("evaluate", self.evaluate)
         self.toolbox.register("evaluate_population", self.evaluate_population)
@@ -1390,6 +1457,19 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         for individual in population:
             self._repair_individual(individual)
         return population
+
+    def select(self, population, k):
+        if not self.elitism:
+            self._selection_pressure_ = None
+            return tools.selRoulette(population, k)
+
+        tournament_size = adaptive_tournament_size(
+            self,
+            getattr(self, "_last_generation_record", None),
+            len(population),
+        )
+        self._selection_pressure_ = tournament_size
+        return tools.selTournament(population, k, tournsize=tournament_size)
 
     def _repair_individual(self, individual):
         for index, value in enumerate(individual):
@@ -1702,6 +1782,7 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
             "stagnation_generations": log.select("stagnation_generations"),
             "best_generation": log.select("best_generation"),
             "mutation_probability": log.select("mutation_probability"),
+            "selection_pressure": log.select("selection_pressure"),
             "diversity_control_triggered": log.select("diversity_control_triggered"),
             "random_immigrants": log.select("random_immigrants"),
             "duplicate_replacements": log.select("duplicate_replacements"),

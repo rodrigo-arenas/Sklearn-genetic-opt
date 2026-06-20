@@ -244,6 +244,10 @@ def build_gasearch(
         diversity_stagnation_generations=4,
         diversity_mutation_boost=1.5,
         random_immigrants_fraction=0.10,
+        adaptive_selection=True,
+        selection_pressure_min=2,
+        selection_pressure_max=5,
+        offspring_diversity_retries=3,
         fitness_sharing=True,
         sharing_radius=0.35,
         final_selection=final_selection,
@@ -288,6 +292,10 @@ def build_feature_selector(
         diversity_stagnation_generations=4,
         diversity_mutation_boost=1.5,
         random_immigrants_fraction=0.10,
+        adaptive_selection=True,
+        selection_pressure_min=2,
+        selection_pressure_max=5,
+        offspring_diversity_retries=3,
         fitness_sharing=True,
         sharing_radius=0.35,
     )
@@ -385,6 +393,9 @@ def summarize_optimizer_telemetry(estimator) -> dict[str, float | int | None]:
     fitness_best = history.get("fitness_best", [])
     fitness = history.get("fitness", [])
     fitness_max = history.get("fitness_max", [])
+    selection_pressure = [
+        value for value in history.get("selection_pressure", []) if value is not None
+    ]
 
     return {
         "generations_ran": int(generations[-1]) if generations else None,
@@ -406,6 +417,9 @@ def summarize_optimizer_telemetry(estimator) -> dict[str, float | int | None]:
         ),
         "final_stagnation_generations": (
             int(stagnation_generations[-1]) if stagnation_generations else None
+        ),
+        "mean_selection_pressure": (
+            float(np.mean(selection_pressure)) if selection_pressure else None
         ),
     }
 
@@ -553,6 +567,7 @@ def aggregate_results(results: list[dict[str, Any]]) -> list[dict[str, Any]]:
             "final_stagnation_generations_mean": mean_optional(
                 items, "final_stagnation_generations"
             ),
+            "mean_selection_pressure_mean": mean_optional(items, "mean_selection_pressure"),
             "final_selection_changed_mean": mean_optional(items, "final_selection_changed"),
             "final_selection_time_seconds_mean": mean_optional(
                 items, "final_selection_time_seconds"
@@ -611,6 +626,7 @@ def print_summary_table(summaries: list[dict[str, Any]]) -> None:
         "final_unique_individual_ratio_mean",
         "mean_genotype_diversity_mean",
         "final_stagnation_generations_mean",
+        "mean_selection_pressure_mean",
         "final_selection_changed_mean",
         "final_selection_time_seconds_mean",
         "accuracy_mean",

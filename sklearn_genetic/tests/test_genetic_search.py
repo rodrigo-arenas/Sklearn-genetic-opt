@@ -17,6 +17,7 @@ from .. import GASearchCV
 from ..space import Integer, Categorical, Continuous
 from .. import genetic_search
 from .. import evaluation
+from ..optimizer_control import replace_duplicate_candidates
 from ..callbacks import (
     ThresholdStopping,
     DeltaThreshold,
@@ -143,6 +144,99 @@ def test_wrong_optimizer_control_parameters():
             sharing_radius=0,
         )
 
+    with pytest.raises(ValueError, match="selection_pressure_max"):
+        GASearchCV(
+            DecisionTreeClassifier(),
+            param_grid={"max_depth": Integer(1, 3)},
+            selection_pressure_min=4,
+            selection_pressure_max=3,
+        )
+
+    with pytest.raises(ValueError, match="offspring_diversity_retries"):
+        GASearchCV(
+            DecisionTreeClassifier(),
+            param_grid={"max_depth": Integer(1, 3)},
+            offspring_diversity_retries=-1,
+        )
+
+
+def test_adaptive_selection_reduces_pressure_when_diversity_is_low():
+    estimator = GASearchCV(
+        DecisionTreeClassifier(random_state=42),
+        cv=2,
+        scoring="accuracy",
+        population_size=5,
+        generations=1,
+        param_grid={
+            "max_depth": Integer(1, 5),
+            "criterion": Categorical(["gini", "entropy"]),
+        },
+        tournament_size=4,
+        adaptive_selection=True,
+        selection_pressure_min=2,
+        selection_pressure_max=5,
+        diversity_control=True,
+        diversity_threshold=0.5,
+        verbose=False,
+    )
+    estimator._register()
+
+    try:
+        estimator._last_generation_record = {
+            "unique_individual_ratio": 0.2,
+            "genotype_diversity": 0.2,
+            "stagnation_generations": 0,
+            "fitness_improved": False,
+        }
+        estimator.select(estimator._pop, 3)
+
+        assert estimator._selection_pressure_ == 2
+    finally:
+        del genetic_search.creator.FitnessMax
+        del genetic_search.creator.Individual
+
+
+def test_offspring_generation_replaces_parent_duplicates():
+    estimator = GASearchCV(
+        DecisionTreeClassifier(random_state=42),
+        cv=2,
+        scoring="accuracy",
+        population_size=4,
+        generations=1,
+        param_grid={
+            "max_depth": Integer(1, 6),
+            "criterion": Categorical(["gini", "entropy"]),
+        },
+        diversity_control=True,
+        offspring_diversity_retries=10,
+        verbose=False,
+    )
+    estimator._register()
+
+    try:
+        parent = genetic_search.creator.Individual([1, "gini"])
+        offspring = [
+            genetic_search.creator.Individual([1, "gini"]),
+            genetic_search.creator.Individual([1, "gini"]),
+        ]
+
+        replacements = replace_duplicate_candidates(
+            offspring,
+            estimator.toolbox,
+            estimator,
+            reference_population=[parent],
+        )
+
+        assert replacements == 2
+        assert all(
+            estimator._individual_key(individual) != estimator._individual_key(parent)
+            for individual in offspring
+        )
+        assert len({estimator._individual_key(individual) for individual in offspring}) == 2
+    finally:
+        del genetic_search.creator.FitnessMax
+        del genetic_search.creator.Individual
+
 
 def test_smart_population_initializer_seeds_defaults_warm_starts_and_diversity():
     estimator = GASearchCV(
@@ -250,6 +344,7 @@ def test_optimizer_telemetry_is_recorded_for_each_generation(algorithm):
         "fitness_improved",
         "stagnation_generations",
         "best_generation",
+        "selection_pressure",
     ]
 
     for field in telemetry_fields:

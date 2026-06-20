@@ -23,6 +23,7 @@ TELEMETRY_FIELDS = [
     "stagnation_generations",
     "best_generation",
     "mutation_probability",
+    "selection_pressure",
     "diversity_control_triggered",
     "random_immigrants",
     "duplicate_replacements",
@@ -42,6 +43,7 @@ VERBOSE_COLUMNS = [
     ("unique_individual_ratio", "unique", 7, "ratio"),
     ("stagnation_generations", "stag", 5, "int"),
     ("mutation_probability", "mut", 7, "ratio"),
+    ("selection_pressure", "sel", 5, "int"),
     ("events", "events", 18, "text"),
 ]
 
@@ -228,6 +230,7 @@ def _compile_generation_record(stats, population, state, gen, control_record=Non
     record.update(
         {
             "mutation_probability": None,
+            "selection_pressure": None,
             "diversity_control_triggered": False,
             "random_immigrants": 0,
             "duplicate_replacements": 0,
@@ -327,6 +330,7 @@ def _run_local_refinement(population, toolbox, halloffame, estimator):
 
 def _control_record(
     mutation_prob,
+    selection_pressure,
     diversity_triggered,
     random_immigrants,
     duplicate_replacements,
@@ -335,6 +339,7 @@ def _control_record(
     sharing_record = sharing_record or {}
     return {
         "mutation_probability": mutation_prob,
+        "selection_pressure": selection_pressure,
         "diversity_control_triggered": diversity_triggered or random_immigrants > 0,
         "random_immigrants": random_immigrants,
         "duplicate_replacements": duplicate_replacements,
@@ -465,8 +470,11 @@ def eaSimple(
     for gen in range(1, ngen + 1):
         try:
             # Select the next generation individuals
+            if estimator is not None:
+                estimator._last_generation_record = record
             with shared_fitness(population, estimator) as sharing_record:
                 offspring = toolbox.select(population, len(population) - hof_size)
+            selection_pressure = getattr(estimator, "_selection_pressure_", None)
 
             mutation_prob, diversity_triggered = mutation_probability(mutpb, estimator, record)
 
@@ -474,7 +482,9 @@ def eaSimple(
 
             # Vary the pool of individuals
             offspring = varAnd(offspring, toolbox, crossover_prob, mutation_prob)
-            duplicate_replacements = replace_duplicate_candidates(offspring, toolbox, estimator)
+            duplicate_replacements = replace_duplicate_candidates(
+                offspring, toolbox, estimator, reference_population=population
+            )
             random_immigrants = inject_random_immigrants(offspring, toolbox, estimator, record)
             _record_optimizer_control_stats(estimator, random_immigrants=random_immigrants)
 
@@ -502,6 +512,7 @@ def eaSimple(
                 gen,
                 _control_record(
                     mutation_prob,
+                    selection_pressure,
                     diversity_triggered,
                     random_immigrants,
                     duplicate_replacements,
@@ -682,7 +693,9 @@ def eaMuPlusLambda(
 
             # Vary the population
             offspring = varOr(population, toolbox, lambda_, crossover_prob, mutation_prob)
-            duplicate_replacements = replace_duplicate_candidates(offspring, toolbox, estimator)
+            duplicate_replacements = replace_duplicate_candidates(
+                offspring, toolbox, estimator, reference_population=population
+            )
             random_immigrants = inject_random_immigrants(offspring, toolbox, estimator, record)
             _record_optimizer_control_stats(estimator, random_immigrants=random_immigrants)
 
@@ -698,8 +711,11 @@ def eaMuPlusLambda(
 
             # Select the next generation population
             selection_pool = population + offspring
+            if estimator is not None:
+                estimator._last_generation_record = record
             with shared_fitness(selection_pool, estimator) as sharing_record:
                 population[:] = toolbox.select(selection_pool, mu)
+            selection_pressure = getattr(estimator, "_selection_pressure_", None)
 
             # Update the statistics with the new population
             record = _compile_generation_record(
@@ -709,6 +725,7 @@ def eaMuPlusLambda(
                 gen,
                 _control_record(
                     mutation_prob,
+                    selection_pressure,
                     diversity_triggered,
                     random_immigrants,
                     duplicate_replacements,
@@ -891,7 +908,9 @@ def eaMuCommaLambda(
 
             # Vary the population
             offspring = varOr(population, toolbox, lambda_, crossover_prob, mutation_prob)
-            duplicate_replacements = replace_duplicate_candidates(offspring, toolbox, estimator)
+            duplicate_replacements = replace_duplicate_candidates(
+                offspring, toolbox, estimator, reference_population=population
+            )
             random_immigrants = inject_random_immigrants(offspring, toolbox, estimator, record)
             _record_optimizer_control_stats(estimator, random_immigrants=random_immigrants)
 
@@ -906,8 +925,11 @@ def eaMuCommaLambda(
                 halloffame.update(offspring)
 
             # Select the next generation population
+            if estimator is not None:
+                estimator._last_generation_record = record
             with shared_fitness(offspring, estimator) as sharing_record:
                 population[:] = toolbox.select(offspring, mu)
+            selection_pressure = getattr(estimator, "_selection_pressure_", None)
 
             # Update the statistics with the new population
             record = _compile_generation_record(
@@ -917,6 +939,7 @@ def eaMuCommaLambda(
                 gen,
                 _control_record(
                     mutation_prob,
+                    selection_pressure,
                     diversity_triggered,
                     random_immigrants,
                     duplicate_replacements,

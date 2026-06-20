@@ -60,6 +60,14 @@ Features:
   penalty based on normalized candidate distance, helping multiple promising
   regions survive longer without changing raw cross-validation scores.
 
+* Added optional adaptive tournament selection and diversity-aware offspring
+  generation to :class:`~sklearn_genetic.GASearchCV` and
+  :class:`~sklearn_genetic.GAFeatureSelectionCV`. ``adaptive_selection=True``
+  reduces selection pressure when diversity is low or the search stagnates and
+  can increase pressure when the population is improving. New
+  ``offspring_diversity_retries`` retry logic helps replace duplicate or
+  parent-matching offspring with novel candidates.
+
 * Added optional robust final selection to :class:`~sklearn_genetic.GASearchCV`.
   With ``final_selection=True``, the search re-evaluates the top
   ``final_selection_top_k`` candidates after the GA and selects the final
