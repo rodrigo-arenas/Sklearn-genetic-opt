@@ -210,7 +210,7 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         Fraction of the search range used to sample local numeric neighbors.
         For categorical parameters, a different category is sampled.
 
-    diversity_control : bool, default=False
+    diversity_control : bool, default=True
         If ``True``, monitor diversity and stagnation to boost mutation,
         replace duplicate candidates, and inject random immigrants.
 
@@ -231,7 +231,7 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         Number of retries used when replacing duplicate or parent-matching
         offspring with new random candidates.
 
-    diversity_threshold : float, default=0.1
+    diversity_threshold : float, default=0.25
         Diversity value below which diversity control can trigger.
 
     diversity_stagnation_generations : int, default=5
@@ -410,8 +410,8 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         local_search_top_k=1,
         local_search_steps=1,
         local_search_radius=0.1,
-        diversity_control=False,
-        diversity_threshold=0.1,
+        diversity_control=True,
+        diversity_threshold=0.25,
         diversity_stagnation_generations=5,
         diversity_mutation_boost=2.0,
         random_immigrants_fraction=0.1,
@@ -1234,11 +1234,11 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
     local_search_radius : float, default=0.1
         Fraction of features to flip when sampling a local neighbor.
 
-    diversity_control : bool, default=False
+    diversity_control : bool, default=True
         If ``True``, monitor diversity and stagnation to boost mutation,
         replace duplicate candidates, and inject random immigrants.
 
-    diversity_threshold : float, default=0.1
+    diversity_threshold : float, default=0.25
         Diversity value below which diversity control can trigger.
 
     diversity_stagnation_generations : int, default=5
@@ -1459,8 +1459,8 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         local_search_top_k=1,
         local_search_steps=1,
         local_search_radius=0.1,
-        diversity_control=False,
-        diversity_threshold=0.1,
+        diversity_control=True,
+        diversity_threshold=0.25,
         diversity_stagnation_generations=5,
         diversity_mutation_boost=2.0,
         random_immigrants_fraction=0.1,
