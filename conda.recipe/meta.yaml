@@ -1,0 +1,63 @@
+{% set name = "sklearn-genetic-opt" %}
+{% set version = load_file_regex(load_file="sklearn_genetic/_version.py", regex_search='__version__\s*=\s*["\']([^"\']+)["\']').group(1) %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  # Build from the local checkout. The conda-forge feedstock should instead use
+  # the released PyPI sdist, e.g.:
+  #   url: https://pypi.io/packages/source/s/{{ name }}/sklearn_genetic_opt-{{ version }}.tar.gz
+  #   sha256: <sha256 of the sdist>
+  path: ..
+
+build:
+  noarch: python
+  number: 0
+  script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
+
+requirements:
+  host:
+    - python >=3.12
+    - pip
+    - setuptools >=77
+    - wheel
+  run:
+    # Keep this in sync with the core "dependencies" in pyproject.toml.
+    # The optional extras (seaborn, mlflow, tensorflow, tensorboard) are imported
+    # lazily and MUST NOT be listed here. Pinning them as hard runtime
+    # requirements is what made the previous conda-forge recipe unsolvable
+    # (see issue #138). Users who need them can install the extras separately.
+    - python >=3.12
+    - scikit-learn >=1.9.0
+    - numpy >=2.4.6
+    - deap >=1.4.4
+    - tqdm >=4.68.3
+
+test:
+  imports:
+    - sklearn_genetic
+    - sklearn_genetic.callbacks
+    - sklearn_genetic.schedules
+  commands:
+    - pip check
+  requires:
+    - pip
+
+about:
+  home: https://github.com/rodrigo-arenas/Sklearn-genetic-opt
+  license: MIT
+  license_family: MIT
+  license_file: LICENSE
+  summary: Scikit-learn models hyperparameter tuning and feature selection using evolutionary algorithms
+  description: |
+    sklearn-genetic-opt adds evolutionary optimization tools to the scikit-learn
+    workflow. It tunes hyperparameters with GASearchCV and selects feature subsets
+    with GAFeatureSelectionCV using algorithms powered by DEAP.
+  doc_url: https://sklearn-genetic-opt.readthedocs.io/
+  dev_url: https://github.com/rodrigo-arenas/Sklearn-genetic-opt
+
+extra:
+  recipe-maintainers:
+    - rodrigo-arenas

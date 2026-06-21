@@ -47,17 +47,31 @@ Highlights
 Installation
 ############
 
-Install the core package:
+Install the core package with pip:
 
 .. code-block:: bash
 
    pip install sklearn-genetic-opt
 
-Install optional plotting, MLflow, and TensorBoard integrations:
+Or with conda from the conda-forge channel:
+
+.. code-block:: bash
+
+   conda install -c conda-forge sklearn-genetic-opt
+
+Install optional plotting, MLflow, and TensorBoard integrations with pip:
 
 .. code-block:: bash
 
    pip install sklearn-genetic-opt[all]
+
+The conda package ships only the core dependencies. To use the optional
+integrations in a conda environment, install the extras you need alongside it,
+for example:
+
+.. code-block:: bash
+
+   conda install -c conda-forge sklearn-genetic-opt seaborn mlflow
 
 .. |PythonMinVersion| replace:: 3.12
 .. |ScikitLearnMinVersion| replace:: 1.9.0
