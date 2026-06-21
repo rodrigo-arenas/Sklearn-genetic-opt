@@ -125,6 +125,12 @@ Docs:
   usage, smart initialization, optimizer controls, persistence, benchmarks,
   and notebook examples.
 
+* Documented conda installation through the conda-forge channel and added a
+  ``conda.recipe`` with a ``noarch: python`` recipe. The recipe declares only
+  the core runtime dependencies, fixing the unsolvable environments caused by
+  pinning the optional ``seaborn``, ``mlflow``, ``tensorflow``, and
+  ``tensorboard`` extras as hard requirements.
+
 ^^^^^^^^^^
 Bug Fixes:
 ^^^^^^^^^^

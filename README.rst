@@ -1,6 +1,6 @@
 .. -*- mode: rst -*-
 
-|Tests|_ |Codecov|_ |PythonVersion|_ |PyPi|_ |Docs|_
+|Tests|_ |Codecov|_ |PythonVersion|_ |PyPi|_ |Conda|_ |Docs|_
 
 .. |Tests| image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/actions/workflows/ci-tests.yml/badge.svg?branch=master
 .. _Tests: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/actions/workflows/ci-tests.yml
@@ -13,6 +13,9 @@
 
 .. |PyPi| image:: https://badge.fury.io/py/sklearn-genetic-opt.svg
 .. _PyPi: https://badge.fury.io/py/sklearn-genetic-opt
+
+.. |Conda| image:: https://img.shields.io/conda/vn/conda-forge/sklearn-genetic-opt.svg
+.. _Conda: https://anaconda.org/conda-forge/sklearn-genetic-opt
 
 .. |Docs| image:: https://readthedocs.org/projects/sklearn-genetic-opt/badge/?version=latest
 .. _Docs: https://sklearn-genetic-opt.readthedocs.io/en/latest/?badge=latest
@@ -64,17 +67,31 @@ Highlights
 Installation
 ############
 
-Install the core package:
+Install the core package with pip:
 
 .. code-block:: bash
 
    pip install sklearn-genetic-opt
 
-Install optional plotting, MLflow, and TensorBoard integrations:
+Or with conda from the conda-forge channel:
+
+.. code-block:: bash
+
+   conda install -c conda-forge sklearn-genetic-opt
+
+Install optional plotting, MLflow, and TensorBoard integrations with pip:
 
 .. code-block:: bash
 
    pip install sklearn-genetic-opt[all]
+
+The conda package ships only the core dependencies. To use the optional
+integrations in a conda environment, install the extras you need alongside it,
+for example:
+
+.. code-block:: bash
+
+   conda install -c conda-forge sklearn-genetic-opt seaborn mlflow
 
 Requirements
 ############
