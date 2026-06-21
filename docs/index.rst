@@ -168,6 +168,8 @@ Recommended Next Steps
 * Read :doc:`tutorials/advanced_optimizer_control` for local search, diversity
   control, fitness sharing, and optimizer telemetry when the default settings
   are not enough.
+* Something not working? See :doc:`tutorials/troubleshooting` for common
+  errors, slow-search diagnosis, and how to read ``fit_stats_``.
 
 .. toctree::
    :maxdepth: 2
@@ -178,6 +180,7 @@ Recommended Next Steps
    tutorials/basic_usage
    tutorials/understand_cv
    tutorials/pipeline_tuning
+   tutorials/multi_metric
    tutorials/callbacks
    tutorials/custom_callback
    tutorials/adapters
@@ -185,6 +188,7 @@ Recommended Next Steps
    tutorials/mlflow
    tutorials/outliers
    tutorials/reproducibility
+   tutorials/troubleshooting
 
 .. toctree::
    :maxdepth: 2

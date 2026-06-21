@@ -151,6 +151,47 @@ Each row summarizes one generation:
 * **fitness_max:** best individual score in the generation.
 * **fitness_min:** worst individual score in the generation.
 
+A compact summary of diversity and optimizer state appears at the right of
+each row:
+
+* **div:** ``genotype_diversity`` — the average fraction of distinct values
+  per gene position across the population. A value near 1.0 means the
+  population is diverse; a value near 0.0 means it has converged to nearly
+  identical configurations.
+* **unique:** ``unique_individual_ratio`` — the fraction of the population
+  that are distinct individuals. Values below ``diversity_threshold``
+  (default 0.25) trigger diversity control.
+* **stag:** ``stagnation_generations`` — how many consecutive generations
+  have passed without ``fitness_best`` improving. Useful for deciding when
+  to add an early-stopping callback.
+* **events:** a compact summary of optimizer interventions in the generation
+  — ``div`` (diversity control triggered), ``imm=N`` (N random immigrants
+  injected), ``dup=N`` (N duplicates replaced), ``share`` (fitness sharing
+  applied).
+
+After fitting, inspect the full history as a DataFrame:
+
+.. code:: python3
+
+    import pandas as pd
+
+    history = pd.DataFrame(evolved_estimator.history)
+    print(history[[
+        "gen", "fitness_best", "genotype_diversity",
+        "unique_individual_ratio", "stagnation_generations",
+    ]])
+
+And check evaluation cost via ``fit_stats_``:
+
+.. code:: python3
+
+    print(evolved_estimator.fit_stats_)
+    # evaluated_candidates: total individuals presented to the evaluator
+    # unique_candidates:    distinct configurations actually cross-validated
+    # cache_hits:           evaluations reused from the fitness cache
+    # random_immigrants:    individuals injected when diversity control triggered
+    # skipped_invalid_candidates: configs that raised exceptions during fit
+
 After fitting, ``GASearchCV`` behaves like a fitted scikit-learn estimator. It
 uses the best hyperparameters found during the search:
 
