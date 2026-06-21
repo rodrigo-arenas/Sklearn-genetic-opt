@@ -105,60 +105,82 @@ Optional extras:
 Quick Start
 ###########
 
+This example tunes a ``RandomForestClassifier`` across six hyperparameters on
+the breast cancer dataset. With six mixed parameters — integers, floats, and
+a categorical — this is exactly the kind of search where GA's ability to
+recombine good partial solutions gives it an edge over independent random
+sampling.
+
 .. code-block:: python
 
-   from sklearn.datasets import load_iris
+   from sklearn.datasets import load_breast_cancer
    from sklearn.ensemble import RandomForestClassifier
-   from sklearn.model_selection import StratifiedKFold
+   from sklearn.model_selection import StratifiedKFold, train_test_split
+   from sklearn.metrics import roc_auc_score
 
    from sklearn_genetic import EvolutionConfig, GASearchCV, PopulationConfig, RuntimeConfig
    from sklearn_genetic.space import Categorical, Continuous, Integer
 
-   X, y = load_iris(return_X_y=True)
+   X, y = load_breast_cancer(return_X_y=True)
+   X_train, X_test, y_train, y_test = train_test_split(
+       X, y, test_size=0.25, stratify=y, random_state=42
+   )
 
    param_grid = {
-       "n_estimators": Integer(50, 200),
-       "max_depth": Integer(2, 12),
-       "max_features": Continuous(0.3, 1.0),
-       "criterion": Categorical(["gini", "entropy", "log_loss"]),
+       "n_estimators": Integer(50, 250),
+       "max_depth": Integer(2, 14),
+       "min_samples_split": Integer(2, 12),
+       "min_samples_leaf": Integer(1, 8),
+       "max_features": Categorical(["sqrt", "log2", None]),
+       "ccp_alpha": Continuous(0.0, 0.03),
    }
 
    search = GASearchCV(
        estimator=RandomForestClassifier(random_state=42),
        param_grid=param_grid,
        cv=StratifiedKFold(n_splits=3, shuffle=True, random_state=42),
-       scoring="accuracy",
-       evolution_config=EvolutionConfig(population_size=12, generations=8),
+       scoring="roc_auc",
+       evolution_config=EvolutionConfig(population_size=20, generations=12),
        population_config=PopulationConfig(initializer="smart"),
        runtime_config=RuntimeConfig(n_jobs=-1, parallel_backend="auto", use_cache=True),
    )
 
-   search.fit(X, y)
+   search.fit(X_train, y_train)
 
    print(search.best_params_)
-   print(search.best_score_)
+   print("CV score:", round(search.best_score_, 4))
+
+   y_prob = search.predict_proba(X_test)[:, 1]
+   print("Holdout ROC-AUC:", round(roc_auc_score(y_test, y_prob), 4))
+
+   # Evaluation cost breakdown
    print(search.fit_stats_)
 
 Recommended Next Steps
 ######################
 
-* Start with :doc:`tutorials/basic_usage` for the core workflow.
+* Not sure if GA search is the right tool? Start with
+  :doc:`tutorials/when_to_use` for a comparison guide and decision table.
+* New to the library? :doc:`tutorials/basic_usage` walks through the full
+  workflow from data loading to prediction.
+* Tuning a scikit-learn ``Pipeline``? See :doc:`tutorials/pipeline_tuning` for
+  the ``step__param`` naming convention and a worked regression example.
 * Read :doc:`tutorials/advanced_optimizer_control` for local search, diversity
-  control, fitness sharing, and optimizer telemetry.
-* Use the notebook examples for richer, executed workflows covering pipelines,
-  feature selection, MLflow 3 logging, persistence, and comparisons against
-  scikit-learn search methods.
+  control, fitness sharing, and optimizer telemetry when the default settings
+  are not enough.
 
 .. toctree::
    :maxdepth: 2
    :titlesonly:
    :caption: User Guide / Tutorials:
 
+   tutorials/when_to_use
    tutorials/basic_usage
+   tutorials/understand_cv
+   tutorials/pipeline_tuning
    tutorials/callbacks
    tutorials/custom_callback
    tutorials/adapters
-   tutorials/understand_cv
    tutorials/advanced_optimizer_control
    tutorials/mlflow
    tutorials/outliers
