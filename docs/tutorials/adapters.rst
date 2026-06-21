@@ -239,12 +239,14 @@ In this example, we create a decay schedule for the mutation probability and an
 ascent schedule for the crossover probability. Let us call them
 :math:`p_{mt}(t; \alpha)` and :math:`p_{cr}(t; \alpha)`, respectively.
 
-This strategy encourages the optimizer to explore more diverse solutions in the
-first generations, then rely more on crossover as the population improves.
+The recommended default is to start with high crossover (``0.8``) and low
+mutation (``0.1``). Crossover is the primary search operator — it recombines
+good parameter combinations from high-fitness parents. Mutation provides
+exploratory perturbation and should be kept small so that discovered good
+regions are refined rather than abandoned.
 
-When choosing :math:`\alpha`, :math:`p_0`, and :math:`p_f`, make sure the
-mutation and crossover probabilities remain compatible with the evolutionary
-algorithm. The implementation requires:
+A useful adaptive strategy keeps crossover high and gently increases mutation
+later to escape stagnation. The implementation requires:
 
 .. math::
 
@@ -270,8 +272,10 @@ The same idea can be used for hyperparameter tuning or feature selection.
 
    clf = RandomForestClassifier()
 
-   mutation_adapter = ExponentialAdapter(initial_value=0.8, end_value=0.2, adaptive_rate=0.1)
-   crossover_adapter = ExponentialAdapter(initial_value=0.2, end_value=0.8, adaptive_rate=0.1)
+   # Start with strong recombination and gentle mutation; slightly relax crossover
+   # over time to allow more diverse offspring if the population stagnates.
+   crossover_adapter = ExponentialAdapter(initial_value=0.8, end_value=0.6, adaptive_rate=0.1)
+   mutation_adapter = ExponentialAdapter(initial_value=0.1, end_value=0.2, adaptive_rate=0.1)
 
    param_grid = {'min_weight_fraction_leaf': Continuous(0.01, 0.5, distribution='log-uniform'),
                  'bootstrap': Categorical([True, False]),
@@ -288,8 +292,8 @@ The same idea can be used for hyperparameter tuning or feature selection.
                                   evolution_config=EvolutionConfig(
                                       population_size=20,
                                       generations=25,
-                                      mutation_probability=mutation_adapter,
                                       crossover_probability=crossover_adapter,
+                                      mutation_probability=mutation_adapter,
                                   ),
                                   population_config=PopulationConfig(initializer="smart"),
                                   runtime_config=RuntimeConfig(n_jobs=-1))

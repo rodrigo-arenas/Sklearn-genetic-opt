@@ -90,15 +90,15 @@ uses a broad search space where multiple different regions can perform well.
         "criterion": Categorical(["gini", "entropy", "log_loss"]),
     }
 
-    mutation_schedule = ExponentialAdapter(
+    crossover_schedule = InverseAdapter(
         initial_value=0.8,
+        end_value=0.6,
+        adaptive_rate=0.05,
+    )
+    mutation_schedule = ExponentialAdapter(
+        initial_value=0.1,
         end_value=0.25,
         adaptive_rate=0.08,
-    )
-    crossover_schedule = InverseAdapter(
-        initial_value=0.25,
-        end_value=0.55,
-        adaptive_rate=0.05,
     )
 
     search = GASearchCV(
@@ -109,8 +109,8 @@ uses a broad search space where multiple different regions can perform well.
         evolution_config=EvolutionConfig(
             population_size=24,
             generations=18,
-            mutation_probability=mutation_schedule,
             crossover_probability=crossover_schedule,
+            mutation_probability=mutation_schedule,
             tournament_size=3,
             elitism=True,
             keep_top_k=4,
@@ -242,8 +242,8 @@ creating local neighbors.
         evolution_config=EvolutionConfig(
             population_size=30,
             generations=16,
-            mutation_probability=ExponentialAdapter(0.7, 0.2, 0.08),
-            crossover_probability=0.35,
+            crossover_probability=0.8,
+            mutation_probability=ExponentialAdapter(0.1, 0.25, 0.08),
             keep_top_k=4,
         ),
         population_config=PopulationConfig(initializer="smart"),
@@ -272,8 +272,8 @@ Recommended Workflow
 
 Start from the simplest useful setup and add controls based on telemetry:
 
-1. Use ``PopulationConfig(initializer="smart")`` and a reasonable adaptive mutation
-   schedule.
+1. Use ``PopulationConfig(initializer="smart")`` with high crossover (``0.8``) and
+   low mutation (``0.1``). Add adaptive schedules if stagnation is detected.
 2. Inspect ``unique_individual_ratio``, ``genotype_diversity``, and
    ``stagnation_generations``.
 3. If diversity collapses early, enable ``OptimizationConfig(diversity_control=True)``.

@@ -9,8 +9,8 @@ class EvolutionConfig:
 
     population_size: int = 50
     generations: int = 80
-    crossover_probability: object = 0.2
-    mutation_probability: object = 0.8
+    crossover_probability: object = 0.8
+    mutation_probability: object = 0.1
     tournament_size: int = 3
     elitism: bool = True
     keep_top_k: int = 1

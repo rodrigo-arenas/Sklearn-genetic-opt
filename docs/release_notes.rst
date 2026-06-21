@@ -6,6 +6,26 @@ Some notes on new features in various releases
 What's new in 0.13.0
 --------------------
 
+^^^^^^^^^^^^^^^^^
+Breaking Changes:
+^^^^^^^^^^^^^^^^^
+
+* The default ``crossover_probability`` has changed from ``0.2`` to ``0.8`` and
+  the default ``mutation_probability`` has changed from ``0.8`` to ``0.1`` for
+  both :class:`~sklearn_genetic.GASearchCV` and
+  :class:`~sklearn_genetic.GAFeatureSelectionCV`.
+
+* The fitness function for :class:`~sklearn_genetic.GASearchCV` is now
+  single-objective (CV score only). Previously, a ``novelty_score`` based on
+  population Hamming distance was included as a second fitness objective with
+  equal weight. This caused Pareto-dominance comparisons during tournament
+  selection to favor diverse-but-lower-scoring candidates over better candidates,
+  systematically reducing search quality. Fitness sharing (``fitness_sharing=True``)
+  and diversity control (``diversity_control=True``) already provide population
+  diversity maintenance without corrupting the primary fitness signal.
+  :class:`~sklearn_genetic.GAFeatureSelectionCV` retains its two-objective
+  fitness (CV score + feature count) unchanged.
+
 ^^^^^^^^^
 Features:
 ^^^^^^^^^
@@ -98,7 +118,18 @@ Features:
   search methods, including ``GridSearchCV``, ``RandomizedSearchCV``,
   ``HalvingGridSearchCV``, and ``HalvingRandomSearchCV``. The benchmark reports
   solution time, evaluated candidates, estimated cross-validation effort, best
-  CV score, holdout metrics, and best parameters.
+  CV score, holdout metrics, and best parameters. The default ``--n-iter``
+  for random and halving searches is now automatically computed from the GA's
+  total candidate generation budget (``population_size + generations * 2 *
+  population_size``) so that all methods are compared with equivalent evaluation
+  slots. Pass ``--n-iter N`` to override.
+
+* :class:`~sklearn_genetic.GASearchCV` now uses uniform crossover
+  (``cxUniform`` with ``indpb=0.5``) instead of two-point crossover
+  (``cxTwoPoint``) for hyperparameter search spaces with two or more parameters.
+  Uniform crossover independently swaps each parameter between parents with 50%
+  probability, which is more effective than two-point crossover for the short,
+  mixed-type parameter lists typical in hyperparameter tuning.
 
 * :class:`~sklearn_genetic.GAFeatureSelectionCV` now repairs feature masks
   created by initialization, crossover, mutation, duplicate replacement, random

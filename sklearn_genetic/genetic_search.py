@@ -55,7 +55,7 @@ from .utils.cv_scores import (
     create_feature_selection_cv_results_,
 )
 from .utils.random import weighted_bool_individual
-from .utils.tools import cxUniform, mutFlipBit, novelty_scorer
+from .utils.tools import cxUniform, mutFlipBit
 from .evaluation import (
     create_fit_stats as _create_fit_stats,
     evaluate_population as _evaluate_population_batch,
@@ -384,8 +384,8 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         scoring=None,
         population_size=50,
         generations=80,
-        crossover_probability=0.2,
-        mutation_probability=0.8,
+        crossover_probability=0.8,
+        mutation_probability=0.1,
         tournament_size=3,
         elitism=True,
         verbose=True,
@@ -638,7 +638,7 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         """
         self.toolbox = base.Toolbox()
 
-        creator.create("FitnessMax", base.Fitness, weights=[self.criteria_sign, 1.0])
+        creator.create("FitnessMax", base.Fitness, weights=(self.criteria_sign,))
         creator.create("Individual", list, fitness=creator.FitnessMax)
 
         attributes = []
@@ -668,7 +668,7 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
                 "mate_raw", tools.cxSimulatedBinaryBounded, low=lower, up=upper, eta=10
             )
         else:
-            self.toolbox.register("mate_raw", tools.cxTwoPoint)
+            self.toolbox.register("mate_raw", tools.cxUniform, indpb=0.5)
 
         self.toolbox.register("mate", self.mate)
         self.toolbox.register("mutate", self.mutate)
@@ -807,8 +807,6 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         cv_scores = cv_results[f"test_{self.refit_metric}"]
         score = np.mean(cv_scores)
 
-        novelty_score = novelty_scorer(individual, self._pop)
-
         # Uses the log config to save in remote log server (e.g MLflow)
         if self.log_config is not None:
             self.log_config.create_run(
@@ -829,7 +827,7 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
             if self.return_train_score:
                 current_generation_params[f"train_{metric}"] = cv_results[f"train_{metric}"]
 
-        fitness_result = [score, novelty_score]
+        fitness_result = (score,)
 
         return fitness_result, current_generation_params, True, False
 
@@ -1435,8 +1433,8 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         scoring=None,
         population_size=50,
         generations=80,
-        crossover_probability=0.2,
-        mutation_probability=0.8,
+        crossover_probability=0.8,
+        mutation_probability=0.1,
         tournament_size=3,
         elitism=True,
         max_features=None,
