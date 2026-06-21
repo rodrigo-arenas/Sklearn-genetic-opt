@@ -6,6 +6,34 @@ Some notes on new features in various releases
 What's new in 0.13.0
 --------------------
 
+^^^^^^^^^^^^^^^^^
+Breaking Changes:
+^^^^^^^^^^^^^^^^^
+
+* The default ``crossover_probability`` has changed from ``0.2`` to ``0.8`` and
+  the default ``mutation_probability`` has changed from ``0.8`` to ``0.1`` for
+  both :class:`~sklearn_genetic.GASearchCV` and
+  :class:`~sklearn_genetic.GAFeatureSelectionCV`.
+
+* ``diversity_control`` now defaults to ``True`` and ``diversity_threshold``
+  now defaults to ``0.25`` for both :class:`~sklearn_genetic.GASearchCV` and
+  :class:`~sklearn_genetic.GAFeatureSelectionCV`. Previously
+  ``diversity_control`` defaulted to ``False`` and ``diversity_threshold``
+  defaulted to ``0.1``. Code that does not set these explicitly will now run
+  with diversity monitoring enabled; set ``diversity_control=False`` to restore
+  the previous behavior.
+
+* The fitness function for :class:`~sklearn_genetic.GASearchCV` is now
+  single-objective (CV score only). Previously, a ``novelty_score`` based on
+  population Hamming distance was included as a second fitness objective with
+  equal weight. This caused Pareto-dominance comparisons during tournament
+  selection to favor diverse-but-lower-scoring candidates over better candidates,
+  systematically reducing search quality. Fitness sharing (``fitness_sharing=True``)
+  and diversity control (``diversity_control=True``) already provide population
+  diversity maintenance without corrupting the primary fitness signal.
+  :class:`~sklearn_genetic.GAFeatureSelectionCV` retains its two-objective
+  fitness (CV score + feature count) unchanged.
+
 ^^^^^^^^^
 Features:
 ^^^^^^^^^
@@ -98,7 +126,18 @@ Features:
   search methods, including ``GridSearchCV``, ``RandomizedSearchCV``,
   ``HalvingGridSearchCV``, and ``HalvingRandomSearchCV``. The benchmark reports
   solution time, evaluated candidates, estimated cross-validation effort, best
-  CV score, holdout metrics, and best parameters.
+  CV score, holdout metrics, and best parameters. The default ``--n-iter``
+  for random and halving searches is now automatically computed from the GA's
+  total candidate generation budget (``population_size + generations * 2 *
+  population_size``) so that all methods are compared with equivalent evaluation
+  slots. Pass ``--n-iter N`` to override.
+
+* :class:`~sklearn_genetic.GASearchCV` now uses uniform crossover
+  (``cxUniform`` with ``indpb=0.5``) instead of two-point crossover
+  (``cxTwoPoint``) for hyperparameter search spaces with two or more parameters.
+  Uniform crossover independently swaps each parameter between parents with 50%
+  probability, which is more effective than two-point crossover for the short,
+  mixed-type parameter lists typical in hyperparameter tuning.
 
 * :class:`~sklearn_genetic.GAFeatureSelectionCV` now repairs feature masks
   created by initialization, crossover, mutation, duplicate replacement, random
@@ -124,6 +163,50 @@ Docs:
 * Simplified the project README and documentation index to emphasize core
   usage, smart initialization, optimizer controls, persistence, benchmarks,
   and notebook examples.
+
+* Documented conda installation through the conda-forge channel and added a
+  ``conda.recipe`` with a ``noarch: python`` recipe. The recipe declares only
+  the core runtime dependencies, fixing the unsolvable environments caused by
+  pinning the optional ``seaborn``, ``mlflow``, ``tensorflow``, and
+  ``tensorboard`` extras as hard requirements.
+
+* Added :doc:`tutorials/when_to_use` tutorial with a decision table comparing
+  Grid, Randomized, and GA search, practical signs that GA helps or does not
+  help, a seven-parameter ``HistGradientBoostingClassifier`` worked example
+  that illustrates the ``learning_rate × max_iter`` interaction, and a minimum
+  recommended configuration snippet.
+
+* Added :doc:`tutorials/pipeline_tuning` tutorial covering the
+  ``step__param`` double-underscore naming convention, a full six-parameter
+  ``GradientBoostingRegressor`` pipeline example, warm-start seed configuration,
+  baseline-versus-tuned comparison, and common pitfalls including wrong step
+  names, negative scorers, and nested parallelism.
+
+* Added :doc:`tutorials/troubleshooting` page with Q&A entries covering
+  parameter name errors, all-same-score causes including ``error_score``
+  masking, slow search and nested parallelism, premature convergence and
+  diversity diagnosis, ``fit_stats_`` field-by-field explanations,
+  reproducibility, warm-start validation, multi-metric confusion, and
+  plot dependency issues.
+
+* Added :doc:`tutorials/multi_metric` tutorial explaining multi-scorer
+  ``scoring`` dicts, the ``refit`` metric, ``cv_results_`` column layout for
+  multi-metric results, per-metric best-config queries, and how to build
+  alternative estimators from ``cv_results_`` without rerunning the search.
+
+* Expanded :doc:`tutorials/basic_usage` with descriptions of the compact
+  verbose log columns added in 0.13.0: ``div`` (genotype diversity),
+  ``unique`` (unique individual ratio), ``stag`` (stagnation generations),
+  and ``events`` (optimizer intervention summary). Also added a
+  ``history`` DataFrame access snippet and field-by-field ``fit_stats_``
+  commentary.
+
+* Reordered the documentation index toctree to start with
+  :doc:`tutorials/when_to_use` before :doc:`tutorials/basic_usage`, and
+  replaced the short Iris quick-start example on the homepage with a
+  six-parameter ``RandomForestClassifier`` example on the breast cancer
+  dataset using ``roc_auc`` and a holdout evaluation. Added a Recommended
+  Next Steps section linking to the new tutorials.
 
 ^^^^^^^^^^
 Bug Fixes:

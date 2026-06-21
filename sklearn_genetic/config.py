@@ -9,8 +9,8 @@ class EvolutionConfig:
 
     population_size: int = 50
     generations: int = 80
-    crossover_probability: object = 0.2
-    mutation_probability: object = 0.8
+    crossover_probability: object = 0.8
+    mutation_probability: object = 0.1
     tournament_size: int = 3
     elitism: bool = True
     keep_top_k: int = 1
@@ -47,8 +47,8 @@ class OptimizationConfig:
     local_search_top_k: int = 1
     local_search_steps: int = 1
     local_search_radius: float = 0.1
-    diversity_control: bool = False
-    diversity_threshold: float = 0.1
+    diversity_control: bool = True
+    diversity_threshold: float = 0.25
     diversity_stagnation_generations: int = 5
     diversity_mutation_boost: float = 2.0
     random_immigrants_fraction: float = 0.1

@@ -528,7 +528,16 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--label", default="current", help="Label stored in benchmark results.")
     parser.add_argument("--runs", type=int, default=1, help="Number of repeated runs per scenario.")
-    parser.add_argument("--n-iter", type=int, default=60, help="Random search candidate budget.")
+    parser.add_argument(
+        "--n-iter",
+        type=int,
+        default=None,
+        help=(
+            "Random/halving search candidate budget. Defaults to the GA's total candidate "
+            "generation budget (population_size + generations * 2 * population_size) so that "
+            "all methods receive a comparable number of evaluation slots."
+        ),
+    )
     parser.add_argument(
         "--ga-population-size",
         type=int,
@@ -609,11 +618,22 @@ def main() -> None:
     args = parse_args()
     if args.quick:
         args.runs = 1
-        args.n_iter = min(args.n_iter, 6)
         args.ga_population_size = min(args.ga_population_size, 5)
         args.ga_generations = min(args.ga_generations, 2)
         args.grid_points = min(args.grid_points, 3)
         args.scenarios = args.scenarios[:1]
+
+    # Match random/halving search budget to the GA's total candidate generation budget so
+    # the comparison is fair. GA generates population_size (initial) + generations *
+    # 2 * population_size (offspring via lambda_=2*mu) candidates before cache deduplication.
+    if args.n_iter is None:
+        args.n_iter = args.ga_population_size + args.ga_generations * 2 * args.ga_population_size
+
+    if args.quick:
+        args.n_iter = min(
+            args.n_iter,
+            args.ga_population_size + args.ga_generations * 2 * args.ga_population_size,
+        )
 
     n_jobs_values = [parse_n_jobs(value) for value in args.n_jobs]
     results: list[dict[str, Any]] = []

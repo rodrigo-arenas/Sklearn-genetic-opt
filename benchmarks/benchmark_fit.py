@@ -28,7 +28,7 @@ from typing import Any, Callable
 
 import numpy as np
 from sklearn.datasets import load_breast_cancer, load_diabetes, make_classification, make_friedman1
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import HistGradientBoostingClassifier, RandomForestClassifier
 from sklearn.linear_model import LogisticRegression, Ridge
 from sklearn.metrics import (
     accuracy_score,
@@ -135,6 +135,10 @@ def random_forest_classifier(random_state: int) -> RandomForestClassifier:
     return RandomForestClassifier(random_state=random_state, n_jobs=1)
 
 
+def hist_gradient_boosting_classifier(random_state: int) -> HistGradientBoostingClassifier:
+    return HistGradientBoostingClassifier(random_state=random_state, early_stopping=False)
+
+
 def ridge_pipeline(random_state: int) -> Pipeline:
     return Pipeline([("scaler", StandardScaler()), ("ridge", Ridge())])
 
@@ -190,6 +194,38 @@ SCENARIOS = {
             "min_samples_leaf": Integer(1, 10),
             "max_features": Categorical(["sqrt", "log2", None]),
             "ccp_alpha": Continuous(0.0, 0.02),
+        },
+    ),
+    "classification_gbm": Scenario(
+        name="classification_gbm",
+        task="classification",
+        scoring="roc_auc",
+        loader=classification_data,
+        estimator_builder=hist_gradient_boosting_classifier,
+        param_grid_builder=lambda: {
+            "learning_rate": Continuous(0.01, 0.3, distribution="log-uniform"),
+            "max_iter": Integer(50, 300),
+            "max_depth": Integer(2, 8),
+            "min_samples_leaf": Integer(5, 50),
+            "l2_regularization": Continuous(1e-6, 1.0, distribution="log-uniform"),
+            "max_features": Continuous(0.3, 1.0),
+            "max_leaf_nodes": Integer(15, 127),
+        },
+    ),
+    "classification_gbm_synthetic": Scenario(
+        name="classification_gbm_synthetic",
+        task="classification",
+        scoring="roc_auc",
+        loader=synthetic_classification_data,
+        estimator_builder=hist_gradient_boosting_classifier,
+        param_grid_builder=lambda: {
+            "learning_rate": Continuous(0.01, 0.3, distribution="log-uniform"),
+            "max_iter": Integer(50, 300),
+            "max_depth": Integer(2, 8),
+            "min_samples_leaf": Integer(5, 50),
+            "l2_regularization": Continuous(1e-6, 1.0, distribution="log-uniform"),
+            "max_features": Continuous(0.3, 1.0),
+            "max_leaf_nodes": Integer(15, 127),
         },
     ),
     "regression_friedman_ridge": Scenario(
