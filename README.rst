@@ -99,10 +99,10 @@ Requirements
 Core requirements:
 
 * Python >= 3.12
-* scikit-learn >= 1.9.0
-* NumPy >= 2.4.6
-* DEAP >= 1.4.4
-* tqdm >= 4.68.3
+* scikit-learn >= 1.5.0
+* NumPy >= 1.26.0
+* DEAP >= 1.4.0
+* tqdm >= 4.60.0
 
 Optional extras:
 
