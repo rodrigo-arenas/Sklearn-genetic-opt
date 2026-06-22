@@ -45,6 +45,20 @@ function versionSidebar(versionPrefix: string) {
       ],
     },
     {
+      text: 'Examples',
+      items: [
+        { text: 'Overview', link: `${versionPrefix}/examples/` },
+        { text: 'Comparing Search Methods', link: `${versionPrefix}/examples/sklearn-comparison` },
+        { text: 'Advanced Random Forest', link: `${versionPrefix}/examples/advanced-rf` },
+        { text: 'Pipeline Regression', link: `${versionPrefix}/examples/pipeline-regression` },
+        { text: 'Feature Selection', link: `${versionPrefix}/examples/feature-selection` },
+        { text: 'Multi-Metric Search', link: `${versionPrefix}/examples/multi-metric` },
+        { text: 'MLflow Tracking', link: `${versionPrefix}/examples/mlflow-tracking` },
+        { text: 'Checkpointing', link: `${versionPrefix}/examples/checkpointing` },
+        { text: 'Plotting Gallery', link: `${versionPrefix}/examples/plotting-gallery` },
+      ],
+    },
+    {
       text: 'Release Notes',
       items: [
         { text: 'Changelog', link: `${versionPrefix}/release-notes` },
