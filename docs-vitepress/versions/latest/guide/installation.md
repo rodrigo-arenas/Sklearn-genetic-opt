@@ -54,6 +54,7 @@ conda install -c conda-forge sklearn-genetic-opt seaborn mlflow
 | Python | 3.12 | Yes |
 | scikit-learn | 1.5.0 | Yes |
 | NumPy | 1.26.0 | Yes |
+| pandas | 1.3.0 | Yes |
 | DEAP | 1.4.0 | Yes |
 | tqdm | 4.60.0 | Yes |
 | Seaborn | 0.13.2 | No (plots) |
