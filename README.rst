@@ -24,7 +24,7 @@
 .. _Contributors: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/graphs/contributors
 
 
-.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/docs/logo.png?raw=true
+.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/docs-vitepress/public/logo.png?raw=true
 
 sklearn-genetic-opt
 ###################

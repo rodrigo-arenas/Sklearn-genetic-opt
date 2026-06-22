@@ -103,6 +103,7 @@ exclude = ["*tests*"]
 
 [tool.pytest.ini_options]
 addopts = "--verbose --color=yes --assert=plain -p no:warnings --tb=short"
+testpaths = ["sklearn_genetic"]
 
 [tool.coverage.run]
 omit = [

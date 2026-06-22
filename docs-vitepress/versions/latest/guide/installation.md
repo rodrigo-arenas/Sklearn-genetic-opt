@@ -31,7 +31,7 @@ pip install sklearn-genetic-opt[all]
 Install individual extras:
 
 ```bash
-pip install sklearn-genetic-opt[plots]     # seaborn for plot_fitness_evolution / plot_search_space
+pip install sklearn-genetic-opt[plot]      # seaborn for plot_fitness_evolution / plot_search_space
 pip install sklearn-genetic-opt[mlflow]    # MLflow 3 logging
 ```
 

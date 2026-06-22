@@ -2,7 +2,7 @@ name: Deploy VitePress docs to GitHub Pages
 
 on:
   push:
-    branches: [0.13.0dev]
+    branches: [master]
     # Matches release tags like 0.13.0 or v0.13.0
     tags: ["[0-9]*", "v[0-9]*"]
   workflow_dispatch:
@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}

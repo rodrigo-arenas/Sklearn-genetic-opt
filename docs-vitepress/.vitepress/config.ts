@@ -73,7 +73,6 @@ export default defineConfig({
   base: GITHUB_PAGES_BASE,
 
   srcExclude: ['**/CLAUDE.md', '**/README.md'],
-  ignoreDeadLinks: [/\/related-page$/],
 
   head: [
     ['link', { rel: 'icon', href: `${GITHUB_PAGES_BASE}logo.png` }],

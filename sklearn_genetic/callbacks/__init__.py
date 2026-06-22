@@ -1,3 +1,4 @@
+from .base import BaseCallback
 from .early_stoppers import (
     DeltaThreshold,
     ThresholdStopping,
@@ -8,6 +9,7 @@ from .loggers import ProgressBar, LogbookSaver, TensorBoard
 from .model_checkpoint import ModelCheckpoint
 
 __all__ = [
+    "BaseCallback",
     "ProgressBar",
     "DeltaThreshold",
     "ThresholdStopping",
