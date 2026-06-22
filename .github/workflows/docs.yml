@@ -2,7 +2,7 @@ name: Deploy VitePress docs to GitHub Pages
 
 on:
   push:
-    branches: [master]
+    branches: [master, 0.13.0dev]
     tags: ["v*"]
   workflow_dispatch:
 

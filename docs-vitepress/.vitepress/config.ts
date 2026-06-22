@@ -1,6 +1,6 @@
 import { defineConfig } from 'vitepress'
 
-const GITHUB_PAGES_BASE = '/sklearn-genetic-opt/'
+const GITHUB_PAGES_BASE = '/Sklearn-genetic-opt/'
 
 // Sidebar shared across versions — paths are relative to the version root
 function versionSidebar(versionPrefix: string) {
