@@ -28,6 +28,7 @@ function versionSidebar(versionPrefix: string) {
         { text: 'Outlier Detection', link: `${versionPrefix}/guide/outliers` },
         { text: 'Reproducibility', link: `${versionPrefix}/guide/reproducibility` },
         { text: 'Troubleshooting', link: `${versionPrefix}/guide/troubleshooting` },
+        { text: 'Migrating from 0.12', link: `${versionPrefix}/guide/migrating-from-0.12` },
       ],
     },
     {
