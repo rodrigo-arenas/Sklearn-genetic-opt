@@ -1,7 +1,6 @@
-import pandas as pd
-
-
 def logbook_to_pandas(logbook, chapter="parameters", fields=None, include_index=True):
+    import pandas as pd
+
     data = logbook.chapters[chapter]
     df = pd.DataFrame(data)
 
