@@ -2,7 +2,6 @@
 title: Feature Selection With Noisy Data
 description: Use GAFeatureSelectionCV to find a compact, informative feature subset when the input has both real and noise features.
 ---
-
 # Feature Selection With Noisy Data
 
 This example adds synthetic noise features to the Iris dataset to make feature selection realistic. A useful selector should keep a small subset of the original measurements and discard most noise columns.

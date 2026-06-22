@@ -2,7 +2,6 @@
 title: Advanced Random Forest Tuning
 description: Tour of advanced optimizer controls — smart initialization, warm starts, diversity control, fitness sharing, local search, and adaptive schedules — applied to a RandomForestClassifier on breast cancer data.
 ---
-
 # Advanced Random Forest Tuning
 
 This example is a guided tour of advanced optimizer controls. We tune a `RandomForestClassifier`, inspect telemetry, compare against a random-search baseline, and apply the same ideas to feature selection.

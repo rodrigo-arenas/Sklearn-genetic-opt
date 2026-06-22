@@ -2,7 +2,6 @@
 title: Plotting Gallery
 description: Walkthrough of all plot helpers in sklearn-genetic-opt — fitness evolution, history telemetry, and search-space visualization.
 ---
-
 # Plotting Gallery
 
 `sklearn-genetic-opt` ships three plot functions. This gallery shows each one with its main options.

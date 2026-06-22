@@ -2,7 +2,6 @@
 title: Checkpointing and Persistence
 description: Write intermediate checkpoints, save and reload a fitted GASearchCV search object, and inspect checkpoint contents.
 ---
-
 # Checkpointing and Persistence
 
 Long-running searches should be able to write intermediate checkpoints, save the fitted search object, and reload it later for inspection or prediction.

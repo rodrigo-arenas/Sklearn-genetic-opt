@@ -2,7 +2,6 @@
 title: Comparing GASearchCV With sklearn Search Methods
 description: Side-by-side comparison of GASearchCV, RandomizedSearchCV, and GridSearchCV on a binary classification task — solution quality, search cost, and runtime.
 ---
-
 # Comparing GASearchCV With sklearn Search Methods
 
 This example compares `GASearchCV` with `RandomizedSearchCV` and `GridSearchCV` on the same classification problem. The goal is not to declare one method universally best — it is to show how to compare solution quality, search cost, and runtime fairly.

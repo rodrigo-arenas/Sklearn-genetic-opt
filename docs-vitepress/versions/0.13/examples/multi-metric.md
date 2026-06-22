@@ -2,7 +2,6 @@
 title: Multi-Metric Search on Iris
 description: Track multiple scorers simultaneously, choose which metric drives the refit, and inspect per-metric cv_results_ after fitting.
 ---
-
 # Multi-Metric Search on Iris
 
 This example shows how to run `GASearchCV` with multiple scorers and inspect per-metric results after fitting.

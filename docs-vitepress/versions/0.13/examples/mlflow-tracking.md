@@ -2,7 +2,6 @@
 title: MLflow 3 Experiment Tracking
 description: Log a GASearchCV run to MLflow 3 — nested candidate runs via MLflowConfig, parent run with dataset inputs and holdout metrics, and logged-model lifecycle management.
 ---
-
 # MLflow 3 Experiment Tracking
 
 This example combines `sklearn-genetic-opt`'s built-in `MLflowConfig` integration with MLflow 3 tracking features: dataset inputs, logged models, model tags, and searchable run metadata.

@@ -217,9 +217,9 @@ population_config=PopulationConfig(initializer="smart")
 Unique candidates within a generation are now evaluated in parallel. Control the strategy with `parallel_backend`:
 
 ```python
-RuntimeConfig(n_jobs=-1, parallel_backend="auto")        # default: parallel across candidates
-RuntimeConfig(n_jobs=-1, parallel_backend="cv")           # parallel across CV folds instead
-RuntimeConfig(n_jobs=-1, parallel_backend="population")   # explicit population-level
+RuntimeConfig(n_jobs=-1, parallel_backend="auto")   # default: parallel across candidates
+RuntimeConfig(n_jobs=-1, parallel_backend="cv")      # parallel across CV folds instead
+RuntimeConfig(n_jobs=-1, parallel_backend="population")  # explicit population-level
 ```
 
 ### Evaluation Counters
