@@ -90,7 +90,7 @@ dev = [
 ]
 
 [project.urls]
-Documentation = "https://sklearn-genetic-opt.readthedocs.io/en/stable/"
+Documentation = "https://rodrigo-arenas.github.io/Sklearn-genetic-opt/"
 "Source Code" = "https://github.com/rodrigo-arenas/Sklearn-genetic-opt"
 "Bug Tracker" = "https://github.com/rodrigo-arenas/Sklearn-genetic-opt/issues"
 
