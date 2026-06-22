@@ -1,6 +1,14 @@
-import { defineConfig } from 'vitepress'
+import { defineConfig, HeadConfig } from 'vitepress'
 
 const GITHUB_PAGES_BASE = '/Sklearn-genetic-opt/'
+const GA_TAG = process.env.GOOGLE_ANALYTICS_TAG
+
+const gaHead: HeadConfig[] = GA_TAG
+  ? [
+      ['script', { async: '', src: `https://www.googletagmanager.com/gtag/js?id=${GA_TAG}` }],
+      ['script', {}, `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA_TAG}');`],
+    ]
+  : []
 
 // Sidebar shared across versions — paths are relative to the version root
 function versionSidebar(versionPrefix: string) {
@@ -77,6 +85,7 @@ export default defineConfig({
 
   head: [
     ['link', { rel: 'icon', href: `${GITHUB_PAGES_BASE}logo.png` }],
+    ...gaHead,
   ],
 
   themeConfig: {

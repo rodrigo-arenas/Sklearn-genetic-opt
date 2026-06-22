@@ -62,6 +62,8 @@ jobs:
       - name: Build VitePress site
         working-directory: docs-vitepress
         run: npm run docs:build
+        env:
+          GOOGLE_ANALYTICS_TAG: ${{ secrets.GOOGLE_ANALYTICS_TAG }}
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
