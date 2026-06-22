@@ -91,3 +91,17 @@ numpydoc_show_class_members = False
 numpydoc_class_members_toctree = False
 
 todo_include_todos = False
+
+# -- Deprecation banner ------------------------------------------------------
+# These docs are no longer actively maintained. A deprecation notice is added
+# to every page via the announcement bar pointing to the new VitePress site.
+
+html_theme_options = {
+    "announcement": (
+        "<strong>These docs are no longer updated.</strong> "
+        "Please visit the new documentation at "
+        "<a href='https://rodrigo-arenas.github.io/Sklearn-genetic-opt/' "
+        "style='color:#fff;text-decoration:underline'>"
+        "rodrigo-arenas.github.io/Sklearn-genetic-opt/</a>."
+    ),
+}
