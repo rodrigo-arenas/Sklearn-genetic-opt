@@ -1,0 +1,29 @@
+:root {
+  --vp-c-brand-1: #3d7eaa;
+  --vp-c-brand-2: #2c6a96;
+  --vp-c-brand-3: #1e5580;
+  --vp-c-brand-soft: rgba(61, 126, 170, 0.14);
+}
+
+/* Version badge in nav */
+.version-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--vp-c-brand-soft);
+  color: var(--vp-c-brand-1);
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+/* Deprecation banner */
+.rtd-deprecation-banner {
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  color: #664d03;
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-bottom: 24px;
+  font-size: 0.9rem;
+}
