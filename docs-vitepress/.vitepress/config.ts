@@ -22,7 +22,7 @@ function versionSidebar(versionPrefix: string) {
         { text: 'Multi-Metric Optimization', link: `${versionPrefix}/guide/multi-metric` },
         { text: 'Callbacks', link: `${versionPrefix}/guide/callbacks` },
         { text: 'Custom Callbacks', link: `${versionPrefix}/guide/custom-callback` },
-        { text: 'Adapters', link: `${versionPrefix}/guide/adapters` },
+        { text: 'Adaptive Schedules', link: `${versionPrefix}/guide/adapters` },
         { text: 'Advanced Optimizer Control', link: `${versionPrefix}/guide/advanced-optimizer-control` },
         { text: 'MLflow Integration', link: `${versionPrefix}/guide/mlflow` },
         { text: 'Outlier Detection', link: `${versionPrefix}/guide/outliers` },
