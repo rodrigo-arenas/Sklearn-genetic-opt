@@ -55,7 +55,7 @@ about:
     sklearn-genetic-opt adds evolutionary optimization tools to the scikit-learn
     workflow. It tunes hyperparameters with GASearchCV and selects feature subsets
     with GAFeatureSelectionCV using algorithms powered by DEAP.
-  doc_url: https://sklearn-genetic-opt.readthedocs.io/
+  doc_url: https://rodrigo-arenas.github.io/Sklearn-genetic-opt/
   dev_url: https://github.com/rodrigo-arenas/Sklearn-genetic-opt
 
 extra:

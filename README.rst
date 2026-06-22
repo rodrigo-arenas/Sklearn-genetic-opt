@@ -17,8 +17,8 @@
 .. |Conda| image:: https://img.shields.io/conda/vn/conda-forge/sklearn-genetic-opt.svg
 .. _Conda: https://anaconda.org/conda-forge/sklearn-genetic-opt
 
-.. |Docs| image:: https://readthedocs.org/projects/sklearn-genetic-opt/badge/?version=latest
-.. _Docs: https://sklearn-genetic-opt.readthedocs.io/en/latest/?badge=latest
+.. |Docs| image:: https://img.shields.io/badge/docs-GitHub%20Pages-blue
+.. _Docs: https://rodrigo-arenas.github.io/Sklearn-genetic-opt/
 
 .. |Contributors| image:: https://contributors-img.web.app/image?repo=rodrigo-arenas/sklearn-genetic-opt
 .. _Contributors: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/graphs/contributors
@@ -40,7 +40,7 @@ patterns: define an estimator, define a search space, call ``fit``, inspect
 ``best_params_`` or ``support_``, and use the fitted object for prediction.
 
 Documentation is available at
-`sklearn-genetic-opt.readthedocs.io <https://sklearn-genetic-opt.readthedocs.io/>`_.
+`rodrigo-arenas.github.io/Sklearn-genetic-opt <https://rodrigo-arenas.github.io/Sklearn-genetic-opt/>`_.
 
 Highlights
 ##########
@@ -319,8 +319,8 @@ Documentation and Examples
 
 Useful links:
 
-* Documentation: https://sklearn-genetic-opt.readthedocs.io/
-* Release notes: https://sklearn-genetic-opt.readthedocs.io/en/latest/release_notes.html
+* Documentation: https://rodrigo-arenas.github.io/Sklearn-genetic-opt/
+* Release notes: https://rodrigo-arenas.github.io/Sklearn-genetic-opt/versions/0.13/release-notes
 * PyPI: https://pypi.org/project/sklearn-genetic-opt/
 * Source code: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/
 * Issues: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/issues
