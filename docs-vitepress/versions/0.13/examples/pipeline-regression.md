@@ -2,7 +2,6 @@
 title: Pipeline Regression Tuning
 description: Tune a scikit-learn Pipeline containing StandardScaler and GradientBoostingRegressor using GASearchCV — pipeline parameter naming, regression scorers, and search visualization.
 ---
-
 # Pipeline Regression Tuning
 
 This example shows how to tune a scikit-learn `Pipeline` with `GASearchCV`. Pipeline parameters use the standard sklearn double-underscore syntax: `regressor__max_depth`.

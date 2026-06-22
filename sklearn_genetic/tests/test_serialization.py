@@ -9,7 +9,7 @@ from sklearn.metrics import accuracy_score, balanced_accuracy_score
 from sklearn.metrics import make_scorer
 import numpy as np
 
-from .. import GAFeatureSelectionCV
+from .. import GAFeatureSelectionCV, EvolutionConfig, PopulationConfig, RuntimeConfig
 from ..callbacks import (
     ThresholdStopping,
     DeltaThreshold,
@@ -101,4 +101,39 @@ def test_estimator_serialization():
     assert "features" in cv_result_keys
 
     # delete dumped estimator
+    os.remove(dump_file)
+
+
+def test_estimator_serialization_with_config_objects():
+    clf = SGDClassifier(loss="modified_huber", fit_intercept=True)
+    evolved_estimator = GAFeatureSelectionCV(
+        clf,
+        cv=3,
+        scoring="accuracy",
+        evolution_config=EvolutionConfig(
+            population_size=6,
+            generations=6,
+            tournament_size=3,
+            elitism=False,
+            keep_top_k=4,
+            algorithm="eaSimple",
+        ),
+        population_config=PopulationConfig(initializer="random"),
+        runtime_config=RuntimeConfig(n_jobs=-1, verbose=False, return_train_score=True),
+    )
+
+    evolved_estimator.fit(X_train, y_train)
+    dump_file = "evolved_estimator_config.pkl"
+
+    assert dump(evolved_estimator, dump_file)[0] == dump_file
+
+    dumped_estimator = load(dump_file)
+    assert check_is_fitted(dumped_estimator) is None
+    assert dumped_estimator.support_.shape[0] == X.shape[1]
+    assert len(dumped_estimator.predict(X_test)) == len(X_test)
+    assert dumped_estimator.score(X_test, y_test) == accuracy_score(
+        y_test, dumped_estimator.predict(X_test)
+    )
+    assert bool(dumped_estimator.get_params())
+
     os.remove(dump_file)

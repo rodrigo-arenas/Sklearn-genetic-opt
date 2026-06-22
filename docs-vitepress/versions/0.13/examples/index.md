@@ -2,7 +2,6 @@
 title: Examples
 description: End-to-end examples for sklearn-genetic-opt — hyperparameter search, feature selection, pipelines, multi-metric, MLflow, checkpointing, and plotting.
 ---
-
 # Examples
 
 End-to-end runnable examples from real use cases. Each example is self-contained — you can copy the code directly into a script or notebook.

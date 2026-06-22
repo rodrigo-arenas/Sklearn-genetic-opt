@@ -27,7 +27,7 @@ pip install sklearn-genetic-opt[all]
 Install individual extras:
 
 ```bash
-pip install sklearn-genetic-opt[plots]     # seaborn for plot_fitness_evolution / plot_search_space
+pip install sklearn-genetic-opt[plot]      # seaborn for plot_fitness_evolution / plot_search_space
 pip install sklearn-genetic-opt[mlflow]    # MLflow 3 logging
 ```
 
@@ -48,10 +48,10 @@ conda install -c conda-forge sklearn-genetic-opt seaborn mlflow
 | Package | Minimum version | Required |
 |---------|----------------|----------|
 | Python | 3.12 | Yes |
-| scikit-learn | 1.9.0 | Yes |
-| NumPy | 2.4.6 | Yes |
-| DEAP | 1.4.4 | Yes |
-| tqdm | 4.68.3 | Yes |
+| scikit-learn | 1.5.0 | Yes |
+| NumPy | 1.26.0 | Yes |
+| DEAP | 1.4.0 | Yes |
+| tqdm | 4.60.0 | Yes |
 | Seaborn | 0.13.2 | No (plots) |
 | MLflow | 3.14.0 | No (MLflow logging) |
 | TensorFlow | 2.21.0 | No (TensorBoard logging, Python < 3.14) |

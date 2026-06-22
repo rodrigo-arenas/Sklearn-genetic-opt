@@ -1,25 +1,21 @@
 ---
-title: sklearn-genetic-opt 0.13
-description: Documentation for sklearn-genetic-opt version 0.13 — evolutionary hyperparameter tuning and feature selection for scikit-learn.
+title: sklearn-genetic-opt (latest / dev)
+description: Development documentation for sklearn-genetic-opt — tracks the master branch and may contain unreleased features.
 ---
 
 # sklearn-genetic-opt
 
 `sklearn-genetic-opt` adds evolutionary optimization tools to the scikit-learn workflow. It can tune hyperparameters with `GASearchCV` and select feature subsets with `GAFeatureSelectionCV` using algorithms powered by DEAP.
 
-The project is useful when a search space is mixed, irregular, expensive, or not well served by an exhaustive grid. It follows familiar scikit-learn patterns: define an estimator, define a search space, call `fit`, inspect `best_params_` or `support_`, and use the fitted object for prediction.
 
-:::info Version
-You are reading the **0.13 (stable)** docs. Looking for the development version? See [latest](/versions/latest/).
-:::
 
 ## Highlights
 
 - `GASearchCV` for hyperparameter search across classification, regression, and supported outlier-detection estimators.
 - `GAFeatureSelectionCV` for wrapper-based feature selection with cross-validation.
 - Search spaces for integer, continuous, and categorical parameters.
-- Grouped configuration objects for readable advanced setups: `EvolutionConfig`, `PopulationConfig`, `RuntimeConfig`, and `OptimizationConfig`.
-- Smart initial populations with `PopulationConfig(initializer="smart")`, including warm-start seeds, estimator defaults, Latin-hypercube numeric coverage, stratified categorical coverage, and duplicate avoidance.
+- Grouped configuration objects: `EvolutionConfig`, `PopulationConfig`, `RuntimeConfig`, and `OptimizationConfig`.
+- Smart initial populations with `PopulationConfig(initializer="smart")`.
 - Adaptive mutation and crossover schedules.
 - Optional local search, diversity control, random immigrants, and fitness sharing.
 - Parallel candidate evaluation with `n_jobs` and `parallel_backend`.
@@ -27,39 +23,21 @@ You are reading the **0.13 (stable)** docs. Looking for the development version?
 - Callbacks for early stopping, progress reporting, checkpoints, TensorBoard, and custom logic.
 - Plotting helpers plus MLflow 3 logging support.
 
-## Installation
+## Installation (dev)
+
+Install from the master branch:
+
+```bash
+pip install git+https://github.com/rodrigo-arenas/Sklearn-genetic-opt.git@master
+```
+
+Or install the released version:
 
 ```bash
 pip install sklearn-genetic-opt
 ```
 
-Or with conda:
-
-```bash
-conda install -c conda-forge sklearn-genetic-opt
-```
-
-Install optional plotting, MLflow, and TensorBoard integrations:
-
-```bash
-pip install sklearn-genetic-opt[all]
-```
-
-## Requirements
-
-| Package | Minimum version |
-|---------|----------------|
-| Python | 3.12 |
-| scikit-learn | 1.9.0 |
-| NumPy | 2.4.6 |
-| DEAP | 1.4.4 |
-| tqdm | 4.68.3 |
-
-Optional extras: Seaborn ≥ 0.13.2 for plots, MLflow ≥ 3.14.0 for experiment logging, TensorFlow ≥ 2.21.0 + TensorBoard ≥ 2.20.0 for TensorBoard logging.
-
 ## Quick Start
-
-This example tunes a `RandomForestClassifier` across six hyperparameters on the breast cancer dataset.
 
 ```python
 from sklearn.datasets import load_breast_cancer
@@ -95,19 +73,11 @@ search = GASearchCV(
 )
 
 search.fit(X_train, y_train)
-
 print(search.best_params_)
-print("CV score:", round(search.best_score_, 4))
-
-y_prob = search.predict_proba(X_test)[:, 1]
-print("Holdout ROC-AUC:", round(roc_auc_score(y_test, y_prob), 4))
-
-print(search.fit_stats_)
 ```
 
 ## Next Steps
 
-- Not sure if GA search is right for your problem? Start with [When to Use](./guide/when-to-use).
-- New to the library? [Basic Usage](./guide/basic-usage) walks through the full workflow.
-- Tuning a scikit-learn `Pipeline`? See [Pipeline Tuning](./guide/pipeline-tuning).
-- Something not working? See [Troubleshooting](./guide/troubleshooting).
+- [When to Use](./guide/when-to-use)
+- [Basic Usage](./guide/basic-usage)
+- [Troubleshooting](./guide/troubleshooting)
