@@ -40,6 +40,17 @@ function versionSidebar(versionPrefix: string) {
       ],
     },
     {
+      text: 'Tutorials',
+      items: [
+        { text: 'Overview',                        link: `${versionPrefix}/tutorials/` },
+        { text: 'Tune XGBoost',                    link: `${versionPrefix}/tutorials/tune-xgboost` },
+        { text: 'Tune LightGBM',                   link: `${versionPrefix}/tutorials/tune-lightgbm` },
+        { text: 'Tune CatBoost',                   link: `${versionPrefix}/tutorials/tune-catboost` },
+        { text: 'Comprehensive Feature Selection',  link: `${versionPrefix}/tutorials/feature-selection` },
+        { text: 'Imbalanced Classification',        link: `${versionPrefix}/tutorials/imbalanced-classification` },
+      ],
+    },
+    {
       text: 'API Reference',
       items: [
         { text: 'GASearchCV', link: `${versionPrefix}/api/gasearchcv` },
@@ -60,7 +71,7 @@ function versionSidebar(versionPrefix: string) {
         { text: 'Comparing Search Methods', link: `${versionPrefix}/examples/sklearn-comparison` },
         { text: 'Advanced Random Forest', link: `${versionPrefix}/examples/advanced-rf` },
         { text: 'Pipeline Regression', link: `${versionPrefix}/examples/pipeline-regression` },
-        { text: 'Feature Selection', link: `${versionPrefix}/examples/feature-selection` },
+        { text: 'Feature Selection (Noisy Data)', link: `${versionPrefix}/examples/feature-selection` },
         { text: 'Multi-Metric Search', link: `${versionPrefix}/examples/multi-metric` },
         { text: 'MLflow Tracking', link: `${versionPrefix}/examples/mlflow-tracking` },
         { text: 'Checkpointing', link: `${versionPrefix}/examples/checkpointing` },
@@ -81,7 +92,63 @@ export default defineConfig({
   description: 'Evolutionary hyperparameter tuning and feature selection for scikit-learn',
   base: GITHUB_PAGES_BASE,
 
+  titleTemplate: ':title | sklearn-genetic-opt',
+
+  sitemap: {
+    hostname: 'https://rodrigo-arenas.github.io',
+  },
+
   srcExclude: ['**/CLAUDE.md', '**/README.md'],
+
+  transformPageData(pageData) {
+    const base = 'https://rodrigo-arenas.github.io/Sklearn-genetic-opt'
+    const ogImage = `${base}/sklearn-genetic-opt-logo-128.png`
+    const pageTitle = pageData.title
+      ? `${pageData.title} | sklearn-genetic-opt`
+      : 'sklearn-genetic-opt'
+    const pageDescription =
+      pageData.description ||
+      'Evolutionary hyperparameter tuning and feature selection for scikit-learn'
+    const cleanPath = pageData.relativePath
+      .replace(/\\/g, '/')
+      .replace(/index\.md$/, '')
+      .replace(/\.md$/, '.html')
+    const pageUrl = `${base}/${cleanPath}`
+
+    pageData.frontmatter.head ??= []
+    pageData.frontmatter.head.push(
+      ['link', { rel: 'canonical',           href: pageUrl }],
+      ['meta', { property: 'og:type',        content: 'website' }],
+      ['meta', { property: 'og:title',       content: pageTitle }],
+      ['meta', { property: 'og:description', content: pageDescription }],
+      ['meta', { property: 'og:url',         content: pageUrl }],
+      ['meta', { property: 'og:image',       content: ogImage }],
+      ['meta', { name: 'twitter:card',        content: 'summary' }],
+      ['meta', { name: 'twitter:title',       content: pageTitle }],
+      ['meta', { name: 'twitter:description', content: pageDescription }],
+    )
+
+    if (pageData.relativePath === 'index.md') {
+      pageData.frontmatter.head.push([
+        'script',
+        { type: 'application/ld+json' },
+        JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'SoftwareApplication',
+          name: 'sklearn-genetic-opt',
+          description:
+            'Evolutionary hyperparameter tuning and feature selection for scikit-learn using genetic algorithms powered by DEAP.',
+          applicationCategory: 'DeveloperApplication',
+          operatingSystem: 'Linux, macOS, Windows',
+          programmingLanguage: 'Python',
+          url: `${base}/`,
+          license: 'https://opensource.org/licenses/MIT',
+          author: { '@type': 'Person', name: 'Rodrigo Arenas Gómez' },
+          offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+        }),
+      ])
+    }
+  },
 
   head: [
     ['link', { rel: 'icon', href: `${GITHUB_PAGES_BASE}logo.png` }],

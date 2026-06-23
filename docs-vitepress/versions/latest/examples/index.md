@@ -11,6 +11,10 @@ This is the **latest (dev)** documentation. It may contain unreleased features o
 
 End-to-end runnable examples from real use cases. Each example is self-contained — you can copy the code directly into a script or notebook.
 
+:::tip Looking for deeper tutorials?
+The [Tutorials](/versions/latest/tutorials/) section covers comprehensive walkthroughs for XGBoost, LightGBM, CatBoost, multi-stage feature selection, and imbalanced classification — each with baseline comparisons, visualizations, and practical notes.
+:::
+
 ## Hyperparameter Search
 
 | Example | What it covers |
