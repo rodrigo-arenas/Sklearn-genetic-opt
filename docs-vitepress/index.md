@@ -6,7 +6,7 @@ titleTemplate: Evolutionary hyperparameter tuning for scikit-learn
 hero:
   name: sklearn-genetic-opt
   text: Evolutionary hyperparameter tuning
-  tagline: Tune scikit-learn models and select features using genetic algorithms powered by DEAP.
+  tagline: Tune XGBoost, LightGBM, CatBoost, and any scikit-learn estimator using genetic algorithms — evolutionary hyperparameter search and wrapper-based feature selection, powered by DEAP.
   image:
     src: /logo.png
     alt: sklearn-genetic-opt logo
@@ -31,4 +31,10 @@ features:
     details: Early stopping, progress bars, checkpoints, TensorBoard, and MLflow 3 logging out of the box.
   - title: scikit-learn Compatible
     details: Follows the familiar fit/predict/best_params_ API — drop it in wherever you'd use GridSearchCV.
+  - title: Boost Library Support
+    details: Works with XGBoost, LightGBM, and CatBoost out of the box — comprehensive tutorials tuning 7–9 hyperparameters with parameter interactions the GA captures naturally.
+  - title: Imbalanced Learning
+    details: Tune class_weight as a search parameter alongside model hyperparameters. Optimize balanced_accuracy or F1 directly instead of misleading accuracy.
+  - title: Comprehensive Tutorials
+    details: Step-by-step walkthroughs for gradient-boosting libraries, multi-stage feature selection, and imbalanced classification — each with baseline comparisons and visualizations.
 ---

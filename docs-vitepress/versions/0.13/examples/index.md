@@ -6,6 +6,10 @@ description: End-to-end examples for sklearn-genetic-opt — hyperparameter sear
 
 End-to-end runnable examples from real use cases. Each example is self-contained — you can copy the code directly into a script or notebook.
 
+:::tip Looking for deeper tutorials?
+The [Tutorials](/versions/0.13/tutorials/) section covers comprehensive walkthroughs for XGBoost, LightGBM, CatBoost, multi-stage feature selection, and imbalanced classification — each with baseline comparisons, visualizations, and practical notes.
+:::
+
 ## Hyperparameter Search
 
 | Example | What it covers |

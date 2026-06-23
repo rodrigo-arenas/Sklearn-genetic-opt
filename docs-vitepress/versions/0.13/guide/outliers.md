@@ -1,70 +1,142 @@
 ---
 title: Outlier Detection
-description: Use GASearchCV to tune outlier-detection estimators such as IsolationForest and LocalOutlierFactor.
+description: Use GASearchCV to tune outlier-detection estimators such as IsolationForest and LocalOutlierFactor — including how to write a custom scorer, which scoring method to use, and the LocalOutlierFactor novelty gotcha.
 ---
 
 # Outlier Detection
 
-`GASearchCV` supports scikit-learn outlier-detection estimators via a scorer adapter. These estimators do not use a class label `y` during fit, so a custom scorer is needed.
+`GASearchCV` supports scikit-learn outlier-detection estimators. These estimators fit on `X` only — they never see `y` during training — so the standard `scoring="roc_auc"` string cannot be used directly. Instead, you define a custom scorer that calls the estimator's anomaly scoring method and compares the result against ground-truth labels.
 
 ## Prerequisites
 
 - Completed [Basic Usage](./basic-usage)
+- Ground-truth labels for your anomalies (at minimum for evaluation; the estimator itself is unsupervised)
 
-## Using Outlier Estimators
+## The Custom Scorer Pattern
 
-Wrap an outlier estimator with a scorer that evaluates anomaly scores:
+The general pattern for any outlier estimator:
 
 ```python
-from sklearn.datasets import make_classification
-from sklearn.ensemble import IsolationForest
-from sklearn.model_selection import train_test_split
 from sklearn.metrics import roc_auc_score, make_scorer
-import numpy as np
-
-from sklearn_genetic import EvolutionConfig, GASearchCV, PopulationConfig, RuntimeConfig
-from sklearn_genetic.space import Categorical, Continuous, Integer
-
-# Synthetic dataset with 5% outliers
-X, y = make_classification(
-    n_samples=500, n_features=10, weights=[0.95, 0.05],
-    random_state=42
-)
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=42
-)
 
 def outlier_roc_auc(estimator, X, y):
-    scores = estimator.score_samples(X)
+    # Replace .score_samples with the method appropriate for your estimator
+    # (see table below)
+    scores = -estimator.score_samples(X)
     return roc_auc_score(y, scores)
+
+scoring = make_scorer(outlier_roc_auc, needs_proba=False)
+```
+
+Two details matter:
+
+- **Negate the score** — `score_samples` and `decision_function` return *lower* values for anomalies, but `roc_auc_score` expects *higher* values for the positive class (`y=1` = outlier). Negating aligns them. Omitting the negation causes the GA to silently optimise in the wrong direction.
+- **`needs_proba=False`** — tells `make_scorer` not to call `predict_proba` or `decision_function` automatically. Without it, sklearn tries to call the estimator's standard probability method, which outlier detectors do not have.
+
+### Which scoring method to use
+
+| Estimator | Method | Notes |
+|-----------|--------|-------|
+| `IsolationForest` | `score_samples` | Always available; independent of `contamination` |
+| `LocalOutlierFactor(novelty=True)` | `score_samples` | Requires `novelty=True` at construction |
+| `LocalOutlierFactor(novelty=False)` | `negative_outlier_factor_` | Attribute set after fit; only usable on training data |
+| `OneClassSVM` | `score_samples` | Available since sklearn 0.24 |
+| `EllipticEnvelope` | `score_samples` | Also has `decision_function` |
+
+:::warning LocalOutlierFactor default mode cannot score new data
+Standard LOF (`novelty=False`) computes scores using the training neighbourhood. Calling `score_samples` on test data raises an error. Use `LocalOutlierFactor(novelty=True)` when you need to score unseen points — which is always the case inside cross-validation.
+:::
+
+## IsolationForest Example
+
+```python
+import numpy as np
+from sklearn.datasets import make_blobs
+from sklearn.ensemble import IsolationForest
+from sklearn.metrics import roc_auc_score, make_scorer
+from sklearn.model_selection import StratifiedKFold, train_test_split
+
+from sklearn_genetic import EvolutionConfig, GASearchCV, PopulationConfig, RuntimeConfig
+from sklearn_genetic.space import Continuous, Integer
+
+# Synthetic dataset: two normal clusters + 5% uniform outliers
+X_normal, _ = make_blobs(n_samples=475, centers=2, cluster_std=0.8, random_state=42)
+rng = np.random.default_rng(42)
+X_outliers = rng.uniform(low=-6, high=6, size=(25, 2))
+
+X = np.vstack([X_normal, X_outliers])
+y = np.array([0] * 475 + [1] * 25)   # 0 = normal, 1 = outlier
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, stratify=y, random_state=42
+)
+cv = StratifiedKFold(n_splits=3, shuffle=True, random_state=42)
+
+
+def outlier_roc_auc(estimator, X, y):
+    scores = -estimator.score_samples(X)
+    return roc_auc_score(y, scores)
+
 
 search = GASearchCV(
     estimator=IsolationForest(random_state=42),
     param_grid={
-        "n_estimators": Integer(50, 200),
-        "max_samples": Continuous(0.5, 1.0),
-        "contamination": Continuous(0.01, 0.2),
-        "max_features": Continuous(0.3, 1.0),
+        "n_estimators":  Integer(50, 300),
+        "max_samples":   Continuous(0.05, 0.80),
+        "contamination": Continuous(0.01, 0.20),
+        "max_features":  Continuous(0.5, 1.0),
     },
-    cv=3,
+    cv=cv,
     scoring=make_scorer(outlier_roc_auc, needs_proba=False),
-    evolution_config=EvolutionConfig(population_size=15, generations=10),
+    evolution_config=EvolutionConfig(population_size=15, generations=12),
     population_config=PopulationConfig(initializer="smart"),
-    runtime_config=RuntimeConfig(n_jobs=-1),
+    runtime_config=RuntimeConfig(n_jobs=-1, verbose=True),
 )
 
 search.fit(X_train, y_train)
 
+print("Best CV ROC AUC:", round(search.best_score_, 4))
 print("Best parameters:", search.best_params_)
+```
+
+## LocalOutlierFactor Example
+
+LOF requires `novelty=True` for use inside cross-validation. The scorer is identical.
+
+```python
+from sklearn.neighbors import LocalOutlierFactor
+
+lof_search = GASearchCV(
+    estimator=LocalOutlierFactor(novelty=True),
+    param_grid={
+        "n_neighbors":       Integer(5, 50),
+        "contamination":     Continuous(0.01, 0.20),
+        "leaf_size":         Integer(10, 60),
+    },
+    cv=cv,
+    scoring=make_scorer(outlier_roc_auc, needs_proba=False),
+    evolution_config=EvolutionConfig(population_size=15, generations=10),
+    population_config=PopulationConfig(initializer="smart"),
+    runtime_config=RuntimeConfig(n_jobs=-1, verbose=True),
+)
+
+lof_search.fit(X_train, y_train)
+
+print("Best CV ROC AUC:", round(lof_search.best_score_, 4))
+print("Best parameters:", lof_search.best_params_)
 ```
 
 ## Tips & Gotchas
 
-- Outlier estimators fit on `X` only — pass `y` to `fit` but expect the estimator to ignore it.
-- Use `make_scorer` with a custom function that computes the metric from `score_samples` or `decision_function`.
-- `contamination` is typically the most impactful parameter to tune.
+- **Always negate the score** — `score_samples` is lower for anomalies. Pass `-score_samples` to `roc_auc_score` when `y=1` is the outlier class. Getting this wrong produces a valid-looking search that quietly minimises detection quality.
+- **`needs_proba=False` is required** — outlier estimators have no `predict_proba`. Without this flag, `make_scorer` tries to call it and raises an `AttributeError`.
+- **Use `StratifiedKFold`** — with 5% outliers, plain `KFold` can produce folds with very few anomalies, making the AUC estimate noisy and the fitness signal unreliable.
+- **`contamination` affects `predict`, not `score_samples`** — tuning it improves the hard-decision boundary but not the ranking score. If your downstream use only needs ranking (e.g., a top-K alert list), fix `contamination` based on domain knowledge and remove it from the search space.
+- **`score_samples` is independent of `contamination`** for IsolationForest — you can optimise the scorer freely without worrying that contamination is circularly influencing the metric used to select it.
+- **LOF with `novelty=False` cannot score new data** — attempting `score_samples` on test data raises an error. Always set `novelty=True` when using LOF inside `GASearchCV`.
 
 ## Next Steps
 
-- [Callbacks](./callbacks) — add early stopping to avoid over-tuning contamination.
-- [Troubleshooting](./troubleshooting) — diagnose flat fitness when the space is too narrow.
+- [Isolation Forest Tutorial](../tutorials/isolation-forest) — full end-to-end walkthrough with contour plots, ROC curve, and a 3-way comparison against baseline and random search.
+- [Callbacks](./callbacks) — add early stopping to avoid over-tuning on a noisy anomaly scorer.
+- [Troubleshooting](./troubleshooting) — diagnose flat fitness when the search space is too narrow.
