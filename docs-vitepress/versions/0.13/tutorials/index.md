@@ -29,6 +29,12 @@ These go deeper than the [Examples](../examples/) section — every tutorial cov
 |----------|---------------|
 | [Imbalanced Classification](./imbalanced-classification) | 95/5 imbalance, `class_weight` as search param, `balanced_accuracy` scoring, confusion matrices |
 
+## Outlier Detection
+
+| Tutorial | What it covers |
+|----------|---------------|
+| [Isolation Forest](./isolation-forest) | Custom scorer from `score_samples`, 4-param search, anomaly contour plots, ROC curve |
+
 ## See Also
 
 - [Examples](../examples/) — shorter end-to-end examples for common use cases

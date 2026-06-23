@@ -48,6 +48,7 @@ function versionSidebar(versionPrefix: string) {
         { text: 'Tune CatBoost',                   link: `${versionPrefix}/tutorials/tune-catboost` },
         { text: 'Comprehensive Feature Selection',  link: `${versionPrefix}/tutorials/feature-selection` },
         { text: 'Imbalanced Classification',        link: `${versionPrefix}/tutorials/imbalanced-classification` },
+        { text: 'Isolation Forest',                 link: `${versionPrefix}/tutorials/isolation-forest` },
       ],
     },
     {
