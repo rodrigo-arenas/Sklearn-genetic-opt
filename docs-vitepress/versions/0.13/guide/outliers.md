@@ -35,7 +35,9 @@ X_train, X_test, y_train, y_test = train_test_split(
 )
 
 def outlier_roc_auc(estimator, X, y):
-    scores = estimator.score_samples(X)
+    # Negate: score_samples is lower for anomalies, but roc_auc_score expects
+    # higher values for the positive class (y=1 = outlier)
+    scores = -estimator.score_samples(X)
     return roc_auc_score(y, scores)
 
 search = GASearchCV(
@@ -66,5 +68,6 @@ print("Best parameters:", search.best_params_)
 
 ## Next Steps
 
+- [Isolation Forest Tutorial](../tutorials/isolation-forest) — full end-to-end walkthrough with contour plots, ROC curve, and a 3-way comparison against baseline and random search.
 - [Callbacks](./callbacks) — add early stopping to avoid over-tuning contamination.
 - [Troubleshooting](./troubleshooting) — diagnose flat fitness when the space is too narrow.
