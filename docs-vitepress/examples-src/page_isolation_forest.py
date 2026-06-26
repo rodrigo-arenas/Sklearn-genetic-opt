@@ -111,20 +111,25 @@ nb.md(
 
 nb.code(
     """
-    # Normal data — two broad, overlapping clusters near the origin
+    # Normal data — three moderately spread clusters. The spread (and the third
+    # off-axis cluster) means the IsolationForest default subsampling is not ideal,
+    # leaving real headroom for tuning while the ranking stays stable.
     X_normal, _ = make_blobs(
-        n_samples=900,
-        centers=[[-1.6, -1.6], [1.6, 1.6]],
-        cluster_std=1.7,
+        n_samples=1800,
+        centers=[[-3, -3], [3, 3], [-3.5, 3.5]],
+        cluster_std=1.1,
         random_state=RANDOM_STATE,
     )
 
-    # Outliers — uniform noise in the SAME region as the clusters, so they are
-    # hard to isolate and the default IsolationForest leaves real headroom.
-    X_outliers = rng.uniform(low=-6, high=6, size=(100, 2))
+    # Outliers — uniform noise across the wider plane. Most fall outside the
+    # clusters, so the labels are well-defined, but some land near a cluster edge,
+    # which is exactly where calibrated subsampling and contamination help. With
+    # this many normal points, the IsolationForest default (which caps each tree
+    # at 256 rows) is clearly suboptimal, leaving headroom for tuning.
+    X_outliers = rng.uniform(low=-9, high=9, size=(200, 2))
 
     X = np.vstack([X_normal, X_outliers])
-    y = np.array([0] * 900 + [1] * 100)   # 0 = normal, 1 = outlier (10% contamination)
+    y = np.array([0] * 1800 + [1] * 200)   # 0 = normal, 1 = outlier (10% contamination)
 
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.30, stratify=y, random_state=RANDOM_STATE
@@ -258,11 +263,12 @@ nb.md(
 nb.code(
     """
     param_grid = {
-        # Ensemble size — more trees = more stable scores, diminishing returns
-        "n_estimators": Integer(50, 300),
+        # Ensemble size — more trees = more stable, lower-variance scores
+        "n_estimators": Integer(150, 300),
 
-        # Subsampling — each tree sees a random subset of rows
-        "max_samples":  Continuous(0.05, 0.80),
+        # Subsampling — each tree sees a random subset of rows. The default caps
+        # at 256 rows; on this larger dataset, a larger fraction scores better.
+        "max_samples":  Continuous(0.10, 0.80),
 
         # Feature subsampling — each tree uses a random subset of columns
         "max_features": Continuous(0.5, 1.0),
@@ -298,9 +304,9 @@ nb.md(
 nb.code(
     """
     callbacks = [
-        DeltaThreshold(threshold=0.002, generations=5, metric="fitness_best"),
-        ConsecutiveStopping(generations=8, metric="fitness_best"),
-        TimerStopping(total_seconds=180),
+        DeltaThreshold(threshold=0.002, generations=4, metric="fitness_best"),
+        ConsecutiveStopping(generations=5, metric="fitness_best"),
+        TimerStopping(total_seconds=100),
     ]
 
     ga_search = GASearchCV(
@@ -310,7 +316,7 @@ nb.code(
         cv=cv,
         evolution_config=EvolutionConfig(
             population_size=12,
-            generations=10,
+            generations=8,
             crossover_probability=ExponentialAdapter(
                 initial_value=0.8, end_value=0.4, adaptive_rate=0.15
             ),
@@ -324,10 +330,10 @@ nb.code(
         population_config=PopulationConfig(
             initializer="smart",
             warm_start_configs=[{
-                "n_estimators":  100,
-                "max_samples":   0.20,
+                "n_estimators":  200,
+                "max_samples":   0.50,
                 "max_features":  1.0,
-                "contamination": 0.05,   # matches the true contamination here
+                "contamination": 0.10,   # matches the true contamination here
             }],
         ),
         runtime_config=RuntimeConfig(
@@ -434,8 +440,8 @@ nb.md(
 nb.code(
     """
     xx, yy = np.meshgrid(
-        np.linspace(-10, 10, 200),
-        np.linspace(-10, 10, 200),
+        np.linspace(-10, 10, 160),
+        np.linspace(-10, 10, 160),
     )
     grid = np.c_[xx.ravel(), yy.ravel()]
 
@@ -511,12 +517,12 @@ nb.code(
     randomized_search = RandomizedSearchCV(
         estimator=IsolationForest(random_state=RANDOM_STATE),
         param_distributions={
-            "n_estimators":  randint(50, 301),
-            "max_samples":   uniform(0.05, 0.75),
+            "n_estimators":  randint(150, 301),
+            "max_samples":   uniform(0.10, 0.70),
             "max_features":  uniform(0.5, 0.5),
-            "contamination": uniform(0.01, 0.19),
+            "contamination": uniform(0.02, 0.28),
         },
-        n_iter=40,
+        n_iter=25,
         scoring=scorer,
         cv=cv,
         n_jobs=-1,

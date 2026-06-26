@@ -68,19 +68,25 @@ plots. Two Gaussian clusters form the normal data; outliers are scattered
 uniformly across a wider region (5% contamination).
 
 ```python
-# Normal data — two compact clusters
+# Normal data — three moderately spread clusters. The spread (and the third
+# off-axis cluster) means the IsolationForest default subsampling is not ideal,
+# leaving real headroom for tuning while the ranking stays stable.
 X_normal, _ = make_blobs(
-    n_samples=950,
-    centers=[[-3, -3], [3, 3]],
-    cluster_std=0.8,
+    n_samples=1800,
+    centers=[[-3, -3], [3, 3], [-3.5, 3.5]],
+    cluster_std=1.1,
     random_state=RANDOM_STATE,
 )
 
-# Outliers — uniform noise across a wider region
-X_outliers = rng.uniform(low=-8, high=8, size=(50, 2))
+# Outliers — uniform noise across the wider plane. Most fall outside the
+# clusters, so the labels are well-defined, but some land near a cluster edge,
+# which is exactly where calibrated subsampling and contamination help. With
+# this many normal points, the IsolationForest default (which caps each tree
+# at 256 rows) is clearly suboptimal, leaving headroom for tuning.
+X_outliers = rng.uniform(low=-9, high=9, size=(200, 2))
 
 X = np.vstack([X_normal, X_outliers])
-y = np.array([0] * 950 + [1] * 50)   # 0 = normal, 1 = outlier (5% contamination)
+y = np.array([0] * 1800 + [1] * 200)   # 0 = normal, 1 = outlier (10% contamination)
 
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.30, stratify=y, random_state=RANDOM_STATE
@@ -92,8 +98,8 @@ print(f"Test:  {X_test.shape} — outliers: {y_test.sum()} ({y_test.mean():.1%})
 ```
 
 ```text
-Train: (700, 2) — outliers: 35 (5.0%)
-Test:  (300, 2) — outliers: 15 (5.0%)
+Train: (1400, 2) — outliers: 140 (10.0%)
+Test:  (600, 2) — outliers: 60 (10.0%)
 ```
 
 ### Visualise the Dataset
@@ -136,8 +142,8 @@ print(f"Without negation (wrong sign): "
 ```
 
 ```text
-Sanity check — default IsolationForest scorer AUC: 0.9944
-Without negation (wrong sign): 0.0056
+Sanity check — default IsolationForest scorer AUC: 0.9431
+Without negation (wrong sign): 0.0569
 ```
 
 :::tip Why negate `score_samples`?
@@ -187,7 +193,7 @@ print(baseline_metrics)
 ```
 
 ```text
-{'name': 'IsolationForest defaults', 'roc_auc': 0.9944, 'avg_precision': 0.9228, 'outlier_precision': 0.3409, 'outlier_recall': 1.0}
+{'name': 'IsolationForest defaults', 'roc_auc': 0.9431, 'avg_precision': 0.8134, 'outlier_precision': 0.5361, 'outlier_recall': 0.8667}
 ```
 
 ## Search Space
@@ -197,17 +203,18 @@ useful region for this dataset.
 
 ```python
 param_grid = {
-    # Ensemble size — more trees = more stable scores, diminishing returns
-    "n_estimators": Integer(50, 300),
+    # Ensemble size — more trees = more stable, lower-variance scores
+    "n_estimators": Integer(150, 300),
 
-    # Subsampling — each tree sees a random subset of rows
-    "max_samples":  Continuous(0.05, 0.80),
+    # Subsampling — each tree sees a random subset of rows. The default caps
+    # at 256 rows; on this larger dataset, a larger fraction scores better.
+    "max_samples":  Continuous(0.10, 0.80),
 
     # Feature subsampling — each tree uses a random subset of columns
     "max_features": Continuous(0.5, 1.0),
 
     # Contamination — sets the decision threshold for predict()
-    "contamination": Continuous(0.01, 0.20),
+    "contamination": Continuous(0.02, 0.30),
 }
 sorted(param_grid)
 ```
@@ -231,9 +238,9 @@ callable with the `(estimator, X, y)` signature.
 
 ```python
 callbacks = [
-    DeltaThreshold(threshold=0.002, generations=5, metric="fitness_best"),
-    ConsecutiveStopping(generations=8, metric="fitness_best"),
-    TimerStopping(total_seconds=180),
+    DeltaThreshold(threshold=0.002, generations=4, metric="fitness_best"),
+    ConsecutiveStopping(generations=5, metric="fitness_best"),
+    TimerStopping(total_seconds=100),
 ]
 
 ga_search = GASearchCV(
@@ -243,7 +250,7 @@ ga_search = GASearchCV(
     cv=cv,
     evolution_config=EvolutionConfig(
         population_size=12,
-        generations=10,
+        generations=8,
         crossover_probability=ExponentialAdapter(
             initial_value=0.8, end_value=0.4, adaptive_rate=0.15
         ),
@@ -257,10 +264,10 @@ ga_search = GASearchCV(
     population_config=PopulationConfig(
         initializer="smart",
         warm_start_configs=[{
-            "n_estimators":  100,
-            "max_samples":   0.20,
+            "n_estimators":  200,
+            "max_samples":   0.50,
             "max_features":  1.0,
-            "contamination": 0.05,   # matches the true contamination here
+            "contamination": 0.10,   # matches the true contamination here
         }],
     ),
     runtime_config=RuntimeConfig(
@@ -299,16 +306,15 @@ pprint(ga_search.best_params_)
 ```
 
 ```text
-INFO: DeltaThreshold callback met its criteria
 INFO: TimerStopping callback met its criteria
 INFO: Stopping the algorithm
-Best CV ROC AUC: 0.9488
-Search time:     183s
+Best CV ROC AUC: 0.9254
+Search time:     145s
 Best params:
-{'contamination': 0.05,
+{'contamination': 0.1,
  'max_features': 1.0,
- 'max_samples': 0.49899386314777744,
- 'n_estimators': 100}
+ 'max_samples': 0.45376653762437785,
+ 'n_estimators': 200}
 ```
 
 ### Evaluation Mechanics
@@ -318,7 +324,7 @@ print(ga_search.fit_stats_)
 ```
 
 ```text
-{'evaluated_candidates': 110, 'unique_candidates': 109, 'cross_validate_calls': 109, 'cache_hits': 1, 'duplicate_candidates': 0, 'skipped_invalid_candidates': 0, 'population_parallel_batches': 5, 'population_serial_batches': 1, 'random_immigrants': 3, 'local_refinement_candidates': 2}
+{'evaluated_candidates': 62, 'unique_candidates': 62, 'cross_validate_calls': 62, 'cache_hits': 0, 'duplicate_candidates': 0, 'skipped_invalid_candidates': 0, 'population_parallel_batches': 4, 'population_serial_batches': 0, 'random_immigrants': 0, 'local_refinement_candidates': 2}
 ```
 
 ### Generation Telemetry
@@ -332,11 +338,9 @@ history[[c for c in cols if c in history.columns]]
 
 ```text
    gen   fitness  fitness_max  fitness_std  unique_individual_ratio  genotype_diversity  stagnation_generations
-0    0  0.893641     0.940888     0.016711                 1.000000            1.000000                       0
-1    1  0.889777     0.899518     0.009501                 0.833333            0.659091                       1
-2    2  0.888961     0.903139     0.010523                 0.750000            0.500000                       2
-3    3  0.889202     0.902399     0.009181                 0.750000            0.409091                       3
-4    4  0.902285     0.948783     0.020182                 0.666667            0.590909                       0
+0    0  0.907571     0.923916     0.005459                 1.000000            0.977273                       0
+1    1  0.907688     0.910681     0.001855                 0.666667            0.568182                       1
+2    2  0.911824     0.925359     0.005875                 0.750000            0.590909                       0
 ```
 
 ## Fitness Evolution
@@ -370,8 +374,8 @@ the tuned one. Darker red = more anomalous; darker green = more normal.
 
 ```python
 xx, yy = np.meshgrid(
-    np.linspace(-10, 10, 200),
-    np.linspace(-10, 10, 200),
+    np.linspace(-10, 10, 160),
+    np.linspace(-10, 10, 160),
 )
 grid = np.c_[xx.ravel(), yy.ravel()]
 
@@ -433,12 +437,12 @@ A 3-way comparison on the held-out test set, all using the same custom scorer.
 randomized_search = RandomizedSearchCV(
     estimator=IsolationForest(random_state=RANDOM_STATE),
     param_distributions={
-        "n_estimators":  randint(50, 301),
-        "max_samples":   uniform(0.05, 0.75),
+        "n_estimators":  randint(150, 301),
+        "max_samples":   uniform(0.10, 0.70),
         "max_features":  uniform(0.5, 0.5),
-        "contamination": uniform(0.01, 0.19),
+        "contamination": uniform(0.02, 0.28),
     },
-    n_iter=40,
+    n_iter=25,
     scoring=scorer,
     cv=cv,
     n_jobs=-1,
@@ -464,9 +468,9 @@ print(comparison.to_string(index=False))
 
 ```text
                     name  roc_auc  avg_precision  outlier_precision  outlier_recall  best_cv_roc_auc  fit_seconds
-IsolationForest defaults   0.9944         0.9228             0.3409          1.0000              NaN          NaN
-      RandomizedSearchCV   0.9455         0.8335             0.2097          0.8667           0.9142         13.6
-              GASearchCV   0.9951         0.9335             1.0000          0.7333           0.9488        182.9
+IsolationForest defaults   0.9431         0.8134             0.5361          0.8667              NaN          NaN
+      RandomizedSearchCV   0.9400         0.7681             0.3901          0.9167           0.9106          7.7
+              GASearchCV   0.9566         0.8301             0.6714          0.7833           0.9254        145.3
 ```
 
 ```python
@@ -476,8 +480,8 @@ print(f"GA outlier recall: {ga_metrics['outlier_recall']:.2f}  "
 ```
 
 ```text
-GA vs default ROC AUC: +0.0007
-GA outlier recall: 0.73  (default 1.00)
+GA vs default ROC AUC: +0.0135
+GA outlier recall: 0.78  (default 0.87)
 ```
 
 The GA tuning improves ranking quality (ROC AUC) over the default and calibrates

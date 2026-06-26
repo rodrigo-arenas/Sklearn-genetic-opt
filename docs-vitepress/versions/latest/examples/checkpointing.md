@@ -26,10 +26,12 @@ written to a temporary directory outside the project tree so nothing is left in
 the repo.
 
 ```python
+import random
 import tempfile
 import warnings
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 from sklearn.datasets import load_breast_cancer
 from sklearn.ensemble import RandomForestClassifier
@@ -40,6 +42,7 @@ from sklearn_genetic import (
     EvolutionConfig,
     GASearchCV,
     OptimizationConfig,
+    PopulationConfig,
     RuntimeConfig,
 )
 from sklearn_genetic.callbacks import ConsecutiveStopping, LogbookSaver, ModelCheckpoint
@@ -54,7 +57,8 @@ X_train, X_test, y_train, y_test = train_test_split(
 )
 cv = StratifiedKFold(n_splits=3, shuffle=True, random_state=42)
 
-artifact_dir = Path(tempfile.mkdtemp(prefix="ga_artifacts_"))
+artifact_dir = Path(tempfile.gettempdir()) / "ga_artifacts_docs"
+artifact_dir.mkdir(exist_ok=True)
 checkpoint_path = artifact_dir / "rf_checkpoint.pkl"
 logbook_path = artifact_dir / "rf_logbook.pkl"
 saved_search_path = artifact_dir / "rf_search.pkl"
@@ -62,7 +66,7 @@ print("Writing artifacts under:", artifact_dir)
 ```
 
 ```text
-Writing artifacts under: /tmp/ga_artifacts_6dhip93w
+Writing artifacts under: /tmp/ga_artifacts_docs
 ```
 
 ## Search Configuration
@@ -99,7 +103,8 @@ search = GASearchCV(
         mutation_probability=0.15,
         keep_top_k=4,
     ),
-    runtime_config=RuntimeConfig(use_cache=True, n_jobs=-1, verbose=False),
+    population_config=PopulationConfig(initializer="random"),
+    runtime_config=RuntimeConfig(use_cache=True, n_jobs=1, verbose=False),
     optimization_config=OptimizationConfig(
         diversity_control=True,
         fitness_sharing=True,
@@ -114,6 +119,8 @@ The `ModelCheckpoint` callback prints a confirmation line each generation as it
 writes the checkpoint file.
 
 ```python
+random.seed(42)
+np.random.seed(42)
 search.fit(X_train, y_train, callbacks=callbacks)
 print()
 print("Best params   :", search.best_params_)
@@ -121,16 +128,16 @@ print("Best CV ROC AUC:", round(search.best_score_, 4))
 ```
 
 ```text
-Checkpoint save in /tmp/ga_artifacts_6dhip93w/rf_checkpoint.pkl
-Checkpoint save in /tmp/ga_artifacts_6dhip93w/rf_checkpoint.pkl
-Checkpoint save in /tmp/ga_artifacts_6dhip93w/rf_checkpoint.pkl
-Checkpoint save in /tmp/ga_artifacts_6dhip93w/rf_checkpoint.pkl
-Checkpoint save in /tmp/ga_artifacts_6dhip93w/rf_checkpoint.pkl
-Checkpoint save in /tmp/ga_artifacts_6dhip93w/rf_checkpoint.pkl
-Checkpoint save in /tmp/ga_artifacts_6dhip93w/rf_checkpoint.pkl
+Checkpoint save in /tmp/ga_artifacts_docs/rf_checkpoint.pkl
+Checkpoint save in /tmp/ga_artifacts_docs/rf_checkpoint.pkl
+Checkpoint save in /tmp/ga_artifacts_docs/rf_checkpoint.pkl
+Checkpoint save in /tmp/ga_artifacts_docs/rf_checkpoint.pkl
+Checkpoint save in /tmp/ga_artifacts_docs/rf_checkpoint.pkl
+Checkpoint save in /tmp/ga_artifacts_docs/rf_checkpoint.pkl
+Checkpoint save in /tmp/ga_artifacts_docs/rf_checkpoint.pkl
 
-Best params   : {'n_estimators': 82, 'max_depth': 7, 'min_samples_leaf': 3, 'max_features': 0.41447453050930205, 'criterion': 'gini', 'class_weight': None}
-Best CV ROC AUC: 0.9901
+Best params   : {'n_estimators': 35, 'max_depth': 7, 'min_samples_leaf': 2, 'max_features': 0.6757752458649936, 'criterion': 'gini', 'class_weight': None}
+Best CV ROC AUC: 0.989
 ```
 
 ## Evaluate on the Test Set
@@ -148,9 +155,9 @@ pd.Series({
 
 ```text
                    test_score
-accuracy               0.9580
-balanced_accuracy      0.9512
-roc_auc                0.9948
+accuracy               0.9650
+balanced_accuracy      0.9606
+roc_auc                0.9945
 ```
 
 ## Inspect the Checkpoint Contents
@@ -220,10 +227,10 @@ print("Restored best CV ROC AUC         :", round(restored_search.best_score_, 4
 ```
 
 ```text
-GASearchCV model successfully saved to /tmp/ga_artifacts_6dhip93w/rf_search.pkl
-GASearchCV model successfully loaded from /tmp/ga_artifacts_6dhip93w/rf_search.pkl
+GASearchCV model successfully saved to /tmp/ga_artifacts_docs/rf_search.pkl
+GASearchCV model successfully loaded from /tmp/ga_artifacts_docs/rf_search.pkl
 Predictions identical to original: True
-Restored best CV ROC AUC         : 0.9901
+Restored best CV ROC AUC         : 0.989
 ```
 
 The restored search reproduces the original predictions exactly.

@@ -21,6 +21,7 @@ something to show. The run is small (population 12 x 10 generations) so the
 whole gallery builds in well under a minute.
 
 ```python
+import random
 import warnings
 
 import matplotlib.pyplot as plt
@@ -34,6 +35,7 @@ from sklearn_genetic import (
     EvolutionConfig,
     GASearchCV,
     OptimizationConfig,
+    PopulationConfig,
     RuntimeConfig,
 )
 from sklearn_genetic.plots import (
@@ -54,7 +56,7 @@ from sklearn_genetic.plots import (
 from sklearn_genetic.space import Categorical, Continuous, Integer
 
 warnings.filterwarnings("ignore")
-np.random.seed(42)
+RANDOM_STATE = 42
 
 X, y = load_breast_cancer(return_X_y=True)
 X_train, X_test, y_train, y_test = train_test_split(
@@ -82,7 +84,8 @@ search = GASearchCV(
         elitism=True,
         keep_top_k=4,
     ),
-    runtime_config=RuntimeConfig(n_jobs=-1, use_cache=True, verbose=False),
+    population_config=PopulationConfig(initializer="random"),
+    runtime_config=RuntimeConfig(n_jobs=1, use_cache=True, verbose=False),
     optimization_config=OptimizationConfig(
         diversity_control=True,
         fitness_sharing=True,
@@ -91,14 +94,16 @@ search = GASearchCV(
     ),
 )
 
+random.seed(RANDOM_STATE)
+np.random.seed(RANDOM_STATE)
 search.fit(X_train, y_train)
 print("Best CV ROC AUC:", round(search.best_score_, 4))
 print("Best params    :", search.best_params_)
 ```
 
 ```text
-Best CV ROC AUC: 0.9905
-Best params    : {'n_estimators': 44, 'max_depth': 14, 'min_samples_split': 2, 'max_features': 0.21250912539295516, 'criterion': 'entropy', 'class_weight': 'balanced'}
+Best CV ROC AUC: 0.9906
+Best params    : {'n_estimators': 43, 'max_depth': 14, 'min_samples_split': 10, 'max_features': 0.21277300177617137, 'criterion': 'entropy', 'class_weight': None}
 ```
 
 ## Overview Dashboard
@@ -109,14 +114,6 @@ single 2x2 figure.
 
 ```python
 plot_search_overview(search, top_k=6)
-```
-
-```text
-array([[<Axes: title={'center': 'Convergence'}, xlabel='generations', ylabel='fitness (score)'>,
-        <Axes: title={'center': 'Diversity'}, xlabel='generations', ylabel='diversity ratio'>],
-       [<Axes: title={'center': 'Optimizer events'}, xlabel='generations'>,
-        <Axes: title={'center': 'Best evaluated candidates'}, xlabel='mean_test_score', ylabel='candidate'>]],
-      dtype=object)
 ```
 
 ![Search overview dashboard with convergence, diversity, events, and candidates](/images/plotting_gallery_search_overview.png)
@@ -147,10 +144,6 @@ type(plotter).__name__
 plot_fitness_evolution(search)
 ```
 
-```text
-<Axes: title={'center': 'Best fitness so far'}, xlabel='generations', ylabel='fitness (score)'>
-```
-
 ![Best fitness so far across generations](/images/plotting_gallery_fitness_evolution.png)
 
 *Best-so-far ROC AUC climbing across generations.*
@@ -165,10 +158,6 @@ plot_fitness_evolution(
     kind="line",
     title="Fitness comparison with smoothing",
 )
-```
-
-```text
-<Axes: title={'center': 'Fitness comparison with smoothing (rolling window=2)'}, xlabel='generations', ylabel='fitness (score)'>
 ```
 
 ![Best, mean, and max fitness with a rolling window](/images/plotting_gallery_fitness_multi.png)
@@ -201,13 +190,6 @@ plot_history(
 )
 ```
 
-```text
-array([<Axes: ylabel='fitness_best'>, <Axes: ylabel='fitness'>,
-       <Axes: ylabel='unique_individual_ratio'>,
-       <Axes: xlabel='generations', ylabel='genotype_diversity'>],
-      dtype=object)
-```
-
 ![Fitness and diversity history fields in stacked subplots](/images/plotting_gallery_history.png)
 
 *Fitness and diversity telemetry, one field per subplot.*
@@ -218,17 +200,6 @@ of step plots.
 
 ```python
 plot_search_decisions(search)
-```
-
-```text
-array([<Axes: ylabel='mutation_probability'>,
-       <Axes: ylabel='selection_pressure'>,
-       <Axes: ylabel='diversity_control_triggered'>,
-       <Axes: ylabel='random_immigrants'>,
-       <Axes: ylabel='duplicate_replacements'>,
-       <Axes: ylabel='local_refinements'>,
-       <Axes: xlabel='generations', ylabel='fitness_sharing_applied'>],
-      dtype=object)
 ```
 
 ![Optimizer-control decisions over generations as step plots](/images/plotting_gallery_search_decisions.png)
@@ -247,10 +218,6 @@ When you want one figure per question instead of the dashboard:
 plot_convergence(search)
 ```
 
-```text
-<Axes: title={'center': 'Convergence'}, xlabel='generations', ylabel='fitness (score)'>
-```
-
 ![Convergence of fitness summary fields across generations](/images/plotting_gallery_convergence.png)
 
 *Best, mean, max, and min fitness on a single axis.*
@@ -259,10 +226,6 @@ plot_convergence(search)
 
 ```python
 plot_diversity(search)
-```
-
-```text
-<Axes: title={'center': 'Diversity'}, xlabel='generations', ylabel='diversity ratio'>
 ```
 
 ![Population diversity ratios with stagnation on a secondary axis](/images/plotting_gallery_diversity.png)
@@ -287,10 +250,6 @@ plot_search_space(
 )
 ```
 
-```text
-<seaborn.axisgrid.PairGrid object at 0x7fafb68c36b0>
-```
-
 ![Pairwise relationships between sampled hyperparameters](/images/plotting_gallery_search_space_pair.png)
 
 *Pairwise scatter of the numeric parameters the search actually sampled.*
@@ -303,10 +262,6 @@ plot_search_space(
     features=["n_estimators", "max_depth", "min_samples_split", "max_features"],
     kind="heatmap",
 )
-```
-
-```text
-<Axes: title={'center': 'Search-space correlation heatmap'}>
 ```
 
 ![Correlation heatmap of sampled numeric parameters](/images/plotting_gallery_search_space_heatmap.png)
@@ -336,13 +291,6 @@ plot_parameter_evolution(
 )
 ```
 
-```text
-array([<Axes: title={'center': 'Parameter exploration over time'}, ylabel='n_estimators'>,
-       <Axes: ylabel='max_depth'>,
-       <Axes: xlabel='evaluation index', ylabel='min_samples_split'>],
-      dtype=object)
-```
-
 ![Parameter values across candidate evaluations colored by score](/images/plotting_gallery_parameter_evolution.png)
 
 *Each parameter's sampled value over evaluation order; brighter points scored higher.*
@@ -358,10 +306,6 @@ overlapping step lines when you only care *when* the optimizer changed behavior.
 
 ```python
 plot_optimizer_events(search)
-```
-
-```text
-<Axes: title={'center': 'Optimizer events'}, xlabel='generations'>
 ```
 
 ![Optimizer interventions as a generation timeline](/images/plotting_gallery_optimizer_events.png)
@@ -380,10 +324,6 @@ smoothly without needing diversity interventions.
 plot_score_landscape(search, x="max_depth", y="min_samples_split")
 ```
 
-```text
-<Axes: title={'center': 'Score landscape: max_depth vs min_samples_split'}, xlabel='max_depth', ylabel='min_samples_split'>
-```
-
 ![Score landscape scatter for two parameters](/images/plotting_gallery_score_landscape.png)
 
 *Scatter of evaluated candidates; color is the CV score, marker size encodes CV std.*
@@ -392,10 +332,6 @@ Dense numeric spaces aggregate cleanly with hexbins:
 
 ```python
 plot_score_landscape(search, x="max_depth", y="min_samples_split", kind="hexbin")
-```
-
-```text
-<Axes: title={'center': 'Score landscape: max_depth vs min_samples_split'}, xlabel='max_depth', ylabel='min_samples_split'>
 ```
 
 ![Score landscape hexbin for two parameters](/images/plotting_gallery_score_landscape_hexbin.png)
@@ -415,10 +351,6 @@ CV standard deviation as error bars.
 plot_candidate_rankings(search, top_k=8)
 ```
 
-```text
-<Axes: title={'center': 'Candidate ranking (top 8)'}, xlabel='mean_test_score', ylabel='candidate'>
-```
-
 ![Top candidates ranked by mean CV score with standard-deviation error bars](/images/plotting_gallery_candidate_rankings.png)
 
 *Top candidates ranked by mean CV score; horizontal bars are the CV standard deviation.*
@@ -427,10 +359,6 @@ plot_candidate_rankings(search, top_k=8)
 
 ```python
 plot_cv_scores(search, top_k=5)
-```
-
-```text
-<Axes: title={'center': 'Cross-validation scores for top 5 candidates'}, xlabel='candidate', ylabel='split_test_score'>
 ```
 
 ![Fold-level CV score distributions for the top candidates](/images/plotting_gallery_cv_scores.png)
@@ -468,8 +396,10 @@ selector = GAFeatureSelectionCV(
     population_size=12,
     generations=8,
     max_features=6,
-    n_jobs=-1,
+    n_jobs=1,
 )
+random.seed(0)
+np.random.seed(0)
 selector.fit(X_fs, y_fs)
 print("Selected", int(selector.best_features_.sum()), "of", len(feature_names), "features")
 ```
@@ -477,24 +407,20 @@ print("Selected", int(selector.best_features_.sum()), "of", len(feature_names), 
 ```text
  gen evals           avg          best     div  unique  stag     mut   sel             events
 ---- ----- ------------- ------------- ------- ------- ----- ------- ----- ------------------
-   0    12       0.67111       0.96000   0.091   1.000     0       -     - -                 
-   1    24       0.88278       0.97333   0.082   0.667     0   0.200     3 div,imm=3,dup=8   
-   2    24       0.89500       0.97333   0.064   0.583     1   0.200     3 div,imm=3,dup=17  
-   3    24       0.81833       0.97333   0.082   0.667     2   0.200     3 div,imm=3,dup=17  
-   4    24       0.89833       0.97333   0.082   0.750     3   0.200     3 div,imm=3,dup=13  
-   5    24       0.91722       0.97333   0.073   0.750     4   0.200     3 div,imm=3,dup=13  
-   6    24       0.88111       0.97333   0.064   0.417     5   0.200     3 div,imm=3,dup=17  
-   7    24       0.89444       0.97333   0.073   0.500     6   0.200     3 div,imm=3,dup=16  
-   8    24       0.90667       0.97333   0.073   0.583     7   0.200     3 div,imm=3,dup=11  
+   0    12       0.66222       0.95333   0.091   1.000     0       -     - -                 
+   1    24       0.83944       0.95333   0.091   1.000     1   0.200     3 div,imm=3,dup=7   
+   2    24       0.90111       0.95333   0.082   0.667     2   0.200     3 div,imm=3,dup=15  
+   3    24       0.91722       0.95333   0.082   0.750     3   0.200     3 div,imm=3,dup=13  
+   4    24       0.92278       0.96667   0.064   0.583     0   0.200     3 div,imm=3,dup=11  
+   5    24       0.93778       0.96667   0.064   0.583     1   0.200     3 div,imm=3,dup=14  
+   6    24       0.93222       0.97333   0.073   0.667     0   0.200     3 div,imm=3,dup=15  
+   7    24       0.93444       0.97333   0.055   0.750     1   0.200     3 div,imm=3,dup=10  
+   8    24       0.91556       0.97333   0.073   0.667     2   0.200     3 div,imm=3,dup=14  
 Selected 4 of 10 features
 ```
 
 ```python
 plot_feature_selection(selector, feature_names=feature_names)
-```
-
-```text
-<Axes: title={'center': 'Selected features (4/10)'}, xlabel='selection'>
 ```
 
 ![Selected feature mask for the GAFeatureSelectionCV search](/images/plotting_gallery_feature_selection.png)
@@ -505,14 +431,6 @@ plot_feature_selection(selector, feature_names=feature_names)
 
 ```python
 plot_search_overview(selector)
-```
-
-```text
-array([[<Axes: title={'center': 'Convergence'}, xlabel='generations', ylabel='fitness (score)'>,
-        <Axes: title={'center': 'Diversity'}, xlabel='generations', ylabel='diversity ratio'>],
-       [<Axes: title={'center': 'Optimizer events'}, xlabel='generations'>,
-        <Axes: title={'center': 'Selected features (4/10)'}, xlabel='selection'>]],
-      dtype=object)
 ```
 
 ![Feature-selection overview dashboard](/images/plotting_gallery_feature_overview.png)
@@ -545,11 +463,11 @@ print(history[available].tail().to_string(index=False))
 
 ```text
  gen  fitness_best  fitness  fitness_max  unique_individual_ratio  genotype_diversity  mutation_probability  selection_pressure  random_immigrants  duplicate_replacements  local_refinements
-   6      0.989082 0.985337     0.989082                      0.8            0.425926                   0.1                 3.0                  0                       5                  0
-   7      0.990460 0.984475     0.990460                      0.9            0.444444                   0.1                 3.0                  0                       6                  0
-   8      0.990460 0.985482     0.990460                      0.8            0.388889                   0.1                 3.0                  0                       5                  0
-   9      0.990460 0.985308     0.988587                      0.8            0.388889                   0.1                 3.0                  0                       1                  0
-  10      0.990460 0.987227     0.989011                      0.8            0.407407                   0.1                 3.0                  0                       4                  2
+   6      0.989541 0.984192     0.985831                      0.7            0.388889                   0.1                 3.0                  0                       3                  0
+   7      0.989541 0.984598     0.988446                      0.6            0.296296                   0.1                 3.0                  0                       5                  0
+   8      0.989541 0.985429     0.987951                      0.9            0.388889                   0.1                 3.0                  2                       5                  0
+   9      0.989541 0.984860     0.987386                      0.5            0.277778                   0.1                 3.0                  2                       4                  0
+  10      0.990177 0.986761     0.990177                      0.8            0.500000                   0.1                 3.0                  2                       7                  2
 ```
 
 ## When to Use Each Plot

@@ -64,12 +64,12 @@ np.random.seed(RANDOM_STATE)
 
 ## Create an Imbalanced Dataset
 
-We build a 5,000-sample binary problem with a **95/5 split** — only 5% of the
+We build a 4,000-sample binary problem with a **95/5 split** — only 5% of the
 rows are the minority class we actually care about.
 
 ```python
 X, y = make_classification(
-    n_samples=5000,
+    n_samples=4000,
     n_features=20,
     n_informative=10,
     n_redundant=5,
@@ -88,8 +88,8 @@ print(f"Test:  {X_test.shape} — minority: {y_test.sum()} ({y_test.mean():.1%})
 ```
 
 ```text
-Train: (3500, 20) — minority: 191 (5.5%)
-Test:  (1500, 20) — minority: 82 (5.5%)
+Train: (2800, 20) — minority: 156 (5.6%)
+Test:  (1200, 20) — minority: 67 (5.6%)
 ```
 
 ## Helpers
@@ -137,7 +137,7 @@ print(dummy_metrics)
 ```
 
 ```text
-{'name': 'DummyClassifier (majority)', 'accuracy': 0.9453, 'balanced_accuracy': 0.5, 'f1_weighted': 0.9188, 'roc_auc': 0.5, 'minority_recall': 0.0}
+{'name': 'DummyClassifier (majority)', 'accuracy': 0.9442, 'balanced_accuracy': 0.5, 'f1_weighted': 0.9171, 'roc_auc': 0.5, 'minority_recall': 0.0}
 ```
 
 ```python
@@ -154,17 +154,17 @@ print(classification_report(
 ```
 
 ```text
-{'name': 'RF defaults', 'accuracy': 0.9627, 'balanced_accuracy': 0.6585, 'f1_weighted': 0.9533, 'roc_auc': 0.9333, 'minority_recall': 0.3171}
+{'name': 'RF defaults', 'accuracy': 0.96, 'balanced_accuracy': 0.6418, 'f1_weighted': 0.9493, 'roc_auc': 0.9475, 'minority_recall': 0.2836}
 
 Classification report — RF defaults:
               precision    recall  f1-score   support
 
-    majority       0.96      1.00      0.98      1418
-    minority       1.00      0.32      0.48        82
+    majority       0.96      1.00      0.98      1133
+    minority       1.00      0.28      0.44        67
 
-    accuracy                           0.96      1500
-   macro avg       0.98      0.66      0.73      1500
-weighted avg       0.96      0.96      0.95      1500
+    accuracy                           0.96      1200
+   macro avg       0.98      0.64      0.71      1200
+weighted avg       0.96      0.96      0.95      1200
 ```
 
 ## Search Space
@@ -176,7 +176,7 @@ model parameters. The GA jointly discovers which combination maximises
 ```python
 param_grid = {
     # Model hyperparameters
-    "n_estimators":      Integer(50, 300),
+    "n_estimators":      Integer(50, 200),
     "max_depth":         Integer(2, 20),
     "min_samples_split": Integer(2, 12),
     "min_samples_leaf":  Integer(1, 8),
@@ -257,7 +257,7 @@ scoring = {
 
 callbacks = [
     ConsecutiveStopping(generations=8, metric="fitness_best"),
-    TimerStopping(total_seconds=180),
+    TimerStopping(total_seconds=150),
 ]
 
 ga_search = GASearchCV(
@@ -267,8 +267,8 @@ ga_search = GASearchCV(
     refit="balanced_accuracy",   # decides best_params_ and best_score_
     cv=cv,
     evolution_config=EvolutionConfig(
-        population_size=12,
-        generations=10,
+        population_size=14,
+        generations=12,
         crossover_probability=ExponentialAdapter(
             initial_value=0.8, end_value=0.4, adaptive_rate=0.15
         ),
@@ -332,18 +332,18 @@ print(f"  roc_auc:           {cv_df['mean_test_roc_auc'].iloc[best_idx]:.4f}")
 ```text
 INFO: TimerStopping callback met its criteria
 INFO: Stopping the algorithm
-Best CV balanced_accuracy: 0.8344
+Best CV balanced_accuracy: 0.8223
 Best params:
-{'class_weight': 'balanced',
- 'max_depth': 5,
- 'min_samples_leaf': 8,
- 'min_samples_split': 9,
- 'n_estimators': 166}
+{'class_weight': 'minority_20x',
+ 'max_depth': 11,
+ 'min_samples_leaf': 7,
+ 'min_samples_split': 4,
+ 'n_estimators': 64}
 
 CV scores at best params:
-  balanced_accuracy: 0.8344
-  f1_weighted:       0.9381
-  roc_auc:           0.8944
+  balanced_accuracy: 0.8223
+  f1_weighted:       0.9478
+  roc_auc:           0.9134
 ```
 
 ### Fitness Evolution
@@ -382,13 +382,13 @@ a comparable number of evaluations, optimizing the **same metric**.
 rs_search = RandomizedSearchCV(
     estimator=LabeledRF(random_state=RANDOM_STATE, n_jobs=1),
     param_distributions={
-        "n_estimators":      randint(50, 301),
+        "n_estimators":      randint(50, 201),
         "max_depth":         randint(2, 21),
         "min_samples_split": randint(2, 13),
         "min_samples_leaf":  randint(1, 9),
         "class_weight":      list(CLASS_WEIGHTS.keys()),
     },
-    n_iter=40,                       # matched-ish budget vs the GA's evaluations
+    n_iter=30,                       # matched-ish budget vs the GA's evaluations
     scoring="balanced_accuracy",
     refit=True,
     cv=cv,
@@ -404,8 +404,8 @@ print(f"GASearchCV         best CV balanced_accuracy: {ga_search.best_score_:.4f
 ```
 
 ```text
-RandomizedSearchCV best CV balanced_accuracy: 0.8221
-GASearchCV         best CV balanced_accuracy: 0.8344
+RandomizedSearchCV best CV balanced_accuracy: 0.8181
+GASearchCV         best CV balanced_accuracy: 0.8223
 ```
 
 ## Confusion Matrices
@@ -450,10 +450,10 @@ print(comparison.to_string(index=False))
 
 ```text
                       name  accuracy  balanced_accuracy  f1_weighted  roc_auc  minority_recall
-DummyClassifier (majority)    0.9453             0.5000       0.9188   0.5000           0.0000
-               RF defaults    0.9627             0.6585       0.9533   0.9333           0.3171
-        RandomizedSearchCV    0.9533             0.8317       0.9557   0.9093           0.6951
-                GASearchCV    0.9320             0.8434       0.9404   0.9094           0.7439
+DummyClassifier (majority)    0.9442             0.5000       0.9171   0.5000           0.0000
+               RF defaults    0.9600             0.6418       0.9493   0.9475           0.2836
+        RandomizedSearchCV    0.8767             0.8223       0.9020   0.9141           0.7612
+                GASearchCV    0.9475             0.8388       0.9513   0.9300           0.7164
 ```
 
 ```python
@@ -466,11 +466,11 @@ print(f"\nMinority recall: default={default_metrics['minority_recall']:.2f}  "
 ```
 
 ```text
-GA vs default RF      : +0.1849 balanced accuracy
-GA vs RandomizedSearch: +0.0117 balanced accuracy
-GA vs dummy           : +0.3434 balanced accuracy
+GA vs default RF      : +0.1970 balanced accuracy
+GA vs RandomizedSearch: +0.0165 balanced accuracy
+GA vs dummy           : +0.3388 balanced accuracy
 
-Minority recall: default=0.32  random=0.70  GA=0.74
+Minority recall: default=0.28  random=0.76  GA=0.72
 ```
 
 The GA finds a `class_weight` and model combination that lifts minority recall
@@ -494,12 +494,12 @@ print(classification_report(
 ```text
               precision    recall  f1-score   support
 
-    majority       0.98      0.94      0.96      1418
-    minority       0.43      0.74      0.54        82
+    majority       0.98      0.96      0.97      1133
+    minority       0.52      0.72      0.60        67
 
-    accuracy                           0.93      1500
-   macro avg       0.71      0.84      0.75      1500
-weighted avg       0.95      0.93      0.94      1500
+    accuracy                           0.95      1200
+   macro avg       0.75      0.84      0.79      1200
+weighted avg       0.96      0.95      0.95      1200
 ```
 
 ## Optional: SMOTE Alternative
@@ -529,7 +529,7 @@ except ImportError:
 ```
 
 ```text
-{'name': 'SMOTE + RF (defaults)', 'accuracy': 0.976, 'balanced_accuracy': 0.8207, 'f1_weighted': 0.9742, 'roc_auc': 0.9456, 'minority_recall': 0.6463}
+{'name': 'SMOTE + RF (defaults)', 'accuracy': 0.9633, 'balanced_accuracy': 0.7629, 'f1_weighted': 0.9606, 'roc_auc': 0.9447, 'minority_recall': 0.5373}
 ```
 
 SMOTE and `class_weight` solve the imbalance problem through different

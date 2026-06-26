@@ -102,7 +102,7 @@ nb.md(
     """
     ## Create an Imbalanced Dataset
 
-    We build a 5,000-sample binary problem with a **95/5 split** — only 5% of the
+    We build a 4,000-sample binary problem with a **95/5 split** — only 5% of the
     rows are the minority class we actually care about.
     """
 )
@@ -110,7 +110,7 @@ nb.md(
 nb.code(
     """
     X, y = make_classification(
-        n_samples=5000,
+        n_samples=4000,
         n_features=20,
         n_informative=10,
         n_redundant=5,
@@ -214,7 +214,7 @@ nb.code(
     """
     param_grid = {
         # Model hyperparameters
-        "n_estimators":      Integer(50, 300),
+        "n_estimators":      Integer(50, 200),
         "max_depth":         Integer(2, 20),
         "min_samples_split": Integer(2, 12),
         "min_samples_leaf":  Integer(1, 8),
@@ -299,7 +299,7 @@ nb.code(
 
     callbacks = [
         ConsecutiveStopping(generations=8, metric="fitness_best"),
-        TimerStopping(total_seconds=180),
+        TimerStopping(total_seconds=150),
     ]
 
     ga_search = GASearchCV(
@@ -309,8 +309,8 @@ nb.code(
         refit="balanced_accuracy",   # decides best_params_ and best_score_
         cv=cv,
         evolution_config=EvolutionConfig(
-            population_size=12,
-            generations=10,
+            population_size=14,
+            generations=12,
             crossover_probability=ExponentialAdapter(
                 initial_value=0.8, end_value=0.4, adaptive_rate=0.15
             ),
@@ -426,13 +426,13 @@ nb.code(
     rs_search = RandomizedSearchCV(
         estimator=LabeledRF(random_state=RANDOM_STATE, n_jobs=1),
         param_distributions={
-            "n_estimators":      randint(50, 301),
+            "n_estimators":      randint(50, 201),
             "max_depth":         randint(2, 21),
             "min_samples_split": randint(2, 13),
             "min_samples_leaf":  randint(1, 9),
             "class_weight":      list(CLASS_WEIGHTS.keys()),
         },
-        n_iter=40,                       # matched-ish budget vs the GA's evaluations
+        n_iter=30,                       # matched-ish budget vs the GA's evaluations
         scoring="balanced_accuracy",
         refit=True,
         cv=cv,

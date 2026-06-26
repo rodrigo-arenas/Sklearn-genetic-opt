@@ -52,6 +52,7 @@ nb.md(
 
 nb.code(
     """
+    import random
     import warnings
 
     import matplotlib.pyplot as plt
@@ -65,6 +66,7 @@ nb.code(
         EvolutionConfig,
         GASearchCV,
         OptimizationConfig,
+        PopulationConfig,
         RuntimeConfig,
     )
     from sklearn_genetic.plots import (
@@ -85,7 +87,7 @@ nb.code(
     from sklearn_genetic.space import Categorical, Continuous, Integer
 
     warnings.filterwarnings("ignore")
-    np.random.seed(42)
+    RANDOM_STATE = 42
 
     X, y = load_breast_cancer(return_X_y=True)
     X_train, X_test, y_train, y_test = train_test_split(
@@ -113,6 +115,7 @@ nb.code(
             elitism=True,
             keep_top_k=4,
         ),
+        population_config=PopulationConfig(initializer="random"),
         runtime_config=RuntimeConfig(n_jobs=1, use_cache=True, verbose=False),
         optimization_config=OptimizationConfig(
             diversity_control=True,
@@ -122,6 +125,8 @@ nb.code(
         ),
     )
 
+    random.seed(RANDOM_STATE)
+    np.random.seed(RANDOM_STATE)
     search.fit(X_train, y_train)
     print("Best CV ROC AUC:", round(search.best_score_, 4))
     print("Best params    :", search.best_params_)
@@ -141,7 +146,8 @@ nb.md(
 nb.code(
     """
     plot_search_overview(search, top_k=6)
-    """
+    """,
+    output=False,
 )
 nb.figure(
     "plotting_gallery_search_overview.png",
@@ -178,7 +184,8 @@ nb.md(
 nb.code(
     """
     plot_fitness_evolution(search)
-    """
+    """,
+    output=False,
 )
 nb.figure(
     "plotting_gallery_fitness_evolution.png",
@@ -197,7 +204,8 @@ nb.code(
         kind="line",
         title="Fitness comparison with smoothing",
     )
-    """
+    """,
+    output=False,
 )
 nb.figure(
     "plotting_gallery_fitness_multi.png",
@@ -234,7 +242,8 @@ nb.code(
         subplots=True,
         title="Optimizer history overview",
     )
-    """
+    """,
+    output=False,
 )
 nb.figure(
     "plotting_gallery_history.png",
@@ -253,7 +262,8 @@ nb.md(
 nb.code(
     """
     plot_search_decisions(search)
-    """
+    """,
+    output=False,
 )
 nb.figure(
     "plotting_gallery_search_decisions.png",
@@ -276,7 +286,8 @@ nb.md(
 nb.code(
     """
     plot_convergence(search)
-    """
+    """,
+    output=False,
 )
 nb.figure(
     "plotting_gallery_convergence.png",
@@ -293,7 +304,8 @@ nb.md(
 nb.code(
     """
     plot_diversity(search)
-    """
+    """,
+    output=False,
 )
 nb.figure(
     "plotting_gallery_diversity.png",
@@ -322,7 +334,8 @@ nb.code(
         features=["n_estimators", "max_depth", "min_samples_split", "max_features"],
         kind="pair",
     )
-    """
+    """,
+    output=False,
 )
 nb.figure(
     "plotting_gallery_search_space_pair.png",
@@ -339,7 +352,8 @@ nb.code(
         features=["n_estimators", "max_depth", "min_samples_split", "max_features"],
         kind="heatmap",
     )
-    """
+    """,
+    output=False,
 )
 nb.figure(
     "plotting_gallery_search_space_heatmap.png",
@@ -373,7 +387,8 @@ nb.code(
         search,
         parameters=["n_estimators", "max_depth", "min_samples_split"],
     )
-    """
+    """,
+    output=False,
 )
 nb.figure(
     "plotting_gallery_parameter_evolution.png",
@@ -397,7 +412,8 @@ nb.md(
 nb.code(
     """
     plot_optimizer_events(search)
-    """
+    """,
+    output=False,
 )
 nb.figure(
     "plotting_gallery_optimizer_events.png",
@@ -420,7 +436,8 @@ nb.md(
 nb.code(
     """
     plot_score_landscape(search, x="max_depth", y="min_samples_split")
-    """
+    """,
+    output=False,
 )
 nb.figure(
     "plotting_gallery_score_landscape.png",
@@ -433,7 +450,8 @@ nb.md("Dense numeric spaces aggregate cleanly with hexbins:")
 nb.code(
     """
     plot_score_landscape(search, x="max_depth", y="min_samples_split", kind="hexbin")
-    """
+    """,
+    output=False,
 )
 nb.figure(
     "plotting_gallery_score_landscape_hexbin.png",
@@ -457,7 +475,8 @@ nb.md(
 nb.code(
     """
     plot_candidate_rankings(search, top_k=8)
-    """
+    """,
+    output=False,
 )
 nb.figure(
     "plotting_gallery_candidate_rankings.png",
@@ -473,7 +492,8 @@ nb.md(
 nb.code(
     """
     plot_cv_scores(search, top_k=5)
-    """
+    """,
+    output=False,
 )
 nb.figure(
     "plotting_gallery_cv_scores.png",
@@ -519,6 +539,8 @@ nb.code(
         max_features=6,
         n_jobs=1,
     )
+    random.seed(0)
+    np.random.seed(0)
     selector.fit(X_fs, y_fs)
     print("Selected", int(selector.best_features_.sum()), "of", len(feature_names), "features")
     """
@@ -527,7 +549,8 @@ nb.code(
 nb.code(
     """
     plot_feature_selection(selector, feature_names=feature_names)
-    """
+    """,
+    output=False,
 )
 nb.figure(
     "plotting_gallery_feature_selection.png",
@@ -540,7 +563,8 @@ nb.md("**What to look for:** the genuine features kept and the noise columns dro
 nb.code(
     """
     plot_search_overview(selector)
-    """
+    """,
+    output=False,
 )
 nb.figure(
     "plotting_gallery_feature_overview.png",

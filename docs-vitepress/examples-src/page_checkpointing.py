@@ -53,10 +53,12 @@ nb.md(
 
 nb.code(
     """
+    import random
     import tempfile
     import warnings
     from pathlib import Path
 
+    import numpy as np
     import pandas as pd
     from sklearn.datasets import load_breast_cancer
     from sklearn.ensemble import RandomForestClassifier
@@ -67,6 +69,7 @@ nb.code(
         EvolutionConfig,
         GASearchCV,
         OptimizationConfig,
+        PopulationConfig,
         RuntimeConfig,
     )
     from sklearn_genetic.callbacks import ConsecutiveStopping, LogbookSaver, ModelCheckpoint
@@ -129,6 +132,7 @@ nb.code(
             mutation_probability=0.15,
             keep_top_k=4,
         ),
+        population_config=PopulationConfig(initializer="random"),
         runtime_config=RuntimeConfig(use_cache=True, n_jobs=1, verbose=False),
         optimization_config=OptimizationConfig(
             diversity_control=True,
@@ -150,6 +154,8 @@ nb.md(
 
 nb.code(
     """
+    random.seed(42)
+    np.random.seed(42)
     search.fit(X_train, y_train, callbacks=callbacks)
     print()
     print("Best params   :", search.best_params_)

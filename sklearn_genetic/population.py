@@ -146,7 +146,14 @@ def smart_search_population(estimator, toolbox, individual_cls):
 
     lhs_samples = None
     if numeric_parameters and remaining > 0:
-        sampler = qmc.LatinHypercube(d=len(numeric_parameters))
+        # Seed the quasi-random sampler from the global ``random`` RNG so that the
+        # "smart" initializer is reproducible when callers set ``random.seed``
+        # before ``fit`` (the same convention DEAP and the rest of this library
+        # follow). Without an explicit seed, ``qmc.LatinHypercube`` draws from its
+        # own fresh entropy and ignores the seed entirely, making
+        # numeric-parameter searches non-reproducible across processes.
+        lhs_seed = random.randint(0, 2**31 - 1)
+        sampler = qmc.LatinHypercube(d=len(numeric_parameters), rng=lhs_seed)
         lhs_samples = sampler.random(n=remaining)
 
     for sample_index in range(remaining):
