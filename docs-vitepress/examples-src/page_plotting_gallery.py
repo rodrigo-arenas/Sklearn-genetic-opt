@@ -113,7 +113,7 @@ nb.code(
             elitism=True,
             keep_top_k=4,
         ),
-        runtime_config=RuntimeConfig(n_jobs=-1, use_cache=True, verbose=False),
+        runtime_config=RuntimeConfig(n_jobs=1, use_cache=True, verbose=False),
         optimization_config=OptimizationConfig(
             diversity_control=True,
             fitness_sharing=True,
@@ -517,7 +517,7 @@ nb.code(
         population_size=12,
         generations=8,
         max_features=6,
-        n_jobs=-1,
+        n_jobs=1,
     )
     selector.fit(X_fs, y_fs)
     print("Selected", int(selector.best_features_.sum()), "of", len(feature_names), "features")

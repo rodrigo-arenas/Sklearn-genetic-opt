@@ -111,19 +111,20 @@ nb.md(
 
 nb.code(
     """
-    # Normal data — two compact clusters
+    # Normal data — two broad, overlapping clusters near the origin
     X_normal, _ = make_blobs(
-        n_samples=950,
-        centers=[[-3, -3], [3, 3]],
-        cluster_std=0.8,
+        n_samples=900,
+        centers=[[-1.6, -1.6], [1.6, 1.6]],
+        cluster_std=1.7,
         random_state=RANDOM_STATE,
     )
 
-    # Outliers — uniform noise across a wider region
-    X_outliers = rng.uniform(low=-8, high=8, size=(50, 2))
+    # Outliers — uniform noise in the SAME region as the clusters, so they are
+    # hard to isolate and the default IsolationForest leaves real headroom.
+    X_outliers = rng.uniform(low=-6, high=6, size=(100, 2))
 
     X = np.vstack([X_normal, X_outliers])
-    y = np.array([0] * 950 + [1] * 50)   # 0 = normal, 1 = outlier (5% contamination)
+    y = np.array([0] * 900 + [1] * 100)   # 0 = normal, 1 = outlier (10% contamination)
 
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.30, stratify=y, random_state=RANDOM_STATE
@@ -267,7 +268,7 @@ nb.code(
         "max_features": Continuous(0.5, 1.0),
 
         # Contamination — sets the decision threshold for predict()
-        "contamination": Continuous(0.01, 0.20),
+        "contamination": Continuous(0.02, 0.30),
     }
     sorted(param_grid)
     """

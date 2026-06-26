@@ -81,7 +81,8 @@ nb.code(
     )
     cv = StratifiedKFold(n_splits=3, shuffle=True, random_state=42)
 
-    artifact_dir = Path(tempfile.mkdtemp(prefix="ga_artifacts_"))
+    artifact_dir = Path(tempfile.gettempdir()) / "ga_artifacts_docs"
+    artifact_dir.mkdir(exist_ok=True)
     checkpoint_path = artifact_dir / "rf_checkpoint.pkl"
     logbook_path = artifact_dir / "rf_logbook.pkl"
     saved_search_path = artifact_dir / "rf_search.pkl"
@@ -128,7 +129,7 @@ nb.code(
             mutation_probability=0.15,
             keep_top_k=4,
         ),
-        runtime_config=RuntimeConfig(use_cache=True, n_jobs=-1, verbose=False),
+        runtime_config=RuntimeConfig(use_cache=True, n_jobs=1, verbose=False),
         optimization_config=OptimizationConfig(
             diversity_control=True,
             fitness_sharing=True,
