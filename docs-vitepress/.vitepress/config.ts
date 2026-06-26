@@ -70,6 +70,95 @@ function versionSidebar(versionPrefix: string) {
       ]
     : []
 
+  // Recipes section — only available in latest/
+  const recipesSection = isLatest
+    ? [
+        {
+          text: 'Recipes',
+          collapsed: false,
+          items: [
+            { text: 'Overview', link: `${versionPrefix}/recipes/` },
+            {
+              text: 'Classification',
+              collapsed: true,
+              items: [
+                { text: 'Tune RandomForestClassifier',         link: `${versionPrefix}/recipes/classification/random-forest-classifier` },
+                { text: 'Tune LogisticRegression',             link: `${versionPrefix}/recipes/classification/logistic-regression` },
+                { text: 'Tune SVC',                            link: `${versionPrefix}/recipes/classification/svm-classifier` },
+                { text: 'Tune XGBClassifier',                  link: `${versionPrefix}/recipes/classification/xgboost-classifier` },
+                { text: 'Tune LGBMClassifier',                 link: `${versionPrefix}/recipes/classification/lightgbm-classifier` },
+                { text: 'Tune CatBoostClassifier',             link: `${versionPrefix}/recipes/classification/catboost-classifier` },
+                { text: 'Tune HistGradientBoostingClassifier', link: `${versionPrefix}/recipes/classification/histgbm-classifier` },
+                { text: 'Tune ExtraTreesClassifier',           link: `${versionPrefix}/recipes/classification/extra-trees-classifier` },
+              ],
+            },
+            {
+              text: 'Regression',
+              collapsed: true,
+              items: [
+                { text: 'Tune RandomForestRegressor', link: `${versionPrefix}/recipes/regression/random-forest-regressor` },
+                { text: 'Tune XGBRegressor',          link: `${versionPrefix}/recipes/regression/xgboost-regressor` },
+                { text: 'Tune LGBMRegressor',         link: `${versionPrefix}/recipes/regression/lightgbm-regressor` },
+                { text: 'Tune CatBoostRegressor',     link: `${versionPrefix}/recipes/regression/catboost-regressor` },
+                { text: 'Tune ElasticNet',             link: `${versionPrefix}/recipes/regression/elasticnet` },
+              ],
+            },
+            {
+              text: 'Feature Selection',
+              collapsed: true,
+              items: [
+                { text: 'Select Features on 50+ Columns',             link: `${versionPrefix}/recipes/feature-selection/high-dimensional` },
+                { text: 'Combine Feature Selection + Tuning',         link: `${versionPrefix}/recipes/feature-selection/select-then-tune` },
+                { text: 'Custom Scorer with Feature-Count Penalty',   link: `${versionPrefix}/recipes/feature-selection/custom-scorer` },
+                { text: 'Feature Selection with CV (Leakage-Free)',   link: `${versionPrefix}/recipes/feature-selection/cv-selection` },
+              ],
+            },
+            {
+              text: 'Pipelines',
+              collapsed: true,
+              items: [
+                { text: 'Tune a Preprocessing + Estimator Pipeline', link: `${versionPrefix}/recipes/pipelines/preprocessing-pipeline` },
+                { text: 'Tune a ColumnTransformer Pipeline',          link: `${versionPrefix}/recipes/pipelines/column-transformer` },
+                { text: 'Tune Imputer Strategy as a Hyperparameter',  link: `${versionPrefix}/recipes/pipelines/imputer-strategy` },
+                { text: 'Tune Polynomial Features Degree',            link: `${versionPrefix}/recipes/pipelines/polynomial-features` },
+              ],
+            },
+            {
+              text: 'Scoring Metrics',
+              collapsed: true,
+              items: [
+                { text: 'Tune for F1 Score (Binary)',   link: `${versionPrefix}/recipes/metrics/f1-binary` },
+                { text: 'Tune for ROC-AUC',             link: `${versionPrefix}/recipes/metrics/roc-auc` },
+                { text: 'Tune for Balanced Accuracy',   link: `${versionPrefix}/recipes/metrics/balanced-accuracy` },
+                { text: 'Tune for MAE (Regression)',    link: `${versionPrefix}/recipes/metrics/mae` },
+                { text: 'Tune for RMSE (Regression)',   link: `${versionPrefix}/recipes/metrics/rmse` },
+              ],
+            },
+            {
+              text: 'Integrations',
+              collapsed: true,
+              items: [
+                { text: 'Log Every Candidate to MLflow',    link: `${versionPrefix}/recipes/integrations/mlflow-logging` },
+                { text: 'Parallelize with Joblib',          link: `${versionPrefix}/recipes/integrations/joblib-parallel` },
+                { text: 'Run in a Jupyter Notebook',        link: `${versionPrefix}/recipes/integrations/jupyter-notebook` },
+              ],
+            },
+            {
+              text: 'Advanced',
+              collapsed: true,
+              items: [
+                { text: 'Seed with Known-Good Params (Warm Start)',  link: `${versionPrefix}/recipes/advanced/warm-start` },
+                { text: 'Stop Early When Fitness Plateaus',          link: `${versionPrefix}/recipes/advanced/early-stopping-consecutive` },
+                { text: 'Stop After a Time Budget',                  link: `${versionPrefix}/recipes/advanced/time-budget` },
+                { text: 'Resume a Stopped Search',                   link: `${versionPrefix}/recipes/advanced/checkpointing` },
+                { text: 'Write a Custom Scoring Function',           link: `${versionPrefix}/recipes/advanced/custom-scorer` },
+              ],
+            },
+          ],
+        },
+      ]
+    : []
+
   return [
     {
       text: 'Getting Started',
@@ -115,6 +204,7 @@ function versionSidebar(versionPrefix: string) {
         { text: 'Isolation Forest Hyperparameter Tuning',         link: `${versionPrefix}/tutorials/isolation-forest` },
       ],
     },
+    ...recipesSection,
     {
       text: 'Examples',
       collapsed: false,

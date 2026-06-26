@@ -337,21 +337,40 @@ Documentation and Examples
 
 Useful links:
 
-* Documentation: https://sklearngeneticopt.rodrigo-arenas.com/
-* Release notes: https://sklearngeneticopt.rodrigo-arenas.com/stable/
-* PyPI: https://pypi.org/project/sklearn-genetic-opt/
-* Source code: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/
-* Issues: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/issues
+* `Documentation <https://sklearngeneticopt.rodrigo-arenas.com/>`_
+* `Release notes <https://sklearngeneticopt.rodrigo-arenas.com/stable/>`_
+* `PyPI <https://pypi.org/project/sklearn-genetic-opt/>`_
+* `Source code <https://github.com/rodrigo-arenas/Sklearn-genetic-opt/>`_
+* `Issues <https://github.com/rodrigo-arenas/Sklearn-genetic-opt/issues>`_
 
-The documentation includes tutorials and executed notebooks for:
+Model-specific hyperparameter tuning tutorials:
 
-* comparing ``GASearchCV`` with sklearn search methods
-* pipeline tuning and prediction
-* feature selection
-* multi-metric optimization
-* MLflow 3 logging
-* checkpointing and persistence
-* advanced optimizer controls
+* `Random Forest Hyperparameter Tuning <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/tutorials/tune-random-forest>`_
+* `XGBoost Hyperparameter Tuning <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/tutorials/tune-xgboost>`_
+* `LightGBM Hyperparameter Tuning <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/tutorials/tune-lightgbm>`_
+* `CatBoost Hyperparameter Tuning <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/tutorials/tune-catboost>`_
+* `Gradient Boosting Hyperparameter Tuning <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/tutorials/tune-gradient-boosting>`_
+* `Logistic Regression Hyperparameter Tuning <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/tutorials/tune-logistic-regression>`_
+* `SVM Hyperparameter Tuning <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/tutorials/tune-svm>`_
+* `Feature Selection with Genetic Algorithms <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/tutorials/feature-selection>`_
+* `Hyperparameter Tuning for Imbalanced Datasets <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/tutorials/imbalanced-classification>`_
+* `Isolation Forest Hyperparameter Tuning <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/tutorials/isolation-forest>`_
+
+Guides and comparisons:
+
+* `How Hyperparameter Optimization Works <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/guide/how-hyperparameter-optimization-works>`_
+* `Grid Search vs Random Search vs Bayesian vs Genetic Algorithms <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/comparisons/grid-search-vs-genetic-algorithms>`_
+* `Optuna vs sklearn-genetic-opt <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/comparisons/optuna-vs-sklearn-genetic-opt>`_
+* `Common Hyperparameter Tuning Mistakes <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/guide/common-mistakes>`_
+* `Choosing the Right Search Space <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/guide/choosing-search-spaces>`_
+
+Other documentation:
+
+* `pipeline tuning and prediction <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/guide/pipeline-tuning>`_
+* `multi-metric optimization <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/guide/multi-metric>`_
+* `MLflow 3 logging <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/guide/mlflow>`_
+* `checkpointing and persistence <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/guide/reproducibility>`_
+* `advanced optimizer controls <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/guide/advanced-optimizer-control>`_
 
 Troubleshooting
 ###############
