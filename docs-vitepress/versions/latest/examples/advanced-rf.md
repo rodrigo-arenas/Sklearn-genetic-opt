@@ -36,8 +36,6 @@ for the genetic search to close.
 
 ```python
 import warnings
-import random
-
 import numpy as np
 import pandas as pd
 from sklearn.datasets import make_classification
@@ -59,8 +57,6 @@ from sklearn_genetic.space import Categorical, Continuous, Integer
 
 warnings.filterwarnings("ignore")
 RANDOM_STATE = 42
-random.seed(RANDOM_STATE)
-np.random.seed(RANDOM_STATE)
 
 X, y = make_classification(
     n_samples=1600,
@@ -166,6 +162,7 @@ control, all switched on together:
 
 ```python
 ga_search = GASearchCV(
+    random_state=RANDOM_STATE,
     estimator=RandomForestClassifier(random_state=RANDOM_STATE, n_jobs=1),
     param_grid=param_grid,
     scoring="balanced_accuracy",
@@ -223,8 +220,6 @@ callbacks = [
     TimerStopping(total_seconds=90),
 ]
 
-random.seed(RANDOM_STATE)
-np.random.seed(RANDOM_STATE)
 ga_search.fit(X_train, y_train, callbacks=callbacks)
 
 print(f"Best CV balanced accuracy: {ga_search.best_score_:.4f}")
@@ -236,15 +231,15 @@ for key, value in sorted(ga_search.best_params_.items()):
 ```text
 INFO: TimerStopping callback met its criteria
 INFO: Stopping the algorithm
-Best CV balanced accuracy: 0.7452
+Best CV balanced accuracy: 0.7544
 Best params:
-  ccp_alpha         : 0.004783956940230192
+  ccp_alpha         : 0.005470132153315338
   class_weight      : balanced
-  max_depth         : 6
+  max_depth         : 7
   max_features      : None
-  min_samples_leaf  : 4
-  min_samples_split : 9
-  n_estimators      : 97
+  min_samples_leaf  : 2
+  min_samples_split : 8
+  n_estimators      : 228
 ```
 
 ## Did It Beat the Defaults?
@@ -272,11 +267,11 @@ for key in ("accuracy", "balanced_accuracy", "roc_auc"):
 ```text
           model  accuracy  balanced_accuracy  roc_auc
  Default forest    0.8625             0.6024   0.7761
-GA-tuned forest    0.7375             0.6945   0.7840
+GA-tuned forest    0.7542             0.6947   0.7896
 
-accuracy          : -0.1250
-balanced_accuracy : +0.0921
-roc_auc           : +0.0079
+accuracy          : -0.1083
+balanced_accuracy : +0.0923
+roc_auc           : +0.0135
 ```
 
 The genetic search lifts **balanced accuracy** sharply on the untouched test
@@ -298,13 +293,13 @@ print(stats.to_string())
 ```
 
 ```text
-evaluated_candidates           86
-unique_candidates              86
-cross_validate_calls           86
+evaluated_candidates           62
+unique_candidates              62
+cross_validate_calls           62
 cache_hits                      0
 duplicate_candidates            0
 skipped_invalid_candidates      0
-population_parallel_batches     5
+population_parallel_batches     4
 population_serial_batches       0
 random_immigrants               0
 local_refinement_candidates     2
@@ -325,10 +320,9 @@ history[[c for c in cols if c in history.columns]]
 
 ```text
    gen   fitness  fitness_best  fitness_max  unique_individual_ratio  genotype_diversity  stagnation_generations
-0    0  0.650745      0.730193     0.730193                 1.000000            0.636364                       0
-1    1  0.628148      0.730691     0.730691                 0.750000            0.376623                       0
-2    2  0.643839      0.730691     0.730691                 0.833333            0.350649                       1
-3    3  0.665712      0.745243     0.745243                 0.916667            0.376623                       0
+0    0  0.662477      0.731742     0.731742                 1.000000            0.662338                       0
+1    1  0.647096      0.731742     0.731742                 0.666667            0.363636                       1
+2    2  0.680716      0.748617     0.748617                 0.750000            0.324675                       0
 ```
 
 ## Convergence
@@ -391,6 +385,7 @@ the 30 columns) that holds — or improves — quality.
 
 ```python
 feature_selector = GAFeatureSelectionCV(
+    random_state=RANDOM_STATE,
     estimator=RandomForestClassifier(
         random_state=RANDOM_STATE, n_jobs=1, **ga_search.best_params_
     ),
@@ -412,8 +407,6 @@ feature_selector = GAFeatureSelectionCV(
     ),
 )
 
-random.seed(RANDOM_STATE)
-np.random.seed(RANDOM_STATE)
 feature_selector.fit(
     X_train, y_train,
     callbacks=[ConsecutiveStopping(generations=8, metric="fitness_best"),
@@ -430,9 +423,9 @@ print(f"Selected indices: {np.where(feature_selector.support_)[0].tolist()}")
 ```text
 INFO: TimerStopping callback met its criteria
 INFO: Stopping the algorithm
-Best CV balanced accuracy (selection): 0.7401
+Best CV balanced accuracy (selection): 0.7491
 Selected 14 of 30 columns
-Selected indices: [0, 6, 8, 12, 13, 14, 18, 19, 22, 25, 26, 27, 28, 29]
+Selected indices: [0, 3, 5, 6, 7, 10, 12, 13, 16, 17, 18, 19, 27, 29]
 ```
 
 ```python
@@ -451,8 +444,8 @@ print(full_table.to_string(index=False))
 ```text
                  model  n_features  accuracy  balanced_accuracy  roc_auc
         Default forest          30    0.8625             0.6024   0.7761
-       GA-tuned forest          30    0.7375             0.6945   0.7840
-GA-tuned + GA-selected          14    0.6958             0.6645   0.7528
+       GA-tuned forest          30    0.7542             0.6947   0.7896
+GA-tuned + GA-selected          14    0.7500             0.6971   0.7767
 ```
 
 The tuned forest on a compact, GA-selected subset matches (or beats) the

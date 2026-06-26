@@ -67,8 +67,6 @@ nb.md(
 nb.code(
     """
     import warnings
-    import random
-
     import numpy as np
     import pandas as pd
     from sklearn.datasets import make_classification
@@ -90,8 +88,6 @@ nb.code(
 
     warnings.filterwarnings("ignore")
     RANDOM_STATE = 42
-    random.seed(RANDOM_STATE)
-    np.random.seed(RANDOM_STATE)
 
     X, y = make_classification(
         n_samples=1600,
@@ -203,6 +199,7 @@ nb.md(
 nb.code(
     """
     ga_search = GASearchCV(
+        random_state=RANDOM_STATE,
         estimator=RandomForestClassifier(random_state=RANDOM_STATE, n_jobs=1),
         param_grid=param_grid,
         scoring="balanced_accuracy",
@@ -260,8 +257,6 @@ nb.code(
         TimerStopping(total_seconds=90),
     ]
 
-    random.seed(RANDOM_STATE)
-    np.random.seed(RANDOM_STATE)
     ga_search.fit(X_train, y_train, callbacks=callbacks)
 
     print(f"Best CV balanced accuracy: {ga_search.best_score_:.4f}")
@@ -421,6 +416,7 @@ nb.md(
 nb.code(
     """
     feature_selector = GAFeatureSelectionCV(
+        random_state=RANDOM_STATE,
         estimator=RandomForestClassifier(
             random_state=RANDOM_STATE, n_jobs=1, **ga_search.best_params_
         ),
@@ -442,8 +438,6 @@ nb.code(
         ),
     )
 
-    random.seed(RANDOM_STATE)
-    np.random.seed(RANDOM_STATE)
     feature_selector.fit(
         X_train, y_train,
         callbacks=[ConsecutiveStopping(generations=8, metric="fitness_best"),

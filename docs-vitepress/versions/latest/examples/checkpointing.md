@@ -26,7 +26,6 @@ written to a temporary directory outside the project tree so nothing is left in
 the repo.
 
 ```python
-import random
 import tempfile
 import warnings
 from pathlib import Path
@@ -92,6 +91,7 @@ callbacks = [
 ]
 
 search = GASearchCV(
+    random_state=42,
     estimator=RandomForestClassifier(random_state=42, n_jobs=1),
     cv=cv,
     scoring="roc_auc",
@@ -119,8 +119,6 @@ The `ModelCheckpoint` callback prints a confirmation line each generation as it
 writes the checkpoint file.
 
 ```python
-random.seed(42)
-np.random.seed(42)
 search.fit(X_train, y_train, callbacks=callbacks)
 print()
 print("Best params   :", search.best_params_)
@@ -135,9 +133,11 @@ Checkpoint save in /tmp/ga_artifacts_docs/rf_checkpoint.pkl
 Checkpoint save in /tmp/ga_artifacts_docs/rf_checkpoint.pkl
 Checkpoint save in /tmp/ga_artifacts_docs/rf_checkpoint.pkl
 Checkpoint save in /tmp/ga_artifacts_docs/rf_checkpoint.pkl
+INFO: ConsecutiveStopping callback met its criteria
+INFO: Stopping the algorithm
 
-Best params   : {'n_estimators': 35, 'max_depth': 7, 'min_samples_leaf': 2, 'max_features': 0.6757752458649936, 'criterion': 'gini', 'class_weight': None}
-Best CV ROC AUC: 0.989
+Best params   : {'n_estimators': 43, 'max_depth': 6, 'min_samples_leaf': 2, 'max_features': 0.5419399092589539, 'criterion': 'entropy', 'class_weight': None}
+Best CV ROC AUC: 0.9888
 ```
 
 ## Evaluate on the Test Set
@@ -156,8 +156,8 @@ pd.Series({
 ```text
                    test_score
 accuracy               0.9650
-balanced_accuracy      0.9606
-roc_auc                0.9945
+balanced_accuracy      0.9567
+roc_auc                0.9954
 ```
 
 ## Inspect the Checkpoint Contents
@@ -213,6 +213,7 @@ predicts identically.
 search.save(saved_search_path)
 
 restored_search = GASearchCV(
+    random_state=42,
     estimator=RandomForestClassifier(random_state=42, n_jobs=1),
     cv=cv,
     scoring="roc_auc",
@@ -230,7 +231,7 @@ print("Restored best CV ROC AUC         :", round(restored_search.best_score_, 4
 GASearchCV model successfully saved to /tmp/ga_artifacts_docs/rf_search.pkl
 GASearchCV model successfully loaded from /tmp/ga_artifacts_docs/rf_search.pkl
 Predictions identical to original: True
-Restored best CV ROC AUC         : 0.989
+Restored best CV ROC AUC         : 0.9888
 ```
 
 The restored search reproduces the original predictions exactly.

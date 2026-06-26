@@ -134,6 +134,7 @@ region; adaptive schedules anneal exploration into exploitation.
 
 ```python
 ga_search = GASearchCV(
+    random_state=RANDOM_STATE,
     estimator=XGBClassifier(tree_method="hist", eval_metric="logloss",
                             random_state=RANDOM_STATE, n_jobs=1),
     param_grid=param_grid,
@@ -181,17 +182,17 @@ for key, value in ga_search.best_params_.items():
 ```text
 INFO: ConsecutiveStopping callback met its criteria
 INFO: Stopping the algorithm
-Best CV ROC AUC : 0.8526   (search took 36s)
+Best CV ROC AUC : 0.8497   (search took 41s)
 Best parameters :
-  n_estimators: 243
-  max_depth: 10
-  min_child_weight: 1
-  subsample: 0.9972752553986706
-  colsample_bytree: 0.7109135667409241
-  learning_rate: 0.03276066048629058
-  gamma: 0.01908427586223375
-  reg_alpha: 0.3064168498016857
-  reg_lambda: 0.0046848065280914375
+  n_estimators: 203
+  max_depth: 7
+  min_child_weight: 3
+  subsample: 0.7600155334780292
+  colsample_bytree: 0.7095337198803435
+  learning_rate: 0.016708952166696652
+  gamma: 0.4480054844680497
+  reg_alpha: 0.04997956912275245
+  reg_lambda: 0.34612328571988993
 ```
 
 ## Did Tuning Help? Baseline vs Tuned
@@ -209,11 +210,11 @@ print(f"Balanced-accuracy improvement    : "
 
 ```text
              model  accuracy  balanced_accuracy  roc_auc
-  XGBoost defaults     0.794              0.794   0.8608
-GASearchCV (tuned)     0.806              0.806   0.8850
+  XGBoost defaults     0.794             0.7940   0.8608
+GASearchCV (tuned)     0.798             0.7979   0.8807
 
-ROC AUC improvement over defaults: +0.0242
-Balanced-accuracy improvement    : +0.0120
+ROC AUC improvement over defaults: +0.0199
+Balanced-accuracy improvement    : +0.0039
 ```
 
 On this noisy data the aggressive default booster overfits; the genetic search
@@ -312,9 +313,9 @@ print(table.to_string(index=False))
 
 ```text
              model  accuracy  balanced_accuracy  roc_auc  best_cv_auc  candidates
-  XGBoost defaults     0.794              0.794   0.8608          NaN         NaN
-RandomizedSearchCV     0.805              0.805   0.8861       0.8561       132.0
-GASearchCV (tuned)     0.806              0.806   0.8850       0.8526       132.0
+  XGBoost defaults     0.794             0.7940   0.8608          NaN         NaN
+RandomizedSearchCV     0.805             0.8050   0.8861       0.8561       132.0
+GASearchCV (tuned)     0.798             0.7979   0.8807       0.8497       132.0
 ```
 
 ## Practical Notes

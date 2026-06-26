@@ -30,7 +30,6 @@ shown below.
 
 ```python
 import warnings
-import random
 from pprint import pprint
 import time
 
@@ -56,8 +55,6 @@ from sklearn_genetic.space import Continuous, Integer
 warnings.filterwarnings("ignore")
 
 RANDOM_STATE = 42
-random.seed(RANDOM_STATE)
-np.random.seed(RANDOM_STATE)
 rng = np.random.default_rng(RANDOM_STATE)
 ```
 
@@ -244,6 +241,7 @@ callbacks = [
 ]
 
 ga_search = GASearchCV(
+    random_state=RANDOM_STATE,
     estimator=IsolationForest(random_state=RANDOM_STATE),
     param_grid=param_grid,
     scoring=scorer,
@@ -309,7 +307,7 @@ pprint(ga_search.best_params_)
 INFO: TimerStopping callback met its criteria
 INFO: Stopping the algorithm
 Best CV ROC AUC: 0.9239
-Search time:     152s
+Search time:     127s
 Best params:
 {'contamination': 0.1,
  'max_features': 1.0,
@@ -324,7 +322,7 @@ print(ga_search.fit_stats_)
 ```
 
 ```text
-{'evaluated_candidates': 62, 'unique_candidates': 62, 'cross_validate_calls': 62, 'cache_hits': 0, 'duplicate_candidates': 0, 'skipped_invalid_candidates': 0, 'population_parallel_batches': 4, 'population_serial_batches': 0, 'random_immigrants': 0, 'local_refinement_candidates': 2}
+{'evaluated_candidates': 38, 'unique_candidates': 38, 'cross_validate_calls': 38, 'cache_hits': 0, 'duplicate_candidates': 0, 'skipped_invalid_candidates': 0, 'population_parallel_batches': 3, 'population_serial_batches': 0, 'random_immigrants': 0, 'local_refinement_candidates': 2}
 ```
 
 ### Generation Telemetry
@@ -338,9 +336,8 @@ history[[c for c in cols if c in history.columns]]
 
 ```text
    gen   fitness  fitness_max  fitness_std  unique_individual_ratio  genotype_diversity  stagnation_generations
-0    0  0.907175     0.923916     0.005474                 1.000000            1.000000                       0
-1    1  0.905335     0.923916     0.006020                 0.750000            0.590909                       1
-2    2  0.912196     0.923916     0.008371                 0.666667            0.431818                       3
+0    0  0.906656     0.923916     0.005961                 1.000000            1.000000                       0
+1    1  0.909998     0.923916     0.007358                 0.833333            0.613636                       2
 ```
 
 ## Fitness Evolution
@@ -469,8 +466,8 @@ print(comparison.to_string(index=False))
 ```text
                     name  roc_auc  avg_precision  outlier_precision  outlier_recall  best_cv_roc_auc  fit_seconds
 IsolationForest defaults   0.9431         0.8134             0.5361          0.8667              NaN          NaN
-      RandomizedSearchCV   0.9400         0.7681             0.3901          0.9167           0.9106          5.8
-              GASearchCV   0.9547         0.8252             0.6528          0.7833           0.9239        152.1
+      RandomizedSearchCV   0.9400         0.7681             0.3901          0.9167           0.9106          8.4
+              GASearchCV   0.9547         0.8252             0.6528          0.7833           0.9239        127.5
 ```
 
 ```python

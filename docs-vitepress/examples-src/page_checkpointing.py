@@ -53,7 +53,6 @@ nb.md(
 
 nb.code(
     """
-    import random
     import tempfile
     import warnings
     from pathlib import Path
@@ -121,6 +120,7 @@ nb.code(
     ]
 
     search = GASearchCV(
+        random_state=42,
         estimator=RandomForestClassifier(random_state=42, n_jobs=1),
         cv=cv,
         scoring="roc_auc",
@@ -154,8 +154,6 @@ nb.md(
 
 nb.code(
     """
-    random.seed(42)
-    np.random.seed(42)
     search.fit(X_train, y_train, callbacks=callbacks)
     print()
     print("Best params   :", search.best_params_)
@@ -237,6 +235,7 @@ nb.code(
     search.save(saved_search_path)
 
     restored_search = GASearchCV(
+        random_state=42,
         estimator=RandomForestClassifier(random_state=42, n_jobs=1),
         cv=cv,
         scoring="roc_auc",

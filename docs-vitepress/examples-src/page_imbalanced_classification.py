@@ -66,7 +66,6 @@ nb.md(
 nb.code(
     """
     import warnings
-    import random
     from pprint import pprint
 
     import numpy as np
@@ -93,8 +92,6 @@ nb.code(
     warnings.filterwarnings("ignore")
 
     RANDOM_STATE = 42
-    random.seed(RANDOM_STATE)
-    np.random.seed(RANDOM_STATE)
     """
 )
 
@@ -303,6 +300,7 @@ nb.code(
     ]
 
     ga_search = GASearchCV(
+        random_state=RANDOM_STATE,
         estimator=LabeledRF(random_state=RANDOM_STATE, n_jobs=1),
         param_grid=param_grid,
         scoring=scoring,

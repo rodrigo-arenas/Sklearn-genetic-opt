@@ -52,7 +52,6 @@ nb.md(
 
 nb.code(
     """
-    import random
     import warnings
 
     import matplotlib.pyplot as plt
@@ -96,6 +95,7 @@ nb.code(
     cv = StratifiedKFold(n_splits=3, shuffle=True, random_state=42)
 
     search = GASearchCV(
+        random_state=RANDOM_STATE,
         estimator=RandomForestClassifier(random_state=42, n_jobs=1),
         cv=cv,
         scoring="roc_auc",
@@ -125,8 +125,6 @@ nb.code(
         ),
     )
 
-    random.seed(RANDOM_STATE)
-    np.random.seed(RANDOM_STATE)
     search.fit(X_train, y_train)
     print("Best CV ROC AUC:", round(search.best_score_, 4))
     print("Best params    :", search.best_params_)
@@ -531,7 +529,8 @@ nb.code(
     feature_names = list(iris.feature_names) + [f"noise_{i}" for i in range(noise.shape[1])]
 
     selector = GAFeatureSelectionCV(
-        SVC(gamma="auto"),
+        estimator=SVC(gamma="auto"),
+        random_state=RANDOM_STATE,
         cv=3,
         scoring="accuracy",
         population_size=12,
@@ -539,8 +538,6 @@ nb.code(
         max_features=6,
         n_jobs=1,
     )
-    random.seed(0)
-    np.random.seed(0)
     selector.fit(X_fs, y_fs)
     print("Selected", int(selector.best_features_.sum()), "of", len(feature_names), "features")
     """

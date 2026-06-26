@@ -48,7 +48,6 @@ nb.md(
 nb.code(
     """
     import warnings
-    import random
     from pprint import pprint
 
     import numpy as np
@@ -70,8 +69,6 @@ nb.code(
     warnings.filterwarnings("ignore")
 
     RANDOM_STATE = 42
-    random.seed(RANDOM_STATE)
-    np.random.seed(RANDOM_STATE)
 
     data = load_diabetes(as_frame=True)
     X, y = data.data, data.target
@@ -163,6 +160,7 @@ nb.md(
 nb.code(
     """
     search = GASearchCV(
+        random_state=RANDOM_STATE,
         estimator=make_pipeline(),
         param_grid=param_grid,
         scoring="neg_root_mean_squared_error",

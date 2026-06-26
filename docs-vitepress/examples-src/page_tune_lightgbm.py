@@ -152,6 +152,7 @@ nb.md(
 nb.code(
     """
     ga_search = GASearchCV(
+        random_state=RANDOM_STATE,
         estimator=LGBMClassifier(random_state=RANDOM_STATE, n_jobs=1, verbose=-1),
         param_grid=param_grid,
         scoring="roc_auc",

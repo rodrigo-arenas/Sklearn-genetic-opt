@@ -63,8 +63,6 @@ nb.md(
 nb.code(
     """
     import warnings
-    import random
-
     import numpy as np
     import pandas as pd
     from sklearn.datasets import make_classification
@@ -86,8 +84,6 @@ nb.code(
 
     warnings.filterwarnings("ignore")
     RANDOM_STATE = 42
-    random.seed(RANDOM_STATE)
-    np.random.seed(RANDOM_STATE)
 
     N_INFORMATIVE, N_REDUNDANT, N_NOISE = 12, 8, 40
     n_features = N_INFORMATIVE + N_REDUNDANT + N_NOISE  # 60
@@ -196,6 +192,7 @@ nb.md(
 nb.code(
     """
     selector = GAFeatureSelectionCV(
+        random_state=RANDOM_STATE,
         estimator=make_knn(),
         cv=cv,
         scoring="balanced_accuracy",
@@ -222,8 +219,6 @@ nb.code(
         DeltaThreshold(threshold=0.0005, generations=6, metric="fitness_best"),
         ConsecutiveStopping(generations=8, metric="fitness_best"),
     ]
-    random.seed(RANDOM_STATE)
-    np.random.seed(RANDOM_STATE)
     selector.fit(X_train, y_train, callbacks=callbacks)
 
     ga_best_cv = float(pd.DataFrame(selector.history)["fitness_best"].max())

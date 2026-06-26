@@ -115,6 +115,7 @@ param_grid = {
 
 ```python
 ga_search = GASearchCV(
+    random_state=RANDOM_STATE,
     estimator=make_catboost(),
     param_grid=param_grid,
     scoring="roc_auc",
@@ -160,15 +161,15 @@ for key, value in ga_search.best_params_.items():
 ```text
 INFO: TimerStopping callback met its criteria
 INFO: Stopping the algorithm
-Best CV ROC AUC : 0.8621   (search took 107s)
+Best CV ROC AUC : 0.8658   (search took 189s)
 Best parameters :
-  iterations: 320
-  depth: 7
-  learning_rate: 0.022177550749986834
-  l2_leaf_reg: 1.4527623427678809
-  bagging_temperature: 0.5520049248439932
-  random_strength: 0.02161894240657444
-  border_count: 84
+  iterations: 225
+  depth: 9
+  learning_rate: 0.027578370077838747
+  l2_leaf_reg: 14.189626805239074
+  bagging_temperature: 0.9841953273239505
+  random_strength: 0.01972533036679783
+  border_count: 196
 ```
 
 ## Baseline vs Tuned
@@ -185,9 +186,9 @@ print(f"ROC AUC improvement over defaults: "
 ```text
              model  accuracy  balanced_accuracy  roc_auc
  CatBoost defaults     0.805             0.8049   0.8803
-GASearchCV (tuned)     0.805             0.8049   0.8855
+GASearchCV (tuned)     0.803             0.8029   0.8875
 
-ROC AUC improvement over defaults: +0.0052
+ROC AUC improvement over defaults: +0.0072
 ```
 
 ### Fitness over generations

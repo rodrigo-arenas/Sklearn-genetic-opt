@@ -21,7 +21,6 @@ something to show. The run is small (population 12 x 10 generations) so the
 whole gallery builds in well under a minute.
 
 ```python
-import random
 import warnings
 
 import matplotlib.pyplot as plt
@@ -65,6 +64,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 cv = StratifiedKFold(n_splits=3, shuffle=True, random_state=42)
 
 search = GASearchCV(
+    random_state=RANDOM_STATE,
     estimator=RandomForestClassifier(random_state=42, n_jobs=1),
     cv=cv,
     scoring="roc_auc",
@@ -94,16 +94,14 @@ search = GASearchCV(
     ),
 )
 
-random.seed(RANDOM_STATE)
-np.random.seed(RANDOM_STATE)
 search.fit(X_train, y_train)
 print("Best CV ROC AUC:", round(search.best_score_, 4))
 print("Best params    :", search.best_params_)
 ```
 
 ```text
-Best CV ROC AUC: 0.9906
-Best params    : {'n_estimators': 43, 'max_depth': 14, 'min_samples_split': 10, 'max_features': 0.21277300177617137, 'criterion': 'entropy', 'class_weight': None}
+Best CV ROC AUC: 0.9894
+Best params    : {'n_estimators': 62, 'max_depth': 10, 'min_samples_split': 4, 'max_features': 0.2825358714597836, 'criterion': 'entropy', 'class_weight': None}
 ```
 
 ## Overview Dashboard
@@ -390,7 +388,8 @@ X_fs = np.hstack((X_fs, noise))
 feature_names = list(iris.feature_names) + [f"noise_{i}" for i in range(noise.shape[1])]
 
 selector = GAFeatureSelectionCV(
-    SVC(gamma="auto"),
+    estimator=SVC(gamma="auto"),
+    random_state=RANDOM_STATE,
     cv=3,
     scoring="accuracy",
     population_size=12,
@@ -398,8 +397,6 @@ selector = GAFeatureSelectionCV(
     max_features=6,
     n_jobs=1,
 )
-random.seed(0)
-np.random.seed(0)
 selector.fit(X_fs, y_fs)
 print("Selected", int(selector.best_features_.sum()), "of", len(feature_names), "features")
 ```
@@ -407,15 +404,15 @@ print("Selected", int(selector.best_features_.sum()), "of", len(feature_names), 
 ```text
  gen evals           avg          best     div  unique  stag     mut   sel             events
 ---- ----- ------------- ------------- ------- ------- ----- ------- ----- ------------------
-   0    12       0.66222       0.95333   0.091   1.000     0       -     - -                 
-   1    24       0.83944       0.95333   0.091   1.000     1   0.200     3 div,imm=3,dup=7   
-   2    24       0.90111       0.95333   0.082   0.667     2   0.200     3 div,imm=3,dup=15  
-   3    24       0.91722       0.95333   0.082   0.750     3   0.200     3 div,imm=3,dup=13  
-   4    24       0.92278       0.96667   0.064   0.583     0   0.200     3 div,imm=3,dup=11  
-   5    24       0.93778       0.96667   0.064   0.583     1   0.200     3 div,imm=3,dup=14  
-   6    24       0.93222       0.97333   0.073   0.667     0   0.200     3 div,imm=3,dup=15  
-   7    24       0.93444       0.97333   0.055   0.750     1   0.200     3 div,imm=3,dup=10  
-   8    24       0.91556       0.97333   0.073   0.667     2   0.200     3 div,imm=3,dup=14  
+   0    12       0.59389       0.91333   0.091   1.000     0       -     - -                 
+   1    24       0.81333       0.91333   0.091   0.667     1   0.200     3 div,imm=3,dup=16  
+   2    24       0.85000       0.91333   0.091   0.750     2   0.200     3 div,imm=3,dup=13  
+   3    24       0.90889       0.96000   0.073   0.500     0   0.200     3 div,imm=3,dup=13  
+   4    24       0.92667       0.96667   0.073   0.667     0   0.200     3 div,imm=3,dup=14  
+   5    24       0.92944       0.96667   0.064   0.833     1   0.200     3 div,imm=3,dup=13  
+   6    24       0.94222       0.96667   0.073   0.667     2   0.200     3 div,imm=3,dup=19  
+   7    24       0.85111       0.96667   0.091   0.750     3   0.200     3 div,imm=3,dup=16  
+   8    24       0.91333       0.96667   0.073   0.667     4   0.200     3 div,imm=3,dup=17  
 Selected 4 of 10 features
 ```
 
@@ -463,11 +460,11 @@ print(history[available].tail().to_string(index=False))
 
 ```text
  gen  fitness_best  fitness  fitness_max  unique_individual_ratio  genotype_diversity  mutation_probability  selection_pressure  random_immigrants  duplicate_replacements  local_refinements
-   6      0.989541 0.984192     0.985831                      0.7            0.388889                   0.1                 3.0                  0                       3                  0
-   7      0.989541 0.984598     0.988446                      0.6            0.296296                   0.1                 3.0                  0                       5                  0
-   8      0.989541 0.985429     0.987951                      0.9            0.388889                   0.1                 3.0                  2                       5                  0
-   9      0.989541 0.984860     0.987386                      0.5            0.277778                   0.1                 3.0                  2                       4                  0
-  10      0.990177 0.986761     0.990177                      0.8            0.500000                   0.1                 3.0                  2                       7                  2
+   6      0.988693 0.985227     0.988517                      0.8            0.425926                   0.1                 3.0                  0                       4                  0
+   7      0.988693 0.983945     0.984771                      0.7            0.351852                   0.1                 3.0                  0                       3                  0
+   8      0.989365 0.983538     0.989365                      0.9            0.370370                   0.1                 3.0                  0                       2                  0
+   9      0.989365 0.985164     0.988976                      0.7            0.296296                   0.1                 3.0                  0                       4                  0
+  10      0.989365 0.985648     0.988941                      0.7            0.388889                   0.1                 3.0                  0                       7                  2
 ```
 
 ## When to Use Each Plot

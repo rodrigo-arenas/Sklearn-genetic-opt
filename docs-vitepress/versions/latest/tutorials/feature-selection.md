@@ -28,8 +28,6 @@ that order so we can grade the selection against the truth later.
 
 ```python
 import warnings
-import random
-
 import numpy as np
 import pandas as pd
 from sklearn.datasets import make_classification
@@ -51,8 +49,6 @@ from sklearn_genetic.callbacks import ConsecutiveStopping, DeltaThreshold
 
 warnings.filterwarnings("ignore")
 RANDOM_STATE = 42
-random.seed(RANDOM_STATE)
-np.random.seed(RANDOM_STATE)
 
 N_INFORMATIVE, N_REDUNDANT, N_NOISE = 12, 8, 40
 n_features = N_INFORMATIVE + N_REDUNDANT + N_NOISE  # 60
@@ -159,6 +155,7 @@ the advanced controls switched on:
 
 ```python
 selector = GAFeatureSelectionCV(
+    random_state=RANDOM_STATE,
     estimator=make_knn(),
     cv=cv,
     scoring="balanced_accuracy",
@@ -185,8 +182,6 @@ callbacks = [
     DeltaThreshold(threshold=0.0005, generations=6, metric="fitness_best"),
     ConsecutiveStopping(generations=8, metric="fitness_best"),
 ]
-random.seed(RANDOM_STATE)
-np.random.seed(RANDOM_STATE)
 selector.fit(X_train, y_train, callbacks=callbacks)
 
 ga_best_cv = float(pd.DataFrame(selector.history)["fitness_best"].max())
@@ -195,10 +190,8 @@ print(f"Selected {int(selector.support_.sum())} of {n_features} features")
 ```
 
 ```text
-INFO: DeltaThreshold callback met its criteria
-INFO: Stopping the algorithm
-Best CV balanced accuracy: 0.7891
-Selected 26 of 60 features
+Best CV balanced accuracy: 0.8024
+Selected 32 of 60 features
 ```
 
 ## Stage 4 — Grade the Mask Against the Truth
@@ -218,10 +211,10 @@ print(f"  noise leaked  : {int((~is_signal[support]).sum())}")
 ```
 
 ```text
-Selected 26 of 60 features
-  signal kept   : 14 / 20
-  noise dropped : 28 / 40
-  noise leaked  : 12
+Selected 32 of 60 features
+  signal kept   : 17 / 20
+  noise dropped : 25 / 40
+  noise leaked  : 15
 ```
 
 ### The support mask
@@ -284,11 +277,11 @@ print(f"while using only {n_selected} of {n_features} columns "
 
 ```text
           strategy  n_features  cv_balanced_acc  accuracy  balanced_accuracy
-   All 60 features          60           0.7625    0.8000             0.8001
-GA-selected subset          26           0.7891    0.8367             0.8367
+   All 60 features          60           0.7625     0.800             0.8001
+GA-selected subset          32           0.8024     0.835             0.8350
 
-Genetic feature selection lifts KNN holdout balanced accuracy by +0.0366
-while using only 26 of 60 columns (43% of the inputs).
+Genetic feature selection lifts KNN holdout balanced accuracy by +0.0349
+while using only 32 of 60 columns (53% of the inputs).
 ```
 
 ## Stage 6 — Does the Win Transfer? (SVC robustness check)
@@ -314,8 +307,8 @@ print(transfer.to_string(index=False))
 
 ```text
   model  all_features  selected  delta
-    KNN        0.8001    0.8367 0.0366
-SVC-RBF        0.8633    0.8667 0.0034
+    KNN        0.8001    0.8350 0.0349
+SVC-RBF        0.8633    0.8733 0.0100
 ```
 
 ### Before / after feature-count and accuracy
@@ -362,15 +355,15 @@ print(pd.Series(selector.fit_stats_).to_string())
 ```
 
 ```text
-evaluated_candidates           314
-unique_candidates              314
-cross_validate_calls           314
+evaluated_candidates           986
+unique_candidates              986
+cross_validate_calls           986
 cache_hits                       0
 duplicate_candidates             0
 skipped_invalid_candidates       0
-population_parallel_batches      8
+population_parallel_batches     22
 population_serial_batches        0
-random_immigrants               30
+random_immigrants              100
 local_refinement_candidates      2
 ```
 
@@ -382,12 +375,12 @@ history[[c for c in cols if c in history.columns]].tail()
 ```
 
 ```text
-   gen   fitness  fitness_best  genotype_diversity  unique_individual_ratio  stagnation_generations
-2    2  0.693630      0.789115            0.043478                 0.750000                       1
-3    3  0.694187      0.789115            0.043478                 0.666667                       2
-4    4  0.721117      0.789115            0.043478                 0.625000                       3
-5    5  0.718357      0.789115            0.043478                 0.750000                       4
-6    6  0.702756      0.789115            0.043478                 0.791667                       6
+    gen   fitness  fitness_best  genotype_diversity  unique_individual_ratio  stagnation_generations
+16   16  0.735777      0.790190            0.043478                 0.750000                       1
+17   17  0.727760      0.790190            0.043478                 0.791667                       2
+18   18  0.723373      0.802352            0.043478                 0.875000                       0
+19   19  0.722615      0.802352            0.043478                 0.875000                       1
+20   20  0.738935      0.802352            0.042754                 0.750000                       3
 ```
 
 ## Practical Notes

@@ -22,8 +22,6 @@ that order so we can grade the selection against the truth.
 
 ```python
 import warnings
-import random
-
 import numpy as np
 import pandas as pd
 from sklearn.datasets import make_classification
@@ -44,8 +42,6 @@ from sklearn_genetic.callbacks import ConsecutiveStopping, DeltaThreshold
 
 warnings.filterwarnings("ignore")
 RANDOM_STATE = 42
-random.seed(RANDOM_STATE)
-np.random.seed(RANDOM_STATE)
 
 N_INFORMATIVE, N_REDUNDANT, N_NOISE = 12, 8, 40
 n_features = N_INFORMATIVE + N_REDUNDANT + N_NOISE  # 60
@@ -130,6 +126,7 @@ refining onto a compact subset.
 
 ```python
 selector = GAFeatureSelectionCV(
+    random_state=RANDOM_STATE,
     estimator=make_model(),
     cv=cv,
     scoring="balanced_accuracy",
@@ -155,14 +152,10 @@ callbacks = [
     DeltaThreshold(threshold=0.0005, generations=6, metric="fitness_best"),
     ConsecutiveStopping(generations=8, metric="fitness_best"),
 ]
-random.seed(RANDOM_STATE)
-np.random.seed(RANDOM_STATE)
 selector.fit(X_train, y_train, callbacks=callbacks)
 ```
 
 ```text
-INFO: DeltaThreshold callback met its criteria
-INFO: Stopping the algorithm
 GAFeatureSelectionCV(cv=StratifiedKFold(n_splits=3, random_state=42, shuffle=True),
                      estimator=Pipeline(steps=[('scaler', StandardScaler()),
                                                ('knn',
@@ -175,12 +168,11 @@ GAFeatureSelectionCV(cv=StratifiedKFold(n_splits=3, random_state=42, shuffle=Tru
                                                       elitism=True,
                                                       keep_top_k=3,
                                                       crite...
-                                                            final_selection=False,
                                                             final_selection_top_k=3,
                                                             final_selection_cv=None),
                      population_config=PopulationConfig(initializer='smart',
                                                         warm_start_configs=[]),
-                     population_size=24,
+                     population_size=24, random_state=42,
                      runtime_config=RuntimeConfig(n_jobs=-1,
                                                   pre_dispatch='2*n_jobs',
                                                   error_score=nan,
@@ -208,10 +200,10 @@ print(f"  noise leaked  : {int((~is_signal[support]).sum())}")
 ```
 
 ```text
-Selected 26 of 60 features
-  signal kept   : 14 / 20
-  noise dropped : 28 / 40
-  noise leaked  : 12
+Selected 32 of 60 features
+  signal kept   : 17 / 20
+  noise dropped : 25 / 40
+  noise leaked  : 15
 ```
 
 ```python
@@ -273,11 +265,11 @@ print(f"while using only {n_selected} of {n_features} columns "
 
 ```text
             strategy  n_features  cv_balanced_acc  accuracy  balanced_accuracy
-     All 60 features          60           0.7625    0.8000             0.8001
-GAFeatureSelectionCV          26           0.7891    0.8367             0.8367
+     All 60 features          60           0.7625     0.800             0.8001
+GAFeatureSelectionCV          32           0.8024     0.835             0.8350
 
-Genetic feature selection lifts holdout balanced accuracy by +0.0366
-while using only 26 of 60 columns (43% of the inputs).
+Genetic feature selection lifts holdout balanced accuracy by +0.0349
+while using only 32 of 60 columns (53% of the inputs).
 ```
 
 The genetic search keeps roughly a third of the columns, throws out most of

@@ -27,7 +27,6 @@ budget and we see who spends it best.
 
 ```python
 import time
-import random
 import warnings
 
 import numpy as np
@@ -56,8 +55,6 @@ from sklearn_genetic.space import Continuous, Integer
 
 warnings.filterwarnings("ignore")
 RANDOM_STATE = 42
-random.seed(RANDOM_STATE)
-np.random.seed(RANDOM_STATE)
 
 X, y = make_classification(
     n_samples=2400,
@@ -140,8 +137,6 @@ random_search = RandomizedSearchCV(
     random_state=RANDOM_STATE,
     n_jobs=-1,
 )
-random.seed(RANDOM_STATE)
-np.random.seed(RANDOM_STATE)
 started = time.perf_counter()
 random_search.fit(X_train, y_train)
 random_seconds = time.perf_counter() - started
@@ -186,6 +181,7 @@ stopping end it once progress stalls.
 
 ```python
 ga_search = GASearchCV(
+    random_state=RANDOM_STATE,
     estimator=make_model(),
     scoring="roc_auc",
     cv=cv,
@@ -223,8 +219,6 @@ callbacks = [
     DeltaThreshold(threshold=0.0005, generations=5, metric="fitness_best"),
     ConsecutiveStopping(generations=6, metric="fitness_best"),
 ]
-random.seed(RANDOM_STATE)
-np.random.seed(RANDOM_STATE)
 started = time.perf_counter()
 ga_search.fit(X_train, y_train, callbacks=callbacks)
 ga_seconds = time.perf_counter() - started
@@ -249,9 +243,9 @@ print(comparison.to_string(index=False))
 
 ```text
             method  best_cv_auc  holdout_auc  holdout_acc  candidates  fit_seconds
-        GASearchCV       0.8344       0.8701       0.7958          46         21.9
-RandomizedSearchCV       0.8367       0.8683       0.7025          45          5.9
-      GridSearchCV       0.8351       0.8557       0.7717          72          6.2
+        GASearchCV       0.8345       0.8723       0.7983          37         41.3
+RandomizedSearchCV       0.8367       0.8683       0.7025          45          8.4
+      GridSearchCV       0.8351       0.8557       0.7717          72          9.3
 ```
 
 The interpretation below is computed straight from the table above — no
@@ -276,9 +270,9 @@ print("- Grid search is boxed in by its own resolution: it cannot afford a fine 
 ```
 
 ```text
-GA vs Random : CV AUC -0.0023, holdout AUC +0.0018
-GA vs Grid   : CV AUC -0.0007, holdout AUC +0.0144
-GA vs Random : holdout accuracy +0.0933
+GA vs Random : CV AUC -0.0022, holdout AUC +0.0040
+GA vs Grid   : CV AUC -0.0006, holdout AUC +0.0166
+GA vs Random : holdout accuracy +0.0958
 
 Takeaways on this smooth boosting space:
 - The cross-validation scores are a three-way tie (all within ~0.002 AUC):
@@ -348,14 +342,14 @@ for key, value in ga_search.fit_stats_.items():
 
 ```text
 Evaluation accounting:
-  evaluated_candidates: 66
-  unique_candidates: 46
-  cross_validate_calls: 46
-  cache_hits: 20
-  duplicate_candidates: 0
+  evaluated_candidates: 72
+  unique_candidates: 37
+  cross_validate_calls: 37
+  cache_hits: 33
+  duplicate_candidates: 2
   skipped_invalid_candidates: 0
-  population_parallel_batches: 5
-  population_serial_batches: 2
+  population_parallel_batches: 6
+  population_serial_batches: 1
   random_immigrants: 0
   local_refinement_candidates: 0
 ```
@@ -368,13 +362,13 @@ print(history[[c for c in cols if c in history.columns]].to_string(index=False))
 
 ```text
  gen  fitness  fitness_best  unique_individual_ratio  genotype_diversity  stagnation_generations
-   0 0.806938      0.832372                 1.000000            1.000000                       0
-   1 0.812617      0.832372                 0.833333            0.628571                       1
-   2 0.823262      0.832372                 0.833333            0.428571                       2
-   3 0.829939      0.833098                 0.666667            0.314286                       0
-   4 0.833215      0.834420                 0.666667            0.142857                       0
-   5 0.834420      0.834420                 0.166667            0.000000                       1
-   6 0.834420      0.834420                 0.166667            0.000000                       2
+   0 0.812969      0.823532                 1.000000            1.000000                       0
+   1 0.818352      0.823532                 0.666667            0.400000                       1
+   2 0.825104      0.830463                 0.500000            0.142857                       0
+   3 0.829704      0.830463                 0.333333            0.142857                       1
+   4 0.831089      0.834218                 0.333333            0.085714                       0
+   5 0.833592      0.834218                 0.500000            0.114286                       1
+   6 0.834218      0.834218                 0.333333            0.028571                       2
 ```
 
 ## When Should You Reach for the Genetic Algorithm?

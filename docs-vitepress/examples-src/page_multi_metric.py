@@ -50,7 +50,6 @@ nb.md(
 nb.code(
     """
     import warnings
-    import random
     from pprint import pprint
 
     import numpy as np
@@ -73,8 +72,6 @@ nb.code(
     warnings.filterwarnings("ignore")
 
     RANDOM_STATE = 42
-    random.seed(RANDOM_STATE)
-    np.random.seed(RANDOM_STATE)
 
     X, y = make_classification(
         n_samples=2000,
@@ -153,6 +150,7 @@ nb.code(
     }
 
     search = GASearchCV(
+        random_state=RANDOM_STATE,
         estimator=model,
         param_grid=param_grid,
         scoring=scoring,

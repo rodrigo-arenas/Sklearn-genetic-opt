@@ -45,8 +45,6 @@ nb.md(
 
 nb.code(
     """
-    import random
-
     import numpy as np
     from sklearn.datasets import load_digits
     from sklearn.metrics import accuracy_score
@@ -57,8 +55,6 @@ nb.code(
     from sklearn_genetic.space import Categorical, Continuous, Integer
 
     RANDOM_STATE = 42
-    random.seed(RANDOM_STATE)
-    np.random.seed(RANDOM_STATE)
 
     X, y = load_digits(return_X_y=True)
     X_train, X_test, y_train, y_test = train_test_split(
@@ -110,17 +106,16 @@ nb.code(
     clf = MLPClassifier(max_iter=150, early_stopping=True, random_state=RANDOM_STATE)
 
     search = GASearchCV(
+        random_state=RANDOM_STATE,
         estimator=clf,
         cv=cv,
         scoring="accuracy",
         param_grid=param_grid,
-        evolution_config=EvolutionConfig(population_size=10, generations=8),
+        evolution_config=EvolutionConfig(population_size=8, generations=6),
         population_config=PopulationConfig(initializer="smart"),
         runtime_config=RuntimeConfig(n_jobs=-1, verbose=False),
     )
 
-    random.seed(RANDOM_STATE)
-    np.random.seed(RANDOM_STATE)
     search.fit(X_train, y_train)
 
     print(f"Best CV accuracy : {search.best_score_:.4f}")
@@ -251,6 +246,7 @@ nb.code(
     )
 
     selector = GAFeatureSelectionCV(
+        random_state=RANDOM_STATE,
         estimator=SVC(gamma="auto"),
         cv=3,
         scoring="accuracy",
@@ -259,8 +255,6 @@ nb.code(
         population_config=PopulationConfig(initializer="smart"),
         runtime_config=RuntimeConfig(n_jobs=-1, verbose=False),
     )
-    random.seed(RANDOM_STATE)
-    np.random.seed(RANDOM_STATE)
     selector.fit(Xtr, ytr)
 
     selected = [name for name, keep in zip(feature_names, selector.support_) if keep]

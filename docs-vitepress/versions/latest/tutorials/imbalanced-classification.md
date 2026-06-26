@@ -31,7 +31,6 @@ execution of this code.
 
 ```python
 import warnings
-import random
 from pprint import pprint
 
 import numpy as np
@@ -58,8 +57,6 @@ from sklearn_genetic.space import Categorical, Integer
 warnings.filterwarnings("ignore")
 
 RANDOM_STATE = 42
-random.seed(RANDOM_STATE)
-np.random.seed(RANDOM_STATE)
 ```
 
 ## Create an Imbalanced Dataset
@@ -261,6 +258,7 @@ callbacks = [
 ]
 
 ga_search = GASearchCV(
+    random_state=RANDOM_STATE,
     estimator=LabeledRF(random_state=RANDOM_STATE, n_jobs=1),
     param_grid=param_grid,
     scoring=scoring,
@@ -332,18 +330,18 @@ print(f"  roc_auc:           {cv_df['mean_test_roc_auc'].iloc[best_idx]:.4f}")
 ```text
 INFO: TimerStopping callback met its criteria
 INFO: Stopping the algorithm
-Best CV balanced_accuracy: 0.8229
+Best CV balanced_accuracy: 0.8203
 Best params:
-{'class_weight': 'minority_20x',
- 'max_depth': 18,
+{'class_weight': 'balanced',
+ 'max_depth': 8,
  'min_samples_leaf': 8,
- 'min_samples_split': 7,
- 'n_estimators': 175}
+ 'min_samples_split': 12,
+ 'n_estimators': 180}
 
 CV scores at best params:
-  balanced_accuracy: 0.8229
-  f1_weighted:       0.9444
-  roc_auc:           0.9164
+  balanced_accuracy: 0.8203
+  f1_weighted:       0.9448
+  roc_auc:           0.9171
 ```
 
 ### Fitness Evolution
@@ -405,7 +403,7 @@ print(f"GASearchCV         best CV balanced_accuracy: {ga_search.best_score_:.4f
 
 ```text
 RandomizedSearchCV best CV balanced_accuracy: 0.8181
-GASearchCV         best CV balanced_accuracy: 0.8229
+GASearchCV         best CV balanced_accuracy: 0.8203
 ```
 
 ## Confusion Matrices
@@ -453,7 +451,7 @@ print(comparison.to_string(index=False))
 DummyClassifier (majority)    0.9442             0.5000       0.9171   0.5000           0.0000
                RF defaults    0.9600             0.6418       0.9493   0.9475           0.2836
         RandomizedSearchCV    0.8767             0.8223       0.9020   0.9141           0.7612
-                GASearchCV    0.9417             0.8217       0.9463   0.9299           0.6866
+                GASearchCV    0.9383             0.8129       0.9436   0.9317           0.6716
 ```
 
 ```python
@@ -466,11 +464,11 @@ print(f"\nMinority recall: default={default_metrics['minority_recall']:.2f}  "
 ```
 
 ```text
-GA vs default RF      : +0.1799 balanced accuracy
-GA vs RandomizedSearch: -0.0006 balanced accuracy
-GA vs dummy           : +0.3217 balanced accuracy
+GA vs default RF      : +0.1711 balanced accuracy
+GA vs RandomizedSearch: -0.0094 balanced accuracy
+GA vs dummy           : +0.3129 balanced accuracy
 
-Minority recall: default=0.28  random=0.76  GA=0.69
+Minority recall: default=0.28  random=0.76  GA=0.67
 ```
 
 The GA finds a `class_weight` and model combination that lifts minority recall
@@ -494,12 +492,12 @@ print(classification_report(
 ```text
               precision    recall  f1-score   support
 
-    majority       0.98      0.96      0.97      1133
-    minority       0.48      0.69      0.57        67
+    majority       0.98      0.95      0.97      1133
+    minority       0.46      0.67      0.55        67
 
     accuracy                           0.94      1200
-   macro avg       0.73      0.82      0.77      1200
-weighted avg       0.95      0.94      0.95      1200
+   macro avg       0.72      0.81      0.76      1200
+weighted avg       0.95      0.94      0.94      1200
 ```
 
 ## Optional: SMOTE Alternative

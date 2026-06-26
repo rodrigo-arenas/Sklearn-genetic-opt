@@ -60,7 +60,6 @@ nb.md(
 nb.code(
     """
     import time
-    import random
     import warnings
 
     import numpy as np
@@ -89,8 +88,6 @@ nb.code(
 
     warnings.filterwarnings("ignore")
     RANDOM_STATE = 42
-    random.seed(RANDOM_STATE)
-    np.random.seed(RANDOM_STATE)
 
     X, y = make_classification(
         n_samples=2400,
@@ -181,8 +178,6 @@ nb.code(
         random_state=RANDOM_STATE,
         n_jobs=-1,
     )
-    random.seed(RANDOM_STATE)
-    np.random.seed(RANDOM_STATE)
     started = time.perf_counter()
     random_search.fit(X_train, y_train)
     random_seconds = time.perf_counter() - started
@@ -235,6 +230,7 @@ nb.md(
 nb.code(
     """
     ga_search = GASearchCV(
+        random_state=RANDOM_STATE,
         estimator=make_model(),
         scoring="roc_auc",
         cv=cv,
@@ -272,8 +268,6 @@ nb.code(
         DeltaThreshold(threshold=0.0005, generations=5, metric="fitness_best"),
         ConsecutiveStopping(generations=6, metric="fitness_best"),
     ]
-    random.seed(RANDOM_STATE)
-    np.random.seed(RANDOM_STATE)
     started = time.perf_counter()
     ga_search.fit(X_train, y_train, callbacks=callbacks)
     ga_seconds = time.perf_counter() - started

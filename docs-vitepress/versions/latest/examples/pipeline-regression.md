@@ -19,7 +19,6 @@ reproducibility.
 
 ```python
 import warnings
-import random
 from pprint import pprint
 
 import numpy as np
@@ -41,8 +40,6 @@ from sklearn_genetic.space import Categorical, Continuous, Integer
 warnings.filterwarnings("ignore")
 
 RANDOM_STATE = 42
-random.seed(RANDOM_STATE)
-np.random.seed(RANDOM_STATE)
 
 data = load_diabetes(as_frame=True)
 X, y = data.data, data.target
@@ -129,6 +126,7 @@ already has a reasonable candidate to improve on.
 
 ```python
 search = GASearchCV(
+    random_state=RANDOM_STATE,
     estimator=make_pipeline(),
     param_grid=param_grid,
     scoring="neg_root_mean_squared_error",
@@ -187,7 +185,6 @@ print("fitted:", search.best_score_ is not None)
 ```
 
 ```text
-INFO: DeltaThreshold callback met its criteria
 INFO: TimerStopping callback met its criteria
 INFO: Stopping the algorithm
 fitted: True
@@ -214,17 +211,17 @@ comparison
 ```
 
 ```text
-Best CV negative RMSE: -58.8134
+Best CV negative RMSE: -58.5933
 Best params:
-{'regressor__learning_rate': 0.055200913750236516,
+{'regressor__learning_rate': 0.05,
  'regressor__loss': 'squared_error',
  'regressor__max_depth': 1,
- 'regressor__min_samples_leaf': 4,
- 'regressor__n_estimators': 170,
- 'regressor__subsample': 0.7642806333015832}
+ 'regressor__min_samples_leaf': 9,
+ 'regressor__n_estimators': 119,
+ 'regressor__subsample': 0.7807245051751381}
                        r2   rmse    mae
 default GBR        0.4303  55.46  44.72
-GA-tuned pipeline  0.5047  51.71  41.14
+GA-tuned pipeline  0.4987  52.02  41.77
 ```
 
 ```python
@@ -237,9 +234,9 @@ print(f"MAE : {baseline_metrics['mae']:.2f}  ->  {ga_metrics['mae']:.2f}   ({-ma
 ```
 
 ```text
-R2  : 0.4303  ->  0.5047   (+0.0744)
-RMSE: 55.46  ->  51.71   (-3.75)
-MAE : 44.72  ->  41.14   (-3.58)
+R2  : 0.4303  ->  0.4987   (+0.0684)
+RMSE: 55.46  ->  52.02   (-3.44)
+MAE : 44.72  ->  41.77   (-2.95)
 ```
 
 Plotting the same numbers makes the improvement on every metric obvious at a glance.
@@ -279,7 +276,7 @@ print(search.fit_stats_)
 ```
 
 ```text
-{'evaluated_candidates': 92, 'unique_candidates': 91, 'cross_validate_calls': 91, 'cache_hits': 1, 'duplicate_candidates': 0, 'skipped_invalid_candidates': 0, 'population_parallel_batches': 6, 'population_serial_batches': 0, 'random_immigrants': 2, 'local_refinement_candidates': 2}
+{'evaluated_candidates': 72, 'unique_candidates': 72, 'cross_validate_calls': 72, 'cache_hits': 0, 'duplicate_candidates': 0, 'skipped_invalid_candidates': 0, 'population_parallel_batches': 5, 'population_serial_batches': 0, 'random_immigrants': 0, 'local_refinement_candidates': 2}
 ```
 
 ```python
@@ -291,11 +288,10 @@ history[[c for c in cols if c in history.columns]].tail()
 
 ```text
    gen    fitness  fitness_max  unique_individual_ratio  genotype_diversity  stagnation_generations
-0    0 -61.764820   -59.042955                      1.0            0.666667                       0
-1    1 -60.618549   -59.042955                      0.7            0.444444                       1
-2    2 -60.167407   -59.042955                      0.6            0.314815                       2
-3    3 -60.555254   -59.447392                      0.6            0.388889                       3
-4    4 -59.933490   -58.834104                      0.9            0.425926                       0
+0    0 -61.243523   -59.037963                      1.0            0.722222                       0
+1    1 -59.857250   -59.037963                      0.8            0.407407                       1
+2    2 -60.193052   -59.045795                      0.6            0.388889                       2
+3    3 -59.580004   -58.664782                      0.7            0.351852                       0
 ```
 
 ## Visualize the Search

@@ -2,6 +2,7 @@ import random
 
 import numpy as np
 from scipy.stats import qmc
+from sklearn.utils import check_random_state
 
 from .space import Categorical, Continuous, Integer
 
@@ -146,13 +147,17 @@ def smart_search_population(estimator, toolbox, individual_cls):
 
     lhs_samples = None
     if numeric_parameters and remaining > 0:
-        # Seed the quasi-random sampler from the global ``random`` RNG so that the
-        # "smart" initializer is reproducible when callers set ``random.seed``
-        # before ``fit`` (the same convention DEAP and the rest of this library
-        # follow). Without an explicit seed, ``qmc.LatinHypercube`` draws from its
-        # own fresh entropy and ignores the seed entirely, making
-        # numeric-parameter searches non-reproducible across processes.
-        lhs_seed = random.randint(0, 2**31 - 1)
+        # The quasi-random sampler must be seeded explicitly: ``qmc.LatinHypercube``
+        # otherwise draws from its own fresh entropy and ignores any seeding,
+        # making numeric-parameter searches non-reproducible. Derive its seed from
+        # the estimator's ``random_state`` when set (threaded from the public API),
+        # and otherwise fall back to the global ``random`` RNG so the documented
+        # ``random.seed`` convention still controls it.
+        random_state = getattr(estimator, "random_state", None)
+        if random_state is None:
+            lhs_seed = random.randint(0, 2**31 - 1)
+        else:
+            lhs_seed = int(check_random_state(random_state).randint(0, 2**31 - 1))
         sampler = qmc.LatinHypercube(d=len(numeric_parameters), rng=lhs_seed)
         lhs_samples = sampler.random(n=remaining)
 

@@ -29,8 +29,6 @@ We tune an `MLPClassifier` on the
 (10 classes, 64 pixel features). First, the imports and data:
 
 ```python
-import random
-
 import numpy as np
 from sklearn.datasets import load_digits
 from sklearn.metrics import accuracy_score
@@ -41,8 +39,6 @@ from sklearn_genetic import EvolutionConfig, GASearchCV, PopulationConfig, Runti
 from sklearn_genetic.space import Categorical, Continuous, Integer
 
 RANDOM_STATE = 42
-random.seed(RANDOM_STATE)
-np.random.seed(RANDOM_STATE)
 
 X, y = load_digits(return_X_y=True)
 X_train, X_test, y_train, y_test = train_test_split(
@@ -86,17 +82,16 @@ parallelism and logging.
 clf = MLPClassifier(max_iter=150, early_stopping=True, random_state=RANDOM_STATE)
 
 search = GASearchCV(
+    random_state=RANDOM_STATE,
     estimator=clf,
     cv=cv,
     scoring="accuracy",
     param_grid=param_grid,
-    evolution_config=EvolutionConfig(population_size=10, generations=8),
+    evolution_config=EvolutionConfig(population_size=8, generations=6),
     population_config=PopulationConfig(initializer="smart"),
     runtime_config=RuntimeConfig(n_jobs=-1, verbose=False),
 )
 
-random.seed(RANDOM_STATE)
-np.random.seed(RANDOM_STATE)
 search.fit(X_train, y_train)
 
 print(f"Best CV accuracy : {search.best_score_:.4f}")
@@ -104,8 +99,8 @@ print(f"Best parameters  : {search.best_params_}")
 ```
 
 ```text
-Best CV accuracy : 0.9659
-Best parameters  : {'hidden_layer_sizes': (64,), 'alpha': 0.006070874110546389, 'learning_rate_init': 0.015702970884055395, 'activation': 'relu', 'batch_size': 89}
+Best CV accuracy : 0.9584
+Best parameters  : {'hidden_layer_sizes': (64,), 'alpha': 0.00027470715996250945, 'learning_rate_init': 0.003590489008293675, 'activation': 'relu', 'batch_size': 70}
 ```
 
 After fitting, `GASearchCV` behaves like any fitted scikit-learn estimator —
@@ -117,7 +112,7 @@ print(f"Holdout accuracy : {accuracy_score(y_test, y_pred):.4f}")
 ```
 
 ```text
-Holdout accuracy : 0.9697
+Holdout accuracy : 0.9579
 ```
 
 ### Reading the evolution
@@ -144,15 +139,13 @@ print(history[["gen", "fitness", "fitness_best", "genotype_diversity",
 
 ```text
  gen  fitness  fitness_best  genotype_diversity  unique_individual_ratio  stagnation_generations
-   0 0.836908      0.936825            0.666667                      1.0                       0
-   1 0.936492      0.955943            0.377778                      0.8                       0
-   2 0.949377      0.960931            0.266667                      0.7                       0
-   3 0.951372      0.960931            0.177778                      0.6                       1
-   4 0.956858      0.962594            0.133333                      0.7                       0
-   5 0.951122      0.962594            0.200000                      0.7                       1
-   6 0.946550      0.962594            0.355556                      0.7                       2
-   7 0.941397      0.962594            0.355556                      0.6                       3
-   8 0.950208      0.962594            0.222222                      0.7                       4
+   0 0.753325      0.946800            0.685714                    1.000                       0
+   1 0.932253      0.946800            0.485714                    0.875                       1
+   2 0.943890      0.955112            0.314286                    0.750                       0
+   3 0.945449      0.955112            0.371429                    0.750                       1
+   4 0.948462      0.955112            0.314286                    0.750                       2
+   5 0.951995      0.955112            0.314286                    0.750                       3
+   6 0.953242      0.958437            0.228571                    0.625                       0
 ```
 
 `fit_stats_` summarizes what the search actually spent — useful for spotting
@@ -164,15 +157,15 @@ for key, value in search.fit_stats_.items():
 ```
 
 ```text
-evaluated_candidates: 170
-unique_candidates: 166
-cross_validate_calls: 166
-cache_hits: 4
+evaluated_candidates: 104
+unique_candidates: 102
+cross_validate_calls: 102
+cache_hits: 2
 duplicate_candidates: 0
 skipped_invalid_candidates: 0
-population_parallel_batches: 9
+population_parallel_batches: 7
 population_serial_batches: 0
-random_immigrants: 6
+random_immigrants: 0
 local_refinement_candidates: 0
 ```
 
@@ -225,6 +218,7 @@ Xtr, Xte, ytr, yte = train_test_split(
 )
 
 selector = GAFeatureSelectionCV(
+    random_state=RANDOM_STATE,
     estimator=SVC(gamma="auto"),
     cv=3,
     scoring="accuracy",
@@ -233,8 +227,6 @@ selector = GAFeatureSelectionCV(
     population_config=PopulationConfig(initializer="smart"),
     runtime_config=RuntimeConfig(n_jobs=-1, verbose=False),
 )
-random.seed(RANDOM_STATE)
-np.random.seed(RANDOM_STATE)
 selector.fit(Xtr, ytr)
 
 selected = [name for name, keep in zip(feature_names, selector.support_) if keep]

@@ -119,6 +119,7 @@ multiplying LightGBM's internal threads by the number of candidate workers.
 
 ```python
 ga_search = GASearchCV(
+    random_state=RANDOM_STATE,
     estimator=LGBMClassifier(random_state=RANDOM_STATE, n_jobs=1, verbose=-1),
     param_grid=param_grid,
     scoring="roc_auc",
@@ -162,19 +163,17 @@ for key, value in ga_search.best_params_.items():
 ```
 
 ```text
-INFO: ConsecutiveStopping callback met its criteria
-INFO: Stopping the algorithm
-Best CV ROC AUC : 0.8552   (search took 31s)
+Best CV ROC AUC : 0.8508   (search took 50s)
 Best parameters :
-  n_estimators: 221
-  num_leaves: 154
+  n_estimators: 171
+  num_leaves: 179
   max_depth: 11
-  learning_rate: 0.023722009513003597
-  min_child_samples: 5
-  subsample: 0.5049196355417795
-  colsample_bytree: 0.6854796731551205
-  reg_alpha: 0.0014345898571198564
-  reg_lambda: 4.8001373865352105e-05
+  learning_rate: 0.019653590081344673
+  min_child_samples: 9
+  subsample: 0.559939750268555
+  colsample_bytree: 0.7222065919875744
+  reg_alpha: 1.1130156968433846e-05
+  reg_lambda: 0.18328989877515126
 ```
 
 ## Baseline vs Tuned
@@ -190,10 +189,10 @@ print(f"ROC AUC improvement over defaults: "
 
 ```text
              model  accuracy  balanced_accuracy  roc_auc
- LightGBM defaults     0.788             0.7880   0.8665
-GASearchCV (tuned)     0.812             0.8119   0.8890
+ LightGBM defaults     0.788              0.788   0.8665
+GASearchCV (tuned)     0.803              0.803   0.8863
 
-ROC AUC improvement over defaults: +0.0225
+ROC AUC improvement over defaults: +0.0198
 ```
 
 ### Fitness over generations

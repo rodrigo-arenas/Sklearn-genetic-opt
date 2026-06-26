@@ -146,15 +146,18 @@ Key ratios to check:
 
 **Results differ between runs with the same code**
 
-Set both Python's `random` module and NumPy's random generator before fitting:
+Set `random_state` on the search — it seeds every stochastic part of the run
+(population initialization, mutation, crossover, random immigrants) from one
+place at `fit` time, so you don't need to seed the global `random`/`numpy` RNGs
+by hand:
 
 ```python
-import random
-import numpy as np
-
-random.seed(42)
-np.random.seed(42)
-
+search = GASearchCV(
+    estimator=estimator,
+    param_grid=param_grid,
+    random_state=42,   # makes the whole search reproducible
+    # ...
+)
 search.fit(X_train, y_train)
 ```
 

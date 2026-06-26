@@ -67,7 +67,6 @@ nb.md(
 nb.code(
     """
     import warnings
-    import random
     from pprint import pprint
     import time
 
@@ -93,8 +92,6 @@ nb.code(
     warnings.filterwarnings("ignore")
 
     RANDOM_STATE = 42
-    random.seed(RANDOM_STATE)
-    np.random.seed(RANDOM_STATE)
     rng = np.random.default_rng(RANDOM_STATE)
     """
 )
@@ -310,6 +307,7 @@ nb.code(
     ]
 
     ga_search = GASearchCV(
+        random_state=RANDOM_STATE,
         estimator=IsolationForest(random_state=RANDOM_STATE),
         param_grid=param_grid,
         scoring=scorer,
