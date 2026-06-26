@@ -17,7 +17,7 @@ You are reading the **latest (dev)** docs. For the stable version, see [stable](
 
 - **Expanded plotting API**: eleven new functions in `sklearn_genetic.plots` — `plot_parameter_evolution`, `plot_search_decisions`, `plot_candidate_scores`, `plot_feature_selection`, `plot_convergence`, `plot_diversity`, `plot_optimizer_events`, `plot_score_landscape`, `plot_cv_scores`, `plot_candidate_rankings`, and `plot_search_overview`. See the [Plotting Gallery](../examples/plotting-gallery) for examples.
 
-- **Benchmarks page**: new [Benchmarks](./benchmarks/) section in the docs with Bayesmark-style comparisons of `GASearchCV` against Optuna and random search on tabular regression/classification tasks and CASH (combined algorithm selection and hyperparameter optimisation) scenarios.
+- **Benchmarks page**: new Benchmarks section in the docs with Bayesmark-style comparisons of `GASearchCV` against Optuna and random search on tabular regression/classification tasks and CASH (combined algorithm selection and hyperparameter optimisation) scenarios.
 
 ### Bug Fixes
 

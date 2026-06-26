@@ -111,7 +111,7 @@ if (config.includes(`'/versions/${version}/'`)) {
 }
 
 // ── 5. Update /stable redirect to point at the new stable version ────────────
-const stablePage = join(docsRoot, 'versions', 'stable', 'index.md')
+const stablePage = join(docsRoot, 'stable', 'index.md')
 if (existsSync(stablePage)) {
   let stableContent = readFileSync(stablePage, 'utf8')
   stableContent = stableContent.replace(
