@@ -4,7 +4,7 @@ description: Decide whether a genetic algorithm search fits your tuning problem,
 ---
 
 :::warning Development version
-You are reading the **latest (dev)** docs. For stable documentation, see [0.13](/versions/0.13/guide/when-to-use).
+You are reading the **latest (dev)** docs. For stable documentation, see [stable](/stable/).
 :::
 
 # When to Use sklearn-genetic-opt

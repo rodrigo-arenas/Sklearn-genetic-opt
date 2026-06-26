@@ -4,7 +4,7 @@ description: "Use GAFeatureSelectionCV to recover a compact, informative feature
 ---
 
 :::warning Development version
-This is the **latest (dev)** documentation. It may contain unreleased features or breaking changes. For the stable release, use [version 0.13](/versions/0.13/).
+This is the **latest (dev)** documentation. It may contain unreleased features or breaking changes. For the stable release, use [stable](/stable/).
 :::
 
 # Feature Selection: Finding the Signal in 60 Columns

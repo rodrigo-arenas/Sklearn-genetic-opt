@@ -4,7 +4,7 @@ description: In-depth tutorials for sklearn-genetic-opt covering XGBoost, LightG
 ---
 
 :::warning Development version
-You are reading the **latest (development)** docs. This version tracks the `master` branch and may contain unreleased features or breaking changes. For stable documentation, see [0.13](/versions/0.13/).
+You are reading the **latest (development)** docs. This version tracks the `master` branch and may contain unreleased features or breaking changes. For stable documentation, see [stable](/stable/).
 :::
 
 # Tutorials
