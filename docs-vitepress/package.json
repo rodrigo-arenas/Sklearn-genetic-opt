@@ -6,7 +6,9 @@
   "scripts": {
     "docs:dev": "vitepress dev .",
     "docs:build": "vitepress build .",
-    "docs:preview": "vitepress preview ."
+    "docs:preview": "vitepress preview .",
+    "examples:generate": "python scripts/run-python-examples.py",
+    "examples:check": "python scripts/run-python-examples.py --check"
   },
   "devDependencies": {
     "vitepress": "^1.6.3"

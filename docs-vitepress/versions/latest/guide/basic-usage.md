@@ -87,6 +87,16 @@ Run the optimization:
 evolved_estimator.fit(X_train, y_train)
 ```
 
+Rendered output from the documentation run:
+
+<!-- docs-example:basic-usage-hyperparameter-output:start -->
+```text
+Best CV accuracy: 0.9252
+Holdout accuracy: 0.9293
+Best parameters: { activation: logistic, alpha: 0.0003, batch_size: 169, tol: 0.0069 }
+```
+<!-- docs-example:basic-usage-hyperparameter-output:end -->
+
 During training you will see a generation-by-generation log. Each row summarizes one generation:
 
 | Column | Meaning |
@@ -112,6 +122,18 @@ print(history[[
 ]])
 ```
 
+The last generations from the rendered docs example:
+
+<!-- docs-example:basic-usage-history-output:start -->
+| Generation | Best CV accuracy | Diversity | Unique ratio | Stagnation |
+| --- | --- | --- | --- | --- |
+| 1 | 0.9086 | 0.4000 | 0.8333 | 1 |
+| 2 | 0.9086 | 0.5500 | 1.0000 | 2 |
+| 3 | 0.9210 | 0.3000 | 0.6667 | 0 |
+| 4 | 0.9210 | 0.3500 | 0.6667 | 1 |
+| 5 | 0.9210 | 0.3000 | 1.0000 | 2 |
+<!-- docs-example:basic-usage-history-output:end -->
+
 Check evaluation cost via `fit_stats_`:
 
 ```python
@@ -122,6 +144,18 @@ print(evolved_estimator.fit_stats_)
 # random_immigrants:    individuals injected when diversity control triggered
 # skipped_invalid_candidates: configs that raised exceptions during fit
 ```
+
+The generated run records the concrete evaluation cost:
+
+<!-- docs-example:basic-usage-fit-stats-output:start -->
+```text
+evaluated_candidates: 66
+unique_candidates: 66
+cache_hits: 0
+random_immigrants: 0
+skipped_invalid_candidates: 0
+```
+<!-- docs-example:basic-usage-fit-stats-output:end -->
 
 After fitting, `GASearchCV` behaves like a fitted scikit-learn estimator:
 
@@ -141,6 +175,17 @@ plot_fitness_evolution(evolved_estimator)
 plt.show()
 ```
 
+Use `plot_search_overview` for a compact diagnostic view of convergence, diversity, optimizer decisions, and the strongest candidate solutions:
+
+```python
+from sklearn_genetic.plots import plot_search_overview
+
+plot_search_overview(evolved_estimator, top_k=6)
+plt.show()
+```
+
+![Search overview dashboard](/images/basic_usage_search_overview.png)
+
 See which hyperparameter values were sampled:
 
 ```python
@@ -149,6 +194,17 @@ from sklearn_genetic.plots import plot_search_space
 plot_search_space(evolved_estimator, features=["tol", "batch_size", "alpha"])
 plt.show()
 ```
+
+When you want to see how sampled values changed in evaluation order, use `plot_parameter_evolution`:
+
+```python
+from sklearn_genetic.plots import plot_parameter_evolution
+
+plot_parameter_evolution(evolved_estimator, parameters=["tol", "batch_size", "alpha"])
+plt.show()
+```
+
+![Parameter evolution over candidate evaluations](/images/basic_usage_parameter_evolution.png)
 
 ## Feature Selection
 
@@ -167,12 +223,13 @@ from sklearn_genetic import (
     PopulationConfig,
     RuntimeConfig,
 )
-from sklearn_genetic.plots import plot_fitness_evolution
+from sklearn_genetic.plots import plot_feature_selection, plot_fitness_evolution
 
 data = load_iris()
 X, y = data["data"], data["target"]
 
-noise = np.random.uniform(0, 10, size=(X.shape[0], 10))
+rng = np.random.default_rng(42)
+noise = rng.uniform(0, 10, size=(X.shape[0], 10))
 X = np.hstack((X, noise))
 
 X_train, X_test, y_train, y_test = train_test_split(
@@ -202,6 +259,22 @@ evolved_estimator = GAFeatureSelectionCV(
 evolved_estimator.fit(X_train, y_train)
 ```
 
+Rendered output from the documentation run:
+
+<!-- docs-example:basic-usage-feature-output:start -->
+```text
+Holdout accuracy: 0.9200
+Selected features: 5 of 14
+Selected noise features: 1
+Selected feature names:
+- sepal length (cm)
+- sepal width (cm)
+- petal length (cm)
+- petal width (cm)
+- noise_2
+```
+<!-- docs-example:basic-usage-feature-output:end -->
+
 After fitting, `GAFeatureSelectionCV` behaves like a fitted scikit-learn estimator. Prediction methods use only the selected columns:
 
 ```python
@@ -219,6 +292,16 @@ Plot the fitness evolution for the feature-selection search:
 plot_fitness_evolution(evolved_estimator)
 plt.show()
 ```
+
+Visualize the selected feature mask directly:
+
+```python
+feature_names = list(data.feature_names) + [f"noise_{i}" for i in range(noise.shape[1])]
+plot_feature_selection(evolved_estimator, feature_names=feature_names)
+plt.show()
+```
+
+![Selected feature mask](/images/basic_usage_feature_selection.png)
 
 ## Tips & Gotchas
 

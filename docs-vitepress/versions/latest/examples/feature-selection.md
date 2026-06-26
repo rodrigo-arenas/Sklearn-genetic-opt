@@ -15,6 +15,7 @@ This example adds synthetic noise features to the Iris dataset to make feature s
 
 ```python
 import warnings
+import random
 
 import numpy as np
 import pandas as pd
@@ -29,11 +30,14 @@ from sklearn_genetic import (
     EvolutionConfig, GAFeatureSelectionCV, OptimizationConfig, PopulationConfig, RuntimeConfig,
 )
 from sklearn_genetic.callbacks import ConsecutiveStopping, DeltaThreshold, TimerStopping
+from sklearn_genetic.plots import plot_feature_selection
 from sklearn_genetic.schedules import ExponentialAdapter, InverseAdapter
 
 warnings.filterwarnings("ignore", category=UserWarning)
 
 RANDOM_STATE = 42
+random.seed(RANDOM_STATE)
+np.random.seed(RANDOM_STATE)
 rng = np.random.default_rng(RANDOM_STATE)
 ```
 
@@ -146,6 +150,17 @@ print(f"Selected {len(selected_features)} of {X_train.shape[1]} features")
 print(selected_summary[selected_summary["selected"]])
 ```
 
+A support-mask plot makes the result easier to audit than a long boolean table, especially when the feature matrix mixes domain features and synthetic noise columns.
+
+```python
+import matplotlib.pyplot as plt
+
+plot_feature_selection(selector, feature_names=X_train.columns)
+plt.show()
+```
+
+![Selected feature mask](/images/feature_selection_support_mask.png)
+
 ## Telemetry
 
 ```python
@@ -187,6 +202,10 @@ pd.DataFrame(
 
 print(classification_report(y_test, selector.predict(X_test), target_names=iris.target_names))
 ```
+
+The plot below keeps the comparison focused on the tutorial question: did the compact subset preserve or improve predictive quality after removing noisy columns?
+
+![Feature selection holdout comparison](/images/feature_selection_metric_comparison.png)
 
 ## Practical Notes
 

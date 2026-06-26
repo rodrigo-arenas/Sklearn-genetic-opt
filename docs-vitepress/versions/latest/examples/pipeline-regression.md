@@ -15,8 +15,10 @@ This example shows how to tune a scikit-learn `Pipeline` with `GASearchCV`. Pipe
 
 ```python
 import warnings
+import random
 from pprint import pprint
 
+import numpy as np
 import pandas as pd
 from sklearn.datasets import load_diabetes
 from sklearn.ensemble import GradientBoostingRegressor
@@ -29,13 +31,20 @@ from sklearn_genetic import (
     EvolutionConfig, GASearchCV, OptimizationConfig, PopulationConfig, RuntimeConfig,
 )
 from sklearn_genetic.callbacks import ConsecutiveStopping, DeltaThreshold, TimerStopping
-from sklearn_genetic.plots import plot_fitness_evolution, plot_search_space
+from sklearn_genetic.plots import (
+    plot_cv_scores,
+    plot_fitness_evolution,
+    plot_score_landscape,
+    plot_search_space,
+)
 from sklearn_genetic.schedules import ExponentialAdapter, InverseAdapter
 from sklearn_genetic.space import Categorical, Continuous, Integer
 
 warnings.filterwarnings("ignore", category=UserWarning)
 
 RANDOM_STATE = 42
+random.seed(RANDOM_STATE)
+np.random.seed(RANDOM_STATE)
 
 data = load_diabetes(as_frame=True)
 X, y = data.data, data.target
@@ -167,6 +176,10 @@ ga_metrics = regression_metrics(search, X_test, y_test)
 pd.DataFrame([baseline_metrics, ga_metrics], index=["baseline", "ga_pipeline"])
 ```
 
+The holdout comparison is the fastest sanity check: the GA should earn its extra search cost by improving the metrics you actually care about outside cross-validation.
+
+![Pipeline regression holdout metrics](/images/pipeline_regression_metric_comparison.png)
+
 ## Search Cost and Telemetry
 
 ```python
@@ -193,6 +206,32 @@ plot_search_space(search, features=["regressor__learning_rate", "regressor__max_
 plt.show()
 ```
 
+The search-space view shows where candidates were sampled, but a fitted search can answer more pointed questions. For example, this landscape highlights which regions of learning rate and tree depth were consistently promising:
+
+```python
+plot_score_landscape(
+    search,
+    x="regressor__learning_rate",
+    y="regressor__max_depth",
+)
+plt.show()
+```
+
+![Pipeline regression score landscape](/images/pipeline_regression_score_landscape.png)
+
+When several candidates have similar mean scores, inspect fold stability before trusting a tiny ranking difference:
+
+```python
+plot_cv_scores(
+    search,
+    top_k=5,
+    label_params=["regressor__learning_rate", "regressor__max_depth"],
+)
+plt.show()
+```
+
+![Pipeline regression CV scores](/images/pipeline_regression_cv_scores.png)
+
 ## Practical Notes
 
 - Use pipeline parameter names exactly as sklearn expects them (`step__param`).
@@ -204,4 +243,4 @@ plt.show()
 
 - [Pipeline Tuning Guide](../guide/pipeline-tuning) — pipeline parameter naming and step configuration
 - [Search Space API](../api/space) — `Continuous`, `Integer`, `Categorical` reference
-- [Plots API](../api/plots) — `plot_fitness_evolution` and `plot_search_space` reference
+- [Plots API](../api/plots) — convergence, landscape, CV stability, and candidate-ranking plots
