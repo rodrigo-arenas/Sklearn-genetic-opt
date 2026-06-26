@@ -10,11 +10,12 @@
  *   2. Strips the :::warning Development version ::: banner from all pages
  *   3. Updates "X.Y (stable)" labels in :::info Version boxes to the new number
  *   4. Adds the new version to the nav dropdown and sidebar in config.ts
- *   5. Updates "see [0.X]" references inside latest/ dev banners to point to
+ *   5. Updates versions/stable/index.md to redirect to the new stable version
+ *   6. Updates "see [0.X]" references inside latest/ dev banners to point to
  *      the new stable version
  */
 
-import { cpSync, readFileSync, writeFileSync, readdirSync, statSync, existsSync } from 'fs'
+import { cpSync, rmSync, readFileSync, writeFileSync, readdirSync, statSync, existsSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 
@@ -32,9 +33,13 @@ const latestDir = join(docsRoot, 'versions', 'latest')
 const frozenDir = join(docsRoot, 'versions', version)
 
 // ── 1 & 2 & 3. Copy latest/ → versions/<version>/ then clean it up ──────────
-if (existsSync(frozenDir)) {
-  console.log(`versions/${version}/ already exists — skipping copy.`)
-} else {
+// Always overwrite: patch releases (e.g. 0.13.1) reuse the same minor folder
+// (e.g. 0.13/) so we delete and re-copy to avoid stale files.
+{
+  if (existsSync(frozenDir)) {
+    console.log(`versions/${version}/ already exists — overwriting for patch release.`)
+    rmSync(frozenDir, { recursive: true, force: true })
+  }
   console.log(`Copying versions/latest/ → versions/${version}/`)
   cpSync(latestDir, frozenDir, { recursive: true })
 
@@ -105,7 +110,23 @@ if (config.includes(`'/versions/${version}/'`)) {
   console.log(`Updated config.ts: added version ${version} to nav and sidebar`)
 }
 
-// ── 5. Update "see [0.X]" references in latest/ dev banners ─────────────────
+// ── 5. Update /stable redirect to point at the new stable version ────────────
+const stablePage = join(docsRoot, 'versions', 'stable', 'index.md')
+if (existsSync(stablePage)) {
+  let stableContent = readFileSync(stablePage, 'utf8')
+  stableContent = stableContent.replace(
+    /url:\/versions\/[\d.]+\//g,
+    `url:/versions/${version}/`
+  )
+  stableContent = stableContent.replace(
+    /window\.location\.replace\('\/versions\/[\d.]+\/'\)/g,
+    `window.location.replace('/versions/${version}/')`
+  )
+  writeFileSync(stablePage, stableContent, 'utf8')
+  console.log(`Updated /stable redirect → /versions/${version}/`)
+}
+
+// ── 6. Update "see [0.X]" references in latest/ dev banners ─────────────────
 walkMd(latestDir, (filePath) => {
   let content = readFileSync(filePath, 'utf8')
   // Replace version links inside the warning block only

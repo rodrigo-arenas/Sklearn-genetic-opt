@@ -122,3 +122,91 @@ jobs:
         run: python -m build
       - name: Check package metadata
         run: twine check dist/*
+
+  publish:
+    name: Publish to PyPI
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [lint, tests, coverage, package]
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      contents: read   # for checkout
+      id-token: write  # for OIDC trusted publishing to PyPI
+    steps:
+      - uses: actions/checkout@v7
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build
+      - name: Build package
+        run: python -m build
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+  sync-conda-recipe:
+    name: Sync conda recipe
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.DOCS_RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Build sdist and compute SHA256
+        run: |
+          pip install build
+          python -m build --sdist
+          SHA256=$(python -c "import hashlib,glob; f=glob.glob('dist/*.tar.gz')[0]; print(hashlib.sha256(open(f,'rb').read()).hexdigest())")
+          TAG="${{ github.ref_name }}"
+          VERSION=$(echo "${TAG}" | sed 's/^v//')
+          echo "SHA256=${SHA256}" >> $GITHUB_ENV
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+
+      - name: Update conda recipe source
+        run: |
+          python - <<'EOF'
+          import re, pathlib, os
+          version = os.environ["VERSION"]
+          sha256 = os.environ["SHA256"]
+          sdist_url = (
+              f"https://pypi.io/packages/source/s/sklearn-genetic-opt/"
+              f"sklearn_genetic_opt-{version}.tar.gz"
+          )
+          recipe = pathlib.Path("conda.recipe/meta.yaml").read_text()
+          new_source = f"source:\n  url: {sdist_url}\n  sha256: {sha256}"
+          recipe = re.sub(
+              r"source:\n(?:  #[^\n]*\n)*  path: \.\.",
+              new_source,
+              recipe,
+          )
+          pathlib.Path("conda.recipe/meta.yaml").write_text(recipe)
+          print(f"Updated conda recipe for {version}")
+          EOF
+
+      - name: Commit and push updated recipe
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git pull --rebase origin master
+          git add conda.recipe/meta.yaml
+          if git diff --staged --quiet; then
+            echo "No changes to conda recipe."
+          else
+            git commit -m "ci: update conda recipe for ${{ github.ref_name }}"
+            git push origin HEAD:master
+          fi

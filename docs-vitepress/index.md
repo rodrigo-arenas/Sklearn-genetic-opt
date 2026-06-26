@@ -13,7 +13,7 @@ hero:
   actions:
     - theme: brand
       text: Get Started
-      link: /versions/0.13/
+      link: /stable/
     - theme: alt
       text: View on GitHub
       link: https://github.com/rodrigo-arenas/Sklearn-genetic-opt
