@@ -1,0 +1,43 @@
+name: Verify executable docs examples
+
+# The example/tutorial pages under docs-vitepress/versions/latest are generated
+# from the Python scripts in docs-vitepress/examples-src (see that folder's
+# README). Regenerating them runs real model searches, so this is intentionally
+# NOT on every push — the committed Markdown already carries the rendered output
+# that the VitePress deploy builds. Run it on demand, and weekly, to catch drift
+# between the generators and the committed pages.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * 1"   # Mondays 06:00 UTC
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Regenerate and diff
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install package and docs dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[all]"
+          pip install xgboost lightgbm catboost
+
+      - name: Regenerate docs and fail on drift
+        env:
+          MPLBACKEND: Agg
+          OMP_NUM_THREADS: "1"
+          OPENBLAS_NUM_THREADS: "1"
+          MKL_NUM_THREADS: "1"
+        run: python docs-vitepress/scripts/build_docs.py --check
