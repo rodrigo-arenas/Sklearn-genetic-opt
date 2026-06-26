@@ -23,6 +23,7 @@ Full release notes with code examples are in the [documentation](https://rodrigo
 - **Final selection**: `final_selection=True` re-evaluates top-K candidates after the GA and selects the best before refitting.
 - **Uniform crossover**: `GASearchCV` now uses `cxUniform` (50% per-gene swap probability) instead of two-point crossover for mixed-type hyperparameter spaces.
 - **Expanded plots**: `plot_fitness_evolution` supports multiple metrics and smoothing; `plot_history` can visualize arbitrary telemetry fields; `plot_search_space` adds pair-plot mode and correlation heatmap.
+- **Bayesmark-style benchmark**: new `benchmarks/benchmark_bayesmark.py` script and a Benchmarks documentation section compare `GASearchCV` head-to-head with Optuna (TPE) and `RandomizedSearchCV` on the standard Bayesmark datasets and search spaces under an equal evaluation budget. Optuna and SciPy are available as an optional `benchmark` extra (`pip install sklearn-genetic-opt[benchmark]`).
 
 ### Bug Fixes
 

@@ -12,6 +12,19 @@ const gaHead: HeadConfig[] = GA_TAG
 
 // Sidebar shared across versions — paths are relative to the version root
 function versionSidebar(versionPrefix: string) {
+  // The Benchmarks section is only published for the in-development docs.
+  const isLatest = versionPrefix.endsWith('/latest')
+  const benchmarksSection = isLatest
+    ? [
+        {
+          text: 'Benchmarks',
+          items: [
+            { text: 'Bayesmark Comparison', link: `${versionPrefix}/benchmarks/` },
+          ],
+        },
+      ]
+    : []
+
   return [
     {
       text: 'Getting Started',
@@ -79,6 +92,7 @@ function versionSidebar(versionPrefix: string) {
         { text: 'Plotting Gallery', link: `${versionPrefix}/examples/plotting-gallery` },
       ],
     },
+    ...benchmarksSection,
     {
       text: 'Release Notes',
       items: [
