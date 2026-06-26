@@ -9,10 +9,10 @@ This is the **latest (dev)** documentation. It may contain unreleased features o
 
 # Examples
 
-End-to-end runnable examples from real use cases. Each example is self-contained — you can copy the code directly into a script or notebook.
+Short, focused recipes — each example is self-contained and demonstrates a single feature you can copy directly into a script or notebook.
 
-:::tip Looking for deeper tutorials?
-The [Tutorials](/versions/latest/tutorials/) section covers comprehensive walkthroughs for XGBoost, LightGBM, CatBoost, multi-stage feature selection, and imbalanced classification — each with baseline comparisons, visualizations, and practical notes.
+::: tip Examples vs Tutorials
+**Examples** are focused recipes that each show one capability (a scorer, a plot, checkpointing, …). **[Tutorials](/versions/latest/tutorials/)** are longer, end-to-end walkthroughs of a complete real-world task — from raw data to a tuned, evaluated model — usually integrating a specific library (XGBoost, LightGBM, CatBoost, …).
 :::
 
 ## Hyperparameter Search
