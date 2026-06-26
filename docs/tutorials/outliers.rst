@@ -47,32 +47,63 @@ Using `GASearchCV` with `IsolationForest`:
 .. code-block:: python
 
     from sklearn.ensemble import IsolationForest
+    from sklearn.metrics import roc_auc_score
+    from sklearn.model_selection import StratifiedKFold, train_test_split
     from sklearn_genetic import EvolutionConfig, GASearchCV, PopulationConfig, RuntimeConfig
+    from sklearn_genetic.plots import plot_cv_scores, plot_score_landscape
     from sklearn_genetic.space import Integer, Continuous
     from sklearn.datasets import make_blobs
+    import matplotlib.pyplot as plt
     import numpy as np
+    import random
+
+    random.seed(42)
+    np.random.seed(42)
 
     # Create synthetic data with outliers
-    X_normal, _ = make_blobs(n_samples=200, centers=1, n_features=4, random_state=42)
-    X_outliers = np.random.uniform(low=-6, high=6, size=(20, 4))
+    X_normal, _ = make_blobs(n_samples=475, centers=2, cluster_std=0.8, random_state=42)
+    rng = np.random.default_rng(42)
+    X_outliers = rng.uniform(low=-6, high=6, size=(25, 2))
     X = np.vstack([X_normal, X_outliers])
+    y = np.array([0] * 475 + [1] * 25)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, stratify=y, random_state=42
+    )
+    cv = StratifiedKFold(n_splits=3, shuffle=True, random_state=42)
+
+    def outlier_roc_auc(estimator, X_eval, y_eval):
+        scores = -estimator.score_samples(X_eval)
+        return roc_auc_score(y_eval, scores)
 
     estimator = IsolationForest(random_state=42)
 
     param_grid = {
         'contamination': Continuous(0.05, 0.3),
-        'n_estimators': Integer(50, 150)
+        'max_samples': Continuous(0.05, 0.80),
+        'n_estimators': Integer(50, 150),
     }
 
     search = GASearchCV(estimator=estimator,
                         param_grid=param_grid,
-                        scoring=None,  # triggers default_outlier_scorer
-                        cv=3,
+                        scoring=outlier_roc_auc,
+                        cv=cv,
                         evolution_config=EvolutionConfig(generations=4, population_size=6),
                         population_config=PopulationConfig(initializer="smart"),
                         runtime_config=RuntimeConfig(n_jobs=-1))
 
-    search.fit(X)
+    search.fit(X_train, y_train)
+
+    plot_score_landscape(search, x="max_samples", y="contamination")
+    plt.show()
+
+    plot_cv_scores(search, top_k=5, label_params=["max_samples", "contamination"])
+    plt.show()
+
+.. image:: ../images/outliers_isolation_forest_score_landscape.png
+   :alt: IsolationForest score landscape
+
+.. image:: ../images/outliers_isolation_forest_cv_scores.png
+   :alt: IsolationForest CV score stability
 
 Using `GAFeatureSelectionCV` with outlier detection:
 

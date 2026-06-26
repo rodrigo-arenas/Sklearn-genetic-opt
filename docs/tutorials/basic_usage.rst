@@ -230,6 +230,20 @@ best score found so far changed over generations:
 
 .. image:: ../images/basic_usage_fitness_plot_3.png
 
+For a fuller diagnostic view, use
+:func:`~sklearn_genetic.plots.plot_search_overview`. It combines convergence,
+diversity and stagnation, optimizer-control decisions, and the strongest
+candidate solutions in a single figure:
+
+.. code:: python3
+
+    from sklearn_genetic.plots import plot_search_overview
+
+    plot_search_overview(evolved_estimator, top_k=6)
+    plt.show()
+
+.. image:: ../images/basic_usage_search_overview.png
+
 The ``evolved_estimator.logbook`` attribute stores the results generated during
 the search. You can use :func:`~sklearn_genetic.plots.plot_search_space` to see
 which hyperparameter values were sampled:
@@ -246,6 +260,18 @@ which hyperparameter values were sampled:
 In this plot, each axis represents a sampled hyperparameter value. For example,
 the ``tol`` range is intentionally broad in this tutorial, and the plot can help
 you decide whether to narrow that range in a second search.
+
+When you want to see how values changed in evaluation order, use
+:func:`~sklearn_genetic.plots.plot_parameter_evolution`:
+
+.. code:: python3
+
+    from sklearn_genetic.plots import plot_parameter_evolution
+
+    plot_parameter_evolution(evolved_estimator, parameters=["tol", "batch_size", "alpha"])
+    plt.show()
+
+.. image:: ../images/basic_usage_parameter_evolution.png
 
 Feature Selection
 -----------------
@@ -269,12 +295,13 @@ noise.
         PopulationConfig,
         RuntimeConfig,
     )
-    from sklearn_genetic.plots import plot_fitness_evolution
+    from sklearn_genetic.plots import plot_feature_selection, plot_fitness_evolution
 
     data = load_iris()
     X, y = data["data"], data["target"]
 
-    noise = np.random.uniform(0, 10, size=(X.shape[0], 10))
+    rng = np.random.default_rng(42)
+    noise = rng.uniform(0, 10, size=(X.shape[0], 10))
     X = np.hstack((X, noise))
 
     X_train, X_test, y_train, y_test = train_test_split(
@@ -345,6 +372,17 @@ You can plot the fitness evolution for the feature-selection search too:
     plt.show()
 
 .. image:: ../images/basic_usage_fitness_plot_7.PNG
+
+The selected support mask can also be visualized directly. Selected features
+are highlighted, while rejected features remain in the background:
+
+.. code:: python3
+
+    feature_names = list(data.feature_names) + [f"noise_{i}" for i in range(noise.shape[1])]
+    plot_feature_selection(evolved_estimator, feature_names=feature_names)
+    plt.show()
+
+.. image:: ../images/basic_usage_feature_selection.png
 
 This concludes the basic sklearn-genetic-opt workflow. The next tutorials cover
 callbacks, custom callbacks, schedulers, reproducibility, MLflow integration,

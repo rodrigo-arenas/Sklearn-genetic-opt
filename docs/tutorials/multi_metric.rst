@@ -42,6 +42,9 @@ Setup
 
 .. code:: python3
 
+    import random
+
+    import numpy as np
     from sklearn.datasets import load_iris
     from sklearn.linear_model import LogisticRegression
     from sklearn.metrics import (
@@ -55,7 +58,11 @@ Setup
     from sklearn.preprocessing import StandardScaler
 
     from sklearn_genetic import EvolutionConfig, GASearchCV, PopulationConfig, RuntimeConfig
+    from sklearn_genetic.plots import plot_candidate_rankings
     from sklearn_genetic.space import Categorical, Continuous, Integer
+
+    random.seed(42)
+    np.random.seed(42)
 
     X, y = load_iris(return_X_y=True)
     X_train, X_test, y_train, y_test = train_test_split(
@@ -171,6 +178,29 @@ Find the best configuration for each metric without rerunning the search:
 
 This is useful when you want to compare what configuration each metric
 would select after a single search run.
+
+For advanced inspection, plot the best candidates under each metric. This
+shows whether accuracy, balanced accuracy, and macro-F1 are rewarding the same
+region of the search space.
+
+.. code:: python3
+
+    import matplotlib.pyplot as plt
+
+    fig, axes = plt.subplots(1, 3, figsize=(15, 4), sharey=True)
+    for axis, metric in zip(axes, ["accuracy", "balanced_accuracy", "f1_macro"]):
+        plot_candidate_rankings(
+            search,
+            top_k=5,
+            metric=metric,
+            label_params=["logistic__C", "logistic__l1_ratio"],
+            ax=axis,
+            title=metric,
+        )
+    plt.show()
+
+.. image:: ../images/multi_metric_candidate_rankings.png
+   :alt: Multi-metric candidate rankings
 
 Change the Refit Metric
 ------------------------

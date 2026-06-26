@@ -57,6 +57,9 @@ uses a broad search space where multiple different regions can perform well.
 
 .. code:: python3
 
+    import random
+
+    import numpy as np
     import pandas as pd
 
     from sklearn.datasets import load_breast_cancer
@@ -71,8 +74,12 @@ uses a broad search space where multiple different regions can perform well.
         PopulationConfig,
         RuntimeConfig,
     )
+    from sklearn_genetic.plots import plot_diversity, plot_optimizer_events
     from sklearn_genetic.schedules import ExponentialAdapter, InverseAdapter
     from sklearn_genetic.space import Categorical, Integer
+
+    random.seed(42)
+    np.random.seed(42)
 
     X, y = load_breast_cancer(return_X_y=True)
     X_train, X_test, y_train, y_test = train_test_split(
@@ -170,6 +177,26 @@ After fitting, convert ``history`` to a dataframe to inspect the search:
 
     print(history[columns])
     print(search.fit_stats_)
+
+Visual plots make the same telemetry easier to inspect. Diversity shows whether
+the population collapsed or recovered; optimizer events show when controls
+such as random immigrants, sharing, or local search changed the run.
+
+.. code:: python3
+
+    import matplotlib.pyplot as plt
+
+    plot_diversity(search)
+    plt.show()
+
+    plot_optimizer_events(search)
+    plt.show()
+
+.. image:: ../images/advanced_optimizer_diversity.png
+   :alt: Advanced optimizer diversity telemetry
+
+.. image:: ../images/advanced_optimizer_events.png
+   :alt: Advanced optimizer event timeline
 
 The most useful fields are:
 

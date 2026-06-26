@@ -18,10 +18,10 @@ You are reading the **latest (dev)** docs. For the stable version, see [0.13](/v
 
 ## The Custom Scorer Pattern
 
-The general pattern for any outlier estimator:
+The general pattern for any outlier estimator is to pass a callable scorer with the sklearn estimator signature:
 
 ```python
-from sklearn.metrics import roc_auc_score, make_scorer
+from sklearn.metrics import roc_auc_score
 
 def outlier_roc_auc(estimator, X, y):
     # Replace .score_samples with the method appropriate for your estimator
@@ -29,13 +29,13 @@ def outlier_roc_auc(estimator, X, y):
     scores = -estimator.score_samples(X)
     return roc_auc_score(y, scores)
 
-scoring = make_scorer(outlier_roc_auc, needs_proba=False)
+scoring = outlier_roc_auc
 ```
 
 Two details matter:
 
 - **Negate the score** — `score_samples` and `decision_function` return *lower* values for anomalies, but `roc_auc_score` expects *higher* values for the positive class (`y=1` = outlier). Negating aligns them. Omitting the negation causes the GA to silently optimise in the wrong direction.
-- **`needs_proba=False`** — tells `make_scorer` not to call `predict_proba` or `decision_function` automatically. Without it, sklearn tries to call the estimator's standard probability method, which outlier detectors do not have.
+- **Use the estimator-aware scorer signature** — the callable receives `(estimator, X, y)`, so it can call `score_samples` directly. Do not wrap this pattern with `make_scorer`, which is intended for functions that receive `y_true` and predictions.
 
 ### Which scoring method to use
 
@@ -54,14 +54,20 @@ Standard LOF (`novelty=False`) computes scores using the training neighbourhood.
 ## IsolationForest Example
 
 ```python
+import random
+
 import numpy as np
 from sklearn.datasets import make_blobs
 from sklearn.ensemble import IsolationForest
-from sklearn.metrics import roc_auc_score, make_scorer
+from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import StratifiedKFold, train_test_split
 
 from sklearn_genetic import EvolutionConfig, GASearchCV, PopulationConfig, RuntimeConfig
+from sklearn_genetic.plots import plot_cv_scores, plot_score_landscape
 from sklearn_genetic.space import Continuous, Integer
+
+random.seed(42)
+np.random.seed(42)
 
 # Synthetic dataset: two normal clusters + 5% uniform outliers
 X_normal, _ = make_blobs(n_samples=475, centers=2, cluster_std=0.8, random_state=42)
@@ -91,7 +97,7 @@ search = GASearchCV(
         "max_features":  Continuous(0.5, 1.0),
     },
     cv=cv,
-    scoring=make_scorer(outlier_roc_auc, needs_proba=False),
+    scoring=outlier_roc_auc,
     evolution_config=EvolutionConfig(population_size=15, generations=12),
     population_config=PopulationConfig(initializer="smart"),
     runtime_config=RuntimeConfig(n_jobs=-1, verbose=True),
@@ -102,6 +108,26 @@ search.fit(X_train, y_train)
 print("Best CV ROC AUC:", round(search.best_score_, 4))
 print("Best parameters:", search.best_params_)
 ```
+
+Anomaly searches can look stable even when the scorer is sensitive to the thresholding parameters. The landscape view shows how the best regions depend on `max_samples` and `contamination`:
+
+```python
+import matplotlib.pyplot as plt
+
+plot_score_landscape(search, x="max_samples", y="contamination")
+plt.show()
+```
+
+![IsolationForest score landscape](/images/outliers_isolation_forest_score_landscape.png)
+
+Use the fold-level plot to check whether top candidates are consistently strong or just lucky on one split:
+
+```python
+plot_cv_scores(search, top_k=5, label_params=["max_samples", "contamination"])
+plt.show()
+```
+
+![IsolationForest CV scores](/images/outliers_isolation_forest_cv_scores.png)
 
 ## LocalOutlierFactor Example
 
@@ -118,7 +144,7 @@ lof_search = GASearchCV(
         "leaf_size":         Integer(10, 60),
     },
     cv=cv,
-    scoring=make_scorer(outlier_roc_auc, needs_proba=False),
+    scoring=outlier_roc_auc,
     evolution_config=EvolutionConfig(population_size=15, generations=10),
     population_config=PopulationConfig(initializer="smart"),
     runtime_config=RuntimeConfig(n_jobs=-1, verbose=True),
@@ -133,7 +159,7 @@ print("Best parameters:", lof_search.best_params_)
 ## Tips & Gotchas
 
 - **Always negate the score** — `score_samples` is lower for anomalies. Pass `-score_samples` to `roc_auc_score` when `y=1` is the outlier class. Getting this wrong produces a valid-looking search that quietly minimises detection quality.
-- **`needs_proba=False` is required** — outlier estimators have no `predict_proba`. Without this flag, `make_scorer` tries to call it and raises an `AttributeError`.
+- **Pass a callable scorer directly** — outlier estimators have no `predict_proba`, and the scorer needs access to the estimator so it can call `score_samples`.
 - **Use `StratifiedKFold`** — with 5% outliers, plain `KFold` can produce folds with very few anomalies, making the AUC estimate noisy and the fitness signal unreliable.
 - **`contamination` affects `predict`, not `score_samples`** — tuning it improves the hard-decision boundary but not the ranking score. If your downstream use only needs ranking (e.g., a top-K alert list), fix `contamination` based on domain knowledge and remove it from the search space.
 - **`score_samples` is independent of `contamination`** for IsolationForest — you can optimise the scorer freely without worrying that contamination is circularly influencing the metric used to select it.
