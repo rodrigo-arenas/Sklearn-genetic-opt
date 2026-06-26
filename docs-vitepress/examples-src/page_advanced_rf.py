@@ -51,10 +51,16 @@ nb.md(
     ## A Non-Trivial Dataset
 
     A genetic search only earns its keep when the problem is hard enough that the
-    defaults leave accuracy on the table. We build a 2,000-sample,
-    30-feature classification problem with overlapping classes
-    (`class_sep=0.6`), label noise (`flip_y=0.08`), and several uninformative and
-    redundant columns. The defaults will not be optimal here.
+    defaults leave performance on the table. We build a 1,600-sample,
+    30-feature **imbalanced** classification problem — only ~15% of samples are in
+    the positive class — with label noise and several redundant columns.
+
+    Class imbalance is exactly the kind of setting where the defaults stumble: a
+    plain `RandomForestClassifier` has no `class_weight`, so it happily predicts
+    the majority class and scores well on raw accuracy while doing badly on the
+    minority class. We will score on **balanced accuracy** (the mean of per-class
+    recall), which the defaults are not tuned for — leaving a large, reliable gap
+    for the genetic search to close.
     """
 )
 
@@ -88,14 +94,15 @@ nb.code(
     np.random.seed(RANDOM_STATE)
 
     X, y = make_classification(
-        n_samples=2000,
+        n_samples=1600,
         n_features=30,
         n_informative=8,
-        n_redundant=6,
+        n_redundant=5,
         n_repeated=0,
-        n_clusters_per_class=3,
-        class_sep=0.6,
-        flip_y=0.08,
+        n_clusters_per_class=2,
+        class_sep=0.7,
+        flip_y=0.05,
+        weights=[0.85, 0.15],     # imbalanced: ~15% positive class
         random_state=RANDOM_STATE,
     )
 
@@ -105,7 +112,7 @@ nb.code(
     cv = StratifiedKFold(n_splits=3, shuffle=True, random_state=RANDOM_STATE)
 
     print(f"train={X_train.shape}  test={X_test.shape}")
-    print(f"class balance (train): {np.bincount(y_train)}")
+    print(f"class balance (train): {np.bincount(y_train)}  (positive class is the minority)")
     """
 )
 
@@ -114,7 +121,9 @@ nb.md(
     ## Baseline: The Default Forest
 
     First, a plain `RandomForestClassifier` with library defaults. This is the bar
-    the genetic search has to clear, measured on the held-out test set.
+    the genetic search has to clear, measured on the held-out test set. Watch the
+    gap between **accuracy** and **balanced accuracy** — the default forest looks
+    fine on raw accuracy but is quietly failing the minority class.
     """
 )
 
@@ -146,19 +155,22 @@ nb.md(
     We give the genetic search room to move on the parameters that matter most for
     a random forest's bias/variance trade-off: ensemble size, tree depth, the
     split/leaf regularizers, the feature-sampling rule, and cost-complexity
-    pruning.
+    pruning. Crucially we also expose **`class_weight`** — the lever the default
+    forest never touches — so the search can discover that re-weighting the
+    minority class is what this problem needs.
     """
 )
 
 nb.code(
     """
     param_grid = {
-        "n_estimators": Integer(60, 220),
-        "max_depth": Integer(3, 18),
-        "min_samples_split": Integer(2, 14),
-        "min_samples_leaf": Integer(1, 8),
+        "n_estimators": Integer(80, 250),
+        "max_depth": Integer(3, 16),
+        "min_samples_split": Integer(2, 12),
+        "min_samples_leaf": Integer(1, 6),
         "max_features": Categorical(["sqrt", "log2", None]),
-        "ccp_alpha": Continuous(0.0, 0.02),
+        "class_weight": Categorical(["balanced", "balanced_subsample", None]),
+        "ccp_alpha": Continuous(0.0, 0.01),
     }
     """
 )
@@ -193,7 +205,7 @@ nb.code(
     ga_search = GASearchCV(
         estimator=RandomForestClassifier(random_state=RANDOM_STATE, n_jobs=1),
         param_grid=param_grid,
-        scoring="roc_auc",
+        scoring="balanced_accuracy",
         cv=cv,
         evolution_config=EvolutionConfig(
             population_size=12,
@@ -211,11 +223,12 @@ nb.code(
         population_config=PopulationConfig(
             initializer="smart",
             warm_start_configs=[{
-                "n_estimators": 120,
-                "max_depth": 8,
+                "n_estimators": 150,
+                "max_depth": 10,
                 "min_samples_split": 4,
                 "min_samples_leaf": 2,
                 "max_features": "sqrt",
+                "class_weight": "balanced",
                 "ccp_alpha": 0.0,
             }],
         ),
@@ -251,7 +264,7 @@ nb.code(
     np.random.seed(RANDOM_STATE)
     ga_search.fit(X_train, y_train, callbacks=callbacks)
 
-    print(f"Best CV ROC AUC: {ga_search.best_score_:.4f}")
+    print(f"Best CV balanced accuracy: {ga_search.best_score_:.4f}")
     print("Best params:")
     for key, value in sorted(ga_search.best_params_.items()):
         print(f"  {key:18s}: {value}")
@@ -263,7 +276,8 @@ nb.md(
     ## Did It Beat the Defaults?
 
     Both rows use the **same model class** and the **same train/test split** — the
-    only difference is the hyperparameters.
+    only difference is the hyperparameters. The headline metric is **balanced
+    accuracy**, which weighs both classes equally.
     """
 )
 
@@ -287,8 +301,12 @@ nb.code(
 
 nb.md(
     """
-    The genetic search lifts every metric on the untouched test set — the defaults
-    really were leaving accuracy on the table for this problem.
+    The genetic search lifts **balanced accuracy** sharply on the untouched test
+    set by discovering `class_weight` re-balancing that the default forest never
+    applies. Raw accuracy may dip slightly — that is the honest trade-off of
+    treating the minority class seriously rather than predicting the majority by
+    default — but ROC AUC and balanced accuracy, the metrics that actually matter
+    on imbalanced data, both improve.
 
     ## Reading the Telemetry
 
@@ -342,7 +360,7 @@ nb.code(
     ax = plot_fitness_evolution(
         ga_search,
         metrics=["fitness_best", "fitness"],
-        title="Best-so-far vs population-mean ROC AUC",
+        title="Best-so-far vs population-mean balanced accuracy",
     )
     ax.set_xlabel("generation")
     ax.figure.set_size_inches(8, 4.5)
@@ -351,7 +369,7 @@ nb.code(
 )
 nb.figure(
     "advanced_rf_fitness.png",
-    "Best-so-far and population-mean cross-validated ROC AUC across generations",
+    "Best-so-far and population-mean cross-validated balanced accuracy across generations",
     caption="The best-so-far curve (top) climbs above the warm-started baseline while the population mean trails the leading edge.",
 )
 
@@ -406,7 +424,7 @@ nb.code(
         estimator=RandomForestClassifier(
             random_state=RANDOM_STATE, n_jobs=1, **ga_search.best_params_
         ),
-        scoring="roc_auc",
+        scoring="balanced_accuracy",
         cv=cv,
         max_features=14,
         evolution_config=EvolutionConfig(
@@ -434,7 +452,7 @@ nb.code(
 
     n_selected = int(feature_selector.support_.sum())
     fs_best_cv = float(pd.DataFrame(feature_selector.history)["fitness_best"].max())
-    print(f"Best CV ROC AUC (selection): {fs_best_cv:.4f}")
+    print(f"Best CV balanced accuracy (selection): {fs_best_cv:.4f}")
     print(f"Selected {n_selected} of {X_train.shape[1]} columns")
     print(f"Selected indices: {np.where(feature_selector.support_)[0].tolist()}")
     """
