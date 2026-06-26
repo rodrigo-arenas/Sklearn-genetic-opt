@@ -37,8 +37,7 @@ nb = Notebook(
     ),
 )
 
-nb.md(
-    """
+nb.md("""
     ## Setup: One Search to Plot
 
     We tune a `RandomForestClassifier` on the breast-cancer dataset with several
@@ -47,11 +46,9 @@ nb.md(
     enabled so the diversity, optimizer-event, and decision plots actually have
     something to show. The run is small (population 12 x 10 generations) so the
     whole gallery builds in well under a minute.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     import warnings
 
     import matplotlib.pyplot as plt
@@ -128,18 +125,15 @@ nb.code(
     search.fit(X_train, y_train)
     print("Best CV ROC AUC:", round(search.best_score_, 4))
     print("Best params    :", search.best_params_)
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Overview Dashboard
 
     `plot_search_overview` is the fastest way to inspect a fitted search. It packs
     convergence, diversity, optimizer events, and the strongest candidates into a
     single 2x2 figure.
-    """
-)
+    """)
 
 nb.code(
     """
@@ -153,31 +147,25 @@ nb.figure(
     caption="Four diagnostics at a glance: convergence (top-left), diversity (top-right), optimizer events (bottom-left), and the best evaluated candidates (bottom-right).",
 )
 
-nb.md(
-    """
+nb.md("""
     **What to look for:** a rising best-fitness curve that flattens (converged),
     diversity that stays above zero (no premature collapse), and a tight cluster
     of strong candidates at the top of the ranking panel.
 
     You can also keep a fitted search wrapped in a small plotting facade and call
     the same plots as methods:
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     plotter = SearchPlotter(search)
     type(plotter).__name__
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Fitness Evolution
 
     `plot_fitness_evolution` shows how a fitness metric changes across generations.
-    """
-)
+    """)
 
 nb.code(
     """
@@ -211,8 +199,7 @@ nb.figure(
     caption="best vs. population mean vs. per-generation max, smoothed with a window of 2.",
 )
 
-nb.md(
-    """
+nb.md("""
     **What to look for:** the gap between `fitness_best` and `fitness` (mean) is
     the population's spread. A mean that races up to meet the best can signal the
     population converging — cross-check with the diversity plot below.
@@ -228,8 +215,7 @@ nb.md(
 
     `plot_history` plots any fields from `history` (generation stats) or `logbook`
     (per-candidate evaluations).
-    """
-)
+    """)
 
 nb.code(
     """
@@ -249,13 +235,11 @@ nb.figure(
     caption="Fitness and diversity telemetry, one field per subplot.",
 )
 
-nb.md(
-    """
+nb.md("""
     `plot_search_decisions` focuses only on the optimizer-control fields (mutation
     probability, selection pressure, immigrants, local refinements, ...) as a stack
     of step plots.
-    """
-)
+    """)
 
 nb.code(
     """
@@ -269,8 +253,7 @@ nb.figure(
     caption="When the optimizer adjusted mutation, injected random immigrants, or ran local refinements.",
 )
 
-nb.md(
-    """
+nb.md("""
     **What to look for:** spikes in `random_immigrants` or `duplicate_replacements`
     mean diversity control kicked in; steps in `mutation_probability` show an
     adaptive schedule responding to stagnation.
@@ -278,8 +261,7 @@ nb.md(
     ## Focused Convergence and Diversity
 
     When you want one figure per question instead of the dashboard:
-    """
-)
+    """)
 
 nb.code(
     """
@@ -311,8 +293,7 @@ nb.figure(
     caption="Unique-individual ratio and genotype diversity; stagnant generations on the right axis.",
 )
 
-nb.md(
-    """
+nb.md("""
     **What to look for:** if diversity collapses toward zero early and stagnation
     climbs, the population has converged prematurely — enable `fitness_sharing`,
     raise `random_immigrants_fraction`, or lower `diversity_threshold` before
@@ -322,8 +303,7 @@ nb.md(
 
     `plot_search_space` shows how the sampled parameters relate. The pair plot
     colors points by a categorical column when `hue` is set.
-    """
-)
+    """)
 
 nb.code(
     """
@@ -359,8 +339,7 @@ nb.figure(
     caption="Correlations between sampled parameters and the score.",
 )
 
-nb.md(
-    """
+nb.md("""
     **What to look for:** clusters of sampled points reveal where the optimizer
     concentrated its effort; a strong correlation in the heatmap hints at a
     parameter that drove the score.
@@ -376,8 +355,7 @@ nb.md(
     `plot_parameter_evolution` plots each parameter's sampled value in evaluation
     order, colored by the score, so you can see whether strong candidates clustered
     in a narrow range.
-    """
-)
+    """)
 
 nb.code(
     """
@@ -394,8 +372,7 @@ nb.figure(
     caption="Each parameter's sampled value over evaluation order; brighter points scored higher.",
 )
 
-nb.md(
-    """
+nb.md("""
     **What to look for:** if the brightest points concentrate in a band, the
     optimizer found a productive region for that parameter; values scattered with
     no color pattern mean the parameter mattered little.
@@ -404,8 +381,7 @@ nb.md(
 
     `plot_optimizer_events` shows interventions as a timeline — easier to scan than
     overlapping step lines when you only care *when* the optimizer changed behavior.
-    """
-)
+    """)
 
 nb.code(
     """
@@ -419,8 +395,7 @@ nb.figure(
     caption="Each row is an intervention type; markers mark the generations where it fired.",
 )
 
-nb.md(
-    """
+nb.md("""
     **What to look for:** events bunched in the late generations usually mean the
     optimizer is fighting stagnation; an empty timeline means the search converged
     smoothly without needing diversity interventions.
@@ -428,8 +403,7 @@ nb.md(
     ## Score Landscapes
 
     `plot_score_landscape` highlights promising regions in a two-parameter slice.
-    """
-)
+    """)
 
 nb.code(
     """
@@ -457,8 +431,7 @@ nb.figure(
     caption="Hexbin aggregation of the same slice; each cell is the mean score of the candidates it contains.",
 )
 
-nb.md(
-    """
+nb.md("""
     **What to look for:** the brightest region is where the search found its best
     scores — a useful sanity check that `best_params_` sits inside it rather than
     on a lonely edge point.
@@ -467,8 +440,7 @@ nb.md(
 
     `plot_candidate_rankings` compares the top candidates with their mean score and
     CV standard deviation as error bars.
-    """
-)
+    """)
 
 nb.code(
     """
@@ -499,8 +471,7 @@ nb.figure(
     caption="Per-fold scores for the top candidates; a wide box means a candidate is fragile across splits.",
 )
 
-nb.md(
-    """
+nb.md("""
     **What to look for:** prefer a candidate with a slightly lower mean but a tight
     fold distribution over a high-mean candidate whose folds are all over the place.
 
@@ -510,11 +481,9 @@ nb.md(
     `GAFeatureSelectionCV`, and `plot_search_overview` swaps its candidate panel for
     that mask when given a feature-selection estimator. We run a small selection
     search on iris padded with noise columns.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     from sklearn.datasets import load_iris
     from sklearn.svm import SVC
 
@@ -540,8 +509,7 @@ nb.code(
     )
     selector.fit(X_fs, y_fs)
     print("Selected", int(selector.best_features_.sum()), "of", len(feature_names), "features")
-    """
-)
+    """)
 
 nb.code(
     """
@@ -569,17 +537,14 @@ nb.figure(
     caption="Same dashboard layout, but the candidate panel is replaced by the selected-feature mask.",
 )
 
-nb.md(
-    """
+nb.md("""
     ## Reading History Directly
 
     Every plot reads from `search.history`. You can also work with it as a
     DataFrame for custom reporting.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     history = pd.DataFrame(search.history)
     telemetry_columns = [
         "gen",
@@ -596,11 +561,9 @@ nb.code(
     ]
     available = [c for c in telemetry_columns if c in history.columns]
     print(history[available].tail().to_string(index=False))
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## When to Use Each Plot
 
     | Plot | Use when |
@@ -638,8 +601,7 @@ nb.md(
     - [Plots API](../api/plots) — full parameter reference for every plot function
     - [Feature Selection](./feature-selection) — the search behind the mask plots
     - [Advanced Optimizer Control](../guide/advanced-optimizer-control) — interpreting diversity and stagnation signals
-    """
-)
+    """)
 
 nb.write()
 print("ok plotting-gallery")

@@ -39,19 +39,16 @@ nb = Notebook(
     ),
 )
 
-nb.md(
-    """
+nb.md("""
     ## A Dataset With Known Signal
 
     We generate 1,500 samples with **60 features**, of which only the first 20
     carry information (12 informative + 8 redundant linear combinations). The
     remaining **40 columns are pure noise**. `shuffle=False` keeps the columns in
     that order so we can grade the selection against the truth.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     import warnings
     import numpy as np
     import pandas as pd
@@ -104,22 +101,18 @@ nb.code(
     cv = StratifiedKFold(n_splits=3, shuffle=True, random_state=RANDOM_STATE)
     print(f"{n_features} features: {is_signal.sum()} carry signal, {(~is_signal).sum()} are noise")
     print(f"train={X_train.shape}  test={X_test.shape}")
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Why This Model Needs Feature Selection
 
     We use a **k-nearest-neighbours** classifier. Distance-based models are the
     textbook victim of the *curse of dimensionality*: 40 irrelevant columns drown
     the distance metric, so every prediction is made in a fog of noise. That makes
     this a problem where keeping the right columns is worth real accuracy.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     def make_model():
         return Pipeline([
             ("scaler", StandardScaler()),
@@ -143,22 +136,18 @@ nb.code(
     all_metrics = holdout_scores()
     print(f"All {n_features} features : CV balanced acc = {all_cv:.4f}, "
           f"holdout balanced acc = {all_metrics['balanced_accuracy']:.4f}")
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Evolve the Feature Mask
 
     `GAFeatureSelectionCV` searches over binary masks — `1` keeps a column, `0`
     drops it. We optimize cross-validated balanced accuracy, with diversity
     control and local search switched on so the search explores broadly before
     refining onto a compact subset.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     selector = GAFeatureSelectionCV(
         estimator=make_model(),
         random_state=RANDOM_STATE,
@@ -187,20 +176,16 @@ nb.code(
         ConsecutiveStopping(generations=8, metric="fitness_best"),
     ]
     selector.fit(X_train, y_train, callbacks=callbacks)
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## What Did It Keep?
 
     Because we know which columns are real, we can grade the selection directly:
     how much signal did it keep, and how much noise did it correctly throw away?
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     support = selector.support_
     selected_idx = np.where(support)[0]
     n_selected = int(support.sum())
@@ -209,11 +194,9 @@ nb.code(
     print(f"  signal kept   : {int(is_signal[support].sum())} / {int(is_signal.sum())}")
     print(f"  noise dropped : {int((~is_signal & ~support).sum())} / {int((~is_signal).sum())}")
     print(f"  noise leaked  : {int((~is_signal[support]).sum())}")
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     import matplotlib.pyplot as plt
     from sklearn_genetic.plots import plot_feature_selection
 
@@ -222,8 +205,7 @@ nb.code(
     fig.set_size_inches(11, 4)
     plt.title("Selected feature mask  (info | redundant | noise, left to right)")
     plt.tight_layout()
-    """
-)
+    """)
 nb.figure(
     "feature_selection_support_mask.png",
     "Binary support mask showing which of the 60 columns the genetic search kept",
@@ -232,8 +214,7 @@ nb.figure(
 
 nb.md("### Fitness over generations")
 
-nb.code(
-    """
+nb.code("""
     history = pd.DataFrame(selector.history)
     fig, ax = plt.subplots(figsize=(8, 4))
     ax.plot(history["gen"], history["fitness_best"], marker="o", color="#16a085",
@@ -246,24 +227,20 @@ nb.code(
     ax.legend(frameon=False)
     ax.grid(alpha=0.25)
     fig.tight_layout()
-    """
-)
+    """)
 nb.figure(
     "feature_selection_fitness.png",
     "Best and mean cross-validated balanced accuracy across generations",
 )
 
-nb.md(
-    """
+nb.md("""
     ## The Verdict
 
     Both rows use the **same KNN model and the same split** — the only difference
     is which columns reach it.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     ga_cv = history["fitness_best"].max()
     ga_metrics = holdout_scores(selected_idx)
 
@@ -279,11 +256,9 @@ nb.code(
     print(f"Genetic feature selection lifts holdout balanced accuracy by {gain:+.4f}")
     print(f"while using only {n_selected} of {n_features} columns "
           f"({n_selected / n_features:.0%} of the inputs).")
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     The genetic search keeps roughly a third of the columns, throws out most of
     the noise, and **gains several points of balanced accuracy** on the untouched
     test set — the noise was actively hurting the distance-based model.
@@ -330,8 +305,7 @@ nb.md(
     - [Comprehensive Feature Selection tutorial](../tutorials/feature-selection) — a full multi-stage workflow
     - [GAFeatureSelectionCV API](../api/gafeatureselectioncv) — every parameter
     - [Comparing Search Methods](./sklearn-comparison) — why grid and random search cannot touch a `2ⁿ` space
-    """
-)
+    """)
 
 nb.write()
 print("ok feature-selection")

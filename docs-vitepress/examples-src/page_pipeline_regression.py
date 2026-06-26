@@ -35,18 +35,15 @@ nb = Notebook(
     ),
 )
 
-nb.md(
-    """
+nb.md("""
     ## Setup
 
     We load the diabetes regression dataset (442 patients, 10 features) and hold
     out 30% for a final, untouched evaluation. Everything downstream is seeded for
     reproducibility.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     import warnings
     from pprint import pprint
 
@@ -80,20 +77,16 @@ nb.code(
 
     print(f"Training shape: {X_train.shape}")
     print(f"Test shape: {X_test.shape}")
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Baseline Pipeline
 
     Before tuning anything, fit a pipeline with **default** boosting settings. This
     is the number to beat — a model anyone gets for free with one line of code.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     def make_pipeline(**regressor_kwargs):
         return Pipeline([
             ("scaler", StandardScaler()),
@@ -115,20 +108,16 @@ nb.code(
     baseline.fit(X_train, y_train)
     baseline_metrics = regression_metrics(baseline, X_test, y_test)
     baseline_metrics
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Pipeline Search Space
 
     Parameter names use the sklearn `step__param` convention, so every key below
     starts with `regressor__` to target the boosting step inside the pipeline.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     param_grid = {
         "regressor__n_estimators": Integer(40, 180),
         "regressor__learning_rate": Continuous(0.01, 0.20, distribution="log-uniform"),
@@ -138,11 +127,9 @@ nb.code(
         "regressor__loss": Categorical(["squared_error", "absolute_error", "huber"]),
     }
     sorted(param_grid)
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     :::tip Regression scorers
     For metrics where smaller is better, use sklearn's negative scorer:
     `"neg_root_mean_squared_error"`. The GA maximizes fitness, so negative RMSE
@@ -154,11 +141,9 @@ nb.md(
     We keep the population and generations modest so the search finishes quickly,
     and warm-start it with a sensible hand-picked configuration so generation 0
     already has a reasonable candidate to improve on.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     search = GASearchCV(
         estimator=make_pipeline(),
         random_state=RANDOM_STATE,
@@ -216,22 +201,18 @@ nb.code(
 
     search.fit(X_train, y_train, callbacks=callbacks)
     print("fitted:", search.best_score_ is not None)
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Evaluate Predictions
 
     `GASearchCV` refits the best pipeline automatically, so you can call `predict`
     directly on the search object. The holdout comparison is the fastest sanity
     check: the GA should earn its extra search cost by improving the metrics you
     actually care about *outside* cross-validation.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     print("Best CV negative RMSE:", round(search.best_score_, 4))
     print("Best params:")
     pprint(search.best_params_)
@@ -242,24 +223,20 @@ nb.code(
         index=["default GBR", "GA-tuned pipeline"],
     )
     comparison
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     r2_gain = ga_metrics["r2"] - baseline_metrics["r2"]
     rmse_drop = baseline_metrics["rmse"] - ga_metrics["rmse"]
     mae_drop = baseline_metrics["mae"] - ga_metrics["mae"]
     print(f"R2  : {baseline_metrics['r2']:.4f}  ->  {ga_metrics['r2']:.4f}   ({r2_gain:+.4f})")
     print(f"RMSE: {baseline_metrics['rmse']:.2f}  ->  {ga_metrics['rmse']:.2f}   ({-rmse_drop:+.2f})")
     print(f"MAE : {baseline_metrics['mae']:.2f}  ->  {ga_metrics['mae']:.2f}   ({-mae_drop:+.2f})")
-    """
-)
+    """)
 
 nb.md("Plotting the same numbers makes the improvement on every metric obvious at a glance.")
 
-nb.code(
-    """
+nb.code("""
     import matplotlib.pyplot as plt
 
     labels = ["R2", "RMSE", "MAE"]
@@ -277,52 +254,42 @@ nb.code(
     axes[0].set_ylabel("score")
     fig.suptitle("Default GradientBoostingRegressor vs GA-tuned pipeline (holdout)")
     fig.tight_layout()
-    """
-)
+    """)
 nb.figure(
     "pipeline_regression_metric_comparison.png",
     "Bar chart comparing R2, RMSE and MAE for the default model versus the GA-tuned pipeline",
     caption="Higher R2 and lower RMSE/MAE for the GA-tuned pipeline — tuning beats the defaults on every metric.",
 )
 
-nb.md(
-    """
+nb.md("""
     ## Search Cost and Telemetry
 
     `fit_stats_` reports the evaluation accounting (how many candidates were
     actually scored, cache hits, random immigrants, local refinements), and
     `history` carries the per-generation convergence and diversity signals.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     print(search.fit_stats_)
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     history = pd.DataFrame(search.history)
     cols = ["gen", "fitness", "fitness_max", "unique_individual_ratio",
             "genotype_diversity", "stagnation_generations"]
     history[[c for c in cols if c in history.columns]].tail()
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Visualize the Search
 
     A fitted search can answer more pointed questions than "what won?". This
     landscape colors each evaluated candidate by its CV score across a
     learning-rate / tree-depth slice, highlighting which region was consistently
     promising.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     from sklearn_genetic.plots import plot_cv_scores, plot_score_landscape
 
     plot_score_landscape(
@@ -331,39 +298,33 @@ nb.code(
         y="regressor__max_depth",
     )
     plt.tight_layout()
-    """
-)
+    """)
 nb.figure(
     "pipeline_regression_score_landscape.png",
     "Score landscape over learning rate and max depth, colored by CV score",
     caption="Each point is one evaluated candidate; brighter points scored better in cross-validation.",
 )
 
-nb.md(
-    """
+nb.md("""
     When several candidates have similar mean scores, inspect fold-level stability
     before trusting a tiny ranking difference.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     plot_cv_scores(
         search,
         top_k=5,
         label_params=["regressor__learning_rate", "regressor__max_depth"],
     )
     plt.tight_layout()
-    """
-)
+    """)
 nb.figure(
     "pipeline_regression_cv_scores.png",
     "Box plot of fold-level CV scores for the top five candidates",
     caption="Per-fold spread for the strongest candidates — a narrow box means a stable choice.",
 )
 
-nb.md(
-    """
+nb.md("""
     ## Practical Notes
 
     - Use pipeline parameter names exactly as sklearn expects them (`step__param`).
@@ -379,8 +340,7 @@ nb.md(
     - [Pipeline Tuning Guide](../guide/pipeline-tuning) — pipeline parameter naming and step configuration
     - [Search Space API](../api/space) — `Continuous`, `Integer`, `Categorical` reference
     - [Plots API](../api/plots) — convergence, landscape, CV stability, and candidate-ranking plots
-    """
-)
+    """)
 
 nb.write()
 print("ok pipeline-regression")

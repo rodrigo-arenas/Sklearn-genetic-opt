@@ -39,8 +39,7 @@ nb = Notebook(
     ),
 )
 
-nb.md(
-    """
+nb.md("""
     ## Prerequisites
 
     - Python with `sklearn-genetic-opt` installed (`pip install sklearn-genetic-opt`).
@@ -61,11 +60,9 @@ nb.md(
     minority class. We will score on **balanced accuracy** (the mean of per-class
     recall), which the defaults are not tuned for — leaving a large, reliable gap
     for the genetic search to close.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     import warnings
     import numpy as np
     import pandas as pd
@@ -109,22 +106,18 @@ nb.code(
 
     print(f"train={X_train.shape}  test={X_test.shape}")
     print(f"class balance (train): {np.bincount(y_train)}  (positive class is the minority)")
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Baseline: The Default Forest
 
     First, a plain `RandomForestClassifier` with library defaults. This is the bar
     the genetic search has to clear, measured on the held-out test set. Watch the
     gap between **accuracy** and **balanced accuracy** — the default forest looks
     fine on raw accuracy but is quietly failing the minority class.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     def evaluate(estimator, X_eval, y_eval):
         pred = estimator.predict(X_eval)
         proba = estimator.predict_proba(X_eval)[:, 1]
@@ -141,11 +134,9 @@ nb.code(
     print("Default RandomForestClassifier:")
     for name, value in baseline_metrics.items():
         print(f"  {name:18s}: {value}")
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## The Search Space
 
     We give the genetic search room to move on the parameters that matter most for
@@ -154,11 +145,9 @@ nb.md(
     pruning. Crucially we also expose **`class_weight`** — the lever the default
     forest never touches — so the search can discover that re-weighting the
     minority class is what this problem needs.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     param_grid = {
         "n_estimators": Integer(80, 250),
         "max_depth": Integer(3, 16),
@@ -168,11 +157,9 @@ nb.code(
         "class_weight": Categorical(["balanced", "balanced_subsample", None]),
         "ccp_alpha": Continuous(0.0, 0.01),
     }
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Configure the Advanced Controls
 
     This is the heart of the example. Every block below maps to one advanced
@@ -193,11 +180,9 @@ nb.md(
     - **Fitness sharing** — penalizes crowding so near-duplicate candidates do not
       dominate selection.
     - **Local search** — a short hill-climb refines the best candidates at the end.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     ga_search = GASearchCV(
         estimator=RandomForestClassifier(random_state=RANDOM_STATE, n_jobs=1),
         random_state=RANDOM_STATE,
@@ -263,21 +248,17 @@ nb.code(
     print("Best params:")
     for key, value in sorted(ga_search.best_params_.items()):
         print(f"  {key:18s}: {value}")
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Did It Beat the Defaults?
 
     Both rows use the **same model class** and the **same train/test split** — the
     only difference is the hyperparameters. The headline metric is **balanced
     accuracy**, which weighs both classes equally.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     ga_metrics = evaluate(ga_search, X_test, y_test)
 
     verdict = pd.DataFrame(
@@ -291,11 +272,9 @@ nb.code(
     for key in ("accuracy", "balanced_accuracy", "roc_auc"):
         gain = ga_metrics[key] - baseline_metrics[key]
         print(f"{key:18s}: {gain:+.4f}")
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     The genetic search lifts **balanced accuracy** sharply on the untouched test
     set by discovering `class_weight` re-balancing that the default forest never
     applies. Raw accuracy may dip slightly — that is the honest trade-off of
@@ -308,47 +287,37 @@ nb.md(
     Two attributes record what the optimizer did. `fit_stats_` is the evaluation
     accounting — how many candidates were scored, how many were unique, how many
     came from cache hits, random immigrants, and local refinements.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     stats = pd.Series(ga_search.fit_stats_)
     print(stats.to_string())
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     `history` is the per-generation record used by the plotting helpers. It carries
     the fitness summary, diversity ratios, and a flag for every optimizer
     intervention.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     history = pd.DataFrame(ga_search.history)
     cols = [
         "gen", "fitness", "fitness_best", "fitness_max",
         "unique_individual_ratio", "genotype_diversity", "stagnation_generations",
     ]
     history[[c for c in cols if c in history.columns]]
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Convergence
 
     `plot_fitness_evolution` reads `history` directly. Plotting `fitness_best`
     (best-so-far) alongside the population mean shows the search climbing and the
     population catching up behind the leading edge.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     import matplotlib.pyplot as plt
     from sklearn_genetic.plots import plot_fitness_evolution
 
@@ -360,43 +329,37 @@ nb.code(
     ax.set_xlabel("generation")
     ax.figure.set_size_inches(8, 4.5)
     ax.figure.tight_layout()
-    """
-)
+    """)
 nb.figure(
     "advanced_rf_fitness.png",
     "Best-so-far and population-mean cross-validated balanced accuracy across generations",
     caption="The best-so-far curve (top) climbs above the warm-started baseline while the population mean trails the leading edge.",
 )
 
-nb.md(
-    """
+nb.md("""
     ## Diversity and Optimizer Events
 
     `plot_diversity` shows how varied the population stays over time, with the
     stagnation counter on a secondary axis. When diversity dips and stagnation
     climbs, the diversity controls kick in — `plot_optimizer_events` marks exactly
     when each intervention fired.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     from sklearn_genetic.plots import plot_diversity, plot_optimizer_events
 
     fig, axes = plt.subplots(2, 1, figsize=(9, 8))
     plot_diversity(ga_search, ax=axes[0], title="Population diversity")
     plot_optimizer_events(ga_search, ax=axes[1], title="Optimizer interventions")
     fig.tight_layout()
-    """
-)
+    """)
 nb.figure(
     "advanced_rf_diversity.png",
     "Population diversity ratios with stagnation counter, and a timeline of optimizer interventions",
     caption="Top: genotype and unique-individual diversity with the stagnation counter (dashed). Bottom: each generation an optimizer control (random immigrants, diversity boost, local refinement, fitness sharing) actually fired.",
 )
 
-nb.md(
-    """
+nb.md("""
     :::tip Reading diversity charts
     If the diversity curves collapse to zero early *while* fitness stalls, the
     search is over-exploiting one region. Lean on `diversity_control=True`, a
@@ -410,11 +373,9 @@ nb.md(
     becomes a binary mask over columns instead of a hyperparameter vector. Here we
     reuse the tuned hyperparameters and search for a compact subset (at most 14 of
     the 30 columns) that holds — or improves — quality.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     feature_selector = GAFeatureSelectionCV(
         estimator=RandomForestClassifier(
             random_state=RANDOM_STATE, n_jobs=1, **ga_search.best_params_
@@ -449,11 +410,9 @@ nb.code(
     print(f"Best CV balanced accuracy (selection): {fs_best_cv:.4f}")
     print(f"Selected {n_selected} of {X_train.shape[1]} columns")
     print(f"Selected indices: {np.where(feature_selector.support_)[0].tolist()}")
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     selector_metrics = evaluate(feature_selector, X_test, y_test)
 
     full_table = pd.DataFrame(
@@ -464,11 +423,9 @@ nb.code(
         ]
     )
     print(full_table.to_string(index=False))
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     The tuned forest on a compact, GA-selected subset matches (or beats) the
     full-feature tuned model while using roughly half the columns — cheaper
     inference and a simpler model for the same quality.
@@ -498,8 +455,7 @@ nb.md(
     - [Comprehensive Feature Selection tutorial](../tutorials/feature-selection) —
       a multi-stage feature-selection walkthrough
     - [Plotting Gallery](./plotting-gallery) — every `sklearn_genetic.plots` helper
-    """
-)
+    """)
 
 nb.write()
 print("ok advanced-rf")

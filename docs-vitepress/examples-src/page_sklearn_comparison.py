@@ -43,8 +43,7 @@ nb = Notebook(
     ),
 )
 
-nb.md(
-    """
+nb.md("""
     ## Problem Setup
 
     We use a deliberately *hard* synthetic classification problem: 25 features
@@ -54,11 +53,9 @@ nb.md(
     integer, and bounded numeric parameters that interact strongly). A full grid
     over seven dimensions is hopeless, so every method gets the *same* evaluation
     budget and we see who spends it best.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     import time
     import warnings
 
@@ -105,22 +102,18 @@ nb.code(
     )
     cv = StratifiedKFold(n_splits=3, shuffle=True, random_state=RANDOM_STATE)
     print(f"train={X_train.shape}  test={X_test.shape}  positives={y.mean():.2%}")
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Shared Estimator and Scoring
 
     Each method tunes the **same** estimator family and is scored with the same
     `roc_auc` cross-validation. We report the best CV score (what every method
     optimizes), the holdout ROC AUC on the untouched test half, the number of
     candidates actually evaluated, and wall-clock time.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     def make_model():
         return HistGradientBoostingClassifier(
             random_state=RANDOM_STATE,
@@ -143,20 +136,16 @@ nb.code(
             "candidates": n_evaluated,
             "fit_seconds": round(fit_seconds, 1),
         }
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## RandomizedSearchCV — the strong baseline
 
     Random search samples a fixed number of configurations. On smooth,
     low-dimensional spaces it is hard to beat, so it is the baseline to respect.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     random_distributions = {
         "learning_rate": loguniform(1e-3, 5e-1),
         "max_iter": randint(50, 300),
@@ -181,11 +170,9 @@ nb.code(
     started = time.perf_counter()
     random_search.fit(X_train, y_train)
     random_seconds = time.perf_counter() - started
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## GridSearchCV — deterministic but it cannot scale
 
     A grid multiplies out: even **two** values per dimension across seven
@@ -193,11 +180,9 @@ nb.md(
     good learning-rate / depth / regularization combination. We give grid search
     a sensible, budget-matched grid over the parameters that matter most — and
     watch it get boxed in by its own resolution.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     grid = {
         "learning_rate": np.geomspace(1e-2, 3e-1, 4).tolist(),
         "max_leaf_nodes": [15, 31, 63],
@@ -211,11 +196,9 @@ nb.code(
     grid_search.fit(X_train, y_train)
     grid_seconds = time.perf_counter() - started
     print(f"grid evaluated {len(grid_search.cv_results_['params'])} configurations")
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## GASearchCV — evolutionary search over the full space
 
     The genetic search explores the **entire** seven-dimensional space. It starts
@@ -224,11 +207,9 @@ nb.md(
     does not collapse onto one region too early. We hand it the same kind of
     budget (a small population over a handful of generations) and let early
     stopping end it once progress stalls.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     ga_search = GASearchCV(
         estimator=make_model(),
         random_state=RANDOM_STATE,
@@ -271,22 +252,18 @@ nb.code(
     started = time.perf_counter()
     ga_search.fit(X_train, y_train, callbacks=callbacks)
     ga_seconds = time.perf_counter() - started
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Results, Side by Side
 
     All three methods got the same evaluation budget and the same split, so the
     table compares quality (`best_cv_auc`, `holdout_auc`) and cost (`candidates`,
     `fit_seconds`) on equal footing. It is sorted by `holdout_auc` — how well the
     chosen model actually *generalizes*, which is what you ultimately care about.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     comparison = pd.DataFrame([
         summarize("RandomizedSearchCV", random_search, random_seconds, random_search.n_iter),
         summarize("GridSearchCV", grid_search, grid_seconds, len(grid_search.cv_results_["params"])),
@@ -294,18 +271,14 @@ nb.code(
     ]).sort_values("holdout_auc", ascending=False).reset_index(drop=True)
 
     print(comparison.to_string(index=False))
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     The interpretation below is computed straight from the table above — no
     hand-typed numbers — so it always matches what just ran:
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     rows = comparison.set_index("method")
     ga, rnd, grid = rows.loc["GASearchCV"], rows.loc["RandomizedSearchCV"], rows.loc["GridSearchCV"]
     print(f"GA vs Random : CV AUC {ga.best_cv_auc - rnd.best_cv_auc:+.4f}, "
@@ -321,12 +294,10 @@ nb.code(
     print("  better-calibrated decision threshold (highest holdout accuracy) — while also")
     print("  returning the per-generation telemetry the other methods do not.")
     print("- Grid search is boxed in by its own resolution: it cannot afford a fine 7-D grid.")
-    """
-)
+    """)
 
 # --- convergence figure -------------------------------------------------------
-nb.md(
-    """
+nb.md("""
     ### How the best score climbs with effort
 
     The most informative view is *best score found so far* versus *number of
@@ -335,11 +306,9 @@ nb.md(
     regions. The genetic search turns each generation's survivors into the next
     generation's starting point, so it keeps tightening around the best region it
     has found.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     import matplotlib.pyplot as plt
 
     # Random search: running best as candidates are revealed (sampling order).
@@ -368,8 +337,7 @@ nb.code(
     ax.legend(loc="lower right", frameon=False)
     ax.grid(alpha=0.25)
     fig.tight_layout()
-    """
-)
+    """)
 nb.figure(
     "sklearn_comparison_convergence.png",
     "Best CV ROC AUC versus number of configurations evaluated for the three search methods",
@@ -379,35 +347,28 @@ nb.figure(
     ),
 )
 
-nb.md(
-    """
+nb.md("""
     ## Telemetry Only GASearchCV Gives You
 
     The scikit-learn searchers expose `cv_results_`. `GASearchCV` adds
     `fit_stats_` (what the search actually spent) and a per-generation `history`
     (how the population evolved) — the data behind every plot in the
     [plotting gallery](./plotting-gallery).
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     print("Evaluation accounting:")
     for key, value in ga_search.fit_stats_.items():
         print(f"  {key}: {value}")
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     cols = ["gen", "fitness", "fitness_best", "unique_individual_ratio",
             "genotype_diversity", "stagnation_generations"]
     print(history[[c for c in cols if c in history.columns]].to_string(index=False))
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## When Should You Reach for the Genetic Algorithm?
 
     | Situation | Best tool |
@@ -442,8 +403,7 @@ nb.md(
     - [When to Use](../guide/when-to-use) — choosing a search method
     - [Advanced Optimizer Control](../guide/advanced-optimizer-control) — diversity, fitness sharing, local search
     - [Feature Selection](./feature-selection) — the combinatorial problem where the GA clearly wins
-    """
-)
+    """)
 
 nb.write()
 print("ok sklearn-comparison")

@@ -45,27 +45,22 @@ nb = Notebook(
     ),
 )
 
-nb.md(
-    """
+nb.md("""
     ## Prerequisites
 
     ```bash
     pip install sklearn-genetic-opt
     ```
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Setup
 
     Every number and figure on this page is captured from running exactly the code
     shown below.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     import warnings
     from pprint import pprint
     import time
@@ -93,21 +88,17 @@ nb.code(
 
     RANDOM_STATE = 42
     rng = np.random.default_rng(RANDOM_STATE)
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Build a Labeled Anomaly Dataset
 
     We use a 2D synthetic dataset so anomaly regions can be visualised as contour
     plots. Two Gaussian clusters form the normal data; outliers are scattered
     uniformly across a wider region (5% contamination).
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     # Normal data — three moderately spread clusters. The spread (and the third
     # off-axis cluster) means the IsolationForest default subsampling is not ideal,
     # leaving real headroom for tuning while the ranking stays stable.
@@ -135,13 +126,11 @@ nb.code(
 
     print(f"Train: {X_train.shape} — outliers: {y_train.sum()} ({y_train.mean():.1%})")
     print(f"Test:  {X_test.shape} — outliers: {y_test.sum()} ({y_test.mean():.1%})")
-    """
-)
+    """)
 
 nb.md("### Visualise the Dataset")
 
-nb.code(
-    """
+nb.code("""
     fig, ax = plt.subplots(figsize=(7, 6))
     ax.scatter(*X[y == 0].T, s=20, alpha=0.5, label="normal", color="steelblue")
     ax.scatter(*X[y == 1].T, s=50, alpha=0.9, label="outlier", color="crimson",
@@ -151,26 +140,22 @@ nb.code(
     ax.set_ylabel("feature 1")
     ax.legend()
     fig.tight_layout()
-    """
-)
+    """)
 nb.figure(
     "isolation_forest_data.png",
     "Scatter plot of two normal Gaussian clusters and uniformly scattered outliers",
     caption="Two dense normal clusters surrounded by sparse uniform outliers — a clean target for anomaly detection.",
 )
 
-nb.md(
-    """
+nb.md("""
     ## Custom Scorer
 
     `score_samples` returns the anomaly score: **lower = more anomalous**. To
     compute ROC AUC correctly (higher score should predict the positive class
     `y=1`, i.e. outlier), we **negate** it.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     def outlier_roc_auc(estimator, X, y):
         # score_samples is lower for outliers; AUC expects higher = more likely positive
         scores = -estimator.score_samples(X)
@@ -183,11 +168,9 @@ nb.code(
     print(f"Sanity check — default IsolationForest scorer AUC: {scorer(_probe, X_test, y_test):.4f}")
     print(f"Without negation (wrong sign): "
           f"{roc_auc_score(y_test, _probe.score_samples(X_test)):.4f}")
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     :::tip Why negate `score_samples`?
     `IsolationForest.score_samples` returns more negative values for anomalies. If
     you pass them directly to `roc_auc_score` with `y=1` for outliers, the
@@ -196,21 +179,17 @@ nb.md(
     outlier → AUC is computed correctly. The scorer is passed as a callable so it
     can call `score_samples` on the fitted estimator.
     :::
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Helpers
 
     `evaluate` reports ranking quality (ROC AUC, average precision) plus the
     precision/recall of the binary `predict()` output, which depends on the tuned
     `contamination` threshold.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     def evaluate(name, estimator, X_eval, y_eval):
         scores = -estimator.score_samples(X_eval)
         auc = round(roc_auc_score(y_eval, scores), 4)
@@ -227,38 +206,30 @@ nb.code(
             "outlier_precision": round(report["outlier"]["precision"], 4),
             "outlier_recall":    round(report["outlier"]["recall"], 4),
         }
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Baseline
 
     The default `IsolationForest` is a strong starting point — but it has no idea
     what the true contamination rate is.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     baseline = IsolationForest(random_state=RANDOM_STATE)
     baseline.fit(X_train, y_train)
     baseline_metrics = evaluate("IsolationForest defaults", baseline, X_test, y_test)
     print(baseline_metrics)
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Search Space
 
     Four continuous/integer hyperparameters, each over a range that covers the
     useful region for this dataset.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     param_grid = {
         # Ensemble size — more trees = more stable, lower-variance scores
         "n_estimators": Integer(150, 300),
@@ -274,11 +245,9 @@ nb.code(
         "contamination": Continuous(0.02, 0.30),
     }
     sorted(param_grid)
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     :::info `contamination` affects the threshold, not the score
     `contamination` determines the cut-off for `predict()` — it does not change
     `score_samples`. If you only care about ranking (ROC AUC), the scoring is
@@ -286,20 +255,16 @@ nb.md(
     because a well-calibrated threshold improves `predict()`, which drives precision
     and recall.
     :::
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Configure GASearchCV
 
     The custom scorer is passed straight to `scoring`. `GASearchCV` accepts any
     callable with the `(estimator, X, y)` signature.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     callbacks = [
         DeltaThreshold(threshold=0.002, generations=4, metric="fitness_best"),
         ConsecutiveStopping(generations=5, metric="fitness_best"),
@@ -354,17 +319,13 @@ nb.code(
             sharing_radius=0.35,
         ),
     )
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Fit and Results
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     started_at = time.perf_counter()
     ga_search.fit(X_train, y_train, callbacks=callbacks)
     ga_seconds = time.perf_counter() - started_at
@@ -373,38 +334,30 @@ nb.code(
     print(f"Search time:     {ga_seconds:.0f}s")
     print("Best params:")
     pprint(ga_search.best_params_)
-    """
-)
+    """)
 
 nb.md("### Evaluation Mechanics")
 
-nb.code(
-    """
+nb.code("""
     print(ga_search.fit_stats_)
-    """
-)
+    """)
 
 nb.md("### Generation Telemetry")
 
-nb.code(
-    """
+nb.code("""
     history = pd.DataFrame(ga_search.history)
     cols = ["gen", "fitness", "fitness_max", "fitness_std",
             "unique_individual_ratio", "genotype_diversity", "stagnation_generations"]
     history[[c for c in cols if c in history.columns]]
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Fitness Evolution
 
     The GA's fitness is the CV ROC AUC of the best individual.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     fig, ax = plt.subplots(figsize=(9, 4))
     ax.plot(history["gen"], history["fitness_best"], marker="o", color="#16a085",
             label="best so far")
@@ -418,25 +371,21 @@ nb.code(
     ax.legend(frameon=False)
     ax.grid(alpha=0.25)
     fig.tight_layout()
-    """
-)
+    """)
 nb.figure(
     "isolation_forest_fitness.png",
     "Best, generation-max, and generation-mean CV ROC AUC across generations",
     caption="Fitness (CV ROC AUC of the best individual) improves as the GA tunes the four IsolationForest hyperparameters.",
 )
 
-nb.md(
-    """
+nb.md("""
     ## Anomaly Score Contour Plots
 
     Visualise how the anomaly-score surface changes between the default model and
     the tuned one. Darker red = more anomalous; darker green = more normal.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     xx, yy = np.meshgrid(
         np.linspace(-10, 10, 160),
         np.linspace(-10, 10, 160),
@@ -459,25 +408,21 @@ nb.code(
 
     plt.suptitle("Anomaly Score Contour — Default vs. Tuned", fontsize=13, y=1.02)
     fig.tight_layout()
-    """
-)
+    """)
 nb.figure(
     "isolation_forest_contours.png",
     "Side-by-side anomaly-score contour plots for the default and tuned IsolationForest",
     caption="The tuned model keeps low scores inside the two normal clusters while concentrating high anomaly scores in the sparse outlier region.",
 )
 
-nb.md(
-    """
+nb.md("""
     ## ROC Curve Comparison
 
     The ROC curve is threshold-independent, so it isolates the ranking quality of
     the anomaly scores — exactly what the custom scorer optimizes.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     fig, ax = plt.subplots(figsize=(7, 6))
     for model, label, color in [
         (baseline,  "IsolationForest defaults", "gray"),
@@ -494,24 +439,20 @@ nb.code(
     ax.set_title("ROC Curve — Isolation Forest")
     ax.legend()
     fig.tight_layout()
-    """
-)
+    """)
 nb.figure(
     "isolation_forest_roc.png",
     "ROC curves for the default and GA-tuned IsolationForest",
     caption="The GA-tuned curve sits above the default across most of the FPR range — a higher ROC AUC means better-ranked anomaly scores.",
 )
 
-nb.md(
-    """
+nb.md("""
     ## Compare with RandomizedSearchCV
 
     A 3-way comparison on the held-out test set, all using the same custom scorer.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     randomized_search = RandomizedSearchCV(
         estimator=IsolationForest(random_state=RANDOM_STATE),
         param_distributions={
@@ -542,27 +483,21 @@ nb.code(
     ]
     comparison["fit_seconds"] = [None, round(rs_seconds, 1), round(ga_seconds, 1)]
     print(comparison.to_string(index=False))
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     print(f"GA vs default ROC AUC: {ga_metrics['roc_auc'] - baseline_metrics['roc_auc']:+.4f}")
     print(f"GA outlier recall: {ga_metrics['outlier_recall']:.2f}  "
           f"(default {baseline_metrics['outlier_recall']:.2f})")
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     The GA tuning improves ranking quality (ROC AUC) over the default and calibrates
     `contamination` to the true anomaly rate, which directly lifts outlier recall in
     the binary `predict()` output.
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Practical Notes
 
     - **`score_samples`, not `predict`** — use `score_samples` in the custom scorer
@@ -589,8 +524,7 @@ nb.md(
     - [Comprehensive Feature Selection](./feature-selection) — select informative features first
     - [Imbalanced Classification](./imbalanced-classification) — the related supervised problem
     - [GASearchCV API](../api/gasearchcv)
-    """
-)
+    """)
 
 nb.write()
 print("ok isolation-forest")

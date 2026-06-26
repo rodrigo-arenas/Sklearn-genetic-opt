@@ -34,14 +34,11 @@ nb = Notebook(
     ),
 )
 
-nb.md(
-    """
+nb.md("""
     ## A Noisy Dataset
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     import warnings
     import time
 
@@ -75,20 +72,16 @@ nb.code(
     )
     cv = StratifiedKFold(n_splits=3, shuffle=True, random_state=RANDOM_STATE)
     print(f"train={X_train.shape}  test={X_test.shape}")
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Baseline: CatBoost Defaults
 
     CatBoost manages its own threads; we set `thread_count=1` and `verbose=0`. We
     cap `iterations` so the baseline trains quickly.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     def make_catboost(**kwargs):
         params = dict(thread_count=1, verbose=0, random_state=RANDOM_STATE,
                       allow_writing_files=False)
@@ -111,21 +104,17 @@ nb.code(
     baseline.fit(X_train, y_train)
     baseline_metrics = evaluate("CatBoost defaults", baseline)
     print(baseline_metrics)
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Search Space
 
     Seven CatBoost-specific parameters. `border_count` (feature binning
     resolution) and `bagging_temperature` (bootstrap aggressiveness) interact with
     `depth` and `l2_leaf_reg` to control over/under-fitting.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     param_grid = {
         "iterations":          Integer(100, 350),
         "depth":               Integer(3, 10),
@@ -135,13 +124,11 @@ nb.code(
         "random_strength":     Continuous(1e-3, 10.0, distribution="log-uniform"),
         "border_count":        Integer(32, 255),
     }
-    """
-)
+    """)
 
 nb.md("## Configure and Run")
 
-nb.code(
-    """
+nb.code("""
     ga_search = GASearchCV(
         estimator=make_catboost(),
         random_state=RANDOM_STATE,
@@ -184,26 +171,22 @@ nb.code(
     print("Best parameters :")
     for key, value in ga_search.best_params_.items():
         print(f"  {key}: {value}")
-    """
-)
+    """)
 
 nb.md("## Baseline vs Tuned")
 
-nb.code(
-    """
+nb.code("""
     ga_metrics = evaluate("GASearchCV (tuned)", ga_search)
     comparison = pd.DataFrame([baseline_metrics, ga_metrics])
     print(comparison.to_string(index=False))
     print()
     print(f"ROC AUC improvement over defaults: "
           f"{ga_metrics['roc_auc'] - baseline_metrics['roc_auc']:+.4f}")
-    """
-)
+    """)
 
 nb.md("### Fitness over generations")
 
-nb.code(
-    """
+nb.code("""
     import matplotlib.pyplot as plt
 
     history = pd.DataFrame(ga_search.history)
@@ -216,12 +199,10 @@ nb.code(
     ax.legend(frameon=False)
     ax.grid(alpha=0.25)
     fig.tight_layout()
-    """
-)
+    """)
 nb.figure("tune_catboost_fitness.png", "Best and mean cross-validated ROC AUC over generations")
 
-nb.md(
-    """
+nb.md("""
     ## Practical Notes
 
     - Set `allow_writing_files=False` to stop CatBoost from littering the working
@@ -236,8 +217,7 @@ nb.md(
 
     - [Tune XGBoost](./tune-xgboost) and [Tune LightGBM](./tune-lightgbm)
     - [Advanced Optimizer Control](../guide/advanced-optimizer-control)
-    """
-)
+    """)
 
 nb.write()
 print("ok tune-catboost")

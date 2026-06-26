@@ -33,8 +33,7 @@ nb = Notebook(
     ),
 )
 
-nb.md(
-    """
+nb.md("""
     ## The Two Persistence Mechanisms
 
     | Mechanism | When to use |
@@ -48,11 +47,9 @@ nb.md(
     We tune a `RandomForestClassifier` on the breast-cancer dataset. Artifacts are
     written to a temporary directory outside the project tree so nothing is left in
     the repo.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     import tempfile
     import warnings
     from pathlib import Path
@@ -89,21 +86,17 @@ nb.code(
     logbook_path = artifact_dir / "rf_logbook.pkl"
     saved_search_path = artifact_dir / "rf_search.pkl"
     print("Writing artifacts under:", artifact_dir)
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Search Configuration
 
     `ModelCheckpoint` writes a checkpoint after every generation; `LogbookSaver`
     persists just the parameter logbook each generation; `ConsecutiveStopping`
     halts the run early if the best fitness stops improving.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     param_grid = {
         "n_estimators": Integer(30, 90),
         "max_depth": Integer(2, 12),
@@ -140,31 +133,25 @@ nb.code(
         ),
         refit=True,
     )
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Fit With Checkpointing
 
     The `ModelCheckpoint` callback prints a confirmation line each generation as it
     writes the checkpoint file.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     search.fit(X_train, y_train, callbacks=callbacks)
     print()
     print("Best params   :", search.best_params_)
     print("Best CV ROC AUC:", round(search.best_score_, 4))
-    """
-)
+    """)
 
 nb.md("## Evaluate on the Test Set")
 
-nb.code(
-    """
+nb.code("""
     y_pred = search.predict(X_test)
     y_proba = search.predict_proba(X_test)[:, 1]
 
@@ -173,31 +160,25 @@ nb.code(
         "balanced_accuracy": balanced_accuracy_score(y_test, y_pred),
         "roc_auc": roc_auc_score(y_test, y_proba),
     }).round(4).to_frame("test_score")
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Inspect the Checkpoint Contents
 
     `ModelCheckpoint.load()` returns a dictionary with two keys: a lightweight
     `estimator_state` (the search *configuration*, not the fitted model) and the
     `logbook` captured up to the last completed generation.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     checkpoint = ModelCheckpoint(checkpoint_path).load()
 
     print("checkpoint keys      :", sorted(checkpoint.keys()))
     print("generations in logbook:", len(checkpoint["logbook"]))
     print("estimator_state keys  :", sorted(checkpoint["estimator_state"].keys()))
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     The `estimator_state` is intentionally small — it captures the search
     configuration so a run can be reconstructed, not the trained estimator. For the
     full fitted object, use `save` / `load` below.
@@ -207,31 +188,25 @@ nb.md(
     `LogbookSaver` persists only the parameter chapter of the logbook using joblib,
     which is handy when you want the per-candidate parameter records without the
     rest of the checkpoint.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     import joblib
 
     saved_logbook = joblib.load(logbook_path)
     print("records saved by LogbookSaver:", len(saved_logbook))
     print("fields per record           :", sorted(saved_logbook[0].keys()))
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Save and Reload the Fitted Search
 
     `save` pickles the full fitted search (dropping only volatile internals like the
     DEAP toolbox and population). `load` restores it into a fresh `GASearchCV` that
     predicts identically.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     search.save(saved_search_path)
 
     restored_search = GASearchCV(
@@ -247,22 +222,18 @@ nb.code(
     identical = bool((restored_pred == y_pred).all())
     print("Predictions identical to original:", identical)
     print("Restored best CV ROC AUC         :", round(restored_search.best_score_, 4))
-    """
-)
+    """)
 
 nb.md("The restored search reproduces the original predictions exactly.")
 
-nb.code(
-    """
+nb.code("""
     import shutil
 
     shutil.rmtree(artifact_dir, ignore_errors=True)
     print("Cleaned up:", not artifact_dir.exists())
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Practical Notes
 
     - Use `ModelCheckpoint` for progress recovery and audit trails during a fit; it
@@ -282,8 +253,7 @@ nb.md(
     - [Callbacks](../guide/callbacks) — `ModelCheckpoint`, `LogbookSaver`, and friends
     - [Reproducibility](../guide/reproducibility) — fixing seeds for repeatable runs
     - [Callbacks API](../api/callbacks) — `ModelCheckpoint` parameter reference
-    """
-)
+    """)
 
 nb.write()
 print("ok checkpointing")

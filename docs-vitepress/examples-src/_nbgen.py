@@ -168,9 +168,7 @@ class Notebook:
             exec(compile(tree, "<docs-cell>", "exec"), self.ns)
             if trailing_expr is not None:
                 value = eval(
-                    compile(
-                        ast.Expression(trailing_expr.value), "<docs-cell>", "eval"
-                    ),
+                    compile(ast.Expression(trailing_expr.value), "<docs-cell>", "eval"),
                     self.ns,
                 )
                 if value is not None:

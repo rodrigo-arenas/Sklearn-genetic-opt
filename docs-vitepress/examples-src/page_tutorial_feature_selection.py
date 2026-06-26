@@ -43,8 +43,7 @@ nb = Notebook(
     ),
 )
 
-nb.md(
-    """
+nb.md("""
     ## Prerequisites
 
     - `sklearn-genetic-opt` installed (`pip install sklearn-genetic-opt`).
@@ -57,11 +56,9 @@ nb.md(
     carry information (12 informative + 8 redundant linear combinations). The
     remaining **40 columns are pure noise**. `shuffle=False` keeps the columns in
     that order so we can grade the selection against the truth later.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     import warnings
     import numpy as np
     import pandas as pd
@@ -115,11 +112,9 @@ nb.code(
     cv = StratifiedKFold(n_splits=3, shuffle=True, random_state=RANDOM_STATE)
     print(f"{n_features} features: {is_signal.sum()} carry signal, {(~is_signal).sum()} are noise")
     print(f"train={X_train.shape}  test={X_test.shape}")
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Stage 2 — Why This Model Needs Feature Selection
 
     We use a **k-nearest-neighbours** classifier. Distance-based models are the
@@ -131,11 +126,9 @@ nb.md(
     **SVC with an RBF kernel**, also distance/kernel based. If the GA's selection
     is genuine signal rather than an artefact of the KNN scorer, the SVC should
     benefit from the *same* subset.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     def make_knn():
         return Pipeline([
             ("scaler", StandardScaler()),
@@ -170,11 +163,9 @@ nb.code(
     print(f"KNN, all {n_features} features : CV bal-acc = {knn_all_cv:.4f}, "
           f"holdout bal-acc = {knn_all['balanced_accuracy']:.4f}")
     print(f"SVC, all {n_features} features : holdout bal-acc = {svc_all['balanced_accuracy']:.4f}")
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Stage 3 — Evolve the Feature Mask
 
     `GAFeatureSelectionCV` searches over binary masks — `1` keeps a column, `0`
@@ -186,11 +177,9 @@ nb.md(
     - **diversity control + fitness sharing** so the population does not collapse
       onto one mask,
     - **local search** for a final refinement pass onto a compact subset.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     selector = GAFeatureSelectionCV(
         estimator=make_knn(),
         random_state=RANDOM_STATE,
@@ -224,20 +213,16 @@ nb.code(
     ga_best_cv = float(pd.DataFrame(selector.history)["fitness_best"].max())
     print(f"Best CV balanced accuracy: {ga_best_cv:.4f}")
     print(f"Selected {int(selector.support_.sum())} of {n_features} features")
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Stage 4 — Grade the Mask Against the Truth
 
     Because we know which columns are real, we can grade the selection directly:
     how much signal did it keep, and how much noise did it correctly throw away?
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     support = selector.support_
     selected_idx = np.where(support)[0]
     n_selected = int(support.sum())
@@ -246,13 +231,11 @@ nb.code(
     print(f"  signal kept   : {int(is_signal[support].sum())} / {int(is_signal.sum())}")
     print(f"  noise dropped : {int((~is_signal & ~support).sum())} / {int((~is_signal).sum())}")
     print(f"  noise leaked  : {int((~is_signal[support]).sum())}")
-    """
-)
+    """)
 
 nb.md("### The support mask")
 
-nb.code(
-    """
+nb.code("""
     import matplotlib.pyplot as plt
     from sklearn_genetic.plots import plot_feature_selection
 
@@ -261,8 +244,7 @@ nb.code(
     fig.set_size_inches(11, 9)
     plt.title("Selected feature mask  (info | redundant | noise, top to bottom)")
     plt.tight_layout()
-    """
-)
+    """)
 nb.figure(
     "tutorial_feature_selection_support_mask.png",
     "Binary support mask showing which of the 60 columns the genetic search kept",
@@ -271,8 +253,7 @@ nb.figure(
 
 nb.md("### Fitness over generations")
 
-nb.code(
-    """
+nb.code("""
     from sklearn_genetic.plots import plot_fitness_evolution
 
     ax = plot_fitness_evolution(
@@ -283,25 +264,21 @@ nb.code(
     ax.set_xlabel("generation")
     ax.figure.set_size_inches(8, 4.5)
     ax.figure.tight_layout()
-    """
-)
+    """)
 nb.figure(
     "tutorial_feature_selection_fitness.png",
     "Best-so-far and population-mean cross-validated balanced accuracy across generations",
     caption="Best-so-far fitness rises as the search prunes noise columns; the population mean trails the leading edge.",
 )
 
-nb.md(
-    """
+nb.md("""
     ## Stage 5 — The Verdict (KNN)
 
     Both rows use the **same KNN model and the same split** — the only difference
     is which columns reach it.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     knn_sel = holdout_scores(make_knn, selected_idx)
 
     verdict = pd.DataFrame([
@@ -316,22 +293,18 @@ nb.code(
     print(f"Genetic feature selection lifts KNN holdout balanced accuracy by {gain:+.4f}")
     print(f"while using only {n_selected} of {n_features} columns "
           f"({n_selected / n_features:.0%} of the inputs).")
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Stage 6 — Does the Win Transfer? (SVC robustness check)
 
     The mask was selected to please the KNN scorer. The honest test of whether it
     found *real* signal is to hand the **same subset** to a completely different
     model. If an independent SVC-RBF also improves, the selection is model-agnostic
     signal, not a KNN-specific artefact.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     svc_sel = holdout_scores(make_svc, selected_idx)
 
     transfer = pd.DataFrame([
@@ -343,13 +316,11 @@ nb.code(
          "delta": round(svc_sel["balanced_accuracy"] - svc_all["balanced_accuracy"], 4)},
     ])
     print(transfer.to_string(index=False))
-    """
-)
+    """)
 
 nb.md("### Before / after feature-count and accuracy")
 
-nb.code(
-    """
+nb.code("""
     fig, (ax_count, ax_acc) = plt.subplots(1, 2, figsize=(11, 4.5))
 
     ax_count.bar(["all features", "GA-selected"], [n_features, n_selected],
@@ -372,16 +343,14 @@ nb.code(
     ax_acc.set_title("Accuracy: all features vs GA-selected")
     ax_acc.legend(frameon=False)
     fig.tight_layout()
-    """
-)
+    """)
 nb.figure(
     "tutorial_feature_selection_before_after.png",
     "Before/after comparison of feature count and holdout balanced accuracy for KNN and SVC",
     caption="Left: the GA keeps a fraction of the columns. Right: both the KNN scorer and the independent SVC improve on the GA-selected subset.",
 )
 
-nb.md(
-    """
+nb.md("""
     Both estimators improve on the GA-selected subset even though only the KNN
     guided the search — the selected columns are genuine, model-agnostic signal.
 
@@ -389,26 +358,20 @@ nb.md(
 
     `fit_stats_` reports the evaluation accounting; `history` carries the
     per-generation convergence and diversity signals.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     print(pd.Series(selector.fit_stats_).to_string())
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     history = pd.DataFrame(selector.history)
     cols = ["gen", "fitness", "fitness_best", "genotype_diversity",
             "unique_individual_ratio", "stagnation_generations"]
     history[[c for c in cols if c in history.columns]].tail()
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Practical Notes
 
     - Pass `max_features=k` to force compact subsets when inference cost or
@@ -434,8 +397,7 @@ nb.md(
       controls applied to hyperparameter tuning
     - [GAFeatureSelectionCV API](../api/gafeatureselectioncv) — every parameter
     - [Plotting Gallery](../examples/plotting-gallery) — every plotting helper
-    """
-)
+    """)
 
 nb.write()
 print("ok tutorial-feature-selection")

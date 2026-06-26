@@ -41,8 +41,7 @@ nb = Notebook(
     ),
 )
 
-nb.md(
-    """
+nb.md("""
     ## Prerequisites
 
     ```bash
@@ -50,21 +49,17 @@ nb.md(
     # Optional (for the SMOTE section):
     pip install imbalanced-learn
     ```
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Setup
 
     Imports, random seeds, and a small evaluation helper. Everything below runs as
     shown — the numbers and figures on this page are captured from the real
     execution of this code.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     import warnings
     from pprint import pprint
 
@@ -92,20 +87,16 @@ nb.code(
     warnings.filterwarnings("ignore")
 
     RANDOM_STATE = 42
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Create an Imbalanced Dataset
 
     We build a 4,000-sample binary problem with a **95/5 split** — only 5% of the
     rows are the minority class we actually care about.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     X, y = make_classification(
         n_samples=4000,
         n_features=20,
@@ -123,21 +114,17 @@ nb.code(
 
     print(f"Train: {X_train.shape} — minority: {y_train.sum()} ({y_train.mean():.1%})")
     print(f"Test:  {X_test.shape} — minority: {y_test.sum()} ({y_test.mean():.1%})")
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Helpers
 
     One function turns a fitted estimator into the metrics that matter for an
     imbalanced problem — including **minority recall**, the fraction of the rare
     class we actually catch.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     def evaluate(name, estimator, X_eval, y_eval):
         predictions = estimator.predict(X_eval)
         try:
@@ -159,31 +146,25 @@ nb.code(
             "roc_auc": roc,
             "minority_recall": minority_recall,
         }
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Stage 1 — Demonstrate the Problem
 
     A classifier that always predicts the majority class scores ~95% accuracy and
     yet has **zero minority recall**. A default RandomForest does better, but still
     misses many of the rare cases — exactly what we want to fix.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     # A dummy classifier that always predicts majority "wins" on accuracy
     dummy = DummyClassifier(strategy="most_frequent")
     dummy.fit(X_train, y_train)
     dummy_metrics = evaluate("DummyClassifier (majority)", dummy, X_test, y_test)
     print(dummy_metrics)
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     # Default RandomForest — high accuracy, but minority recall is poor
     rf_default = RandomForestClassifier(n_estimators=100, random_state=RANDOM_STATE, n_jobs=-1)
     rf_default.fit(X_train, y_train)
@@ -194,21 +175,17 @@ nb.code(
     print(classification_report(
         y_test, rf_default.predict(X_test), target_names=["majority", "minority"]
     ))
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Search Space
 
     `class_weight` is treated as a categorical hyperparameter **alongside** the
     model parameters. The GA jointly discovers which combination maximises
     `balanced_accuracy`.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     param_grid = {
         # Model hyperparameters
         "n_estimators":      Integer(50, 200),
@@ -235,11 +212,9 @@ nb.code(
         "minority_20x": {0: 1, 1: 20},
     }
     sorted(param_grid)
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     :::tip Why labels instead of raw dicts?
     A genetic search hashes and recombines categorical values, so each option
     should be a simple, hashable label. We search over the **names** of the
@@ -251,11 +226,9 @@ nb.md(
     `RandomForestClassifier` so it accepts a string label and expands it just
     before fitting. This keeps the search space clean while the underlying model
     still receives a real `class_weight`.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     from sklearn.base import clone
 
     class LabeledRF(RandomForestClassifier):
@@ -273,21 +246,17 @@ nb.code(
     # sanity check: the wrapper behaves like a plain RF under a real weight
     _probe = LabeledRF(n_estimators=20, class_weight="balanced", random_state=0).fit(X_train, y_train)
     print("wrapper fits and predicts:", _probe.predict(X_test[:5]))
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Configure GASearchCV
 
     Multi-metric scoring lets the GA optimize `balanced_accuracy` while we keep an
     eye on `f1_weighted` and `roc_auc`. `refit="balanced_accuracy"` makes that
     metric decide `best_params_`, `best_score_`, and the refit estimator.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     scoring = {
         "balanced_accuracy": make_scorer(balanced_accuracy_score),
         "f1_weighted":       make_scorer(f1_score, average="weighted"),
@@ -346,21 +315,17 @@ nb.code(
             sharing_radius=0.35,
         ),
     )
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Fit and Results
 
     `refit="balanced_accuracy"` means the best candidate is the one that maximises
     average per-class recall — the optimizer cannot cheat by riding the majority
     class.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     ga_search.fit(X_train, y_train, callbacks=callbacks)
 
     print(f"Best CV balanced_accuracy: {ga_search.best_score_:.4f}")
@@ -373,21 +338,17 @@ nb.code(
     print(f"  balanced_accuracy: {cv_df['mean_test_balanced_accuracy'].iloc[best_idx]:.4f}")
     print(f"  f1_weighted:       {cv_df['mean_test_f1_weighted'].iloc[best_idx]:.4f}")
     print(f"  roc_auc:           {cv_df['mean_test_roc_auc'].iloc[best_idx]:.4f}")
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ### Fitness Evolution
 
     The GA's fitness is the CV balanced accuracy of the best individual. Watching it
     climb confirms the search is finding genuinely better `class_weight` + model
     combinations generation over generation.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     history = pd.DataFrame(ga_search.history)
     fig, ax = plt.subplots(figsize=(9, 4))
     ax.plot(history["gen"], history["fitness_best"], marker="o", color="#16a085",
@@ -402,25 +363,21 @@ nb.code(
     ax.legend(frameon=False)
     ax.grid(alpha=0.25)
     fig.tight_layout()
-    """
-)
+    """)
 nb.figure(
     "imbalanced_fitness.png",
     "Best, generation-max, and generation-mean CV balanced accuracy across generations",
     caption="Fitness (CV balanced accuracy of the best individual) climbs as the GA discovers stronger class_weight and model combinations.",
 )
 
-nb.md(
-    """
+nb.md("""
     ## RandomizedSearchCV at a Matched Budget
 
     For a fair comparison we give `RandomizedSearchCV` the **same search space** and
     a comparable number of evaluations, optimizing the **same metric**.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     rs_search = RandomizedSearchCV(
         estimator=LabeledRF(random_state=RANDOM_STATE, n_jobs=1),
         param_distributions={
@@ -443,21 +400,17 @@ nb.code(
     ga_metrics = evaluate("GASearchCV", ga_search, X_test, y_test)
     print(f"RandomizedSearchCV best CV balanced_accuracy: {rs_search.best_score_:.4f}")
     print(f"GASearchCV         best CV balanced_accuracy: {ga_search.best_score_:.4f}")
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Confusion Matrices
 
     The confusion matrix reveals what aggregate metrics hide: the dummy classifier
     and the uncorrected RF miss most of the minority class, while the GA-tuned model
     recovers far more of it.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     fig, axes = plt.subplots(1, 3, figsize=(14, 4))
     titles = ["DummyClassifier (majority)", "RF defaults", "GASearchCV (tuned)"]
     models = [dummy, rf_default, ga_search]
@@ -474,72 +427,58 @@ nb.code(
 
     plt.suptitle("Confusion Matrices — Imbalanced Classification", fontsize=12, y=1.04)
     plt.tight_layout()
-    """
-)
+    """)
 nb.figure(
     "imbalanced_confusion.png",
     "Three confusion matrices: dummy, default RF, and GA-tuned model",
     caption="Left to right: the dummy and default models leak most of the minority class into the majority cell; the GA-tuned model recovers far more true positives.",
 )
 
-nb.md(
-    """
+nb.md("""
     ## Full Comparison Table
 
     All rows use the same held-out test set. The honest headline: the GA-tuned
     model beats **both** the naive default and RandomizedSearchCV on the
     imbalance-aware metric.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     comparison = pd.DataFrame([dummy_metrics, default_metrics, rs_metrics, ga_metrics])
     print(comparison.to_string(index=False))
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     ga_ba = ga_metrics["balanced_accuracy"]
     print(f"GA vs default RF      : {ga_ba - default_metrics['balanced_accuracy']:+.4f} balanced accuracy")
     print(f"GA vs RandomizedSearch: {ga_ba - rs_metrics['balanced_accuracy']:+.4f} balanced accuracy")
     print(f"GA vs dummy           : {ga_ba - dummy_metrics['balanced_accuracy']:+.4f} balanced accuracy")
     print(f"\\nMinority recall: default={default_metrics['minority_recall']:.2f}  "
           f"random={rs_metrics['minority_recall']:.2f}  GA={ga_metrics['minority_recall']:.2f}")
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     The GA finds a `class_weight` and model combination that lifts minority recall
     while preserving overall quality — balanced accuracy jumps well above the
     default RandomForest and edges out random search at a matched budget. Because
     the weighting strategy and the tree shape are searched **together**, the GA can
     settle on the deeper/shallower tree that a given weighting actually needs.
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Classification Report — GA Model
 
     The per-class report makes the minority-class gain concrete.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     print(classification_report(
         y_test,
         ga_search.predict(X_test),
         target_names=["majority", "minority"],
     ))
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Optional: SMOTE Alternative
 
     :::info Prerequisites
@@ -549,11 +488,9 @@ nb.md(
     SMOTE generates synthetic minority samples rather than adjusting class weights.
     It plugs into an `imblearn.pipeline.Pipeline` so the oversampling happens inside
     each CV fold.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     try:
         from imblearn.pipeline import Pipeline as ImbPipeline
         from imblearn.over_sampling import SMOTE
@@ -567,11 +504,9 @@ nb.code(
         print(smote_metrics)
     except ImportError:
         print("Install imbalanced-learn to run this section: pip install imbalanced-learn")
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     SMOTE and `class_weight` solve the imbalance problem through different
     mechanisms:
 
@@ -604,8 +539,7 @@ nb.md(
     - [Multi-Metric Search](../examples/multi-metric) — worked example with `cv_results_` inspection
     - [Tuning Isolation Forest](./isolation-forest) — the related unsupervised anomaly-detection problem
     - [GASearchCV API](../api/gasearchcv)
-    """
-)
+    """)
 
 nb.write()
 print("ok imbalanced-classification")

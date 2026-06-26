@@ -35,18 +35,15 @@ nb = Notebook(
     ),
 )
 
-nb.md(
-    """
+nb.md("""
     ## A Dataset Where Defaults Overfit
 
     We build a noisy binary problem — 30 features, only 8 informative, label
     noise, and overlapping clusters — so that an untuned, aggressive booster
     memorizes the training set instead of generalizing.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     import warnings
     import time
 
@@ -86,20 +83,16 @@ nb.code(
     )
     cv = StratifiedKFold(n_splits=3, shuffle=True, random_state=RANDOM_STATE)
     print(f"train={X_train.shape}  test={X_test.shape}")
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Baseline: XGBoost Defaults
 
     XGBoost manages its own threads, so we set `n_jobs=1` on the estimator and let
     sklearn-genetic-opt handle parallelism (see the note below).
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     def evaluate(name, estimator):
         proba = estimator.predict_proba(X_test)[:, 1]
         pred = estimator.predict(X_test)
@@ -116,21 +109,17 @@ nb.code(
     baseline.fit(X_train, y_train)
     baseline_metrics = evaluate("XGBoost defaults", baseline)
     print(baseline_metrics)
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## The Search Space
 
     Nine parameters with ranges grounded in XGBoost's documentation. `log-uniform`
     is used for parameters that matter across orders of magnitude, so each decade
     gets equal sampling probability instead of biasing toward large values.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     param_grid = {
         "n_estimators":     Integer(50, 350),
         "max_depth":        Integer(2, 10),
@@ -142,11 +131,9 @@ nb.code(
         "reg_alpha":        Continuous(1e-5, 10.0, distribution="log-uniform"),
         "reg_lambda":       Continuous(1e-5, 10.0, distribution="log-uniform"),
     }
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ::: warning CPU oversubscription with XGBoost
     XGBoost spawns threads internally for tree building. If the estimator uses
     `n_jobs=-1` **and** the search parallelizes candidates, you get
@@ -161,11 +148,9 @@ nb.md(
     and let early stopping end it once progress stalls. `warm_start_configs` seeds
     the first population with XGBoost's defaults so the search starts from a known
     region; adaptive schedules anneal exploration into exploitation.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     ga_search = GASearchCV(
         estimator=XGBClassifier(tree_method="hist", eval_metric="logloss",
                                 random_state=RANDOM_STATE, n_jobs=1),
@@ -210,13 +195,11 @@ nb.code(
     print("Best parameters :")
     for key, value in ga_search.best_params_.items():
         print(f"  {key}: {value}")
-    """
-)
+    """)
 
 nb.md("## Did Tuning Help? Baseline vs Tuned")
 
-nb.code(
-    """
+nb.code("""
     ga_metrics = evaluate("GASearchCV (tuned)", ga_search)
     comparison = pd.DataFrame([baseline_metrics, ga_metrics])
     print(comparison.to_string(index=False))
@@ -225,21 +208,17 @@ nb.code(
           f"{ga_metrics['roc_auc'] - baseline_metrics['roc_auc']:+.4f}")
     print(f"Balanced-accuracy improvement    : "
           f"{ga_metrics['balanced_accuracy'] - baseline_metrics['balanced_accuracy']:+.4f}")
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     On this noisy data the aggressive default booster overfits; the genetic search
     finds a calmer, better-regularized configuration that **generalizes
     measurably better** on the untouched test set.
-    """
-)
+    """)
 
 nb.md("### Fitness over generations")
 
-nb.code(
-    """
+nb.code("""
     import matplotlib.pyplot as plt
 
     history = pd.DataFrame(ga_search.history)
@@ -252,23 +231,19 @@ nb.code(
     ax.legend(frameon=False)
     ax.grid(alpha=0.25)
     fig.tight_layout()
-    """
-)
+    """)
 nb.figure("tune_xgboost_fitness.png", "Best and mean cross-validated ROC AUC over generations")
 
-nb.md(
-    """
+nb.md("""
     ### The interaction the search exploits
 
     `learning_rate` and `n_estimators` trade off: more trees want a smaller step.
     Coloring every evaluated candidate by its CV score shows the productive
     region — a band of low learning rate with many estimators — that a
     one-parameter-at-a-time sweep would struggle to find.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     results = pd.DataFrame(ga_search.cv_results_)
     fig, ax = plt.subplots(figsize=(8, 5))
     sc = ax.scatter(results["param_learning_rate"], results["param_n_estimators"],
@@ -279,15 +254,15 @@ nb.code(
     ax.set_title("Every evaluated candidate, colored by CV ROC AUC")
     fig.colorbar(sc, label="mean CV ROC AUC")
     fig.tight_layout()
-    """
+    """)
+nb.figure(
+    "tune_xgboost_interaction.png",
+    "Scatter of evaluated candidates over learning_rate and n_estimators, colored by CV score",
 )
-nb.figure("tune_xgboost_interaction.png",
-          "Scatter of evaluated candidates over learning_rate and n_estimators, colored by CV score")
 
 nb.md("### Feature importance of the tuned model")
 
-nb.code(
-    """
+nb.code("""
     importances = pd.Series(ga_search.best_estimator_.feature_importances_,
                             index=[f"f{i:02d}" for i in range(X_train.shape[1])])
     top = importances.sort_values(ascending=True).tail(15)
@@ -296,12 +271,10 @@ nb.code(
     ax.set_title("Top-15 feature importances — tuned XGBoost")
     ax.set_xlabel("importance (gain)")
     fig.tight_layout()
-    """
-)
+    """)
 nb.figure("tune_xgboost_importance.png", "Top-15 feature importances of the tuned XGBoost model")
 
-nb.md(
-    """
+nb.md("""
     ## How Does It Compare to Random Search?
 
     Random search is a strong baseline. Given the **same evaluation budget** and
@@ -309,11 +282,9 @@ nb.md(
     per-generation telemetry and the diagnostic plots above. (On a small, smooth
     space the two will tie; the genetic search's edge grows with the number of
     interacting parameters.)
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     from scipy.stats import loguniform, randint, uniform
     from sklearn.model_selection import RandomizedSearchCV
 
@@ -337,11 +308,9 @@ nb.code(
     table["best_cv_auc"] = [None, round(random_search.best_score_, 4), round(ga_search.best_score_, 4)]
     table["candidates"] = [None, budget, ga_search.fit_stats_["unique_candidates"]]
     print(table.to_string(index=False))
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Practical Notes
 
     - **`tree_method="hist"`** dramatically cuts per-tree build time — use it by default.
@@ -361,8 +330,7 @@ nb.md(
     - [Tune CatBoost](./tune-catboost) — CatBoost-specific parameters
     - [Comparing Search Methods](../examples/sklearn-comparison) — GA vs random vs grid, honestly
     - [Advanced Optimizer Control](../guide/advanced-optimizer-control) — diversity, fitness sharing, local search
-    """
-)
+    """)
 
 nb.write()
 print("ok tune-xgboost")

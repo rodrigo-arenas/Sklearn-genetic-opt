@@ -35,17 +35,14 @@ nb = Notebook(
     ),
 )
 
-nb.md(
-    """
+nb.md("""
     ## A Noisy Dataset
 
     Defaults overfit when the signal is weak and the data is noisy, so we build
     exactly that: 30 features, 8 informative, label noise, overlapping clusters.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     import warnings
     import time
 
@@ -79,20 +76,16 @@ nb.code(
     )
     cv = StratifiedKFold(n_splits=3, shuffle=True, random_state=RANDOM_STATE)
     print(f"train={X_train.shape}  test={X_test.shape}")
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Baseline: LightGBM Defaults
 
     LightGBM manages its own threads, so we set `n_jobs=1` on the estimator and
     `verbose=-1` to silence per-iteration logging.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     def evaluate(name, estimator):
         proba = estimator.predict_proba(X_test)[:, 1]
         pred = estimator.predict(X_test)
@@ -108,21 +101,17 @@ nb.code(
     baseline.fit(X_train, y_train)
     baseline_metrics = evaluate("LightGBM defaults", baseline)
     print(baseline_metrics)
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Search Space
 
     The key relationship is `num_leaves` ≤ `2^max_depth`. We give the search wide
     ranges for both and let it discover the productive combinations; the scatter
     plot later shows where they are.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     param_grid = {
         "n_estimators":      Integer(50, 350),
         "num_leaves":        Integer(8, 255),
@@ -134,11 +123,9 @@ nb.code(
         "reg_alpha":         Continuous(1e-5, 10.0, distribution="log-uniform"),
         "reg_lambda":        Continuous(1e-5, 10.0, distribution="log-uniform"),
     }
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ::: warning CPU oversubscription
     Pair `n_jobs=1` on the `LGBMClassifier` with `parallel_backend="cv"` in
     `RuntimeConfig` so the search parallelizes at the fold level rather than
@@ -146,11 +133,9 @@ nb.md(
     :::
 
     ## Configure and Run
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     ga_search = GASearchCV(
         estimator=LGBMClassifier(random_state=RANDOM_STATE, n_jobs=1, verbose=-1),
         random_state=RANDOM_STATE,
@@ -193,26 +178,22 @@ nb.code(
     print("Best parameters :")
     for key, value in ga_search.best_params_.items():
         print(f"  {key}: {value}")
-    """
-)
+    """)
 
 nb.md("## Baseline vs Tuned")
 
-nb.code(
-    """
+nb.code("""
     ga_metrics = evaluate("GASearchCV (tuned)", ga_search)
     comparison = pd.DataFrame([baseline_metrics, ga_metrics])
     print(comparison.to_string(index=False))
     print()
     print(f"ROC AUC improvement over defaults: "
           f"{ga_metrics['roc_auc'] - baseline_metrics['roc_auc']:+.4f}")
-    """
-)
+    """)
 
 nb.md("### Fitness over generations")
 
-nb.code(
-    """
+nb.code("""
     import matplotlib.pyplot as plt
 
     history = pd.DataFrame(ga_search.history)
@@ -225,23 +206,19 @@ nb.code(
     ax.legend(frameon=False)
     ax.grid(alpha=0.25)
     fig.tight_layout()
-    """
-)
+    """)
 nb.figure("tune_lightgbm_fitness.png", "Best and mean cross-validated ROC AUC over generations")
 
-nb.md(
-    """
+nb.md("""
     ### The num_leaves / max_depth interaction
 
     Each evaluated candidate is plotted by its `num_leaves` and `max_depth` and
     colored by CV score. The productive region respects `num_leaves ≤ 2^max_depth`
     — the search concentrates there instead of wasting effort on invalid or
     overfitting combinations.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     results = pd.DataFrame(ga_search.cv_results_)
     fig, ax = plt.subplots(figsize=(8, 5))
     sc = ax.scatter(results["param_max_depth"], results["param_num_leaves"],
@@ -255,13 +232,13 @@ nb.code(
     ax.legend(frameon=False)
     fig.colorbar(sc, label="mean CV ROC AUC")
     fig.tight_layout()
-    """
+    """)
+nb.figure(
+    "tune_lightgbm_interaction.png",
+    "Scatter of candidates over max_depth and num_leaves with the 2^max_depth boundary",
 )
-nb.figure("tune_lightgbm_interaction.png",
-          "Scatter of candidates over max_depth and num_leaves with the 2^max_depth boundary")
 
-nb.md(
-    """
+nb.md("""
     ## Practical Notes
 
     - `num_leaves` is LightGBM's primary complexity knob — always tune it together
@@ -277,8 +254,7 @@ nb.md(
     - [Tune XGBoost](./tune-xgboost) — level-wise boosting and the same workflow
     - [Tune CatBoost](./tune-catboost) — ordered boosting and CatBoost-specific knobs
     - [Advanced Optimizer Control](../guide/advanced-optimizer-control)
-    """
-)
+    """)
 
 nb.write()
 print("ok tune-lightgbm")

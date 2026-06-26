@@ -33,18 +33,15 @@ nb = Notebook(
     ),
 )
 
-nb.md(
-    """
+nb.md("""
     ## Hyperparameter Tuning
 
     We tune an `MLPClassifier` on the
     [handwritten digits dataset](https://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_digits.html)
     (10 classes, 64 pixel features). First, the imports and data:
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     import numpy as np
     from sklearn.datasets import load_digits
     from sklearn.metrics import accuracy_score
@@ -62,11 +59,9 @@ nb.code(
     )
     cv = StratifiedKFold(n_splits=3, shuffle=True, random_state=RANDOM_STATE)
     print(f"train={X_train.shape}  test={X_test.shape}  classes={len(np.unique(y))}")
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ### Define the search space
 
     The keys in `param_grid` are estimator parameter names. Each value is a
@@ -75,11 +70,9 @@ nb.md(
     - `Integer` — whole numbers in a range
     - `Continuous` — floats in a range (optionally `distribution="log-uniform"`)
     - `Categorical` — a fixed list of choices
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     param_grid = {
         "hidden_layer_sizes": Categorical([(32,), (64,), (32, 16)]),
         "alpha": Continuous(1e-5, 1e-1, distribution="log-uniform"),
@@ -87,22 +80,18 @@ nb.code(
         "activation": Categorical(["relu", "tanh"]),
         "batch_size": Integer(32, 256),
     }
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ### Configure and run the search
 
     `GASearchCV` is configured with small config objects. `EvolutionConfig`
     controls the population and generations; `PopulationConfig(initializer="smart")`
     builds a diverse, well-spread starting population; `RuntimeConfig` controls
     parallelism and logging.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     clf = MLPClassifier(max_iter=150, early_stopping=True, random_state=RANDOM_STATE)
 
     search = GASearchCV(
@@ -120,25 +109,19 @@ nb.code(
 
     print(f"Best CV accuracy : {search.best_score_:.4f}")
     print(f"Best parameters  : {search.best_params_}")
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     After fitting, `GASearchCV` behaves like any fitted scikit-learn estimator —
     it has already refit the best configuration on all of `X_train`:
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     y_pred = search.predict(X_test)
     print(f"Holdout accuracy : {accuracy_score(y_test, y_pred):.4f}")
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ### Reading the evolution
 
     Each generation is logged. Inspect the full history as a DataFrame — the
@@ -152,83 +135,67 @@ nb.md(
     | `genotype_diversity` | 1.0 = diverse, 0.0 = converged |
     | `unique_individual_ratio` | fraction of distinct configurations |
     | `stagnation_generations` | consecutive generations without improvement |
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     import pandas as pd
 
     history = pd.DataFrame(search.history)
     print(history[["gen", "fitness", "fitness_best", "genotype_diversity",
                    "unique_individual_ratio", "stagnation_generations"]].to_string(index=False))
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     `fit_stats_` summarizes what the search actually spent — useful for spotting
     wasted effort (e.g. many `skipped_invalid_candidates`):
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     for key, value in search.fit_stats_.items():
         print(f"{key}: {value}")
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ### Visualize convergence
 
     With the `[plot]` extra installed, `plot_fitness_evolution` shows the best
     score climbing over generations, and `plot_search_overview` gives a compact
     diagnostic dashboard.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     import matplotlib.pyplot as plt
     from sklearn_genetic.plots import plot_search_overview
 
     plot_search_overview(search, top_k=6)
     plt.tight_layout()
-    """
-)
+    """)
 nb.figure(
     "basic_usage_search_overview.png",
     "Search overview dashboard: convergence, diversity, optimizer events, and top candidates",
 )
 
-nb.code(
-    """
+nb.code("""
     from sklearn_genetic.plots import plot_parameter_evolution
 
     plot_parameter_evolution(search, parameters=["alpha", "learning_rate_init", "batch_size"])
     plt.tight_layout()
-    """
-)
+    """)
 nb.figure(
     "basic_usage_parameter_evolution.png",
     "How sampled values of alpha, learning rate, and batch size evolved over evaluations",
 )
 
 # --- Feature selection --------------------------------------------------------
-nb.md(
-    """
+nb.md("""
     ## Feature Selection
 
     `GAFeatureSelectionCV` searches for the most useful subset of columns. To make
     the task concrete we take the Iris dataset and bolt on 10 columns of pure
     noise; a good selector should keep the real measurements and discard the noise.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     from sklearn.datasets import load_iris
     from sklearn.svm import SVC
 
@@ -262,31 +229,25 @@ nb.code(
     for name in selected:
         print(f"  - {name}")
     print(f"Holdout accuracy : {accuracy_score(yte, selector.predict(Xte)):.4f}")
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     `support_` is a boolean mask (`True` = kept). The search keeps the informative
     Iris measurements and drops most of the noise columns. Visualize the mask:
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     from sklearn_genetic.plots import plot_feature_selection
 
     plot_feature_selection(selector, feature_names=feature_names)
     plt.tight_layout()
-    """
-)
+    """)
 nb.figure(
     "basic_usage_feature_selection.png",
     "Selected-feature mask over the four Iris features plus ten noise columns",
 )
 
-nb.md(
-    """
+nb.md("""
     ## Tips & Gotchas
 
     - Set `RuntimeConfig(verbose=True)` to watch the per-generation log live.
@@ -304,8 +265,7 @@ nb.md(
     - [Pipeline Tuning](./pipeline-tuning) — tune a scikit-learn `Pipeline` with `step__param` names
     - [Callbacks](./callbacks) — early stopping, progress bars, and checkpoints
     - [Plotting Gallery](../examples/plotting-gallery) — every diagnostic plot, explained
-    """
-)
+    """)
 
 nb.write()
 print("ok basic-usage")

@@ -36,19 +36,16 @@ nb = Notebook(
     ),
 )
 
-nb.md(
-    """
+nb.md("""
     ## Setup
 
     We build a 2,000-sample binary problem with a 90/10 class split and a bit of
     label noise. The majority class is so dominant that a model predicting "always
     majority" already scores 90% accuracy — which is exactly why accuracy alone is
     misleading here.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     import warnings
     from pprint import pprint
 
@@ -92,11 +89,9 @@ nb.code(
     print(f"class balance: {counts[0]} majority / {counts[1]} minority "
           f"({counts[1] / counts.sum():.0%} minority)")
     print(f"train={X_train.shape}  test={X_test.shape}")
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Define Multiple Metrics
 
     A multi-metric search receives a dictionary of scorers. On this dataset the
@@ -110,33 +105,27 @@ nb.md(
     The `refit` parameter decides which metric chooses `best_params_` and refits
     `best_estimator_`. We refit on `balanced_accuracy` so the final model is forced
     to take the minority class seriously.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     scoring = {
         "accuracy": "accuracy",
         "balanced_accuracy": make_scorer(balanced_accuracy_score),
         "f1": make_scorer(f1_score),  # minority (positive) class F1
     }
     sorted(scoring)
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Configure GASearchCV
 
     We tune a scaled `LogisticRegression`. The key knob for imbalance is
     `class_weight`: leaving it `None` chases accuracy, while `"balanced"` reweights
     the minority class — so different candidates will favor different metrics,
     exactly the tension we want to expose.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     model = Pipeline([
         ("scaler", StandardScaler()),
         ("logistic", LogisticRegression(solver="saga", max_iter=1500, random_state=RANDOM_STATE)),
@@ -198,20 +187,16 @@ nb.code(
 
     search.fit(X_train, y_train, callbacks=callbacks)
     print("fitted:", search.refit_metric)
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Best Parameters and Test Metrics
 
     Because `refit="balanced_accuracy"`, `best_params_` and `best_estimator_` are
     selected by the CV rank of that metric.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     print("Refit metric:", search.refit_metric)
     print("Best balanced-accuracy CV score:", round(search.best_score_, 4))
     print("Best params:")
@@ -224,21 +209,17 @@ nb.code(
         "f1": round(f1_score(y_test, predictions), 4),
     }
     test_metrics
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Explore Multi-Metric cv_results_
 
     For multi-metric searches, `cv_results_` contains one set of columns per
     metric. The point of this page is visible right here: sorting by each metric's
     rank surfaces a **different** top candidate.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     results = pd.DataFrame(search.cv_results_)
     metric_columns = [
         "mean_test_accuracy", "rank_test_accuracy",
@@ -248,22 +229,18 @@ nb.code(
     param_columns = ["param_logistic__C", "param_logistic__class_weight"]
 
     results[metric_columns + param_columns].sort_values("rank_test_balanced_accuracy").head()
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## The Metrics Disagree
 
     The same `cv_results_` can point to different winners. Pulling the best row for
     each metric — without rerunning the search — shows the tradeoff explicitly:
     accuracy tends to prefer the unweighted model, while balanced accuracy and F1
     reward the candidate that pays attention to the minority class.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     best_rows = []
     for metric_name in ["accuracy", "balanced_accuracy", "f1"]:
         row = results.sort_values(f"rank_test_{metric_name}").iloc[0]
@@ -278,11 +255,9 @@ nb.code(
         })
 
     pd.DataFrame(best_rows)
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     winners = {
         m: int(results.sort_values(f"rank_test_{m}").iloc[0].name)
         for m in ["accuracy", "balanced_accuracy", "f1"]
@@ -292,19 +267,15 @@ nb.code(
     print(f"{distinct} distinct candidates win across the 3 metrics "
           f"-> the metrics disagree." if distinct > 1
           else "metrics agreed on a single candidate.")
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     For advanced users the useful question is not only "which candidate won?", but
     whether different metrics prefer the same region. Plotting the top candidates
     per metric makes those tradeoffs visible without rerunning the search.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     import matplotlib.pyplot as plt
 
     fig, axes = plt.subplots(1, 3, figsize=(15, 4))
@@ -319,41 +290,33 @@ nb.code(
         )
     fig.suptitle("Top candidates by metric — each metric prefers a different ordering")
     fig.tight_layout()
-    """
-)
+    """)
 nb.figure(
     "multi_metric_candidate_rankings.png",
     "Three side-by-side candidate-ranking plots, one per metric, showing different orderings",
     caption="Each subplot ranks candidates by one metric; the orderings differ, so the refit choice matters.",
 )
 
-nb.md(
-    """
+nb.md("""
     ## Optimizer Telemetry
 
     With multi-metric scoring the GA still optimizes a single scalar fitness — the
     selected `refit` metric. Telemetry explains how the optimizer moved through the
     space while optimizing balanced accuracy.
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     print(search.fit_stats_)
-    """
-)
+    """)
 
-nb.code(
-    """
+nb.code("""
     history = pd.DataFrame(search.history)
     cols = ["gen", "fitness", "fitness_max", "fitness_std",
             "unique_individual_ratio", "genotype_diversity", "stagnation_generations"]
     history[[c for c in cols if c in history.columns]].tail()
-    """
-)
+    """)
 
-nb.md(
-    """
+nb.md("""
     ## Practical Notes
 
     - Set `refit` to the metric that should define the final model **before**
@@ -370,8 +333,7 @@ nb.md(
     - [Multi-Metric Optimization Guide](../guide/multi-metric) — full guide with scoring dict details
     - [GASearchCV API](../api/gasearchcv) — `scoring` and `refit` parameter reference
     - [Understanding Cross-Validation](../guide/understand-cv) — reading the generation log
-    """
-)
+    """)
 
 nb.write()
 print("ok multi-metric")
