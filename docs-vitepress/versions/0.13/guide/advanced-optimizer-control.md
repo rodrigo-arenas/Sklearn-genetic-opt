@@ -35,6 +35,7 @@ from sklearn_genetic import OptimizationConfig
 ## Full Example: Hyperparameter Search
 
 ```python
+import numpy as np
 import pandas as pd
 from sklearn.datasets import load_breast_cancer
 from sklearn.ensemble import RandomForestClassifier
@@ -48,6 +49,7 @@ from sklearn_genetic import (
     PopulationConfig,
     RuntimeConfig,
 )
+from sklearn_genetic.plots import plot_diversity, plot_optimizer_events
 from sklearn_genetic.schedules import ExponentialAdapter, InverseAdapter
 from sklearn_genetic.space import Categorical, Integer
 
@@ -80,6 +82,7 @@ mutation_schedule = ExponentialAdapter(
 
 search = GASearchCV(
     estimator=RandomForestClassifier(random_state=42, n_jobs=1),
+    random_state=42,
     param_grid=param_grid,
     cv=cv,
     scoring="roc_auc",
@@ -151,6 +154,22 @@ print(history[columns])
 print(search.fit_stats_)
 ```
 
+The same telemetry is easier to reason about visually. `plot_diversity` shows whether the population collapsed or recovered, while `plot_optimizer_events` marks the generations where diversity control, immigrant injection, sharing, or local search changed the search process.
+
+```python
+import matplotlib.pyplot as plt
+
+plot_diversity(search)
+plt.show()
+
+plot_optimizer_events(search)
+plt.show()
+```
+
+![Advanced optimizer diversity](/images/advanced_optimizer_diversity.png)
+
+![Advanced optimizer events](/images/advanced_optimizer_events.png)
+
 **Key telemetry fields:**
 
 | Field | Meaning |
@@ -192,6 +211,7 @@ cv = StratifiedKFold(n_splits=4, shuffle=True, random_state=42)
 
 selector = GAFeatureSelectionCV(
     estimator=RandomForestClassifier(random_state=42, n_jobs=1),
+    random_state=42,
     cv=cv,
     scoring="roc_auc",
     max_features=18,

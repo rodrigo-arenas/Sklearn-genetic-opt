@@ -5,17 +5,23 @@ description: Make sklearn-genetic-opt results reproducible across runs by seedin
 
 # Reproducibility
 
-Genetic algorithms are stochastic — results vary between runs unless every random source is seeded. This page shows a complete reproducibility setup.
+Genetic algorithms are stochastic — results vary between runs unless the
+randomness is seeded. The simplest, recommended way is the single
+`random_state` parameter on `GASearchCV` / `GAFeatureSelectionCV`.
 
 ## Prerequisites
 
 - Completed [Basic Usage](./basic-usage)
 
-## Seed All Random Sources
+## One Seed Controls the Search
+
+Pass `random_state` to the estimator. At `fit` time it seeds **every** stochastic
+part of the search from that one value — population initialization (including the
+Latin hypercube sampler), mutation, crossover, and random immigrants — so
+repeated fits give identical results. You no longer need to seed the global
+`random` / `numpy` RNGs yourself.
 
 ```python
-import random
-import numpy as np
 from sklearn.datasets import load_breast_cancer
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import StratifiedKFold, train_test_split
@@ -23,34 +29,38 @@ from sklearn.model_selection import StratifiedKFold, train_test_split
 from sklearn_genetic import EvolutionConfig, GASearchCV, PopulationConfig, RuntimeConfig
 from sklearn_genetic.space import Categorical, Continuous, Integer
 
-# 1. Seed Python's built-in random module
-random.seed(42)
-
-# 2. Seed NumPy
-np.random.seed(42)
-
 X, y = load_breast_cancer(return_X_y=True)
 X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.25, stratify=y, random_state=42  # 3. Seed the split
+    X, y, test_size=0.25, stratify=y, random_state=42  # seed the split
 )
 
 search = GASearchCV(
-    estimator=RandomForestClassifier(random_state=42),  # 4. Seed the estimator
+    estimator=RandomForestClassifier(random_state=42),  # seed the estimator
+    random_state=42,                                    # seed the whole search
     param_grid={
         "n_estimators": Integer(50, 250),
         "max_depth": Integer(2, 14),
         "max_features": Categorical(["sqrt", "log2"]),
         "ccp_alpha": Continuous(0.0, 0.03),
     },
-    cv=StratifiedKFold(n_splits=3, shuffle=True, random_state=42),  # 5. Seed CV
+    cv=StratifiedKFold(n_splits=3, shuffle=True, random_state=42),  # seed CV
     scoring="roc_auc",
     evolution_config=EvolutionConfig(population_size=20, generations=12),
     population_config=PopulationConfig(initializer="smart"),
-    runtime_config=RuntimeConfig(n_jobs=1),  # 6. n_jobs=1 for full determinism
+    runtime_config=RuntimeConfig(n_jobs=1),  # n_jobs=1 for full determinism
 )
 
 search.fit(X_train, y_train)
 ```
+
+The four `random_state=42` values above seed four independent things: the
+train/test split, the estimator, the cross-validation splitter, and — the new
+one — the genetic search itself. Set all four for an end-to-end reproducible run.
+
+:::tip Leave it unset for variety
+`random_state=None` (the default) keeps the search non-deterministic, matching
+scikit-learn's convention — useful when you want to explore different runs.
+:::
 
 ## Why `n_jobs=1`?
 

@@ -25,6 +25,7 @@ GAFeatureSelectionCV(
     elitism=True,
     error_score=np.nan,
     return_train_score=False,
+    random_state=None,
     evolution_config=None,
     population_config=None,
     runtime_config=None,
@@ -44,6 +45,7 @@ GAFeatureSelectionCV(
 | `keep_top_k` | int | `1` | Number of hall-of-fame individuals to keep across generations |
 | `elitism` | bool | `True` | Whether to carry over the best individual to the next generation |
 | `error_score` | float or `"raise"` | `np.nan` | Score to assign when a candidate raises an exception |
+| `random_state` | int, RandomState or `None` | `None` | Seeds the whole search at `fit` time for reproducible runs. `None` is non-deterministic |
 | `evolution_config` | `EvolutionConfig` | `None` | Population size, generations, crossover/mutation rates |
 | `population_config` | `PopulationConfig` | `None` | Initialization strategy and diversity settings |
 | `runtime_config` | `RuntimeConfig` | `None` | Parallelism, caching, verbosity |
@@ -83,7 +85,8 @@ from sklearn.svm import SVC
 from sklearn_genetic import EvolutionConfig, GAFeatureSelectionCV, PopulationConfig, RuntimeConfig
 
 X, y = load_iris(return_X_y=True)
-noise = np.random.uniform(0, 10, size=(X.shape[0], 10))
+rng = np.random.default_rng(42)
+noise = rng.uniform(0, 10, size=(X.shape[0], 10))
 X = np.hstack((X, noise))
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=0)

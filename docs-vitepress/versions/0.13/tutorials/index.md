@@ -7,7 +7,9 @@ description: In-depth tutorials for sklearn-genetic-opt covering XGBoost, LightG
 
 Step-by-step tutorials for common real-world scenarios. Each tutorial is self-contained and includes a baseline comparison, runnable code, visualizations, and practical notes.
 
-These go deeper than the [Examples](../examples/) section — every tutorial covers the full workflow from raw data to a tuned, evaluated model.
+::: tip Tutorials vs Examples
+**Tutorials** are end-to-end walkthroughs of a complete real-world task — from raw data to a tuned, evaluated model — usually integrating a specific library (XGBoost, LightGBM, CatBoost, …). **[Examples](../examples/)** are shorter, focused recipes that each demonstrate a single feature you can drop into your own code.
+:::
 
 ## Gradient Boosting Libraries
 

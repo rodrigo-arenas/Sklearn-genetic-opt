@@ -24,6 +24,7 @@ GASearchCV(
     verbose=0,
     error_score=np.nan,
     return_train_score=False,
+    random_state=None,
     evolution_config=None,
     population_config=None,
     runtime_config=None,
@@ -43,6 +44,7 @@ GASearchCV(
 | `verbose` | int | `0` | Verbosity level. `1` = generation log |
 | `error_score` | float or `"raise"` | `np.nan` | Score to use when a candidate raises an exception |
 | `return_train_score` | bool | `False` | Include training scores in `cv_results_` |
+| `random_state` | int, RandomState or `None` | `None` | Seeds the whole search (population init, mutation, crossover, immigrants) at `fit` time for reproducible runs. `None` is non-deterministic |
 | `evolution_config` | `EvolutionConfig` | `None` | Controls population size, generations, crossover/mutation rates, elitism |
 | `population_config` | `PopulationConfig` | `None` | Controls initialization strategy, warm starts, diversity |
 | `runtime_config` | `RuntimeConfig` | `None` | Controls parallelism, caching, verbosity |

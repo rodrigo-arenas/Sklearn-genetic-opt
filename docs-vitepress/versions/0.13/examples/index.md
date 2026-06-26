@@ -4,10 +4,10 @@ description: End-to-end examples for sklearn-genetic-opt — hyperparameter sear
 ---
 # Examples
 
-End-to-end runnable examples from real use cases. Each example is self-contained — you can copy the code directly into a script or notebook.
+Short, focused recipes — each example is self-contained and demonstrates a single feature you can copy directly into a script or notebook.
 
-:::tip Looking for deeper tutorials?
-The [Tutorials](/versions/0.13/tutorials/) section covers comprehensive walkthroughs for XGBoost, LightGBM, CatBoost, multi-stage feature selection, and imbalanced classification — each with baseline comparisons, visualizations, and practical notes.
+::: tip Examples vs Tutorials
+**Examples** are focused recipes that each show one capability (a scorer, a plot, checkpointing, …). **[Tutorials](/versions/latest/tutorials/)** are longer, end-to-end walkthroughs of a complete real-world task — from raw data to a tuned, evaluated model — usually integrating a specific library (XGBoost, LightGBM, CatBoost, …).
 :::
 
 ## Hyperparameter Search
@@ -22,14 +22,14 @@ The [Tutorials](/versions/0.13/tutorials/) section covers comprehensive walkthro
 
 | Example | What it covers |
 |---------|---------------|
-| [Feature Selection With Noisy Data](./feature-selection) | GAFeatureSelectionCV on Iris with 12 added noise features |
+| [Finding the Signal in 60 Columns](./feature-selection) | GAFeatureSelectionCV recovers the signal from a dataset that is two-thirds noise, beating the all-features baseline |
 | [Advanced RF + Feature Selection](./advanced-rf#feature-selection-with-gafeatureselectioncv) | Feature selection after hyperparameter tuning |
 
 ## Multi-Metric and Refit
 
 | Example | What it covers |
 |---------|---------------|
-| [Multi-Metric Search on Iris](./multi-metric) | Multiple scorers, choosing refit metric, inspecting cv_results_ per metric |
+| [Multi-Metric Search on Imbalanced Data](./multi-metric) | Multiple scorers that genuinely disagree, choosing the refit metric, inspecting per-metric `cv_results_` |
 
 ## Experiment Tracking
 

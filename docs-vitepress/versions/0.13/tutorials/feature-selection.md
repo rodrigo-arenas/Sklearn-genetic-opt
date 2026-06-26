@@ -1,398 +1,406 @@
 ---
-title: Comprehensive GA Feature Selection
-description: Three-stage workflow — GA feature selection on 50 features, hyperparameter retune on the selected subset, cross-estimator robustness validation — on breast cancer data with added noise.
+title: "Comprehensive GA Feature Selection"
+description: "A multi-stage walkthrough: build a noisy high-dimensional dataset, evolve a feature mask with GAFeatureSelectionCV, grade it against the known ground truth, confirm the win on a second estimator, and read the support mask and fitness history — all from real execution."
 ---
 
 # Comprehensive GA Feature Selection
 
-Feature selection and hyperparameter tuning are usually done separately, but they interact: the best hyperparameters for 50 features are different from the best for 15. This tutorial shows a three-stage workflow that treats both together:
+Choosing which of *n* columns to keep is a search over `2ⁿ` subsets — far beyond any grid or random sweep. `GAFeatureSelectionCV` evolves the on/off mask directly, and because it scores *whole subsets* it can account for redundancy and interaction between columns, not just each column in isolation.
 
-1. **Baseline** — all 50 features, default hyperparameters
-2. **GA feature selection** — find the best 15-feature subset from 50 (30 real + 20 noise)
-3. **Hyperparameter retune** — tune a new model on the selected 15 features (faster evaluations, better budget)
-
-Then a **robustness check** fits a completely different estimator on the selected features. If a second estimator also improves, the selection is genuinely informative and not an artifact of the scoring model.
-
-:::info Complementary to the simpler example
-The [Feature Selection (Noisy Data)](../examples/feature-selection) example in the Examples section uses Iris + 12 noise features in a single stage. This tutorial uses breast cancer + 20 noise features and adds hyperparameter retuning and cross-estimator validation.
-:::
+This tutorial is a full multi-stage walkthrough. We build a dataset whose informative, redundant, and pure-noise columns are known, then show the genetic search decisively beating the all-features baseline on a held-out test set. We grade the mask against the ground truth, confirm the win transfers to a completely different estimator, and read the convergence and support telemetry.
 
 ## Prerequisites
 
-```bash
-pip install sklearn-genetic-opt
-```
+- `sklearn-genetic-opt` installed (`pip install sklearn-genetic-opt`).
+- For the plots, the `seaborn` extra: `pip install sklearn-genetic-opt[all]`.
+- Comfort with scikit-learn pipelines and cross-validation.
 
-## Setup
+## Stage 1 — A Dataset With Known Signal
+
+We generate 1,500 samples with **60 features**, of which only the first 20
+carry information (12 informative + 8 redundant linear combinations). The
+remaining **40 columns are pure noise**. `shuffle=False` keeps the columns in
+that order so we can grade the selection against the truth later.
 
 ```python
 import warnings
-from pprint import pprint
-
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-from sklearn.datasets import load_breast_cancer
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, balanced_accuracy_score, roc_auc_score
-from sklearn.model_selection import StratifiedKFold, train_test_split
+from sklearn.datasets import make_classification
+from sklearn.metrics import accuracy_score, balanced_accuracy_score
+from sklearn.model_selection import StratifiedKFold, cross_val_score, train_test_split
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 
 from sklearn_genetic import (
-    EvolutionConfig, GAFeatureSelectionCV, GASearchCV,
-    OptimizationConfig, PopulationConfig, RuntimeConfig,
+    EvolutionConfig,
+    GAFeatureSelectionCV,
+    OptimizationConfig,
+    PopulationConfig,
+    RuntimeConfig,
 )
-from sklearn_genetic.callbacks import ConsecutiveStopping, DeltaThreshold, TimerStopping
-from sklearn_genetic.schedules import ExponentialAdapter, InverseAdapter
-from sklearn_genetic.space import Categorical, Continuous, Integer
+from sklearn_genetic.callbacks import ConsecutiveStopping, DeltaThreshold
 
 warnings.filterwarnings("ignore")
-
 RANDOM_STATE = 42
-rng = np.random.default_rng(RANDOM_STATE)
-```
 
-## Build the Dataset
+N_INFORMATIVE, N_REDUNDANT, N_NOISE = 12, 8, 40
+n_features = N_INFORMATIVE + N_REDUNDANT + N_NOISE  # 60
 
-Start with breast cancer's 30 real features, then add 20 independent Gaussian noise columns. A good selector should recover most real features and drop all noise ones.
-
-```python
-data = load_breast_cancer(as_frame=True)
-X_real = data.data          # 30 real features
-y = data.target
-
-noise = pd.DataFrame(
-    rng.normal(size=(X_real.shape[0], 20)),
-    columns=[f"noise_{i:02d}" for i in range(20)],
+X_array, y = make_classification(
+    n_samples=1500,
+    n_features=n_features,
+    n_informative=N_INFORMATIVE,
+    n_redundant=N_REDUNDANT,
+    n_repeated=0,
+    n_clusters_per_class=2,
+    class_sep=0.8,
+    flip_y=0.02,
+    shuffle=False,            # keep informative / redundant / noise columns in order
+    random_state=RANDOM_STATE,
 )
-X = pd.concat([X_real.reset_index(drop=True), noise], axis=1)
+
+feature_names = (
+    [f"info_{i:02d}" for i in range(N_INFORMATIVE)]
+    + [f"redundant_{i:02d}" for i in range(N_REDUNDANT)]
+    + [f"noise_{i:02d}" for i in range(N_NOISE)]
+)
+is_signal = np.array([not name.startswith("noise") for name in feature_names])
+X = pd.DataFrame(X_array, columns=feature_names)
 
 X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.30, stratify=y, random_state=RANDOM_STATE
+    X, y, test_size=0.40, stratify=y, random_state=RANDOM_STATE
 )
 cv = StratifiedKFold(n_splits=3, shuffle=True, random_state=RANDOM_STATE)
-
-real_feature_names = set(data.feature_names)
-
-print(f"Real features:  {X_real.shape[1]}")
-print(f"Noise features: {noise.shape[1]}")
-print(f"Total features: {X.shape[1]}")
-print(f"Train: {X_train.shape}, Test: {X_test.shape}")
+print(f"{n_features} features: {is_signal.sum()} carry signal, {(~is_signal).sum()} are noise")
+print(f"train={X_train.shape}  test={X_test.shape}")
 ```
 
-## Helpers
+```text
+60 features: 20 carry signal, 40 are noise
+train=(900, 60)  test=(600, 60)
+```
+
+## Stage 2 — Why This Model Needs Feature Selection
+
+We use a **k-nearest-neighbours** classifier. Distance-based models are the
+textbook victim of the *curse of dimensionality*: 40 irrelevant columns drown
+the distance metric, so every prediction is made in a fog of noise. That makes
+this a problem where keeping the right columns is worth real accuracy.
+
+We also keep a second, completely different estimator on hand — an
+**SVC with an RBF kernel**, also distance/kernel based. If the GA's selection
+is genuine signal rather than an artefact of the KNN scorer, the SVC should
+benefit from the *same* subset.
 
 ```python
-def evaluate(name, estimator, X_eval, y_eval):
-    predictions = estimator.predict(X_eval)
-    try:
-        probabilities = estimator.predict_proba(X_eval)[:, 1]
-        roc = round(roc_auc_score(y_eval, probabilities), 4)
-    except AttributeError:
-        roc = None
-    return {
-        "name": name,
-        "n_features": X_eval.shape[1],
-        "accuracy": round(accuracy_score(y_eval, predictions), 4),
-        "balanced_accuracy": round(balanced_accuracy_score(y_eval, predictions), 4),
-        "roc_auc": roc,
-    }
+def make_knn():
+    return Pipeline([
+        ("scaler", StandardScaler()),
+        ("knn", KNeighborsClassifier(n_neighbors=15)),
+    ])
 
 
 def make_svc():
     return Pipeline([
         ("scaler", StandardScaler()),
-        ("svc", SVC(kernel="rbf", C=2.0, gamma="scale",
-                    probability=True, random_state=RANDOM_STATE)),
+        ("svc", SVC(kernel="rbf", C=2.0, gamma="scale", random_state=RANDOM_STATE)),
     ])
+
+
+def holdout_scores(make_model, columns=None):
+    Xtr = X_train if columns is None else X_train.iloc[:, columns]
+    Xte = X_test if columns is None else X_test.iloc[:, columns]
+    model = make_model().fit(Xtr, y_train)
+    pred = model.predict(Xte)
+    return {
+        "accuracy": round(accuracy_score(y_test, pred), 4),
+        "balanced_accuracy": round(balanced_accuracy_score(y_test, pred), 4),
+    }
+
+
+knn_all_cv = cross_val_score(
+    make_knn(), X_train, y_train, cv=cv, scoring="balanced_accuracy"
+).mean()
+knn_all = holdout_scores(make_knn)
+svc_all = holdout_scores(make_svc)
+
+print(f"KNN, all {n_features} features : CV bal-acc = {knn_all_cv:.4f}, "
+      f"holdout bal-acc = {knn_all['balanced_accuracy']:.4f}")
+print(f"SVC, all {n_features} features : holdout bal-acc = {svc_all['balanced_accuracy']:.4f}")
 ```
 
-## Stage 1 — Baseline on All 50 Features
-
-```python
-rf_baseline = RandomForestClassifier(n_estimators=100, random_state=RANDOM_STATE, n_jobs=-1)
-rf_baseline.fit(X_train, y_train)
-baseline_rf = evaluate("RF baseline (50 features)", rf_baseline, X_test, y_test)
-
-svc_baseline = make_svc()
-svc_baseline.fit(X_train, y_train)
-baseline_svc = evaluate("SVC baseline (50 features)", svc_baseline, X_test, y_test)
-
-print(baseline_rf)
-# {'name': 'RF baseline (50 features)', 'n_features': 50, 'accuracy': 0.9474, ...}
-print(baseline_svc)
-# {'name': 'SVC baseline (50 features)', 'n_features': 50, 'accuracy': 0.9298, ...}
+```text
+KNN, all 60 features : CV bal-acc = 0.7625, holdout bal-acc = 0.8001
+SVC, all 60 features : holdout bal-acc = 0.8633
 ```
 
-The noise features dilute both models. The RF ignores them via feature importance; the SVC's kernel distance is degraded by irrelevant dimensions.
+## Stage 3 — Evolve the Feature Mask
 
-## Stage 2 — GA Feature Selection
+`GAFeatureSelectionCV` searches over binary masks — `1` keeps a column, `0`
+drops it. We optimize cross-validated balanced accuracy of the KNN model, with
+the advanced controls switched on:
 
-`GAFeatureSelectionCV` optimizes a binary mask over the 50 columns. Setting `max_features=15` steers the search toward compact subsets.
+- **smart initialization** for broad first-generation coverage,
+- a steady mutation rate that keeps probing column flips throughout the run,
+- **diversity control + fitness sharing** so the population does not collapse
+  onto one mask,
+- **local search** for a final refinement pass onto a compact subset.
 
 ```python
 selector = GAFeatureSelectionCV(
-    estimator=RandomForestClassifier(
-        n_estimators=100, random_state=RANDOM_STATE, n_jobs=1
-    ),
+    estimator=make_knn(),
+    random_state=RANDOM_STATE,
     cv=cv,
-    scoring="roc_auc",
-    max_features=15,
+    scoring="balanced_accuracy",
     evolution_config=EvolutionConfig(
         population_size=24,
         generations=20,
-        crossover_probability=ExponentialAdapter(
-            initial_value=0.8, end_value=0.4, adaptive_rate=0.15
-        ),
-        mutation_probability=InverseAdapter(
-            initial_value=0.30, end_value=0.08, adaptive_rate=0.25
-        ),
+        crossover_probability=0.8,
+        mutation_probability=0.12,
         tournament_size=3,
         elitism=True,
         keep_top_k=3,
     ),
     population_config=PopulationConfig(initializer="smart"),
-    runtime_config=RuntimeConfig(
-        n_jobs=-1,
-        parallel_backend="auto",
-        use_cache=True,
-        verbose=True,
-    ),
+    runtime_config=RuntimeConfig(n_jobs=-1, use_cache=True, verbose=False),
     optimization_config=OptimizationConfig(
+        diversity_control=True,
+        fitness_sharing=True,
         local_search=True,
         local_search_top_k=2,
-        local_search_steps=1,
-        local_search_radius=0.15,
-        diversity_control=True,
-        diversity_threshold=0.30,
-        diversity_stagnation_generations=3,
-        diversity_mutation_boost=1.8,
-        random_immigrants_fraction=0.12,
-        fitness_sharing=True,
-        sharing_radius=0.40,
     ),
 )
 
-selection_callbacks = [
-    DeltaThreshold(threshold=0.001, generations=5, metric="fitness_best"),
+callbacks = [
+    DeltaThreshold(threshold=0.0005, generations=6, metric="fitness_best"),
     ConsecutiveStopping(generations=8, metric="fitness_best"),
-    TimerStopping(total_seconds=120),
 ]
+selector.fit(X_train, y_train, callbacks=callbacks)
 
-selector.fit(X_train, y_train, callbacks=selection_callbacks)
-
-print(f"\nBest CV ROC AUC (selection): {selector.best_score_:.4f}")
-print(f"Selected {selector.n_features_} of {X.shape[1]} features")
+ga_best_cv = float(pd.DataFrame(selector.history)["fitness_best"].max())
+print(f"Best CV balanced accuracy: {ga_best_cv:.4f}")
+print(f"Selected {int(selector.support_.sum())} of {n_features} features")
 ```
 
-### Which Features Were Selected?
-
-```python
-selected_mask = selector.support_
-selected_names = X_train.columns[selected_mask].tolist()
-
-summary = pd.DataFrame({
-    "feature": X_train.columns,
-    "selected": selected_mask,
-    "kind": ["real" if c in real_feature_names else "noise" for c in X_train.columns],
-})
-
-print("\nSelected features:")
-print(summary[summary["selected"]].to_string(index=False))
-
-n_real_selected = summary[summary["selected"] & (summary["kind"] == "real")].shape[0]
-n_noise_selected = summary[summary["selected"] & (summary["kind"] == "noise")].shape[0]
-print(f"\nReal features kept: {n_real_selected} / {X_real.shape[1]}")
-print(f"Noise features kept: {n_noise_selected} / {noise.shape[1]}")
+```text
+Best CV balanced accuracy: 0.8024
+Selected 32 of 60 features
 ```
 
-### Feature Selection Breakdown Chart
+## Stage 4 — Grade the Mask Against the Truth
+
+Because we know which columns are real, we can grade the selection directly:
+how much signal did it keep, and how much noise did it correctly throw away?
 
 ```python
-color_map = {"real": "steelblue", "noise": "salmon"}
-colors = [color_map[k] for k in summary[summary["selected"]]["kind"]]
+support = selector.support_
+selected_idx = np.where(support)[0]
+n_selected = int(support.sum())
 
-fig, ax = plt.subplots(figsize=(10, 5))
-ax.bar(range(len(selected_names)), [1] * len(selected_names), color=colors)
-ax.set_xticks(range(len(selected_names)))
-ax.set_xticklabels(selected_names, rotation=45, ha="right", fontsize=8)
-ax.set_title("Selected Features — real (blue) vs noise (red)")
-ax.set_ylabel("Selected")
-ax.set_yticks([])
-from matplotlib.patches import Patch
-ax.legend(handles=[Patch(color="steelblue", label="real"), Patch(color="salmon", label="noise")])
+print(f"Selected {n_selected} of {n_features} features")
+print(f"  signal kept   : {int(is_signal[support].sum())} / {int(is_signal.sum())}")
+print(f"  noise dropped : {int((~is_signal & ~support).sum())} / {int((~is_signal).sum())}")
+print(f"  noise leaked  : {int((~is_signal[support]).sum())}")
+```
+
+```text
+Selected 32 of 60 features
+  signal kept   : 17 / 20
+  noise dropped : 25 / 40
+  noise leaked  : 15
+```
+
+### The support mask
+
+```python
+import matplotlib.pyplot as plt
+from sklearn_genetic.plots import plot_feature_selection
+
+plot_feature_selection(selector, feature_names=feature_names)
+fig = plt.gcf()
+fig.set_size_inches(11, 9)
+plt.title("Selected feature mask  (info | redundant | noise, top to bottom)")
 plt.tight_layout()
-plt.show()
 ```
 
-### Feature Selection Telemetry
+![Binary support mask showing which of the 60 columns the genetic search kept](/images/tutorial_feature_selection_support_mask.png)
+
+*The search concentrates its picks in the info/redundant block and clears most of the noise block.*
+
+### Fitness over generations
 
 ```python
-print(selector.fit_stats_)
+from sklearn_genetic.plots import plot_fitness_evolution
 
+ax = plot_fitness_evolution(
+    selector,
+    metrics=["fitness_best", "fitness"],
+    title="CV balanced accuracy climbs as noisy columns are pruned",
+)
+ax.set_xlabel("generation")
+ax.figure.set_size_inches(8, 4.5)
+ax.figure.tight_layout()
+```
+
+![Best-so-far and population-mean cross-validated balanced accuracy across generations](/images/tutorial_feature_selection_fitness.png)
+
+*Best-so-far fitness rises as the search prunes noise columns; the population mean trails the leading edge.*
+
+## Stage 5 — The Verdict (KNN)
+
+Both rows use the **same KNN model and the same split** — the only difference
+is which columns reach it.
+
+```python
+knn_sel = holdout_scores(make_knn, selected_idx)
+
+verdict = pd.DataFrame([
+    {"strategy": "All 60 features", "n_features": n_features,
+     "cv_balanced_acc": round(knn_all_cv, 4), **knn_all},
+    {"strategy": "GA-selected subset", "n_features": n_selected,
+     "cv_balanced_acc": round(ga_best_cv, 4), **knn_sel},
+])
+print(verdict.to_string(index=False))
+print()
+gain = knn_sel["balanced_accuracy"] - knn_all["balanced_accuracy"]
+print(f"Genetic feature selection lifts KNN holdout balanced accuracy by {gain:+.4f}")
+print(f"while using only {n_selected} of {n_features} columns "
+      f"({n_selected / n_features:.0%} of the inputs).")
+```
+
+```text
+          strategy  n_features  cv_balanced_acc  accuracy  balanced_accuracy
+   All 60 features          60           0.7625     0.800             0.8001
+GA-selected subset          32           0.8024     0.835             0.8350
+
+Genetic feature selection lifts KNN holdout balanced accuracy by +0.0349
+while using only 32 of 60 columns (53% of the inputs).
+```
+
+## Stage 6 — Does the Win Transfer? (SVC robustness check)
+
+The mask was selected to please the KNN scorer. The honest test of whether it
+found *real* signal is to hand the **same subset** to a completely different
+model. If an independent SVC-RBF also improves, the selection is model-agnostic
+signal, not a KNN-specific artefact.
+
+```python
+svc_sel = holdout_scores(make_svc, selected_idx)
+
+transfer = pd.DataFrame([
+    {"model": "KNN", "all_features": knn_all["balanced_accuracy"],
+     "selected": knn_sel["balanced_accuracy"],
+     "delta": round(knn_sel["balanced_accuracy"] - knn_all["balanced_accuracy"], 4)},
+    {"model": "SVC-RBF", "all_features": svc_all["balanced_accuracy"],
+     "selected": svc_sel["balanced_accuracy"],
+     "delta": round(svc_sel["balanced_accuracy"] - svc_all["balanced_accuracy"], 4)},
+])
+print(transfer.to_string(index=False))
+```
+
+```text
+  model  all_features  selected  delta
+    KNN        0.8001    0.8350 0.0349
+SVC-RBF        0.8633    0.8733 0.0100
+```
+
+### Before / after feature-count and accuracy
+
+```python
+fig, (ax_count, ax_acc) = plt.subplots(1, 2, figsize=(11, 4.5))
+
+ax_count.bar(["all features", "GA-selected"], [n_features, n_selected],
+             color=["#bdc3c7", "#16a085"])
+ax_count.set_ylabel("number of features")
+ax_count.set_title("Feature count")
+for i, v in enumerate([n_features, n_selected]):
+    ax_count.text(i, v + 0.5, str(v), ha="center")
+
+labels = ["KNN", "SVC-RBF"]
+all_vals = [knn_all["balanced_accuracy"], svc_all["balanced_accuracy"]]
+sel_vals = [knn_sel["balanced_accuracy"], svc_sel["balanced_accuracy"]]
+xpos = np.arange(len(labels))
+width = 0.38
+ax_acc.bar(xpos - width / 2, all_vals, width, label="all features", color="#bdc3c7")
+ax_acc.bar(xpos + width / 2, sel_vals, width, label="GA-selected", color="#16a085")
+ax_acc.set_xticks(xpos, labels)
+ax_acc.set_ylabel("holdout balanced accuracy")
+ax_acc.set_ylim(min(all_vals + sel_vals) - 0.05, max(all_vals + sel_vals) + 0.03)
+ax_acc.set_title("Accuracy: all features vs GA-selected")
+ax_acc.legend(frameon=False)
+fig.tight_layout()
+```
+
+![Before/after comparison of feature count and holdout balanced accuracy for KNN and SVC](/images/tutorial_feature_selection_before_after.png)
+
+*Left: the GA keeps a fraction of the columns. Right: both the KNN scorer and the independent SVC improve on the GA-selected subset.*
+
+Both estimators improve on the GA-selected subset even though only the KNN
+guided the search — the selected columns are genuine, model-agnostic signal.
+
+## Telemetry
+
+`fit_stats_` reports the evaluation accounting; `history` carries the
+per-generation convergence and diversity signals.
+
+```python
+print(pd.Series(selector.fit_stats_).to_string())
+```
+
+```text
+evaluated_candidates           986
+unique_candidates              986
+cross_validate_calls           986
+cache_hits                       0
+duplicate_candidates             0
+skipped_invalid_candidates       0
+population_parallel_batches     22
+population_serial_batches        0
+random_immigrants              100
+local_refinement_candidates      2
+```
+
+```python
 history = pd.DataFrame(selector.history)
-ax = history.plot(
-    x="gen",
-    y=["fitness_best", "fitness_max", "fitness"],
-    marker="o",
-    figsize=(9, 4),
-)
-ax.set_title("Feature Selection — Fitness over Generations")
-ax.set_xlabel("Generation")
-ax.set_ylabel("ROC AUC (CV)")
-plt.tight_layout()
-plt.show()
+cols = ["gen", "fitness", "fitness_best", "genotype_diversity",
+        "unique_individual_ratio", "stagnation_generations"]
+history[[c for c in cols if c in history.columns]].tail()
 ```
 
-## Stage 3 — Hyperparameter Retune on Selected Features
-
-With 15 features instead of 50, each cross-validation call is faster. The same search budget covers more candidates.
-
-```python
-X_train_sel = selector.transform(X_train)
-X_test_sel = selector.transform(X_test)
-
-print(f"Train shape after selection: {X_train_sel.shape}")
-
-rf_param_grid = {
-    "n_estimators":      Integer(40, 200),
-    "max_depth":         Integer(2, 12),
-    "min_samples_split": Integer(2, 12),
-    "min_samples_leaf":  Integer(1, 8),
-    "max_features":      Categorical(["sqrt", "log2", None]),
-}
-
-ga_rf = GASearchCV(
-    estimator=RandomForestClassifier(random_state=RANDOM_STATE, n_jobs=1),
-    param_grid=rf_param_grid,
-    scoring="roc_auc",
-    cv=cv,
-    evolution_config=EvolutionConfig(
-        population_size=20,
-        generations=15,
-        crossover_probability=ExponentialAdapter(
-            initial_value=0.8, end_value=0.4, adaptive_rate=0.15
-        ),
-        mutation_probability=InverseAdapter(
-            initial_value=0.25, end_value=0.05, adaptive_rate=0.20
-        ),
-        tournament_size=3,
-        elitism=True,
-        keep_top_k=2,
-    ),
-    population_config=PopulationConfig(
-        initializer="smart",
-        warm_start_configs=[{
-            "n_estimators": 100,
-            "max_depth": 6,
-            "min_samples_split": 4,
-            "min_samples_leaf": 2,
-            "max_features": "sqrt",
-        }],
-    ),
-    runtime_config=RuntimeConfig(n_jobs=-1, parallel_backend="auto", use_cache=True, verbose=True),
-    optimization_config=OptimizationConfig(
-        local_search=True, diversity_control=True, fitness_sharing=True,
-    ),
-)
-
-ga_rf.fit(X_train_sel, y_train, callbacks=[
-    ConsecutiveStopping(generations=8, metric="fitness_best"),
-    TimerStopping(total_seconds=90),
-])
-
-print(f"\nBest CV ROC AUC (retune): {ga_rf.best_score_:.4f}")
-pprint(ga_rf.best_params_)
-```
-
-## Robustness Validation — Second Estimator
-
-If the selected features are genuinely informative (not overfitted to the RF scorer), an independent SVC should also benefit.
-
-```python
-svc_on_selected = make_svc()
-svc_on_selected.fit(X_train_sel, y_train)
-
-svc_sel_metrics = evaluate(
-    "SVC on selected features", svc_on_selected, X_test_sel, y_test
-)
-
-rf_sel_metrics = evaluate(
-    "RF retuned (selected features)", ga_rf, X_test_sel, y_test
-)
-
-print("\nSVC baseline vs SVC on selected features:")
-print(pd.DataFrame([baseline_svc, svc_sel_metrics]).to_string(index=False))
-```
-
-If the SVC improves on the selected subset, it confirms the features are model-agnostic signal, not RF-specific artefacts.
-
-## Full Comparison Table
-
-```python
-comparison = pd.DataFrame([
-    baseline_rf,
-    baseline_svc,
-    evaluate("RF retuned (selected features)", ga_rf, X_test_sel, y_test),
-    svc_sel_metrics,
-])
-print(comparison.to_string(index=False))
-```
-
-Expected output (approximate):
-
-```
-                          name  n_features  accuracy  balanced_accuracy  roc_auc
-      RF baseline (50 features)         50    0.9474             0.9432   0.9891
-     SVC baseline (50 features)         50    0.9298             0.9252   0.9857
-  RF retuned (selected features)        15    0.9649             0.9613   0.9948
-   SVC on selected features            15    0.9532             0.9497   0.9921
-```
-
-Both estimators improve after selection, confirming the selected subset carries the majority of predictive signal.
-
-## Feature Importance Before and After Selection
-
-```python
-# Before: RF fitted on all 50 features
-imp_all = pd.Series(
-    rf_baseline.feature_importances_, index=X_train.columns
-).sort_values(ascending=False).head(20)
-
-# After: RF fitted on selected features only
-imp_sel = pd.Series(
-    ga_rf.best_estimator_.feature_importances_, index=selected_names
-).sort_values(ascending=False)
-
-fig, axes = plt.subplots(1, 2, figsize=(14, 7))
-
-colors_all = ["steelblue" if n in real_feature_names else "salmon" for n in imp_all.index]
-imp_all.plot(kind="barh", ax=axes[0], color=colors_all[::-1])
-axes[0].set_title("Top-20 Importances — All 50 Features")
-axes[0].invert_yaxis()
-
-colors_sel = ["steelblue" if n in real_feature_names else "salmon" for n in imp_sel.index]
-imp_sel.plot(kind="barh", ax=axes[1], color=colors_sel[::-1])
-axes[1].set_title("Importances — 15 Selected Features")
-axes[1].invert_yaxis()
-
-plt.tight_layout()
-plt.show()
+```text
+    gen   fitness  fitness_best  genotype_diversity  unique_individual_ratio  stagnation_generations
+16   16  0.735777      0.790190            0.043478                 0.750000                       1
+17   17  0.727760      0.790190            0.043478                 0.791667                       2
+18   18  0.723373      0.802352            0.043478                 0.875000                       0
+19   19  0.722615      0.802352            0.043478                 0.875000                       1
+20   20  0.738935      0.802352            0.042754                 0.750000                       3
 ```
 
 ## Practical Notes
 
-- **`max_features` in `GAFeatureSelectionCV`** is a soft upper bound — the GA prefers subsets below it, but can exceed it if fitness requires. Check `selector.n_features_` for the actual count.
-- **Stage ordering matters** — run feature selection before hyperparameter tuning when evaluations are expensive. Feature selection narrows the input space, making every subsequent CV call cheaper.
-- **Cross-estimator validation** is the most reliable check that selected features are signal and not model-specific noise. If only the scoring estimator improves, suspect scorer-feature circularity.
-- **`use_cache=True`** in feature selection is particularly impactful — many binary masks differ by only one or two features, and cached evaluations avoid redundant CV calls.
-- **Diversity metrics in history** — if `unique_individual_ratio` drops below 0.5 before generation 10, increase `random_immigrants_fraction` or widen `sharing_radius`.
+- Pass `max_features=k` to force compact subsets when inference cost or
+  interpretability matters; `selector.support_.sum()` is the actual count.
+- Always compare against the **all-features baseline** — a smaller subset is
+  only worth it if quality holds or improves.
+- **Cross-estimator validation** (Stage 6) is the most reliable check that the
+  selection is signal and not scorer-specific. If only the scoring estimator
+  improves, suspect feature/scorer circularity.
+- Feature selection helps most for models hurt by irrelevant inputs (distance-
+  and kernel-based methods like KNN and SVC-RBF); strongly regularized linear
+  models are already robust to noise columns.
+- `use_cache=True` is especially impactful here — many masks differ by a single
+  column, so cached evaluations avoid redundant CV calls.
+- If diversity collapses early, lean on `diversity_control`,
+  `random_immigrants_fraction`, and `fitness_sharing` before adding generations.
 
-## See Also
+## Next Steps
 
-- [Feature Selection (Noisy Data)](../examples/feature-selection) — simpler single-stage example
-- [GAFeatureSelectionCV API](../api/gafeatureselectioncv)
-- [Advanced Optimizer Control](../guide/advanced-optimizer-control)
-- [Adaptive Schedules](../guide/adapters)
+- [Feature Selection example](../examples/feature-selection) — the shorter
+  single-stage version of this story
+- [Advanced Random Forest Tuning](../examples/advanced-rf) — the same optimizer
+  controls applied to hyperparameter tuning
+- [GAFeatureSelectionCV API](../api/gafeatureselectioncv) — every parameter
+- [Plotting Gallery](../examples/plotting-gallery) — every plotting helper
