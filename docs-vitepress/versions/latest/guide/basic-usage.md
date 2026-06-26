@@ -82,8 +82,8 @@ parallelism and logging.
 clf = MLPClassifier(max_iter=150, early_stopping=True, random_state=RANDOM_STATE)
 
 search = GASearchCV(
-    random_state=RANDOM_STATE,
     estimator=clf,
+    random_state=RANDOM_STATE,
     cv=cv,
     scoring="accuracy",
     param_grid=param_grid,
@@ -218,8 +218,8 @@ Xtr, Xte, ytr, yte = train_test_split(
 )
 
 selector = GAFeatureSelectionCV(
-    random_state=RANDOM_STATE,
     estimator=SVC(gamma="auto"),
+    random_state=RANDOM_STATE,
     cv=3,
     scoring="accuracy",
     evolution_config=EvolutionConfig(population_size=10, generations=8,

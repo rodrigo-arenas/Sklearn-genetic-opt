@@ -84,8 +84,8 @@ def outlier_roc_auc(estimator, X, y):
 
 
 search = GASearchCV(
-    random_state=42,
     estimator=IsolationForest(random_state=42),
+    random_state=42,
     param_grid={
         "n_estimators":  Integer(50, 300),
         "max_samples":   Continuous(0.05, 0.80),
@@ -133,8 +133,8 @@ LOF requires `novelty=True` for use inside cross-validation. The scorer is ident
 from sklearn.neighbors import LocalOutlierFactor
 
 lof_search = GASearchCV(
-    random_state=42,
     estimator=LocalOutlierFactor(novelty=True),
+    random_state=42,
     param_grid={
         "n_neighbors":       Integer(5, 50),
         "contamination":     Continuous(0.01, 0.20),

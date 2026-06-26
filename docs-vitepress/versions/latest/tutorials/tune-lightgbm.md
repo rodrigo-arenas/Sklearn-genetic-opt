@@ -119,8 +119,8 @@ multiplying LightGBM's internal threads by the number of candidate workers.
 
 ```python
 ga_search = GASearchCV(
-    random_state=RANDOM_STATE,
     estimator=LGBMClassifier(random_state=RANDOM_STATE, n_jobs=1, verbose=-1),
+    random_state=RANDOM_STATE,
     param_grid=param_grid,
     scoring="roc_auc",
     cv=cv,

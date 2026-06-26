@@ -143,8 +143,8 @@ nb.md("## Configure and Run")
 nb.code(
     """
     ga_search = GASearchCV(
-        random_state=RANDOM_STATE,
         estimator=make_catboost(),
+        random_state=RANDOM_STATE,
         param_grid=param_grid,
         scoring="roc_auc",
         cv=cv,

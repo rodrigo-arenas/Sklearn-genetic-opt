@@ -126,8 +126,8 @@ refining onto a compact subset.
 
 ```python
 selector = GAFeatureSelectionCV(
-    random_state=RANDOM_STATE,
     estimator=make_model(),
+    random_state=RANDOM_STATE,
     cv=cv,
     scoring="balanced_accuracy",
     evolution_config=EvolutionConfig(

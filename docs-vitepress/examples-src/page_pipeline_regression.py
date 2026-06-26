@@ -160,8 +160,8 @@ nb.md(
 nb.code(
     """
     search = GASearchCV(
-        random_state=RANDOM_STATE,
         estimator=make_pipeline(),
+        random_state=RANDOM_STATE,
         param_grid=param_grid,
         scoring="neg_root_mean_squared_error",
         criteria="max",

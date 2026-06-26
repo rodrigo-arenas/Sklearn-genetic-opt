@@ -85,8 +85,8 @@ mutation_schedule = ExponentialAdapter(
 )
 
 search = GASearchCV(
-    random_state=42,
     estimator=RandomForestClassifier(random_state=42, n_jobs=1),
+    random_state=42,
     param_grid=param_grid,
     cv=cv,
     scoring="roc_auc",
@@ -214,8 +214,8 @@ X_train, X_test, y_train, y_test = train_test_split(
 cv = StratifiedKFold(n_splits=4, shuffle=True, random_state=42)
 
 selector = GAFeatureSelectionCV(
-    random_state=42,
     estimator=RandomForestClassifier(random_state=42, n_jobs=1),
+    random_state=42,
     cv=cv,
     scoring="roc_auc",
     max_features=18,

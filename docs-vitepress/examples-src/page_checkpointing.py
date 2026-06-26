@@ -120,8 +120,8 @@ nb.code(
     ]
 
     search = GASearchCV(
-        random_state=42,
         estimator=RandomForestClassifier(random_state=42, n_jobs=1),
+        random_state=42,
         cv=cv,
         scoring="roc_auc",
         param_grid=param_grid,
@@ -235,8 +235,8 @@ nb.code(
     search.save(saved_search_path)
 
     restored_search = GASearchCV(
-        random_state=42,
         estimator=RandomForestClassifier(random_state=42, n_jobs=1),
+        random_state=42,
         cv=cv,
         scoring="roc_auc",
         param_grid=param_grid,

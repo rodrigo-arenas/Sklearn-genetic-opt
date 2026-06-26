@@ -117,8 +117,8 @@ param_grid = {
 }
 
 search = GASearchCV(
-    random_state=RANDOM_STATE,
     estimator=model,
+    random_state=RANDOM_STATE,
     param_grid=param_grid,
     scoring=scoring,
     refit="balanced_accuracy",   # drives best_params_ and best_estimator_

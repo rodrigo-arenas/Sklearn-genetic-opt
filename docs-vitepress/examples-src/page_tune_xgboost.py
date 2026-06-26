@@ -167,9 +167,9 @@ nb.md(
 nb.code(
     """
     ga_search = GASearchCV(
-        random_state=RANDOM_STATE,
         estimator=XGBClassifier(tree_method="hist", eval_metric="logloss",
                                 random_state=RANDOM_STATE, n_jobs=1),
+        random_state=RANDOM_STATE,
         param_grid=param_grid,
         scoring="roc_auc",
         cv=cv,

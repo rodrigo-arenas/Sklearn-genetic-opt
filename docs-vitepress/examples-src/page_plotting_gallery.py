@@ -95,8 +95,8 @@ nb.code(
     cv = StratifiedKFold(n_splits=3, shuffle=True, random_state=42)
 
     search = GASearchCV(
-        random_state=RANDOM_STATE,
         estimator=RandomForestClassifier(random_state=42, n_jobs=1),
+        random_state=RANDOM_STATE,
         cv=cv,
         scoring="roc_auc",
         param_grid={

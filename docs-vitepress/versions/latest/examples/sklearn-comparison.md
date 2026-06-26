@@ -181,8 +181,8 @@ stopping end it once progress stalls.
 
 ```python
 ga_search = GASearchCV(
-    random_state=RANDOM_STATE,
     estimator=make_model(),
+    random_state=RANDOM_STATE,
     scoring="roc_auc",
     cv=cv,
     param_grid={

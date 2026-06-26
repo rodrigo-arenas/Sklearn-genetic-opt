@@ -162,8 +162,8 @@ control, all switched on together:
 
 ```python
 ga_search = GASearchCV(
-    random_state=RANDOM_STATE,
     estimator=RandomForestClassifier(random_state=RANDOM_STATE, n_jobs=1),
+    random_state=RANDOM_STATE,
     param_grid=param_grid,
     scoring="balanced_accuracy",
     cv=cv,
@@ -385,10 +385,10 @@ the 30 columns) that holds — or improves — quality.
 
 ```python
 feature_selector = GAFeatureSelectionCV(
-    random_state=RANDOM_STATE,
     estimator=RandomForestClassifier(
         random_state=RANDOM_STATE, n_jobs=1, **ga_search.best_params_
     ),
+    random_state=RANDOM_STATE,
     scoring="balanced_accuracy",
     cv=cv,
     max_features=14,

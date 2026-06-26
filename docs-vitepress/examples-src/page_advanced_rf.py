@@ -199,8 +199,8 @@ nb.md(
 nb.code(
     """
     ga_search = GASearchCV(
-        random_state=RANDOM_STATE,
         estimator=RandomForestClassifier(random_state=RANDOM_STATE, n_jobs=1),
+        random_state=RANDOM_STATE,
         param_grid=param_grid,
         scoring="balanced_accuracy",
         cv=cv,
@@ -416,10 +416,10 @@ nb.md(
 nb.code(
     """
     feature_selector = GAFeatureSelectionCV(
-        random_state=RANDOM_STATE,
         estimator=RandomForestClassifier(
             random_state=RANDOM_STATE, n_jobs=1, **ga_search.best_params_
         ),
+        random_state=RANDOM_STATE,
         scoring="balanced_accuracy",
         cv=cv,
         max_features=14,

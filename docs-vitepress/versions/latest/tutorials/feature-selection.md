@@ -155,8 +155,8 @@ the advanced controls switched on:
 
 ```python
 selector = GAFeatureSelectionCV(
-    random_state=RANDOM_STATE,
     estimator=make_knn(),
+    random_state=RANDOM_STATE,
     cv=cv,
     scoring="balanced_accuracy",
     evolution_config=EvolutionConfig(

@@ -241,8 +241,8 @@ callbacks = [
 ]
 
 ga_search = GASearchCV(
-    random_state=RANDOM_STATE,
     estimator=IsolationForest(random_state=RANDOM_STATE),
+    random_state=RANDOM_STATE,
     param_grid=param_grid,
     scoring=scorer,
     cv=cv,

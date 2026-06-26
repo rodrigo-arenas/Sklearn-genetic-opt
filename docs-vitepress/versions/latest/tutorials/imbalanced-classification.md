@@ -258,8 +258,8 @@ callbacks = [
 ]
 
 ga_search = GASearchCV(
-    random_state=RANDOM_STATE,
     estimator=LabeledRF(random_state=RANDOM_STATE, n_jobs=1),
+    random_state=RANDOM_STATE,
     param_grid=param_grid,
     scoring=scoring,
     refit="balanced_accuracy",   # decides best_params_ and best_score_
