@@ -314,6 +314,24 @@ The reports include runtime, evaluated candidates, cross-validation effort,
 cache/duplicate counts, optimizer telemetry, holdout metrics, and best
 parameters.
 
+For an apples-to-apples comparison against other frameworks, the
+``benchmark_bayesmark.py`` script reproduces the `Bayesmark
+<https://github.com/uber/bayesmark>`_ experiment design that Optuna and similar
+tools benchmark against: the same standard datasets and search spaces, an equal
+evaluation budget per optimizer, and ``GASearchCV`` compared head-to-head with
+Optuna (TPE) and ``RandomizedSearchCV``. Optuna and SciPy are optional
+benchmarking dependencies that regular users do not need:
+
+.. code-block:: bash
+
+   pip install sklearn-genetic-opt[benchmark]
+   python benchmarks/benchmark_bayesmark.py --quick
+   python benchmarks/benchmark_bayesmark.py --datasets wine breast diabetes --models knn svm dt rf --budget 64 --seeds 3
+
+See the `Benchmarks documentation
+<https://rodrigo-arenas.github.io/Sklearn-genetic-opt/versions/latest/benchmarks/>`_
+for the methodology and results.
+
 Documentation and Examples
 ##########################
 
