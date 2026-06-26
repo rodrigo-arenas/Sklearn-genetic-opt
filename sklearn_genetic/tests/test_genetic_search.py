@@ -1358,3 +1358,32 @@ def test_checkpoint_functionality():
 
     if os.path.exists(checkpoint_path):
         os.remove(checkpoint_path)
+
+
+def test_random_state_makes_gasearch_reproducible():
+    """A single random_state on the estimator should fully drive reproducibility,
+    without callers seeding the global random / numpy RNGs themselves."""
+
+    def run():
+        search = GASearchCV(
+            estimator=DecisionTreeClassifier(),
+            cv=3,
+            scoring="accuracy",
+            random_state=42,
+            param_grid={
+                "max_depth": Integer(2, 15),
+                "min_samples_leaf": Integer(1, 20),
+                "max_features": Continuous(0.2, 1.0),
+            },
+            evolution_config=EvolutionConfig(population_size=8, generations=3),
+            population_config=PopulationConfig(initializer="smart"),
+            runtime_config=RuntimeConfig(n_jobs=1, verbose=False),
+        )
+        search.fit(X[:300], y[:300])
+        return search.best_score_, search.best_params_
+
+    first_score, first_params = run()
+    second_score, second_params = run()
+
+    assert first_score == second_score
+    assert first_params == second_params

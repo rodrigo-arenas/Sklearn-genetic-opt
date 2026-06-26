@@ -54,8 +54,6 @@ Standard LOF (`novelty=False`) computes scores using the training neighbourhood.
 ## IsolationForest Example
 
 ```python
-import random
-
 import numpy as np
 from sklearn.datasets import make_blobs
 from sklearn.ensemble import IsolationForest
@@ -65,9 +63,6 @@ from sklearn.model_selection import StratifiedKFold, train_test_split
 from sklearn_genetic import EvolutionConfig, GASearchCV, PopulationConfig, RuntimeConfig
 from sklearn_genetic.plots import plot_cv_scores, plot_score_landscape
 from sklearn_genetic.space import Continuous, Integer
-
-random.seed(42)
-np.random.seed(42)
 
 # Synthetic dataset: two normal clusters + 5% uniform outliers
 X_normal, _ = make_blobs(n_samples=475, centers=2, cluster_std=0.8, random_state=42)
@@ -90,6 +85,7 @@ def outlier_roc_auc(estimator, X, y):
 
 search = GASearchCV(
     estimator=IsolationForest(random_state=42),
+    random_state=42,
     param_grid={
         "n_estimators":  Integer(50, 300),
         "max_samples":   Continuous(0.05, 0.80),
@@ -138,6 +134,7 @@ from sklearn.neighbors import LocalOutlierFactor
 
 lof_search = GASearchCV(
     estimator=LocalOutlierFactor(novelty=True),
+    random_state=42,
     param_grid={
         "n_neighbors":       Integer(5, 50),
         "contamination":     Continuous(0.01, 0.20),

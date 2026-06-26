@@ -27,14 +27,14 @@ The [Tutorials](/versions/latest/tutorials/) section covers comprehensive walkth
 
 | Example | What it covers |
 |---------|---------------|
-| [Feature Selection With Noisy Data](./feature-selection) | GAFeatureSelectionCV on Iris with 12 added noise features |
+| [Finding the Signal in 60 Columns](./feature-selection) | GAFeatureSelectionCV recovers the signal from a dataset that is two-thirds noise, beating the all-features baseline |
 | [Advanced RF + Feature Selection](./advanced-rf#feature-selection-with-gafeatureselectioncv) | Feature selection after hyperparameter tuning |
 
 ## Multi-Metric and Refit
 
 | Example | What it covers |
 |---------|---------------|
-| [Multi-Metric Search on Iris](./multi-metric) | Multiple scorers, choosing refit metric, inspecting cv_results_ per metric |
+| [Multi-Metric Search on Imbalanced Data](./multi-metric) | Multiple scorers that genuinely disagree, choosing the refit metric, inspecting per-metric `cv_results_` |
 
 ## Experiment Tracking
 

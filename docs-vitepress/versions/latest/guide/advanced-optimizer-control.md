@@ -39,8 +39,6 @@ from sklearn_genetic import OptimizationConfig
 ## Full Example: Hyperparameter Search
 
 ```python
-import random
-
 import numpy as np
 import pandas as pd
 from sklearn.datasets import load_breast_cancer
@@ -58,9 +56,6 @@ from sklearn_genetic import (
 from sklearn_genetic.plots import plot_diversity, plot_optimizer_events
 from sklearn_genetic.schedules import ExponentialAdapter, InverseAdapter
 from sklearn_genetic.space import Categorical, Integer
-
-random.seed(42)
-np.random.seed(42)
 
 X, y = load_breast_cancer(return_X_y=True)
 X_train, X_test, y_train, y_test = train_test_split(
@@ -91,6 +86,7 @@ mutation_schedule = ExponentialAdapter(
 
 search = GASearchCV(
     estimator=RandomForestClassifier(random_state=42, n_jobs=1),
+    random_state=42,
     param_grid=param_grid,
     cv=cv,
     scoring="roc_auc",
@@ -219,6 +215,7 @@ cv = StratifiedKFold(n_splits=4, shuffle=True, random_state=42)
 
 selector = GAFeatureSelectionCV(
     estimator=RandomForestClassifier(random_state=42, n_jobs=1),
+    random_state=42,
     cv=cv,
     scoring="roc_auc",
     max_features=18,

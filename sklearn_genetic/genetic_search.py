@@ -36,7 +36,7 @@ def _is_outlier_detector(estimator):
 
 
 from sklearn.feature_selection import SelectorMixin
-from sklearn.utils import check_X_y
+from sklearn.utils import check_X_y, check_random_state
 from sklearn.utils.metaestimators import available_if
 from sklearn.feature_selection._from_model import _estimator_has
 from sklearn.metrics import check_scoring
@@ -76,6 +76,25 @@ from .optimizer_control import (
 import os
 from .callbacks.model_checkpoint import ModelCheckpoint
 from .config import EvolutionConfig, OptimizationConfig, PopulationConfig, RuntimeConfig
+
+
+def _seed_global_rngs(random_state):
+    """Seed the global ``random`` and NumPy RNGs from a single ``random_state``.
+
+    A genetic search draws on several sources of randomness — population
+    initialization, DEAP's mutation/crossover operators (which use the global
+    ``random`` module), random immigrants, and NumPy sampling. Seeding them all
+    from one estimator-level ``random_state`` at the start of ``fit`` gives
+    reproducible runs without callers having to seed the global RNGs by hand.
+
+    ``random_state=None`` keeps the default non-deterministic behaviour, matching
+    scikit-learn's convention.
+    """
+    if random_state is None:
+        return
+    seed = int(check_random_state(random_state).randint(0, 2**31 - 1))
+    random.seed(seed)
+    np.random.seed(seed)
 
 
 def _resolve_config_value(config, field_name, fallback):
@@ -151,6 +170,14 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         hypercube sampling for numeric dimensions, stratified categorical
         values, and duplicate avoidance. ``'random'`` uses the previous random
         sampling behavior.
+
+    random_state : int, RandomState instance or None, default=None
+        Controls the randomness of the search. When set, it seeds every
+        stochastic step from a single place at ``fit`` time — population
+        initialization (including the Latin hypercube sampler), mutation,
+        crossover, and random immigrants — so repeated fits give identical
+        results without manually seeding the global ``random`` / ``numpy`` RNGs.
+        ``None`` keeps the default non-deterministic behaviour.
 
     generations : int, default=40
         Number of generations or iterations to run the evolutionary algorithm.
@@ -406,6 +433,7 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         optimization_config=None,
         parallel_backend="auto",
         population_initializer="smart",
+        random_state=None,
         local_search=False,
         local_search_top_k=1,
         local_search_steps=1,
@@ -554,6 +582,7 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         self._warm_start_configs = warm_start_configs
         self.parallel_backend = parallel_backend
         self.population_initializer = population_initializer
+        self.random_state = random_state
         self.local_search = local_search
         self.local_search_top_k = local_search_top_k
         self.local_search_steps = local_search_steps
@@ -1016,6 +1045,8 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
             The callback is evaluated after fitting the estimators from the generation 1.
         """
 
+        _seed_global_rngs(self.random_state)
+
         self.X_ = X
         self.y_ = y
         self._n_iterations = self.generations + 1
@@ -1455,6 +1486,7 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         optimization_config=None,
         parallel_backend="auto",
         population_initializer="smart",
+        random_state=None,
         local_search=False,
         local_search_top_k=1,
         local_search_steps=1,
@@ -1584,6 +1616,7 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         self.fitness_cache = {}
         self.parallel_backend = parallel_backend
         self.population_initializer = population_initializer
+        self.random_state = random_state
         self.local_search = local_search
         self.local_search_top_k = local_search_top_k
         self.local_search_steps = local_search_steps
@@ -1906,6 +1939,8 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
             :class:`~sklearn_genetic.callbacks`.
             The callback is evaluated after fitting the estimators from the generation 1.
         """
+
+        _seed_global_rngs(self.random_state)
 
         self.X_, self.y_ = check_X_y(X, y, accept_sparse=True) if y is not None else (X, None)
 
