@@ -71,7 +71,7 @@ nb.code(
     RANDOM_STATE = 42
 
     X, y = make_classification(
-        n_samples=3000, n_features=30, n_informative=8, n_redundant=8,
+        n_samples=2500, n_features=30, n_informative=8, n_redundant=8,
         n_clusters_per_class=3, class_sep=0.6, flip_y=0.08, random_state=RANDOM_STATE,
     )
     X_train, X_test, y_train, y_test = train_test_split(
@@ -124,7 +124,7 @@ nb.md(
 nb.code(
     """
     param_grid = {
-        "n_estimators":      Integer(50, 600),
+        "n_estimators":      Integer(50, 350),
         "num_leaves":        Integer(8, 255),
         "max_depth":         Integer(3, 14),
         "learning_rate":     Continuous(0.01, 0.3, distribution="log-uniform"),
@@ -157,8 +157,8 @@ nb.code(
         scoring="roc_auc",
         cv=cv,
         evolution_config=EvolutionConfig(
-            population_size=12,
-            generations=10,
+            population_size=10,
+            generations=8,
             crossover_probability=ExponentialAdapter(initial_value=0.8, end_value=0.4, adaptive_rate=0.15),
             mutation_probability=InverseAdapter(initial_value=0.25, end_value=0.05, adaptive_rate=0.20),
             elitism=True,
@@ -182,7 +182,7 @@ nb.code(
 
     callbacks = [
         ConsecutiveStopping(generations=6, metric="fitness_best"),
-        TimerStopping(total_seconds=150),
+        TimerStopping(total_seconds=90),
     ]
     started = time.perf_counter()
     ga_search.fit(X_train, y_train, callbacks=callbacks)

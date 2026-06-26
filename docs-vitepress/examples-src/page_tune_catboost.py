@@ -67,7 +67,7 @@ nb.code(
     RANDOM_STATE = 42
 
     X, y = make_classification(
-        n_samples=3000, n_features=30, n_informative=8, n_redundant=8,
+        n_samples=2500, n_features=30, n_informative=8, n_redundant=8,
         n_clusters_per_class=3, class_sep=0.6, flip_y=0.08, random_state=RANDOM_STATE,
     )
     X_train, X_test, y_train, y_test = train_test_split(
@@ -127,7 +127,7 @@ nb.md(
 nb.code(
     """
     param_grid = {
-        "iterations":          Integer(100, 600),
+        "iterations":          Integer(100, 350),
         "depth":               Integer(3, 10),
         "learning_rate":       Continuous(0.01, 0.3, distribution="log-uniform"),
         "l2_leaf_reg":         Continuous(1.0, 30.0, distribution="log-uniform"),
@@ -173,7 +173,7 @@ nb.code(
 
     callbacks = [
         ConsecutiveStopping(generations=5, metric="fitness_best"),
-        TimerStopping(total_seconds=160),
+        TimerStopping(total_seconds=90),
     ]
     started = time.perf_counter()
     ga_search.fit(X_train, y_train, callbacks=callbacks)
