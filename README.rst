@@ -25,386 +25,315 @@
 
 
 .. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/docs-vitepress/public/sklearn-genetic-opt-logo-128.png?raw=true
+   :alt: sklearn-genetic-opt logo
 
 sklearn-genetic-opt
 ###################
 
-``sklearn-genetic-opt`` adds evolutionary optimization tools to the
-scikit-learn workflow. It can tune hyperparameters with
-``GASearchCV`` and select feature subsets with ``GAFeatureSelectionCV`` using
-algorithms powered by `DEAP <https://deap.readthedocs.io/en/master/>`_.
+Hyperparameter tuning and feature selection for scikit-learn models using genetic algorithms.
 
-The project is useful when a search space is mixed, irregular, expensive, or
-not well served by an exhaustive grid. It follows familiar scikit-learn
-patterns: define an estimator, define a search space, call ``fit``, inspect
-``best_params_`` or ``support_``, and use the fitted object for prediction.
+``sklearn-genetic-opt`` is a scikit-learn-compatible optimization toolkit for users
+who want a smarter alternative to ``GridSearchCV`` and ``RandomizedSearchCV``.
+Its genetic algorithm evaluates complete parameter configurations — finding
+regions where ``learning_rate × n_estimators`` or ``C × gamma`` are jointly optimal,
+something one-parameter-at-a-time approaches miss. It also provides
+``GAFeatureSelectionCV``, a wrapper-based selector that searches the full space
+of feature subsets simultaneously instead of eliminating features one at a time.
 
-Documentation is available at
-`sklearngeneticopt.rodrigo-arenas.com <https://sklearngeneticopt.rodrigo-arenas.com/>`_.
 
-Highlights
-##########
+Why use sklearn-genetic-opt?
+#############################
 
-* ``GASearchCV`` for hyperparameter search across classification, regression,
-  and supported outlier-detection estimators.
-* ``GAFeatureSelectionCV`` for wrapper-based feature selection with
-  cross-validation.
-* Search spaces for integer, continuous, and categorical parameters.
-* Smart initial populations with ``PopulationConfig(initializer="smart")``, including
-  warm-start seeds, estimator defaults, Latin-hypercube numeric coverage,
-  stratified categorical coverage, and duplicate avoidance.
-* Adaptive mutation and crossover schedules.
-* Optional local search, diversity control, random immigrants, and fitness
-  sharing to improve exploration, avoid premature convergence, and refine good
-  solutions.
-* Parallel candidate evaluation with ``n_jobs`` and ``parallel_backend``.
-* Evaluation caching, optimizer telemetry through ``history``, and fit-cost
-  counters through ``fit_stats_``.
-* Callbacks for early stopping, progress reporting, checkpoints, TensorBoard,
-  and custom logic.
-* Plotting helpers plus MLflow 3 logging support.
+* **Drop-in scikit-learn API** — ``GASearchCV`` has the same ``fit`` / ``predict`` / ``best_params_`` interface as ``GridSearchCV``; replace it in one line.
+* **Handles interacting parameters** — genetic algorithms evaluate complete configurations, naturally finding cross-parameter sweet spots that random or grid search miss.
+* **Joint feature selection and tuning** — run ``GAFeatureSelectionCV`` and ``GASearchCV`` in a two-stage workflow; no separate feature-selection library needed.
+* **Mixed search spaces** — ``Integer``, ``Continuous`` (uniform or log-uniform), and ``Categorical`` types in the same search.
+* **Smart initialization** — Latin hypercube seeding, estimator defaults, warm-start configs, and duplicate avoidance give the first generation a head start over random initialization.
+* **Early stopping callbacks** — ``ConsecutiveStopping``, ``DeltaThreshold``, and ``TimerStopping`` end the search automatically when it converges or runs out of time.
+* **Adaptive schedules** — crossover and mutation rates anneal over generations, shifting from exploration to exploitation.
+* **Optimization history and plots** — per-generation fitness, diversity, and telemetry stored in ``history``; built-in plots visualize the full search.
+* **MLflow integration** — every evaluated candidate is automatically logged as a child run for experiment comparison.
+* **Parallel execution** — ``n_jobs=-1`` parallelizes candidate or fold evaluation.
 
-Installation
-############
 
-Install the core package with pip:
+When should you use it?
+########################
+
+* Your model is expensive to train and you can only afford 50–200 total evaluations.
+* Your search space has 5+ hyperparameters that interact (gradient boosting, SVM, regularized regression).
+* You want feature selection and hyperparameter tuning in a single reproducible workflow.
+* You want optimization history, convergence plots, callbacks, or MLflow tracking built in.
+* You have known-good configurations to warm-start from (prior runs, published defaults).
+* ``GridSearchCV`` is too slow and ``RandomizedSearchCV`` keeps returning similar bad results.
+
+
+When should you NOT use it?
+############################
+
+* **You need a fast baseline** — start with a fixed configuration or ``RandomizedSearchCV(n_iter=20)``; it's faster and good enough to validate your pipeline.
+* **Your grid is tiny** (fewer than 50 combinations) — ``GridSearchCV`` covers it exhaustively and is simpler to reason about.
+* **Your model and dataset are fast** (< 1 s per fit) — the overhead of managing a population adds up relative to just running all combinations.
+* **You need distributed optimization** across a cluster — use Optuna with its distributed backends.
+* **You need strict Bayesian guarantees** on the exploration-exploitation trade-off — use Optuna (TPE) or scikit-optimize.
+
+
+How it compares
+################
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 28 28 24
+
+   * - Tool
+     - Best for
+     - Key limitation
+     - Where sklearn-genetic-opt helps
+   * - ``GridSearchCV``
+     - Small, fully discrete grids; guaranteed complete coverage
+     - Combinatorial explosion on 4+ params; no continuous params natively
+     - Large, mixed, or continuous spaces with interacting parameters
+   * - ``RandomizedSearchCV``
+     - Larger budgets; simple independent parameter spaces
+     - No learning from past evaluations; treats each parameter independently
+     - Exploits cross-parameter interactions; adaptive schedules; early stopping
+   * - Optuna
+     - Sequential Bayesian (TPE) search; distributed optimization; neural architecture search
+     - No native sklearn cross-validation; no built-in wrapper feature selection
+     - Drop-in sklearn API; built-in ``GAFeatureSelectionCV``
+   * - RFE
+     - Greedy feature elimination for models with ``coef_`` or ``feature_importances_``
+     - Greedy and sequential; can miss non-greedy optimal subsets
+     - Evaluates all subsets simultaneously; works with any estimator
+   * - ``SelectFromModel``
+     - Fast embedded selection via a threshold on feature importance
+     - Tied to model-specific importances; no cross-estimator comparison
+     - Estimator-agnostic wrapper; combinable with hyperparameter tuning in one workflow
+   * - **sklearn-genetic-opt**
+     - Large or mixed spaces; joint feature + parameter search; history, plots, callbacks
+     - Slower than Bayesian methods on small smooth spaces; population size needs tuning
+     - —
+
+
+Quick Start
+###########
+
+**Install**
 
 .. code-block:: bash
 
    pip install sklearn-genetic-opt
+   # With optional plotting, MLflow, and TensorBoard extras:
+   # pip install sklearn-genetic-opt[all]
 
-Or with conda from the conda-forge channel:
-
-.. code-block:: bash
-
-   conda install -c conda-forge sklearn-genetic-opt
-
-Install optional plotting, MLflow, and TensorBoard integrations with pip:
-
-.. code-block:: bash
-
-   pip install sklearn-genetic-opt[all]
-
-The conda package ships only the core dependencies. To use the optional
-integrations in a conda environment, install the extras you need alongside it,
-for example:
-
-.. code-block:: bash
-
-   conda install -c conda-forge sklearn-genetic-opt seaborn mlflow
-
-Requirements
-############
-
-Core requirements:
-
-* Python >= 3.12
-* scikit-learn >= 1.5.0
-* NumPy >= 1.26.0
-* DEAP >= 1.4.0
-* tqdm >= 4.60.0
-
-Optional extras:
-
-* Seaborn >= 0.13.2 for plots
-* MLflow >= 3.14.0 for experiment logging
-* TensorFlow >= 2.21.0 and TensorBoard >= 2.20.0,<2.21.0 for TensorBoard
-  logging on Python < 3.14
-
-Quick Start: Hyperparameter Search
-##################################
+**Hyperparameter search**
 
 .. code-block:: python
 
-   from sklearn.datasets import load_iris
+   from sklearn.datasets import load_breast_cancer
    from sklearn.ensemble import RandomForestClassifier
    from sklearn.model_selection import StratifiedKFold, train_test_split
 
-   from sklearn_genetic import EvolutionConfig, GASearchCV, PopulationConfig, RuntimeConfig
+   from sklearn_genetic import GASearchCV, EvolutionConfig, RuntimeConfig
    from sklearn_genetic.space import Categorical, Continuous, Integer
 
-   X, y = load_iris(return_X_y=True)
+   X, y = load_breast_cancer(return_X_y=True)
    X_train, X_test, y_train, y_test = train_test_split(
-       X,
-       y,
-       test_size=0.25,
-       stratify=y,
-       random_state=42,
+       X, y, test_size=0.2, stratify=y, random_state=42
    )
-
-   param_grid = {
-       "n_estimators": Integer(50, 200),
-       "max_depth": Integer(2, 12),
-       "max_features": Continuous(0.3, 1.0),
-       "criterion": Categorical(["gini", "entropy", "log_loss"]),
-   }
 
    search = GASearchCV(
        estimator=RandomForestClassifier(random_state=42),
-       param_grid=param_grid,
-       cv=StratifiedKFold(n_splits=3, shuffle=True, random_state=42),
-       scoring="accuracy",
-       evolution_config=EvolutionConfig(population_size=12, generations=8),
-       population_config=PopulationConfig(initializer="smart"),
-       runtime_config=RuntimeConfig(
-           n_jobs=-1,
-           parallel_backend="auto",
-           use_cache=True,
-           verbose=True,
-       ),
+       param_grid={
+           "n_estimators": Integer(50, 300),
+           "max_depth":    Integer(3, 20),
+           "max_features": Continuous(0.1, 1.0),
+           "class_weight": Categorical([None, "balanced"]),
+       },
+       cv=StratifiedKFold(n_splits=5, shuffle=True, random_state=42),
+       scoring="roc_auc",
+       evolution_config=EvolutionConfig(population_size=15, generations=12),
+       runtime_config=RuntimeConfig(n_jobs=-1, verbose=True),
+       random_state=42,
    )
-
    search.fit(X_train, y_train)
 
-   print(search.best_params_)
-   print(search.best_score_)
-   print(search.score(X_test, y_test))
-   print(search.fit_stats_)
+   print(search.best_params_)          # best hyperparameter configuration
+   print(search.best_score_)           # best cross-validated ROC-AUC
+   print(search.score(X_test, y_test)) # test-set score
 
-Quick Start: Feature Selection
-##############################
+**Feature selection**
 
 .. code-block:: python
 
    import numpy as np
    from sklearn.datasets import load_iris
-   from sklearn.metrics import accuracy_score
-   from sklearn.model_selection import train_test_split
-   from sklearn.svm import SVC
+   from sklearn.ensemble import RandomForestClassifier
+   from sklearn.model_selection import StratifiedKFold, train_test_split
 
-   from sklearn_genetic import (
-       EvolutionConfig,
-       GAFeatureSelectionCV,
-       PopulationConfig,
-       RuntimeConfig,
-   )
-   from sklearn_genetic.schedules import ExponentialAdapter
+   from sklearn_genetic import GAFeatureSelectionCV, EvolutionConfig, RuntimeConfig
 
    X, y = load_iris(return_X_y=True)
-   noise = np.random.default_rng(42).uniform(0, 1, size=(X.shape[0], 8))
-   X = np.hstack([X, noise])
-
+   # Add 8 noise features — the selector should drop them
+   X = np.hstack([X, np.random.default_rng(42).uniform(0, 1, (X.shape[0], 8))])
    X_train, X_test, y_train, y_test = train_test_split(
-       X,
-       y,
-       test_size=0.25,
-       stratify=y,
-       random_state=42,
+       X, y, test_size=0.2, stratify=y, random_state=42
    )
 
    selector = GAFeatureSelectionCV(
-       estimator=SVC(gamma="auto"),
-       cv=3,
+       estimator=RandomForestClassifier(n_estimators=100, random_state=42),
+       cv=StratifiedKFold(n_splits=5, shuffle=True, random_state=42),
        scoring="accuracy",
-       evolution_config=EvolutionConfig(
-           population_size=12,
-           generations=8,
-           mutation_probability=ExponentialAdapter(0.8, 0.2, 0.05),
-           crossover_probability=ExponentialAdapter(0.2, 0.8, 0.05),
-       ),
-       population_config=PopulationConfig(initializer="smart"),
+       evolution_config=EvolutionConfig(population_size=20, generations=15),
        runtime_config=RuntimeConfig(n_jobs=-1, verbose=True),
+       random_state=42,
    )
-
    selector.fit(X_train, y_train)
 
-   print(selector.support_)
-   print(accuracy_score(y_test, selector.predict(X_test)))
-   print(selector.transform(X_test).shape)
+   print(selector.support_)                    # boolean mask of selected features
+   print(selector.score(X_test, y_test))       # accuracy on selected features
 
-Improving Search Quality
-########################
+`Read the full Getting Started guide →
+<https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/guide/basic-usage>`_
 
-The default ``PopulationConfig(initializer="smart")`` is recommended for most runs.
-It improves early search coverage without reducing the number of generations
-or population size.
 
-For harder spaces, combine it with optimizer controls:
+What you can do
+################
 
-.. code-block:: python
+**Track optimization progress generation by generation.** The fitness curve
+shows when the search converges so you know whether to add more generations
+or stop early.
 
-   from sklearn_genetic import EvolutionConfig, OptimizationConfig, PopulationConfig, RuntimeConfig
-   from sklearn_genetic.schedules import ExponentialAdapter, InverseAdapter
+.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/docs-vitepress/public/images/plotting_gallery_fitness_evolution.png?raw=true
+   :alt: Fitness evolution — best and mean CV score plotted over generations
+   :width: 680
 
-   search = GASearchCV(
-       estimator=estimator,
-       param_grid=param_grid,
-       scoring="roc_auc",
-       cv=3,
-       evolution_config=EvolutionConfig(
-           population_size=16,
-           generations=12,
-           crossover_probability=ExponentialAdapter(0.85, 0.45, 0.08),
-           mutation_probability=InverseAdapter(0.18, 0.55, 0.12),
-       ),
-       population_config=PopulationConfig(
-           initializer="smart",
-           warm_start_configs=[{"C": 1.0, "class_weight": None}],
-       ),
-       runtime_config=RuntimeConfig(n_jobs=-1, parallel_backend="auto", use_cache=True),
-       optimization_config=OptimizationConfig(
-           local_search=True,
-           local_search_top_k=2,
-           local_search_steps=2,
-           diversity_control=True,
-           random_immigrants_fraction=0.15,
-           fitness_sharing=True,
-       ),
-   )
+**See where the search explored and which parameter combinations scored
+highest.** The scatter plot reveals the productive region of the
+``learning_rate × n_estimators`` interaction — a band a one-at-a-time
+sweep cannot find.
 
-Use:
+.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/docs-vitepress/public/images/tune_xgboost_interaction.png?raw=true
+   :alt: Every evaluated candidate colored by CV score, learning_rate vs n_estimators
+   :width: 680
 
-* ``PopulationConfig.warm_start_configs`` when you already know useful candidate settings.
-* ``OptimizationConfig(local_search=True)`` to refine the best candidates near the end of the run.
-* ``OptimizationConfig(diversity_control=True)`` to react when the population collapses too early.
-* ``OptimizationConfig(fitness_sharing=True)`` to keep multiple promising regions alive.
-* ``fit_stats_`` to understand evaluation cost, cache hits, and skipped work.
-* ``history`` to inspect fitness, diversity, stagnation, and optimizer
-  telemetry by generation.
+**Inspect the full search in one view.** The search overview panel combines
+scores, parameter distributions, diversity, and candidate decisions.
 
-Parallelism
-###########
+.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/docs-vitepress/public/images/basic_usage_search_overview.png?raw=true
+   :alt: Search overview dashboard showing all evaluated candidates
+   :width: 680
 
-``RuntimeConfig.n_jobs`` controls parallel execution:
+`See the full Plotting Gallery →
+<https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/examples/plotting-gallery>`_
 
-* ``RuntimeConfig(n_jobs=1)`` runs sequentially.
-* ``RuntimeConfig(n_jobs=-1)`` uses all available CPU cores.
-* ``RuntimeConfig(n_jobs=k)`` uses ``k`` workers.
 
-With ``RuntimeConfig(parallel_backend="auto")`` or
-``RuntimeConfig(parallel_backend="population")``, unique candidates in the same
-generation are evaluated in parallel and each candidate runs cross-validation
-sequentially to avoid nested parallelism. Use
-``RuntimeConfig(parallel_backend="cv")`` to evaluate candidates serially while
-passing ``n_jobs`` to each candidate's cross-validation call.
+Common use cases
+#################
 
-Persistence and Checkpointing
-#############################
+**Hyperparameter tuning**
 
-Use ``ModelCheckpoint`` to write progress during long searches:
+* `Tune RandomForestClassifier <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/tutorials/tune-random-forest>`_ — 7-parameter joint search, classification and regression
+* `Tune XGBoost <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/tutorials/tune-xgboost>`_ — 9 interacting params, ``n_jobs=1`` oversubscription fix, interaction visualization
+* `Tune LightGBM <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/tutorials/tune-lightgbm>`_ — ``num_leaves`` / ``max_depth`` interaction, parameter scatter plots
+* `Tune CatBoost <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/tutorials/tune-catboost>`_ — ``bagging_temperature``, ``border_count``, GPU tip
+* `Tune Gradient Boosting (sklearn) <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/tutorials/tune-gradient-boosting>`_ — HistGBM vs classic GBM, speed comparison
+* `Tune Logistic Regression <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/tutorials/tune-logistic-regression>`_ — solver / penalty compatibility, multi-penalty with SAGA
+* `Tune SVM (C, kernel, gamma) <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/tutorials/tune-svm>`_ — C–gamma interaction, mandatory Pipeline + StandardScaler
+* `Tune a scikit-learn Pipeline <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/guide/pipeline-tuning>`_ — step prefix patterns, ColumnTransformer
+* `Tune for imbalanced datasets <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/tutorials/imbalanced-classification>`_ — ``class_weight`` as a search param, balanced accuracy
 
-.. code-block:: python
+**Feature selection**
 
-   from sklearn_genetic.callbacks import ModelCheckpoint
+* `Feature selection with genetic algorithms <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/tutorials/feature-selection>`_ — 3-stage: select, retune, validate
+* `Combine feature selection + hyperparameter tuning <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/recipes/feature-selection/select-then-tune>`_ — two-stage pipeline recipe
 
-   search.fit(X_train, y_train, callbacks=[ModelCheckpoint("checkpoint.pkl")])
+**Experiment tracking and tooling**
 
-Use ``save`` and ``load`` when you want to persist a fitted search object:
+* `MLflow experiment tracking <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/guide/mlflow>`_ — log every candidate as a child run
+* `Callbacks and early stopping <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/guide/callbacks>`_ — ConsecutiveStopping, TimerStopping, DeltaThreshold
+* `Checkpointing and resume <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/guide/reproducibility>`_ — save and continue long searches
+* `Visualize optimization progress <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/examples/plotting-gallery>`_ — full gallery of available plots
 
-.. code-block:: python
+`Browse all Recipes →
+<https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/recipes/>`_
+`Browse all Tutorials →
+<https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/tutorials/>`_
 
-   search.save("ga_search.pkl")
-   restored = GASearchCV(estimator=estimator, param_grid=param_grid)
-   restored.load("ga_search.pkl")
+
+Learning paths
+###############
+
+**New user**
+  `Install <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/guide/installation>`_
+  → `Getting Started with GASearchCV <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/guide/basic-usage>`_
+  → `How Hyperparameter Optimization Works <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/guide/how-hyperparameter-optimization-works>`_
+  → `Pick a Recipe <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/recipes/>`_
+
+**ML practitioner**
+  `When to Use Genetic Algorithm Search <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/guide/when-to-use>`_
+  → `Choosing the Right Search Space <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/guide/choosing-search-spaces>`_
+  → `Model-specific Tutorials <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/tutorials/>`_
+  → `Optuna vs sklearn-genetic-opt <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/comparisons/optuna-vs-sklearn-genetic-opt>`_
+
+**Contributor**
+  `Contributing guide <https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/CONTRIBUTING.md>`_
+  → `Open issues <https://github.com/rodrigo-arenas/Sklearn-genetic-opt/issues>`_
+  → `Benchmarks documentation <https://rodrigo-arenas.github.io/Sklearn-genetic-opt/versions/latest/benchmarks/>`_
+
 
 Benchmarks
 ##########
 
-The repository includes benchmark scripts for optimizer mechanics, model
-metrics, and comparisons against scikit-learn search methods:
-
-.. code-block:: bash
-
-   python benchmarks/benchmark_fit.py --quick
-   python benchmarks/benchmark_fit.py --parallel-backends auto cv --runs 3
-   python benchmarks/benchmark_search_methods.py --quick
-   python benchmarks/benchmark_search_methods.py --methods gasearch randomized grid --runs 3
-
-The reports include runtime, evaluated candidates, cross-validation effort,
-cache/duplicate counts, optimizer telemetry, holdout metrics, and best
-parameters.
-
-For an apples-to-apples comparison against other frameworks, the
-``benchmark_bayesmark.py`` script reproduces the `Bayesmark
-<https://github.com/uber/bayesmark>`_ experiment design that Optuna and similar
-tools benchmark against: the same standard datasets and search spaces, an equal
-evaluation budget per optimizer, and ``GASearchCV`` compared head-to-head with
-Optuna (TPE) and ``RandomizedSearchCV``. Optuna and SciPy are optional
-benchmarking dependencies that regular users do not need:
+The repository includes benchmark scripts that compare ``GASearchCV`` against
+``RandomizedSearchCV``, ``GridSearchCV``, and Optuna (TPE) using the
+`Bayesmark <https://github.com/uber/bayesmark>`_ experimental design — same
+datasets, same search spaces, equal evaluation budget:
 
 .. code-block:: bash
 
    pip install sklearn-genetic-opt[benchmark]
    python benchmarks/benchmark_bayesmark.py --quick
-   python benchmarks/benchmark_bayesmark.py --datasets wine breast diabetes --models knn svm dt rf --budget 64 --seeds 3
 
 See the `Benchmarks documentation
 <https://rodrigo-arenas.github.io/Sklearn-genetic-opt/versions/latest/benchmarks/>`_
-for the methodology and results.
+for methodology and full results.
 
-Documentation and Examples
-##########################
 
-Useful links:
+Installation
+############
 
-* `Documentation <https://sklearngeneticopt.rodrigo-arenas.com/>`_
-* `Release notes <https://sklearngeneticopt.rodrigo-arenas.com/stable/>`_
-* `PyPI <https://pypi.org/project/sklearn-genetic-opt/>`_
-* `Source code <https://github.com/rodrigo-arenas/Sklearn-genetic-opt/>`_
-* `Issues <https://github.com/rodrigo-arenas/Sklearn-genetic-opt/issues>`_
+.. code-block:: bash
 
-Model-specific hyperparameter tuning tutorials:
+   # Core package
+   pip install sklearn-genetic-opt
 
-* `Random Forest Hyperparameter Tuning <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/tutorials/tune-random-forest>`_
-* `XGBoost Hyperparameter Tuning <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/tutorials/tune-xgboost>`_
-* `LightGBM Hyperparameter Tuning <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/tutorials/tune-lightgbm>`_
-* `CatBoost Hyperparameter Tuning <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/tutorials/tune-catboost>`_
-* `Gradient Boosting Hyperparameter Tuning <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/tutorials/tune-gradient-boosting>`_
-* `Logistic Regression Hyperparameter Tuning <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/tutorials/tune-logistic-regression>`_
-* `SVM Hyperparameter Tuning <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/tutorials/tune-svm>`_
-* `Feature Selection with Genetic Algorithms <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/tutorials/feature-selection>`_
-* `Hyperparameter Tuning for Imbalanced Datasets <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/tutorials/imbalanced-classification>`_
-* `Isolation Forest Hyperparameter Tuning <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/tutorials/isolation-forest>`_
+   # With plotting, MLflow, and TensorBoard:
+   pip install sklearn-genetic-opt[all]
 
-Guides and comparisons:
+   # conda
+   conda install -c conda-forge sklearn-genetic-opt
 
-* `How Hyperparameter Optimization Works <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/guide/how-hyperparameter-optimization-works>`_
-* `Grid Search vs Random Search vs Bayesian vs Genetic Algorithms <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/comparisons/grid-search-vs-genetic-algorithms>`_
-* `Optuna vs sklearn-genetic-opt <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/comparisons/optuna-vs-sklearn-genetic-opt>`_
-* `Common Hyperparameter Tuning Mistakes <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/guide/common-mistakes>`_
-* `Choosing the Right Search Space <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/guide/choosing-search-spaces>`_
+Requires Python ≥ 3.12 and scikit-learn ≥ 1.5.0.
+See `Installation <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/guide/installation>`_
+for the full requirements table and optional extras.
 
-Other documentation:
-
-* `pipeline tuning and prediction <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/guide/pipeline-tuning>`_
-* `multi-metric optimization <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/guide/multi-metric>`_
-* `MLflow 3 logging <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/guide/mlflow>`_
-* `checkpointing and persistence <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/guide/reproducibility>`_
-* `advanced optimizer controls <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/guide/advanced-optimizer-control>`_
-
-Troubleshooting
-###############
-
-``TypeError: param_grid values must be instances of Integer, Continuous or Categorical``
-    Use ``sklearn_genetic.space`` objects instead of plain lists.
-
-    .. code-block:: python
-
-       from sklearn_genetic.space import Integer
-
-       param_grid = {"max_depth": Integer(2, 10)}
-
-Missing optional dependencies
-    Install the optional extras:
-
-    .. code-block:: bash
-
-       pip install sklearn-genetic-opt[all]
-
-TensorFlow, TensorBoard, or MLflow dependency conflicts
-    Install only the extras you need, or use a clean virtual environment.
-    TensorFlow/TensorBoard support is only available on Python versions
-    supported by those projects.
 
 Contributing
 ############
 
-Contributions are welcome. Please read the
-`contribution guide <https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/CONTRIBUTING.md>`_,
-open issues for bugs or proposals, and include tests and documentation when
-changing behavior.
+Contributions of all sizes are welcome — from fixing a typo to adding a new
+tutorial or benchmark.
 
-For local development:
+Good ways to start:
+
+* **Add a Recipe** for an estimator or workflow not yet covered — `see existing Recipes <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/recipes/>`_.
+* **Write or improve a tutorial** (new models, edge cases, regression examples).
+* **Test with a new estimator** from another framework and report the results.
+* **Add a benchmark** comparing search methods on a real dataset.
+* **Fix typing, CI, or formatting** — ``black .`` keeps the style consistent.
+* **Answer questions** in open issues.
+* **Share your work** — add a blog post, article, or video to the
+  `external references file <https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/docs/external_references.rst>`_.
 
 .. code-block:: bash
 
@@ -413,6 +342,27 @@ For local development:
    pip install -r dev-requirements.txt
    pytest sklearn_genetic
 
-Big thanks to everyone helping improve the project.
+Read the `contribution guide <https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/CONTRIBUTING.md>`_
+before opening a pull request. If you are not sure where to start,
+`open an issue <https://github.com/rodrigo-arenas/Sklearn-genetic-opt/issues>`_
+and ask — small contributions are very welcome.
+
+If ``sklearn-genetic-opt`` helps your work, consider starring the repository
+so others can find it.
 
 |Contributors|_
+
+
+Links
+#####
+
+* `Documentation <https://sklearngeneticopt.rodrigo-arenas.com/>`_
+* `API reference <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/api/gasearchcv>`_
+* `Tutorials <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/tutorials/>`_
+* `Recipes <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/recipes/>`_
+* `Grid vs Random vs Bayesian vs Genetic comparison <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/comparisons/grid-search-vs-genetic-algorithms>`_
+* `Common hyperparameter tuning mistakes <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/guide/common-mistakes>`_
+* `Troubleshooting <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/guide/troubleshooting>`_
+* `Release notes <https://sklearngeneticopt.rodrigo-arenas.com/stable/>`_
+* `PyPI <https://pypi.org/project/sklearn-genetic-opt/>`_
+* `Issues <https://github.com/rodrigo-arenas/Sklearn-genetic-opt/issues>`_
