@@ -4,7 +4,7 @@ description: "A fully reproducible, side-by-side comparison of GASearchCV, Rando
 ---
 
 :::warning Development version
-This is the **latest (dev)** documentation. It may contain unreleased features or breaking changes. For the stable release, use [version 0.13](/versions/0.13/).
+This is the **latest (dev)** documentation. It may contain unreleased features or breaking changes. For the stable release, use [stable](/stable/).
 :::
 
 # Comparing GASearchCV With scikit-learn Search Methods

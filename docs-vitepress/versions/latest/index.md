@@ -8,7 +8,7 @@ description: Development documentation for sklearn-genetic-opt — tracks the ma
 `sklearn-genetic-opt` adds evolutionary optimization tools to the scikit-learn workflow. It can tune hyperparameters with `GASearchCV` and select feature subsets with `GAFeatureSelectionCV` using algorithms powered by DEAP.
 
 :::warning Development version
-You are reading the **latest (development)** docs. This version tracks the `master` branch and may contain unreleased features or breaking changes. For stable documentation, see [0.13](/versions/0.13/).
+You are reading the **latest (development)** docs. This version tracks the `master` branch and may contain unreleased features or breaking changes. For stable documentation, see [stable](/stable/).
 :::
 
 ## Highlights

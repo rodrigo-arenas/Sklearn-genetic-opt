@@ -4,7 +4,7 @@ description: "A guided tour of the advanced optimizer controls — smart initial
 ---
 
 :::warning Development version
-This is the **latest (dev)** documentation. It may contain unreleased features or breaking changes. For the stable release, use [version 0.13](/versions/0.13/).
+This is the **latest (dev)** documentation. It may contain unreleased features or breaking changes. For the stable release, use [stable](/stable/).
 :::
 
 # Advanced Random Forest Tuning

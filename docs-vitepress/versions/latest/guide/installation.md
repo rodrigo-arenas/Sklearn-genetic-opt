@@ -4,7 +4,7 @@ description: Install sklearn-genetic-opt with pip or conda, including optional e
 ---
 
 :::warning Development version
-You are reading the **latest (dev)** docs. For the stable version, see [0.13](/versions/0.13/).
+You are reading the **latest (dev)** docs. For the stable version, see [stable](/stable/).
 :::
 
 # Installation

@@ -4,7 +4,7 @@ description: Step-by-step guide for upgrading sklearn-genetic-opt from 0.12.x to
 ---
 
 :::warning Development version
-You are reading the **latest (dev)** docs. For the stable version, see [0.13](/versions/0.13/).
+You are reading the **latest (dev)** docs. For the stable version, see [stable](/stable/).
 :::
 
 # Migrating from 0.12 to 0.13

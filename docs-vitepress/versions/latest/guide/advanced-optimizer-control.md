@@ -4,7 +4,7 @@ description: Diversity control, fitness sharing, local search, adaptive schedule
 ---
 
 :::warning Development version
-You are reading the **latest (dev)** docs. For the stable version, see [0.13](/versions/0.13/).
+You are reading the **latest (dev)** docs. For the stable version, see [stable](/stable/).
 :::
 
 # Advanced Optimizer Control

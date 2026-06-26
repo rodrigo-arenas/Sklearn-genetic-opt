@@ -1,6 +1,6 @@
 import { defineConfig, HeadConfig } from 'vitepress'
 
-const GITHUB_PAGES_BASE = '/Sklearn-genetic-opt/'
+const GITHUB_PAGES_BASE = '/'
 const GA_TAG = process.env.GOOGLE_ANALYTICS_TAG
 
 const gaHead: HeadConfig[] = GA_TAG
@@ -117,13 +117,13 @@ export default defineConfig({
   titleTemplate: ':title | sklearn-genetic-opt',
 
   sitemap: {
-    hostname: 'https://rodrigo-arenas.github.io',
+    hostname: 'https://sklearngeneticopt.rodrigo-arenas.com',
   },
 
   srcExclude: ['**/CLAUDE.md', '**/README.md'],
 
   transformPageData(pageData) {
-    const base = 'https://rodrigo-arenas.github.io/Sklearn-genetic-opt'
+    const base = 'https://sklearngeneticopt.rodrigo-arenas.com'
     const ogImage = `${base}/sklearn-genetic-opt-logo-128.png`
     const pageTitle = pageData.title
       ? `${pageData.title} | sklearn-genetic-opt`

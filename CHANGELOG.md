@@ -1,6 +1,20 @@
 # Changelog
 
-Full release notes with code examples are in the [documentation](https://rodrigo-arenas.github.io/Sklearn-genetic-opt/).
+Full release notes with code examples are in the [documentation](https://sklearngeneticopt.rodrigo-arenas.com/).
+
+## 0.13.1
+
+### New Features
+
+- **`random_state`**: `GASearchCV` and `GAFeatureSelectionCV` now accept a `random_state` argument that seeds the entire search at `fit` time (population init, mutation, crossover, random immigrants). Pass `random_state=None` (default) for non-deterministic behaviour.
+- **Expanded plotting API**: eleven new functions — `plot_parameter_evolution`, `plot_search_decisions`, `plot_candidate_scores`, `plot_feature_selection`, `plot_convergence`, `plot_diversity`, `plot_optimizer_events`, `plot_score_landscape`, `plot_cv_scores`, `plot_candidate_rankings`, `plot_search_overview`.
+- **Benchmarks**: new comparisons of `GASearchCV` vs Optuna and random search on tabular and CASH tasks.
+
+### Bug Fixes
+
+- Fixed Latin hypercube sampler reproducibility in the `smart` population initialiser.
+
+---
 
 ## 0.13.0
 

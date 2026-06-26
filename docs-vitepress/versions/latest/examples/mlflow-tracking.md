@@ -3,7 +3,7 @@ title: MLflow 3 Experiment Tracking
 description: Log a GASearchCV run to MLflow 3 — nested candidate runs via MLflowConfig, parent run with dataset inputs and holdout metrics, and logged-model lifecycle management.
 ---
 :::warning Development version
-This is the **latest (dev)** documentation. It may contain unreleased features or breaking changes. For the stable release, use [version 0.13](/versions/0.13/).
+This is the **latest (dev)** documentation. It may contain unreleased features or breaking changes. For the stable release, use [stable](/stable/).
 :::
 
 
