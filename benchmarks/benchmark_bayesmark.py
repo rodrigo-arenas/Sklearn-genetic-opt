@@ -285,7 +285,7 @@ MIXED_MODELS: dict[str, Model] = {
         needs_scaling=False,
         space=[
             ("learning_rate", "real", "log", (1e-3, 1.0)),
-            ("max_iter", "int", "linear", (50, 300)),
+            ("max_iter", "int", "linear", (50, 200)),
             ("max_leaf_nodes", "int", "linear", (7, 63)),
             ("max_depth", "cat", "choice", [None, 3, 5, 7, 9]),
             ("min_samples_leaf", "int", "linear", (5, 50)),
