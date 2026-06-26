@@ -1,6 +1,6 @@
 ---
-title: Multi-Metric Search on Imbalanced Data
-description: Track multiple scorers simultaneously, choose which metric drives the refit, and inspect per-metric cv_results_ where the metrics genuinely disagree about the best candidate.
+title: "Multi-Metric Search on Imbalanced Data"
+description: "Track multiple scorers simultaneously, choose which metric drives the refit, and inspect per-metric cv_results_ where the metrics genuinely disagree about the best candidate."
 ---
 
 :::warning Development version
@@ -197,13 +197,13 @@ test_metrics
 
 ```text
 Refit metric: balanced_accuracy
-Best balanced-accuracy CV score: 0.7112
+Best balanced-accuracy CV score: 0.7089
 Best params:
-{'logistic__C': 0.013735868898101319,
+{'logistic__C': 0.02486384467554937,
  'logistic__class_weight': 'balanced',
- 'logistic__l1_ratio': 0.2587799816000169,
- 'logistic__max_iter': 1687}
-{'accuracy': 0.73, 'balanced_accuracy': 0.711, 'f1': 0.3622}
+ 'logistic__l1_ratio': 0.5200680211778108,
+ 'logistic__max_iter': 1305}
+{'accuracy': 0.7317, 'balanced_accuracy': 0.7054, 'f1': 0.3586}
 ```
 
 ## Explore Multi-Metric cv_results_
@@ -225,12 +225,12 @@ results[metric_columns + param_columns].sort_values("rank_test_balanced_accuracy
 ```
 
 ```text
-     mean_test_accuracy  rank_test_accuracy  mean_test_balanced_accuracy  rank_test_balanced_accuracy  mean_test_f1  rank_test_f1  param_logistic__C param_logistic__class_weight
-96             0.714264                  46                     0.711238                            1      0.357855             1           0.013736                     balanced
-109            0.714264                  46                     0.711238                            1      0.357855             1           0.013736                     balanced
-94             0.714264                  46                     0.711238                            1      0.357855             1           0.013736                     balanced
-5              0.707845                  55                     0.702020                            4      0.347684             6           2.181177                     balanced
-54             0.707845                  55                     0.702020                            4      0.347684             6           2.181177                     balanced
+    mean_test_accuracy  rank_test_accuracy  mean_test_balanced_accuracy  rank_test_balanced_accuracy  mean_test_f1  rank_test_f1  param_logistic__C param_logistic__class_weight
+65            0.714980                  58                     0.708896                            1      0.356527             1           0.024864                     balanced
+22            0.713549                  60                     0.705348                            2      0.353485             2           0.054159                     balanced
+39            0.713551                  59                     0.702608                            3      0.350907             3           0.085876                     balanced
+91            0.707845                  64                     0.702020                            4      0.347684             6           2.867038                     balanced
+7             0.712123                  61                     0.701864                            5      0.349329             4           0.073363                     balanced
 ```
 
 ## The Metrics Disagree
@@ -259,9 +259,9 @@ pd.DataFrame(best_rows)
 
 ```text
       winning_metric  candidate_index  accuracy  balanced_accuracy      f1 class_weight      C
-0           accuracy               84    0.8957             0.5602  0.2134         None  0.516
-1  balanced_accuracy               96    0.7143             0.7112  0.3579     balanced  0.014
-2                 f1               96    0.7143             0.7112  0.3579     balanced  0.014
+0           accuracy               55    0.8957             0.5602  0.2134         None  0.581
+1  balanced_accuracy               65    0.7150             0.7089  0.3565     balanced  0.025
+2                 f1               65    0.7150             0.7089  0.3565     balanced  0.025
 ```
 
 ```python
@@ -277,7 +277,7 @@ print(f"{distinct} distinct candidates win across the 3 metrics "
 ```
 
 ```text
-top candidate index per metric: {'accuracy': 84, 'balanced_accuracy': 96, 'f1': 96}
+top candidate index per metric: {'accuracy': 55, 'balanced_accuracy': 65, 'f1': 65}
 2 distinct candidates win across the 3 metrics -> the metrics disagree.
 ```
 
@@ -317,7 +317,7 @@ print(search.fit_stats_)
 ```
 
 ```text
-{'evaluated_candidates': 110, 'unique_candidates': 107, 'cross_validate_calls': 107, 'cache_hits': 3, 'duplicate_candidates': 0, 'skipped_invalid_candidates': 0, 'population_parallel_batches': 6, 'population_serial_batches': 0, 'random_immigrants': 3, 'local_refinement_candidates': 2}
+{'evaluated_candidates': 110, 'unique_candidates': 110, 'cross_validate_calls': 110, 'cache_hits': 0, 'duplicate_candidates': 0, 'skipped_invalid_candidates': 0, 'population_parallel_batches': 6, 'population_serial_batches': 0, 'random_immigrants': 3, 'local_refinement_candidates': 2}
 ```
 
 ```python
@@ -329,11 +329,11 @@ history[[c for c in cols if c in history.columns]].tail()
 
 ```text
    gen   fitness  fitness_max  fitness_std  unique_individual_ratio  genotype_diversity  stagnation_generations
-0    0  0.590741     0.702020     0.079620                 1.000000            0.727273                       0
-1    1  0.637081     0.702020     0.073888                 0.833333            0.545455                       1
-2    2  0.642274     0.702020     0.084625                 0.750000            0.386364                       2
-3    3  0.675020     0.701617     0.050653                 0.833333            0.500000                       3
-4    4  0.644240     0.711238     0.068784                 1.000000            0.590909                       0
+0    0  0.590753     0.701864     0.080069                 1.000000            0.727273                       0
+1    1  0.654949     0.701215     0.078476                 0.583333            0.363636                       1
+2    2  0.655599     0.702608     0.078862                 0.916667            0.454545                       0
+3    3  0.644519     0.701617     0.067220                 0.500000            0.250000                       1
+4    4  0.610180     0.701215     0.063921                 0.750000            0.295455                       3
 ```
 
 ## Practical Notes

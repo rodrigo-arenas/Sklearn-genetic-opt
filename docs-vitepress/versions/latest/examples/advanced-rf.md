@@ -1,6 +1,6 @@
 ---
-title: Advanced Random Forest Tuning
-description: A guided tour of the advanced optimizer controls — smart initialization, warm starts, diversity control, fitness sharing, local search, and adaptive schedules — that tune a RandomForestClassifier to beat its own defaults, with real telemetry and convergence plots.
+title: "Advanced Random Forest Tuning"
+description: "A guided tour of the advanced optimizer controls — smart initialization, warm starts, diversity control, fitness sharing, local search, and adaptive schedules — that tune a RandomForestClassifier to beat its own defaults, with real telemetry and convergence plots."
 ---
 
 :::warning Development version
@@ -236,15 +236,15 @@ for key, value in sorted(ga_search.best_params_.items()):
 ```text
 INFO: TimerStopping callback met its criteria
 INFO: Stopping the algorithm
-Best CV balanced accuracy: 0.7602
+Best CV balanced accuracy: 0.7452
 Best params:
-  ccp_alpha         : 0.01
+  ccp_alpha         : 0.004783956940230192
   class_weight      : balanced
-  max_depth         : 16
+  max_depth         : 6
   max_features      : None
   min_samples_leaf  : 4
-  min_samples_split : 12
-  n_estimators      : 126
+  min_samples_split : 9
+  n_estimators      : 97
 ```
 
 ## Did It Beat the Defaults?
@@ -272,11 +272,11 @@ for key in ("accuracy", "balanced_accuracy", "roc_auc"):
 ```text
           model  accuracy  balanced_accuracy  roc_auc
  Default forest    0.8625             0.6024   0.7761
-GA-tuned forest    0.7375             0.7093   0.7880
+GA-tuned forest    0.7375             0.6945   0.7840
 
 accuracy          : -0.1250
-balanced_accuracy : +0.1069
-roc_auc           : +0.0119
+balanced_accuracy : +0.0921
+roc_auc           : +0.0079
 ```
 
 The genetic search lifts **balanced accuracy** sharply on the untouched test
@@ -298,13 +298,13 @@ print(stats.to_string())
 ```
 
 ```text
-evaluated_candidates           62
-unique_candidates              62
-cross_validate_calls           62
+evaluated_candidates           86
+unique_candidates              86
+cross_validate_calls           86
 cache_hits                      0
 duplicate_candidates            0
 skipped_invalid_candidates      0
-population_parallel_batches     4
+population_parallel_batches     5
 population_serial_batches       0
 random_immigrants               0
 local_refinement_candidates     2
@@ -325,9 +325,10 @@ history[[c for c in cols if c in history.columns]]
 
 ```text
    gen   fitness  fitness_best  fitness_max  unique_individual_ratio  genotype_diversity  stagnation_generations
-0    0  0.668694      0.733616     0.733616                 1.000000            0.662338                       0
-1    1  0.682074      0.754948     0.754948                 0.750000            0.402597                       0
-2    2  0.710075      0.760198     0.760198                 0.833333            0.285714                       0
+0    0  0.650745      0.730193     0.730193                 1.000000            0.636364                       0
+1    1  0.628148      0.730691     0.730691                 0.750000            0.376623                       0
+2    2  0.643839      0.730691     0.730691                 0.833333            0.350649                       1
+3    3  0.665712      0.745243     0.745243                 0.916667            0.376623                       0
 ```
 
 ## Convergence
@@ -429,9 +430,9 @@ print(f"Selected indices: {np.where(feature_selector.support_)[0].tolist()}")
 ```text
 INFO: TimerStopping callback met its criteria
 INFO: Stopping the algorithm
-Best CV balanced accuracy (selection): 0.7299
+Best CV balanced accuracy (selection): 0.7401
 Selected 14 of 30 columns
-Selected indices: [4, 5, 6, 8, 10, 11, 13, 17, 18, 19, 21, 23, 25, 29]
+Selected indices: [0, 6, 8, 12, 13, 14, 18, 19, 22, 25, 26, 27, 28, 29]
 ```
 
 ```python
@@ -450,8 +451,8 @@ print(full_table.to_string(index=False))
 ```text
                  model  n_features  accuracy  balanced_accuracy  roc_auc
         Default forest          30    0.8625             0.6024   0.7761
-       GA-tuned forest          30    0.7375             0.7093   0.7880
-GA-tuned + GA-selected          14    0.7500             0.6824   0.7484
+       GA-tuned forest          30    0.7375             0.6945   0.7840
+GA-tuned + GA-selected          14    0.6958             0.6645   0.7528
 ```
 
 The tuned forest on a compact, GA-selected subset matches (or beats) the

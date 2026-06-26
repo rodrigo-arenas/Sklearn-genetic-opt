@@ -1,6 +1,6 @@
 ---
-title: Tuning XGBoost With GASearchCV
-description: Optimize 9 interacting XGBoost hyperparameters with a genetic algorithm on a noisy dataset where the defaults overfit — with a real baseline comparison, interaction visualization, and feature importance.
+title: "Tuning XGBoost With GASearchCV"
+description: "Optimize 9 interacting XGBoost hyperparameters with a genetic algorithm on a noisy dataset where the defaults overfit — with a real baseline comparison, interaction visualization, and feature importance."
 ---
 
 :::warning Development version
@@ -180,19 +180,18 @@ for key, value in ga_search.best_params_.items():
 
 ```text
 INFO: ConsecutiveStopping callback met its criteria
-INFO: TimerStopping callback met its criteria
 INFO: Stopping the algorithm
-Best CV ROC AUC : 0.8518   (search took 94s)
+Best CV ROC AUC : 0.8526   (search took 36s)
 Best parameters :
-  n_estimators: 121
-  max_depth: 9
+  n_estimators: 243
+  max_depth: 10
   min_child_weight: 1
-  subsample: 0.8787671989998376
-  colsample_bytree: 0.6214338869915268
-  learning_rate: 0.03338983025312827
-  gamma: 0.03579830541478899
-  reg_alpha: 0.00028261570135238226
-  reg_lambda: 0.0008846161493392649
+  subsample: 0.9972752553986706
+  colsample_bytree: 0.7109135667409241
+  learning_rate: 0.03276066048629058
+  gamma: 0.01908427586223375
+  reg_alpha: 0.3064168498016857
+  reg_lambda: 0.0046848065280914375
 ```
 
 ## Did Tuning Help? Baseline vs Tuned
@@ -211,10 +210,10 @@ print(f"Balanced-accuracy improvement    : "
 ```text
              model  accuracy  balanced_accuracy  roc_auc
   XGBoost defaults     0.794              0.794   0.8608
-GASearchCV (tuned)     0.811              0.811   0.8831
+GASearchCV (tuned)     0.806              0.806   0.8850
 
-ROC AUC improvement over defaults: +0.0223
-Balanced-accuracy improvement    : +0.0170
+ROC AUC improvement over defaults: +0.0242
+Balanced-accuracy improvement    : +0.0120
 ```
 
 On this noisy data the aggressive default booster overfits; the genetic search
@@ -315,7 +314,7 @@ print(table.to_string(index=False))
              model  accuracy  balanced_accuracy  roc_auc  best_cv_auc  candidates
   XGBoost defaults     0.794              0.794   0.8608          NaN         NaN
 RandomizedSearchCV     0.805              0.805   0.8861       0.8561       132.0
-GASearchCV (tuned)     0.811              0.811   0.8831       0.8518       132.0
+GASearchCV (tuned)     0.806              0.806   0.8850       0.8526       132.0
 ```
 
 ## Practical Notes

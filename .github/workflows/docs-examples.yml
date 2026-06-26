@@ -4,8 +4,9 @@ name: Verify executable docs examples
 # from the Python scripts in docs-vitepress/examples-src (see that folder's
 # README). Regenerating them runs real model searches, so this is intentionally
 # NOT on every push — the committed Markdown already carries the rendered output
-# that the VitePress deploy builds. Run it on demand, and weekly, to catch drift
-# between the generators and the committed pages.
+# that the VitePress deploy builds. Run it on demand, and weekly, as a smoke
+# test that every generator still runs end to end against the current library
+# and dependencies (e.g. catching breakage after an API change).
 
 on:
   workflow_dispatch:
@@ -34,7 +35,7 @@ jobs:
           pip install -e ".[all]"
           pip install xgboost lightgbm catboost
 
-      - name: Regenerate docs and fail on drift
+      - name: Run every docs generator (smoke test)
         env:
           MPLBACKEND: Agg
           OMP_NUM_THREADS: "1"

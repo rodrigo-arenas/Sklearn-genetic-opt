@@ -1,6 +1,6 @@
 ---
-title: Tuning CatBoost With GASearchCV
-description: Optimize CatBoost's ordered-boosting hyperparameters (depth, l2_leaf_reg, bagging_temperature, border_count, random_strength) with a genetic algorithm, with a real baseline comparison.
+title: "Tuning CatBoost With GASearchCV"
+description: "Optimize CatBoost's ordered-boosting hyperparameters (depth, l2_leaf_reg, bagging_temperature, border_count, random_strength) with a genetic algorithm, with a real baseline comparison."
 ---
 
 :::warning Development version
@@ -160,15 +160,15 @@ for key, value in ga_search.best_params_.items():
 ```text
 INFO: TimerStopping callback met its criteria
 INFO: Stopping the algorithm
-Best CV ROC AUC : 0.8651   (search took 171s)
+Best CV ROC AUC : 0.8621   (search took 107s)
 Best parameters :
-  iterations: 298
-  depth: 8
-  learning_rate: 0.02362111216846762
-  l2_leaf_reg: 13.123370406913228
-  bagging_temperature: 0.46508571237548957
-  random_strength: 0.04407711844991688
-  border_count: 210
+  iterations: 320
+  depth: 7
+  learning_rate: 0.022177550749986834
+  l2_leaf_reg: 1.4527623427678809
+  bagging_temperature: 0.5520049248439932
+  random_strength: 0.02161894240657444
+  border_count: 84
 ```
 
 ## Baseline vs Tuned
@@ -185,9 +185,9 @@ print(f"ROC AUC improvement over defaults: "
 ```text
              model  accuracy  balanced_accuracy  roc_auc
  CatBoost defaults     0.805             0.8049   0.8803
-GASearchCV (tuned)     0.807             0.8069   0.8889
+GASearchCV (tuned)     0.805             0.8049   0.8855
 
-ROC AUC improvement over defaults: +0.0086
+ROC AUC improvement over defaults: +0.0052
 ```
 
 ### Fitness over generations

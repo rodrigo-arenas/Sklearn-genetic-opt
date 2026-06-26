@@ -1,6 +1,6 @@
 ---
-title: Tuning Isolation Forest With GASearchCV
-description: Tune IsolationForest's four key hyperparameters using a genetic algorithm on a labeled anomaly dataset with a custom score_samples scorer. Includes anomaly-score contour plots, a ROC curve, and a 3-way comparison.
+title: "Tuning Isolation Forest With GASearchCV"
+description: "Tune IsolationForest's four key hyperparameters using a genetic algorithm on a labeled anomaly dataset with a custom score_samples scorer. Includes anomaly-score contour plots, a ROC curve, and a 3-way comparison."
 ---
 
 :::warning Development version
@@ -308,12 +308,12 @@ pprint(ga_search.best_params_)
 ```text
 INFO: TimerStopping callback met its criteria
 INFO: Stopping the algorithm
-Best CV ROC AUC: 0.9254
-Search time:     145s
+Best CV ROC AUC: 0.9239
+Search time:     152s
 Best params:
 {'contamination': 0.1,
  'max_features': 1.0,
- 'max_samples': 0.45376653762437785,
+ 'max_samples': 0.5,
  'n_estimators': 200}
 ```
 
@@ -338,9 +338,9 @@ history[[c for c in cols if c in history.columns]]
 
 ```text
    gen   fitness  fitness_max  fitness_std  unique_individual_ratio  genotype_diversity  stagnation_generations
-0    0  0.907571     0.923916     0.005459                 1.000000            0.977273                       0
-1    1  0.907688     0.910681     0.001855                 0.666667            0.568182                       1
-2    2  0.911824     0.925359     0.005875                 0.750000            0.590909                       0
+0    0  0.907175     0.923916     0.005474                 1.000000            1.000000                       0
+1    1  0.905335     0.923916     0.006020                 0.750000            0.590909                       1
+2    2  0.912196     0.923916     0.008371                 0.666667            0.431818                       3
 ```
 
 ## Fitness Evolution
@@ -469,8 +469,8 @@ print(comparison.to_string(index=False))
 ```text
                     name  roc_auc  avg_precision  outlier_precision  outlier_recall  best_cv_roc_auc  fit_seconds
 IsolationForest defaults   0.9431         0.8134             0.5361          0.8667              NaN          NaN
-      RandomizedSearchCV   0.9400         0.7681             0.3901          0.9167           0.9106          7.7
-              GASearchCV   0.9566         0.8301             0.6714          0.7833           0.9254        145.3
+      RandomizedSearchCV   0.9400         0.7681             0.3901          0.9167           0.9106          5.8
+              GASearchCV   0.9547         0.8252             0.6528          0.7833           0.9239        152.1
 ```
 
 ```python
@@ -480,7 +480,7 @@ print(f"GA outlier recall: {ga_metrics['outlier_recall']:.2f}  "
 ```
 
 ```text
-GA vs default ROC AUC: +0.0135
+GA vs default ROC AUC: +0.0116
 GA outlier recall: 0.78  (default 0.87)
 ```
 

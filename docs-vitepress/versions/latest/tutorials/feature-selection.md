@@ -1,6 +1,6 @@
 ---
-title: Comprehensive GA Feature Selection
-description: A multi-stage walkthrough: build a noisy high-dimensional dataset, evolve a feature mask with GAFeatureSelectionCV, grade it against the known ground truth, confirm the win on a second estimator, and read the support mask and fitness history — all from real execution.
+title: "Comprehensive GA Feature Selection"
+description: "A multi-stage walkthrough: build a noisy high-dimensional dataset, evolve a feature mask with GAFeatureSelectionCV, grade it against the known ground truth, confirm the win on a second estimator, and read the support mask and fitness history — all from real execution."
 ---
 
 :::warning Development version

@@ -1,6 +1,6 @@
 ---
-title: Basic Usage
-description: Your first hyperparameter search with GASearchCV and your first feature selection with GAFeatureSelectionCV — a complete, runnable walkthrough.
+title: "Basic Usage"
+description: "Your first hyperparameter search with GASearchCV and your first feature selection with GAFeatureSelectionCV — a complete, runnable walkthrough."
 ---
 
 :::warning Development version
@@ -105,7 +105,7 @@ print(f"Best parameters  : {search.best_params_}")
 
 ```text
 Best CV accuracy : 0.9659
-Best parameters  : {'hidden_layer_sizes': (64,), 'alpha': 0.0009444574254983562, 'learning_rate_init': 0.0036999724314638123, 'activation': 'relu', 'batch_size': 46}
+Best parameters  : {'hidden_layer_sizes': (64,), 'alpha': 0.006070874110546389, 'learning_rate_init': 0.015702970884055395, 'activation': 'relu', 'batch_size': 89}
 ```
 
 After fitting, `GASearchCV` behaves like any fitted scikit-learn estimator —
@@ -117,7 +117,7 @@ print(f"Holdout accuracy : {accuracy_score(y_test, y_pred):.4f}")
 ```
 
 ```text
-Holdout accuracy : 0.9613
+Holdout accuracy : 0.9697
 ```
 
 ### Reading the evolution
@@ -144,15 +144,15 @@ print(history[["gen", "fitness", "fitness_best", "genotype_diversity",
 
 ```text
  gen  fitness  fitness_best  genotype_diversity  unique_individual_ratio  stagnation_generations
-   0 0.817872      0.942643            0.666667                      1.0                       0
-   1 0.938487      0.950125            0.444444                      0.8                       0
-   2 0.948545      0.953450            0.200000                      0.5                       0
-   3 0.939817      0.953450            0.444444                      0.8                       1
-   4 0.952702      0.954281            0.288889                      0.6                       0
-   5 0.954032      0.963425            0.200000                      0.6                       0
-   6 0.951704      0.963425            0.222222                      0.6                       1
-   7 0.950873      0.963425            0.066667                      0.4                       2
-   8 0.944140      0.963425            0.288889                      0.7                       3
+   0 0.836908      0.936825            0.666667                      1.0                       0
+   1 0.936492      0.955943            0.377778                      0.8                       0
+   2 0.949377      0.960931            0.266667                      0.7                       0
+   3 0.951372      0.960931            0.177778                      0.6                       1
+   4 0.956858      0.962594            0.133333                      0.7                       0
+   5 0.951122      0.962594            0.200000                      0.7                       1
+   6 0.946550      0.962594            0.355556                      0.7                       2
+   7 0.941397      0.962594            0.355556                      0.6                       3
+   8 0.950208      0.962594            0.222222                      0.7                       4
 ```
 
 `fit_stats_` summarizes what the search actually spent — useful for spotting
@@ -172,7 +172,7 @@ duplicate_candidates: 0
 skipped_invalid_candidates: 0
 population_parallel_batches: 9
 population_serial_batches: 0
-random_immigrants: 8
+random_immigrants: 6
 local_refinement_candidates: 0
 ```
 

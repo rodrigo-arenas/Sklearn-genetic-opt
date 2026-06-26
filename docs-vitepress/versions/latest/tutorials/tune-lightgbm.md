@@ -1,6 +1,6 @@
 ---
-title: Tuning LightGBM With GASearchCV
-description: Optimize LightGBM's leaf-wise tree hyperparameters with a genetic algorithm, with a real baseline comparison and a look at the num_leaves / max_depth interaction.
+title: "Tuning LightGBM With GASearchCV"
+description: "Optimize LightGBM's leaf-wise tree hyperparameters with a genetic algorithm, with a real baseline comparison and a look at the num_leaves / max_depth interaction."
 ---
 
 :::warning Development version
@@ -162,19 +162,19 @@ for key, value in ga_search.best_params_.items():
 ```
 
 ```text
-INFO: TimerStopping callback met its criteria
+INFO: ConsecutiveStopping callback met its criteria
 INFO: Stopping the algorithm
-Best CV ROC AUC : 0.8546   (search took 94s)
+Best CV ROC AUC : 0.8552   (search took 31s)
 Best parameters :
-  n_estimators: 248
-  num_leaves: 88
-  max_depth: 12
-  learning_rate: 0.014518042019709979
-  min_child_samples: 8
-  subsample: 0.501142853484565
-  colsample_bytree: 0.5490573177472226
-  reg_alpha: 0.01345842215577326
-  reg_lambda: 1.3691839210724823
+  n_estimators: 221
+  num_leaves: 154
+  max_depth: 11
+  learning_rate: 0.023722009513003597
+  min_child_samples: 5
+  subsample: 0.5049196355417795
+  colsample_bytree: 0.6854796731551205
+  reg_alpha: 0.0014345898571198564
+  reg_lambda: 4.8001373865352105e-05
 ```
 
 ## Baseline vs Tuned
@@ -190,10 +190,10 @@ print(f"ROC AUC improvement over defaults: "
 
 ```text
              model  accuracy  balanced_accuracy  roc_auc
- LightGBM defaults     0.788              0.788   0.8665
-GASearchCV (tuned)     0.812              0.812   0.8834
+ LightGBM defaults     0.788             0.7880   0.8665
+GASearchCV (tuned)     0.812             0.8119   0.8890
 
-ROC AUC improvement over defaults: +0.0169
+ROC AUC improvement over defaults: +0.0225
 ```
 
 ### Fitness over generations

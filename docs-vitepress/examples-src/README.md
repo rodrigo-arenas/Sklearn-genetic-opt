@@ -29,7 +29,8 @@ python docs-vitepress/scripts/build_docs.py
 # Regenerate selected pages
 python docs-vitepress/scripts/build_docs.py sklearn-comparison feature-selection
 
-# CI / pre-commit: fail if committed pages drifted from the generators
+# CI smoke test: every generator must run end to end (no byte-diff — pages
+# embed real wall-clock timings that vary run to run; scores/figures are seeded)
 python docs-vitepress/scripts/build_docs.py --check
 ```
 

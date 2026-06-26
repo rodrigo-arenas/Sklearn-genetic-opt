@@ -1,6 +1,6 @@
 ---
-title: Feature Selection: Finding the Signal in 60 Columns
-description: Use GAFeatureSelectionCV to recover a compact, informative feature subset from a dataset padded with redundant and noise columns, and beat the all-features baseline by a wide margin.
+title: "Feature Selection: Finding the Signal in 60 Columns"
+description: "Use GAFeatureSelectionCV to recover a compact, informative feature subset from a dataset padded with redundant and noise columns, and beat the all-features baseline by a wide margin."
 ---
 
 :::warning Development version

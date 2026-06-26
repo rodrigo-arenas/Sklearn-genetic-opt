@@ -1,6 +1,6 @@
 ---
-title: Plotting Gallery
-description: A live tour of every plotting helper in sklearn-genetic-opt: overview dashboards, fitness and convergence curves, diversity and optimizer-event telemetry, parameter exploration, score landscapes, candidate rankings, fold-level CV robustness, and feature-selection masks.
+title: "Plotting Gallery"
+description: "A live tour of every plotting helper in sklearn-genetic-opt: overview dashboards, fitness and convergence curves, diversity and optimizer-event telemetry, parameter exploration, score landscapes, candidate rankings, fold-level CV robustness, and feature-selection masks."
 ---
 
 :::warning Development version

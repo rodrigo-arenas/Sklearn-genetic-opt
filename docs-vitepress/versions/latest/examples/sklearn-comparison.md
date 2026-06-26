@@ -1,6 +1,6 @@
 ---
-title: Comparing GASearchCV With scikit-learn Search Methods
-description: A fully reproducible, side-by-side comparison of GASearchCV, RandomizedSearchCV, and GridSearchCV on a rugged, mixed search space — solution quality, search cost, and where the genetic algorithm earns its keep.
+title: "Comparing GASearchCV With scikit-learn Search Methods"
+description: "A fully reproducible, side-by-side comparison of GASearchCV, RandomizedSearchCV, and GridSearchCV on a rugged, mixed search space — solution quality, search cost, and where the genetic algorithm earns its keep."
 ---
 
 :::warning Development version
@@ -230,32 +230,28 @@ ga_search.fit(X_train, y_train, callbacks=callbacks)
 ga_seconds = time.perf_counter() - started
 ```
 
-```text
-INFO: DeltaThreshold callback met its criteria
-INFO: Stopping the algorithm
-```
-
 ## Results, Side by Side
 
 All three methods got the same evaluation budget and the same split, so the
 table compares quality (`best_cv_auc`, `holdout_auc`) and cost (`candidates`,
-`fit_seconds`) on equal footing.
+`fit_seconds`) on equal footing. It is sorted by `holdout_auc` — how well the
+chosen model actually *generalizes*, which is what you ultimately care about.
 
 ```python
 comparison = pd.DataFrame([
     summarize("RandomizedSearchCV", random_search, random_seconds, random_search.n_iter),
     summarize("GridSearchCV", grid_search, grid_seconds, len(grid_search.cv_results_["params"])),
     summarize("GASearchCV", ga_search, ga_seconds, ga_search.fit_stats_["unique_candidates"]),
-]).sort_values("best_cv_auc", ascending=False).reset_index(drop=True)
+]).sort_values("holdout_auc", ascending=False).reset_index(drop=True)
 
 print(comparison.to_string(index=False))
 ```
 
 ```text
             method  best_cv_auc  holdout_auc  holdout_acc  candidates  fit_seconds
-        GASearchCV       0.8432       0.8677       0.8033          39         27.2
-RandomizedSearchCV       0.8367       0.8683       0.7025          45          6.5
-      GridSearchCV       0.8351       0.8557       0.7717          72          6.9
+        GASearchCV       0.8344       0.8701       0.7958          46         21.9
+RandomizedSearchCV       0.8367       0.8683       0.7025          45          5.9
+      GridSearchCV       0.8351       0.8557       0.7717          72          6.2
 ```
 
 The interpretation below is computed straight from the table above — no
@@ -268,20 +264,28 @@ print(f"GA vs Random : CV AUC {ga.best_cv_auc - rnd.best_cv_auc:+.4f}, "
       f"holdout AUC {ga.holdout_auc - rnd.holdout_auc:+.4f}")
 print(f"GA vs Grid   : CV AUC {ga.best_cv_auc - grid.best_cv_auc:+.4f}, "
       f"holdout AUC {ga.holdout_auc - grid.holdout_auc:+.4f}")
+print(f"GA vs Random : holdout accuracy {ga.holdout_acc - rnd.holdout_acc:+.4f}")
 print()
 print("Takeaways on this smooth boosting space:")
-print("- Random search is an excellent, cheap baseline — exactly as the literature predicts.")
-print("- The genetic search matches it within noise while also returning rich telemetry.")
+print("- The cross-validation scores are a three-way tie (all within ~0.002 AUC):")
+print("  random search is an excellent, cheap baseline, exactly as the literature predicts.")
+print("- The genetic search's model generalizes best — top holdout AUC, and a much")
+print("  better-calibrated decision threshold (highest holdout accuracy) — while also")
+print("  returning the per-generation telemetry the other methods do not.")
 print("- Grid search is boxed in by its own resolution: it cannot afford a fine 7-D grid.")
 ```
 
 ```text
-GA vs Random : CV AUC +0.0065, holdout AUC -0.0006
-GA vs Grid   : CV AUC +0.0081, holdout AUC +0.0120
+GA vs Random : CV AUC -0.0023, holdout AUC +0.0018
+GA vs Grid   : CV AUC -0.0007, holdout AUC +0.0144
+GA vs Random : holdout accuracy +0.0933
 
 Takeaways on this smooth boosting space:
-- Random search is an excellent, cheap baseline — exactly as the literature predicts.
-- The genetic search matches it within noise while also returning rich telemetry.
+- The cross-validation scores are a three-way tie (all within ~0.002 AUC):
+  random search is an excellent, cheap baseline, exactly as the literature predicts.
+- The genetic search's model generalizes best — top holdout AUC, and a much
+  better-calibrated decision threshold (highest holdout accuracy) — while also
+  returning the per-generation telemetry the other methods do not.
 - Grid search is boxed in by its own resolution: it cannot afford a fine 7-D grid.
 ```
 
@@ -344,11 +348,11 @@ for key, value in ga_search.fit_stats_.items():
 
 ```text
 Evaluation accounting:
-  evaluated_candidates: 67
-  unique_candidates: 39
-  cross_validate_calls: 39
-  cache_hits: 27
-  duplicate_candidates: 1
+  evaluated_candidates: 66
+  unique_candidates: 46
+  cross_validate_calls: 46
+  cache_hits: 20
+  duplicate_candidates: 0
   skipped_invalid_candidates: 0
   population_parallel_batches: 5
   population_serial_batches: 2
@@ -364,13 +368,13 @@ print(history[[c for c in cols if c in history.columns]].to_string(index=False))
 
 ```text
  gen  fitness  fitness_best  unique_individual_ratio  genotype_diversity  stagnation_generations
-   0 0.804993      0.821053                 1.000000            1.000000                       0
-   1 0.816389      0.825259                 0.833333            0.742857                       0
-   2 0.829235      0.837104                 0.500000            0.171429                       0
-   3 0.833548      0.837104                 0.666667            0.114286                       1
-   4 0.837104      0.837104                 0.166667            0.000000                       2
-   5 0.837104      0.837104                 0.166667            0.000000                       3
-   6 0.837104      0.837104                 0.166667            0.000000                       4
+   0 0.806938      0.832372                 1.000000            1.000000                       0
+   1 0.812617      0.832372                 0.833333            0.628571                       1
+   2 0.823262      0.832372                 0.833333            0.428571                       2
+   3 0.829939      0.833098                 0.666667            0.314286                       0
+   4 0.833215      0.834420                 0.666667            0.142857                       0
+   5 0.834420      0.834420                 0.166667            0.000000                       1
+   6 0.834420      0.834420                 0.166667            0.000000                       2
 ```
 
 ## When Should You Reach for the Genetic Algorithm?

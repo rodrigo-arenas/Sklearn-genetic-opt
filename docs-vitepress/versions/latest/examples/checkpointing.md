@@ -1,6 +1,6 @@
 ---
-title: Checkpointing and Persistence
-description: Write per-generation checkpoints with the ModelCheckpoint callback, save the logbook with LogbookSaver, and round-trip a fully fitted GASearchCV with save / load — verified against real, captured output.
+title: "Checkpointing and Persistence"
+description: "Write per-generation checkpoints with the ModelCheckpoint callback, save the logbook with LogbookSaver, and round-trip a fully fitted GASearchCV with save / load — verified against real, captured output."
 ---
 
 :::warning Development version

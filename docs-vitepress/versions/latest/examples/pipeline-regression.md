@@ -1,6 +1,6 @@
 ---
-title: Pipeline Regression Tuning
-description: Tune a scikit-learn Pipeline containing StandardScaler and GradientBoostingRegressor using GASearchCV — pipeline parameter naming, regression scorers, and search visualization.
+title: "Pipeline Regression Tuning"
+description: "Tune a scikit-learn Pipeline containing StandardScaler and GradientBoostingRegressor using GASearchCV — pipeline parameter naming, regression scorers, and search visualization."
 ---
 
 :::warning Development version
@@ -214,17 +214,17 @@ comparison
 ```
 
 ```text
-Best CV negative RMSE: -58.922
+Best CV negative RMSE: -58.8134
 Best params:
-{'regressor__learning_rate': 0.17099914874934968,
+{'regressor__learning_rate': 0.055200913750236516,
  'regressor__loss': 'squared_error',
  'regressor__max_depth': 1,
- 'regressor__min_samples_leaf': 10,
- 'regressor__n_estimators': 54,
- 'regressor__subsample': 0.8565695363320779}
+ 'regressor__min_samples_leaf': 4,
+ 'regressor__n_estimators': 170,
+ 'regressor__subsample': 0.7642806333015832}
                        r2   rmse    mae
 default GBR        0.4303  55.46  44.72
-GA-tuned pipeline  0.4824  52.86  42.34
+GA-tuned pipeline  0.5047  51.71  41.14
 ```
 
 ```python
@@ -237,9 +237,9 @@ print(f"MAE : {baseline_metrics['mae']:.2f}  ->  {ga_metrics['mae']:.2f}   ({-ma
 ```
 
 ```text
-R2  : 0.4303  ->  0.4824   (+0.0521)
-RMSE: 55.46  ->  52.86   (-2.60)
-MAE : 44.72  ->  42.34   (-2.38)
+R2  : 0.4303  ->  0.5047   (+0.0744)
+RMSE: 55.46  ->  51.71   (-3.75)
+MAE : 44.72  ->  41.14   (-3.58)
 ```
 
 Plotting the same numbers makes the improvement on every metric obvious at a glance.
@@ -279,7 +279,7 @@ print(search.fit_stats_)
 ```
 
 ```text
-{'evaluated_candidates': 92, 'unique_candidates': 92, 'cross_validate_calls': 92, 'cache_hits': 0, 'duplicate_candidates': 0, 'skipped_invalid_candidates': 0, 'population_parallel_batches': 6, 'population_serial_batches': 0, 'random_immigrants': 2, 'local_refinement_candidates': 2}
+{'evaluated_candidates': 92, 'unique_candidates': 91, 'cross_validate_calls': 91, 'cache_hits': 1, 'duplicate_candidates': 0, 'skipped_invalid_candidates': 0, 'population_parallel_batches': 6, 'population_serial_batches': 0, 'random_immigrants': 2, 'local_refinement_candidates': 2}
 ```
 
 ```python
@@ -291,11 +291,11 @@ history[[c for c in cols if c in history.columns]].tail()
 
 ```text
    gen    fitness  fitness_max  unique_individual_ratio  genotype_diversity  stagnation_generations
-0    0 -61.350306   -58.921956                      1.0            0.703704                       0
-1    1 -61.028095   -59.255349                      0.8            0.481481                       1
-2    2 -60.228431   -59.255349                      0.9            0.425926                       2
-3    3 -60.743288   -59.255349                      0.7            0.388889                       3
-4    4 -59.911203   -59.229803                      1.0            0.481481                       5
+0    0 -61.764820   -59.042955                      1.0            0.666667                       0
+1    1 -60.618549   -59.042955                      0.7            0.444444                       1
+2    2 -60.167407   -59.042955                      0.6            0.314815                       2
+3    3 -60.555254   -59.447392                      0.6            0.388889                       3
+4    4 -59.933490   -58.834104                      0.9            0.425926                       0
 ```
 
 ## Visualize the Search

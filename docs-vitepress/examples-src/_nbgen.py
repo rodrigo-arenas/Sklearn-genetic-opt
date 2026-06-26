@@ -66,6 +66,11 @@ def _dedent(text: str) -> str:
     return textwrap.dedent(text).strip("\n")
 
 
+def _yaml_quote(value: str) -> str:
+    """Double-quote a scalar so colons/specials in titles don't break YAML."""
+    return '"' + value.replace("\\", "\\\\").replace('"', '\\"') + '"'
+
+
 class Notebook:
     """Build one Markdown documentation page from executable code cells."""
 
@@ -84,7 +89,12 @@ class Notebook:
         self._blocks: list[str] = []
         self.ns: dict[str, object] = {"__name__": "__docs_example__"}
 
-        front = f"---\ntitle: {title}\ndescription: {description}\n---"
+        front = (
+            "---\n"
+            f"title: {_yaml_quote(title)}\n"
+            f"description: {_yaml_quote(description)}\n"
+            "---"
+        )
         self._blocks.append(front)
         if dev_banner:
             self._blocks.append(DEV_BANNER)
