@@ -1,10 +1,19 @@
 name: CI
 
 on:
-  push:
-    branches-ignore:
-      - gh-pages
   pull_request:
+    branches: [master]
+  push:
+    branches: [master]
+    tags: ["[0-9]*", "v[0-9]*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   lint:

@@ -15,8 +15,10 @@ This example shows how to run `GASearchCV` with multiple scorers and inspect per
 
 ```python
 import warnings
+import random
 from pprint import pprint
 
+import numpy as np
 import pandas as pd
 from sklearn.datasets import load_iris
 from sklearn.linear_model import LogisticRegression
@@ -29,12 +31,15 @@ from sklearn_genetic import (
     EvolutionConfig, GASearchCV, OptimizationConfig, PopulationConfig, RuntimeConfig,
 )
 from sklearn_genetic.callbacks import ConsecutiveStopping, DeltaThreshold, TimerStopping
+from sklearn_genetic.plots import plot_candidate_rankings
 from sklearn_genetic.schedules import ExponentialAdapter, InverseAdapter
 from sklearn_genetic.space import Categorical, Continuous, Integer
 
 warnings.filterwarnings("ignore", category=UserWarning)
 
 RANDOM_STATE = 42
+random.seed(RANDOM_STATE)
+np.random.seed(RANDOM_STATE)
 
 iris = load_iris(as_frame=True)
 X, y = iris.data, iris.target
@@ -175,6 +180,26 @@ for metric_name in ["accuracy", "balanced_accuracy", "f1_macro"]:
 
 pd.DataFrame(best_rows)
 ```
+
+For advanced users, the useful question is not only "which candidate won?", but whether different metrics prefer the same region. Plotting the top candidates by metric makes those tradeoffs visible without rerunning the search.
+
+```python
+import matplotlib.pyplot as plt
+
+fig, axes = plt.subplots(1, 3, figsize=(15, 4), sharey=True)
+for axis, metric in zip(axes, ["accuracy", "balanced_accuracy", "f1_macro"]):
+    plot_candidate_rankings(
+        search,
+        top_k=5,
+        metric=metric,
+        label_params=["logistic__C", "logistic__l1_ratio"],
+        ax=axis,
+        title=metric,
+    )
+plt.show()
+```
+
+![Multi-metric candidate rankings](/images/multi_metric_candidate_rankings.png)
 
 ## Optimizer Telemetry
 

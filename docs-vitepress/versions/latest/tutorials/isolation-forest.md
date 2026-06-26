@@ -23,6 +23,7 @@ pip install sklearn-genetic-opt
 
 ```python
 import warnings
+import random
 from pprint import pprint
 import time
 
@@ -33,7 +34,7 @@ from scipy.stats import uniform
 from sklearn.ensemble import IsolationForest
 from sklearn.metrics import (
     roc_auc_score, roc_curve, average_precision_score,
-    classification_report, make_scorer,
+    classification_report,
 )
 from sklearn.model_selection import RandomizedSearchCV, StratifiedKFold, train_test_split
 
@@ -47,6 +48,8 @@ from sklearn_genetic.space import Continuous, Integer
 warnings.filterwarnings("ignore")
 
 RANDOM_STATE = 42
+random.seed(RANDOM_STATE)
+np.random.seed(RANDOM_STATE)
 rng = np.random.default_rng(RANDOM_STATE)
 ```
 
@@ -106,11 +109,11 @@ def outlier_roc_auc(estimator, X, y):
     return roc_auc_score(y, scores)
 
 
-scorer = make_scorer(outlier_roc_auc, needs_proba=False)
+scorer = outlier_roc_auc
 ```
 
 :::tip Why negate `score_samples`?
-`IsolationForest.score_samples` returns more negative values for anomalies. If we pass these directly to `roc_auc_score` with `y=1` for outliers, the discriminator appears to be anti-correlated and AUC comes out below 0.5. Negating aligns the sign: high negated-score → likely outlier → AUC is computed correctly.
+`IsolationForest.score_samples` returns more negative values for anomalies. If we pass these directly to `roc_auc_score` with `y=1` for outliers, the discriminator appears to be anti-correlated and AUC comes out below 0.5. Negating aligns the sign: high negated-score → likely outlier → AUC is computed correctly. The scorer is passed directly so it can call `score_samples` on the fitted estimator.
 :::
 
 ## Helpers

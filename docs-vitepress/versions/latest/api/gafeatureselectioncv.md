@@ -87,7 +87,8 @@ from sklearn.svm import SVC
 from sklearn_genetic import EvolutionConfig, GAFeatureSelectionCV, PopulationConfig, RuntimeConfig
 
 X, y = load_iris(return_X_y=True)
-noise = np.random.uniform(0, 10, size=(X.shape[0], 10))
+rng = np.random.default_rng(42)
+noise = rng.uniform(0, 10, size=(X.shape[0], 10))
 X = np.hstack((X, noise))
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=0)

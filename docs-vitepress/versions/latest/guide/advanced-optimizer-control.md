@@ -39,6 +39,9 @@ from sklearn_genetic import OptimizationConfig
 ## Full Example: Hyperparameter Search
 
 ```python
+import random
+
+import numpy as np
 import pandas as pd
 from sklearn.datasets import load_breast_cancer
 from sklearn.ensemble import RandomForestClassifier
@@ -52,8 +55,12 @@ from sklearn_genetic import (
     PopulationConfig,
     RuntimeConfig,
 )
+from sklearn_genetic.plots import plot_diversity, plot_optimizer_events
 from sklearn_genetic.schedules import ExponentialAdapter, InverseAdapter
 from sklearn_genetic.space import Categorical, Integer
+
+random.seed(42)
+np.random.seed(42)
 
 X, y = load_breast_cancer(return_X_y=True)
 X_train, X_test, y_train, y_test = train_test_split(
@@ -154,6 +161,22 @@ columns = [
 print(history[columns])
 print(search.fit_stats_)
 ```
+
+The same telemetry is easier to reason about visually. `plot_diversity` shows whether the population collapsed or recovered, while `plot_optimizer_events` marks the generations where diversity control, immigrant injection, sharing, or local search changed the search process.
+
+```python
+import matplotlib.pyplot as plt
+
+plot_diversity(search)
+plt.show()
+
+plot_optimizer_events(search)
+plt.show()
+```
+
+![Advanced optimizer diversity](/images/advanced_optimizer_diversity.png)
+
+![Advanced optimizer events](/images/advanced_optimizer_events.png)
 
 **Key telemetry fields:**
 

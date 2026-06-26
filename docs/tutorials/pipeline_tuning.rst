@@ -43,6 +43,9 @@ Setup
 
 .. code:: python3
 
+    import random
+
+    import numpy as np
     from sklearn.datasets import load_diabetes
     from sklearn.ensemble import GradientBoostingRegressor
     from sklearn.metrics import r2_score, mean_squared_error
@@ -52,6 +55,9 @@ Setup
 
     from sklearn_genetic import EvolutionConfig, GASearchCV, PopulationConfig, RuntimeConfig
     from sklearn_genetic.space import Categorical, Continuous, Integer
+
+    random.seed(42)
+    np.random.seed(42)
 
     X, y = load_diabetes(return_X_y=True)
     X_train, X_test, y_train, y_test = train_test_split(
@@ -152,6 +158,12 @@ After fitting, the search object behaves like a fitted pipeline. Call
     print(f"Baseline → R²: {baseline_r2:.4f}  RMSE: {baseline_rmse:.2f}")
     print(f"GA tuned → R²: {ga_r2:.4f}  RMSE: {ga_rmse:.2f}")
 
+The holdout comparison should be the first visual check: the GA search is only
+valuable if it improves metrics outside the CV folds.
+
+.. image:: ../images/pipeline_regression_metric_comparison.png
+   :alt: Pipeline regression holdout metric comparison
+
 Inspect Evaluation Cost
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -169,7 +181,12 @@ Visualize the Search
 .. code:: python3
 
     import matplotlib.pyplot as plt
-    from sklearn_genetic.plots import plot_fitness_evolution, plot_search_space
+    from sklearn_genetic.plots import (
+        plot_cv_scores,
+        plot_fitness_evolution,
+        plot_score_landscape,
+        plot_search_space,
+    )
 
     plot_fitness_evolution(search)
     plt.show()
@@ -180,6 +197,36 @@ Visualize the Search
         features=["regressor__learning_rate", "regressor__n_estimators"],
     )
     plt.show()
+
+The landscape plot makes the interaction between ``learning_rate`` and
+``max_depth`` easier to read than a raw candidate table.
+
+.. code:: python3
+
+    plot_score_landscape(
+        search,
+        x="regressor__learning_rate",
+        y="regressor__max_depth",
+    )
+    plt.show()
+
+.. image:: ../images/pipeline_regression_score_landscape.png
+   :alt: Pipeline regression score landscape
+
+Use fold-level CV scores when the top candidates are close and you need to
+separate robust solutions from lucky splits.
+
+.. code:: python3
+
+    plot_cv_scores(
+        search,
+        top_k=5,
+        label_params=["regressor__learning_rate", "regressor__max_depth"],
+    )
+    plt.show()
+
+.. image:: ../images/pipeline_regression_cv_scores.png
+   :alt: Pipeline regression CV score stability
 
 Common Pitfalls
 ---------------
