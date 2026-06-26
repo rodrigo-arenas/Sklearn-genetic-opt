@@ -91,9 +91,9 @@ Rendered output from the documentation run:
 
 <!-- docs-example:basic-usage-hyperparameter-output:start -->
 ```text
-Best CV accuracy: 0.9252
-Holdout accuracy: 0.9293
-Best parameters: { activation: logistic, alpha: 0.0003, batch_size: 169, tol: 0.0069 }
+Best CV accuracy: 0.9327
+Holdout accuracy: 0.9158
+Best parameters: { activation: logistic, alpha: 0.0000, batch_size: 214, tol: 0.0046 }
 ```
 <!-- docs-example:basic-usage-hyperparameter-output:end -->
 
@@ -127,11 +127,11 @@ The last generations from the rendered docs example:
 <!-- docs-example:basic-usage-history-output:start -->
 | Generation | Best CV accuracy | Diversity | Unique ratio | Stagnation |
 | --- | --- | --- | --- | --- |
-| 1 | 0.9086 | 0.4000 | 0.8333 | 1 |
-| 2 | 0.9086 | 0.5500 | 1.0000 | 2 |
-| 3 | 0.9210 | 0.3000 | 0.6667 | 0 |
-| 4 | 0.9210 | 0.3500 | 0.6667 | 1 |
-| 5 | 0.9210 | 0.3000 | 1.0000 | 2 |
+| 1 | 0.9244 | 0.4500 | 0.8333 | 0 |
+| 2 | 0.9252 | 0.1500 | 0.5000 | 0 |
+| 3 | 0.9252 | 0.2000 | 0.5000 | 1 |
+| 4 | 0.9327 | 0.2500 | 0.5000 | 0 |
+| 5 | 0.9327 | 0.5000 | 0.8333 | 1 |
 <!-- docs-example:basic-usage-history-output:end -->
 
 Check evaluation cost via `fit_stats_`:
@@ -150,9 +150,9 @@ The generated run records the concrete evaluation cost:
 <!-- docs-example:basic-usage-fit-stats-output:start -->
 ```text
 evaluated_candidates: 66
-unique_candidates: 66
-cache_hits: 0
-random_immigrants: 0
+unique_candidates: 65
+cache_hits: 1
+random_immigrants: 4
 skipped_invalid_candidates: 0
 ```
 <!-- docs-example:basic-usage-fit-stats-output:end -->
