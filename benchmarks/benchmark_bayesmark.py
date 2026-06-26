@@ -23,12 +23,20 @@ script still runs and simply skips the Optuna column::
 
     pip install sklearn-genetic-opt[benchmark]
 
+There are two suites:
+
+* ``--suite bayesmark`` (default): the standard, mostly numeric spaces above.
+* ``--suite mixed``: categorical/conditional spaces (kernel choice, ``max_depth``
+  of None vs an integer, on/off switches) that are closer to real tuning and
+  play to the strengths of population-based evolutionary search.
+
 Run from the repository root, for example::
 
     python benchmarks/benchmark_bayesmark.py --quick
     python benchmarks/benchmark_bayesmark.py --datasets wine iris --models svm knn
     python benchmarks/benchmark_bayesmark.py --budget 80 --seeds 5 \
         --optimizers gasearch optuna randomized --output-json benchmarks/bayesmark.json
+    python benchmarks/benchmark_bayesmark.py --suite mixed --budget 96 --seeds 3
 """
 
 from __future__ import annotations
@@ -57,6 +65,8 @@ from sklearn.datasets import (
 from sklearn.ensemble import (
     AdaBoostClassifier,
     AdaBoostRegressor,
+    HistGradientBoostingClassifier,
+    HistGradientBoostingRegressor,
     RandomForestClassifier,
     RandomForestRegressor,
 )
@@ -115,11 +125,13 @@ DATASETS: dict[str, Dataset] = {
 
 # ---------------------------------------------------------------------------
 # Search spaces (verbatim from bayesmark API_CONFIG)
-# Each entry: (param_name, type, space, (low, high))
-#   type  in {"real", "int"}
-#   space in {"log", "linear", "logit"}  (logit searched on its natural range)
+# Each entry: (param_name, type, space, payload)
+#   type  in {"real", "int", "cat"}
+#   space in {"log", "linear", "logit", "choice"}
+#   payload is (low, high) for real/int, or a list of choices for cat.
+# (logit is searched on its natural range; choice covers categorical params.)
 # ---------------------------------------------------------------------------
-Spec = tuple[str, str, str, tuple[float, float]]
+Spec = tuple[str, str, str, Any]
 
 
 @dataclass(frozen=True)
@@ -242,6 +254,79 @@ REGRESSION_SPACE_OVERRIDES: dict[str, list[Spec]] = {
 
 
 # ---------------------------------------------------------------------------
+# Mixed / conditional search spaces (showcase suite)
+#
+# Bayesmark's spaces are almost entirely numeric, which is the home turf of
+# Bayesian optimizers. Real ML tuning is often *mixed*: categorical switches that
+# turn whole regions of the space on or off (a kernel choice that makes `degree`
+# relevant only for `poly`; a `max_depth` of None vs a small integer). These
+# spaces are rugged and partially conditional — exactly where a population-based
+# search with categorical-aware crossover tends to pay off, and where random
+# search wastes budget on irrelevant combinations.
+# ---------------------------------------------------------------------------
+MIXED_MODELS: dict[str, Model] = {
+    "svc_mixed": Model(
+        name="svc_mixed",
+        needs_scaling=True,
+        space=[
+            ("kernel", "cat", "choice", ["linear", "rbf", "poly", "sigmoid"]),
+            ("C", "real", "log", (1e-3, 1e3)),
+            ("gamma", "real", "log", (1e-5, 1e1)),
+            ("degree", "int", "linear", (2, 5)),
+            ("coef0", "real", "linear", (-1.0, 1.0)),
+            ("class_weight", "cat", "choice", [None, "balanced"]),
+            ("shrinking", "cat", "choice", [True, False]),
+        ],
+        classifier=lambda seed: SVC(random_state=seed),
+        regressor=None,
+    ),
+    "histgb_mixed": Model(
+        name="histgb_mixed",
+        needs_scaling=False,
+        space=[
+            ("learning_rate", "real", "log", (1e-3, 1.0)),
+            ("max_iter", "int", "linear", (50, 300)),
+            ("max_leaf_nodes", "int", "linear", (7, 63)),
+            ("max_depth", "cat", "choice", [None, 3, 5, 7, 9]),
+            ("min_samples_leaf", "int", "linear", (5, 50)),
+            ("l2_regularization", "real", "log", (1e-6, 1e1)),
+            ("max_features", "real", "linear", (0.3, 1.0)),
+            ("interaction_cst", "cat", "choice", [None, "no_interactions"]),
+        ],
+        classifier=lambda seed: HistGradientBoostingClassifier(
+            early_stopping=False, random_state=seed
+        ),
+        regressor=lambda seed: HistGradientBoostingRegressor(
+            early_stopping=False, random_state=seed
+        ),
+    ),
+}
+
+
+# Registries the driver can choose between with --suite.
+SUITES: dict[str, dict[str, Any]] = {
+    "bayesmark": {
+        "models": MODELS,
+        "default_datasets": ["iris", "wine", "breast", "digits", "diabetes"],
+        "default_models": ["knn", "svm", "dt", "rf", "ada"],
+        "quick_datasets": ["wine", "breast"],
+        "quick_models": ["svm", "knn", "rf"],
+        "default_budget": 80,
+        "quick_budget": 24,
+    },
+    "mixed": {
+        "models": MIXED_MODELS,
+        "default_datasets": ["wine", "breast", "diabetes"],
+        "default_models": ["svc_mixed", "histgb_mixed"],
+        "quick_datasets": ["wine"],
+        "quick_models": ["svc_mixed"],
+        "default_budget": 96,
+        "quick_budget": 24,
+    },
+}
+
+
+# ---------------------------------------------------------------------------
 # Search-space converters (one internal spec -> each optimizer's format)
 # ---------------------------------------------------------------------------
 def is_integer_param(spec: Spec) -> bool:
@@ -250,39 +335,55 @@ def is_integer_param(spec: Spec) -> bool:
 
 def to_sklearn_genetic_space(specs: list[Spec], prefix: str) -> dict[str, Any]:
     grid: dict[str, Any] = {}
-    for name, kind, space, (low, high) in specs:
+    for name, kind, space, payload in specs:
         key = f"{prefix}{name}"
-        if kind == "int":
+        if kind == "cat":
+            grid[key] = Categorical(list(payload))
+        elif kind == "int":
+            low, high = payload
             grid[key] = Integer(int(low), int(high))
         elif space == "log":
+            low, high = payload
             grid[key] = Continuous(low, high, distribution="log-uniform")
         else:  # linear or logit -> uniform on the natural range
+            low, high = payload
             grid[key] = Continuous(low, high, distribution="uniform")
     return grid
 
 
 def to_scipy_distributions(specs: list[Spec], prefix: str) -> dict[str, Any]:
     distributions: dict[str, Any] = {}
-    for name, kind, space, (low, high) in specs:
+    for name, kind, space, payload in specs:
         key = f"{prefix}{name}"
-        if kind == "int":
+        if kind == "cat":
+            # RandomizedSearchCV samples a plain list of choices uniformly.
+            distributions[key] = list(payload)
+        elif kind == "int":
+            low, high = payload
             distributions[key] = randint(int(low), int(high) + 1)
         elif space == "log":
+            low, high = payload
             distributions[key] = loguniform(low, high)
         else:
+            low, high = payload
             distributions[key] = uniform(low, high - low)
     return distributions
 
 
 def suggest_with_optuna(trial: "optuna.Trial", specs: list[Spec], prefix: str) -> dict[str, Any]:
     params: dict[str, Any] = {}
-    for name, kind, space, (low, high) in specs:
+    for name, kind, space, payload in specs:
         key = f"{prefix}{name}"
-        if kind == "int":
+        if kind == "cat":
+            params[key] = trial.suggest_categorical(name, list(payload))
+        elif kind == "int":
+            low, high = payload
             params[key] = trial.suggest_int(name, int(low), int(high))
         elif space == "log":
+            low, high = payload
             params[key] = trial.suggest_float(name, low, high, log=True)
         else:
+            low, high = payload
             params[key] = trial.suggest_float(name, low, high)
     return params
 
@@ -505,10 +606,21 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument(
+        "--suite",
+        default="bayesmark",
+        choices=list(SUITES),
+        help="Benchmark suite: 'bayesmark' (standard numeric spaces) or "
+        "'mixed' (categorical/conditional spaces that play to evolutionary search).",
+    )
+    parser.add_argument(
         "--datasets", nargs="+", default=None, choices=list(DATASETS), help="Datasets to run."
     )
     parser.add_argument(
-        "--models", nargs="+", default=None, choices=list(MODELS), help="Models to tune."
+        "--models",
+        nargs="+",
+        default=None,
+        choices=sorted(set(MODELS) | set(MIXED_MODELS)),
+        help="Models to tune (must belong to the chosen --suite).",
     )
     parser.add_argument(
         "--optimizers",
@@ -536,20 +648,30 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 
 def resolve_matrix(args: argparse.Namespace) -> tuple[list[str], list[str], int, int]:
+    suite = SUITES[args.suite]
     if args.quick:
-        datasets = args.datasets or ["wine", "breast"]
-        models = args.models or ["svm", "knn", "rf"]
-        budget = args.budget if args.budget != 80 else 24
+        datasets = args.datasets or suite["quick_datasets"]
+        models = args.models or suite["quick_models"]
+        budget = args.budget if args.budget != 80 else suite["quick_budget"]
         seeds = args.seeds if args.seeds != 3 else 2
         return datasets, models, budget, seeds
-    datasets = args.datasets or ["iris", "wine", "breast", "digits", "diabetes"]
-    models = args.models or ["knn", "svm", "dt", "rf", "ada"]
-    return datasets, models, args.budget, args.seeds
+    datasets = args.datasets or suite["default_datasets"]
+    models = args.models or suite["default_models"]
+    budget = args.budget if args.budget != 80 else suite["default_budget"]
+    return datasets, models, budget, args.seeds
 
 
 def main(argv: list[str] | None = None) -> None:
     args = parse_args(argv)
     dataset_names, model_names, budget, seeds = resolve_matrix(args)
+    models = SUITES[args.suite]["models"]
+
+    unknown = [name for name in model_names if name not in models]
+    if unknown:
+        raise SystemExit(
+            f"Models {unknown} are not part of the '{args.suite}' suite. "
+            f"Available: {sorted(models)}"
+        )
 
     optimizers = list(args.optimizers)
     if "optuna" in optimizers and not HAS_OPTUNA:
@@ -559,7 +681,7 @@ def main(argv: list[str] | None = None) -> None:
         optimizers = [name for name in optimizers if name != "optuna"]
 
     print(
-        f"Bayesmark-style benchmark | datasets={dataset_names} models={model_names} "
+        f"Benchmark suite={args.suite} | datasets={dataset_names} models={model_names} "
         f"optimizers={optimizers} budget={budget} seeds={seeds} cv={args.cv_splits}\n"
     )
 
@@ -568,7 +690,7 @@ def main(argv: list[str] | None = None) -> None:
         dataset = DATASETS[dataset_name]
         X, y = dataset.loader()
         for model_name in model_names:
-            task = build_task(dataset, MODELS[model_name])
+            task = build_task(dataset, models[model_name])
             if task is None:
                 continue
             report = TaskReport(dataset_name, model_name, dataset.task, task.scoring)
@@ -601,6 +723,7 @@ def main(argv: list[str] | None = None) -> None:
     if args.output_json:
         payload = {
             "config": {
+                "suite": args.suite,
                 "budget": budget,
                 "seeds": seeds,
                 "cv_splits": args.cv_splits,

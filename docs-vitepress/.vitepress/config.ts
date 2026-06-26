@@ -18,6 +18,7 @@ function versionSidebar(versionPrefix: string) {
     ? [
         {
           text: 'Benchmarks',
+          collapsed: false,
           items: [
             { text: 'Bayesmark Comparison', link: `${versionPrefix}/benchmarks/` },
           ],
@@ -28,6 +29,7 @@ function versionSidebar(versionPrefix: string) {
   return [
     {
       text: 'Getting Started',
+      collapsed: false,
       items: [
         { text: 'Introduction', link: `${versionPrefix}/` },
         { text: 'When to Use', link: `${versionPrefix}/guide/when-to-use` },
@@ -37,6 +39,7 @@ function versionSidebar(versionPrefix: string) {
     },
     {
       text: 'User Guide',
+      collapsed: false,
       items: [
         { text: 'Understanding Cross-Validation', link: `${versionPrefix}/guide/understand-cv` },
         { text: 'Pipeline Tuning', link: `${versionPrefix}/guide/pipeline-tuning` },
@@ -54,6 +57,7 @@ function versionSidebar(versionPrefix: string) {
     },
     {
       text: 'Tutorials',
+      collapsed: false,
       items: [
         { text: 'Overview',                        link: `${versionPrefix}/tutorials/` },
         { text: 'Tune XGBoost',                    link: `${versionPrefix}/tutorials/tune-xgboost` },
@@ -65,21 +69,8 @@ function versionSidebar(versionPrefix: string) {
       ],
     },
     {
-      text: 'API Reference',
-      items: [
-        { text: 'GASearchCV', link: `${versionPrefix}/api/gasearchcv` },
-        { text: 'GAFeatureSelectionCV', link: `${versionPrefix}/api/gafeatureselectioncv` },
-        { text: 'Config Objects', link: `${versionPrefix}/api/config` },
-        { text: 'Callbacks', link: `${versionPrefix}/api/callbacks` },
-        { text: 'Schedules', link: `${versionPrefix}/api/schedules` },
-        { text: 'Plots', link: `${versionPrefix}/api/plots` },
-        { text: 'MLflow', link: `${versionPrefix}/api/mlflow` },
-        { text: 'Search Space', link: `${versionPrefix}/api/space` },
-        { text: 'Algorithms', link: `${versionPrefix}/api/algorithms` },
-      ],
-    },
-    {
       text: 'Examples',
+      collapsed: false,
       items: [
         { text: 'Overview', link: `${versionPrefix}/examples/` },
         { text: 'Comparing Search Methods', link: `${versionPrefix}/examples/sklearn-comparison` },
@@ -92,9 +83,25 @@ function versionSidebar(versionPrefix: string) {
         { text: 'Plotting Gallery', link: `${versionPrefix}/examples/plotting-gallery` },
       ],
     },
+    {
+      text: 'API Reference',
+      collapsed: false,
+      items: [
+        { text: 'GASearchCV', link: `${versionPrefix}/api/gasearchcv` },
+        { text: 'GAFeatureSelectionCV', link: `${versionPrefix}/api/gafeatureselectioncv` },
+        { text: 'Config Objects', link: `${versionPrefix}/api/config` },
+        { text: 'Callbacks', link: `${versionPrefix}/api/callbacks` },
+        { text: 'Schedules', link: `${versionPrefix}/api/schedules` },
+        { text: 'Plots', link: `${versionPrefix}/api/plots` },
+        { text: 'MLflow', link: `${versionPrefix}/api/mlflow` },
+        { text: 'Search Space', link: `${versionPrefix}/api/space` },
+        { text: 'Algorithms', link: `${versionPrefix}/api/algorithms` },
+      ],
+    },
     ...benchmarksSection,
     {
       text: 'Release Notes',
+      collapsed: false,
       items: [
         { text: 'Changelog', link: `${versionPrefix}/release-notes` },
       ],
