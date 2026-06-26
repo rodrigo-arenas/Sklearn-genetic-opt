@@ -12,7 +12,8 @@ const gaHead: HeadConfig[] = GA_TAG
 
 // Sidebar shared across versions — paths are relative to the version root
 function versionSidebar(versionPrefix: string) {
-  // The Benchmarks section is only published for the in-development docs.
+  // These sections and items only appear in the in-development (latest) docs.
+  // New pages are only published in versions/latest/ until the next stable release.
   const isLatest = versionPrefix.endsWith('/latest')
   const benchmarksSection = isLatest
     ? [
@@ -25,6 +26,49 @@ function versionSidebar(versionPrefix: string) {
         },
       ]
     : []
+  const comparisonsSection = isLatest
+    ? [
+        {
+          text: 'Comparisons',
+          collapsed: false,
+          items: [
+            { text: 'Overview', link: `${versionPrefix}/comparisons/` },
+            {
+              text: 'Grid vs Random vs Bayesian vs Genetic',
+              link: `${versionPrefix}/comparisons/grid-search-vs-genetic-algorithms`,
+            },
+            {
+              text: 'Optuna vs sklearn-genetic-opt',
+              link: `${versionPrefix}/comparisons/optuna-vs-sklearn-genetic-opt`,
+            },
+          ],
+        },
+      ]
+    : []
+
+  // New Getting Started items — only available in latest/
+  const latestGettingStarted = isLatest
+    ? [{ text: 'How Hyperparameter Optimization Works', link: `${versionPrefix}/guide/how-hyperparameter-optimization-works` }]
+    : []
+
+  // New User Guide items — only available in latest/
+  const latestGuideItems = isLatest
+    ? [
+        { text: 'Choosing the Right Search Space',        link: `${versionPrefix}/guide/choosing-search-spaces` },
+        { text: 'Common Hyperparameter Tuning Mistakes',  link: `${versionPrefix}/guide/common-mistakes` },
+        { text: 'Feature Selection Methods Compared',     link: `${versionPrefix}/guide/feature-selection-guide` },
+      ]
+    : []
+
+  // New Tutorial items — only available in latest/
+  const latestTutorialItems = isLatest
+    ? [
+        { text: 'Random Forest Hyperparameter Tuning',          link: `${versionPrefix}/tutorials/tune-random-forest` },
+        { text: 'Gradient Boosting Hyperparameter Tuning',      link: `${versionPrefix}/tutorials/tune-gradient-boosting` },
+        { text: 'Logistic Regression Hyperparameter Tuning',    link: `${versionPrefix}/tutorials/tune-logistic-regression` },
+        { text: 'SVM Hyperparameter Tuning (C, kernel, gamma)', link: `${versionPrefix}/tutorials/tune-svm` },
+      ]
+    : []
 
   return [
     {
@@ -32,8 +76,9 @@ function versionSidebar(versionPrefix: string) {
       collapsed: false,
       items: [
         { text: 'Introduction', link: `${versionPrefix}/` },
-        { text: 'When to Use', link: `${versionPrefix}/guide/when-to-use` },
-        { text: 'Basic Usage', link: `${versionPrefix}/guide/basic-usage` },
+        ...latestGettingStarted,
+        { text: 'When to Use Genetic Algorithm Search', link: `${versionPrefix}/guide/when-to-use` },
+        { text: 'Getting Started with GASearchCV', link: `${versionPrefix}/guide/basic-usage` },
         { text: 'Installation', link: `${versionPrefix}/guide/installation` },
       ],
     },
@@ -41,16 +86,17 @@ function versionSidebar(versionPrefix: string) {
       text: 'User Guide',
       collapsed: false,
       items: [
-        { text: 'Understanding Cross-Validation', link: `${versionPrefix}/guide/understand-cv` },
-        { text: 'Pipeline Tuning', link: `${versionPrefix}/guide/pipeline-tuning` },
+        ...latestGuideItems,
+        { text: 'Cross-Validation in Hyperparameter Search', link: `${versionPrefix}/guide/understand-cv` },
+        { text: 'Tuning scikit-learn Pipelines', link: `${versionPrefix}/guide/pipeline-tuning` },
         { text: 'Multi-Metric Optimization', link: `${versionPrefix}/guide/multi-metric` },
-        { text: 'Callbacks', link: `${versionPrefix}/guide/callbacks` },
-        { text: 'Custom Callbacks', link: `${versionPrefix}/guide/custom-callback` },
-        { text: 'Adaptive Schedules', link: `${versionPrefix}/guide/adapters` },
+        { text: 'Early Stopping with Callbacks', link: `${versionPrefix}/guide/callbacks` },
+        { text: 'Writing Custom Callbacks', link: `${versionPrefix}/guide/custom-callback` },
+        { text: 'Adaptive Crossover & Mutation Schedules', link: `${versionPrefix}/guide/adapters` },
         { text: 'Advanced Optimizer Control', link: `${versionPrefix}/guide/advanced-optimizer-control` },
         { text: 'MLflow Integration', link: `${versionPrefix}/guide/mlflow` },
-        { text: 'Outlier Detection', link: `${versionPrefix}/guide/outliers` },
-        { text: 'Reproducibility', link: `${versionPrefix}/guide/reproducibility` },
+        { text: 'Tuning Outlier Detection Models', link: `${versionPrefix}/guide/outliers` },
+        { text: 'Reproducibility & Checkpointing', link: `${versionPrefix}/guide/reproducibility` },
         { text: 'Troubleshooting', link: `${versionPrefix}/guide/troubleshooting` },
         { text: 'Migrating from 0.12', link: `${versionPrefix}/guide/migrating-from-0.12` },
       ],
@@ -59,28 +105,29 @@ function versionSidebar(versionPrefix: string) {
       text: 'Tutorials',
       collapsed: false,
       items: [
-        { text: 'Overview',                        link: `${versionPrefix}/tutorials/` },
-        { text: 'Tune XGBoost',                    link: `${versionPrefix}/tutorials/tune-xgboost` },
-        { text: 'Tune LightGBM',                   link: `${versionPrefix}/tutorials/tune-lightgbm` },
-        { text: 'Tune CatBoost',                   link: `${versionPrefix}/tutorials/tune-catboost` },
-        { text: 'Comprehensive Feature Selection',  link: `${versionPrefix}/tutorials/feature-selection` },
-        { text: 'Imbalanced Classification',        link: `${versionPrefix}/tutorials/imbalanced-classification` },
-        { text: 'Isolation Forest',                 link: `${versionPrefix}/tutorials/isolation-forest` },
+        { text: 'Overview',                                       link: `${versionPrefix}/tutorials/` },
+        ...latestTutorialItems,
+        { text: 'XGBoost Hyperparameter Tuning',                  link: `${versionPrefix}/tutorials/tune-xgboost` },
+        { text: 'LightGBM Hyperparameter Tuning',                 link: `${versionPrefix}/tutorials/tune-lightgbm` },
+        { text: 'CatBoost Hyperparameter Tuning',                 link: `${versionPrefix}/tutorials/tune-catboost` },
+        { text: 'Feature Selection with Genetic Algorithms',       link: `${versionPrefix}/tutorials/feature-selection` },
+        { text: 'Hyperparameter Tuning for Imbalanced Datasets',  link: `${versionPrefix}/tutorials/imbalanced-classification` },
+        { text: 'Isolation Forest Hyperparameter Tuning',         link: `${versionPrefix}/tutorials/isolation-forest` },
       ],
     },
     {
       text: 'Examples',
       collapsed: false,
       items: [
-        { text: 'Overview', link: `${versionPrefix}/examples/` },
-        { text: 'Comparing Search Methods', link: `${versionPrefix}/examples/sklearn-comparison` },
-        { text: 'Advanced Random Forest', link: `${versionPrefix}/examples/advanced-rf` },
-        { text: 'Pipeline Regression', link: `${versionPrefix}/examples/pipeline-regression` },
-        { text: 'Feature Selection', link: `${versionPrefix}/examples/feature-selection` },
-        { text: 'Multi-Metric Search', link: `${versionPrefix}/examples/multi-metric` },
-        { text: 'MLflow Tracking', link: `${versionPrefix}/examples/mlflow-tracking` },
-        { text: 'Checkpointing', link: `${versionPrefix}/examples/checkpointing` },
-        { text: 'Plotting Gallery', link: `${versionPrefix}/examples/plotting-gallery` },
+        { text: 'Overview',                               link: `${versionPrefix}/examples/` },
+        { text: 'Grid Search vs Genetic Algorithms',      link: `${versionPrefix}/examples/sklearn-comparison` },
+        { text: 'Random Forest: All Advanced Features',   link: `${versionPrefix}/examples/advanced-rf` },
+        { text: 'Pipeline Regression',                    link: `${versionPrefix}/examples/pipeline-regression` },
+        { text: 'Feature Selection',                      link: `${versionPrefix}/examples/feature-selection` },
+        { text: 'Multi-Metric Search',                    link: `${versionPrefix}/examples/multi-metric` },
+        { text: 'MLflow Experiment Tracking',             link: `${versionPrefix}/examples/mlflow-tracking` },
+        { text: 'Checkpointing & Resume',                 link: `${versionPrefix}/examples/checkpointing` },
+        { text: 'Plotting Gallery',                       link: `${versionPrefix}/examples/plotting-gallery` },
       ],
     },
     {
@@ -99,6 +146,7 @@ function versionSidebar(versionPrefix: string) {
       ],
     },
     ...benchmarksSection,
+    ...comparisonsSection,
     {
       text: 'Release Notes',
       collapsed: false,

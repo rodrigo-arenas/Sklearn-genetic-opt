@@ -1,13 +1,17 @@
 ---
-title: Understanding Cross-Validation
-description: How GASearchCV evaluates candidate hyperparameters and what the generation log columns mean.
+title: Cross-Validation in Genetic Algorithm Hyperparameter Search
+description: How cross-validation interacts with evolutionary search, how to read the generation log, and how to interpret convergence plots.
 ---
 
 :::warning Development version
 You are reading the **latest (dev)** docs. For the stable version, see [stable](/stable/).
 :::
 
-# Understanding Cross-Validation
+**Estimated reading time:** 8 minutes  
+**Difficulty:** Intermediate  
+**Prerequisites:** [Getting Started with GASearchCV](./basic-usage), basic cross-validation knowledge
+
+# Cross-Validation in Genetic Algorithm Hyperparameter Search
 
 This tutorial explains how `GASearchCV` evaluates candidate hyperparameters and how cross-validation fits into the evolutionary search process.
 
@@ -92,8 +96,10 @@ A healthy search shows the mean and best fitness rising together, then plateauin
 - A noisy scoring metric (high `fitness_std`) can mislead the optimizer. Increase `cv` folds to reduce variance.
 - The `use_cache=True` option in `RuntimeConfig` is strongly recommended — it avoids re-evaluating previously seen configurations.
 
-## Next Steps
+## See Also
 
-- [Pipeline Tuning](./pipeline-tuning) — apply the same workflow inside a scikit-learn `Pipeline`.
-- [Callbacks](./callbacks) — stop the search early when the score plateaus.
-- [Advanced Optimizer Control](./advanced-optimizer-control) — tune the evolutionary operators themselves.
+- [Common Hyperparameter Tuning Mistakes](./common-mistakes) — avoid CV-related mistakes
+- [Early Stopping with Callbacks](./callbacks) — stop search when CV plateaus
+- [Advanced Optimizer Control](./advanced-optimizer-control) — diversity and stagnation telemetry
+- [Reproducibility & Checkpointing](./reproducibility) — seed your CV splitter
+- [API: GASearchCV](../api/gasearchcv) — full parameter reference

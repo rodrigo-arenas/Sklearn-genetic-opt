@@ -1,13 +1,13 @@
 ---
-title: Advanced Optimizer Control
-description: Diversity control, fitness sharing, local search, adaptive schedules, and telemetry for difficult search spaces.
+title: "Advanced Optimizer Control: Diversity, Fitness Sharing, and Local Search"
+description: Control population diversity, enable fitness sharing and local search refinement, and interpret optimizer telemetry to improve genetic algorithm hyperparameter search.
 ---
 
 :::warning Development version
 You are reading the **latest (dev)** docs. For the stable version, see [stable](/stable/).
 :::
 
-# Advanced Optimizer Control
+# Advanced Optimizer Control: Diversity, Fitness Sharing, and Local Search
 
 When default settings produce premature convergence or poor search quality, these controls give you finer-grained command over the evolutionary process. They are **optional** — the defaults are conservative and work well for most searches. Add them one at a time when telemetry shows the optimizer needs them.
 

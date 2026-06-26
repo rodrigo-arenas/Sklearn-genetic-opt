@@ -1,11 +1,15 @@
 ---
-title: Pipeline Tuning
-description: Tune a scikit-learn Pipeline with GASearchCV using the step__param naming convention.
+title: How to Tune an Entire scikit-learn Pipeline with Genetic Algorithms
+description: Tune preprocessing and model hyperparameters together by building a scikit-learn Pipeline and running GASearchCV across the full parameter space.
 ---
 
 :::warning Development version
 You are reading the **latest (dev)** docs. For the stable version, see [stable](/stable/).
 :::
+
+**Estimated reading time:** 8 minutes  
+**Difficulty:** Intermediate  
+**Prerequisites:** [Getting Started with GASearchCV](./basic-usage), basic sklearn Pipeline knowledge
 
 # Pipeline Tuning with GASearchCV
 
@@ -92,8 +96,10 @@ y_pred = search.predict(X_test)
 - Preprocessing parameters (e.g., `scaler__with_std`) are part of the same search space and can be tuned alongside model parameters.
 - For nested pipelines (a pipeline inside a pipeline), the naming chain extends: `outer_step__inner_step__paramname`.
 
-## Next Steps
+## See Also
 
-- [Multi-Metric Optimization](./multi-metric) — track multiple metrics and choose which one to optimize.
-- [Callbacks](./callbacks) — add early stopping and progress reporting.
-- [Troubleshooting](./troubleshooting) — fix common parameter naming errors.
+- [Gradient Boosting Hyperparameter Tuning](../tutorials/tune-gradient-boosting) — pipeline-friendly estimator
+- [MLflow Integration](./mlflow) — track pipeline experiments
+- [Multi-Metric Optimization](./multi-metric) — evaluate pipelines on multiple metrics
+- [Common Hyperparameter Tuning Mistakes](./common-mistakes) — avoid data leakage in pipelines
+- [Examples: Pipeline Regression](../examples/pipeline-regression) — full regression pipeline example
