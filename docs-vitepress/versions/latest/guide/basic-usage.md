@@ -87,6 +87,16 @@ Run the optimization:
 evolved_estimator.fit(X_train, y_train)
 ```
 
+Rendered output from the documentation run:
+
+<!-- docs-example:basic-usage-hyperparameter-output:start -->
+```text
+Best CV accuracy: 0.9252
+Holdout accuracy: 0.9293
+Best parameters: { activation: logistic, alpha: 0.0003, batch_size: 169, tol: 0.0069 }
+```
+<!-- docs-example:basic-usage-hyperparameter-output:end -->
+
 During training you will see a generation-by-generation log. Each row summarizes one generation:
 
 | Column | Meaning |
@@ -112,6 +122,18 @@ print(history[[
 ]])
 ```
 
+The last generations from the rendered docs example:
+
+<!-- docs-example:basic-usage-history-output:start -->
+| Generation | Best CV accuracy | Diversity | Unique ratio | Stagnation |
+| --- | --- | --- | --- | --- |
+| 1 | 0.9086 | 0.4000 | 0.8333 | 1 |
+| 2 | 0.9086 | 0.5500 | 1.0000 | 2 |
+| 3 | 0.9210 | 0.3000 | 0.6667 | 0 |
+| 4 | 0.9210 | 0.3500 | 0.6667 | 1 |
+| 5 | 0.9210 | 0.3000 | 1.0000 | 2 |
+<!-- docs-example:basic-usage-history-output:end -->
+
 Check evaluation cost via `fit_stats_`:
 
 ```python
@@ -122,6 +144,18 @@ print(evolved_estimator.fit_stats_)
 # random_immigrants:    individuals injected when diversity control triggered
 # skipped_invalid_candidates: configs that raised exceptions during fit
 ```
+
+The generated run records the concrete evaluation cost:
+
+<!-- docs-example:basic-usage-fit-stats-output:start -->
+```text
+evaluated_candidates: 66
+unique_candidates: 66
+cache_hits: 0
+random_immigrants: 0
+skipped_invalid_candidates: 0
+```
+<!-- docs-example:basic-usage-fit-stats-output:end -->
 
 After fitting, `GASearchCV` behaves like a fitted scikit-learn estimator:
 
@@ -224,6 +258,22 @@ evolved_estimator = GAFeatureSelectionCV(
 
 evolved_estimator.fit(X_train, y_train)
 ```
+
+Rendered output from the documentation run:
+
+<!-- docs-example:basic-usage-feature-output:start -->
+```text
+Holdout accuracy: 0.9200
+Selected features: 5 of 14
+Selected noise features: 1
+Selected feature names:
+- sepal length (cm)
+- sepal width (cm)
+- petal length (cm)
+- petal width (cm)
+- noise_2
+```
+<!-- docs-example:basic-usage-feature-output:end -->
 
 After fitting, `GAFeatureSelectionCV` behaves like a fitted scikit-learn estimator. Prediction methods use only the selected columns:
 

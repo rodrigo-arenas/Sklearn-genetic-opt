@@ -102,6 +102,8 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -e ".[docs]"
+      - name: Check generated VitePress examples
+        run: python docs-vitepress/scripts/run-python-examples.py --check
       - name: Build docs
         run: sphinx-build -b html docs docs/_build/html
 

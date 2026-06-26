@@ -1,3 +1,4 @@
+import random
 from types import SimpleNamespace
 
 import pytest
@@ -59,6 +60,30 @@ def test_smart_search_population_seeds_warm_start_defaults_and_unique_candidates
     assert [4, "gini"] in population
     assert [2, "entropy"] in population
     assert len({tuple(individual) for individual in population}) >= 3
+
+
+def test_smart_search_population_is_reproducible_with_seeded_random_state():
+    space = Space(
+        {
+            "max_depth": Integer(1, 10),
+            "min_samples_leaf": Integer(1, 5),
+            "criterion": Categorical(["gini", "entropy"]),
+        }
+    )
+    estimator = SimpleNamespace(
+        estimator=DecisionTreeClassifier(max_depth=2, min_samples_leaf=1, criterion="gini"),
+        population_size=6,
+        space=space,
+        warm_start_configs=[],
+    )
+    toolbox = SimpleNamespace(individual=lambda: [1, 1, "gini"])
+
+    random.seed(42)
+    first_population = smart_search_population(estimator, toolbox, list)
+    random.seed(42)
+    second_population = smart_search_population(estimator, toolbox, list)
+
+    assert first_population == second_population
 
 
 def test_random_search_population_preserves_warm_starts_before_random_candidates():
