@@ -9,6 +9,8 @@ from .presets import (
     svc_space,
     xgboost_classifier_space,
     xgboost_regressor_space,
+    list_preset_profiles,
+    list_preset_spaces,
 )
 
 from .callbacks import (
@@ -42,6 +44,8 @@ __all__ = [
     "svc_space",
     "xgboost_classifier_space",
     "xgboost_regressor_space",
+    "list_preset_profiles",
+    "list_preset_spaces",
     "ThresholdStopping",
     "ConsecutiveStopping",
     "DeltaThreshold",

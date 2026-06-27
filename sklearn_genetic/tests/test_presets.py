@@ -125,3 +125,25 @@ def test_presets_reject_unknown_profiles():
     for preset in PRESET_FUNCTIONS:
         with pytest.raises(ValueError, match="profile must be one of"):
             preset(profile="tiny")
+
+
+def test_list_preset_profiles_returns_valid_profiles():
+    from sklearn_genetic import list_preset_profiles
+
+    assert list_preset_profiles() == ["balanced", "fast", "wide"]
+    # Every reported profile is actually accepted by a preset.
+    for profile in list_preset_profiles():
+        random_forest_classifier_space(profile=profile)
+
+
+def test_list_preset_spaces_matches_exported_presets():
+    import sklearn_genetic
+    from sklearn_genetic import list_preset_spaces
+
+    names = list_preset_spaces()
+    assert names == sorted(names)  # stable, alphabetical
+    assert len(names) == len(PRESET_FUNCTIONS)
+    assert "random_forest_classifier_space" in names
+    # Every reported name is importable from the package and callable.
+    for name in names:
+        assert callable(getattr(sklearn_genetic, name))

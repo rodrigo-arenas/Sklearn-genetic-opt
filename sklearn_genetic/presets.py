@@ -9,9 +9,63 @@ __all__ = [
     "svc_space",
     "xgboost_classifier_space",
     "xgboost_regressor_space",
+    "list_preset_profiles",
+    "list_preset_spaces",
 ]
 
 _PROFILES = {"fast", "balanced", "wide"}
+
+# Names of the preset search-space factory functions, captured so the discovery
+# helpers below stay in sync with what is actually exported.
+_PRESET_SPACES = (
+    "hist_gradient_boosting_classifier_space",
+    "hist_gradient_boosting_regressor_space",
+    "logistic_regression_space",
+    "random_forest_classifier_space",
+    "random_forest_regressor_space",
+    "svc_space",
+    "xgboost_classifier_space",
+    "xgboost_regressor_space",
+)
+
+
+def list_preset_profiles():
+    """Return the profile names accepted by every preset space function.
+
+    Returns
+    -------
+    list of str
+        The valid ``profile`` arguments, sorted alphabetically
+        (``["balanced", "fast", "wide"]``).
+
+    Examples
+    --------
+    >>> from sklearn_genetic import list_preset_profiles
+    >>> list_preset_profiles()
+    ['balanced', 'fast', 'wide']
+    """
+    return sorted(_PROFILES)
+
+
+def list_preset_spaces():
+    """Return the names of the available preset search-space functions.
+
+    Each name is importable from :mod:`sklearn_genetic` and is a callable that
+    accepts a ``profile`` (see :func:`list_preset_profiles`) and an optional
+    ``prefix``.
+
+    Returns
+    -------
+    list of str
+        The preset function names, sorted alphabetically.
+
+    Examples
+    --------
+    >>> from sklearn_genetic import list_preset_spaces
+    >>> "random_forest_classifier_space" in list_preset_spaces()
+    True
+    """
+    return sorted(_PRESET_SPACES)
 
 
 def random_forest_classifier_space(profile="balanced", prefix=""):
