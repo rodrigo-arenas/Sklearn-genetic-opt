@@ -1,5 +1,5 @@
 ---
-title: Tuning Outlier Detection Models: IsolationForest and LocalOutlierFactor
+title: "Tuning Outlier Detection Models: IsolationForest and LocalOutlierFactor"
 description: Use GASearchCV to tune IsolationForest and LocalOutlierFactor hyperparameters with a custom scorer, handling the unique challenges of outlier detection.
 ---
 
