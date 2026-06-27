@@ -6,11 +6,8 @@ package:
   version: {{ version }}
 
 source:
-  # Build from the local checkout. The conda-forge feedstock should instead use
-  # the released PyPI sdist, e.g.:
-  #   url: https://pypi.io/packages/source/s/{{ name }}/sklearn_genetic_opt-{{ version }}.tar.gz
-  #   sha256: <sha256 of the sdist>
-  path: ..
+  url: https://pypi.io/packages/source/s/sklearn-genetic-opt/sklearn_genetic_opt-0.13.2.tar.gz
+  sha256: 835632fd3b39817205e21c1fc997de51096cb0f5cec148ce514e9c73dd828f6f
 
 build:
   noarch: python
