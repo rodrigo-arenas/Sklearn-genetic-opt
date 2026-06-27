@@ -1,6 +1,6 @@
 .. -*- mode: rst -*-
 
-|Tests|_ |Codecov|_ |PythonVersion|_ |PyPi|_ |Conda|_ |Docs|_
+|Tests|_ |Codecov|_ |PythonVersion|_ |PyPi|_ |Conda|_ |Docs|_ |GoodFirstIssues|_
 
 .. |Tests| image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/actions/workflows/ci-tests.yml/badge.svg?branch=master
 .. _Tests: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/actions/workflows/ci-tests.yml
@@ -19,6 +19,9 @@
 
 .. |Docs| image:: https://img.shields.io/badge/docs-GitHub%20Pages-blue
 .. _Docs: https://sklearngeneticopt.rodrigo-arenas.com/
+
+.. |GoodFirstIssues| image:: https://img.shields.io/github/issues/rodrigo-arenas/Sklearn-genetic-opt/good%20first%20issue?label=good%20first%20issues&color=7057ff
+.. _GoodFirstIssues: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22
 
 .. |Contributors| image:: https://contributors-img.web.app/image?repo=rodrigo-arenas/sklearn-genetic-opt
 .. _Contributors: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/graphs/contributors
