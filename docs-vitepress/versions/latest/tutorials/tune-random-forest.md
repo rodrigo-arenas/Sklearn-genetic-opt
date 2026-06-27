@@ -261,7 +261,7 @@ fig.tight_layout()
 plt.show()
 ```
 
-![Best and mean cross-validated ROC AUC over generations](/images/tune_rf_fitness.png)
+![Best and mean cross-validated ROC AUC over generations (representative output)](/images/advanced_rf_fitness.png)
 
 A plateau after generation 5–7 is normal and is exactly what `ConsecutiveStopping` detects — there is no point running 15 full generations if the search has already converged.
 
@@ -289,7 +289,7 @@ fig.tight_layout()
 plt.show()
 ```
 
-![Scatter of evaluated candidates over max_depth and n_estimators, colored by CV score](/images/tune_rf_interaction.png)
+![Scatter of evaluated candidates over max_depth and n_estimators, colored by CV score (representative output)](/images/tune_xgboost_interaction.png)
 
 The visualization shows why a genetic algorithm outperforms grid search here: the high-scoring region is a diagonal band, not an axis-aligned rectangle. No grid of depth values × estimator counts would locate that band as efficiently.
 

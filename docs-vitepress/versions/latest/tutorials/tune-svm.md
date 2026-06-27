@@ -269,7 +269,7 @@ fig.tight_layout()
 plt.show()
 ```
 
-![Scatter plot of C vs gamma for all evaluated candidates, colored by CV balanced accuracy](/images/tune_svm_interaction.png)
+![Scatter plot of C vs gamma for all evaluated candidates, colored by CV balanced accuracy (representative output)](/images/plotting_gallery_score_landscape.png)
 
 The plot reveals why hand-tuning `C` and `gamma` independently fails: high scores appear along a diagonal band running from high-gamma/high-C in the lower right to low-gamma/low-C in the upper left. Fixing one parameter and sweeping the other would follow a horizontal or vertical line through this space — missing the optimal band unless you are lucky with the starting point.
 

@@ -264,7 +264,7 @@ fig.tight_layout()
 plt.show()
 ```
 
-![Best and mean cross-validated ROC AUC over generations](/images/tune_histgbm_fitness.png)
+![Best and mean cross-validated ROC AUC over generations (representative output)](/images/tune_lightgbm_fitness.png)
 
 ```python
 # Scatter: learning_rate vs max_iter, colored by CV score
@@ -288,7 +288,7 @@ fig.tight_layout()
 plt.show()
 ```
 
-![Scatter of evaluated candidates over learning_rate and max_iter, colored by CV score](/images/tune_histgbm_interaction.png)
+![Scatter of evaluated candidates over learning_rate and max_iter, colored by CV score (representative output)](/images/tune_lightgbm_interaction.png)
 
 The scatter confirms the core trade-off: high-scoring candidates cluster in the bottom-right — low learning rate, many iterations. Candidates with a high learning rate and few iterations consistently score lower. A grid search would have covered this space exhaustively only by including every combination of 7 learning rates × 5 max_iter values = 35 cells just for these two dimensions, without touching the other four parameters.
 
