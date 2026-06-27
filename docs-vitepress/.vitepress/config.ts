@@ -232,6 +232,7 @@ function versionSidebar(versionPrefix: string) {
         { text: 'Plots', link: `${versionPrefix}/api/plots` },
         { text: 'MLflow', link: `${versionPrefix}/api/mlflow` },
         { text: 'Search Space', link: `${versionPrefix}/api/space` },
+        ...(isLatest ? [{ text: 'Estimator Presets', link: `${versionPrefix}/api/presets` }] : []),
         { text: 'Algorithms', link: `${versionPrefix}/api/algorithms` },
       ],
     },
