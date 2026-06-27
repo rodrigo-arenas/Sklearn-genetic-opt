@@ -154,6 +154,48 @@ def test_check_space_invalid_type_message():
     assert 'param_grid = {"kernel": Categorical([...])}' in message
 
 
+def _warm_start_space():
+    return Space(
+        {
+            "max_depth": Integer(2, 20),
+            "criterion": Categorical(["gini", "entropy"]),
+        }
+    )
+
+
+def test_sample_warm_start_accepts_valid_config():
+    space = _warm_start_space()
+    sampled = space.sample_warm_start({"max_depth": 5, "criterion": "gini"})
+    assert sampled["max_depth"] == 5
+    assert sampled["criterion"] == "gini"
+
+
+def test_sample_warm_start_rejects_unknown_key():
+    """A misspelled hyperparameter name is reported clearly (issue #220)."""
+    space = _warm_start_space()
+    with pytest.raises(ValueError) as excinfo:
+        space.sample_warm_start({"max_depths": 5})  # typo: should be max_depth
+    message = str(excinfo.value)
+    assert "max_depths" in message
+    assert "not in the search space" in message
+    assert "max_depth" in message  # the valid name is suggested
+
+
+def test_sample_warm_start_rejects_value_outside_space():
+    """A value outside its dimension is reported clearly (issue #220)."""
+    space = _warm_start_space()
+    with pytest.raises(ValueError, match="outside its search space"):
+        space.sample_warm_start({"max_depth": 99})
+    with pytest.raises(ValueError, match="outside its search space"):
+        space.sample_warm_start({"criterion": "log_loss"})
+
+
+def test_sample_warm_start_rejects_non_dict_config():
+    space = _warm_start_space()
+    with pytest.raises(ValueError, match="must be a dict"):
+        space.sample_warm_start([("max_depth", 5)])
+
+
 @pytest.mark.parametrize(
     "data_object, parameters, message",
     [

@@ -232,6 +232,24 @@ def check_space(param_grid: dict = None):
             )
 
 
+def value_in_dimension(dimension, value) -> bool:
+    """Return ``True`` if ``value`` is a valid sample for ``dimension``.
+
+    Used both for population initialization and for validating warm-start
+    configurations against the search space.
+    """
+    if isinstance(dimension, Integer):
+        return isinstance(value, int) and dimension.lower <= value <= dimension.upper
+
+    if isinstance(dimension, Continuous):
+        return isinstance(value, (int, float)) and dimension.lower <= value <= dimension.upper
+
+    if isinstance(dimension, Categorical):
+        return value in dimension.choices
+
+    return False
+
+
 class Space(object):
     """Search space for all the models hyperparameters"""
 
@@ -262,7 +280,16 @@ class Space(object):
         Returns
         -------
         A dictionary containing sampled values for each hyperparameter.
+
+        Raises
+        ------
+        ValueError
+            If ``warm_start_values`` is not a dict, contains a hyperparameter
+            name that is not in the search space (e.g. a misspelled key), or
+            assigns a value that falls outside its dimension.
         """
+        self._validate_warm_start_config(warm_start_values)
+
         sampled_params = {}
         for param, dimension in self.param_grid.items():
             if param in warm_start_values:
@@ -270,6 +297,32 @@ class Space(object):
             else:
                 sampled_params[param] = dimension.sample()
         return sampled_params
+
+    def _validate_warm_start_config(self, warm_start_values):
+        """Validate a single warm-start config against the search space."""
+        if not isinstance(warm_start_values, dict):
+            raise ValueError(
+                "Each warm_start_configs entry must be a dict mapping "
+                "hyperparameter names to values, got "
+                f"{type(warm_start_values).__name__} instead."
+            )
+
+        unknown = [name for name in warm_start_values if name not in self.param_grid]
+        if unknown:
+            raise ValueError(
+                f"warm_start_configs contains unknown hyperparameter(s) "
+                f"{sorted(unknown)} that are not in the search space. Valid "
+                f"names are {sorted(self.param_grid)}. (Check for typos, e.g. "
+                f"'max_depths' instead of 'max_depth'.)"
+            )
+
+        for name, value in warm_start_values.items():
+            dimension = self.param_grid[name]
+            if not value_in_dimension(dimension, value):
+                raise ValueError(
+                    f"warm_start_configs value {value!r} for '{name}' is "
+                    f"outside its search space {dimension!r}."
+                )
 
     @property
     def dimensions(self):

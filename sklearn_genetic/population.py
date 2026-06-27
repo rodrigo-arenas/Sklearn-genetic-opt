@@ -4,7 +4,7 @@ import numpy as np
 from scipy.stats import qmc
 from sklearn.utils import check_random_state
 
-from .space import Categorical, Continuous, Integer
+from .space import Categorical, Continuous, Integer, value_in_dimension
 
 
 def validate_population_initializer(population_initializer):
@@ -17,16 +17,9 @@ def validate_population_initializer(population_initializer):
 
 
 def _is_dimension_value_valid(dimension, value):
-    if isinstance(dimension, Integer):
-        return isinstance(value, int) and dimension.lower <= value <= dimension.upper
-
-    if isinstance(dimension, Continuous):
-        return isinstance(value, (int, float)) and dimension.lower <= value <= dimension.upper
-
-    if isinstance(dimension, Categorical):
-        return value in dimension.choices
-
-    return False
+    # Single source of truth lives in space.value_in_dimension so warm-start
+    # validation and population initialization stay in sync.
+    return value_in_dimension(dimension, value)
 
 
 def _default_estimator_params(estimator, space):

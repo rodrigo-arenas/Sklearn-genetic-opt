@@ -100,6 +100,20 @@ def test_random_search_population_preserves_warm_starts_before_random_candidates
     assert population == [[4], [1], [1]]
 
 
+def test_random_search_population_rejects_invalid_warm_start_config():
+    """An invalid warm-start config surfaces a clear error at init time (#220)."""
+    space = Space({"max_depth": Integer(1, 4)})
+    estimator = SimpleNamespace(
+        population_size=3,
+        space=space,
+        warm_start_configs=[{"max_depths": 4}],  # typo
+    )
+    toolbox = SimpleNamespace(population=lambda n: [[1] for _ in range(n)])
+
+    with pytest.raises(ValueError, match="not in the search space"):
+        random_search_population(estimator, toolbox, list)
+
+
 def test_feature_population_initializer_delegates_random_and_smart_modes():
     smart_estimator = SimpleNamespace(
         population_initializer="smart",
