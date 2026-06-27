@@ -8,6 +8,28 @@ from ..base import BaseDimension
 
 
 @pytest.mark.parametrize(
+    "space_object, expected_repr",
+    [
+        (
+            Continuous(0.01, 1.0, distribution="log-uniform"),
+            "Continuous(lower=0.01, upper=1.0, distribution='log-uniform')",
+        ),
+        (Integer(10, 200), "Integer(lower=10, upper=200, distribution='uniform')"),
+        (
+            Categorical(["rbf", "linear", "poly"]),
+            "Categorical(choices=['rbf', 'linear', 'poly'])",
+        ),
+        (
+            Categorical(["a", "b"], priors=[0.8, 0.2]),
+            "Categorical(choices=['a', 'b'], priors=[0.8, 0.2])",
+        ),
+    ],
+)
+def test_space_repr(space_object, expected_repr):
+    assert repr(space_object) == expected_repr
+
+
+@pytest.mark.parametrize(
     "data_object, parameters",
     [
         (Continuous, {"lower": 0.01, "upper": 0.5, "distribution": "log-uniform"}),
