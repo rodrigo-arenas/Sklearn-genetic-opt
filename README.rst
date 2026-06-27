@@ -11,8 +11,8 @@
 .. |PythonVersion| image:: https://img.shields.io/badge/python-3.12%20%7C%203.13%20%7C%203.14-blue
 .. _PythonVersion: https://www.python.org/downloads/
 
-.. |PyPi| image:: https://badge.fury.io/py/sklearn-genetic-opt.svg
-.. _PyPi: https://badge.fury.io/py/sklearn-genetic-opt
+.. |PyPi| image:: https://img.shields.io/pypi/v/sklearn-genetic-opt.svg
+.. _PyPi: https://pypi.org/project/sklearn-genetic-opt/
 
 .. |Conda| image:: https://img.shields.io/conda/vn/conda-forge/sklearn-genetic-opt.svg
 .. _Conda: https://anaconda.org/conda-forge/sklearn-genetic-opt
