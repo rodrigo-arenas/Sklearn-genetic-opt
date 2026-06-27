@@ -5,7 +5,7 @@
   --vp-c-brand-soft: rgba(61, 126, 170, 0.14);
 }
 
-/* Version badge in nav */
+/* ─── Version badge in nav ────────────────────────────────────── */
 .version-badge {
   font-size: 0.75rem;
   font-weight: 600;
@@ -17,7 +17,7 @@
   vertical-align: middle;
 }
 
-/* Deprecation banner */
+/* ─── Deprecation banner ──────────────────────────────────────── */
 .rtd-deprecation-banner {
   background: #fff3cd;
   border: 1px solid #ffc107;
@@ -26,4 +26,37 @@
   border-radius: 6px;
   margin-bottom: 24px;
   font-size: 0.9rem;
+}
+
+/* ─── Shared home-section layout ─────────────────────────────── */
+.home-section {
+  padding: 4rem 1.5rem;
+}
+
+.home-container {
+  max-width: 1152px;
+  margin: 0 auto;
+}
+
+.section-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--vp-c-text-1);
+  text-align: center;
+  margin: 0 0 0.6rem;
+  line-height: 1.2;
+}
+
+.section-subtitle {
+  font-size: 1rem;
+  color: var(--vp-c-text-2);
+  text-align: center;
+  max-width: 600px;
+  margin: 0 auto 2.5rem;
+  line-height: 1.65;
+}
+
+/* Make the home-features-after slot attach flush */
+.VPHome .home-extension {
+  margin-top: 0;
 }

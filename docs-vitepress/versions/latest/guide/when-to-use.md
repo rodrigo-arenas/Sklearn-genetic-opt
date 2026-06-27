@@ -1,13 +1,17 @@
 ---
-title: When to Use sklearn-genetic-opt
-description: Decide whether a genetic algorithm search fits your tuning problem, and see a realistic example.
+title: When to Use Genetic Algorithm Hyperparameter Search
+description: "Decide whether GASearchCV fits your problem: decision table, signs that genetic search helps, signs it won't, and a realistic 7-parameter example."
 ---
 
 :::warning Development version
 You are reading the **latest (dev)** docs. For stable documentation, see [stable](/stable/).
 :::
 
-# When to Use sklearn-genetic-opt
+**Estimated reading time:** 5 minutes  
+**Difficulty:** Beginner  
+**Prerequisites:** Basic sklearn knowledge
+
+# When to Use Genetic Algorithm Hyperparameter Search
 
 This page helps you decide whether a genetic search is the right tool for your tuning problem and shows what a realistic setup looks like.
 
@@ -81,9 +85,10 @@ print("Best CV score:", round(search.best_score_, 4))
 print("Best parameters:", search.best_params_)
 ```
 
-## Next Steps
+## See Also
 
-- [Basic Usage](./basic-usage)
-- [Understanding Cross-Validation](./understand-cv)
-- [Pipeline Tuning](./pipeline-tuning)
-- [Advanced Optimizer Control](./advanced-optimizer-control)
+- [How Hyperparameter Optimization Works](./how-hyperparameter-optimization-works) — deep dive into all search strategies
+- [Grid Search vs Genetic Algorithms: Benchmark](../comparisons/grid-search-vs-genetic-algorithms) — honest comparison with numbers
+- [Getting Started with GASearchCV](./basic-usage) — start here if you've decided to try it
+- [Common Hyperparameter Tuning Mistakes](./common-mistakes) — common pitfalls to avoid
+- [Benchmarks](../benchmarks/) — real benchmark results vs Optuna and random search

@@ -7,6 +7,10 @@ description: "A multi-stage walkthrough: build a noisy high-dimensional dataset,
 This is the **latest (dev)** documentation. It may contain unreleased features or breaking changes. For the stable release, use [stable](/stable/).
 :::
 
+**Estimated reading time:** 20 minutes  
+**Difficulty:** Advanced  
+**Prerequisites:** [Getting Started with GASearchCV](../guide/basic-usage), basic sklearn Pipeline knowledge
+
 # Comprehensive GA Feature Selection
 
 Choosing which of *n* columns to keep is a search over `2ⁿ` subsets — far beyond any grid or random sweep. `GAFeatureSelectionCV` evolves the on/off mask directly, and because it scores *whole subsets* it can account for redundancy and interaction between columns, not just each column in isolation.
@@ -408,3 +412,11 @@ history[[c for c in cols if c in history.columns]].tail()
   controls applied to hyperparameter tuning
 - [GAFeatureSelectionCV API](../api/gafeatureselectioncv) — every parameter
 - [Plotting Gallery](../examples/plotting-gallery) — every plotting helper
+
+## See Also
+
+- [Random Forest Hyperparameter Tuning](./tune-random-forest) — tune the estimator used in feature selection
+- [Tuning scikit-learn Pipelines](../guide/pipeline-tuning) — combine preprocessing + feature selection + model
+- [Common Hyperparameter Tuning Mistakes](../guide/common-mistakes) — data leakage in feature selection
+- [API: GAFeatureSelectionCV](../api/gafeatureselectioncv) — full API reference
+- [Examples: Feature Selection](../examples/feature-selection) — shorter recipe version

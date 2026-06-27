@@ -1,13 +1,13 @@
 ---
-title: Adaptive Schedules
-description: Change mutation and crossover probabilities automatically over generations using adapter schedules.
+title: Adaptive Mutation and Crossover Schedules for Better Convergence
+description: Use ExponentialAdapter, InverseAdapter, and PotentialAdapter to anneal mutation and crossover rates from exploration to exploitation during genetic search.
 ---
 
 :::warning Development version
 You are reading the **latest (dev)** docs. For the stable version, see [stable](/stable/).
 :::
 
-# Adaptive Schedules
+# Adaptive Mutation and Crossover Schedules for Better Convergence
 
 By default, `crossover_probability` and `mutation_probability` in `EvolutionConfig` stay fixed for the entire search. Adapters let them change automatically over generations — a useful tool for searches that need strong early exploration but precise late-stage refinement.
 

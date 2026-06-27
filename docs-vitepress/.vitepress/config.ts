@@ -12,7 +12,8 @@ const gaHead: HeadConfig[] = GA_TAG
 
 // Sidebar shared across versions — paths are relative to the version root
 function versionSidebar(versionPrefix: string) {
-  // The Benchmarks section is only published for the in-development docs.
+  // These sections and items only appear in the in-development (latest) docs.
+  // New pages are only published in versions/latest/ until the next stable release.
   const isLatest = versionPrefix.endsWith('/latest')
   const benchmarksSection = isLatest
     ? [
@@ -25,6 +26,138 @@ function versionSidebar(versionPrefix: string) {
         },
       ]
     : []
+  const comparisonsSection = isLatest
+    ? [
+        {
+          text: 'Comparisons',
+          collapsed: false,
+          items: [
+            { text: 'Overview', link: `${versionPrefix}/comparisons/` },
+            {
+              text: 'Grid vs Random vs Bayesian vs Genetic',
+              link: `${versionPrefix}/comparisons/grid-search-vs-genetic-algorithms`,
+            },
+            {
+              text: 'Optuna vs sklearn-genetic-opt',
+              link: `${versionPrefix}/comparisons/optuna-vs-sklearn-genetic-opt`,
+            },
+          ],
+        },
+      ]
+    : []
+
+  // New Getting Started items — only available in latest/
+  const latestGettingStarted = isLatest
+    ? [{ text: 'How Hyperparameter Optimization Works', link: `${versionPrefix}/guide/how-hyperparameter-optimization-works` }]
+    : []
+
+  // New User Guide items — only available in latest/
+  const latestGuideItems = isLatest
+    ? [
+        { text: 'Choosing the Right Search Space',        link: `${versionPrefix}/guide/choosing-search-spaces` },
+        { text: 'Common Hyperparameter Tuning Mistakes',  link: `${versionPrefix}/guide/common-mistakes` },
+        { text: 'Feature Selection Methods Compared',     link: `${versionPrefix}/guide/feature-selection-guide` },
+      ]
+    : []
+
+  // New Tutorial items — only available in latest/
+  const latestTutorialItems = isLatest
+    ? [
+        { text: 'Random Forest Hyperparameter Tuning',          link: `${versionPrefix}/tutorials/tune-random-forest` },
+        { text: 'Gradient Boosting Hyperparameter Tuning',      link: `${versionPrefix}/tutorials/tune-gradient-boosting` },
+        { text: 'Logistic Regression Hyperparameter Tuning',    link: `${versionPrefix}/tutorials/tune-logistic-regression` },
+        { text: 'SVM Hyperparameter Tuning (C, kernel, gamma)', link: `${versionPrefix}/tutorials/tune-svm` },
+      ]
+    : []
+
+  // Recipes section — only available in latest/
+  const recipesSection = isLatest
+    ? [
+        {
+          text: 'Recipes',
+          collapsed: false,
+          items: [
+            { text: 'Overview', link: `${versionPrefix}/recipes/` },
+            {
+              text: 'Classification',
+              collapsed: true,
+              items: [
+                { text: 'Tune RandomForestClassifier',         link: `${versionPrefix}/recipes/classification/random-forest-classifier` },
+                { text: 'Tune LogisticRegression',             link: `${versionPrefix}/recipes/classification/logistic-regression` },
+                { text: 'Tune SVC',                            link: `${versionPrefix}/recipes/classification/svm-classifier` },
+                { text: 'Tune XGBClassifier',                  link: `${versionPrefix}/recipes/classification/xgboost-classifier` },
+                { text: 'Tune LGBMClassifier',                 link: `${versionPrefix}/recipes/classification/lightgbm-classifier` },
+                { text: 'Tune CatBoostClassifier',             link: `${versionPrefix}/recipes/classification/catboost-classifier` },
+                { text: 'Tune HistGradientBoostingClassifier', link: `${versionPrefix}/recipes/classification/histgbm-classifier` },
+                { text: 'Tune ExtraTreesClassifier',           link: `${versionPrefix}/recipes/classification/extra-trees-classifier` },
+              ],
+            },
+            {
+              text: 'Regression',
+              collapsed: true,
+              items: [
+                { text: 'Tune RandomForestRegressor', link: `${versionPrefix}/recipes/regression/random-forest-regressor` },
+                { text: 'Tune XGBRegressor',          link: `${versionPrefix}/recipes/regression/xgboost-regressor` },
+                { text: 'Tune LGBMRegressor',         link: `${versionPrefix}/recipes/regression/lightgbm-regressor` },
+                { text: 'Tune CatBoostRegressor',     link: `${versionPrefix}/recipes/regression/catboost-regressor` },
+                { text: 'Tune ElasticNet',             link: `${versionPrefix}/recipes/regression/elasticnet` },
+              ],
+            },
+            {
+              text: 'Feature Selection',
+              collapsed: true,
+              items: [
+                { text: 'Select Features on 50+ Columns',             link: `${versionPrefix}/recipes/feature-selection/high-dimensional` },
+                { text: 'Combine Feature Selection + Tuning',         link: `${versionPrefix}/recipes/feature-selection/select-then-tune` },
+                { text: 'Custom Scorer with Feature-Count Penalty',   link: `${versionPrefix}/recipes/feature-selection/custom-scorer` },
+                { text: 'Feature Selection with CV (Leakage-Free)',   link: `${versionPrefix}/recipes/feature-selection/cv-selection` },
+              ],
+            },
+            {
+              text: 'Pipelines',
+              collapsed: true,
+              items: [
+                { text: 'Tune a Preprocessing + Estimator Pipeline', link: `${versionPrefix}/recipes/pipelines/preprocessing-pipeline` },
+                { text: 'Tune a ColumnTransformer Pipeline',          link: `${versionPrefix}/recipes/pipelines/column-transformer` },
+                { text: 'Tune Imputer Strategy as a Hyperparameter',  link: `${versionPrefix}/recipes/pipelines/imputer-strategy` },
+                { text: 'Tune Polynomial Features Degree',            link: `${versionPrefix}/recipes/pipelines/polynomial-features` },
+              ],
+            },
+            {
+              text: 'Scoring Metrics',
+              collapsed: true,
+              items: [
+                { text: 'Tune for F1 Score (Binary)',   link: `${versionPrefix}/recipes/metrics/f1-binary` },
+                { text: 'Tune for ROC-AUC',             link: `${versionPrefix}/recipes/metrics/roc-auc` },
+                { text: 'Tune for Balanced Accuracy',   link: `${versionPrefix}/recipes/metrics/balanced-accuracy` },
+                { text: 'Tune for MAE (Regression)',    link: `${versionPrefix}/recipes/metrics/mae` },
+                { text: 'Tune for RMSE (Regression)',   link: `${versionPrefix}/recipes/metrics/rmse` },
+              ],
+            },
+            {
+              text: 'Integrations',
+              collapsed: true,
+              items: [
+                { text: 'Log Every Candidate to MLflow',    link: `${versionPrefix}/recipes/integrations/mlflow-logging` },
+                { text: 'Parallelize with Joblib',          link: `${versionPrefix}/recipes/integrations/joblib-parallel` },
+                { text: 'Run in a Jupyter Notebook',        link: `${versionPrefix}/recipes/integrations/jupyter-notebook` },
+              ],
+            },
+            {
+              text: 'Advanced',
+              collapsed: true,
+              items: [
+                { text: 'Seed with Known-Good Params (Warm Start)',  link: `${versionPrefix}/recipes/advanced/warm-start` },
+                { text: 'Stop Early When Fitness Plateaus',          link: `${versionPrefix}/recipes/advanced/early-stopping-consecutive` },
+                { text: 'Stop After a Time Budget',                  link: `${versionPrefix}/recipes/advanced/time-budget` },
+                { text: 'Resume a Stopped Search',                   link: `${versionPrefix}/recipes/advanced/checkpointing` },
+                { text: 'Write a Custom Scoring Function',           link: `${versionPrefix}/recipes/advanced/custom-scorer` },
+              ],
+            },
+          ],
+        },
+      ]
+    : []
 
   return [
     {
@@ -32,8 +165,9 @@ function versionSidebar(versionPrefix: string) {
       collapsed: false,
       items: [
         { text: 'Introduction', link: `${versionPrefix}/` },
-        { text: 'When to Use', link: `${versionPrefix}/guide/when-to-use` },
-        { text: 'Basic Usage', link: `${versionPrefix}/guide/basic-usage` },
+        ...latestGettingStarted,
+        { text: 'When to Use Genetic Algorithm Search', link: `${versionPrefix}/guide/when-to-use` },
+        { text: 'Getting Started with GASearchCV', link: `${versionPrefix}/guide/basic-usage` },
         { text: 'Installation', link: `${versionPrefix}/guide/installation` },
       ],
     },
@@ -41,16 +175,17 @@ function versionSidebar(versionPrefix: string) {
       text: 'User Guide',
       collapsed: false,
       items: [
-        { text: 'Understanding Cross-Validation', link: `${versionPrefix}/guide/understand-cv` },
-        { text: 'Pipeline Tuning', link: `${versionPrefix}/guide/pipeline-tuning` },
+        ...latestGuideItems,
+        { text: 'Cross-Validation in Hyperparameter Search', link: `${versionPrefix}/guide/understand-cv` },
+        { text: 'Tuning scikit-learn Pipelines', link: `${versionPrefix}/guide/pipeline-tuning` },
         { text: 'Multi-Metric Optimization', link: `${versionPrefix}/guide/multi-metric` },
-        { text: 'Callbacks', link: `${versionPrefix}/guide/callbacks` },
-        { text: 'Custom Callbacks', link: `${versionPrefix}/guide/custom-callback` },
-        { text: 'Adaptive Schedules', link: `${versionPrefix}/guide/adapters` },
+        { text: 'Early Stopping with Callbacks', link: `${versionPrefix}/guide/callbacks` },
+        { text: 'Writing Custom Callbacks', link: `${versionPrefix}/guide/custom-callback` },
+        { text: 'Adaptive Crossover & Mutation Schedules', link: `${versionPrefix}/guide/adapters` },
         { text: 'Advanced Optimizer Control', link: `${versionPrefix}/guide/advanced-optimizer-control` },
         { text: 'MLflow Integration', link: `${versionPrefix}/guide/mlflow` },
-        { text: 'Outlier Detection', link: `${versionPrefix}/guide/outliers` },
-        { text: 'Reproducibility', link: `${versionPrefix}/guide/reproducibility` },
+        { text: 'Tuning Outlier Detection Models', link: `${versionPrefix}/guide/outliers` },
+        { text: 'Reproducibility & Checkpointing', link: `${versionPrefix}/guide/reproducibility` },
         { text: 'Troubleshooting', link: `${versionPrefix}/guide/troubleshooting` },
         { text: 'Migrating from 0.12', link: `${versionPrefix}/guide/migrating-from-0.12` },
       ],
@@ -59,28 +194,30 @@ function versionSidebar(versionPrefix: string) {
       text: 'Tutorials',
       collapsed: false,
       items: [
-        { text: 'Overview',                        link: `${versionPrefix}/tutorials/` },
-        { text: 'Tune XGBoost',                    link: `${versionPrefix}/tutorials/tune-xgboost` },
-        { text: 'Tune LightGBM',                   link: `${versionPrefix}/tutorials/tune-lightgbm` },
-        { text: 'Tune CatBoost',                   link: `${versionPrefix}/tutorials/tune-catboost` },
-        { text: 'Comprehensive Feature Selection',  link: `${versionPrefix}/tutorials/feature-selection` },
-        { text: 'Imbalanced Classification',        link: `${versionPrefix}/tutorials/imbalanced-classification` },
-        { text: 'Isolation Forest',                 link: `${versionPrefix}/tutorials/isolation-forest` },
+        { text: 'Overview',                                       link: `${versionPrefix}/tutorials/` },
+        ...latestTutorialItems,
+        { text: 'XGBoost Hyperparameter Tuning',                  link: `${versionPrefix}/tutorials/tune-xgboost` },
+        { text: 'LightGBM Hyperparameter Tuning',                 link: `${versionPrefix}/tutorials/tune-lightgbm` },
+        { text: 'CatBoost Hyperparameter Tuning',                 link: `${versionPrefix}/tutorials/tune-catboost` },
+        { text: 'Feature Selection with Genetic Algorithms',       link: `${versionPrefix}/tutorials/feature-selection` },
+        { text: 'Hyperparameter Tuning for Imbalanced Datasets',  link: `${versionPrefix}/tutorials/imbalanced-classification` },
+        { text: 'Isolation Forest Hyperparameter Tuning',         link: `${versionPrefix}/tutorials/isolation-forest` },
       ],
     },
+    ...recipesSection,
     {
       text: 'Examples',
       collapsed: false,
       items: [
-        { text: 'Overview', link: `${versionPrefix}/examples/` },
-        { text: 'Comparing Search Methods', link: `${versionPrefix}/examples/sklearn-comparison` },
-        { text: 'Advanced Random Forest', link: `${versionPrefix}/examples/advanced-rf` },
-        { text: 'Pipeline Regression', link: `${versionPrefix}/examples/pipeline-regression` },
-        { text: 'Feature Selection', link: `${versionPrefix}/examples/feature-selection` },
-        { text: 'Multi-Metric Search', link: `${versionPrefix}/examples/multi-metric` },
-        { text: 'MLflow Tracking', link: `${versionPrefix}/examples/mlflow-tracking` },
-        { text: 'Checkpointing', link: `${versionPrefix}/examples/checkpointing` },
-        { text: 'Plotting Gallery', link: `${versionPrefix}/examples/plotting-gallery` },
+        { text: 'Overview',                               link: `${versionPrefix}/examples/` },
+        { text: 'Grid Search vs Genetic Algorithms',      link: `${versionPrefix}/examples/sklearn-comparison` },
+        { text: 'Random Forest: All Advanced Features',   link: `${versionPrefix}/examples/advanced-rf` },
+        { text: 'Pipeline Regression',                    link: `${versionPrefix}/examples/pipeline-regression` },
+        { text: 'Feature Selection',                      link: `${versionPrefix}/examples/feature-selection` },
+        { text: 'Multi-Metric Search',                    link: `${versionPrefix}/examples/multi-metric` },
+        { text: 'MLflow Experiment Tracking',             link: `${versionPrefix}/examples/mlflow-tracking` },
+        { text: 'Checkpointing & Resume',                 link: `${versionPrefix}/examples/checkpointing` },
+        { text: 'Plotting Gallery',                       link: `${versionPrefix}/examples/plotting-gallery` },
       ],
     },
     {
@@ -99,6 +236,7 @@ function versionSidebar(versionPrefix: string) {
       ],
     },
     ...benchmarksSection,
+    ...comparisonsSection,
     {
       text: 'Release Notes',
       collapsed: false,

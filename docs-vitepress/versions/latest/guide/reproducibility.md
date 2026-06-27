@@ -1,13 +1,17 @@
 ---
-title: Reproducibility
-description: Make sklearn-genetic-opt results reproducible across runs by seeding all random sources.
+title: Reproducibility and Checkpointing in Hyperparameter Optimization
+description: Make genetic algorithm hyperparameter searches reproducible with random_state, checkpoint with LogbookSaver, and resume interrupted searches.
 ---
 
 :::warning Development version
 You are reading the **latest (dev)** docs. For the stable version, see [stable](/stable/).
 :::
 
-# Reproducibility
+**Estimated reading time:** 6 minutes  
+**Difficulty:** Beginner  
+**Prerequisites:** [Getting Started with GASearchCV](./basic-usage)
+
+# Reproducibility and Checkpointing in Hyperparameter Optimization
 
 Genetic algorithms are stochastic — results vary between runs unless the
 randomness is seeded. The simplest, recommended way is the single
@@ -93,7 +97,9 @@ with open("./logbook.pkl", "rb") as f:
 - If using `PopulationConfig(warm_start_configs=[...])`, the warm-start configs are deterministic by definition.
 - DEAP's internal RNG is seeded through Python's `random` module — seeding `random` before `fit` is sufficient.
 
-## Next Steps
+## See Also
 
-- [Troubleshooting](./troubleshooting#reproducibility) — debugging non-deterministic results.
-- [Callbacks](./callbacks) — use `LogbookSaver` for checkpointing.
+- [Early Stopping with Callbacks](./callbacks) — LogbookSaver and ModelCheckpoint
+- [Common Hyperparameter Tuning Mistakes](./common-mistakes) — why inconsistent seeds hurt results
+- [Cross-Validation in Hyperparameter Search](./understand-cv) — seed your CV splitter
+- [Troubleshooting](./troubleshooting) — if results vary unexpectedly between runs

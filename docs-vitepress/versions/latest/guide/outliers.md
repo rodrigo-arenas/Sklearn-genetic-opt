@@ -1,13 +1,13 @@
 ---
-title: Outlier Detection
-description: Use GASearchCV to tune outlier-detection estimators such as IsolationForest and LocalOutlierFactor — including how to write a custom scorer, which scoring method to use, and the LocalOutlierFactor novelty gotcha.
+title: "Tuning Outlier Detection Models: IsolationForest and LocalOutlierFactor"
+description: Use GASearchCV to tune IsolationForest and LocalOutlierFactor hyperparameters with a custom scorer, handling the unique challenges of outlier detection.
 ---
 
 :::warning Development version
 You are reading the **latest (dev)** docs. For the stable version, see [stable](/stable/).
 :::
 
-# Outlier Detection
+# Tuning Outlier Detection Models: IsolationForest and LocalOutlierFactor
 
 `GASearchCV` supports scikit-learn outlier-detection estimators. These estimators fit on `X` only — they never see `y` during training — so the standard `scoring="roc_auc"` string cannot be used directly. Instead, you define a custom scorer that calls the estimator's anomaly scoring method and compares the result against ground-truth labels.
 

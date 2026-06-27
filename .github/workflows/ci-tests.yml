@@ -18,6 +18,7 @@ concurrency:
 jobs:
   lint:
     name: Lint
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -36,6 +37,7 @@ jobs:
 
   tests:
     name: Tests (${{ matrix.os }}, Python ${{ matrix.python-version }})
+    if: github.actor != 'github-actions[bot]'
     runs-on: ${{ matrix.os }}
     env:
       MPLBACKEND: Agg
@@ -61,6 +63,7 @@ jobs:
 
   coverage:
     name: Coverage
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     env:
       MPLBACKEND: Agg
@@ -87,6 +90,8 @@ jobs:
 
   docs:
     name: Docs
+    # docs.yml handles the build and deploy on master/tag pushes; only run here on PRs
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -105,6 +110,7 @@ jobs:
 
   package:
     name: Package
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -202,11 +208,11 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git pull --rebase --autostash origin master
           git add conda.recipe/meta.yaml
           if git diff --staged --quiet; then
             echo "No changes to conda recipe."
           else
             git commit -m "ci: update conda recipe for ${{ github.ref_name }}"
-            git pull --rebase origin master
             git push origin HEAD:master
           fi

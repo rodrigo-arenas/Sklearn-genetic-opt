@@ -9,6 +9,56 @@ You are reading the **latest (dev)** docs. For the stable version, see [stable](
 
 # Release Notes
 
+## 0.13.2
+
+Documentation release. No changes to the Python package.
+
+### New Documentation
+
+**New Guides**
+
+- **[How Hyperparameter Optimization Works](./guide/how-hyperparameter-optimization-works)** — complete conceptual guide comparing grid search, random search, Bayesian optimization, and genetic algorithms with worked Python examples and a method-selection flowchart.
+- **[Common Hyperparameter Tuning Mistakes](./guide/common-mistakes)** — ten common pitfalls (data leakage, class imbalance, bad search spaces, missing seeds, premature stopping, and more) with diagnosis and fixes.
+- **[Choosing the Right Search Space](./guide/choosing-search-spaces)** — when to use `Integer`, `Continuous`, `Categorical`; when to use log-uniform; per-estimator recommended parameter ranges.
+- **[Feature Selection Methods Compared](./guide/feature-selection-guide)** — side-by-side comparison of filter, embedded, and wrapper methods with guidance on which to use and when `GAFeatureSelectionCV` is the right choice.
+
+**New Tutorials**
+
+- **[Random Forest Hyperparameter Tuning](./tutorials/tune-random-forest)** — 7-parameter joint search, which parameters matter most, classification and regression variants, baseline comparison.
+- **[Gradient Boosting Hyperparameter Tuning](./tutorials/tune-gradient-boosting)** — `HistGradientBoostingClassifier` vs classic `GradientBoostingClassifier`, `max_leaf_nodes` vs `max_depth`, speed comparison.
+- **[Logistic Regression Hyperparameter Tuning](./tutorials/tune-logistic-regression)** — solver/penalty compatibility table, multi-penalty search with SAGA, mandatory scaling in a Pipeline.
+- **[SVM Hyperparameter Tuning (C, kernel, gamma)](./tutorials/tune-svm)** — C–gamma interaction visualization, mandatory `Pipeline` + `StandardScaler`, RBF vs linear kernel, O(n²) scaling note.
+
+**New Comparisons Section**
+
+- **[Comparisons overview](./comparisons/)** — new section hub for tool comparisons.
+- **[Grid Search vs Random Search vs Bayesian vs Genetic Algorithms](./comparisons/grid-search-vs-genetic-algorithms)** — honest equal-budget benchmark across all four methods with code and result tables.
+- **[Optuna vs sklearn-genetic-opt](./comparisons/optuna-vs-sklearn-genetic-opt)** — head-to-head on tabular benchmarks using the Bayesmark experimental design; honest about where each approach wins.
+
+**New Recipes Section**
+
+A new [Recipes](./recipes/) section provides 30 copy-paste ready solutions (5–10 min each) organized into seven categories:
+
+- **[Classification](./recipes/classification/)** (8 recipes) — `RandomForestClassifier`, `LogisticRegression`, `SVC`, `XGBClassifier`, `LGBMClassifier`, `CatBoostClassifier`, `HistGradientBoostingClassifier`, `ExtraTreesClassifier`.
+- **[Regression](./recipes/regression/)** (5 recipes) — `RandomForestRegressor`, `XGBRegressor`, `LGBMRegressor`, `CatBoostRegressor`, `ElasticNet`.
+- **[Feature Selection](./recipes/feature-selection/)** (4 recipes) — high-dimensional datasets, two-stage select-then-tune, custom feature-count penalty scorer, leakage-free CV selection.
+- **[Pipelines](./recipes/pipelines/)** (4 recipes) — preprocessing + estimator pipeline, `ColumnTransformer` with mixed types, imputer strategy as a hyperparameter, polynomial features degree.
+- **[Scoring Metrics](./recipes/metrics/)** (5 recipes) — F1 (binary), ROC-AUC, balanced accuracy, MAE, RMSE.
+- **[Integrations](./recipes/integrations/)** (3 recipes) — MLflow child-run logging, Joblib parallelism modes, Jupyter notebook setup.
+- **[Advanced](./recipes/advanced/)** (5 recipes) — warm-start with known-good configs, `ConsecutiveStopping` setup, `TimerStopping` for wall-clock budgets, checkpointing and resume, custom scoring functions.
+
+### Documentation Improvements
+
+- **SEO titles and descriptions** — titles on 15+ existing pages rewritten to answer the search query directly (e.g. "LightGBM Hyperparameter Tuning with Genetic Algorithms" instead of "Tuning LightGBM").
+- **Cross-linking** — "See Also" sections added to all tutorial and guide pages linking to related tutorials, recipes, and comparison pages.
+- **Difficulty and reading-time metadata** — all tutorial pages now show difficulty level (Beginner / Intermediate / Advanced) and an estimated reading time.
+- **Tutorials index** — updated with difficulty column, recommended reading order, and links to all new tutorials.
+- **Sidebar** — Comparisons and Recipes sections added to the `latest` sidebar as collapsible trees. The `0.13` stable sidebar is unchanged.
+- **README** — complete rewrite of `README.rst` as a high-converting GitHub landing page with value proposition, when-to-use / when-not-to-use guidance, a six-tool comparison table, condensed Quick Start, visual demo section, common use cases, and learning paths.
+- **Canonical URLs and Open Graph tags** — `transformPageData` in `config.ts` now injects `<link rel="canonical">`, `og:title`, `og:description`, `og:url`, `og:image`, and `twitter:*` tags on every page.
+
+---
+
 ## 0.13.1
 
 ### New Features

@@ -1,11 +1,16 @@
 ---
-title: "Tuning Isolation Forest With GASearchCV"
-description: "Tune IsolationForest's four key hyperparameters using a genetic algorithm on a labeled anomaly dataset with a custom score_samples scorer. Includes anomaly-score contour plots, a ROC curve, and a 3-way comparison."
+title: "Isolation Forest Hyperparameter Tuning with Custom Scorers"
+description: "Tune IsolationForest hyperparameters with GASearchCV using a custom ROC-AUC scorer — including contamination, n_estimators, and max_features."
 ---
 
 :::warning Development version
 This is the **latest (dev)** documentation. It may contain unreleased features or breaking changes. For the stable release, use [stable](/stable/).
 :::
+
+**Estimated reading time:** 18 minutes  
+**Difficulty:** Advanced  
+**Prerequisites:** [Getting Started with GASearchCV](../guide/basic-usage), basic outlier detection concepts  
+**Note:** Outlier detection requires custom scoring — see [Tuning Outlier Detection Models](../guide/outliers)
 
 # Tuning Isolation Forest With GASearchCV
 
@@ -507,7 +512,8 @@ the binary `predict()` output.
 
 ## See Also
 
-- [Outlier Detection guide](../guide/outliers) — minimal working example and gotchas
-- [Comprehensive Feature Selection](./feature-selection) — select informative features first
-- [Imbalanced Classification](./imbalanced-classification) — the related supervised problem
-- [GASearchCV API](../api/gasearchcv)
+- [Tuning Outlier Detection Models](../guide/outliers) — guide covering LocalOutlierFactor and IsolationForest
+- [Random Forest Hyperparameter Tuning](./tune-random-forest) — standard classification alternative
+- [Common Hyperparameter Tuning Mistakes](../guide/common-mistakes) — custom scorer pitfalls
+- [API: GASearchCV](../api/gasearchcv) — search CV parameters including error_score
+- [Plotting Gallery](../examples/plotting-gallery) — all available visualizations

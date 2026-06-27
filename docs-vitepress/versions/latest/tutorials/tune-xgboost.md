@@ -7,6 +7,10 @@ description: "Optimize 9 interacting XGBoost hyperparameters with a genetic algo
 This is the **latest (dev)** documentation. It may contain unreleased features or breaking changes. For the stable release, use [stable](/stable/).
 :::
 
+**Estimated reading time:** 20 minutes  
+**Difficulty:** Intermediate  
+**Prerequisites:** `pip install sklearn-genetic-opt xgboost`
+
 # Tuning XGBoost With GASearchCV
 
 XGBoost has around nine hyperparameters that interact non-linearly: the right `learning_rate` depends on `n_estimators`, which depends on `max_depth` and the regularization terms. Out of the box, XGBoost's defaults (a high `0.3` learning rate, 100 deep trees) **overfit noisy data**. This tutorial searches the joint space with `GASearchCV`, shows the real gain over the default model, and visualizes the interaction the search exploits.
@@ -333,7 +337,10 @@ GASearchCV (tuned)     0.798             0.7979   0.8807       0.8497       132.
 
 ## See Also
 
-- [Tune LightGBM](./tune-lightgbm) — leaf-wise trees and the `num_leaves`/`max_depth` constraint
-- [Tune CatBoost](./tune-catboost) — CatBoost-specific parameters
-- [Comparing Search Methods](../examples/sklearn-comparison) — GA vs random vs grid, honestly
+- [LightGBM Hyperparameter Tuning](./tune-lightgbm) — leaf-wise trees, often faster training
+- [CatBoost Hyperparameter Tuning](./tune-catboost) — best native categorical handling
+- [Random Forest Hyperparameter Tuning](./tune-random-forest) — if you want a sklearn-native baseline
+- [Grid Search vs Genetic Algorithms](../comparisons/grid-search-vs-genetic-algorithms) — honest comparison with benchmarks
 - [Advanced Optimizer Control](../guide/advanced-optimizer-control) — diversity, fitness sharing, local search
+- [Adaptive Crossover & Mutation Schedules](../guide/adapters) — what the ExponentialAdapter and InverseAdapter do
+- [Comparing Search Methods](../examples/sklearn-comparison) — GA vs random vs grid on same dataset
