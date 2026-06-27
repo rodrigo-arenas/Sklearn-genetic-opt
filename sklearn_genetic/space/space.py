@@ -60,7 +60,7 @@ class Integer(BaseDimension):
         if self.distribution == IntegerDistributions.uniform.value:
             self.rvs = stats.randint.rvs
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (
             f"{self.__class__.__name__}(lower={self.lower}, upper={self.upper}, "
             f"distribution={self.distribution!r})"
@@ -124,7 +124,7 @@ class Continuous(BaseDimension):
         elif self.distribution == ContinuousDistributions.log_uniform.value:
             self.rvs = stats.loguniform.rvs
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (
             f"{self.__class__.__name__}(lower={self.lower}, upper={self.upper}, "
             f"distribution={self.distribution!r})"
@@ -189,7 +189,7 @@ class Categorical(BaseDimension):
         if self.distribution == CategoricalDistributions.choice.value:
             self.rvs = self.rng.choice if self.rng else random.choice
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         if self.priors is None:
             return f"{self.__class__.__name__}(choices={self.choices!r})"
 
