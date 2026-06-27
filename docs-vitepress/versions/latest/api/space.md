@@ -122,9 +122,9 @@ Conversion rules:
 | `scipy.stats.loguniform(a, b)` / `reciprocal(a, b)` | `Continuous(a, b, distribution="log-uniform")` |
 | Existing `Integer`, `Continuous`, `Categorical` | returned unchanged |
 
-Unsupported scipy distributions raise `ValueError` so you can choose an explicit
-`Integer`, `Continuous`, or `Categorical` dimension instead of getting a silent
-misconfiguration.
+Unsupported scipy distributions raise an actionable `ValueError` that names the
+distribution and suggests defining the corresponding `Integer`, `Continuous`, or
+`Categorical` dimension manually.
 
 ## See Also
 

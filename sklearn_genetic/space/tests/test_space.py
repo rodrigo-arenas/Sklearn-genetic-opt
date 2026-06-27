@@ -249,7 +249,9 @@ def test_from_sklearn_space_rejects_unsupported_distributions():
 
     message = str(excinfo.value)
     assert "alpha uses scipy.stats.expon" in message
-    assert "Supported scipy distributions are randint, uniform, loguniform, and reciprocal" in message
+    assert (
+        "Supported scipy distributions are randint, uniform, loguniform, and reciprocal" in message
+    )
     assert "define the search space manually" in message
     assert "Continuous(lower, upper)" in message
 
