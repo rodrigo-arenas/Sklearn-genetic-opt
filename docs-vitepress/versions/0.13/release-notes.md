@@ -5,6 +5,46 @@ description: Changelog for sklearn-genetic-opt.
 
 # Release Notes
 
+## 0.13.2
+
+Documentation release. No changes to the Python package.
+
+### New Documentation
+
+**New Guides**
+
+- **How Hyperparameter Optimization Works** — complete conceptual guide comparing grid search, random search, Bayesian optimization, and genetic algorithms with worked Python examples and a method-selection flowchart.
+- **Common Hyperparameter Tuning Mistakes** — ten common pitfalls (data leakage, class imbalance, bad search spaces, missing seeds, premature stopping, and more) with diagnosis and fixes.
+- **Choosing the Right Search Space** — when to use `Integer`, `Continuous`, `Categorical`; when to use log-uniform; per-estimator recommended parameter ranges.
+- **Feature Selection Methods Compared** — side-by-side comparison of filter, embedded, and wrapper methods with guidance on when `GAFeatureSelectionCV` is the right choice.
+
+**New Tutorials**
+
+- **Random Forest Hyperparameter Tuning** — 7-parameter joint search, which parameters matter most, classification and regression variants, baseline comparison.
+- **Gradient Boosting Hyperparameter Tuning** — `HistGradientBoostingClassifier` vs classic `GradientBoostingClassifier`, `max_leaf_nodes` vs `max_depth`, speed comparison.
+- **Logistic Regression Hyperparameter Tuning** — solver/penalty compatibility table, multi-penalty search with SAGA, mandatory scaling in a Pipeline.
+- **SVM Hyperparameter Tuning (C, kernel, gamma)** — C–gamma interaction visualization, mandatory `Pipeline` + `StandardScaler`, RBF vs linear kernel, O(n²) scaling note.
+
+**New Comparisons Section**
+
+- **Grid Search vs Random Search vs Bayesian vs Genetic Algorithms** — honest equal-budget benchmark across all four methods with code and result tables.
+- **Optuna vs sklearn-genetic-opt** — head-to-head on tabular benchmarks using the Bayesmark experimental design; honest about where each approach wins.
+
+**New Recipes Section**
+
+A new Recipes section provides 30 copy-paste ready solutions (5–10 min each) organized into seven categories: Classification (8), Regression (5), Feature Selection (4), Pipelines (4), Scoring Metrics (5), Integrations (3), and Advanced (5).
+
+See the [full documentation](https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/recipes/) for the complete recipe list.
+
+### Documentation Improvements
+
+- **SEO titles and descriptions** — titles on 15+ existing pages rewritten to answer the search query directly.
+- **Cross-linking** — "See Also" sections added to all tutorial and guide pages.
+- **Difficulty and reading-time metadata** — all tutorial pages now show difficulty level and an estimated reading time.
+- **README** — complete rewrite of `README.rst` as a high-converting GitHub landing page with value proposition, when-to-use / when-not-to-use guidance, a six-tool comparison table, condensed Quick Start, visual demo section, common use cases, and learning paths.
+
+---
+
 ## 0.13.1
 
 ### New Features
