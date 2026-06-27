@@ -163,15 +163,15 @@ search.fit(X_train, y_train)
 
 Also seed the CV splitter and any estimator that accepts `random_state`. See [Reproducibility](./reproducibility) for a complete example.
 
-## Warm-Start Configs Are Ignored
+## Warm-Start Config Errors
 
-**Warm-start seeds do not appear in the first generation**
+**`ValueError` mentioning `warm_start_configs`**
 
-Warm-start configs in `PopulationConfig(warm_start_configs=[...])` are validated against the search space. A config is silently skipped if:
+Warm-start configs in `PopulationConfig(warm_start_configs=[...])` are validated against the search space at fit time, so a mistake raises a clear error instead of being silently dropped. You'll get one if a config:
 
-- A key is not in `param_grid`
-- A value is out of range for an `Integer` or `Continuous` dimension
-- A value is not in the `choices` list of a `Categorical` dimension
+- uses a key that isn't in `param_grid` (e.g. a typo like `max_depths` instead of `max_depth`)
+- gives a value outside an `Integer` or `Continuous` dimension's bounds
+- gives a value that isn't in a `Categorical` dimension's `choices`
 
 Check your config keys against `list(search.param_grid.keys())` and the bounds of each dimension.
 

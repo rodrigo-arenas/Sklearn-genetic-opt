@@ -1,6 +1,8 @@
+import numbers
+import random
+
 import numpy as np
 from scipy import stats
-import random
 
 from .space_parameters import (
     IntegerDistributions,
@@ -238,11 +240,14 @@ def value_in_dimension(dimension, value) -> bool:
     Used both for population initialization and for validating warm-start
     configurations against the search space.
     """
+    # Accept NumPy scalars (np.int64, np.float64, ...) as well as Python numbers
+    # via the numbers ABCs, so warm-start values pulled from arrays or earlier
+    # search results are not wrongly rejected.
     if isinstance(dimension, Integer):
-        return isinstance(value, int) and dimension.lower <= value <= dimension.upper
+        return isinstance(value, numbers.Integral) and dimension.lower <= value <= dimension.upper
 
     if isinstance(dimension, Continuous):
-        return isinstance(value, (int, float)) and dimension.lower <= value <= dimension.upper
+        return isinstance(value, numbers.Real) and dimension.lower <= value <= dimension.upper
 
     if isinstance(dimension, Categorical):
         return value in dimension.choices

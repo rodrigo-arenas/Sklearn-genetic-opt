@@ -196,6 +196,14 @@ def test_sample_warm_start_rejects_non_dict_config():
         space.sample_warm_start([("max_depth", 5)])
 
 
+def test_sample_warm_start_accepts_numpy_scalars():
+    """NumPy scalars are valid values, not rejected as out-of-space (#220)."""
+    space = Space({"max_depth": Integer(2, 20), "lr": Continuous(0.0, 1.0)})
+    sampled = space.sample_warm_start({"max_depth": np.int64(5), "lr": np.float64(0.5)})
+    assert sampled["max_depth"] == 5
+    assert sampled["lr"] == 0.5
+
+
 @pytest.mark.parametrize(
     "data_object, parameters, message",
     [
