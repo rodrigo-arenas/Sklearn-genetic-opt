@@ -247,7 +247,13 @@ def test_from_sklearn_space_rejects_unsupported_distributions():
     with pytest.raises(ValueError) as excinfo:
         from_sklearn_space({"alpha": stats.expon()})
 
-    assert "scipy.stats.expon" in str(excinfo.value)
+    message = str(excinfo.value)
+    assert "scipy.stats.expon" in message
+    # The message should name the supported distributions and suggest a manual
+    # alternative for the offending parameter (issue #221).
+    assert "randint, uniform, loguniform, and reciprocal" in message
+    assert "Continuous(" in message
+    assert "'alpha'" in message
 
 
 def test_from_sklearn_space_rejects_empty_or_ambiguous_values():

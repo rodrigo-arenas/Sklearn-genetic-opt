@@ -78,7 +78,11 @@ def _convert_scipy_distribution(parameter, distribution):
         return Continuous(float(lower), float(upper), distribution="log-uniform")
 
     raise ValueError(
-        f"{parameter} uses scipy.stats.{name}, which can not be converted automatically"
+        f"{parameter} uses scipy.stats.{name}, which can not be converted "
+        f"automatically. Supported scipy distributions are randint, uniform, "
+        f"loguniform, and reciprocal. For anything else, define the dimension "
+        f"manually, e.g. Continuous(low, high) or "
+        f"Continuous(low, high, distribution='log-uniform') for '{parameter}'."
     )
 
 
