@@ -96,9 +96,25 @@ def _available_fields(estimator, fields):
     return [field for field in fields if field in getattr(estimator, "history", {})]
 
 
+def _require_fitted(estimator, attribute, plot_name=None):
+    """Raise an actionable error if ``estimator`` lacks a fit-time ``attribute``.
+
+    Plotting is often the first thing new users try after creating an
+    estimator, so the message tells them to call ``estimator.fit(X, y)`` first
+    and names the attribute the plot relies on (and, when known, the plotting
+    function).
+    """
+    if not hasattr(estimator, attribute):
+        who = f"{plot_name} requires" if plot_name else "This plot requires"
+        raise ValueError(
+            f"{who} a fitted {type(estimator).__name__} estimator. "
+            f"Call estimator.fit(X, y) before plotting because this plot reads "
+            f"estimator.{attribute}."
+        )
+
+
 def _cv_results_frame(estimator):
-    if not hasattr(estimator, "cv_results_"):
-        raise ValueError("estimator must be fitted before plotting cv_results_ data")
+    _require_fitted(estimator, "cv_results_")
 
     return pd.DataFrame(estimator.cv_results_)
 
@@ -811,8 +827,7 @@ def plot_feature_selection(
     if not isinstance(estimator, GAFeatureSelectionCV):
         raise TypeError("plot_feature_selection requires a GAFeatureSelectionCV estimator")
 
-    if not hasattr(estimator, "best_features_"):
-        raise ValueError("estimator must be fitted before plotting selected features")
+    _require_fitted(estimator, "best_features_", plot_name="plot_feature_selection")
 
     mask = np.asarray(estimator.best_features_, dtype=bool)
     if feature_names is None:

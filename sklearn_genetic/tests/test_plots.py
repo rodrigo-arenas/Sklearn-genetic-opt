@@ -316,3 +316,30 @@ def test_feature_selection_plot():
 
     with pytest.raises(ValueError, match="same length"):
         plot_feature_selection(estimator, feature_names=["one"])
+
+
+def test_plot_on_unfitted_estimator_gives_actionable_error():
+    """Plotting before fit should tell the user to call .fit(X, y) (issue #222)."""
+    unfitted = GASearchCV(
+        DecisionTreeRegressor(),
+        cv=2,
+        scoring="r2",
+        param_grid={"max_depth": Integer(2, 8)},
+    )
+    with pytest.raises(ValueError) as excinfo:
+        plot_candidate_scores(unfitted)
+    message = str(excinfo.value)
+    assert "fitted GASearchCV" in message
+    assert "estimator.fit(X, y)" in message
+    assert "estimator.cv_results_" in message
+
+
+def test_plot_feature_selection_on_unfitted_estimator_names_the_plot():
+    """plot_feature_selection should name itself and best_features_ (issue #222)."""
+    unfitted = GAFeatureSelectionCV(DecisionTreeRegressor(), cv=2, scoring="r2")
+    with pytest.raises(ValueError) as excinfo:
+        plot_feature_selection(unfitted)
+    message = str(excinfo.value)
+    assert "plot_feature_selection requires" in message
+    assert "estimator.fit(X, y)" in message
+    assert "estimator.best_features_" in message
