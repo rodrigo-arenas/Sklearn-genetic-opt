@@ -200,25 +200,35 @@ class Categorical(BaseDimension):
 
 
 def check_space(param_grid: dict = None):
-    """
+    """Validate that ``param_grid`` is a non-empty mapping of space objects.
 
     Parameters
     ----------
     param_grid: dict, default=None
-        Dictionary with the for {"hyperparameter_name": :obj:`~sklearn_genetic.space`}
+        Dictionary of the form {"hyperparameter_name": :obj:`~sklearn_genetic.space`}
 
-    Returns
-    -------
-        Raises a Value Error if the dictionary does not have valid space instances
+    Raises
+    ------
+    ValueError
+        If ``param_grid`` is empty, or if any value is not an instance of
+        :class:`~sklearn_genetic.space.Integer`,
+        :class:`~sklearn_genetic.space.Categorical` or
+        :class:`~sklearn_genetic.space.Continuous`. The message names the
+        offending key and the type that was passed instead.
     """
     if not param_grid:
-        raise ValueError(f"param_grid can not be empty")
+        raise ValueError("param_grid can not be empty")
 
     # Make sure that each of the param_grid values are defined using one of the available Space objects
     for key, value in param_grid.items():
         if not isinstance(value, BaseDimension):
             raise ValueError(
-                f"{key} must be a valid instance of Integer, Categorical or Continuous classes"
+                f"Invalid param_grid entry for '{key}': expected a space object "
+                f"(Continuous, Integer, or Categorical), got "
+                f"{type(value).__name__} instead.\n"
+                f"Example:\n"
+                f"    from sklearn_genetic.space import Categorical\n"
+                f'    param_grid = {{"{key}": Categorical([...])}}'
             )
 
 
