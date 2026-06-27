@@ -200,7 +200,9 @@ def check_space(param_grid: dict = None):
     for key, value in param_grid.items():
         if not isinstance(value, BaseDimension):
             raise ValueError(
-                f"{key} must be a valid instance of Integer, Categorical or Continuous classes"
+                f"Invalid param_grid entry for '{key}': expected a space object "
+                f"(Continuous, Integer, or Categorical), got {type(value).__name__} instead.\n"
+                f"Example: param_grid = {{'{key}': Categorical([...])}}"
             )
 
 

@@ -108,8 +108,21 @@ def test_check_space_fail():
         my_space = Space(param_grid)
     assert (
         str(excinfo.value)
-        == "max_depth must be a valid instance of Integer, Categorical or Continuous classes"
+        == "Invalid param_grid entry for 'max_depth': expected a space object "
+        "(Continuous, Integer, or Categorical), got range instead.\n"
+        "Example: param_grid = {'max_depth': Categorical([...])}"
     )
+
+
+def test_check_space_invalid_dimension_message_includes_type_and_example():
+    with pytest.raises(ValueError) as excinfo:
+        Space({"kernel": ["rbf", "linear"]})
+
+    message = str(excinfo.value)
+    assert "Invalid param_grid entry for 'kernel'" in message
+    assert "expected a space object (Continuous, Integer, or Categorical)" in message
+    assert "got list instead" in message
+    assert "Categorical([...])" in message
 
 
 @pytest.mark.parametrize(
