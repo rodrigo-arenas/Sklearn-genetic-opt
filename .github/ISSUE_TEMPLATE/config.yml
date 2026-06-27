@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Question / Discussion
+    url: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/discussions
+    about: For general usage questions and "how do I…" help, start a Discussion.
+  - name: Documentation
+    url: https://rodrigo-arenas.github.io/Sklearn-genetic-opt/
+    about: Browse the docs before opening an issue.
