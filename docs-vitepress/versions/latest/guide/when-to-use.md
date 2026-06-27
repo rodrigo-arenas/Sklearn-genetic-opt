@@ -1,6 +1,6 @@
 ---
 title: When to Use Genetic Algorithm Hyperparameter Search
-description: Decide whether GASearchCV fits your problem: decision table, signs that genetic search helps, signs it won't, and a realistic 7-parameter example.
+description: "Decide whether GASearchCV fits your problem: decision table, signs that genetic search helps, signs it won't, and a realistic 7-parameter example."
 ---
 
 :::warning Development version
