@@ -11,6 +11,18 @@ You are reading the **latest (dev)** docs. For the stable version, see [stable](
 
 This page covers the most common problems, organized by symptom.
 
+## Common Errors at a Glance
+
+| Symptom | Likely cause | Fix |
+|---------|--------------|-----|
+| `estimator is not a valid Sklearn classifier or regressor` | An unsupported estimator was passed to `GASearchCV` | Use `GASearchCV` with a classifier/regressor; for feature selection use `GAFeatureSelectionCV` |
+| `Invalid param_grid entry for '...'` (value is not a space object) | A raw `list`/`tuple`/`range` was used instead of a space object | Wrap choices in `Categorical([...])` and ranges in `Integer(...)` / `Continuous(...)` |
+| `ImportError` for `mlflow`, `tensorflow`, or `seaborn` | An optional dependency is not installed | `pip install "sklearn-genetic-opt[all]"` (or the specific extra) |
+| `InvalidParameterError` mentioning `'max_error'` | recent scikit-learn no longer accepts `max_error` as a scoring string | Use `scoring="neg_max_error"` |
+| Fit is much slower than expected | CPU oversubscription from nested parallelism | See [Search Is Slow](#search-is-slow) and the `parallel_backend` table |
+
+Each row is explained in more detail in the sections below.
+
 ## Parameter Errors
 
 **`ValueError: parameter X is not a valid parameter for estimator Y`**
@@ -37,6 +49,22 @@ A parameter value from `param_grid` is invalid for the estimator in that configu
 
 - Integer ranges do not include values the estimator rejects (e.g., `max_depth=0` is invalid for most tree models; use `Integer(1, ...)`)
 - Categorical choices are all valid strings or `None`, not mixed types the estimator cannot handle
+
+---
+
+**`Invalid param_grid entry for 'X': expected a space object ...`**
+
+Every value in `param_grid` must be a space object, not a raw list or range:
+
+```python
+from sklearn_genetic.space import Categorical, Integer
+
+# ❌ Wrong — raw list / range
+param_grid = {"kernel": ["rbf", "linear"], "max_depth": range(2, 20)}
+
+# ✅ Correct — space objects
+param_grid = {"kernel": Categorical(["rbf", "linear"]), "max_depth": Integer(2, 20)}
+```
 
 ## All Candidates Score the Same
 
@@ -70,6 +98,16 @@ runtime_config=RuntimeConfig(parallel_backend="cv", n_jobs=-1)
 ```
 
 This keeps candidate evaluation serial but parallelizes the cross-validation splits for each candidate.
+
+**Choosing `parallel_backend` vs estimator `n_jobs`.** Parallelize in exactly one layer to avoid oversubscribing the CPU:
+
+| Your estimator | Recommended setting |
+|----------------|---------------------|
+| Pure sklearn estimator with no internal threading (e.g. `SVC`, `LogisticRegression`) | `parallel_backend="population"` (or `"auto"`); leave estimator `n_jobs` unset |
+| sklearn estimator already using all cores (e.g. `RandomForestClassifier(n_jobs=-1)`) | Set the estimator's `n_jobs=1`, **or** use `parallel_backend="cv"` |
+| XGBoost / LightGBM / CatBoost | Set the model's thread count to 1 (`n_jobs=1` / `thread_count=1`) and use `parallel_backend="cv"` |
+
+Rule of thumb: parallelize either across candidates/CV (`parallel_backend`) **or** inside the estimator (`n_jobs`) — not both. See the [joblib parallelism recipe](../recipes/integrations/joblib-parallel) and [`RuntimeConfig.parallel_backend`](../api/config).
 
 2. **Too many unique candidates.** Check `fit_stats_["unique_candidates"]`. If it equals `fit_stats_["evaluated_candidates"]` and `cache_hits` is zero, the cache is not helping. This is normal on the first run.
 
@@ -202,6 +240,45 @@ pip install seaborn
 ```
 
 The plotting helpers operate on the fitted estimator's `logbook` attribute. If `verbose=False` was set during fit, the logbook is still populated — the flag only controls printed output.
+
+## Unsupported Estimator Type
+
+**`estimator is not a valid Sklearn classifier or regressor`**
+
+`GASearchCV` tunes the hyperparameters of a classifier or regressor. If you want
+to select features instead, use `GAFeatureSelectionCV`:
+
+```python
+from sklearn_genetic import GAFeatureSelectionCV
+
+selector = GAFeatureSelectionCV(estimator=clf, cv=3, scoring="accuracy")
+selector.fit(X, y)
+```
+
+## Optional Dependencies
+
+**`ImportError` / `ModuleNotFoundError` for `mlflow`, `tensorflow`, or `seaborn`**
+
+These power optional features (experiment logging, the TensorBoard callback, and
+plots). Install the extra you need:
+
+```bash
+pip install "sklearn-genetic-opt[all]"   # everything
+pip install "sklearn-genetic-opt[mlflow]" # MLflow logging only
+pip install seaborn                        # plotting only
+```
+
+## `max_error` Scoring String Rejected
+
+**`InvalidParameterError` mentioning `'max_error'`**
+
+Recent scikit-learn versions don't accept `"max_error"` as a scoring string.
+Use its negated form, which works as a maximization objective like the other
+`neg_*` scorers:
+
+```python
+GASearchCV(estimator=reg, scoring="neg_max_error", param_grid=param_grid)
+```
 
 ## Getting More Help
 
