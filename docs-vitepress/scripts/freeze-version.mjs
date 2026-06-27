@@ -9,9 +9,8 @@
  *   1. Copies versions/latest/ → versions/<version>/
  *   2. Strips the :::warning Development version ::: banner from all pages
  *   3. Updates "X.Y (stable)" labels in :::info Version boxes to the new number
- *   4. Adds the new version to the nav dropdown and sidebar in config.ts
- *   5. Updates versions/stable/index.md to redirect to the new stable version
- *   6. Updates "see [0.X]" references inside latest/ dev banners to point to
+ *   4. Updates /stable/index.md to redirect to the new stable version
+ *   5. Updates "see [0.X]" references inside latest/ dev banners to point to
  *      the new stable version
  */
 
@@ -58,65 +57,13 @@ const frozenDir = join(docsRoot, 'versions', version)
   console.log(`Cleaned up versions/${version}/`)
 }
 
-// ── 4. Update config.ts ───────────────────────────────────────────────────────
-const configPath = join(docsRoot, '.vitepress', 'config.ts')
-let config = readFileSync(configPath, 'utf8')
-
-if (config.includes(`'/versions/${version}/'`)) {
-  console.log(`config.ts already references ${version} — skipping config update.`)
-} else {
-  const lines = config.split('\n')
-
-  // 4a. Demote the current stable in the nav: "X.Y (stable)" → "X.Y"
-  for (let i = 0; i < lines.length; i++) {
-    lines[i] = lines[i].replace(/(\d+\.\d+) \(stable\)(')/g, '$1$2')
-  }
-
-  // 4b. Insert new stable as the first entry in the Version dropdown items: [...]
-  let inVersionDropdown = false
-  let itemsLine = -1
-  for (let i = 0; i < lines.length; i++) {
-    if (lines[i].includes("text: 'Version',")) inVersionDropdown = true
-    if (inVersionDropdown && lines[i].trimStart().startsWith('items: [')) {
-      itemsLine = i
-      break
-    }
-  }
-  if (itemsLine === -1) throw new Error("Could not find Version dropdown 'items: [' in config.ts")
-
-  const navIndent = lines[itemsLine + 1].match(/^(\s*)/)[1]
-  lines.splice(
-    itemsLine + 1,
-    0,
-    `${navIndent}{ text: '${version} (stable)', link: '/versions/${version}/' },`
-  )
-
-  // 4c. Add sidebar entry for the new version (before '/versions/latest/')
-  const latestSidebarEntry = `'/versions/latest/': versionSidebar('/versions/latest')`
-  for (let i = 0; i < lines.length; i++) {
-    if (lines[i].includes(latestSidebarEntry)) {
-      const sidebarIndent = lines[i].match(/^(\s*)/)[1]
-      lines.splice(
-        i,
-        0,
-        `${sidebarIndent}'/versions/${version}/': versionSidebar('/versions/${version}'),`
-      )
-      break
-    }
-  }
-
-  config = lines.join('\n')
-  writeFileSync(configPath, config, 'utf8')
-  console.log(`Updated config.ts: added version ${version} to nav and sidebar`)
-}
-
-// ── 5. Update /stable redirect to point at the new stable version ────────────
+// ── 4. Update /stable redirect to point at the new stable version ────────────
 const stablePage = join(docsRoot, 'stable', 'index.md')
 if (existsSync(stablePage)) {
   let stableContent = readFileSync(stablePage, 'utf8')
   stableContent = stableContent.replace(
-    /url:\/versions\/[\d.]+\//g,
-    `url:/versions/${version}/`
+    /url=\/versions\/[\d.]+\//g,
+    `url=/versions/${version}/`
   )
   stableContent = stableContent.replace(
     /window\.location\.replace\('\/versions\/[\d.]+\/'\)/g,
@@ -126,7 +73,7 @@ if (existsSync(stablePage)) {
   console.log(`Updated /stable redirect → /versions/${version}/`)
 }
 
-// ── 6. Update "see [0.X]" references in latest/ dev banners ─────────────────
+// ── 5. Update "see [0.X]" references in latest/ dev banners ─────────────────
 walkMd(latestDir, (filePath) => {
   let content = readFileSync(filePath, 'utf8')
   // Replace version links inside the warning block only

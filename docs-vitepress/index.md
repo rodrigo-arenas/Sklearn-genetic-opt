@@ -26,7 +26,7 @@ features:
   - icon: 🔁
     title: Drop-in sklearn Replacement
     details: GASearchCV follows the same fit / predict / best_params_ API as GridSearchCV. Replace it in one line and keep your entire pipeline unchanged.
-    link: /versions/latest/guide/getting-started
+    link: /versions/latest/guide/basic-usage
     linkText: Quick Start
   - icon: 🧬
     title: Evolves Whole Configurations
@@ -36,11 +36,11 @@ features:
   - icon: 🎯
     title: Wrapper Feature Selection
     details: GAFeatureSelectionCV finds the compact feature subset that maximises CV score — outperforms filter methods when features interact.
-    link: /versions/latest/tutorials/feature-selection-with-genetic-algorithms
+    link: /versions/latest/tutorials/feature-selection
     linkText: Feature Selection Tutorial
   - icon: 📊
     title: Built-in Monitoring
     details: Callbacks for early stopping, MLflow child-run logging, TensorBoard, and per-generation telemetry — out of the box.
-    link: /versions/latest/tutorials/callbacks
+    link: /versions/latest/guide/callbacks
     linkText: Callbacks Guide
 ---
