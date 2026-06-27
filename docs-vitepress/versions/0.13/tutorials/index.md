@@ -1,44 +1,64 @@
 ---
-title: Tutorials
-description: In-depth tutorials for sklearn-genetic-opt covering XGBoost, LightGBM, CatBoost, comprehensive feature selection, and imbalanced classification.
+title: "Hyperparameter Tuning Tutorials: Random Forest, XGBoost, LightGBM, and More"
+description: "End-to-end hyperparameter tuning tutorials for scikit-learn models, XGBoost, LightGBM, CatBoost, and more — using genetic algorithms with sklearn-genetic-opt."
 ---
 
-# Tutorials
+# Hyperparameter Tuning Tutorials
 
 Step-by-step tutorials for common real-world scenarios. Each tutorial is self-contained and includes a baseline comparison, runnable code, visualizations, and practical notes.
 
 ::: tip Tutorials vs Examples
-**Tutorials** are end-to-end walkthroughs of a complete real-world task — from raw data to a tuned, evaluated model — usually integrating a specific library (XGBoost, LightGBM, CatBoost, …). **[Examples](../examples/)** are shorter, focused recipes that each demonstrate a single feature you can drop into your own code.
+**Tutorials** are end-to-end walkthroughs of a complete real-world task — from raw data to a tuned, evaluated model. **[Examples](../examples/)** are shorter, focused recipes that each demonstrate a single feature you can drop into your own code.
 :::
+
+## scikit-learn Estimators
+
+| Tutorial | Difficulty | What it covers |
+|----------|-----------|---------------|
+| [Random Forest Hyperparameter Tuning](./tune-random-forest) | Intermediate | 7-parameter joint search, which params matter, classification and regression, baseline comparison |
+| [Gradient Boosting Hyperparameter Tuning](./tune-gradient-boosting) | Intermediate | HistGradientBoosting vs classic GBM, max_leaf_nodes vs max_depth, speed comparison |
+| [Logistic Regression Hyperparameter Tuning](./tune-logistic-regression) | Beginner | C, penalty, solver compatibility, multi-penalty search with SAGA |
+| [SVM Hyperparameter Tuning (C, kernel, gamma)](./tune-svm) | Intermediate | C–gamma interaction, Pipeline with StandardScaler, RBF vs linear kernel, scaling limits |
 
 ## Gradient Boosting Libraries
 
-| Tutorial | What it covers |
-|----------|---------------|
-| [Tune XGBoost](./tune-xgboost) | 9-parameter XGBoost search, adaptive schedules, feature importance, 3-way comparison |
-| [Tune LightGBM](./tune-lightgbm) | 9-parameter LightGBM search, `num_leaves`/`max_depth` interaction, parameter scatter plots |
-| [Tune CatBoost](./tune-catboost) | 7-parameter CatBoost search, `bagging_temperature`, `border_count`, GPU tip |
+| Tutorial | Difficulty | What it covers |
+|----------|-----------|---------------|
+| [XGBoost Hyperparameter Tuning](./tune-xgboost) | Intermediate | 9-parameter XGBoost search, adaptive schedules, feature importance, 3-way comparison |
+| [LightGBM Hyperparameter Tuning](./tune-lightgbm) | Intermediate | 9-parameter LightGBM search, `num_leaves`/`max_depth` interaction, parameter scatter plots |
+| [CatBoost Hyperparameter Tuning](./tune-catboost) | Intermediate | 7-parameter CatBoost search, `bagging_temperature`, `border_count`, GPU tip |
 
 ## Feature Selection
 
-| Tutorial | What it covers |
-|----------|---------------|
-| [Comprehensive Feature Selection](./feature-selection) | 3-stage workflow: select on 50 features, retune on selected subset, validate with a second estimator |
+| Tutorial | Difficulty | What it covers |
+|----------|-----------|---------------|
+| [Feature Selection with Genetic Algorithms](./feature-selection) | Advanced | 3-stage workflow: select on 50 features, retune on selected subset, validate with a second estimator |
 
 ## Imbalanced Data
 
-| Tutorial | What it covers |
-|----------|---------------|
-| [Imbalanced Classification](./imbalanced-classification) | 95/5 imbalance, `class_weight` as search param, `balanced_accuracy` scoring, confusion matrices |
+| Tutorial | Difficulty | What it covers |
+|----------|-----------|---------------|
+| [Hyperparameter Tuning for Imbalanced Datasets](./imbalanced-classification) | Intermediate | 95/5 imbalance, `class_weight` as search param, `balanced_accuracy` scoring, confusion matrices |
 
 ## Outlier Detection
 
-| Tutorial | What it covers |
-|----------|---------------|
-| [Isolation Forest](./isolation-forest) | Custom scorer from `score_samples`, 4-param search, anomaly contour plots, ROC curve |
+| Tutorial | Difficulty | What it covers |
+|----------|-----------|---------------|
+| [Isolation Forest Hyperparameter Tuning](./isolation-forest) | Advanced | Custom scorer from `score_samples`, 4-param search, anomaly contour plots, ROC curve |
+
+## Not Sure Where to Start?
+
+:::tip Recommended reading order
+1. [How Hyperparameter Optimization Works](../guide/how-hyperparameter-optimization-works) — theory and method comparison
+2. [When to Use Genetic Algorithm Search](../guide/when-to-use) — decide if GASearchCV fits your problem
+3. [Getting Started with GASearchCV](../guide/basic-usage) — run your first search
+4. Pick the tutorial for your model above
+:::
 
 ## See Also
 
 - [Examples](../examples/) — shorter end-to-end examples for common use cases
-- [User Guide](../guide/when-to-use) — decision guide for choosing a search method
+- [Comparisons](../comparisons/) — honest benchmarks: GA vs Random vs Bayesian
+- [Common Hyperparameter Tuning Mistakes](../guide/common-mistakes) — avoid the most frequent pitfalls
+- [Choosing the Right Search Space](../guide/choosing-search-spaces) — define good parameter bounds
 - [API Reference](../api/gasearchcv) — full parameter documentation

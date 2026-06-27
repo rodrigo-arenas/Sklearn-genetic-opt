@@ -1,9 +1,13 @@
 ---
-title: "Basic Usage"
-description: "Your first hyperparameter search with GASearchCV and your first feature selection with GAFeatureSelectionCV — a complete, runnable walkthrough."
+title: "Getting Started with GASearchCV: Hyperparameter Tuning and Feature Selection"
+description: "Step-by-step introduction to GASearchCV for hyperparameter optimization and GAFeatureSelectionCV for feature selection, with complete runnable examples."
 ---
 
-# Basic Usage
+**Estimated reading time:** 15 minutes  
+**Difficulty:** Beginner  
+**Prerequisites:** Python, pip, basic sklearn knowledge (`train_test_split`, classifiers)
+
+# Getting Started with GASearchCV: Hyperparameter Tuning and Feature Selection
 
 This page walks through the two workflows you will use most:
 
@@ -262,10 +266,11 @@ plt.tight_layout()
 - Check `fit_stats_["skipped_invalid_candidates"]` after fitting — a non-zero
   value means some sampled configurations raised errors during `fit`.
 
-## Next Steps
+## See Also
 
-- [When to Use](./when-to-use) — is a genetic search the right tool for your problem?
-- [Understanding Cross-Validation](./understand-cv) — read the generation log in depth
-- [Pipeline Tuning](./pipeline-tuning) — tune a scikit-learn `Pipeline` with `step__param` names
-- [Callbacks](./callbacks) — early stopping, progress bars, and checkpoints
-- [Plotting Gallery](../examples/plotting-gallery) — every diagnostic plot, explained
+- [How Hyperparameter Optimization Works](./how-hyperparameter-optimization-works) — understand the theory behind different search methods
+- [Choosing the Right Search Space](./choosing-search-spaces) — pick optimal parameter bounds
+- [Common Hyperparameter Tuning Mistakes](./common-mistakes) — avoid the most frequent pitfalls
+- [Cross-Validation in Hyperparameter Search](./understand-cv) — understand generation logs and convergence
+- [Random Forest Hyperparameter Tuning](../tutorials/tune-random-forest) — first real tutorial
+- [Troubleshooting](./troubleshooting) — if something doesn't work

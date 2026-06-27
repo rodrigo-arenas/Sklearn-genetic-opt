@@ -3,6 +3,10 @@ title: MLflow Integration
 description: Log sklearn-genetic-opt experiments to MLflow using MLflowConfig — track hyperparameter search runs, compare experiments, and save fitted models.
 ---
 
+**Estimated reading time:** 10 minutes  
+**Difficulty:** Intermediate  
+**Prerequisites:** [Getting Started with GASearchCV](./basic-usage), MLflow installed (`pip install sklearn-genetic-opt[mlflow]`)
+
 # MLflow Integration
 
 `sklearn-genetic-opt` has built-in integration with MLflow via `MLflowConfig`. It logs each evaluated candidate as a nested child run within a parent experiment run, making it easy to compare hyperparameter configurations in the MLflow UI.
@@ -142,7 +146,10 @@ mlflow_config = MLflowConfig(
 )
 ```
 
-## Next Steps
+## See Also
 
-- [Callbacks](./callbacks) — combine early stopping with MLflow logging
-- [Reproducibility](./reproducibility) — log seeds alongside metrics for fully reproducible runs
+- [Early Stopping with Callbacks](./callbacks) — combine MLflow logging with early stopping callbacks
+- [Reproducibility & Checkpointing](./reproducibility) — checkpoint and resume alongside MLflow tracking
+- [Multi-Metric Optimization](./multi-metric) — log multiple metrics to MLflow
+- [Examples: MLflow Experiment Tracking](../examples/mlflow-tracking) — complete end-to-end example
+- [API: MLflow](../api/mlflow) — MLflowConfig reference

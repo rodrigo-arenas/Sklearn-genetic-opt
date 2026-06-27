@@ -1,6 +1,6 @@
 ---
-title: "Comparing GASearchCV With scikit-learn Search Methods"
-description: "A fully reproducible, side-by-side comparison of GASearchCV, RandomizedSearchCV, and GridSearchCV on a rugged, mixed search space — solution quality, search cost, and where the genetic algorithm earns its keep."
+title: "Grid Search vs Random Search vs Genetic Algorithms: A Benchmark"
+description: "Side-by-side benchmark of GridSearchCV, RandomizedSearchCV, and GASearchCV on the same dataset and budget — with honest results."
 ---
 
 # Comparing GASearchCV With scikit-learn Search Methods

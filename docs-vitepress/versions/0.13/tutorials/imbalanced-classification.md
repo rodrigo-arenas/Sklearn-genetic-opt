@@ -1,7 +1,11 @@
 ---
-title: "Imbalanced Classification With GASearchCV"
-description: "Handle a 95/5 class imbalance by tuning class_weight as a search parameter alongside model hyperparameters, with balanced_accuracy as the fitness signal. Includes confusion matrices and a matched-budget comparison against RandomizedSearchCV."
+title: "Hyperparameter Tuning for Imbalanced Datasets: Beyond Accuracy"
+description: "Tune classifiers on imbalanced datasets using balanced_accuracy, ROC-AUC, and class_weight — with a 95/5 imbalanced example using GASearchCV."
 ---
+
+**Estimated reading time:** 15 minutes  
+**Difficulty:** Intermediate  
+**Prerequisites:** [Getting Started with GASearchCV](../guide/basic-usage), basic imbalanced learning concepts
 
 # Imbalanced Classification With GASearchCV
 
@@ -554,7 +558,8 @@ mechanisms:
 
 ## See Also
 
-- [Multi-Metric Optimization](../guide/multi-metric) — using multiple scorers with `refit`
-- [Multi-Metric Search](../examples/multi-metric) — worked example with `cv_results_` inspection
-- [Tuning Isolation Forest](./isolation-forest) — the related unsupervised anomaly-detection problem
-- [GASearchCV API](../api/gasearchcv)
+- [Multi-Metric Optimization](../guide/multi-metric) — optimize multiple metrics simultaneously
+- [Common Hyperparameter Tuning Mistakes](../guide/common-mistakes) — class imbalance and scoring pitfalls
+- [Random Forest Hyperparameter Tuning](./tune-random-forest) — class_weight in Random Forest
+- [Logistic Regression Hyperparameter Tuning](./tune-logistic-regression) — class_weight for linear models
+- [Choosing the Right Search Space](../guide/choosing-search-spaces) — search space for imbalanced setups

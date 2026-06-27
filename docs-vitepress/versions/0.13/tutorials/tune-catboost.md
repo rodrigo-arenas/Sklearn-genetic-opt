@@ -1,7 +1,11 @@
 ---
-title: "Tuning CatBoost With GASearchCV"
-description: "Optimize CatBoost's ordered-boosting hyperparameters (depth, l2_leaf_reg, bagging_temperature, border_count, random_strength) with a genetic algorithm, with a real baseline comparison."
+title: "CatBoost Hyperparameter Tuning with Genetic Algorithms"
+description: "Optimize CatBoost's 7 key hyperparameters including bagging_temperature and border_count using GASearchCV with adaptive schedules."
 ---
+
+**Estimated reading time:** 18 minutes  
+**Difficulty:** Intermediate  
+**Prerequisites:** `pip install sklearn-genetic-opt catboost`
 
 # Tuning CatBoost With GASearchCV
 
@@ -218,5 +222,8 @@ fig.tight_layout()
 
 ## See Also
 
-- [Tune XGBoost](./tune-xgboost) and [Tune LightGBM](./tune-lightgbm)
-- [Advanced Optimizer Control](../guide/advanced-optimizer-control)
+- [XGBoost Hyperparameter Tuning](./tune-xgboost) — XGBoost's regularization-heavy approach
+- [LightGBM Hyperparameter Tuning](./tune-lightgbm) — LightGBM for maximum speed
+- [Gradient Boosting Hyperparameter Tuning](./tune-gradient-boosting) — sklearn-native option (no extra install)
+- [Adaptive Crossover & Mutation Schedules](../guide/adapters) — tune exploration/exploitation balance
+- [Choosing the Right Search Space](../guide/choosing-search-spaces) — search space design principles

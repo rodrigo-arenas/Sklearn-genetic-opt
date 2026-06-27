@@ -1,7 +1,11 @@
 ---
-title: "Tuning LightGBM With GASearchCV"
-description: "Optimize LightGBM's leaf-wise tree hyperparameters with a genetic algorithm, with a real baseline comparison and a look at the num_leaves / max_depth interaction."
+title: "LightGBM Hyperparameter Tuning with Genetic Algorithms"
+description: "Tune 9 LightGBM hyperparameters including the num_leaves/max_depth interaction using GASearchCV, with scatter plots and baseline comparison."
 ---
+
+**Estimated reading time:** 18 minutes  
+**Difficulty:** Intermediate  
+**Prerequisites:** `pip install sklearn-genetic-opt lightgbm`
 
 # Tuning LightGBM With GASearchCV
 
@@ -247,6 +251,9 @@ fig.tight_layout()
 
 ## See Also
 
-- [Tune XGBoost](./tune-xgboost) — level-wise boosting and the same workflow
-- [Tune CatBoost](./tune-catboost) — ordered boosting and CatBoost-specific knobs
-- [Advanced Optimizer Control](../guide/advanced-optimizer-control)
+- [XGBoost Hyperparameter Tuning](./tune-xgboost) — XGBoost-specific parameters and comparison
+- [CatBoost Hyperparameter Tuning](./tune-catboost) — CatBoost's unique parameters
+- [Gradient Boosting Hyperparameter Tuning](./tune-gradient-boosting) — sklearn-native GBM (no extra install)
+- [Random Forest Hyperparameter Tuning](./tune-random-forest) — simpler baseline
+- [Grid Search vs Genetic Algorithms](../comparisons/grid-search-vs-genetic-algorithms) — comparison with benchmarks
+- [Choosing the Right Search Space](../guide/choosing-search-spaces) — log-uniform guidance for LightGBM params

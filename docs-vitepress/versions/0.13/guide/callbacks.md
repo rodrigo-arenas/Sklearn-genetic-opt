@@ -1,9 +1,13 @@
 ---
-title: Callbacks
-description: Add early stopping, progress reporting, checkpoints, TensorBoard, and MLflow logging to your GASearchCV runs.
+title: Early Stopping and Callbacks for Hyperparameter Search
+description: Use built-in callbacks to stop search early, track progress, save checkpoints, and log to TensorBoard during genetic algorithm hyperparameter optimization.
 ---
 
-# Callbacks
+**Estimated reading time:** 12 minutes  
+**Difficulty:** Intermediate  
+**Prerequisites:** [Getting Started with GASearchCV](./basic-usage)
+
+# Early Stopping and Callbacks for Hyperparameter Search
 
 Callbacks hook into the search loop and run after each generation. They can stop the search early, log progress, save checkpoints, or trigger any custom action.
 
@@ -242,8 +246,10 @@ print("Accuracy:", accuracy_score(y_test, y_predict_ga))
 - `TimerStopping` stops after the **next** generation completes once the time limit is exceeded — it won't interrupt a running generation.
 - When multiple callbacks are combined, **any single one** returning `True` stops the search.
 
-## Next Steps
+## See Also
 
-- [Custom Callbacks](./custom-callback) — write your own callback
-- [MLflow Integration](./mlflow) — log experiments using `MLflowConfig`
-- [Advanced Optimizer Control](./advanced-optimizer-control) — tune diversity and convergence behavior
+- [Writing Custom Callbacks](./custom-callback) — build your own stopping logic
+- [Reproducibility & Checkpointing](./reproducibility) — use LogbookSaver and ModelCheckpoint
+- [Cross-Validation in Hyperparameter Search](./understand-cv) — understand the metrics callbacks watch
+- [Advanced Optimizer Control](./advanced-optimizer-control) — diversity control and stagnation recovery
+- [API: Callbacks](../api/callbacks) — full callback reference
