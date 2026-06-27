@@ -1,7 +1,43 @@
+import { existsSync, readdirSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { defineConfig, HeadConfig } from 'vitepress'
 
 const GITHUB_PAGES_BASE = '/'
 const GA_TAG = process.env.GOOGLE_ANALYTICS_TAG
+const DOCS_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
+
+function discoverReleaseVersions() {
+  const versionsRoot = join(DOCS_ROOT, 'versions')
+  if (!existsSync(versionsRoot)) return []
+
+  return readdirSync(versionsRoot, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && /^\d+\.\d+$/.test(entry.name))
+    .map((entry) => entry.name)
+    .sort((a, b) => {
+      const [aMajor, aMinor] = a.split('.').map(Number)
+      const [bMajor, bMinor] = b.split('.').map(Number)
+      return bMajor - aMajor || bMinor - aMinor
+    })
+}
+
+const releaseVersions = discoverReleaseVersions()
+
+const versionNavItems = [
+  ...releaseVersions.map((version, index) => ({
+    text: index === 0 ? `${version} (stable)` : version,
+    link: `/versions/${version}/`,
+  })),
+  { text: 'latest (dev)', link: '/versions/latest/' },
+]
+
+const versionSidebarEntries = Object.fromEntries([
+  ...releaseVersions.map((version) => [
+    `/versions/${version}/`,
+    versionSidebar(`/versions/${version}`),
+  ]),
+  ['/versions/latest/', versionSidebar('/versions/latest')],
+])
 
 const gaHead: HeadConfig[] = GA_TAG
   ? [
@@ -10,162 +46,47 @@ const gaHead: HeadConfig[] = GA_TAG
     ]
   : []
 
-// Sidebar shared across versions — paths are relative to the version root
+function versionName(versionPrefix: string) {
+  return versionPrefix.replace(/\/$/, '').split('/').at(-1) || versionPrefix
+}
+
+function hasVersionPage(versionPrefix: string, relativePath: string) {
+  const version = versionName(versionPrefix)
+  const cleanPath = relativePath.replace(/^\/+/, '').replace(/\/$/, '/index')
+  return existsSync(join(DOCS_ROOT, 'versions', version, `${cleanPath}.md`))
+}
+
+function pageItem(versionPrefix: string, text: string, relativePath: string) {
+  return hasVersionPage(versionPrefix, relativePath)
+    ? [{ text, link: `${versionPrefix}/${relativePath}` }]
+    : []
+}
+
+function pageSection(
+  versionPrefix: string,
+  text: string,
+  relativeRoot: string,
+  items: Array<{ text: string; relativePath: string }>,
+  collapsed = false,
+) {
+  const existingItems = items.flatMap((item) =>
+    pageItem(versionPrefix, item.text, item.relativePath),
+  )
+  return hasVersionPage(versionPrefix, relativeRoot) || existingItems.length
+    ? [{ text, collapsed, items: existingItems }]
+    : []
+}
+
+// Sidebar shared across versions. Sections are included only when that version
+// actually has the referenced pages, so frozen versions stay self-contained.
 function versionSidebar(versionPrefix: string) {
-  // These sections and items only appear in the in-development (latest) docs.
-  // New pages are only published in versions/latest/ until the next stable release.
-  const isLatest = versionPrefix.endsWith('/latest')
-  const benchmarksSection = isLatest
-    ? [
-        {
-          text: 'Benchmarks',
-          collapsed: false,
-          items: [
-            { text: 'Bayesmark Comparison', link: `${versionPrefix}/benchmarks/` },
-          ],
-        },
-      ]
-    : []
-  const comparisonsSection = isLatest
-    ? [
-        {
-          text: 'Comparisons',
-          collapsed: false,
-          items: [
-            { text: 'Overview', link: `${versionPrefix}/comparisons/` },
-            {
-              text: 'Grid vs Random vs Bayesian vs Genetic',
-              link: `${versionPrefix}/comparisons/grid-search-vs-genetic-algorithms`,
-            },
-            {
-              text: 'Optuna vs sklearn-genetic-opt',
-              link: `${versionPrefix}/comparisons/optuna-vs-sklearn-genetic-opt`,
-            },
-          ],
-        },
-      ]
-    : []
-
-  // New Getting Started items — only available in latest/
-  const latestGettingStarted = isLatest
-    ? [{ text: 'How Hyperparameter Optimization Works', link: `${versionPrefix}/guide/how-hyperparameter-optimization-works` }]
-    : []
-
-  // New User Guide items — only available in latest/
-  const latestGuideItems = isLatest
-    ? [
-        { text: 'Choosing the Right Search Space',        link: `${versionPrefix}/guide/choosing-search-spaces` },
-        { text: 'Common Hyperparameter Tuning Mistakes',  link: `${versionPrefix}/guide/common-mistakes` },
-        { text: 'Feature Selection Methods Compared',     link: `${versionPrefix}/guide/feature-selection-guide` },
-      ]
-    : []
-
-  // New Tutorial items — only available in latest/
-  const latestTutorialItems = isLatest
-    ? [
-        { text: 'Random Forest Hyperparameter Tuning',          link: `${versionPrefix}/tutorials/tune-random-forest` },
-        { text: 'Gradient Boosting Hyperparameter Tuning',      link: `${versionPrefix}/tutorials/tune-gradient-boosting` },
-        { text: 'Logistic Regression Hyperparameter Tuning',    link: `${versionPrefix}/tutorials/tune-logistic-regression` },
-        { text: 'SVM Hyperparameter Tuning (C, kernel, gamma)', link: `${versionPrefix}/tutorials/tune-svm` },
-      ]
-    : []
-
-  // Recipes section — only available in latest/
-  const recipesSection = isLatest
-    ? [
-        {
-          text: 'Recipes',
-          collapsed: false,
-          items: [
-            { text: 'Overview', link: `${versionPrefix}/recipes/` },
-            {
-              text: 'Classification',
-              collapsed: true,
-              items: [
-                { text: 'Tune RandomForestClassifier',         link: `${versionPrefix}/recipes/classification/random-forest-classifier` },
-                { text: 'Tune LogisticRegression',             link: `${versionPrefix}/recipes/classification/logistic-regression` },
-                { text: 'Tune SVC',                            link: `${versionPrefix}/recipes/classification/svm-classifier` },
-                { text: 'Tune XGBClassifier',                  link: `${versionPrefix}/recipes/classification/xgboost-classifier` },
-                { text: 'Tune LGBMClassifier',                 link: `${versionPrefix}/recipes/classification/lightgbm-classifier` },
-                { text: 'Tune CatBoostClassifier',             link: `${versionPrefix}/recipes/classification/catboost-classifier` },
-                { text: 'Tune HistGradientBoostingClassifier', link: `${versionPrefix}/recipes/classification/histgbm-classifier` },
-                { text: 'Tune ExtraTreesClassifier',           link: `${versionPrefix}/recipes/classification/extra-trees-classifier` },
-              ],
-            },
-            {
-              text: 'Regression',
-              collapsed: true,
-              items: [
-                { text: 'Tune RandomForestRegressor', link: `${versionPrefix}/recipes/regression/random-forest-regressor` },
-                { text: 'Tune XGBRegressor',          link: `${versionPrefix}/recipes/regression/xgboost-regressor` },
-                { text: 'Tune LGBMRegressor',         link: `${versionPrefix}/recipes/regression/lightgbm-regressor` },
-                { text: 'Tune CatBoostRegressor',     link: `${versionPrefix}/recipes/regression/catboost-regressor` },
-                { text: 'Tune ElasticNet',             link: `${versionPrefix}/recipes/regression/elasticnet` },
-              ],
-            },
-            {
-              text: 'Feature Selection',
-              collapsed: true,
-              items: [
-                { text: 'Select Features on 50+ Columns',             link: `${versionPrefix}/recipes/feature-selection/high-dimensional` },
-                { text: 'Combine Feature Selection + Tuning',         link: `${versionPrefix}/recipes/feature-selection/select-then-tune` },
-                { text: 'Custom Scorer with Feature-Count Penalty',   link: `${versionPrefix}/recipes/feature-selection/custom-scorer` },
-                { text: 'Feature Selection with CV (Leakage-Free)',   link: `${versionPrefix}/recipes/feature-selection/cv-selection` },
-              ],
-            },
-            {
-              text: 'Pipelines',
-              collapsed: true,
-              items: [
-                { text: 'Tune a Preprocessing + Estimator Pipeline', link: `${versionPrefix}/recipes/pipelines/preprocessing-pipeline` },
-                { text: 'Tune a ColumnTransformer Pipeline',          link: `${versionPrefix}/recipes/pipelines/column-transformer` },
-                { text: 'Tune Imputer Strategy as a Hyperparameter',  link: `${versionPrefix}/recipes/pipelines/imputer-strategy` },
-                { text: 'Tune Polynomial Features Degree',            link: `${versionPrefix}/recipes/pipelines/polynomial-features` },
-              ],
-            },
-            {
-              text: 'Scoring Metrics',
-              collapsed: true,
-              items: [
-                { text: 'Tune for F1 Score (Binary)',   link: `${versionPrefix}/recipes/metrics/f1-binary` },
-                { text: 'Tune for ROC-AUC',             link: `${versionPrefix}/recipes/metrics/roc-auc` },
-                { text: 'Tune for Balanced Accuracy',   link: `${versionPrefix}/recipes/metrics/balanced-accuracy` },
-                { text: 'Tune for MAE (Regression)',    link: `${versionPrefix}/recipes/metrics/mae` },
-                { text: 'Tune for RMSE (Regression)',   link: `${versionPrefix}/recipes/metrics/rmse` },
-              ],
-            },
-            {
-              text: 'Integrations',
-              collapsed: true,
-              items: [
-                { text: 'Log Every Candidate to MLflow',    link: `${versionPrefix}/recipes/integrations/mlflow-logging` },
-                { text: 'Parallelize with Joblib',          link: `${versionPrefix}/recipes/integrations/joblib-parallel` },
-                { text: 'Run in a Jupyter Notebook',        link: `${versionPrefix}/recipes/integrations/jupyter-notebook` },
-              ],
-            },
-            {
-              text: 'Advanced',
-              collapsed: true,
-              items: [
-                { text: 'Seed with Known-Good Params (Warm Start)',  link: `${versionPrefix}/recipes/advanced/warm-start` },
-                { text: 'Stop Early When Fitness Plateaus',          link: `${versionPrefix}/recipes/advanced/early-stopping-consecutive` },
-                { text: 'Stop After a Time Budget',                  link: `${versionPrefix}/recipes/advanced/time-budget` },
-                { text: 'Resume a Stopped Search',                   link: `${versionPrefix}/recipes/advanced/checkpointing` },
-                { text: 'Write a Custom Scoring Function',           link: `${versionPrefix}/recipes/advanced/custom-scorer` },
-              ],
-            },
-          ],
-        },
-      ]
-    : []
-
   return [
     {
       text: 'Getting Started',
       collapsed: false,
       items: [
         { text: 'Introduction', link: `${versionPrefix}/` },
-        ...latestGettingStarted,
+        ...pageItem(versionPrefix, 'How Hyperparameter Optimization Works', 'guide/how-hyperparameter-optimization-works'),
         { text: 'When to Use Genetic Algorithm Search', link: `${versionPrefix}/guide/when-to-use` },
         { text: 'Getting Started with GASearchCV', link: `${versionPrefix}/guide/basic-usage` },
         { text: 'Installation', link: `${versionPrefix}/guide/installation` },
@@ -175,7 +96,9 @@ function versionSidebar(versionPrefix: string) {
       text: 'User Guide',
       collapsed: false,
       items: [
-        ...latestGuideItems,
+        ...pageItem(versionPrefix, 'Choosing the Right Search Space', 'guide/choosing-search-spaces'),
+        ...pageItem(versionPrefix, 'Common Hyperparameter Tuning Mistakes', 'guide/common-mistakes'),
+        ...pageItem(versionPrefix, 'Feature Selection Methods Compared', 'guide/feature-selection-guide'),
         { text: 'Cross-Validation in Hyperparameter Search', link: `${versionPrefix}/guide/understand-cv` },
         { text: 'Tuning scikit-learn Pipelines', link: `${versionPrefix}/guide/pipeline-tuning` },
         { text: 'Multi-Metric Optimization', link: `${versionPrefix}/guide/multi-metric` },
@@ -195,7 +118,10 @@ function versionSidebar(versionPrefix: string) {
       collapsed: false,
       items: [
         { text: 'Overview',                                       link: `${versionPrefix}/tutorials/` },
-        ...latestTutorialItems,
+        ...pageItem(versionPrefix, 'Random Forest Hyperparameter Tuning', 'tutorials/tune-random-forest'),
+        ...pageItem(versionPrefix, 'Gradient Boosting Hyperparameter Tuning', 'tutorials/tune-gradient-boosting'),
+        ...pageItem(versionPrefix, 'Logistic Regression Hyperparameter Tuning', 'tutorials/tune-logistic-regression'),
+        ...pageItem(versionPrefix, 'SVM Hyperparameter Tuning (C, kernel, gamma)', 'tutorials/tune-svm'),
         { text: 'XGBoost Hyperparameter Tuning',                  link: `${versionPrefix}/tutorials/tune-xgboost` },
         { text: 'LightGBM Hyperparameter Tuning',                 link: `${versionPrefix}/tutorials/tune-lightgbm` },
         { text: 'CatBoost Hyperparameter Tuning',                 link: `${versionPrefix}/tutorials/tune-catboost` },
@@ -204,7 +130,16 @@ function versionSidebar(versionPrefix: string) {
         { text: 'Isolation Forest Hyperparameter Tuning',         link: `${versionPrefix}/tutorials/isolation-forest` },
       ],
     },
-    ...recipesSection,
+    ...pageSection(versionPrefix, 'Recipes', 'recipes/', [
+      { text: 'Overview', relativePath: 'recipes/' },
+      { text: 'Classification', relativePath: 'recipes/classification/' },
+      { text: 'Regression', relativePath: 'recipes/regression/' },
+      { text: 'Feature Selection', relativePath: 'recipes/feature-selection/' },
+      { text: 'Pipelines', relativePath: 'recipes/pipelines/' },
+      { text: 'Scoring Metrics', relativePath: 'recipes/metrics/' },
+      { text: 'Integrations', relativePath: 'recipes/integrations/' },
+      { text: 'Advanced', relativePath: 'recipes/advanced/' },
+    ]),
     {
       text: 'Examples',
       collapsed: false,
@@ -232,17 +167,29 @@ function versionSidebar(versionPrefix: string) {
         { text: 'Plots', link: `${versionPrefix}/api/plots` },
         { text: 'MLflow', link: `${versionPrefix}/api/mlflow` },
         { text: 'Search Space', link: `${versionPrefix}/api/space` },
-        ...(isLatest ? [{ text: 'Estimator Presets', link: `${versionPrefix}/api/presets` }] : []),
+        ...pageItem(versionPrefix, 'Estimator Presets', 'api/presets'),
         { text: 'Algorithms', link: `${versionPrefix}/api/algorithms` },
       ],
     },
-    ...benchmarksSection,
-    ...comparisonsSection,
+    ...pageSection(versionPrefix, 'Benchmarks', 'benchmarks/', [
+      { text: 'Bayesmark Comparison', relativePath: 'benchmarks/' },
+    ]),
+    ...pageSection(versionPrefix, 'Comparisons', 'comparisons/', [
+      { text: 'Overview', relativePath: 'comparisons/' },
+      {
+        text: 'Grid vs Random vs Bayesian vs Genetic',
+        relativePath: 'comparisons/grid-search-vs-genetic-algorithms',
+      },
+      {
+        text: 'Optuna vs sklearn-genetic-opt',
+        relativePath: 'comparisons/optuna-vs-sklearn-genetic-opt',
+      },
+    ]),
     {
       text: 'Release Notes',
       collapsed: false,
       items: [
-        { text: 'Changelog', link: `${versionPrefix}/release-notes` },
+        ...pageItem(versionPrefix, 'Changelog', 'release-notes'),
       ],
     },
   ]
@@ -324,10 +271,7 @@ export default defineConfig({
       { text: 'Home', link: '/' },
       {
         text: 'Version',
-        items: [
-          { text: '0.13 (stable)', link: '/versions/0.13/' },
-          { text: 'latest (dev)', link: '/versions/latest/' },
-        ],
+        items: versionNavItems,
       },
       {
         text: 'Links',
@@ -339,10 +283,7 @@ export default defineConfig({
       },
     ],
 
-    sidebar: {
-      '/versions/0.13/': versionSidebar('/versions/0.13'),
-      '/versions/latest/': versionSidebar('/versions/latest'),
-    },
+    sidebar: versionSidebarEntries,
 
     socialLinks: [
       { icon: 'github', link: 'https://github.com/rodrigo-arenas/Sklearn-genetic-opt' },
