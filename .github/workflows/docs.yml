@@ -51,7 +51,7 @@ jobs:
 
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs-vitepress/
+          git add docs-vitepress/versions docs-vitepress/stable
           if git diff --staged --quiet; then
             echo "Version ${VERSION} already frozen — nothing to commit."
           else
