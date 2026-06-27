@@ -147,3 +147,16 @@ def test_list_preset_spaces_matches_exported_presets():
     # Every reported name is importable from the package and callable.
     for name in names:
         assert callable(getattr(sklearn_genetic, name))
+
+
+def test_discovery_helpers_return_fresh_lists():
+    """Mutating a returned list must not affect internal state or later calls."""
+    from sklearn_genetic import list_preset_profiles, list_preset_spaces
+
+    for helper in (list_preset_profiles, list_preset_spaces):
+        first = helper()
+        first.append("__mutated__")
+        first.clear()
+        second = helper()
+        assert "__mutated__" not in second
+        assert second == sorted(second) and len(second) > 0

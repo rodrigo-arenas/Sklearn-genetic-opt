@@ -15,18 +15,11 @@ __all__ = [
 
 _PROFILES = {"fast", "balanced", "wide"}
 
-# Names of the preset search-space factory functions, captured so the discovery
-# helpers below stay in sync with what is actually exported.
-_PRESET_SPACES = (
-    "hist_gradient_boosting_classifier_space",
-    "hist_gradient_boosting_regressor_space",
-    "logistic_regression_space",
-    "random_forest_classifier_space",
-    "random_forest_regressor_space",
-    "svc_space",
-    "xgboost_classifier_space",
-    "xgboost_regressor_space",
-)
+# Names of the preset search-space factory functions, derived from __all__ so
+# the discovery helpers stay in sync with what is exported: the presets are
+# everything in __all__ except the discovery helpers themselves.
+_DISCOVERY_HELPERS = {"list_preset_profiles", "list_preset_spaces"}
+_PRESET_SPACES = tuple(name for name in __all__ if name not in _DISCOVERY_HELPERS)
 
 
 def list_preset_profiles():
