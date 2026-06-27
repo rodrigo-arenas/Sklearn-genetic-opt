@@ -1076,6 +1076,24 @@ def test_no_param_grid():
     assert str(excinfo.value) == "param_grid can not be empty"
 
 
+def test_invalid_param_grid_type():
+    """An invalid param_grid value raises a clear, actionable error (issue #210)."""
+    clf = SGDClassifier(loss="modified_huber", fit_intercept=True)
+    with pytest.raises(ValueError, match=r"Invalid param_grid entry for 'alpha'"):
+        GASearchCV(
+            clf,
+            cv=3,
+            scoring="accuracy",
+            population_size=12,
+            generations=8,
+            tournament_size=3,
+            elitism=False,
+            verbose=False,
+            criteria="max",
+            param_grid={"alpha": [1e-4, 1]},  # should be Continuous(1e-4, 1)
+        )
+
+
 def test_expected_ga_multimetric():
     clf = SGDClassifier(loss="modified_huber", fit_intercept=True)
     scoring = {

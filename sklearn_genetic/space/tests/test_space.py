@@ -129,12 +129,29 @@ def test_check_space_fail():
         "max_depth": range(10, 20),
     }
 
-    with pytest.raises(Exception) as excinfo:
+    with pytest.raises(ValueError) as excinfo:
         my_space = Space(param_grid)
-    assert (
-        str(excinfo.value)
-        == "max_depth must be a valid instance of Integer, Categorical or Continuous classes"
-    )
+    message = str(excinfo.value)
+    # The improved message names the offending key, the type that was passed,
+    # and shows a corrective example.
+    assert "Invalid param_grid entry for 'max_depth'" in message
+    assert "got range instead" in message
+    assert "Categorical" in message
+
+
+def test_check_space_invalid_type_message():
+    """A non-space value yields a clear, actionable error (issue #210)."""
+    param_grid = {"kernel": ["rbf", "linear"]}  # should be Categorical([...])
+
+    with pytest.raises(ValueError, match=r"Invalid param_grid entry for 'kernel'"):
+        Space(param_grid)
+
+    with pytest.raises(ValueError) as excinfo:
+        Space(param_grid)
+    message = str(excinfo.value)
+    assert "expected a space object (Continuous, Integer, or Categorical)" in message
+    assert "got list instead" in message
+    assert 'param_grid = {"kernel": Categorical([...])}' in message
 
 
 @pytest.mark.parametrize(
