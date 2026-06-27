@@ -1,44 +1,46 @@
 ---
 layout: home
-title: sklearn-genetic-opt — Genetic Algorithm Hyperparameter Tuning for scikit-learn
-description: "Tune Random Forest, XGBoost, LightGBM, CatBoost, and any scikit-learn estimator using genetic algorithms. Evolutionary hyperparameter search and feature selection powered by DEAP."
+title: sklearn-genetic-opt — Evolutionary Hyperparameter Tuning for scikit-learn
+description: "Genetic algorithm hyperparameter search and feature selection for scikit-learn. Tune Random Forest, XGBoost, LightGBM, SVM and any sklearn estimator with GASearchCV — the drop-in GridSearchCV replacement powered by evolutionary algorithms."
 titleTemplate: Evolutionary hyperparameter tuning for scikit-learn
 
 hero:
   name: sklearn-genetic-opt
-  text: Genetic Algorithm Hyperparameter Tuning
-  tagline: Tune Random Forest, XGBoost, LightGBM, and any scikit-learn estimator with evolutionary search — handles parameter interactions that GridSearchCV and RandomizedSearchCV miss.
+  text: Hyperparameter Tuning for scikit-learn
+  tagline: Find better parameters faster. Evolutionary search handles cross-parameter interactions that GridSearchCV and RandomizedSearchCV miss — with feature selection, callbacks, and MLflow built in.
   image:
     src: /logo.png
     alt: sklearn-genetic-opt logo
   actions:
     - theme: brand
-      text: Get Started
+      text: Get Started →
       link: /stable/
     - theme: alt
-      text: How It Works
-      link: /versions/latest/guide/how-hyperparameter-optimization-works
+      text: Browse Recipes
+      link: /versions/latest/recipes/
     - theme: alt
       text: View on GitHub
       link: https://github.com/rodrigo-arenas/Sklearn-genetic-opt
 
 features:
-  - title: Drop-in GridSearchCV Replacement
-    details: GASearchCV follows the same fit/predict/best_params_ API as GridSearchCV — replace it in one line and keep your entire sklearn workflow.
-  - title: Handles Parameter Interactions
-    details: Genetic algorithms evaluate complete configurations, not individual parameters — naturally finding learning_rate × n_estimators and other cross-parameter sweet spots.
-  - title: Wrapper-Based Feature Selection
-    details: GAFeatureSelectionCV finds the compact feature subset that maximises cross-validated score — outperforms filter methods on datasets with feature interactions.
-  - title: Smart Initialization
-    details: Latin hypercube sampling, estimator defaults, and warm-start seeds produce a better initial population than pure random — fewer wasted evaluations.
-  - title: Early Stopping
-    details: Built-in callbacks (ConsecutiveStopping, DeltaThreshold, TimerStopping) stop the search automatically when it converges — no manual iteration counting.
-  - title: Diversity Control
-    details: Adaptive mutation/crossover schedules, random immigrants, and fitness sharing prevent the population from converging to a local optimum.
-  - title: MLflow & TensorBoard
-    details: Every candidate is logged as a child run in MLflow — compare experiments, track parameter distributions, and store fitted models automatically.
-  - title: XGBoost, LightGBM, CatBoost
-    details: Detailed tutorials for every major gradient boosting library — 7–9 parameters tuned jointly, with CPU oversubscription tips and baseline comparisons.
-  - title: Comprehensive Educational Docs
-    details: Not just API docs — tutorials for Random Forest, XGBoost, LightGBM, Logistic Regression, SVM, feature selection, imbalanced data, outlier detection, and more.
+  - icon: 🔁
+    title: Drop-in sklearn Replacement
+    details: GASearchCV follows the same fit / predict / best_params_ API as GridSearchCV. Replace it in one line and keep your entire pipeline unchanged.
+    link: /versions/latest/guide/getting-started
+    linkText: Quick Start
+  - icon: 🧬
+    title: Evolves Whole Configurations
+    details: Genetic operators evaluate complete hyperparameter sets — naturally discovering learning_rate × n_estimators interactions that one-at-a-time search misses.
+    link: /versions/latest/guide/how-hyperparameter-optimization-works
+    linkText: How It Works
+  - icon: 🎯
+    title: Wrapper Feature Selection
+    details: GAFeatureSelectionCV finds the compact feature subset that maximises CV score — outperforms filter methods when features interact.
+    link: /versions/latest/tutorials/feature-selection-with-genetic-algorithms
+    linkText: Feature Selection Tutorial
+  - icon: 📊
+    title: Built-in Monitoring
+    details: Callbacks for early stopping, MLflow child-run logging, TensorBoard, and per-generation telemetry — out of the box.
+    link: /versions/latest/tutorials/callbacks
+    linkText: Callbacks Guide
 ---
