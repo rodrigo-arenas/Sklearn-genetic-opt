@@ -94,7 +94,40 @@ param_grid = {
 }
 ```
 
+## Convert sklearn/scipy-style spaces
+
+`from_sklearn_space` converts common `RandomizedSearchCV`-style dictionaries into
+native `sklearn-genetic-opt` dimensions:
+
+```python
+from scipy import stats
+
+from sklearn_genetic.space import from_sklearn_space
+
+param_grid = from_sklearn_space({
+    "n_estimators": stats.randint(50, 300),
+    "learning_rate": stats.loguniform(1e-3, 1e-1),
+    "max_features": stats.uniform(0.2, 0.8),
+    "criterion": ["gini", "entropy"],
+})
+```
+
+Conversion rules:
+
+| Input value | Output dimension |
+|-------------|------------------|
+| `list`, `tuple`, `set`, `range`, numpy array | `Categorical([...])` |
+| `scipy.stats.randint(low, high)` | `Integer(low, high - 1)` |
+| `scipy.stats.uniform(loc, scale)` | `Continuous(loc, loc + scale)` |
+| `scipy.stats.loguniform(a, b)` / `reciprocal(a, b)` | `Continuous(a, b, distribution="log-uniform")` |
+| Existing `Integer`, `Continuous`, `Categorical` | returned unchanged |
+
+Unsupported scipy distributions raise `ValueError` so you can choose an explicit
+`Integer`, `Continuous`, or `Categorical` dimension instead of getting a silent
+misconfiguration.
+
 ## See Also
 
 - [Basic Usage](../guide/basic-usage) — tutorial using all three dimension types
+- [Presets](./presets) — starter spaces for common scikit-learn estimators
 - [GASearchCV](./gasearchcv) — the search estimator that consumes `param_grid`

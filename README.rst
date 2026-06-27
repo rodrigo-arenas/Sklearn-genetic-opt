@@ -1,6 +1,6 @@
 .. -*- mode: rst -*-
 
-|Tests|_ |Codecov|_ |PythonVersion|_ |PyPi|_ |Conda|_ |Docs|_ |GoodFirstIssues|_
+|Tests|_ |Codecov|_ |PythonVersion|_ |PyPi| |Conda|_ |Docs|_ |GoodFirstIssues|_
 
 .. |Tests| image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/actions/workflows/ci-tests.yml/badge.svg?branch=master
 .. _Tests: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/actions/workflows/ci-tests.yml
@@ -12,7 +12,8 @@
 .. _PythonVersion: https://www.python.org/downloads/
 
 .. |PyPi| image:: https://img.shields.io/pypi/v/sklearn-genetic-opt.svg
-.. _PyPi: https://pypi.org/project/sklearn-genetic-opt/
+   :target: https://pypi.org/project/sklearn-genetic-opt/
+   :alt: PyPI package version
 
 .. |Conda| image:: https://img.shields.io/conda/vn/conda-forge/sklearn-genetic-opt.svg
 .. _Conda: https://anaconda.org/conda-forge/sklearn-genetic-opt
@@ -163,6 +164,29 @@ Quick Start
    print(search.best_params_)          # best hyperparameter configuration
    print(search.best_score_)           # best cross-validated ROC-AUC
    print(search.score(X_test, y_test)) # test-set score
+
+**Use a starter preset**
+
+.. code-block:: python
+
+   from sklearn_genetic import random_forest_classifier_space, xgboost_classifier_space
+
+   rf_param_grid = random_forest_classifier_space(profile="balanced")
+   xgb_param_grid = xgboost_classifier_space(profile="balanced")
+
+**Convert a RandomizedSearchCV-style space**
+
+.. code-block:: python
+
+   from scipy import stats
+
+   from sklearn_genetic.space import from_sklearn_space
+
+   param_grid = from_sklearn_space({
+       "n_estimators": stats.randint(50, 300),
+       "max_depth": [3, 5, 10, None],
+       "max_features": stats.uniform(0.1, 0.9),
+   })
 
 **Feature selection**
 

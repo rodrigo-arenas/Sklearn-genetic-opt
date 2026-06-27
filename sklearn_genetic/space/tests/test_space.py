@@ -1,6 +1,9 @@
 import pytest
+import numpy as np
+from scipy import stats
 
 from ..space import Categorical, Integer, Continuous, Space
+from ..converters import from_sklearn_space
 from ..base import BaseDimension
 
 
@@ -140,3 +143,89 @@ def test_wrong_dimension():
     message = str(excinfo.value)
     assert "Can't instantiate abstract class FakeDimension" in message
     assert "sample" in message
+
+
+def test_from_sklearn_space_converts_lists_and_scipy_distributions():
+    native_dimension = Integer(1, 3)
+    converted = from_sklearn_space(
+        {
+            "criterion": ["gini", "entropy"],
+            "max_depth": stats.randint(2, 12),
+            "learning_rate": stats.uniform(0.01, 0.29),
+            "alpha": stats.loguniform(1e-5, 1e-1),
+            "already_native": native_dimension,
+        }
+    )
+
+    assert isinstance(converted["criterion"], Categorical)
+    assert converted["criterion"].choices == ["gini", "entropy"]
+    assert isinstance(converted["max_depth"], Integer)
+    assert converted["max_depth"].lower == 2
+    assert converted["max_depth"].upper == 11
+    assert isinstance(converted["learning_rate"], Continuous)
+    assert converted["learning_rate"].lower == pytest.approx(0.01)
+    assert converted["learning_rate"].upper == pytest.approx(0.3)
+    assert converted["learning_rate"].distribution == "uniform"
+    assert isinstance(converted["alpha"], Continuous)
+    assert converted["alpha"].distribution == "log-uniform"
+    assert converted["already_native"].lower == 1
+    assert converted["already_native"] is native_dimension
+
+
+def test_from_sklearn_space_converts_keyword_scipy_distributions():
+    converted = from_sklearn_space(
+        {
+            "max_depth": stats.randint(low=3, high=9),
+            "subsample": stats.uniform(loc=0.25, scale=0.5),
+            "reg_alpha": stats.reciprocal(a=1e-6, b=1e-2),
+        }
+    )
+
+    assert converted["max_depth"].lower == 3
+    assert converted["max_depth"].upper == 8
+    assert converted["subsample"].lower == pytest.approx(0.25)
+    assert converted["subsample"].upper == pytest.approx(0.75)
+    assert converted["reg_alpha"].lower == pytest.approx(1e-6)
+    assert converted["reg_alpha"].upper == pytest.approx(1e-2)
+    assert converted["reg_alpha"].distribution == "log-uniform"
+
+
+def test_from_sklearn_space_converts_range_and_numpy_array_to_categorical():
+    converted = from_sklearn_space(
+        {
+            "depth_options": range(2, 5),
+            "activation": ["relu", "tanh"],
+            "batch_size": np.array([32, 64, 128]),
+        }
+    )
+
+    assert converted["depth_options"].choices == [2, 3, 4]
+    assert converted["activation"].choices == ["relu", "tanh"]
+    assert converted["batch_size"].choices == [32, 64, 128]
+
+
+def test_from_sklearn_space_rejects_unsupported_distributions():
+    with pytest.raises(ValueError) as excinfo:
+        from_sklearn_space({"alpha": stats.expon()})
+
+    assert "scipy.stats.expon" in str(excinfo.value)
+
+
+def test_from_sklearn_space_rejects_empty_or_ambiguous_values():
+    with pytest.raises(ValueError, match="non-empty mapping"):
+        from_sklearn_space({})
+
+    with pytest.raises(ValueError, match="has no categorical choices"):
+        from_sklearn_space({"criterion": []})
+
+    with pytest.raises(ValueError, match="must be a list-like value"):
+        from_sklearn_space({"max_depth": 3})
+
+
+def test_from_sklearn_space_rejects_broken_frozen_distribution_bounds(monkeypatch):
+    broken_distribution = stats.randint(1, 5)
+    monkeypatch.setattr(broken_distribution, "args", ())
+    monkeypatch.setattr(broken_distribution, "kwds", {})
+
+    with pytest.raises(ValueError, match="must define low and high bounds"):
+        from_sklearn_space({"max_depth": broken_distribution})
