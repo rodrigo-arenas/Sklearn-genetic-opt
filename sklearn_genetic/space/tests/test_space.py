@@ -16,6 +16,10 @@ from ..base import BaseDimension
             Categorical(["rbf", "linear", "poly"]),
             "Categorical(choices=['rbf', 'linear', 'poly'])",
         ),
+        (
+            Categorical(["a", "b"], priors=[0.8, 0.2]),
+            "Categorical(choices=['a', 'b'], priors=[0.8, 0.2])",
+        ),
     ],
 )
 def test_space_repr(space_object, expected_repr):

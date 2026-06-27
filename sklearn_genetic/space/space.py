@@ -188,7 +188,10 @@ class Categorical(BaseDimension):
             self.rvs = self.rng.choice if self.rng else random.choice
 
     def __repr__(self):
-        return f"{self.__class__.__name__}(choices={self.choices!r})"
+        if self.priors is None:
+            return f"{self.__class__.__name__}(choices={self.choices!r})"
+
+        return f"{self.__class__.__name__}(choices={self.choices!r}, priors={self.priors!r})"
 
     def sample(self):
         """Sample a random value from the assigned distribution"""
