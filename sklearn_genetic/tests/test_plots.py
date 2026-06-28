@@ -192,6 +192,34 @@ def test_plot_candidate_scores():
     )
 
 
+@pytest.mark.parametrize(
+    "plot_function",
+    [
+        plot_candidate_scores,
+        plot_cv_scores,
+        plot_candidate_rankings,
+    ],
+)
+@pytest.mark.parametrize("top_k", [0, -1, 1.5])
+def test_candidate_plots_reject_invalid_top_k(plot_function, top_k):
+    with pytest.raises(ValueError, match="top_k must be a positive integer"):
+        plot_function(evolved_estimator, top_k=top_k)
+
+
+@pytest.mark.parametrize(
+    "plot_function",
+    [
+        plot_candidate_scores,
+        plot_cv_scores,
+        plot_candidate_rankings,
+    ],
+)
+@pytest.mark.parametrize("top_k", [1, None])
+def test_candidate_plots_accept_valid_top_k(plot_function, top_k):
+    plot = plot_function(evolved_estimator, top_k=top_k)
+    assert plot is not None
+
+
 def test_plot_convergence_and_diversity():
     convergence = plot_convergence(evolved_estimator)
     assert convergence.get_title() == "Convergence"
