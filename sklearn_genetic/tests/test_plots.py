@@ -1,4 +1,5 @@
 import matplotlib
+import numpy as np
 import pytest
 import re
 from sklearn.datasets import load_diabetes
@@ -9,6 +10,7 @@ matplotlib.use("Agg")
 
 from .. import GASearchCV, GAFeatureSelectionCV
 from ..plots import (
+    _as_list,
     SearchPlotter,
     plot_candidate_rankings,
     plot_candidate_scores,
@@ -352,3 +354,72 @@ def test_plot_feature_selection_on_unfitted_estimator_names_the_plot():
     assert "plot_feature_selection requires" in message
     assert "estimator.fit(X, y)" in message
     assert "estimator.best_features_" in message
+
+
+# _as_list tests – issue #256
+# normalises whatever callers pass into a plain list,
+# these just make sure the edge cases don't quietly break
+
+
+def test_as_list_none():
+    assert _as_list(None) == []
+
+
+def test_as_list_falsy_values():
+    # 0 and False are falsy but they're not None
+    assert _as_list(0) == [0]
+    assert _as_list(False) == [False]
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        ("score", ["score"]),
+        ("fitness_best", ["fitness_best"]),
+        ("a", ["a"]),
+        ("", [""]),  # empty string != None, should not return []
+    ],
+)
+def test_as_list_with_strings(value, expected):
+    assert _as_list(value) == expected
+
+
+def test_as_list_string_not_split():
+    # without an isinstance check this would return ["n","a","m","e"]
+    assert _as_list("name") != list("name")
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        (["a", "b"], ["a", "b"]),
+        (("a", "b"), ["a", "b"]),
+        ([], []),
+        ((), []),
+        (["fitness_best", "fitness_max"], ["fitness_best", "fitness_max"]),
+    ],
+)
+def test_as_list_with_sequences(value, expected):
+    assert _as_list(value) == expected
+
+
+def test_as_list_with_generator():
+    result = _as_list(x for x in ("x", "y", "z"))
+    assert result == ["x", "y", "z"]
+
+
+def test_as_list_with_numpy_array():
+    # pipelines pass arrays here, worth making sure it doesn't blow up
+    arr = np.array(["feature_0", "feature_1"])
+    assert _as_list(arr) == ["feature_0", "feature_1"]
+
+
+def test_as_list_with_set():
+    # sets are unordered so just check the contents, not the order
+    result = _as_list({"a", "b"})
+    assert sorted(result) == ["a", "b"]
+
+
+@pytest.mark.parametrize("value", [1, 3.14, 42, -1])
+def test_as_list_with_numbers(value):
+    assert _as_list(value) == [value]
