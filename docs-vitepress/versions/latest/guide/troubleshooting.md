@@ -167,13 +167,12 @@ Also seed the CV splitter and any estimator that accepts `random_state`. See [Re
 
 **`ValueError` mentioning `warm_start_configs`**
 
-Warm-start configs in `PopulationConfig(warm_start_configs=[...])` are validated against the search space at fit time, so a mistake raises a clear error instead of being silently dropped. You'll get one if a config:
+Warm-start configs in `PopulationConfig(warm_start_configs=[...])` are checked at fit time, so a misspelled hyperparameter name raises a clear error (listing the valid names) instead of being silently ignored. You'll get one if a config:
 
+- is not a dict
 - uses a key that isn't in `param_grid` (e.g. a typo like `max_depths` instead of `max_depth`)
-- gives a value outside an `Integer` or `Continuous` dimension's bounds
-- gives a value that isn't in a `Categorical` dimension's `choices`
 
-Check your config keys against `list(search.param_grid.keys())` and the bounds of each dimension.
+Provided values are used as-is, so make sure each value makes sense for its dimension. Check your config keys against `list(search.param_grid.keys())`.
 
 ## Multi-Metric: `best_params_` Is Not What I Expected
 

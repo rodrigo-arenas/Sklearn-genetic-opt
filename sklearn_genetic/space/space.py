@@ -232,30 +232,6 @@ def check_space(param_grid: dict = None):
             )
 
 
-def value_in_dimension(dimension, value) -> bool:
-    """Return ``True`` if ``value`` is a valid sample for ``dimension``.
-
-    Used both for population initialization and for validating warm-start
-    configurations against the search space.
-    """
-    # Accept NumPy scalars (np.int64, np.float64, ...) alongside Python numbers,
-    # so warm-start values pulled from arrays or earlier search results are not
-    # wrongly rejected. Uses the already-imported ``np`` (no extra import).
-    if isinstance(dimension, Integer):
-        return isinstance(value, (int, np.integer)) and dimension.lower <= value <= dimension.upper
-
-    if isinstance(dimension, Continuous):
-        return (
-            isinstance(value, (int, float, np.integer, np.floating))
-            and dimension.lower <= value <= dimension.upper
-        )
-
-    if isinstance(dimension, Categorical):
-        return value in dimension.choices
-
-    return False
-
-
 class Space(object):
     """Search space for all the models hyperparameters"""
 
@@ -290,9 +266,10 @@ class Space(object):
         Raises
         ------
         ValueError
-            If ``warm_start_values`` is not a dict, contains a hyperparameter
-            name that is not in the search space (e.g. a misspelled key), or
-            assigns a value that falls outside its dimension.
+            If ``warm_start_values`` is not a dict, or contains a hyperparameter
+            name that is not in the search space (e.g. a misspelled key).
+            Provided values are used as-is (not range-checked), matching the
+            existing warm-start contract.
         """
         self._validate_warm_start_config(warm_start_values)
 
@@ -321,14 +298,6 @@ class Space(object):
                 f"names are {sorted(self.param_grid)}. (Check for typos, e.g. "
                 f"'max_depths' instead of 'max_depth'.)"
             )
-
-        for name, value in warm_start_values.items():
-            dimension = self.param_grid[name]
-            if not value_in_dimension(dimension, value):
-                raise ValueError(
-                    f"warm_start_configs value {value!r} for '{name}' is "
-                    f"outside its search space {dimension!r}."
-                )
 
     @property
     def dimensions(self):
