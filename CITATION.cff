@@ -6,6 +6,7 @@ abstract: "Hyperparameter tuning and feature selection using genetic algorithms,
 authors:
   - family-names: Arenas
     given-names: Rodrigo
+    orcid: "https://orcid.org/0009-0005-0910-3705"
 repository-code: "https://github.com/rodrigo-arenas/Sklearn-genetic-opt"
 url: "https://sklearngeneticopt.rodrigo-arenas.com/"
 license: MIT
