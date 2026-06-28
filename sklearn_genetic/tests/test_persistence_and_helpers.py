@@ -21,9 +21,10 @@ def test_safe_estimator_check_returns_false_for_attribute_errors():
 def test_space_sample_warm_start_fills_missing_parameters():
     space = Space({"provided": Integer(1, 1), "sampled": Integer(2, 2)})
 
-    sampled_params = space.sample_warm_start({"provided": 10})
+    # "provided" is given (and in range); "sampled" is missing and filled by sampling.
+    sampled_params = space.sample_warm_start({"provided": 1})
 
-    assert sampled_params == {"provided": 10, "sampled": 2}
+    assert sampled_params == {"provided": 1, "sampled": 2}
 
 
 def test_ga_search_save_and_load_round_trip(tmp_path, capsys):

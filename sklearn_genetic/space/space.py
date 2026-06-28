@@ -266,10 +266,10 @@ class Space(object):
         Raises
         ------
         ValueError
-            If ``warm_start_values`` is not a dict, or contains a hyperparameter
-            name that is not in the search space (e.g. a misspelled key).
-            Provided values are used as-is (not range-checked), matching the
-            existing warm-start contract.
+            If ``warm_start_values`` is not a dict, contains a hyperparameter
+            name that is not in the search space (e.g. a misspelled key), or
+            assigns a value that falls outside its dimension. Missing keys are
+            allowed and filled by sampling.
         """
         self._validate_warm_start_config(warm_start_values)
 
@@ -298,6 +298,37 @@ class Space(object):
                 f"names are {sorted(self.param_grid)}. (Check for typos, e.g. "
                 f"'max_depths' instead of 'max_depth'.)"
             )
+
+        # Provided values must fall inside their dimension. Missing keys are
+        # intentionally allowed (they are filled by sampling).
+        for name, value in warm_start_values.items():
+            dimension = self.param_grid[name]
+            if not self.value_in_dimension(dimension, value):
+                raise ValueError(
+                    f"warm_start_configs value {value!r} for '{name}' is outside "
+                    f"its search space {dimension!r}."
+                )
+
+    @staticmethod
+    def value_in_dimension(dimension, value) -> bool:
+        """Return ``True`` if ``value`` is a valid sample for ``dimension``.
+
+        Single source of truth shared by warm-start validation and population
+        initialization (``population._is_dimension_value_valid``) so the two
+        cannot drift. NumPy scalars are accepted alongside Python numbers.
+        """
+        if isinstance(dimension, Integer):
+            return (
+                isinstance(value, (int, np.integer)) and dimension.lower <= value <= dimension.upper
+            )
+        if isinstance(dimension, Continuous):
+            return (
+                isinstance(value, (int, float, np.integer, np.floating))
+                and dimension.lower <= value <= dimension.upper
+            )
+        if isinstance(dimension, Categorical):
+            return value in dimension.choices
+        return False
 
     @property
     def dimensions(self):

@@ -187,12 +187,29 @@ def test_sample_warm_start_rejects_non_dict_config():
         space.sample_warm_start([("max_depth", 5)])
 
 
-def test_sample_warm_start_keeps_provided_values_as_is():
-    """Provided values pass through unchanged; range is not enforced, matching
-    the existing warm-start contract (only unknown keys are rejected)."""
-    space = _warm_start_space()  # max_depth is Integer(2, 20)
-    sampled = space.sample_warm_start({"max_depth": 999})  # out of range, kept as-is
-    assert sampled["max_depth"] == 999
+def test_sample_warm_start_rejects_value_outside_space():
+    """A value outside its dimension is reported clearly (issue #220)."""
+    space = _warm_start_space()  # max_depth Integer(2, 20), criterion gini/entropy
+    with pytest.raises(ValueError, match="outside its search space"):
+        space.sample_warm_start({"max_depth": 999})
+    with pytest.raises(ValueError, match="outside its search space"):
+        space.sample_warm_start({"criterion": "log_loss"})
+
+
+def test_sample_warm_start_allows_missing_keys():
+    """Missing keys are intentionally allowed and filled by sampling."""
+    space = _warm_start_space()
+    sampled = space.sample_warm_start({"max_depth": 5})  # criterion omitted
+    assert sampled["max_depth"] == 5
+    assert sampled["criterion"] in ["gini", "entropy"]
+
+
+def test_sample_warm_start_accepts_numpy_scalars():
+    """NumPy scalars are valid values, not rejected as out-of-space (#220)."""
+    space = Space({"max_depth": Integer(2, 20), "lr": Continuous(0.0, 1.0)})
+    sampled = space.sample_warm_start({"max_depth": np.int64(5), "lr": np.float64(0.5)})
+    assert sampled["max_depth"] == 5
+    assert sampled["lr"] == 0.5
 
 
 @pytest.mark.parametrize(
