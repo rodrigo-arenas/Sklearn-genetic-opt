@@ -835,7 +835,10 @@ def plot_feature_selection(
     else:
         feature_names = _as_list(feature_names)
         if len(feature_names) != mask.size:
-            raise ValueError("feature_names must have the same length as estimator.best_features_")
+            raise ValueError(
+            f"feature_names must have the same length as estimator.best_features_: "
+            f"expected {mask.size}, got {len(feature_names)}"
+        )
 
     if ax is None:
         _, ax = plt.subplots(figsize=(10, max(4, 0.28 * mask.size)))
