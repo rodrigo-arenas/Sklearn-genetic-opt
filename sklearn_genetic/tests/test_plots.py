@@ -314,8 +314,14 @@ def test_feature_selection_plot():
     with pytest.raises(TypeError, match="supports GASearchCV only"):
         plot_score_landscape(estimator, x="feature_0", y="feature_1")
 
-    with pytest.raises(ValueError, match="same length"):
+    with pytest.raises(ValueError) as excinfo:
         plot_feature_selection(estimator, feature_names=["one"])
+    message = str(excinfo.value)
+    assert "feature_names" in message
+    assert "expected" in message
+    assert "got" in message
+    assert f"expected {len(estimator.best_features_)}" in message
+    assert "got 1" in message
 
 
 def test_plot_on_unfitted_estimator_gives_actionable_error():
