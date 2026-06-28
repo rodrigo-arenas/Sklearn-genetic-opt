@@ -7,10 +7,10 @@ authors:
   - family-names: Arenas
     given-names: Rodrigo
 repository-code: "https://github.com/rodrigo-arenas/Sklearn-genetic-opt"
-url: "https://rodrigo-arenas.github.io/Sklearn-genetic-opt/"
+url: "https://sklearngeneticopt.rodrigo-arenas.com/"
 license: MIT
-version: "0.13.1"
-date-released: "2025-01-01"
+version: "0.13.2"
+date-released: "2026-06-28"
 keywords:
   - hyperparameter-tuning
   - feature-selection
