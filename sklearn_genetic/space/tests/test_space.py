@@ -1,3 +1,5 @@
+from typing import Any
+
 import pytest
 import numpy as np
 from scipy import stats
@@ -115,6 +117,20 @@ def test_categorical_bad_parameters(data_object, parameters, message):
     with pytest.raises(Exception) as excinfo:
         data_object(**parameters)
     assert str(excinfo.value) == message
+
+
+def test_space_classes_have_complete_type_annotations():
+    """random_state and sample() carry annotations on every space class (#209)."""
+    import inspect
+
+    for cls, sample_return in [(Integer, int), (Continuous, float), (Categorical, Any)]:
+        init_params = inspect.signature(cls.__init__).parameters
+        assert init_params["random_state"].annotation is not inspect.Parameter.empty
+        sample_sig = inspect.signature(cls.sample)
+        assert sample_sig.return_annotation is sample_return
+
+    # The abstract base also annotates its sample() return type.
+    assert inspect.signature(BaseDimension.sample).return_annotation is Any
 
 
 def test_check_space_fail():

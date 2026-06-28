@@ -1,6 +1,8 @@
+import random
+from typing import Any, List, Optional, Union
+
 import numpy as np
 from scipy import stats
-import random
 
 from .space_parameters import (
     IntegerDistributions,
@@ -15,11 +17,11 @@ class Integer(BaseDimension):
 
     def __init__(
         self,
-        lower: int = None,
-        upper: int = None,
+        lower: Optional[int] = None,
+        upper: Optional[int] = None,
         distribution: str = "uniform",
-        random_state=None,
-    ):
+        random_state: Optional[Union[int, np.random.Generator]] = None,
+    ) -> None:
         """
         Parameters
         ----------
@@ -58,13 +60,13 @@ class Integer(BaseDimension):
         if self.distribution == IntegerDistributions.uniform.value:
             self.rvs = stats.randint.rvs
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (
             f"{self.__class__.__name__}(lower={self.lower}, upper={self.upper}, "
             f"distribution={self.distribution!r})"
         )
 
-    def sample(self):
+    def sample(self) -> int:
         """Sample a random value from the assigned distribution"""
 
         return self.rvs(self.lower, self.upper + 1, random_state=self.rng)
@@ -75,11 +77,11 @@ class Continuous(BaseDimension):
 
     def __init__(
         self,
-        lower: float = None,
-        upper: float = None,
+        lower: Optional[float] = None,
+        upper: Optional[float] = None,
         distribution: str = "uniform",
-        random_state=None,
-    ):
+        random_state: Optional[Union[int, np.random.Generator]] = None,
+    ) -> None:
         """
         Parameters
         ----------
@@ -122,13 +124,13 @@ class Continuous(BaseDimension):
         elif self.distribution == ContinuousDistributions.log_uniform.value:
             self.rvs = stats.loguniform.rvs
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (
             f"{self.__class__.__name__}(lower={self.lower}, upper={self.upper}, "
             f"distribution={self.distribution!r})"
         )
 
-    def sample(self):
+    def sample(self) -> float:
         """Sample a random value from the assigned distribution"""
 
         return self.rvs(self.lower, self.shifted_upper, random_state=self.rng)
@@ -139,11 +141,11 @@ class Categorical(BaseDimension):
 
     def __init__(
         self,
-        choices: list = None,
-        priors: list = None,
+        choices: Optional[List[Any]] = None,
+        priors: Optional[List[float]] = None,
         distribution: str = "choice",
-        random_state=None,
-    ):
+        random_state: Optional[Union[int, np.random.Generator]] = None,
+    ) -> None:
         """
         Parameters
         ----------
@@ -187,13 +189,13 @@ class Categorical(BaseDimension):
         if self.distribution == CategoricalDistributions.choice.value:
             self.rvs = self.rng.choice if self.rng else random.choice
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         if self.priors is None:
             return f"{self.__class__.__name__}(choices={self.choices!r})"
 
         return f"{self.__class__.__name__}(choices={self.choices!r}, priors={self.priors!r})"
 
-    def sample(self):
+    def sample(self) -> Any:
         """Sample a random value from the assigned distribution"""
 
         return self.rvs(self.choices)

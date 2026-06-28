@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Any
 
 
 class BaseDimension(ABC):
@@ -7,7 +8,7 @@ class BaseDimension(ABC):
     """
 
     @abstractmethod
-    def sample(self):
+    def sample(self) -> Any:
         """
         Sample a random value from the assigned distribution
         """
