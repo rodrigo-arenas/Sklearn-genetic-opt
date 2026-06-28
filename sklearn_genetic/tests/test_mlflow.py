@@ -79,6 +79,25 @@ def test_mlflow_config(mlflow_resources):
     assert isinstance(mlflow_config, MLflowConfig)
 
 
+def test_mlflow_config_requires_mlflow(monkeypatch):
+    """
+    Check MLflowConfig raises a clear error when mlflow is not installed.
+    """
+    import sklearn_genetic.mlflow_log as mlflow_log
+
+    monkeypatch.setattr(mlflow_log, "mlflow", None)
+
+    with pytest.raises(ImportError, match="MLflowConfig requires mlflow") as error_info:
+        MLflowConfig(
+            tracking_uri="sqlite:///mlflow.db",
+            experiment=EXPERIMENT_NAME,
+            run_name="Decision Tree",
+        )
+
+    assert "mlflow" in str(error_info.value)
+    assert 'pip install "sklearn-genetic-opt[mlflow]"' in str(error_info.value)
+
+
 def test_runs(mlflow_resources, mlflow_run):
     """
     Check if runs are captured and parameters are true.
