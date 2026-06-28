@@ -54,6 +54,24 @@ param_grid = random_forest_classifier_space(profile="fast")
 | `balanced` | You want a practical default for real tuning |
 | `wide` | You have more budget and want broader exploration |
 
+## Discovering presets
+
+Two helpers let you list the available presets and profiles from Python — handy
+in a notebook or for building a UI:
+
+```python
+from sklearn_genetic import list_preset_profiles, list_preset_spaces
+
+list_preset_profiles()
+# ['balanced', 'fast', 'wide']
+
+list_preset_spaces()
+# ['hist_gradient_boosting_classifier_space', ..., 'xgboost_regressor_space']
+```
+
+Both return sorted lists, and every name from `list_preset_spaces()` is
+importable from `sklearn_genetic`.
+
 ## Pipeline prefixes
 
 Use `prefix` when tuning an estimator inside a scikit-learn `Pipeline`:
