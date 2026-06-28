@@ -4,7 +4,7 @@ from .schedulers import ConstantAdapter
 
 def check_adapter(adapter):
     """
-    Check if the adapter is a number of a class, if it's a number it will create a ConstantAdapter
+    Check if the adapter is a number or a class, if it's a number it will create a ConstantAdapter
     """
     if isinstance(adapter, BaseAdapter):
         return adapter
@@ -12,6 +12,8 @@ def check_adapter(adapter):
         return ConstantAdapter(initial_value=adapter, end_value=adapter, adaptive_rate=0)
     else:
         raise ValueError(
-            "adapter should be either a class with inheritance from schedulers.base.BaseAdapter "
-            "or a real number."
+            "adapter should be either a class with inheritance from "
+            "schedulers.base.BaseAdapter (for example ConstantAdapter, "
+            "ExponentialAdapter, InverseAdapter, or PotentialAdapter) or a real "
+            f"number, but got {type(adapter).__name__!r}."
         )
