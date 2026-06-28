@@ -11,6 +11,24 @@ Code contributions are always welcome, from simple bug fixes to new features.
 Also, consider contributing to the documentation, 
 and reviewing open issues, it is the easiest way to get started.
 
+## Before you start working on an issue
+
+To avoid duplicated effort, please check these things **before** you start coding:
+
+1. **The issue is still open.** Closed issues are usually already resolved — this
+   is especially common for `good first issue` tickets. Check the status shown at
+   the top of the issue before picking it up.
+2. **No one is already working on it.** Look at the issue's **Development** section
+   in the right sidebar for linked pull requests, and skim the comments. You can
+   also filter the open [pull requests](https://github.com/rodrigo-arenas/Sklearn-genetic-opt/pulls)
+   by the issue number.
+3. **Claim it.** Leave a short comment saying you'd like to work on it, so others
+   know it's taken and don't duplicate your work.
+
+If an issue is already closed, or already has an open or recently merged PR, please
+pick a different one — and feel free to ask in the comments if you'd like a
+suggestion for a good next issue to tackle.
+
 ## Local development setup
 
 sklearn-genetic-opt supports Python 3.12 and newer. Python 3.13 is a good
@@ -116,8 +134,11 @@ If you have questions, you can open an issue (tag it as a question).
 We encourage you to follow these guidelines:
 
 * Fork this project, make the changes you expect to merge and make a pull request 
-* If the work you are making is related to some issue, please mention in the comments 
-  that you are working on it, so other people know and no duplicate your work.
+* If the work you are making is related to some issue, please first check that the
+  issue is still open and not already covered by another PR (see
+  [Before you start working on an issue](#before-you-start-working-on-an-issue)),
+  then mention in the comments that you are working on it, so other people know and
+  don't duplicate your work.
 * If you are working on a new feature, or have an idea, consider first opening an issue
   so people know what you are working on and possibly give some guidelines
 * Commit all changes by pull request (PR)
