@@ -185,6 +185,9 @@ function versionSidebar(versionPrefix: string) {
         relativePath: 'comparisons/optuna-vs-sklearn-genetic-opt',
       },
     ]),
+    ...pageSection(versionPrefix, 'Community', 'community/articles', [
+      { text: 'Articles', relativePath: 'community/articles' },
+    ]),
     {
       text: 'Release Notes',
       collapsed: false,
