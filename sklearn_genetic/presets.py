@@ -192,6 +192,8 @@ def xgboost_regressor_space(profile="balanced", prefix=""):
 
 
 def _with_prefix(space, prefix):
+    if not isinstance(prefix, str):
+        raise TypeError(f"prefix must be a string, got {type(prefix).__name__} instead")
     if not prefix:
         return space
     return {f"{prefix}{name}": dimension for name, dimension in space.items()}
