@@ -15,7 +15,7 @@ This page covers the most common problems, organized by symptom.
 
 | Symptom | Likely cause | Fix |
 |---------|--------------|-----|
-| `estimator is not a valid Sklearn classifier or regressor` | An unsupported estimator was passed to `GASearchCV` | Use `GASearchCV` with a classifier/regressor; for feature selection use `GAFeatureSelectionCV` |
+| `... is not a valid Sklearn classifier, regressor, or outlier detector` | An unsupported estimator was passed to `GASearchCV` | Use `GASearchCV` with a classifier, regressor, or outlier detector; for feature selection use `GAFeatureSelectionCV` |
 | `Invalid param_grid entry for '...'` (value is not a space object) | A raw `list`/`tuple`/`range` was used instead of a space object | Wrap choices in `Categorical([...])` and ranges in `Integer(...)` / `Continuous(...)` |
 | `ImportError` for `mlflow`, `tensorflow`, or `seaborn` | An optional dependency is not installed | `pip install "sklearn-genetic-opt[all]"` (or the specific extra) |
 | `InvalidParameterError` mentioning `'max_error'` | recent scikit-learn no longer accepts `max_error` as a scoring string | Use `scoring="neg_max_error"` |
@@ -243,10 +243,10 @@ The plotting helpers operate on the fitted estimator's `logbook` attribute. If `
 
 ## Unsupported Estimator Type
 
-**`estimator is not a valid Sklearn classifier or regressor`**
+**`... is not a valid Sklearn classifier, regressor, or outlier detector`**
 
-`GASearchCV` tunes the hyperparameters of a classifier or regressor. If you want
-to select features instead, use `GAFeatureSelectionCV`:
+`GASearchCV` tunes the hyperparameters of a classifier, regressor, or outlier
+detector. If you want to select features instead, use `GAFeatureSelectionCV`:
 
 ```python
 from sklearn_genetic import GAFeatureSelectionCV
