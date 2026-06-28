@@ -15,10 +15,10 @@ description: "Recipe to configure GASearchCV parallelism using n_jobs and loky v
 
 | `parallel_backend` | What parallelizes | Use when |
 |-------------------|-------------------|----------|
-| `"candidates"` (default) | Evaluates multiple candidates at once | Estimator has single-threaded training (RF, LR, sklearn models) |
+| `"auto"` (default) or `"population"` | Evaluates multiple candidates at once | Estimator training is single-threaded, or estimator-level parallelism is disabled |
 | `"cv"` | Evaluates multiple CV folds at once | Estimator manages its own threads (XGBoost, LightGBM, CatBoost) |
 
-## Recipe: sklearn Estimator (Use `"candidates"`)
+## Recipe: sklearn Estimator (Use `"population"`)
 
 ```python
 from sklearn.ensemble import RandomForestClassifier
@@ -33,7 +33,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, stratif
 ga = GASearchCV(
     estimator=RandomForestClassifier(
         random_state=42,
-        n_jobs=-1,         # RF uses shared-memory threading — safe to parallelize
+        n_jobs=1,          # keep estimator-level parallelism disabled
     ),
     param_grid={
         "n_estimators": Integer(50, 200),
@@ -45,7 +45,7 @@ ga = GASearchCV(
     evolution_config=EvolutionConfig(population_size=20, generations=15),
     runtime_config=RuntimeConfig(
         n_jobs=-1,
-        parallel_backend="candidates",  # parallelize candidate evaluation
+        parallel_backend="population",  # parallelize candidate evaluation
     ),
     random_state=42,
 )
@@ -94,7 +94,7 @@ print("Best ROC AUC:", round(ga.best_score_, 4))
 
 - **`n_jobs=-1`**: Uses all available cores.
 - **XGBoost/LightGBM/CatBoost**: Always set `n_jobs=1` (or `thread_count=1` for CatBoost) on the estimator. Use `parallel_backend="cv"`.
-- **RF/sklearn models**: Safe to use `n_jobs=-1` on both estimator and search — they use different parallelism layers.
+- **RF/sklearn models**: Use `parallel_backend="population"` with `n_jobs=-1` on the search and `n_jobs=1` on the estimator to parallelize candidate evaluation without nested parallelism.
 
 ## See Also
 
