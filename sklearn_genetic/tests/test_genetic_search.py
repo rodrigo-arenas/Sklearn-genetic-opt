@@ -154,6 +154,31 @@ def test_wrong_parallel_backend():
     )
 
 
+def test_gasearch_rejects_invalid_error_score():
+    with pytest.raises(ValueError) as excinfo:
+        GASearchCV(
+            DecisionTreeClassifier(),
+            param_grid={"max_depth": Integer(1, 3)},
+            error_score="warn",
+        )
+
+    assert str(excinfo.value) == "error_score must be numeric or 'raise', got 'warn' instead"
+
+
+@pytest.mark.parametrize("error_score", ["raise", np.nan, 0.0])
+def test_gasearch_accepts_valid_error_score(error_score):
+    estimator = GASearchCV(
+        DecisionTreeClassifier(),
+        param_grid={"max_depth": Integer(1, 3)},
+        error_score=error_score,
+    )
+
+    if isinstance(error_score, float) and np.isnan(error_score):
+        assert np.isnan(estimator.error_score)
+    else:
+        assert estimator.error_score == error_score
+
+
 def test_wrong_population_initializer():
     with pytest.raises(ValueError) as excinfo:
         GASearchCV(

@@ -61,6 +61,7 @@ from .evaluation import (
     evaluate_population as _evaluate_population_batch,
     logbook_record as _logbook_record,
     record_fit_stats as _record_fit_stats,
+    validate_error_score as _validate_error_score,
     validate_parallel_backend as _validate_parallel_backend,
 )
 from .population import (
@@ -604,6 +605,7 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         self.final_selection_cv = final_selection_cv
 
         _validate_parallel_backend(self.parallel_backend)
+        _validate_error_score(self.error_score)
         _validate_population_initializer(self.population_initializer)
         if self.final_selection_top_k < 1:
             raise ValueError("final_selection_top_k must be greater than or equal to 1")
@@ -1635,6 +1637,7 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         self.sharing_alpha = sharing_alpha
 
         _validate_parallel_backend(self.parallel_backend)
+        _validate_error_score(self.error_score)
         _validate_population_initializer(self.population_initializer)
         _validate_optimizer_control(
             self.local_search_top_k,
