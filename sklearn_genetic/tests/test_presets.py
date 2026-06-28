@@ -66,6 +66,14 @@ def test_presets_support_pipeline_prefixes():
     assert isinstance(space["model__degree"], Integer)
 
 
+@pytest.mark.parametrize("prefix", [None, True, ["model__"], 1])
+def test_presets_reject_non_string_prefix(prefix):
+    with pytest.raises(
+        TypeError, match=f"prefix must be a string, got {type(prefix).__name__} instead"
+    ):
+        svc_space(prefix=prefix)
+
+
 @pytest.mark.parametrize("preset", PRESET_FUNCTIONS)
 @pytest.mark.parametrize("profile", ["fast", "balanced", "wide"])
 def test_all_presets_return_native_dimensions_for_each_profile(preset, profile):
