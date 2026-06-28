@@ -19,7 +19,7 @@ You are reading the **latest (development)** docs. For stable documentation, see
 
 | `parallel_backend` | What parallelizes | Use when |
 |-------------------|-------------------|----------|
-| `"auto"` or `"population"` | Evaluates multiple candidates at once | Estimator training is single-threaded, or estimator-level parallelism is disabled |
+| `"auto"` (default) or `"population"` | Evaluates multiple candidates at once | Estimator training is single-threaded, or estimator-level parallelism is disabled |
 | `"cv"` | Evaluates multiple CV folds at once | Estimator manages its own threads (XGBoost, LightGBM, CatBoost) |
 
 ## Recipe: sklearn Estimator (Use `"population"`)
