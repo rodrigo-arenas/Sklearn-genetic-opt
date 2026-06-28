@@ -4,8 +4,19 @@ import logging
 try:
     import mlflow
 except ModuleNotFoundError:  # noqa
+    mlflow = None
     logger = logging.getLogger(__name__)  # noqa
     logger.error("MLflow not found, pip install mlflow to use MLflowConfig")  # noqa
+
+
+_MLFLOW_INSTALL_MESSAGE = (
+    'MLflowConfig requires mlflow. Install it with: pip install "sklearn-genetic-opt[mlflow]"'
+)
+
+
+def _require_mlflow():
+    if mlflow is None:
+        raise ImportError(_MLFLOW_INSTALL_MESSAGE)
 
 
 class MLflowConfig:
@@ -40,6 +51,8 @@ class MLflowConfig:
             Dictionary of tag_name: String -> value.
 
         """
+        _require_mlflow()
+
         self.client = mlflow.tracking.MlflowClient()
         self.tracking_uri = tracking_uri
         self.experiment = experiment
