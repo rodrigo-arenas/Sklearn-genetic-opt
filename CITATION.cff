@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use this software in your research, please cite it as below."
+type: software
+title: "sklearn-genetic-opt"
+abstract: "Hyperparameter tuning and feature selection using genetic algorithms, built on top of scikit-learn."
+authors:
+  - family-names: Arenas
+    given-names: Rodrigo
+    orcid: "https://orcid.org/0009-0005-0910-3705"
+repository-code: "https://github.com/rodrigo-arenas/Sklearn-genetic-opt"
+url: "https://sklearngeneticopt.rodrigo-arenas.com/"
+license: MIT
+version: "0.13.2"
+date-released: "2026-06-27"
+keywords:
+  - hyperparameter-tuning
+  - feature-selection
+  - genetic-algorithm
+  - scikit-learn
+  - machine-learning
