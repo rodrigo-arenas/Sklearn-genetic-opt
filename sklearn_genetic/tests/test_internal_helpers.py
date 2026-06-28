@@ -1,6 +1,7 @@
 import random
 from types import SimpleNamespace
 
+import numpy as np
 import pytest
 from deap import base, creator, tools
 from sklearn.exceptions import NotFittedError
@@ -36,6 +37,7 @@ from ..population import (
 )
 from ..schedules.schedulers import ConstantAdapter
 from ..space import Categorical, Continuous, Integer, Space
+from ..utils.cv_scores import _rank_scores
 from ..utils.random import weighted_bool_individual
 
 
@@ -531,6 +533,38 @@ def test_genetic_estimator_mixin_history_iteration_and_fitted_guard():
     search.refit = False
     with pytest.raises(NotFittedError, match="DummySearch instance is not fitted yet"):
         search[0]
+
+
+def test_rank_scores_orders_finite_scores_descending_for_maximization():
+    ranks = _rank_scores([0.7, 0.9, 0.5])
+
+    assert list(ranks) == [2, 1, 3]
+
+
+def test_rank_scores_breaks_ties_with_deterministic_min_method():
+    ranks = _rank_scores([0.9, 0.9, 0.5])
+
+    assert list(ranks) == [1, 1, 3]
+
+
+def test_rank_scores_supports_minimization_metrics():
+    ranks = _rank_scores([0.7, 0.9, 0.5], greater_is_better=False)
+
+    assert list(ranks) == [2, 3, 1]
+
+
+def test_rank_scores_places_nan_candidates_last():
+    ranks = _rank_scores([0.7, np.nan, 0.9])
+
+    assert list(ranks) == [2, 3, 1]
+    # NaN never outranks a finite candidate.
+    assert ranks[1] == max(ranks)
+
+
+def test_rank_scores_with_all_nan_does_not_crash():
+    ranks = _rank_scores([np.nan, np.nan, np.nan])
+
+    assert list(ranks) == [1, 1, 1]
 
 
 def test_reset_adapters_calls_both_adapter_resets():

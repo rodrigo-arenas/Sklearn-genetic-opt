@@ -6,6 +6,46 @@ def select_dict_keys(dictionary, keys):
     return {key: dictionary[key] for key in keys}
 
 
+def _rank_scores(scores, greater_is_better=True):
+    """Rank candidate scores, always placing NaN scores last.
+
+    Candidates with finite scores are ranked first; ties share the lowest rank
+    (scipy's ``method="min"``). NaN scores—produced when a candidate fails under
+    the default ``error_score=np.nan``—are assigned the worst ranks so they never
+    outrank a valid candidate. An all-NaN input does not crash and returns
+    descending ranks for every candidate.
+
+    Parameters
+    ----------
+    scores : array-like
+        The mean scores for each candidate. May contain NaN.
+    greater_is_better : bool, default=True
+        If True, higher scores rank better (e.g. accuracy). If False, lower
+        scores rank better (e.g. an error/loss metric).
+
+    Returns
+    -------
+    numpy.ndarray of int
+        1-based ranks, where rank 1 is the best candidate and NaN scores rank last.
+    """
+    scores = np.asarray(scores, dtype=float)
+    finite_mask = ~np.isnan(scores)
+
+    ranks = np.empty(scores.shape[0], dtype=int)
+
+    if finite_mask.any():
+        finite_scores = scores[finite_mask]
+        ordered = -finite_scores if greater_is_better else finite_scores
+        ranks[finite_mask] = rankdata(ordered, method="min").astype(int)
+        # NaN candidates rank strictly worse than every finite candidate.
+        ranks[~finite_mask] = finite_mask.sum() + 1
+    else:
+        # All scores are NaN: keep a deterministic, non-crashing ranking.
+        ranks[:] = 1
+
+    return ranks
+
+
 def create_gasearch_cv_results_(logbook, space, return_train_score, metrics):
     cv_results = {}
     n_splits = len(logbook.chapters["parameters"].select("cv_scores")[0])
@@ -30,9 +70,7 @@ def create_gasearch_cv_results_(logbook, space, return_train_score, metrics):
             for cv_scores in logbook.chapters["parameters"].select(f"test_{metric}")
         ]
 
-        cv_results[f"rank_test_{metric}"] = rankdata(
-            -np.array(cv_results[f"mean_test_{metric}"]), method="min"
-        ).astype(int)
+        cv_results[f"rank_test_{metric}"] = _rank_scores(cv_results[f"mean_test_{metric}"])
 
         if return_train_score:
             for split in range(n_splits):
@@ -51,9 +89,7 @@ def create_gasearch_cv_results_(logbook, space, return_train_score, metrics):
                 for cv_scores in logbook.chapters["parameters"].select(f"train_{metric}")
             ]
 
-            cv_results[f"rank_train_{metric}"] = rankdata(
-                -np.array(cv_results[f"mean_train_{metric}"]), method="min"
-            ).astype(int)
+            cv_results[f"rank_train_{metric}"] = _rank_scores(cv_results[f"mean_train_{metric}"])
 
     # These values are only one even with multi-metric
     cv_results["mean_fit_time"] = [
@@ -99,9 +135,7 @@ def create_feature_selection_cv_results_(logbook, return_train_score, metrics):
             for cv_scores in logbook.chapters["parameters"].select(f"test_{metric}")
         ]
 
-        cv_results[f"rank_test_{metric}"] = rankdata(
-            -np.array(cv_results[f"mean_test_{metric}"]), method="min"
-        ).astype(int)
+        cv_results[f"rank_test_{metric}"] = _rank_scores(cv_results[f"mean_test_{metric}"])
 
         if return_train_score:
             for split in range(n_splits):
@@ -120,9 +154,7 @@ def create_feature_selection_cv_results_(logbook, return_train_score, metrics):
                 for cv_scores in logbook.chapters["parameters"].select(f"train_{metric}")
             ]
 
-            cv_results[f"rank_train_{metric}"] = rankdata(
-                -np.array(cv_results[f"mean_train_{metric}"]), method="min"
-            ).astype(int)
+            cv_results[f"rank_train_{metric}"] = _rank_scores(cv_results[f"mean_train_{metric}"])
 
     # These values are only one even with multi-metric
     cv_results["mean_fit_time"] = [
