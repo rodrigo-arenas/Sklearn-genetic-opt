@@ -90,6 +90,22 @@ def test_all_presets_treat_empty_prefix_as_unprefixed(preset):
     assert set(preset(prefix="")) == set(preset())
 
 
+@pytest.mark.parametrize(
+    ("prefix", "type_name"),
+    [
+        pytest.param(None, "NoneType", id="none"),
+        pytest.param(["model__"], "list", id="list"),
+    ],
+)
+def test_presets_reject_non_string_prefixes(prefix, type_name):
+    with pytest.raises(TypeError) as excinfo:
+        random_forest_classifier_space(prefix=prefix)
+
+    message = str(excinfo.value)
+    assert "prefix" in message
+    assert type_name in message
+
+
 def test_xgboost_classifier_preset_matches_interacting_tree_space():
     space = xgboost_classifier_space(profile="balanced")
 
