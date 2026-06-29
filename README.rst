@@ -286,6 +286,18 @@ Common use cases
 `Browse all Tutorials →
 <https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/tutorials/>`_
 
+Citation
+########
+
+If ``sklearn-genetic-opt`` is useful in your research, please cite it. You can use the
+"Cite this repository" button on the GitHub page (powered by ``CITATION.cff``), or cite
+it directly:
+
+.. code-block:: text
+
+    Arenas, R. sklearn-genetic-opt: Hyperparameter tuning and feature selection using
+    genetic algorithms, built on top of scikit-learn.
+    https://github.com/rodrigo-arenas/Sklearn-genetic-opt
 
 Learning paths
 ###############
