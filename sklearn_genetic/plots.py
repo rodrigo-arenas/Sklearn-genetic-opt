@@ -73,7 +73,10 @@ def _history_frame(estimator, source="history", fields=None):
     if fields is not None:
         missing = [field for field in fields if field not in frame.columns]
         if missing:
-            raise ValueError(f"fields not found in {source}: {missing}")
+            available = sorted(frame.columns.tolist())
+            raise ValueError(
+                f"fields not found in {source}: {missing}. Available fields: {available}"
+            )
         frame = frame.loc[:, list(fields)]
 
     return frame
@@ -452,7 +455,10 @@ def plot_history(
 
     missing = [field for field in fields if field not in frame.columns]
     if missing:
-        raise ValueError(f"fields not found in {source}: {missing}")
+        available = sorted(frame.columns.tolist())
+        raise ValueError(
+            f"fields not found in {source}: {missing}. Available fields: {available}"
+        )
 
     plotted = frame.loc[:, fields].copy()
     if rolling is not None:

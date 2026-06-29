@@ -109,8 +109,10 @@ def test_plot_history():
     )
     assert logbook_plot.get_xlabel() == "record index"
 
-    with pytest.raises(ValueError, match="fields not found in history"):
+    with pytest.raises(ValueError, match="fields not found in history") as exc_info:
         plot_history(evolved_estimator, fields=["missing_field"])
+    assert "Available fields" in str(exc_info.value)
+    assert "missing_field" in str(exc_info.value)
 
     with pytest.raises(ValueError, match="kind must be one of"):
         plot_history(evolved_estimator, kind="scatter")
