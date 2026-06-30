@@ -144,7 +144,7 @@ class Categorical(BaseDimension):
         choices: Optional[List[Any]] = None,
         priors: Optional[List[float]] = None,
         distribution: str = "choice",
-        random_state: Optional[Union[int, np.random.Generator]] = None,
+        random_state: Optional[int] = None,
     ) -> None:
         """
         Parameters
