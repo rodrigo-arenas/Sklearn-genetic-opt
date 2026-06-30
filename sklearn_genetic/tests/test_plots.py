@@ -401,3 +401,29 @@ def test_as_list_normalizes_plot_inputs():
 
     # A non-iterable scalar is wrapped as a single-element list.
     assert _as_list(5) == [5]
+
+
+def test_metric_column_lists_available_metrics_on_unknown():
+    """An unknown metric error lists the available metric names (#259)."""
+    from types import SimpleNamespace
+    from ..plots import _metric_column
+
+    estimator = SimpleNamespace(
+        cv_results_={
+            "mean_test_accuracy": [0.9],
+            "mean_test_f1": [0.8],
+            "std_test_accuracy": [0.0],  # different prefix, must be ignored
+        },
+        refit_metric="accuracy",
+    )
+
+    # A valid metric still resolves to its column.
+    assert _metric_column(estimator, metric="accuracy") == "mean_test_accuracy"
+
+    # An unknown metric names the missing column and the available metrics.
+    with pytest.raises(ValueError) as excinfo:
+        _metric_column(estimator, metric="roc_auc")
+    message = str(excinfo.value)
+    assert "mean_test_roc_auc" in message
+    assert "Available metrics" in message
+    assert "accuracy" in message and "f1" in message

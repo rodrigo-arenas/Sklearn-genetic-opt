@@ -122,8 +122,15 @@ def _cv_results_frame(estimator):
 def _metric_column(estimator, metric=None, prefix="mean_test"):
     metric = metric or getattr(estimator, "refit_metric", "score")
     column = f"{prefix}_{metric}"
-    if column not in getattr(estimator, "cv_results_", {}):
-        raise ValueError(f"metric column not found in estimator.cv_results_: {column}")
+    cv_results = getattr(estimator, "cv_results_", {})
+    if column not in cv_results:
+        available = sorted(
+            key[len(prefix) + 1 :] for key in cv_results if key.startswith(f"{prefix}_")
+        )
+        raise ValueError(
+            f"metric column not found in estimator.cv_results_: {column}. "
+            f"Available metrics: {available}"
+        )
     return column
 
 
