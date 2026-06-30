@@ -57,11 +57,13 @@ def _resolves(md_file: Path, target: str) -> bool:
 
     base = (md_file.parent / path_part).resolve()
     candidates = [
-        base,
-        base.with_name(base.name + ".md"),
-        base / "index.md",
+        base,  # a direct file link (e.g. an asset)
+        base.with_name(base.name + ".md"),  # VitePress drops the .md extension
+        base / "index.md",  # a directory served via its index page
     ]
-    return any(candidate.exists() for candidate in candidates)
+    # ``is_file`` (not ``exists``) so a directory without an ``index.md`` — which
+    # VitePress would not serve — is reported as broken.
+    return any(candidate.is_file() for candidate in candidates)
 
 
 def check() -> list[tuple[Path, str]]:
