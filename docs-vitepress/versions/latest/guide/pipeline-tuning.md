@@ -90,6 +90,53 @@ print("Best parameters:", search.best_params_)
 y_pred = search.predict(X_test)
 ```
 
+## Using Preset Search Spaces
+
+Instead of writing every dimension by hand, you can start from a [preset](../api/presets)
+search space and pass `prefix` to match your pipeline step name:
+
+```python
+from sklearn.datasets import load_breast_cancer
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+
+from sklearn_genetic import GASearchCV
+from sklearn_genetic.presets import random_forest_classifier_space
+
+X, y = load_breast_cancer(return_X_y=True)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, stratify=y, random_state=0
+)
+
+pipe = Pipeline(
+    [
+        ("scale", StandardScaler()),
+        ("model", RandomForestClassifier(random_state=0, n_jobs=1)),
+    ]
+)
+
+# prefix="model__" produces keys like model__n_estimators, model__max_depth
+param_grid = random_forest_classifier_space(prefix="model__")
+
+search = GASearchCV(
+    estimator=pipe,
+    param_grid=param_grid,
+    scoring="roc_auc",
+    cv=3,
+    population_size=10,
+    generations=5,
+    random_state=0,
+)
+search.fit(X_train, y_train)
+print("Best ROC AUC:", round(search.best_score_, 4))
+```
+
+The prefix must match the step name — `"model"` → `prefix="model__"`. See
+[Estimator Presets](../api/presets) for the full list of available presets and
+profiles (`"fast"`, `"balanced"`, `"wide"`).
+
 ## Tips & Gotchas
 
 - Always call `pipe.get_params().keys()` first — it is easy to misspell a step name.
