@@ -123,7 +123,19 @@ def _metric_column(estimator, metric=None, prefix="mean_test"):
     metric = metric or getattr(estimator, "refit_metric", "score")
     column = f"{prefix}_{metric}"
     if column not in getattr(estimator, "cv_results_", {}):
-        raise ValueError(f"metric column not found in estimator.cv_results_: {column}")
+        cv_results = getattr(estimator, "cv_results_", {}) or {}
+        prefix_with_sep = f"{prefix}_"
+        available_metrics = sorted(
+            {
+                col[len(prefix_with_sep):]
+                for col in cv_results
+                if col.startswith(prefix_with_sep)
+            }
+        )
+        raise ValueError(
+            f"metric column not found in estimator.cv_results_: {column}. "
+            f"Available metrics: {available_metrics}"
+        )
     return column
 
 

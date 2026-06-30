@@ -10,6 +10,7 @@ matplotlib.use("Agg")
 from .. import GASearchCV, GAFeatureSelectionCV
 from ..plots import (
     _as_list,
+    _metric_column,
     SearchPlotter,
     plot_candidate_rankings,
     plot_candidate_scores,
@@ -401,3 +402,50 @@ def test_as_list_normalizes_plot_inputs():
 
     # A non-iterable scalar is wrapped as a single-element list.
     assert _as_list(5) == [5]
+
+
+def test_metric_column_lists_available_metrics_for_invalid_metric():
+    """Invalid metrics should raise ValueError that names available metrics (#259)."""
+    with pytest.raises(ValueError) as excinfo:
+        _metric_column(evolved_estimator, metric="auc")
+
+    message = str(excinfo.value)
+    assert "metric column not found in estimator.cv_results_:" in message
+    assert "mean_test_auc" in message
+    assert "Available metrics:" in message
+
+
+def test_metric_column_lists_actual_available_metrics():
+    """The error should list the metrics present in cv_results_ (#259)."""
+    with pytest.raises(ValueError) as excinfo:
+        _metric_column(evolved_estimator, metric="auc")
+
+    message = str(excinfo.value)
+    assert "score" in message
+    assert "fit_time" not in message  # fit_time does not start with mean_test_
+
+
+def test_metric_column_custom_prefix_includes_available_metrics():
+    """For custom prefixes, the error should list metrics for that prefix (#259)."""
+    with pytest.raises(ValueError) as excinfo:
+        _metric_column(evolved_estimator, metric="roc_auc", prefix="std_test")
+
+    message = str(excinfo.value)
+    assert "std_test_roc_auc" in message
+    assert "Available metrics:" in message
+
+
+def test_metric_column_valid_metric_returns_column():
+    """A valid metric should still resolve to its column name (#259)."""
+    assert _metric_column(evolved_estimator) == "mean_test_score"
+    assert _metric_column(evolved_estimator, metric="score") == "mean_test_score"
+
+
+def test_invalid_metric_error_caught_via_public_plot():
+    """The improved error should propagate through public plotting entry points (#259)."""
+    with pytest.raises(ValueError) as excinfo:
+        plot_candidate_scores(evolved_estimator, metric="nonexistent_metric")
+
+    message = str(excinfo.value)
+    assert "Available metrics:" in message
+    assert "mean_test_nonexistent_metric" in message
