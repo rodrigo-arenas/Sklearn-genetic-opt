@@ -96,6 +96,68 @@ y_pred = search.predict(X_test)
 - Preprocessing parameters (e.g., `scaler__with_std`) are part of the same search space and can be tuned alongside model parameters.
 - For nested pipelines (a pipeline inside a pipeline), the naming chain extends: `outer_step__inner_step__paramname`.
 
+## Using Preset Search Spaces
+
+Manually defining `param_grid` for every estimator gets repetitive. `sklearn_genetic.presets` ships pre-built parameter grids for common models — pass them directly to `GASearchCV` to skip the boilerplate.
+
+### Available Presets
+
+| Preset | Estimator | Type |
+|---|---|---|
+| `GRADIENT_BOOSTING_REG` / `GRADIENT_BOOSTING_CLF` | `GradientBoostingRegressor` / `GradientBoostingClassifier` | Regression / Classification |
+| `RANDOM_FOREST_REG` / `RANDOM_FOREST_CLF` | `RandomForestRegressor` / `RandomForestClassifier` | Regression / Classification |
+| `SVR` / `SVC` | `SVR` / `SVC` | Regression / Classification |
+| `LOGISTIC_REGRESSION` | `LogisticRegression` | Classification |
+| `RIDGE` / `LASSO` / `ELASTIC_NET` | `Ridge` / `Lasso` / `ElasticNet` | Regression |
+| `KNN_REGRESSOR` / `KNN_CLASSIFIER` | `KNeighborsRegressor` / `KNeighborsClassifier` | Regression / Classification |
+| `DECISION_TREE_REG` / `DECISION_TREE_CLF` | `DecisionTreeRegressor` / `DecisionTreeClassifier` | Regression / Classification |
+
+See the [Preset Search Spaces API reference](../api/presets) for the full list and parameter ranges.
+
+### Using a Preset with a Pipeline
+
+Presets use bare parameter names (e.g., `n_estimators`). Inside a `Pipeline`, parameters must be prefixed with the step name (`regressor__n_estimators`). Build the prefixed grid with a dict comprehension:
+
+```python
+from sklearn.datasets import load_diabetes
+from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+
+from sklearn_genetic import GASearchCV
+from sklearn_genetic.presets import GRADIENT_BOOSTING_REG
+
+X, y = load_diabetes(return_X_y=True)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+pipe = Pipeline([
+    ("scaler", StandardScaler()),
+    ("regressor", GradientBoostingRegressor(random_state=42)),
+])
+
+# Prefix each preset key with the pipeline step name
+param_grid = {
+    f"regressor__{k}": v for k, v in GRADIENT_BOOSTING_REG.items()
+}
+
+search = GASearchCV(
+    estimator=pipe,
+    param_grid=param_grid,
+    cv=5,
+    scoring="neg_root_mean_squared_error",
+)
+
+search.fit(X_train, y_train)
+print("Best parameters:", search.best_params_)
+```
+
+:::tip
+You can mix preset parameters with custom ones in the same `param_grid`. Add pipeline-specific parameters (like `scaler__with_std`) alongside the prefixed preset entries.
+:::
+
 ## See Also
 
 - [Gradient Boosting Hyperparameter Tuning](../tutorials/tune-gradient-boosting) — pipeline-friendly estimator
