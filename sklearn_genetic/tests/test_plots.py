@@ -115,8 +115,6 @@ def test_plot_history():
     assert "Available fields include" in message
     assert "gen" in message
 
-
-
     with pytest.raises(ValueError, match="kind must be one of"):
         plot_history(evolved_estimator, kind="scatter")
 
