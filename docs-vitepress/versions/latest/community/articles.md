@@ -35,3 +35,6 @@ promotional.
 3. [sklearn-genetic-opt 0.13: What Five Years of Genetic Search Taught Me](https://rodrigo-arenas.medium.com/sklearn-genetic-opt-0-13-what-five-years-of-genetic-search-taught-me-3f842fc105b2)  
    Rodrigo Arenas on Medium. Shares lessons from the 0.13 release and the
    evolution of the project over several years.
+
+4. [Optimizing Machine Learning Models with Genetic Algorithm-Based Hyperparameter Tuning](https://medium.com/@community/optimizing-machine-learning-models-with-genetic-algorithm-based-hyperparameter-tuning)  
+   Community Contributor on Medium. Explains the theoretical mechanics of the `mutate` and `calculate_fitness` functions.
