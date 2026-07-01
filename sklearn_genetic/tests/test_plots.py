@@ -1,5 +1,6 @@
 import matplotlib
 import pytest
+import numpy as np
 import re
 from sklearn.datasets import load_diabetes
 from sklearn.model_selection import train_test_split
@@ -430,3 +431,29 @@ def test_metric_column_lists_available_metrics_on_unknown():
     assert "mean_test_roc_auc" in message
     assert "Available metrics" in message
     assert "accuracy" in message and "f1" in message
+
+
+# _as_list – extra edge cases not covered by #270
+
+
+def test_as_list_with_numpy_array():
+    # sklearn pipelines pass arrays here, worth making sure it doesn't blow up
+    arr = np.array(["feature_0", "feature_1"])
+    assert _as_list(arr) == ["feature_0", "feature_1"]
+
+
+def test_as_list_with_set():
+    # sets are unordered so just check the contents, not the order
+    result = _as_list({"a", "b"})
+    assert sorted(result) == ["a", "b"]
+
+
+def test_as_list_empty_string():
+    # empty string is not None — should return [""] not []
+    assert _as_list("") == [""]
+
+
+def test_as_list_falsy_values():
+    # 0 and False are falsy but they're not None — easy bug to introduce
+    assert _as_list(0) == [0]
+    assert _as_list(False) == [False]
