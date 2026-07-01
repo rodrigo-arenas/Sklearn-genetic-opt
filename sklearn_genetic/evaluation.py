@@ -1,4 +1,18 @@
+from numbers import Real
+
 from joblib import Parallel, delayed, effective_n_jobs
+
+
+def validate_error_score(error_score):
+    if isinstance(error_score, str):
+        if error_score == "raise":
+            return
+        raise ValueError(f"error_score must be numeric or 'raise', got {error_score!r} instead")
+
+    if isinstance(error_score, Real):
+        return
+
+    raise ValueError(f"error_score must be numeric or 'raise', got {error_score!r} instead")
 
 
 def logbook_record(logbook, chapter_name, parameters):

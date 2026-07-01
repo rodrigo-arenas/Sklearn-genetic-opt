@@ -9,6 +9,7 @@ matplotlib.use("Agg")
 
 from .. import GASearchCV, GAFeatureSelectionCV
 from ..plots import (
+    _as_list,
     SearchPlotter,
     plot_candidate_rankings,
     plot_candidate_scores,
@@ -192,6 +193,34 @@ def test_plot_candidate_scores():
     )
 
 
+@pytest.mark.parametrize(
+    "plot_function",
+    [
+        plot_candidate_scores,
+        plot_cv_scores,
+        plot_candidate_rankings,
+    ],
+)
+@pytest.mark.parametrize("top_k", [0, -1, 1.5])
+def test_candidate_plots_reject_invalid_top_k(plot_function, top_k):
+    with pytest.raises(ValueError, match="top_k must be a positive integer"):
+        plot_function(evolved_estimator, top_k=top_k)
+
+
+@pytest.mark.parametrize(
+    "plot_function",
+    [
+        plot_candidate_scores,
+        plot_cv_scores,
+        plot_candidate_rankings,
+    ],
+)
+@pytest.mark.parametrize("top_k", [1, None])
+def test_candidate_plots_accept_valid_top_k(plot_function, top_k):
+    plot = plot_function(evolved_estimator, top_k=top_k)
+    assert plot is not None
+
+
 def test_plot_convergence_and_diversity():
     convergence = plot_convergence(evolved_estimator)
     assert convergence.get_title() == "Convergence"
@@ -352,3 +381,49 @@ def test_plot_feature_selection_on_unfitted_estimator_names_the_plot():
     assert "plot_feature_selection requires" in message
     assert "estimator.fit(X, y)" in message
     assert "estimator.best_features_" in message
+
+
+def test_as_list_normalizes_plot_inputs():
+    """_as_list normalizes the field/parameter-name inputs used across the plots."""
+    # None means "nothing selected" -> empty list.
+    assert _as_list(None) == []
+
+    # A single string becomes a one-element list, not a list of characters.
+    assert _as_list("score") == ["score"]
+    assert _as_list("score") != ["s", "c", "o", "r", "e"]
+
+    # An iterable of strings is materialized into a list.
+    assert _as_list(("a", "b")) == ["a", "b"]
+    assert _as_list(["a", "b"]) == ["a", "b"]
+
+    # A lazy iterable (generator) is consumed into a concrete list.
+    assert _as_list(name for name in ("x", "y")) == ["x", "y"]
+
+    # A non-iterable scalar is wrapped as a single-element list.
+    assert _as_list(5) == [5]
+
+
+def test_metric_column_lists_available_metrics_on_unknown():
+    """An unknown metric error lists the available metric names (#259)."""
+    from types import SimpleNamespace
+    from ..plots import _metric_column
+
+    estimator = SimpleNamespace(
+        cv_results_={
+            "mean_test_accuracy": [0.9],
+            "mean_test_f1": [0.8],
+            "std_test_accuracy": [0.0],  # different prefix, must be ignored
+        },
+        refit_metric="accuracy",
+    )
+
+    # A valid metric still resolves to its column.
+    assert _metric_column(estimator, metric="accuracy") == "mean_test_accuracy"
+
+    # An unknown metric names the missing column and the available metrics.
+    with pytest.raises(ValueError) as excinfo:
+        _metric_column(estimator, metric="roc_auc")
+    message = str(excinfo.value)
+    assert "mean_test_roc_auc" in message
+    assert "Available metrics" in message
+    assert "accuracy" in message and "f1" in message

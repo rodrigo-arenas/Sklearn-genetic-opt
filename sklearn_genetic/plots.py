@@ -122,8 +122,15 @@ def _cv_results_frame(estimator):
 def _metric_column(estimator, metric=None, prefix="mean_test"):
     metric = metric or getattr(estimator, "refit_metric", "score")
     column = f"{prefix}_{metric}"
-    if column not in getattr(estimator, "cv_results_", {}):
-        raise ValueError(f"metric column not found in estimator.cv_results_: {column}")
+    cv_results = getattr(estimator, "cv_results_", {})
+    if column not in cv_results:
+        available = sorted(
+            key[len(prefix) + 1 :] for key in cv_results if key.startswith(f"{prefix}_")
+        )
+        raise ValueError(
+            f"metric column not found in estimator.cv_results_: {column}. "
+            f"Available metrics: {available}"
+        )
     return column
 
 
@@ -215,7 +222,17 @@ def _score_values(estimator, metric=None):
     return frame, score_column, pd.to_numeric(frame[score_column], errors="coerce")
 
 
+def _validate_top_k(top_k):
+    if top_k is None:
+        return
+
+    if isinstance(top_k, bool) or not isinstance(top_k, (int, np.integer)) or top_k < 1:
+        raise ValueError("top_k must be a positive integer")
+
+
 def _candidate_frame(estimator, metric=None, top_k=None, sort=True):
+    _validate_top_k(top_k)
+
     frame, score_column, scores = _score_values(estimator, metric=metric)
     candidates = frame.copy()
     candidates[score_column] = scores
@@ -760,18 +777,12 @@ def plot_candidate_scores(
 
     _require_seaborn()
 
-    frame, score_column, scores = _score_values(estimator, metric=metric)
-    candidates = frame.copy()
-    candidates[score_column] = scores
-    candidates = candidates.dropna(subset=[score_column])
-
-    if candidates.empty:
-        raise ValueError("No candidate scores were found in estimator.cv_results_")
-
-    if sort:
-        candidates = candidates.sort_values(score_column, ascending=False)
-
-    candidates = candidates.head(top_k)
+    candidates, score_column = _candidate_frame(
+        estimator,
+        metric=metric,
+        top_k=top_k,
+        sort=sort,
+    )
     labels = _candidate_labels(
         candidates,
         label_params=label_params,

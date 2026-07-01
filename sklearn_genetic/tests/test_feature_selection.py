@@ -115,6 +115,29 @@ def test_feature_selection_grouped_config_is_sklearn_clone_compatible():
     assert "runtime_config" in cloned.get_params()
 
 
+def test_feature_selection_rejects_invalid_error_score():
+    with pytest.raises(ValueError) as excinfo:
+        GAFeatureSelectionCV(
+            DecisionTreeClassifier(),
+            error_score="warn",
+        )
+
+    assert str(excinfo.value) == "error_score must be numeric or 'raise', got 'warn' instead"
+
+
+@pytest.mark.parametrize("error_score", ["raise", np.nan, 0.0])
+def test_feature_selection_accepts_valid_error_score(error_score):
+    estimator = GAFeatureSelectionCV(
+        DecisionTreeClassifier(),
+        error_score=error_score,
+    )
+
+    if isinstance(error_score, float) and np.isnan(error_score):
+        assert np.isnan(estimator.error_score)
+    else:
+        assert estimator.error_score == error_score
+
+
 def test_smart_population_initializer_creates_diverse_feature_masks():
     estimator = GAFeatureSelectionCV(
         DecisionTreeClassifier(random_state=42),

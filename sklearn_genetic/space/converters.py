@@ -80,8 +80,9 @@ def _convert_scipy_distribution(parameter, distribution):
     raise ValueError(
         f"{parameter} uses scipy.stats.{name}, which cannot be converted automatically. "
         "Supported scipy distributions are randint, uniform, loguniform, and reciprocal. "
-        "For other distributions, define the search space manually, for example "
-        "Continuous(lower, upper)."
+        "For other distributions, define the search space manually: use "
+        "Continuous(lower, upper) or Integer(lower, upper) for numeric ranges, or a "
+        "plain list / Categorical([...]) for a small set of choices."
     )
 
 

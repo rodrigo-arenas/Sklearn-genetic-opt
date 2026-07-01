@@ -45,13 +45,40 @@ def test_check_adapter():
     for _ in range(10):
         assert constant_adapter.step() == 0.6
 
-    with pytest.raises(Exception) as excinfo:
+    with pytest.raises(ValueError) as excinfo:
         check_adapter(True)
-    assert (
-        str(excinfo.value)
-        == "adapter should be either a class with inheritance from schedulers.base.BaseAdapter "
-        "or a real number."
-    )
+
+    message = str(excinfo.value)
+    # The received type is reported so misconfigurations are easy to debug ...
+    assert "bool" in message
+    # ... and the expected adapter base class is still mentioned.
+    assert "schedulers.base.BaseAdapter" in message
+
+
+class _NotAnAdapter:
+    """A plain object that does not inherit from ``BaseAdapter``."""
+
+
+@pytest.mark.parametrize(
+    "invalid_adapter, expected_type_name",
+    [
+        (True, "bool"),
+        ("constant", "str"),
+        ([0.5], "list"),
+        (None, "NoneType"),
+        (_NotAnAdapter(), "_NotAnAdapter"),
+    ],
+)
+def test_check_adapter_invalid_object_error_message(invalid_adapter, expected_type_name):
+    # 1. Invalid objects raise a ValueError.
+    with pytest.raises(ValueError) as excinfo:
+        check_adapter(invalid_adapter)
+
+    message = str(excinfo.value)
+    # 2. The message names the received type so the mistake is obvious.
+    assert expected_type_name in message
+    # 3. The message still points users to the expected adapter base class.
+    assert "schedulers.base.BaseAdapter" in message
 
 
 def test_scheduler_reset():

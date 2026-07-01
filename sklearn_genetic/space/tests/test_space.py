@@ -328,6 +328,9 @@ def test_from_sklearn_space_rejects_unsupported_distributions():
     )
     assert "define the search space manually" in message
     assert "Continuous(lower, upper)" in message
+    # Guidance for users who actually wanted a small set of choices (#260).
+    assert "Categorical([...])" in message
+    assert "choices" in message
 
 
 def test_from_sklearn_space_rejects_empty_or_ambiguous_values():
