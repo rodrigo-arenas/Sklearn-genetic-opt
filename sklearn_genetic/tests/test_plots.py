@@ -427,3 +427,23 @@ def test_metric_column_lists_available_metrics_on_unknown():
     assert "mean_test_roc_auc" in message
     assert "Available metrics" in message
     assert "accuracy" in message and "f1" in message
+
+
+def test_candidate_label_formatting():
+    from ..plots import _candidate_label
+
+    params = {"a": 1, "b": 2, "c": 3, "d": 4}
+
+    # Test hidden parameters when label_params is specified
+    label1 = _candidate_label(params, fallback="fb", label_params=["a", "b"])
+    assert label1 == "a=1, b=2"
+
+    # Test hidden parameters using max_label_params defaults
+    label2 = _candidate_label(params, fallback="fb", max_label_params=2)
+    assert "+2 more" in label2
+
+    # Test long label truncation
+    long_params = {"long_parameter_name_1": 1, "long_parameter_name_2": 2}
+    label3 = _candidate_label(long_params, fallback="fb", max_length=15)
+    assert len(label3) == 15
+    assert label3.endswith("...")
