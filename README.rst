@@ -1,5 +1,15 @@
 .. -*- mode: rst -*-
 
+.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/docs-vitepress/public/sklearn-genetic-opt-logo-128.png?raw=true
+   :alt: sklearn-genetic-opt logo
+   :width: 104px
+   :align: left
+
+sklearn-genetic-opt
+###################
+
+Hyperparameter tuning and feature selection for scikit-learn models using genetic algorithms.
+
 |Tests|_ |Codecov|_ |PythonVersion|_ |PyPi| |Conda|_ |Docs|_ |GoodFirstIssues|_
 
 .. |Tests| image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/actions/workflows/ci-tests.yml/badge.svg?branch=master
@@ -27,14 +37,6 @@
 .. |Contributors| image:: https://contributors-img.web.app/image?repo=rodrigo-arenas/sklearn-genetic-opt
 .. _Contributors: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/graphs/contributors
 
-
-.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/docs-vitepress/public/sklearn-genetic-opt-logo-128.png?raw=true
-   :alt: sklearn-genetic-opt logo
-
-sklearn-genetic-opt
-###################
-
-Hyperparameter tuning and feature selection for scikit-learn models using genetic algorithms.
 
 ``sklearn-genetic-opt`` is a scikit-learn-compatible optimization toolkit for users
 who want a smarter alternative to ``GridSearchCV`` and ``RandomizedSearchCV``.
