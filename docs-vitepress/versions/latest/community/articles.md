@@ -38,7 +38,5 @@ promotional.
 
 4. [GASearchCV vs RandomizedSearchCV: When Evolutionary Search Pays Off](https://github.com/andrianbalanesq/sklearn-genetic-opt-tutorials/tree/main/tutorials/01-ga-vs-random-search)  
    Andrian Balanescu (@andrianbalanesq) on GitHub. Compares `GASearchCV`
-   against scikit-learn's `RandomizedSearchCV` on a noisy XGBoost
-   classification task at the same evaluation budget, and explains
-   when the extra wall-clock cost of the genetic search is worth it.
-   Includes a runnable notebook and reproducible numbers.
+   against `RandomizedSearchCV` on a noisy XGBoost task at a fixed
+   evaluation budget, with a runnable notebook and reproducible numbers.
