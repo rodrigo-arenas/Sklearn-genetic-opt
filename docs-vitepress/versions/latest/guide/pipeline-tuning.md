@@ -98,35 +98,34 @@ y_pred = search.predict(X_test)
 
 ## Using Preset Search Spaces
 
-Manually defining `param_grid` for every estimator gets repetitive. `sklearn_genetic.presets` ships pre-built parameter grids for common models — pass them directly to `GASearchCV` to skip the boilerplate.
+Manually defining `param_grid` for every estimator gets repetitive. `sklearn_genetic` ships pre-built parameter grids for common models — call a preset function and pass the result directly to `GASearchCV` to skip the boilerplate.
 
 ### Available Presets
 
-| Preset | Estimator | Type |
+Each preset is a factory function that returns a ready-to-use `param_grid` dict. Pass `profile="fast"`, `"balanced"` (default), or `"wide"` to control the search range.
+
+| Preset function | Estimator | Type |
 |---|---|---|
-| `GRADIENT_BOOSTING_REG` / `GRADIENT_BOOSTING_CLF` | `GradientBoostingRegressor` / `GradientBoostingClassifier` | Regression / Classification |
-| `RANDOM_FOREST_REG` / `RANDOM_FOREST_CLF` | `RandomForestRegressor` / `RandomForestClassifier` | Regression / Classification |
-| `SVR` / `SVC` | `SVR` / `SVC` | Regression / Classification |
-| `LOGISTIC_REGRESSION` | `LogisticRegression` | Classification |
-| `RIDGE` / `LASSO` / `ELASTIC_NET` | `Ridge` / `Lasso` / `ElasticNet` | Regression |
-| `KNN_REGRESSOR` / `KNN_CLASSIFIER` | `KNeighborsRegressor` / `KNeighborsClassifier` | Regression / Classification |
-| `DECISION_TREE_REG` / `DECISION_TREE_CLF` | `DecisionTreeRegressor` / `DecisionTreeClassifier` | Regression / Classification |
+| `random_forest_regressor_space` / `random_forest_classifier_space` | `RandomForestRegressor` / `RandomForestClassifier` | Regression / Classification |
+| `hist_gradient_boosting_regressor_space` / `hist_gradient_boosting_classifier_space` | `HistGradientBoostingRegressor` / `HistGradientBoostingClassifier` | Regression / Classification |
+| `xgboost_regressor_space` / `xgboost_classifier_space` | `XGBRegressor` / `XGBClassifier` | Regression / Classification |
+| `svc_space` | `SVC` | Classification |
+| `logistic_regression_space` | `LogisticRegression` | Classification |
 
 See the [Preset Search Spaces API reference](../api/presets) for the full list and parameter ranges.
 
 ### Using a Preset with a Pipeline
 
-Presets use bare parameter names (e.g., `n_estimators`). Inside a `Pipeline`, parameters must be prefixed with the step name (`regressor__n_estimators`). Build the prefixed grid with a dict comprehension:
+Every preset function accepts a `prefix` argument. Inside a `Pipeline`, set `prefix` to the step name followed by `__` so the returned keys are already pipeline-ready — no manual dict comprehension needed:
 
 ```python
 from sklearn.datasets import load_diabetes
-from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
-from sklearn_genetic import GASearchCV
-from sklearn_genetic.presets import GRADIENT_BOOSTING_REG
+from sklearn_genetic import GASearchCV, random_forest_regressor_space
 
 X, y = load_diabetes(return_X_y=True)
 X_train, X_test, y_train, y_test = train_test_split(
@@ -135,13 +134,11 @@ X_train, X_test, y_train, y_test = train_test_split(
 
 pipe = Pipeline([
     ("scaler", StandardScaler()),
-    ("regressor", GradientBoostingRegressor(random_state=42)),
+    ("regressor", RandomForestRegressor(random_state=42, n_jobs=1)),
 ])
 
-# Prefix each preset key with the pipeline step name
-param_grid = {
-    f"regressor__{k}": v for k, v in GRADIENT_BOOSTING_REG.items()
-}
+# prefix="regressor__" matches the "regressor" step, e.g. regressor__n_estimators
+param_grid = random_forest_regressor_space(prefix="regressor__")
 
 search = GASearchCV(
     estimator=pipe,
