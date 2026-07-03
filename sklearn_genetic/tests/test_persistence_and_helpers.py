@@ -234,5 +234,7 @@ def test_model_checkpoint_estimator_state_keys(tmp_path):
     assert estimator_state["scoring"] == "accuracy"
     assert estimator_state["population_size"] == 4
     assert estimator_state["generations"] == 2
-    assert estimator_state["algorithm"] == "eaSimple"
     assert list(estimator_state["param_grid"].keys()) == ["max_depth"]
+    assert estimator_state["param_grid"]["max_depth"].lower == 1
+    assert estimator_state["param_grid"]["max_depth"].upper == 2
+    assert estimator_state["algorithm"] == "eaSimple"
