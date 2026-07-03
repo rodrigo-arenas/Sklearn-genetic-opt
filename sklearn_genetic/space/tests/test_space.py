@@ -119,6 +119,33 @@ def test_categorical_bad_parameters(data_object, parameters, message):
     assert str(excinfo.value) == message
 
 
+def test_categorical_random_state_is_deterministic():
+    """Same random_state yields the same sample sequence (#296).
+
+    This exercises the seeded ``rng.choice`` path, which the existing sampling
+    tests (using no ``random_state``) do not cover.
+    """
+    choices = ["a", "b", "c", "d"]
+    first = Categorical(choices, random_state=42)
+    second = Categorical(choices, random_state=42)
+
+    seq_first = [first.sample() for _ in range(15)]
+    seq_second = [second.sample() for _ in range(15)]
+
+    assert seq_first == seq_second
+    # Every draw is a valid choice.
+    assert all(value in choices for value in seq_first)
+
+
+def test_categorical_sampling_with_priors_stays_in_choices():
+    """A priored categorical only ever samples declared choices (#296)."""
+    choices = ["x", "y", "z"]
+    dimension = Categorical(choices, priors=[0.2, 0.3, 0.5], random_state=7)
+
+    assert dimension.priors == [0.2, 0.3, 0.5]
+    assert all(dimension.sample() in choices for _ in range(50))
+
+
 def test_space_classes_have_complete_type_annotations():
     """random_state and sample() carry annotations on every space class (#209)."""
     import inspect
