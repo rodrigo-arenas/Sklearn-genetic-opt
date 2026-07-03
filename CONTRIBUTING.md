@@ -150,17 +150,19 @@ We encourage you to follow these guidelines:
 * Make sure all the tests are passing by running `pytest sklearn_genetic/` in the root of the project.
 * We can not merge if the tests fail.
 
-# External References
+# Community Articles
 
-We have a [file](https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/docs/external_references.rst) 
-in our docs where you can put external references with the use of sklearn-genetic-opt,
-it could be a blog post, a video or an article.
-You can add the link of the content in that file (following the contribution guides).
+We have a [Community Articles](https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/community/articles)
+page in our docs where you can add external content about sklearn-genetic-opt,
+such as a blog post, video, tutorial, or article.
+You can add the link of the content to that page by updating
+`docs-vitepress/versions/latest/community/articles.md` in a pull request.
 
 Take into consideration:
 
-* The link must be after the last existing link.
-* The name must be the title that will be visible.
-* The link must take to the referred content.
+* Add the link after the last existing entry.
+* Use the content title as the visible link text.
+* Include the author name or GitHub handle.
+* Keep the description short and focused on what the content teaches.
 
 ## Thank you for being part of this project!
