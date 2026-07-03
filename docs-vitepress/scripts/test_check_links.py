@@ -56,3 +56,64 @@ def test_resolves(tmp_path):
     # Broken: missing page, and a directory without an index.md (the edge case).
     assert check_links._resolves(source, "./guide/missing") is False
     assert check_links._resolves(source, "./empty") is False
+
+
+def test_root_docs_valid_local_links_pass(tmp_path, monkeypatch):
+    readme = tmp_path / "README.rst"
+    contributing = tmp_path / "CONTRIBUTING.md"
+    guide = tmp_path / "docs-vitepress" / "versions" / "latest" / "guide"
+    guide.mkdir(parents=True)
+    (guide / "index.md").write_text("x", encoding="utf-8")
+    contributing.write_text("[README](README.rst)\n", encoding="utf-8")
+    readme.write_text(
+        "`Contributing <CONTRIBUTING.md>`_\n"
+        "`Latest guide <docs-vitepress/versions/latest/guide>`_\n",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(check_links, "ROOT", tmp_path)
+    monkeypatch.setattr(check_links, "VERSION_DIRS", [])
+    monkeypatch.setattr(check_links, "ROOT_DOCS", [readme, contributing])
+
+    assert check_links.check() == []
+
+
+def test_root_docs_report_missing_local_links(tmp_path, monkeypatch):
+    readme = tmp_path / "README.rst"
+    readme.write_text("`Missing <missing-page.md>`_\n", encoding="utf-8")
+
+    monkeypatch.setattr(check_links, "ROOT", tmp_path)
+    monkeypatch.setattr(check_links, "VERSION_DIRS", [])
+    monkeypatch.setattr(check_links, "ROOT_DOCS", [readme])
+
+    assert check_links.check() == [(readme, "missing-page.md")]
+
+
+def test_root_docs_skip_external_links(tmp_path, monkeypatch):
+    contributing = tmp_path / "CONTRIBUTING.md"
+    contributing.write_text(
+        "[GitHub](https://github.com/rodrigo-arenas/Sklearn-genetic-opt)\n"
+        "[Email](mailto:dev@example.com)\n",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(check_links, "ROOT", tmp_path)
+    monkeypatch.setattr(check_links, "VERSION_DIRS", [])
+    monkeypatch.setattr(check_links, "ROOT_DOCS", [contributing])
+
+    assert check_links.check() == []
+
+
+def test_rst_prose_with_angle_brackets_is_not_a_link(tmp_path, monkeypatch):
+    readme = tmp_path / "README.rst"
+    readme.write_text(
+        "Use this when your model takes < 1 s per fit) and keep reading.\n"
+        "``code`` later in the same file should not turn it into a link.\n",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(check_links, "ROOT", tmp_path)
+    monkeypatch.setattr(check_links, "VERSION_DIRS", [])
+    monkeypatch.setattr(check_links, "ROOT_DOCS", [readme])
+
+    assert check_links.check() == []

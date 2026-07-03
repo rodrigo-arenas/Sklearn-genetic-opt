@@ -1,9 +1,9 @@
-"""Check internal Markdown links in the versioned VitePress docs.
+"""Check internal documentation links.
 
-Scans every Markdown file under the versioned docs trees and verifies that
-*relative* links point at a file that exists. VitePress lets you omit the
-``.md`` extension and link to a directory's ``index.md``, so this resolver
-mirrors that behaviour.
+Scans every Markdown file under the versioned docs trees, plus the root
+contributor docs, and verifies that *relative* links point at a file that
+exists. VitePress lets you omit the ``.md`` extension and link to a directory's
+``index.md``, so this resolver mirrors that behaviour.
 
 What is checked / skipped:
 
@@ -32,9 +32,17 @@ VERSION_DIRS = [
     ROOT / "docs-vitepress" / "versions" / "latest",
     ROOT / "docs-vitepress" / "versions" / "0.13",
 ]
+ROOT_DOCS = [
+    ROOT / "README.rst",
+    ROOT / "CONTRIBUTING.md",
+]
 
 # [text](target) and ![alt](target) — capture the target up to whitespace or ')'.
 LINK_RE = re.compile(r"!?\[[^\]]*\]\(\s*([^)\s]+)")
+RST_INLINE_LINK_RE = re.compile(r"`[^`\n<>]+<([^\s>]+)>`_")
+RST_REFERENCE_RE = re.compile(r"^\s*\.\. _[^:]+:\s*([^\s]+)", re.MULTILINE)
+RST_DIRECTIVE_TARGET_RE = re.compile(r"^\s*\.\. image::\s*([^\s]+)", re.MULTILINE)
+RST_OPTION_TARGET_RE = re.compile(r"^\s*:target:\s*([^\s]+)", re.MULTILINE)
 
 _EXTERNAL_PREFIXES = ("http://", "https://", "mailto:", "//")
 
@@ -66,16 +74,36 @@ def _resolves(md_file: Path, target: str) -> bool:
     return any(candidate.is_file() for candidate in candidates)
 
 
+def _targets_in_doc(doc_file: Path) -> list[str]:
+    text = doc_file.read_text(encoding="utf-8")
+    if doc_file.suffix == ".rst":
+        return (
+            RST_INLINE_LINK_RE.findall(text)
+            + RST_REFERENCE_RE.findall(text)
+            + RST_DIRECTIVE_TARGET_RE.findall(text)
+            + RST_OPTION_TARGET_RE.findall(text)
+        )
+    return LINK_RE.findall(text)
+
+
+def _check_doc(doc_file: Path) -> list[tuple[Path, str]]:
+    broken: list[tuple[Path, str]] = []
+    for target in _targets_in_doc(doc_file):
+        if _is_internal_relative(target) and not _resolves(doc_file, target):
+            broken.append((doc_file, target))
+    return broken
+
+
 def check() -> list[tuple[Path, str]]:
     broken: list[tuple[Path, str]] = []
     for version_dir in VERSION_DIRS:
         if not version_dir.exists():
             continue
         for md_file in sorted(version_dir.rglob("*.md")):
-            text = md_file.read_text(encoding="utf-8")
-            for target in LINK_RE.findall(text):
-                if _is_internal_relative(target) and not _resolves(md_file, target):
-                    broken.append((md_file, target))
+            broken.extend(_check_doc(md_file))
+    for root_doc in ROOT_DOCS:
+        if root_doc.exists():
+            broken.extend(_check_doc(root_doc))
     return broken
 
 
