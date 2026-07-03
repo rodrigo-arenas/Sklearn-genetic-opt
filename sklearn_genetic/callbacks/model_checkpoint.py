@@ -25,7 +25,6 @@ class ModelCheckpoint(BaseCallback):
                 "mutation_probability": estimator.mutation_probability,
                 "param_grid": estimator.param_grid,
                 "algorithm": estimator.algorithm,
-                "param_grid": estimator.param_grid,
                 "local_search": getattr(estimator, "local_search", False),
                 "local_search_top_k": getattr(estimator, "local_search_top_k", 1),
                 "local_search_steps": getattr(estimator, "local_search_steps", 1),
