@@ -152,10 +152,10 @@ We encourage you to follow these guidelines:
 
 # External References
 
-We have a [file](https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/docs/external_references.rst) 
+We have a [Community Articles page](https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/docs-vitepress/versions/latest/community/articles.md)
 in our docs where you can put external references with the use of sklearn-genetic-opt,
 it could be a blog post, a video or an article.
-You can add the link of the content in that file (following the contribution guides).
+You can add the link of the content on that page (following the contribution guides).
 
 Take into consideration:
 

@@ -374,7 +374,7 @@ Good ways to start:
 * **Fix typing, CI, or formatting** — ``black .`` keeps the style consistent.
 * **Answer questions** in open issues.
 * **Share your work** — add a blog post, article, or video to the
-  `external references file <https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/docs/external_references.rst>`_.
+  `Community Articles page <https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/docs-vitepress/versions/latest/community/articles.md>`_.
 
 .. code-block:: bash
 
