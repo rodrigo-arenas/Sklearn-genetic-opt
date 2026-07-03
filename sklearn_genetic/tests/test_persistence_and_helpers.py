@@ -191,7 +191,7 @@ def test_model_checkpoint_save_load_and_error_paths(tmp_path, capsys):
     missing_checkpoint = ModelCheckpoint(tmp_path / "missing.pkl").load()
     output = capsys.readouterr().out
 
-    assert "Checkpoint save in" in output
+    assert "Checkpoint saved to" in output
     assert "Error saving checkpoint" in output
     assert "Error loading checkpoint" in output
     assert loaded_checkpoint["estimator_state"]["scoring"] == "accuracy"

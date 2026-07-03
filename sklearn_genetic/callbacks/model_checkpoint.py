@@ -44,7 +44,7 @@ class ModelCheckpoint(BaseCallback):
             checkpoint_data = {"estimator_state": estimator_state, "logbook": deepcopy(logbook)}
             with open(self.checkpoint_path, "wb") as f:
                 pickle.dump(checkpoint_data, f)
-                print(f"Checkpoint save in {self.checkpoint_path}")
+                print(f"Checkpoint saved to {self.checkpoint_path}")
 
         except Exception as e:
             print(f"Error saving checkpoint: {e}")
