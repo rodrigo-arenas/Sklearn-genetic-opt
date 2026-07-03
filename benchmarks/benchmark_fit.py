@@ -259,6 +259,7 @@ def build_gasearch(
     n_jobs: int | None,
     parallel_backend: str,
     population_initializer: str,
+    use_cache: bool = True,
     final_selection: bool = False,
     final_selection_top_k: int = 3,
     final_selection_cv=None,
@@ -275,7 +276,7 @@ def build_gasearch(
         parallel_backend=parallel_backend,
         verbose=False,
         return_train_score=False,
-        use_cache=True,
+        use_cache=use_cache,
     )
     optimization_config = OptimizationConfig(
         local_search=True,
@@ -320,6 +321,7 @@ def build_feature_selector(
     parallel_backend: str,
     population_initializer: str,
     max_features: int,
+    use_cache: bool = True,
 ) -> GAFeatureSelectionCV:
     evolution_config = EvolutionConfig(
         population_size=population_size,
@@ -333,7 +335,7 @@ def build_feature_selector(
         parallel_backend=parallel_backend,
         verbose=False,
         return_train_score=False,
-        use_cache=True,
+        use_cache=use_cache,
     )
     optimization_config = OptimizationConfig(
         local_search=True,
@@ -794,6 +796,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--population-size", type=int, default=12, help="GA population size.")
     parser.add_argument("--cv-splits", type=int, default=3, help="Cross-validation splits.")
     parser.add_argument(
+        "--use-cache",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Enable the fitness cache (default). Pass --no-use-cache to "
+        "re-evaluate every candidate and benchmark the cache's effect on the "
+        "cross_validate call count.",
+    )
+    parser.add_argument(
         "--scenarios",
         nargs="+",
         choices=sorted(SCENARIOS),
@@ -920,6 +930,7 @@ def main() -> None:
                                         n_jobs=n_jobs,
                                         parallel_backend=parallel_backend,
                                         population_initializer=population_initializer,
+                                        use_cache=args.use_cache,
                                         final_selection=args.final_selection,
                                         final_selection_top_k=args.final_selection_top_k,
                                         final_selection_cv=args.final_selection_cv_splits,
@@ -951,6 +962,7 @@ def main() -> None:
                                         parallel_backend=parallel_backend,
                                         population_initializer=population_initializer,
                                         max_features=max(2, X_train.shape[1] // 3),
+                                        use_cache=args.use_cache,
                                     ),
                                     X_train=X_train,
                                     X_test=X_test,
