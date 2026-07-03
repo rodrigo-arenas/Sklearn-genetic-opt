@@ -197,3 +197,51 @@ def test_model_checkpoint_save_load_and_error_paths(tmp_path, capsys):
     assert loaded_checkpoint["estimator_state"]["scoring"] == "accuracy"
     assert loaded_checkpoint["logbook"] is None
     assert missing_checkpoint is None
+
+
+def test_model_checkpoint_state_has_expected_keys(tmp_path):
+    estimator = SimpleNamespace(
+        estimator=DecisionTreeClassifier(),
+        cv=2,
+        scoring="accuracy",
+        population_size=4,
+        generations=2,
+        crossover_probability=0.8,
+        mutation_probability=0.1,
+        param_grid={"max_depth": Integer(1, 2)},
+        algorithm="eaSimple",
+    )
+    checkpoint_path = tmp_path / "checkpoint.pkl"
+    checkpoint = ModelCheckpoint(checkpoint_path)
+
+    checkpoint.on_step(logbook=None, estimator=estimator)
+    state = checkpoint.load()["estimator_state"]
+
+    expected_keys = {
+        "estimator",
+        "cv",
+        "scoring",
+        "population_size",
+        "generations",
+        "crossover_probability",
+        "mutation_probability",
+        "param_grid",
+        "algorithm",
+        "local_search",
+        "local_search_top_k",
+        "local_search_steps",
+        "local_search_radius",
+        "diversity_control",
+        "diversity_threshold",
+        "diversity_stagnation_generations",
+        "diversity_mutation_boost",
+        "random_immigrants_fraction",
+        "fitness_sharing",
+        "sharing_radius",
+        "sharing_alpha",
+    }
+    assert set(state.keys()) == expected_keys
+    # Integer has no __eq__, so compare bounds rather than the dict by value.
+    assert set(state["param_grid"].keys()) == {"max_depth"}
+    assert state["param_grid"]["max_depth"].lower == 1
+    assert state["param_grid"]["max_depth"].upper == 2
