@@ -202,6 +202,7 @@ export default defineConfig({
   title: 'sklearn-genetic-opt',
   description: 'Evolutionary hyperparameter tuning and feature selection for scikit-learn',
   base: GITHUB_PAGES_BASE,
+  cleanUrls: true,
 
   titleTemplate: ':title | sklearn-genetic-opt',
 
@@ -223,7 +224,7 @@ export default defineConfig({
     const cleanPath = pageData.relativePath
       .replace(/\\/g, '/')
       .replace(/index\.md$/, '')
-      .replace(/\.md$/, '.html')
+      .replace(/\.md$/, '')
     const pageUrl = `${base}/${cleanPath}`
 
     pageData.frontmatter.head ??= []
