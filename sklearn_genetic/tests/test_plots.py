@@ -10,6 +10,7 @@ matplotlib.use("Agg")
 from .. import GASearchCV, GAFeatureSelectionCV
 from ..plots import (
     _as_list,
+    _candidate_label,
     SearchPlotter,
     plot_candidate_rankings,
     plot_candidate_scores,
@@ -404,6 +405,45 @@ def test_as_list_normalizes_plot_inputs():
 
     # A non-iterable scalar is wrapped as a single-element list.
     assert _as_list(5) == [5]
+
+
+def test_candidate_label_shows_hidden_count():
+    params = {
+        "n_estimators": 100,
+        "max_depth": 5,
+        "learning_rate": 0.1,
+        "criterion": "gini",
+    }
+    label = _candidate_label(params, fallback=0, max_label_params=2)
+
+    assert "n_estimators=100" in label
+    assert "max_depth=5" in label
+    assert "+2 more" in label
+
+
+def test_candidate_label_respects_label_params():
+    params = {"n_estimators": 100, "max_depth": 5, "criterion": "gini"}
+    label = _candidate_label(params, fallback=0, label_params=["max_depth"])
+
+    assert label == "max_depth=5"
+    assert "n_estimators" not in label
+    assert "criterion" not in label
+    assert "more" not in label
+
+
+def test_candidate_label_truncates_long_label():
+    params = {"kernel": "rbf_with_a_very_long_descriptive_kernel_name"}
+    label = _candidate_label(params, fallback=0, label_params=["kernel"], max_length=20)
+
+    assert len(label) == 20
+    assert label.endswith("...")
+
+
+def test_candidate_label_float_formatting():
+    params = {"learning_rate": 0.123456789}
+    label = _candidate_label(params, fallback=0, label_params=["learning_rate"], float_precision=3)
+
+    assert label == "learning_rate=0.123"
 
 
 def test_metric_column_lists_available_metrics_on_unknown():
