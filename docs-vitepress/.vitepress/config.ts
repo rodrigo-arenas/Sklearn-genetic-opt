@@ -297,6 +297,13 @@ export default defineConfig({
         text: 'Version',
         items: versionNavItems,
       },
+      {
+        text: 'Links',
+        items: [
+          { text: 'GitHub', link: 'https://github.com/rodrigo-arenas/Sklearn-genetic-opt' },
+          { text: 'PyPI', link: 'https://pypi.org/project/sklearn-genetic-opt/' },
+        ],
+      },
     ],
 
     sidebar: versionSidebarEntries,
