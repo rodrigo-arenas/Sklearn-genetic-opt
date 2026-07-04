@@ -5,7 +5,8 @@
         <h2 class="community-title">Open Source &amp; Community Driven</h2>
         <p class="community-desc">
           sklearn-genetic-opt is MIT licensed and actively maintained. Contributions, bug reports,
-          and feature requests are welcome.
+          and feature requests are welcome. If it saves you time, a GitHub star helps other
+          practitioners discover it.
         </p>
 
         <div class="community-stats">
@@ -29,7 +30,7 @@
             Report an Issue
           </a>
           <a
-            href="https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/CONTRIBUTING.rst"
+            href="https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/CONTRIBUTING.md"
             class="community-btn secondary"
           >
             Contributing Guide
@@ -47,7 +48,7 @@
 <script setup>
 const stats = [
   { value: 'MIT', label: 'License' },
-  { value: 'Python 3.8+', label: 'Requirement' },
+  { value: 'Python 3.12+', label: 'Requirement' },
   { value: 'scikit-learn', label: 'Compatible with' },
   { value: '0.13', label: 'Latest stable' },
 ]
