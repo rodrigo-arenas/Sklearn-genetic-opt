@@ -9,6 +9,59 @@ You are reading the **latest (dev)** docs. For the stable version, see [stable](
 
 # Release Notes
 
+## 0.13.4 (unreleased)
+
+### New Features and Behavior
+
+- **Benchmark cache toggle**: `benchmarks/benchmark_fit.py` now exposes `--use-cache` / `--no-use-cache`, and threads the setting through both `GASearchCV` and `GAFeatureSelectionCV` benchmark builders. This makes it possible to measure the real impact of the fitness cache on repeated candidate evaluation.
+- **Safer constructor validation**: `error_score` is now validated during estimator construction, so invalid values fail earlier with a clearer message.
+- **More robust ranking utilities**: internal score ranking now handles `NaN` values consistently when ranking candidates.
+
+### Bug Fixes and Error Messages
+
+- **ModelCheckpoint cleanup**: removed a duplicate `param_grid` entry from `ModelCheckpoint` estimator state and added regression coverage for the core checkpoint keys.
+- **Clearer checkpoint output**: `ModelCheckpoint` now reports successful saves with the clearer message `Checkpoint saved to ...`.
+- **Better plotting errors**:
+  - candidate plots now validate invalid `top_k` values before plotting
+  - metric-column errors now list available metric names
+  - `plot_history` errors now show available fields
+  - plotting helpers now raise more actionable errors when called before fitting
+- **Search-space validation improvements**:
+  - `warm_start_configs` validation now reports clearer errors
+  - feature-name count mismatch errors include the expected and received counts
+  - preset `prefix` now validates its type
+  - unsupported scipy distributions in `from_sklearn_space` now suggest list or `Categorical` alternatives
+- **Optional dependency errors**: missing MLflow now raises a clearer error explaining how to install the optional extra.
+- **Adapter validation**: scheduler adapter errors now include the received type.
+- **Type annotations**: completed type annotations for the search-space parameter classes and fixed the `Categorical.random_state` annotation.
+
+### Documentation
+
+- **Clean canonical URLs**: docs canonical and Open Graph URLs now use clean VitePress-style URLs instead of raw `.html` targets.
+- **Preset pipeline guidance**: added a guide section showing how to use preset search spaces with sklearn `Pipeline` objects via the preset `prefix` argument.
+- **Community articles**:
+  - added a Community Articles page for external posts, videos, tutorials, and articles
+  - updated README and contributor-facing docs to point to the current community articles source file
+  - added the first community article entry comparing `GASearchCV` and `RandomizedSearchCV`
+- **Contributor guidance**: docs now remind contributors to check issue and PR status before starting work to avoid duplicated effort.
+- **README improvements**:
+  - added citation guidance
+  - added a gentle GitHub star prompt and stars badge
+  - updated community article contribution links
+- **Docs navigation cleanup**: removed the legacy Read the Docs link from the new VitePress docs now that the RTD page is no longer available.
+- **TimerStopping example**: callbacks docs now include a runnable `TimerStopping` example.
+- **Troubleshooting expansion**: added error-reference and `parallel_backend` decision tables, plus refreshed stale `parallel_backend` examples.
+
+### Tests and Maintenance
+
+- Added direct tests for `_as_list` and extra edge cases including NumPy arrays, sets, empty strings, and falsy scalar values.
+- Added `_candidate_label` tests covering hidden-parameter counts, `label_params`, truncation, and compact float formatting.
+- Added `Categorical.random_state` determinism coverage and priors sampling validation.
+- Added an internal Markdown link checker for versioned docs pages.
+- Added `CITATION.cff` for GitHub citation support.
+
+---
+
 ## 0.13.3
 
 ### New Features
