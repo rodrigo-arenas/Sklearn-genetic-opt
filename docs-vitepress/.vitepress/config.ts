@@ -31,6 +31,26 @@ const versionNavItems = [
   { text: 'latest (dev)', link: '/versions/latest/' },
 ]
 
+const starIcon = {
+  svg: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="m12 2.6 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.4l-5.8 3.1 1.1-6.5-4.7-4.6 6.5-.9L12 2.6Z"/></svg>',
+}
+
+const forkIcon = {
+  svg: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 3a3 3 0 0 0-1 5.83V15a4 4 0 0 0 4 4h4a3 3 0 1 0 0-2h-4a2 2 0 0 1-2-2V8.83A3 3 0 0 0 7 3Zm0 2a1 1 0 1 1 0 2 1 1 0 0 1 0-2Zm10 12a1 1 0 1 1 0 2 1 1 0 0 1 0-2Zm0-14a3 3 0 0 0-1 5.83V11a2 2 0 0 1-2 2h-2v2h2a4 4 0 0 0 4-4V8.83A3 3 0 0 0 17 3Zm0 2a1 1 0 1 1 0 2 1 1 0 0 1 0-2Z"/></svg>',
+}
+
+const issuesIcon = {
+  svg: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 1 0 .01 0H12Zm0 2a8 8 0 1 1-.01 0H12Zm-1 3h2v7h-2V7Zm0 9h2v2h-2v-2Z"/></svg>',
+}
+
+const discussionsIcon = {
+  svg: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 4h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9.8L5 21v-4H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Zm0 2v9h3v1.7L9.1 15H20V6H4Zm3 3h10v2H7V9Zm0 3h7v2H7v-2Z"/></svg>',
+}
+
+const packageIcon = {
+  svg: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="m12 2 9 5v10l-9 5-9-5V7l9-5Zm0 2.3L6.1 7.6 12 10.9l5.9-3.3L12 4.3ZM5 9.3v6.5l6 3.3v-6.5L5 9.3Zm14 0-6 3.3v6.5l6-3.3V9.3Z"/></svg>',
+}
+
 const versionSidebarEntries = Object.fromEntries([
   ...releaseVersions.map((version) => [
     `/versions/${version}/`,
@@ -277,19 +297,41 @@ export default defineConfig({
         text: 'Version',
         items: versionNavItems,
       },
-      {
-        text: 'Links',
-        items: [
-          { text: 'GitHub', link: 'https://github.com/rodrigo-arenas/Sklearn-genetic-opt' },
-          { text: 'PyPI', link: 'https://pypi.org/project/sklearn-genetic-opt/' },
-        ],
-      },
     ],
 
     sidebar: versionSidebarEntries,
 
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/rodrigo-arenas/Sklearn-genetic-opt' },
+      {
+        icon: 'github',
+        link: 'https://github.com/rodrigo-arenas/Sklearn-genetic-opt',
+        ariaLabel: 'GitHub repository',
+      },
+      {
+        icon: starIcon,
+        link: 'https://github.com/rodrigo-arenas/Sklearn-genetic-opt',
+        ariaLabel: 'Star on GitHub',
+      },
+      {
+        icon: forkIcon,
+        link: 'https://github.com/rodrigo-arenas/Sklearn-genetic-opt/fork',
+        ariaLabel: 'Fork on GitHub',
+      },
+      {
+        icon: issuesIcon,
+        link: 'https://github.com/rodrigo-arenas/Sklearn-genetic-opt/issues',
+        ariaLabel: 'GitHub issues',
+      },
+      {
+        icon: discussionsIcon,
+        link: 'https://github.com/rodrigo-arenas/Sklearn-genetic-opt/discussions',
+        ariaLabel: 'GitHub discussions',
+      },
+      {
+        icon: packageIcon,
+        link: 'https://pypi.org/project/sklearn-genetic-opt/',
+        ariaLabel: 'PyPI package',
+      },
     ],
 
     footer: {

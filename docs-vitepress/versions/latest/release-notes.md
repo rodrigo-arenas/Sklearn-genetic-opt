@@ -48,7 +48,7 @@ You are reading the **latest (dev)** docs. For the stable version, see [stable](
   - added citation guidance
   - added a gentle GitHub star prompt and stars badge
   - updated community article contribution links
-- **Docs navigation cleanup**: removed the legacy Read the Docs link from the new VitePress docs now that the RTD page is no longer available.
+- **Docs navigation cleanup**: replaced the generic Links dropdown with direct navbar icons for GitHub, Star, Fork, Issues, Discussions, and PyPI; also removed the legacy Read the Docs link now that the RTD page is no longer available.
 - **TimerStopping example**: callbacks docs now include a runnable `TimerStopping` example.
 - **Troubleshooting expansion**: added error-reference and `parallel_backend` decision tables, plus refreshed stale `parallel_backend` examples.
 
