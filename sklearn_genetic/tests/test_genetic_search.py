@@ -1376,7 +1376,20 @@ def test_checkpoint_functionality():
     assert "algorithm" in checkpoint_data["estimator_state"]
     assert "logbook" in checkpoint_data
 
-    restored_estimator = GASearchCV(**checkpoint_data["estimator_state"])
+    restored_estimator = GASearchCV(
+        clf,
+        cv=3,
+        scoring="accuracy",
+        population_size=6,
+        generations=gen,
+        tournament_size=3,
+        param_grid={
+            "l1_ratio": Continuous(0, 1),
+            "alpha": Continuous(1e-4, 1),
+            "average": Categorical([True, False]),
+        },
+    )
+    restored_estimator.load(checkpoint_path)
 
     assert restored_estimator.algorithm == checkpoint_data["estimator_state"]["algorithm"]  # noqa
 

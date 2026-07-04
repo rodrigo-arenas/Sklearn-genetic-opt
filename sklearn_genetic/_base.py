@@ -17,7 +17,7 @@ def history_record(history, index):
 
 
 class GeneticEstimatorMixin:
-    _volatile_pickle_attrs = {"toolbox", "_stats", "_pop", "_hof", "hof"}
+    _volatile_pickle_attrs = {"toolbox", "_stats", "_pop", "_hof", "hof", "callbacks"}
 
     def _serializable_state(self):
         return {

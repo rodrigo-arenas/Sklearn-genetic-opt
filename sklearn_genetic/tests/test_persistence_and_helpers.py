@@ -1,3 +1,4 @@
+import pickle
 from types import SimpleNamespace
 
 import pytest
@@ -238,3 +239,100 @@ def test_model_checkpoint_estimator_state_keys(tmp_path):
     assert estimator_state["param_grid"]["max_depth"].lower == 1
     assert estimator_state["param_grid"]["max_depth"].upper == 2
     assert estimator_state["algorithm"] == "eaSimple"
+
+
+def test_model_checkpoint_matches_save_state(tmp_path):
+    X, y = load_iris(return_X_y=True)
+    X_train, _, y_train, _ = train_test_split(X, y, test_size=0.25, stratify=y, random_state=0)
+
+    search = GASearchCV(
+        estimator=DecisionTreeClassifier(random_state=0),
+        param_grid={"max_depth": Integer(1, 3)},
+        cv=2,
+        scoring="accuracy",
+        population_size=3,
+        generations=1,
+        verbose=False,
+    )
+    search.fit(X_train, y_train)
+
+    save_path = tmp_path / "save.pkl"
+    search.save(save_path)
+    with open(save_path, "rb") as f:
+        saved_state = pickle.load(f)["estimator_state"]
+
+    checkpoint_path = tmp_path / "checkpoint.pkl"
+    checkpoint = ModelCheckpoint(checkpoint_path)
+    checkpoint.on_step(logbook=search.logbook, estimator=search)
+    checkpoint_state = checkpoint.load()["estimator_state"]
+
+    assert checkpoint_state.keys() == saved_state.keys()
+
+    for key in ("cv", "scoring", "population_size", "generations", "algorithm"):
+        assert checkpoint_state[key] == saved_state[key]
+
+    assert list(checkpoint_state["param_grid"].keys()) == list(saved_state["param_grid"].keys())
+    assert (
+        checkpoint_state["param_grid"]["max_depth"].lower
+        == saved_state["param_grid"]["max_depth"].lower
+    )
+    assert (
+        checkpoint_state["param_grid"]["max_depth"].upper
+        == saved_state["param_grid"]["max_depth"].upper
+    )
+
+
+def test_model_checkpoint_output_restorable_via_load(tmp_path):
+    X, y = load_iris(return_X_y=True)
+    X_train, X_test, y_train, _ = train_test_split(X, y, test_size=0.25, stratify=y, random_state=0)
+
+    search = GASearchCV(
+        estimator=DecisionTreeClassifier(random_state=0),
+        param_grid={"max_depth": Integer(1, 3)},
+        cv=2,
+        scoring="accuracy",
+        population_size=3,
+        generations=1,
+        verbose=False,
+    )
+    search.fit(X_train, y_train)
+
+    checkpoint_path = tmp_path / "checkpoint.pkl"
+    checkpoint = ModelCheckpoint(checkpoint_path)
+    checkpoint.on_step(logbook=None, estimator=search)
+
+    restored = GASearchCV(
+        estimator=DecisionTreeClassifier(random_state=0),
+        param_grid={"max_depth": Integer(1, 3)},
+        cv=2,
+        scoring="accuracy",
+    )
+    restored.load(checkpoint_path)
+
+    assert restored.best_score_ == search.best_score_
+    assert restored.best_params_ == search.best_params_
+    assert restored.predict(X_test).shape[0] == X_test.shape[0]
+
+
+def test_model_checkpoint_excludes_volatile_attributes(tmp_path):
+    X, y = load_iris(return_X_y=True)
+    X_train, _, y_train, _ = train_test_split(X, y, test_size=0.25, stratify=y, random_state=0)
+
+    checkpoint_path = tmp_path / "checkpoint.pkl"
+    checkpoint = ModelCheckpoint(checkpoint_path)
+
+    search = GASearchCV(
+        estimator=DecisionTreeClassifier(random_state=0),
+        param_grid={"max_depth": Integer(1, 3)},
+        cv=2,
+        scoring="accuracy",
+        population_size=3,
+        generations=1,
+        verbose=False,
+    )
+    search.fit(X_train, y_train, callbacks=[checkpoint])
+
+    estimator_state = checkpoint.load()["estimator_state"]
+
+    volatile_keys = {"callbacks", "toolbox", "_pop", "_hof", "hof", "_stats"}
+    assert volatile_keys.isdisjoint(estimator_state.keys())
