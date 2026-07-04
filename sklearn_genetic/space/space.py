@@ -184,7 +184,9 @@ class Categorical(BaseDimension):
         self.distribution = distribution
         self.random_state = random_state
         random.seed(random_state)
-        self.rng = None if not self.random_state else np.random.default_rng(self.random_state)
+        self.rng = (
+            np.random.default_rng(self.random_state) if self.random_state is not None else None
+        )
 
         if self.distribution == CategoricalDistributions.choice.value:
             self.rvs = self.rng.choice if self.rng else random.choice
@@ -198,7 +200,11 @@ class Categorical(BaseDimension):
     def sample(self) -> Any:
         """Sample a random value from the assigned distribution"""
 
-        return self.rvs(self.choices)
+        if self.priors is None:
+            return self.rvs(self.choices)
+        if self.rng is not None:
+            return self.rvs(self.choices, p=self.priors)
+        return random.choices(self.choices, weights=self.priors, k=1)[0]
 
 
 def check_space(param_grid: dict = None):
