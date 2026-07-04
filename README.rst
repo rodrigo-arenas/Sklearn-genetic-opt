@@ -10,7 +10,7 @@ sklearn-genetic-opt
 
 Hyperparameter tuning and feature selection for scikit-learn models using genetic algorithms.
 
-|Tests|_ |Codecov|_ |PythonVersion|_ |PyPi| |Conda|_ |Docs|_ |GoodFirstIssues|_
+|Tests|_ |Codecov|_ |PythonVersion|_ |PyPi| |Conda|_ |Docs|_ |Stars|_ |GoodFirstIssues|_
 
 .. |Tests| image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/actions/workflows/ci-tests.yml/badge.svg?branch=master
 .. _Tests: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/actions/workflows/ci-tests.yml
@@ -31,6 +31,9 @@ Hyperparameter tuning and feature selection for scikit-learn models using geneti
 .. |Docs| image:: https://img.shields.io/badge/docs-GitHub%20Pages-blue
 .. _Docs: https://sklearngeneticopt.rodrigo-arenas.com/
 
+.. |Stars| image:: https://img.shields.io/github/stars/rodrigo-arenas/Sklearn-genetic-opt?style=social
+.. _Stars: https://github.com/rodrigo-arenas/Sklearn-genetic-opt
+
 .. |GoodFirstIssues| image:: https://img.shields.io/github/issues/rodrigo-arenas/Sklearn-genetic-opt/good%20first%20issue?label=good%20first%20issues&color=7057ff
 .. _GoodFirstIssues: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22
 
@@ -45,6 +48,10 @@ regions where ``learning_rate × n_estimators`` or ``C × gamma`` are jointly op
 something one-parameter-at-a-time approaches miss. It also provides
 ``GAFeatureSelectionCV``, a wrapper-based selector that searches the full space
 of feature subsets simultaneously instead of eliminating features one at a time.
+
+If ``sklearn-genetic-opt`` saves you time, consider starring the
+`GitHub repository <https://github.com/rodrigo-arenas/Sklearn-genetic-opt>`_.
+It helps more practitioners discover the project.
 
 
 Why use sklearn-genetic-opt?
@@ -387,9 +394,6 @@ Read the `contribution guide <https://github.com/rodrigo-arenas/Sklearn-genetic-
 before opening a pull request. If you are not sure where to start,
 `open an issue <https://github.com/rodrigo-arenas/Sklearn-genetic-opt/issues>`_
 and ask — small contributions are very welcome.
-
-If ``sklearn-genetic-opt`` helps your work, consider starring the repository
-so others can find it.
 
 |Contributors|_
 
