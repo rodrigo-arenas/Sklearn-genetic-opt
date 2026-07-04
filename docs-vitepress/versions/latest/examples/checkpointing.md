@@ -126,13 +126,13 @@ print("Best CV ROC AUC:", round(search.best_score_, 4))
 ```
 
 ```text
-Checkpoint save in /tmp/ga_artifacts_docs/rf_checkpoint.pkl
-Checkpoint save in /tmp/ga_artifacts_docs/rf_checkpoint.pkl
-Checkpoint save in /tmp/ga_artifacts_docs/rf_checkpoint.pkl
-Checkpoint save in /tmp/ga_artifacts_docs/rf_checkpoint.pkl
-Checkpoint save in /tmp/ga_artifacts_docs/rf_checkpoint.pkl
-Checkpoint save in /tmp/ga_artifacts_docs/rf_checkpoint.pkl
-Checkpoint save in /tmp/ga_artifacts_docs/rf_checkpoint.pkl
+Checkpoint saved to /tmp/ga_artifacts_docs/rf_checkpoint.pkl
+Checkpoint saved to /tmp/ga_artifacts_docs/rf_checkpoint.pkl
+Checkpoint saved to /tmp/ga_artifacts_docs/rf_checkpoint.pkl
+Checkpoint saved to /tmp/ga_artifacts_docs/rf_checkpoint.pkl
+Checkpoint saved to /tmp/ga_artifacts_docs/rf_checkpoint.pkl
+Checkpoint saved to /tmp/ga_artifacts_docs/rf_checkpoint.pkl
+Checkpoint saved to /tmp/ga_artifacts_docs/rf_checkpoint.pkl
 INFO: ConsecutiveStopping callback met its criteria
 INFO: Stopping the algorithm
 
