@@ -1,3 +1,4 @@
+from collections import Counter
 from typing import Any
 
 import pytest
@@ -144,6 +145,38 @@ def test_categorical_sampling_with_priors_stays_in_choices():
 
     assert dimension.priors == [0.2, 0.3, 0.5]
     assert all(dimension.sample() in choices for _ in range(50))
+
+
+def test_categorical_priors_skew_sampling_with_numpy_rng():
+    """Priors must actually bias sampling, not just be stored (#314).
+
+    Uses the seeded ``rng.choice`` path (random_state is given). With a heavy
+    98/2 skew over 4000 draws, an unweighted 50/50 draw is statistically
+    impossible to land in the assertion window below.
+    """
+    dimension = Categorical(["a", "b"], priors=[0.98, 0.02], random_state=1)
+
+    counts = Counter(dimension.sample() for _ in range(4000))
+
+    assert counts["a"] > 3500
+    assert counts["b"] < 500
+
+
+def test_categorical_priors_skew_sampling_with_stdlib_random():
+    """Same as above, but exercising the unseeded ``random.choices`` path (#314)."""
+    dimension = Categorical(["a", "b"], priors=[0.98, 0.02])
+
+    counts = Counter(dimension.sample() for _ in range(4000))
+
+    assert counts["a"] > 3500
+    assert counts["b"] < 500
+
+
+def test_categorical_random_state_zero_uses_numpy_generator():
+    """random_state=0 must not be treated as falsy and silently ignored (#314)."""
+    dimension = Categorical(["a", "b"], random_state=0)
+
+    assert dimension.rng is not None
 
 
 def test_space_classes_have_complete_type_annotations():
