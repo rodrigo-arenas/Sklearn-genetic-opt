@@ -197,3 +197,44 @@ def test_model_checkpoint_save_load_and_error_paths(tmp_path, capsys):
     assert loaded_checkpoint["estimator_state"]["scoring"] == "accuracy"
     assert loaded_checkpoint["logbook"] is None
     assert missing_checkpoint is None
+
+
+def test_model_checkpoint_estimator_state_keys(tmp_path):
+    estimator = SimpleNamespace(
+        estimator=DecisionTreeClassifier(),
+        cv=2,
+        scoring="accuracy",
+        population_size=4,
+        generations=2,
+        crossover_probability=0.8,
+        mutation_probability=0.1,
+        param_grid={"max_depth": Integer(1, 2)},
+        algorithm="eaSimple",
+    )
+    checkpoint_path = tmp_path / "checkpoint.pkl"
+    checkpoint = ModelCheckpoint(checkpoint_path)
+
+    checkpoint.on_step(logbook=None, estimator=estimator)
+    loaded_checkpoint = checkpoint.load()
+
+    estimator_state = loaded_checkpoint["estimator_state"]
+    expected_keys = {
+        "estimator",
+        "cv",
+        "scoring",
+        "population_size",
+        "generations",
+        "param_grid",
+        "algorithm",
+    }
+    assert expected_keys.issubset(estimator_state.keys())
+
+    assert isinstance(estimator_state["estimator"], DecisionTreeClassifier)
+    assert estimator_state["cv"] == 2
+    assert estimator_state["scoring"] == "accuracy"
+    assert estimator_state["population_size"] == 4
+    assert estimator_state["generations"] == 2
+    assert list(estimator_state["param_grid"].keys()) == ["max_depth"]
+    assert estimator_state["param_grid"]["max_depth"].lower == 1
+    assert estimator_state["param_grid"]["max_depth"].upper == 2
+    assert estimator_state["algorithm"] == "eaSimple"
