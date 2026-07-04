@@ -282,7 +282,6 @@ export default defineConfig({
         items: [
           { text: 'GitHub', link: 'https://github.com/rodrigo-arenas/Sklearn-genetic-opt' },
           { text: 'PyPI', link: 'https://pypi.org/project/sklearn-genetic-opt/' },
-          { text: 'Legacy Docs (RTD)', link: 'https://sklearn-genetic-opt.readthedocs.io' },
         ],
       },
     ],
