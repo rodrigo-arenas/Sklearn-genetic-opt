@@ -32,9 +32,20 @@ VERSION_DIRS = [
     ROOT / "docs-vitepress" / "versions" / "latest",
     ROOT / "docs-vitepress" / "versions" / "0.13",
 ]
+ROOT_DOCS = [
+    ROOT / "README.rst",
+    ROOT / "CONTRIBUTING.md",
+]
+OWN_REPO_BLOB_PREFIXES = (
+    "https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/",
+    "https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/main/",
+)
 
 # [text](target) and ![alt](target) — capture the target up to whitespace or ')'.
 LINK_RE = re.compile(r"!?\[[^\]]*\]\(\s*([^)\s]+)")
+# Basic RST inline links and named hyperlink definitions. Targets are kept
+# single-token so normal prose with angle brackets is not treated as a path.
+RST_LINK_RE = re.compile(r"`[^`<\n]+<([^\s>]+)>`_|^\.\.\s+_[^:]+:\s+(\S+)", re.MULTILINE)
 
 _EXTERNAL_PREFIXES = ("http://", "https://", "mailto:", "//")
 
@@ -66,6 +77,48 @@ def _resolves(md_file: Path, target: str) -> bool:
     return any(candidate.is_file() for candidate in candidates)
 
 
+def _same_repo_blob_path(target: str) -> str | None:
+    for prefix in OWN_REPO_BLOB_PREFIXES:
+        if target.startswith(prefix):
+            return target[len(prefix):]
+    return None
+
+
+def _iter_targets(doc_file: Path) -> list[str]:
+    text = doc_file.read_text(encoding="utf-8")
+    if doc_file.suffix == ".rst":
+        targets = []
+        for inline, named in RST_LINK_RE.findall(text):
+            targets.append(inline or named)
+        return targets
+    return LINK_RE.findall(text)
+
+
+def _resolves_root_doc_link(doc_file: Path, target: str) -> bool:
+    same_repo = _same_repo_blob_path(target)
+    if same_repo is None:
+        if not _is_internal_relative(target):
+            return True
+        path_part = target.split("#", 1)[0].split("?", 1)[0]
+        base = (doc_file.parent / path_part).resolve()
+    else:
+        path_part = same_repo.split("#", 1)[0].split("?", 1)[0]
+        base = (ROOT / path_part).resolve()
+
+    try:
+        base.relative_to(ROOT)
+    except ValueError:
+        return False
+
+    candidates = [
+        base,
+        base.with_name(base.name + ".md"),
+        base.with_name(base.name + ".rst"),
+        base / "index.md",
+    ]
+    return any(candidate.is_file() for candidate in candidates)
+
+
 def check() -> list[tuple[Path, str]]:
     broken: list[tuple[Path, str]] = []
     for version_dir in VERSION_DIRS:
@@ -76,6 +129,12 @@ def check() -> list[tuple[Path, str]]:
             for target in LINK_RE.findall(text):
                 if _is_internal_relative(target) and not _resolves(md_file, target):
                     broken.append((md_file, target))
+    for root_doc in ROOT_DOCS:
+        if not root_doc.exists():
+            continue
+        for target in _iter_targets(root_doc):
+            if not _resolves_root_doc_link(root_doc, target):
+                broken.append((root_doc, target))
     return broken
 
 
