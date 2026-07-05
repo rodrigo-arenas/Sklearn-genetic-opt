@@ -56,3 +56,45 @@ def test_resolves(tmp_path):
     # Broken: missing page, and a directory without an index.md (the edge case).
     assert check_links._resolves(source, "./guide/missing") is False
     assert check_links._resolves(source, "./empty") is False
+
+
+def test_root_doc_valid_local_link_passes(tmp_path, monkeypatch):
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "external_references.rst").write_text("x", encoding="utf-8")
+    root_doc = tmp_path / "CONTRIBUTING.md"
+    root_doc.write_text("[refs](docs/external_references.rst)", encoding="utf-8")
+    monkeypatch.setattr(check_links, "ROOT", tmp_path)
+    monkeypatch.setattr(check_links, "VERSION_DIRS", [])
+    monkeypatch.setattr(check_links, "ROOT_DOCS", [root_doc])
+    assert check_links.check() == []
+
+
+def test_root_doc_missing_local_file_is_reported(tmp_path, monkeypatch):
+    root_doc = tmp_path / "CONTRIBUTING.md"
+    root_doc.write_text("[refs](docs/missing.rst)", encoding="utf-8")
+    monkeypatch.setattr(check_links, "ROOT", tmp_path)
+    monkeypatch.setattr(check_links, "VERSION_DIRS", [])
+    monkeypatch.setattr(check_links, "ROOT_DOCS", [root_doc])
+    assert check_links.check() == [(root_doc, "docs/missing.rst")]
+
+
+def test_root_doc_external_url_is_skipped(tmp_path, monkeypatch):
+    root_doc = tmp_path / "CONTRIBUTING.md"
+    root_doc.write_text("[external](https://example.com/missing)", encoding="utf-8")
+    monkeypatch.setattr(check_links, "ROOT", tmp_path)
+    monkeypatch.setattr(check_links, "VERSION_DIRS", [])
+    monkeypatch.setattr(check_links, "ROOT_DOCS", [root_doc])
+    assert check_links.check() == []
+
+
+def test_root_doc_rst_parser_does_not_capture_multiline_prose(tmp_path, monkeypatch):
+    root_doc = tmp_path / "README.rst"
+    root_doc.write_text(
+        "This paragraph mentions <not-a-link> and then continues\\n"
+        "across lines without creating a filesystem target.",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(check_links, "ROOT", tmp_path)
+    monkeypatch.setattr(check_links, "VERSION_DIRS", [])
+    monkeypatch.setattr(check_links, "ROOT_DOCS", [root_doc])
+    assert check_links.check() == []
