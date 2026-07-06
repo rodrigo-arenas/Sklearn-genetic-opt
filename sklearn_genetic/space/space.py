@@ -55,7 +55,9 @@ class Integer(BaseDimension):
         self.upper = upper
         self.distribution = distribution
         self.random_state = random_state
-        self.rng = None if not self.random_state else np.random.default_rng(self.random_state)
+        self.rng = (
+            np.random.default_rng(self.random_state) if self.random_state is not None else None
+        )
 
         if self.distribution == IntegerDistributions.uniform.value:
             self.rvs = stats.randint.rvs
@@ -116,7 +118,9 @@ class Continuous(BaseDimension):
         self.distribution = distribution
         self.shifted_upper = self.upper
         self.random_state = random_state
-        self.rng = None if not self.random_state else np.random.default_rng(self.random_state)
+        self.rng = (
+            np.random.default_rng(self.random_state) if self.random_state is not None else None
+        )
 
         if self.distribution == ContinuousDistributions.uniform.value:
             self.rvs = stats.uniform.rvs
