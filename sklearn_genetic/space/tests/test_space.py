@@ -179,6 +179,38 @@ def test_categorical_random_state_zero_uses_numpy_generator():
     assert dimension.rng is not None
 
 
+@pytest.mark.parametrize(
+    "data_object, parameters",
+    [
+        (Integer, {"lower": 1, "upper": 1000}),
+        (Continuous, {"lower": 0.0, "upper": 1.0}),
+    ],
+)
+def test_integer_and_continuous_random_state_zero_uses_numpy_generator(data_object, parameters):
+    """random_state=0 must not be treated as falsy and silently ignored (#322)."""
+    dimension = data_object(random_state=0, **parameters)
+
+    assert dimension.rng is not None
+
+
+@pytest.mark.parametrize(
+    "data_object, parameters",
+    [
+        (Integer, {"lower": 1, "upper": 1000}),
+        (Continuous, {"lower": 0.0, "upper": 1.0}),
+    ],
+)
+def test_integer_and_continuous_random_state_zero_is_deterministic(data_object, parameters):
+    """Same random_state=0 yields the same sample sequence (#322)."""
+    first = data_object(random_state=0, **parameters)
+    second = data_object(random_state=0, **parameters)
+
+    seq_first = [first.sample() for _ in range(5)]
+    seq_second = [second.sample() for _ in range(5)]
+
+    assert seq_first == seq_second
+
+
 def test_space_classes_have_complete_type_annotations():
     """random_state and sample() carry annotations on every space class (#209)."""
     import inspect
