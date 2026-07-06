@@ -81,7 +81,7 @@ def _resolves(md_file: Path, target: str) -> bool:
 def _same_repo_blob_path(target: str) -> str | None:
     for prefix in OWN_REPO_BLOB_PREFIXES:
         if target.startswith(prefix):
-            return target[len(prefix):]
+            return target[len(prefix) :]
     return None
 
 
