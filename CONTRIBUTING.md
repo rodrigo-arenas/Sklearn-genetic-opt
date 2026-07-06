@@ -5,10 +5,10 @@ are welcome.
 
 You can contribute with documentation, examples/tutorials, reviewing pull requests, code,
 helping answer questions in issues, creating visualizations, maintaining project
-infrastructure, and creating new tests. 
+infrastructure, and creating new tests.
 
 Code contributions are always welcome, from simple bug fixes to new features.
-Also, consider contributing to the documentation, 
+Also, consider contributing to the documentation,
 and reviewing open issues, it is the easiest way to get started.
 
 ## Before you start working on an issue
@@ -65,6 +65,25 @@ pip install -e ".[build]"
 
 # Formatting
 pip install -e ".[lint]"
+```
+
+### Pre-commit hooks (recommended)
+
+This repo ships a [pre-commit](https://pre-commit.com/) configuration that runs
+Black and a few basic hygiene checks (trailing whitespace, end-of-file fixer,
+YAML validation, merge-conflict markers) before each commit — the same checks
+enforced by the `Lint` job in CI.
+
+```bash
+pip install pre-commit
+pre-commit install
+```
+
+Once installed, the hooks run automatically on `git commit`. You can also run
+them on demand against all files:
+
+```bash
+pre-commit run --all-files
 ```
 
 ## Useful local commands
@@ -133,7 +152,7 @@ If you have questions, you can open an issue (tag it as a question).
 
 We encourage you to follow these guidelines:
 
-* Fork this project, make the changes you expect to merge and make a pull request 
+* Fork this project, make the changes you expect to merge and make a pull request
 * If the work you are making is related to some issue, please first check that the
   issue is still open and not already covered by another PR (see
   [Before you start working on an issue](#before-you-start-working-on-an-issue)),
@@ -145,7 +164,7 @@ We encourage you to follow these guidelines:
 * A PR solves one problem (do not mix problems in one PR) with the
   minimal set of changes
 * The changes should come with their respective tests and documentation
-* Describe why you are proposing those changes 
+* Describe why you are proposing those changes
 * Please run Black to keep the formatting style.
 * Make sure all the tests are passing by running `pytest sklearn_genetic/` in the root of the project.
 * We can not merge if the tests fail.
