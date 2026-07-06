@@ -40,7 +40,16 @@ class ModelCheckpoint(BaseCallback):
                 "sharing_radius": getattr(estimator, "sharing_radius", 0.2),
                 "sharing_alpha": getattr(estimator, "sharing_alpha", 1.0),
             }
-            checkpoint_data = {"estimator_state": estimator_state, "logbook": deepcopy(logbook)}
+            # Runtime state is kept separate from ``estimator_state`` so the
+            # latter stays constructor-compatible (it is consumed as
+            # ``GASearchCV(**estimator_state)``). Restoring the fitness cache on
+            # resume lets already-evaluated candidates be reused (see fit()).
+            runtime_state = {"fitness_cache": getattr(estimator, "fitness_cache", {})}
+            checkpoint_data = {
+                "estimator_state": estimator_state,
+                "logbook": deepcopy(logbook),
+                "runtime_state": runtime_state,
+            }
             with open(self.checkpoint_path, "wb") as f:
                 pickle.dump(checkpoint_data, f)
                 print(f"Checkpoint saved to {self.checkpoint_path}")

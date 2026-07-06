@@ -1073,6 +1073,14 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
                     if checkpoint_data:
                         self.__dict__.update(checkpoint_data["estimator_state"])  # noqa
                         self.logbook = checkpoint_data["logbook"]
+                        # Restore the fitness cache so already-evaluated
+                        # candidates are reused instead of re-evaluated. Older
+                        # checkpoints have no ``runtime_state``, so guard with
+                        # .get() for backward compatibility.
+                        runtime_state = checkpoint_data.get("runtime_state") or {}
+                        cached = runtime_state.get("fitness_cache")
+                        if cached is not None:
+                            self.fitness_cache = cached
                         checkpoint_loaded = True
                     break
 
@@ -1975,6 +1983,14 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
                     if checkpoint_data:
                         self.__dict__.update(checkpoint_data["estimator_state"])  # noqa
                         self.logbook = checkpoint_data["logbook"]
+                        # Restore the fitness cache so already-evaluated
+                        # candidates are reused instead of re-evaluated. Older
+                        # checkpoints have no ``runtime_state``, so guard with
+                        # .get() for backward compatibility.
+                        runtime_state = checkpoint_data.get("runtime_state") or {}
+                        cached = runtime_state.get("fitness_cache")
+                        if cached is not None:
+                            self.fitness_cache = cached
                         checkpoint_loaded = True
                     break
 
