@@ -240,6 +240,45 @@ def test_model_checkpoint_estimator_state_keys(tmp_path):
     assert estimator_state["algorithm"] == "eaSimple"
 
 
+def test_model_checkpoint_supports_feature_selection_estimator(tmp_path, capsys):
+    """Checkpointing and resuming a GAFeatureSelectionCV must work (#297).
+
+    GAFeatureSelectionCV has no ``param_grid`` attribute; the checkpoint state
+    builder used to read ``estimator.param_grid`` unconditionally, so every
+    on_step call failed with AttributeError and the estimator state was never
+    saved. ``param_grid`` is now only included when the estimator defines it, so
+    the saved state is both correct and usable by the resume path.
+    """
+    X, y = load_iris(return_X_y=True)
+    checkpoint_path = str(tmp_path / "fs_checkpoint.pkl")
+
+    def build():
+        return GAFeatureSelectionCV(
+            estimator=DecisionTreeClassifier(random_state=0),
+            cv=2,
+            scoring="accuracy",
+            population_size=4,
+            generations=2,
+        )
+
+    build().fit(X, y, callbacks=ModelCheckpoint(checkpoint_path=checkpoint_path))
+    output = capsys.readouterr().out
+    assert "Error saving checkpoint" not in output
+
+    loaded = ModelCheckpoint(checkpoint_path=checkpoint_path).load()
+    assert "estimator_state" in loaded
+    # param_grid is GASearchCV-only, so it must be absent for a feature selector.
+    assert "param_grid" not in loaded["estimator_state"]
+    assert loaded["estimator_state"]["scoring"] == "accuracy"
+
+    # Round trip: the real saved checkpoint must feed the resume path without
+    # error and yield a fitted selector.
+    resumed = build()
+    resumed.fit(X, y, callbacks=ModelCheckpoint(checkpoint_path=checkpoint_path))
+    assert resumed.support_.shape[0] == X.shape[1]
+    assert resumed.support_.any()
+
+
 def test_feature_selection_checkpoint_resume_restores_fitness_cache(tmp_path):
     """GAFeatureSelectionCV restores its fitness cache on resume (#299).
 
