@@ -1403,6 +1403,82 @@ def test_checkpoint_functionality():
         os.remove(checkpoint_path)
 
 
+def test_checkpoint_resume_restores_fitness_cache(tmp_path):
+    """Resuming from a checkpoint restores the fitness cache (#299).
+
+    The cache lives under a separate ``runtime_state`` key (kept out of the
+    constructor-compatible ``estimator_state``) so a resumed run reuses
+    already-evaluated candidates instead of re-evaluating them.
+    """
+    import pickle
+
+    clf = SGDClassifier(loss="modified_huber", fit_intercept=True)
+    checkpoint_path = str(tmp_path / "resume_checkpoint.pkl")
+
+    def build():
+        return GASearchCV(
+            clf,
+            cv=3,
+            scoring="accuracy",
+            population_size=6,
+            generations=3,
+            param_grid={"alpha": Continuous(1e-4, 1)},
+        )
+
+    build().fit(X_train, y_train, callbacks=ModelCheckpoint(checkpoint_path=checkpoint_path))
+
+    with open(checkpoint_path, "rb") as f:
+        checkpoint_data = pickle.load(f)
+    assert "runtime_state" in checkpoint_data
+    saved_cache = checkpoint_data["runtime_state"]["fitness_cache"]
+    assert isinstance(saved_cache, dict) and len(saved_cache) > 0
+
+    # Inject a sentinel entry, then confirm a resumed run restores it. The
+    # sentinel is never regenerated during fit, so its presence proves the
+    # saved cache was reloaded onto the resumed estimator.
+    sentinel_key = ("__resume_sentinel__",)
+    saved_cache[sentinel_key] = {"fitness": (0.5,)}
+    with open(checkpoint_path, "wb") as f:
+        pickle.dump(checkpoint_data, f)
+
+    resumed = build()
+    resumed.fit(X_train, y_train, callbacks=ModelCheckpoint(checkpoint_path=checkpoint_path))
+    assert sentinel_key in resumed.fitness_cache
+
+
+def test_checkpoint_resume_without_runtime_state_is_backward_compatible(tmp_path):
+    """A pre-#299 checkpoint (no ``runtime_state``) still resumes cleanly (#299)."""
+    import pickle
+
+    clf = SGDClassifier(loss="modified_huber", fit_intercept=True)
+    checkpoint_path = str(tmp_path / "old_checkpoint.pkl")
+
+    def build():
+        return GASearchCV(
+            clf,
+            cv=3,
+            scoring="accuracy",
+            population_size=6,
+            generations=2,
+            param_grid={"alpha": Continuous(1e-4, 1)},
+        )
+
+    build().fit(X_train, y_train, callbacks=ModelCheckpoint(checkpoint_path=checkpoint_path))
+
+    # Simulate an old checkpoint by dropping the runtime_state key.
+    with open(checkpoint_path, "rb") as f:
+        checkpoint_data = pickle.load(f)
+    checkpoint_data.pop("runtime_state", None)
+    with open(checkpoint_path, "wb") as f:
+        pickle.dump(checkpoint_data, f)
+
+    resumed = build()
+    resumed.fit(X_train, y_train, callbacks=ModelCheckpoint(checkpoint_path=checkpoint_path))
+    # Resume must not crash and the estimator remains fitted/usable.
+    assert isinstance(resumed.fitness_cache, dict)
+    assert resumed.best_params_ is not None
+
+
 def test_random_state_makes_gasearch_reproducible():
     """A single random_state on the estimator should fully drive reproducibility,
     without callers seeding the global random / numpy RNGs themselves."""

@@ -238,3 +238,39 @@ def test_model_checkpoint_estimator_state_keys(tmp_path):
     assert estimator_state["param_grid"]["max_depth"].lower == 1
     assert estimator_state["param_grid"]["max_depth"].upper == 2
     assert estimator_state["algorithm"] == "eaSimple"
+
+
+def test_feature_selection_checkpoint_resume_restores_fitness_cache(tmp_path):
+    """GAFeatureSelectionCV restores its fitness cache on resume (#299).
+
+    Covers the ``runtime_state`` restore branch in GAFeatureSelectionCV.fit,
+    mirroring the GASearchCV path. The checkpoint is built directly so the test
+    targets the restore branch specifically (feature-selection checkpoint
+    *saving* is fixed separately).
+    """
+    import pickle
+
+    X, y = load_iris(return_X_y=True)
+    checkpoint_path = str(tmp_path / "fs_resume_checkpoint.pkl")
+
+    # A minimal pre-existing checkpoint carrying a sentinel cache entry. The
+    # sentinel is never generated during fit, so its presence afterwards proves
+    # the resume path reloaded the cache onto the estimator.
+    sentinel_key = ("__fs_resume_sentinel__",)
+    checkpoint_data = {
+        "estimator_state": {},
+        "logbook": None,
+        "runtime_state": {"fitness_cache": {sentinel_key: {"fitness": (0.5,)}}},
+    }
+    with open(checkpoint_path, "wb") as f:
+        pickle.dump(checkpoint_data, f)
+
+    resumed = GAFeatureSelectionCV(
+        estimator=DecisionTreeClassifier(random_state=0),
+        cv=2,
+        scoring="accuracy",
+        population_size=4,
+        generations=2,
+    )
+    resumed.fit(X, y, callbacks=ModelCheckpoint(checkpoint_path=checkpoint_path))
+    assert sentinel_key in resumed.fitness_cache
