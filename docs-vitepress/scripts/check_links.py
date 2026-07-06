@@ -46,6 +46,7 @@ LINK_RE = re.compile(r"!?\[[^\]]*\]\(\s*([^)\s]+)")
 # Basic RST inline links and named hyperlink definitions. Targets are kept
 # single-token so normal prose with angle brackets is not treated as a path.
 RST_LINK_RE = re.compile(r"`[^`<\n]+<([^\s>]+)>`_|^\.\.\s+_[^:]+:\s+(\S+)", re.MULTILINE)
+RST_DIRECTIVE_TARGET_RE = re.compile(r"^\.\.\s+(?:image|figure)::\s+(\S+)", re.MULTILINE)
 
 _EXTERNAL_PREFIXES = ("http://", "https://", "mailto:", "//")
 
@@ -90,6 +91,7 @@ def _iter_targets(doc_file: Path) -> list[str]:
         targets = []
         for inline, named in RST_LINK_RE.findall(text):
             targets.append(inline or named)
+        targets.extend(RST_DIRECTIVE_TARGET_RE.findall(text))
         return targets
     return LINK_RE.findall(text)
 
