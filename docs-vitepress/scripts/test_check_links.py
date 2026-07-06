@@ -98,3 +98,16 @@ def test_root_doc_rst_parser_does_not_capture_multiline_prose(tmp_path, monkeypa
     monkeypatch.setattr(check_links, "VERSION_DIRS", [])
     monkeypatch.setattr(check_links, "ROOT_DOCS", [root_doc])
     assert check_links.check() == []
+
+
+def test_root_doc_rst_image_directive_broken_same_repo_blob_is_reported(tmp_path, monkeypatch):
+    root_doc = tmp_path / "README.rst"
+    target = (
+        "https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/"
+        "docs-vitepress/public/images/missing.png?raw=true"
+    )
+    root_doc.write_text(f".. image:: {target}\n", encoding="utf-8")
+    monkeypatch.setattr(check_links, "ROOT", tmp_path)
+    monkeypatch.setattr(check_links, "VERSION_DIRS", [])
+    monkeypatch.setattr(check_links, "ROOT_DOCS", [root_doc])
+    assert check_links.check() == [(root_doc, target)]
