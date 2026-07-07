@@ -118,6 +118,18 @@ callback = TimerStopping(total_seconds=300)  # stop after 5 minutes
 |-----------|------|-------------|
 | `total_seconds` | float | Maximum elapsed seconds. Checked after each generation, so the current generation completes before stopping |
 
+Pass it to `fit` to cap a long search by wall-clock time — handy for notebook and local experiments where the search space may be larger than expected:
+
+```python
+from sklearn_genetic.callbacks import TimerStopping
+
+callbacks = [TimerStopping(total_seconds=60)]
+
+search.fit(X_train, y_train, callbacks=callbacks)
+```
+
+The optimization stops after the time budget is reached, once the current generation finishes.
+
 ---
 
 ### LogbookSaver
