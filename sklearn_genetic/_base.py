@@ -19,12 +19,64 @@ def history_record(history, index):
 class GeneticEstimatorMixin:
     _volatile_pickle_attrs = {"toolbox", "_stats", "_pop", "_hof", "hof"}
 
+    # Contract for the two serialization paths (see #297):
+    #
+    # * ``_serializable_state()`` is the FULL snapshot used by ``save``/``load``.
+    #   It is restored with ``setattr`` onto an existing instance, so it may hold
+    #   non-constructor attributes (``X_``, ``cv_results_``, ``best_estimator_``…).
+    # * ``_checkpoint_state()`` is the CONSTRUCTOR-COMPATIBLE subset used by
+    #   ``ModelCheckpoint`` to resume a search. Every key is an ``__init__``
+    #   parameter, so it can be replayed as ``ClassName(**state)``, and it is a
+    #   strict subset of ``_serializable_state()``.
+    #
+    # The serialization contract test enforces that relationship (every
+    # checkpoint key is an __init__ parameter and lives in _serializable_state)
+    # so the two paths cannot silently drift apart.
+    _checkpoint_core_keys = (
+        "estimator",
+        "cv",
+        "scoring",
+        "population_size",
+        "generations",
+        "crossover_probability",
+        "mutation_probability",
+        "algorithm",
+    )
+    _checkpoint_optional_defaults = {
+        "local_search": False,
+        "local_search_top_k": 1,
+        "local_search_steps": 1,
+        "local_search_radius": 0.1,
+        "diversity_control": False,
+        "diversity_threshold": 0.1,
+        "diversity_stagnation_generations": 5,
+        "diversity_mutation_boost": 2.0,
+        "random_immigrants_fraction": 0.1,
+        "fitness_sharing": False,
+        "sharing_radius": 0.2,
+        "sharing_alpha": 1.0,
+    }
+
     def _serializable_state(self):
         return {
             key: value
             for key, value in self.__dict__.items()
             if key not in self._volatile_pickle_attrs
         }
+
+    def _checkpoint_state(self):
+        """Constructor-compatible subset of the state used to resume a search.
+
+        ``param_grid`` is only included when the estimator defines it
+        (GAFeatureSelectionCV does not), so this works for both estimators and a
+        feature selector never raises ``AttributeError`` while checkpointing.
+        """
+        state = {key: getattr(self, key) for key in self._checkpoint_core_keys}
+        if hasattr(self, "param_grid"):
+            state["param_grid"] = self.param_grid
+        for key, default in self._checkpoint_optional_defaults.items():
+            state[key] = getattr(self, key, default)
+        return state
 
     def save(self, filepath):
         """Save the current state of the estimator instance to a file."""
