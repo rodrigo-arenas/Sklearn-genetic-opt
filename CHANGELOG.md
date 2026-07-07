@@ -9,6 +9,11 @@ Full release notes with code examples are in the [documentation](https://sklearn
 - **Search-space conversion helper**: `from_sklearn_space` converts common `RandomizedSearchCV`-style spaces into native `Integer`, `Continuous`, and `Categorical` dimensions. It supports list-like categorical choices plus `scipy.stats.randint`, `uniform`, `loguniform`, and `reciprocal` frozen distributions.
 - **Estimator presets**: new starter spaces for `RandomForestClassifier`, `RandomForestRegressor`, `HistGradientBoostingClassifier`, `HistGradientBoostingRegressor`, `LogisticRegression`, `SVC`, `XGBClassifier`, and `XGBRegressor`. Presets support `profile="fast"`, `"balanced"`, or `"wide"` and a `prefix` argument for sklearn pipelines.
 
+### Bug Fixes
+
+- Fixed `ModelCheckpoint` for `GAFeatureSelectionCV` by building constructor-compatible checkpoint state from a shared helper and omitting `param_grid` for estimators that do not define it.
+- Fixed `random_state=0` handling for `Integer` and `Continuous` search-space dimensions so seed `0` creates a NumPy generator and produces deterministic samples.
+
 ---
 
 ## 0.13.1
