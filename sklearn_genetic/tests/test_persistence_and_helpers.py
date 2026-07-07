@@ -1,5 +1,3 @@
-from types import SimpleNamespace
-
 import pytest
 from sklearn.datasets import load_iris
 from sklearn.exceptions import NotFittedError
@@ -168,18 +166,19 @@ def test_ga_feature_selection_support_mask_requires_fit():
         selector._get_support_mask()
 
 
-def test_model_checkpoint_save_load_and_error_paths(tmp_path, capsys):
-    estimator = SimpleNamespace(
+def _checkpoint_estimator():
+    return GASearchCV(
         estimator=DecisionTreeClassifier(),
+        param_grid={"max_depth": Integer(1, 2), "min_samples_split": Integer(2, 5)},
         cv=2,
         scoring="accuracy",
         population_size=4,
         generations=2,
-        crossover_probability=0.8,
-        mutation_probability=0.1,
-        param_grid={"max_depth": Integer(1, 2)},
-        algorithm="eaSimple",
     )
+
+
+def test_model_checkpoint_save_load_and_error_paths(tmp_path, capsys):
+    estimator = _checkpoint_estimator()
     checkpoint_path = tmp_path / "checkpoint.pkl"
     checkpoint = ModelCheckpoint(checkpoint_path)
 
@@ -200,17 +199,7 @@ def test_model_checkpoint_save_load_and_error_paths(tmp_path, capsys):
 
 
 def test_model_checkpoint_estimator_state_keys(tmp_path):
-    estimator = SimpleNamespace(
-        estimator=DecisionTreeClassifier(),
-        cv=2,
-        scoring="accuracy",
-        population_size=4,
-        generations=2,
-        crossover_probability=0.8,
-        mutation_probability=0.1,
-        param_grid={"max_depth": Integer(1, 2)},
-        algorithm="eaSimple",
-    )
+    estimator = _checkpoint_estimator()
     checkpoint_path = tmp_path / "checkpoint.pkl"
     checkpoint = ModelCheckpoint(checkpoint_path)
 
@@ -232,12 +221,44 @@ def test_model_checkpoint_estimator_state_keys(tmp_path):
     assert isinstance(estimator_state["estimator"], DecisionTreeClassifier)
     assert estimator_state["cv"] == 2
     assert estimator_state["scoring"] == "accuracy"
-    assert estimator_state["population_size"] == 4
-    assert estimator_state["generations"] == 2
-    assert list(estimator_state["param_grid"].keys()) == ["max_depth"]
+    assert estimator_state["population_size"] == estimator.population_size
+    assert estimator_state["generations"] == estimator.generations
+    assert list(estimator_state["param_grid"].keys()) == ["max_depth", "min_samples_split"]
     assert estimator_state["param_grid"]["max_depth"].lower == 1
     assert estimator_state["param_grid"]["max_depth"].upper == 2
-    assert estimator_state["algorithm"] == "eaSimple"
+    assert estimator_state["algorithm"] == estimator.algorithm
+
+
+@pytest.mark.parametrize(
+    "estimator",
+    [
+        GASearchCV(
+            estimator=DecisionTreeClassifier(),
+            param_grid={"max_depth": Integer(1, 3), "min_samples_split": Integer(2, 5)},
+        ),
+        GAFeatureSelectionCV(estimator=DecisionTreeClassifier()),
+    ],
+    ids=["GASearchCV", "GAFeatureSelectionCV"],
+)
+def test_checkpoint_state_honors_serialization_contract(estimator):
+    """#297: the checkpoint state is a constructor-compatible subset of save/load.
+
+    Every key ModelCheckpoint persists must be an ``__init__`` parameter (so the
+    checkpoint replays as ``ClassName(**state)``) and must also live in the full
+    ``_serializable_state()`` used by save/load, so the two serialization paths
+    cannot silently drift apart.
+    """
+    checkpoint = estimator._checkpoint_state()
+    full = estimator._serializable_state()
+    params = estimator.get_params(deep=False)
+
+    # Constructor-compatible: every checkpoint key is an __init__ parameter...
+    assert set(checkpoint).issubset(params), set(checkpoint) - set(params)
+    # ...and the checkpoint actually replays through the constructor.
+    type(estimator)(**checkpoint)
+
+    # Consistent with save/load: the checkpoint is a subset of the full state.
+    assert set(checkpoint).issubset(full), set(checkpoint) - set(full)
 
 
 def test_model_checkpoint_supports_feature_selection_estimator(tmp_path, capsys):
