@@ -75,4 +75,4 @@ Guidelines for every generator:
   defaults*, *feature selection vs. all features*, and *GA vs. a grid that cannot
   scale*. Never ship a table where the GA looks worse than a baseline; reframe
   against defaults instead of fabricating numbers.
-- Figures are written to both `docs-vitepress/public/images/` and `docs/images/`.
+- Figures are written to `docs-vitepress/public/images/`.

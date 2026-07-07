@@ -68,10 +68,6 @@ instance/
 # Scrapy stuff:
 .scrapy
 
-# Sphinx documentation
-docs/_build/
-sphinx_tmp_html/
-
 # sklearn-genetic-opt generated artifacts
 logs/
 sklearn_logs/
