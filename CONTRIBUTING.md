@@ -57,8 +57,11 @@ pip install -e ".[test,plot,mlflow]"
 # Tests with TensorBoard support
 pip install -e ".[test,plot,mlflow,tensorflow]"
 
-# Documentation
+# Documentation Python helpers
 pip install -e ".[docs]"
+
+# VitePress site dependencies
+npm --prefix docs-vitepress install
 
 # Packaging checks
 pip install -e ".[build]"
@@ -119,14 +122,23 @@ python -m build
 twine check dist/*
 ```
 
-Build the documentation:
+Build the VitePress documentation:
 
 ```bash
-sphinx-build -b html docs docs/_build/html
+npm --prefix docs-vitepress run docs:build
 ```
 
-If the documentation build processes notebooks, make sure `pandoc` is installed
-on your system.
+Regenerate executable example pages and figures:
+
+```bash
+python docs-vitepress/scripts/build_docs.py
+```
+
+Check internal documentation links:
+
+```bash
+python docs-vitepress/scripts/check_links.py
+```
 
 Run a quick fit-performance benchmark smoke check:
 

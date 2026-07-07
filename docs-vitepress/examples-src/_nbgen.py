@@ -49,9 +49,7 @@ import matplotlib.pyplot as plt  # noqa: E402
 ROOT = Path(__file__).resolve().parents[2]
 DOCS_ROOT = ROOT / "docs-vitepress"
 LATEST_ROOT = DOCS_ROOT / "versions" / "latest"
-# Images are written to both the VitePress public folder and the legacy Sphinx
-# tree so a single run keeps every doc site in sync.
-IMAGE_DIRS = [DOCS_ROOT / "public" / "images", ROOT / "docs" / "images"]
+IMAGE_DIR = DOCS_ROOT / "public" / "images"
 
 DEV_BANNER = (
     ":::warning Development version\n"
@@ -143,11 +141,10 @@ class Notebook:
         dpi: int = 140,
         fig=None,
     ) -> "Notebook":
-        """Save the current (or given) figure to the image dirs and embed it."""
+        """Save the current (or given) figure to the image directory and embed it."""
         target_fig = fig if fig is not None else plt.gcf()
-        for directory in IMAGE_DIRS:
-            directory.mkdir(parents=True, exist_ok=True)
-            target_fig.savefig(directory / name, dpi=dpi, bbox_inches="tight")
+        IMAGE_DIR.mkdir(parents=True, exist_ok=True)
+        target_fig.savefig(IMAGE_DIR / name, dpi=dpi, bbox_inches="tight")
         plt.close("all")
         block = f"![{alt}](/images/{name})"
         if caption:

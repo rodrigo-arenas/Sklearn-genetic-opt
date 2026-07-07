@@ -9,10 +9,12 @@ You are reading the **latest (dev)** docs. For the stable version, see [stable](
 
 # Release Notes
 
-## 0.13.4 (unreleased)
+## 0.13.3
 
 ### New Features and Behavior
 
+- **Search-space conversion helper**: `from_sklearn_space` converts common `RandomizedSearchCV`-style spaces into native `Integer`, `Continuous`, and `Categorical` dimensions. It supports list-like categorical choices plus `scipy.stats.randint`, `uniform`, `loguniform`, and `reciprocal` frozen distributions.
+- **Estimator presets**: new starter spaces for `RandomForestClassifier`, `RandomForestRegressor`, `HistGradientBoostingClassifier`, `HistGradientBoostingRegressor`, `LogisticRegression`, `SVC`, `XGBClassifier`, and `XGBRegressor`. Presets support `profile="fast"`, `"balanced"`, or `"wide"` and a `prefix` argument for sklearn pipelines.
 - **Benchmark cache toggle**: `benchmarks/benchmark_fit.py` now exposes `--use-cache` / `--no-use-cache`, and threads the setting through both `GASearchCV` and `GAFeatureSelectionCV` benchmark builders. This makes it possible to measure the real impact of the fitness cache on repeated candidate evaluation.
 - **Safer constructor validation**: `error_score` is now validated during estimator construction, so invalid values fail earlier with a clearer message.
 - **More robust ranking utilities**: internal score ranking now handles `NaN` values consistently when ranking candidates.
@@ -44,6 +46,7 @@ You are reading the **latest (dev)** docs. For the stable version, see [stable](
   - updated README and contributor-facing docs to point to the current community articles source file
   - added the first community article entry comparing `GASearchCV` and `RandomizedSearchCV`
 - **Contributor guidance**: docs now remind contributors to check issue and PR status before starting work to avoid duplicated effort.
+- Added [Estimator Presets](./api/presets) and expanded [Search Space](./api/space) with conversion examples and rules.
 - **README improvements**:
   - added citation guidance
   - added a gentle GitHub star prompt and stars badge
@@ -59,19 +62,6 @@ You are reading the **latest (dev)** docs. For the stable version, see [stable](
 - Added `Categorical.random_state` determinism coverage and priors sampling validation.
 - Added an internal Markdown link checker for versioned docs pages.
 - Added `CITATION.cff` for GitHub citation support.
-
----
-
-## 0.13.3
-
-### New Features
-
-- **Search-space conversion helper**: `from_sklearn_space` converts common `RandomizedSearchCV`-style spaces into native `Integer`, `Continuous`, and `Categorical` dimensions. It supports list-like categorical choices plus `scipy.stats.randint`, `uniform`, `loguniform`, and `reciprocal` frozen distributions.
-- **Estimator presets**: new starter spaces for `RandomForestClassifier`, `RandomForestRegressor`, `HistGradientBoostingClassifier`, `HistGradientBoostingRegressor`, `LogisticRegression`, `SVC`, `XGBClassifier`, and `XGBRegressor`. Presets support `profile="fast"`, `"balanced"`, or `"wide"` and a `prefix` argument for sklearn pipelines.
-
-### Documentation
-
-- Added [Estimator Presets](./api/presets) and expanded [Search Space](./api/space) with conversion examples and rules.
 
 ---
 
