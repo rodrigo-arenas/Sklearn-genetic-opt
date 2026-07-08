@@ -1066,6 +1066,7 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         checkpoint_loaded = False
         restored_logbook = None
         restored_fit_stats = None
+        restored_generation_log = None
 
         # Load state if a checkpoint exists
         for callback in self.callbacks:
@@ -1092,6 +1093,11 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
                         # it back afterwards (see comment near the
                         # ``_register()`` call).
                         restored_logbook = runtime_state.get("candidate_logbook")
+                        # The per-generation summary log saved under the
+                        # legacy ``"logbook"`` key is exactly what generation
+                        # numbering needs to continue from -- see
+                        # ``_seed_logbook`` in ``algorithms.py``.
+                        restored_generation_log = checkpoint_data.get("logbook")
                         checkpoint_loaded = True
                     break
 
@@ -1103,6 +1109,7 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         self.fit_stats_ = (
             restored_fit_stats if restored_fit_stats is not None else _create_fit_stats()
         )
+        self._resume_generation_log = restored_generation_log
 
         if callable(self.scoring):
             self.scorer_ = self.scoring
@@ -1998,6 +2005,7 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         checkpoint_loaded = False
         restored_logbook = None
         restored_fit_stats = None
+        restored_generation_log = None
 
         # Load state if a checkpoint exists
         for callback in self.callbacks:
@@ -2024,6 +2032,11 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
                         # it back afterwards (see comment near the
                         # ``_register()`` call).
                         restored_logbook = runtime_state.get("candidate_logbook")
+                        # The per-generation summary log saved under the
+                        # legacy ``"logbook"`` key is exactly what generation
+                        # numbering needs to continue from -- see
+                        # ``_seed_logbook`` in ``algorithms.py``.
+                        restored_generation_log = checkpoint_data.get("logbook")
                         checkpoint_loaded = True
                     break
 
@@ -2035,6 +2048,7 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         self.fit_stats_ = (
             restored_fit_stats if restored_fit_stats is not None else _create_fit_stats()
         )
+        self._resume_generation_log = restored_generation_log
 
         if callable(self.scoring):
             self.scorer_ = self.scoring

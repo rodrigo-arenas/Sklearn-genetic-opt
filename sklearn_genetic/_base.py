@@ -122,6 +122,7 @@ class GeneticEstimatorMixin:
                 callbacks=self.callbacks,
                 verbose=self.verbose,
                 estimator=self,
+                resume_log=getattr(self, "_resume_generation_log", None),
             )
         else:
             raise ValueError(

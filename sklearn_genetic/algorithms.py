@@ -94,7 +94,7 @@ def _verbose_events(record):
     return ",".join(events) if events else "-"
 
 
-def _print_verbose_record(gen, nevals, record):
+def _print_verbose_record(gen, nevals, record, print_header=False):
     display_record = {
         "gen": gen,
         "nevals": nevals,
@@ -102,7 +102,7 @@ def _print_verbose_record(gen, nevals, record):
         **record,
     }
 
-    if gen == 0:
+    if print_header:
         header = " ".join(label.rjust(width) for _, label, width, _ in VERBOSE_COLUMNS)
         separator = " ".join("-" * width for _, _, width, _ in VERBOSE_COLUMNS)
         print(header)
@@ -287,6 +287,24 @@ def _refresh_last_record_after_local_refinement(
     )
 
 
+def _seed_logbook(resume_log, stats):
+    """Continue generation numbering across a checkpoint resume (see #299).
+
+    Without this, every resumed run restarts its local ``gen`` counter at 0,
+    so the logbook/history end up with duplicate generation indices (e.g.
+    ``0..N`` from the first run followed by another ``0..M`` after resume)
+    instead of a single, monotonically increasing sequence.
+    """
+    if resume_log is not None and len(resume_log) > 0:
+        logbook = resume_log
+        gen_offset = max(logbook.select("gen")) + 1
+    else:
+        logbook = tools.Logbook()
+        gen_offset = 0
+    logbook.header = ["gen", "nevals"] + (stats.fields if stats else []) + TELEMETRY_FIELDS
+    return logbook, gen_offset
+
+
 def _new_telemetry_state():
     return {
         "best_fitness": None,
@@ -361,6 +379,7 @@ def eaSimple(
     callbacks=None,
     verbose=True,
     estimator=None,
+    resume_log=None,
     **kwargs,
 ):
     """
@@ -423,8 +442,7 @@ def eaSimple(
     eval_callbacks(**callbacks_start_args)
 
     telemetry_state = _new_telemetry_state()
-    logbook = tools.Logbook()
-    logbook.header = ["gen", "nevals"] + (stats.fields if stats else []) + TELEMETRY_FIELDS
+    logbook, gen_offset = _seed_logbook(resume_log, stats)
 
     # Evaluate the individuals with an invalid fitness
     invalid_ind = [ind for ind in population if not ind.fitness.valid]
@@ -438,10 +456,10 @@ def eaSimple(
 
     n_gen = gen = 0
     record = _compile_generation_record(stats, population, telemetry_state, gen)
-    logbook.record(gen=n_gen, nevals=len(invalid_ind), **record)
+    logbook.record(gen=n_gen + gen_offset, nevals=len(invalid_ind), **record)
 
     if verbose:
-        _print_verbose_record(n_gen, len(invalid_ind), record)
+        _print_verbose_record(n_gen + gen_offset, len(invalid_ind), record, print_header=True)
 
     # Check if any of the callbacks conditions are True to stop the iteration
 
@@ -465,7 +483,7 @@ def eaSimple(
         # Call ending callback
         eval_callbacks(**callbacks_end_args)
         print("INFO: Stopping the algorithm")
-        return population, logbook, n_gen
+        return population, logbook, n_gen + gen_offset
 
     for gen in range(1, ngen + 1):
         try:
@@ -519,10 +537,10 @@ def eaSimple(
                     sharing_record,
                 ),
             )
-            logbook.record(gen=gen, nevals=len(invalid_ind), **record)
+            logbook.record(gen=gen + gen_offset, nevals=len(invalid_ind), **record)
 
             if verbose:
-                _print_verbose_record(gen, len(invalid_ind), record)
+                _print_verbose_record(gen + gen_offset, len(invalid_ind), record)
 
             callbacks_step_args = {
                 "callbacks": callbacks,
@@ -543,7 +561,7 @@ def eaSimple(
         except (KeyboardInterrupt, SystemExit, StopIteration) as e:
             stored_exception = e
 
-    n_gen = gen + 1
+    n_gen = gen + 1 + gen_offset
     local_refinements = _run_local_refinement(population, toolbox, halloffame, estimator)
     _refresh_last_record_after_local_refinement(
         logbook, stats, population, telemetry_state, local_refinements
@@ -576,6 +594,7 @@ def eaMuPlusLambda(
     callbacks=None,
     verbose=True,
     estimator=None,
+    resume_log=None,
     **kwargs,
 ):
     r"""
@@ -642,8 +661,7 @@ def eaMuPlusLambda(
     eval_callbacks(**callbacks_start_args)
 
     telemetry_state = _new_telemetry_state()
-    logbook = tools.Logbook()
-    logbook.header = ["gen", "nevals"] + (stats.fields if stats else []) + TELEMETRY_FIELDS
+    logbook, gen_offset = _seed_logbook(resume_log, stats)
 
     # Evaluate the individuals with an invalid fitness
     invalid_ind = [ind for ind in population if not ind.fitness.valid]
@@ -656,10 +674,10 @@ def eaMuPlusLambda(
 
     n_gen = gen = 0
     record = _compile_generation_record(stats, population, telemetry_state, gen)
-    logbook.record(gen=n_gen, nevals=len(invalid_ind), **record)
+    logbook.record(gen=n_gen + gen_offset, nevals=len(invalid_ind), **record)
 
     if verbose:
-        _print_verbose_record(n_gen, len(invalid_ind), record)
+        _print_verbose_record(n_gen + gen_offset, len(invalid_ind), record, print_header=True)
 
     # Check if any of the callbacks conditions are True to stop the iteration
     callbacks_step_args = {
@@ -682,7 +700,7 @@ def eaMuPlusLambda(
 
         eval_callbacks(**callbacks_end_args)
         print("INFO: Stopping the algorithm")
-        return population, logbook, n_gen
+        return population, logbook, n_gen + gen_offset
 
     for gen in range(1, ngen + 1):
         try:
@@ -732,10 +750,10 @@ def eaMuPlusLambda(
                     sharing_record,
                 ),
             )
-            logbook.record(gen=gen, nevals=len(invalid_ind), **record)
+            logbook.record(gen=gen + gen_offset, nevals=len(invalid_ind), **record)
 
             if verbose:
-                _print_verbose_record(gen, len(invalid_ind), record)
+                _print_verbose_record(gen + gen_offset, len(invalid_ind), record)
 
             callbacks_step_args = {
                 "callbacks": callbacks,
@@ -756,7 +774,7 @@ def eaMuPlusLambda(
         except (KeyboardInterrupt, SystemExit, StopIteration) as e:
             stored_exception = e
 
-    n_gen = gen + 1
+    n_gen = gen + 1 + gen_offset
     local_refinements = _run_local_refinement(population, toolbox, halloffame, estimator)
     _refresh_last_record_after_local_refinement(
         logbook, stats, population, telemetry_state, local_refinements
@@ -788,6 +806,7 @@ def eaMuCommaLambda(
     callbacks=None,
     verbose=True,
     estimator=None,
+    resume_log=None,
     **kwargs,
 ):
     r"""
@@ -867,15 +886,14 @@ def eaMuCommaLambda(
         halloffame.update(population)
 
     telemetry_state = _new_telemetry_state()
-    logbook = tools.Logbook()
-    logbook.header = ["gen", "nevals"] + (stats.fields if stats else []) + TELEMETRY_FIELDS
+    logbook, gen_offset = _seed_logbook(resume_log, stats)
 
     n_gen = gen = 0
     record = _compile_generation_record(stats, population, telemetry_state, gen)
-    logbook.record(gen=n_gen, nevals=len(invalid_ind), **record)
+    logbook.record(gen=n_gen + gen_offset, nevals=len(invalid_ind), **record)
 
     if verbose:
-        _print_verbose_record(n_gen, len(invalid_ind), record)
+        _print_verbose_record(n_gen + gen_offset, len(invalid_ind), record, print_header=True)
 
     callbacks_step_args = {
         "callbacks": callbacks,
@@ -897,7 +915,7 @@ def eaMuCommaLambda(
 
         eval_callbacks(**callbacks_end_args)
         print("INFO: Stopping the algorithm")
-        return population, logbook, n_gen
+        return population, logbook, n_gen + gen_offset
 
     for gen in range(1, ngen + 1):
         try:
@@ -946,10 +964,10 @@ def eaMuCommaLambda(
                     sharing_record,
                 ),
             )
-            logbook.record(gen=gen, nevals=len(invalid_ind), **record)
+            logbook.record(gen=gen + gen_offset, nevals=len(invalid_ind), **record)
 
             if verbose:
-                _print_verbose_record(gen, len(invalid_ind), record)
+                _print_verbose_record(gen + gen_offset, len(invalid_ind), record)
 
             callbacks_step_args = {
                 "callbacks": callbacks,
@@ -971,7 +989,7 @@ def eaMuCommaLambda(
         except (KeyboardInterrupt, SystemExit, StopIteration) as e:
             stored_exception = e
 
-    n_gen = gen + 1
+    n_gen = gen + 1 + gen_offset
     local_refinements = _run_local_refinement(population, toolbox, halloffame, estimator)
     _refresh_last_record_after_local_refinement(
         logbook, stats, population, telemetry_state, local_refinements
