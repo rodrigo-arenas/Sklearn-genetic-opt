@@ -9,6 +9,12 @@ You are reading the **latest (dev)** docs. For the stable version, see [stable](
 
 # Release Notes
 
+## Unreleased
+
+### Bug Fixes and Error Messages
+
+- **Checkpoint resume dropped prior-run history (#299)**: resuming from a `ModelCheckpoint` reset `logbook`/`cv_results_`/`history` to only the newly-run generations and zeroed `fit_stats_` counters, because `_register()` unconditionally rebuilt `self.logbook` after it was restored, and the checkpoint was saving the wrong (per-generation summary) logbook object under the restored key in the first place. `ModelCheckpoint` now also persists the real per-candidate logbook and `fit_stats_`, and the restore path re-applies them after `_register()`, so resumed runs accumulate history and counters instead of losing them.
+
 ## 0.13.3
 
 ### New Features and Behavior
