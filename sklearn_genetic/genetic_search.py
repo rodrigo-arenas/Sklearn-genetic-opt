@@ -1100,7 +1100,9 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
 
         # Preserve cumulative counters across a resume instead of zeroing them,
         # so e.g. ``cache_hits``/``evaluated_candidates`` reflect the whole run.
-        self.fit_stats_ = restored_fit_stats if restored_fit_stats is not None else _create_fit_stats()
+        self.fit_stats_ = (
+            restored_fit_stats if restored_fit_stats is not None else _create_fit_stats()
+        )
 
         if callable(self.scoring):
             self.scorer_ = self.scoring
@@ -2030,7 +2032,9 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
 
         # Preserve cumulative counters across a resume instead of zeroing them,
         # so e.g. ``cache_hits``/``evaluated_candidates`` reflect the whole run.
-        self.fit_stats_ = restored_fit_stats if restored_fit_stats is not None else _create_fit_stats()
+        self.fit_stats_ = (
+            restored_fit_stats if restored_fit_stats is not None else _create_fit_stats()
+        )
 
         if callable(self.scoring):
             self.scorer_ = self.scoring
