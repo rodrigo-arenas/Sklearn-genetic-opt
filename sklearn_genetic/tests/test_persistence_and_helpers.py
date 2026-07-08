@@ -334,3 +334,43 @@ def test_feature_selection_checkpoint_resume_restores_fitness_cache(tmp_path):
     )
     resumed.fit(X, y, callbacks=ModelCheckpoint(checkpoint_path=checkpoint_path))
     assert sentinel_key in resumed.fitness_cache
+
+
+def test_checkpoint_resume_preserves_logbook_and_fit_stats(tmp_path):
+    """#299: resuming from a checkpoint must not drop prior-run history.
+
+    ``_register()`` unconditionally rebuilds ``self.logbook`` (it also rebuilds
+    the toolbox/population/hof, which are unpicklable ``deap`` objects that
+    can't be checkpointed). That used to wipe out the logbook ``fit`` had just
+    restored from the checkpoint, silently dropping every pre-resume candidate
+    from ``cv_results_``/``history`` and resetting ``fit_stats_`` counters back
+    to zero on every resume.
+    """
+    X, y = load_iris(return_X_y=True)
+    checkpoint_path = str(tmp_path / "resume_history_checkpoint.pkl")
+
+    def build():
+        return GASearchCV(
+            estimator=DecisionTreeClassifier(random_state=0),
+            param_grid={"max_depth": Integer(1, 3)},
+            cv=2,
+            scoring="accuracy",
+            population_size=4,
+            generations=1,
+        )
+
+    first = build()
+    first.fit(X, y, callbacks=ModelCheckpoint(checkpoint_path=checkpoint_path))
+    first_logbook_len = len(first.logbook.chapters["parameters"])
+    first_evaluated = first.fit_stats_["evaluated_candidates"]
+    assert first_logbook_len > 0
+    assert first_evaluated > 0
+
+    resumed = build()
+    resumed.fit(X, y, callbacks=ModelCheckpoint(checkpoint_path=checkpoint_path))
+
+    # The resumed logbook must contain the first run's records plus the new
+    # ones, not just the new run's (which is what the bug produced).
+    assert len(resumed.logbook.chapters["parameters"]) > first_logbook_len
+    # fit_stats_ counters must accumulate across the resume, not reset to 0.
+    assert resumed.fit_stats_["evaluated_candidates"] > first_evaluated

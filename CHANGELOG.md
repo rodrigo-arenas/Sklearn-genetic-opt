@@ -2,6 +2,12 @@
 
 Full release notes with code examples are in the [documentation](https://sklearngeneticopt.rodrigo-arenas.com/).
 
+## Unreleased
+
+### Bug Fixes
+
+- Fixed `ModelCheckpoint` resume dropping prior-run history: `logbook`, `cv_results_`, and `history` were silently reset to only the post-resume generations, and `fit_stats_` counters were zeroed on every resume. `ModelCheckpoint` now persists the real per-candidate logbook and `fit_stats_`, and `GASearchCV`/`GAFeatureSelectionCV.fit` restore them after `_register()` rebuilds the (unpicklable) DEAP toolbox/population/hof (#299).
+
 ## 0.13.3
 
 ### New Features

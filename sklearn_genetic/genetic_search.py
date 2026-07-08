@@ -1064,6 +1064,8 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         self.callbacks = check_callback(callbacks)
 
         checkpoint_loaded = False
+        restored_logbook = None
+        restored_fit_stats = None
 
         # Load state if a checkpoint exists
         for callback in self.callbacks:
@@ -1072,7 +1074,6 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
                     checkpoint_data = callback.load()
                     if checkpoint_data:
                         self.__dict__.update(checkpoint_data["estimator_state"])  # noqa
-                        self.logbook = checkpoint_data["logbook"]
                         # Restore the fitness cache so already-evaluated
                         # candidates are reused instead of re-evaluated. Older
                         # checkpoints have no ``runtime_state``, so guard with
@@ -1081,13 +1082,27 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
                         cached = runtime_state.get("fitness_cache")
                         if cached is not None:
                             self.fitness_cache = cached
+                        restored_fit_stats = runtime_state.get("fit_stats_")
+                        # ``checkpoint_data["logbook"]`` is the per-*generation*
+                        # summary log (see ModelCheckpoint.on_step), not
+                        # ``self.logbook`` -- restoring it onto ``self.logbook``
+                        # would silently break ``cv_results_``/``history``.
+                        # ``_register()`` below also unconditionally creates a
+                        # fresh ``self.logbook``, so stash the real one and put
+                        # it back afterwards (see comment near the
+                        # ``_register()`` call).
+                        restored_logbook = runtime_state.get("candidate_logbook")
                         checkpoint_loaded = True
                     break
 
         if not checkpoint_loaded:
             _reset_adapters(self)
 
-        self.fit_stats_ = _create_fit_stats()
+        # Preserve cumulative counters across a resume instead of zeroing them,
+        # so e.g. ``cache_hits``/``evaluated_candidates`` reflect the whole run.
+        self.fit_stats_ = (
+            restored_fit_stats if restored_fit_stats is not None else _create_fit_stats()
+        )
 
         if callable(self.scoring):
             self.scorer_ = self.scoring
@@ -1131,6 +1146,13 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
 
         # Set the DEAPs necessary methods
         self._register()
+        # ``_register()`` always creates a fresh, empty ``self.logbook`` (it
+        # also builds the toolbox/population/hof/stats, which are ``deap``
+        # objects that cannot be checkpointed and are intentionally rebuilt on
+        # every ``fit`` call). Put the restored per-candidate logbook back so
+        # resumed candidates are not dropped from ``cv_results_``/``history``.
+        if restored_logbook is not None:
+            self.logbook = restored_logbook
 
         # Optimization routine from the selected evolutionary algorithm
         pop, log, n_gen = self._select_algorithm(pop=self._pop, stats=self._stats, hof=self._hof)
@@ -1974,6 +1996,8 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         self.callbacks = check_callback(callbacks)
 
         checkpoint_loaded = False
+        restored_logbook = None
+        restored_fit_stats = None
 
         # Load state if a checkpoint exists
         for callback in self.callbacks:
@@ -1982,7 +2006,6 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
                     checkpoint_data = callback.load()
                     if checkpoint_data:
                         self.__dict__.update(checkpoint_data["estimator_state"])  # noqa
-                        self.logbook = checkpoint_data["logbook"]
                         # Restore the fitness cache so already-evaluated
                         # candidates are reused instead of re-evaluated. Older
                         # checkpoints have no ``runtime_state``, so guard with
@@ -1991,13 +2014,27 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
                         cached = runtime_state.get("fitness_cache")
                         if cached is not None:
                             self.fitness_cache = cached
+                        restored_fit_stats = runtime_state.get("fit_stats_")
+                        # ``checkpoint_data["logbook"]`` is the per-*generation*
+                        # summary log (see ModelCheckpoint.on_step), not
+                        # ``self.logbook`` -- restoring it onto ``self.logbook``
+                        # would silently break ``cv_results_``/``history``.
+                        # ``_register()`` below also unconditionally creates a
+                        # fresh ``self.logbook``, so stash the real one and put
+                        # it back afterwards (see comment near the
+                        # ``_register()`` call).
+                        restored_logbook = runtime_state.get("candidate_logbook")
                         checkpoint_loaded = True
                     break
 
         if not checkpoint_loaded:
             _reset_adapters(self)
 
-        self.fit_stats_ = _create_fit_stats()
+        # Preserve cumulative counters across a resume instead of zeroing them,
+        # so e.g. ``cache_hits``/``evaluated_candidates`` reflect the whole run.
+        self.fit_stats_ = (
+            restored_fit_stats if restored_fit_stats is not None else _create_fit_stats()
+        )
 
         if callable(self.scoring):
             self.scorer_ = self.scoring
@@ -2040,6 +2077,13 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
 
         # Set the DEAPs necessary methods
         self._register()
+        # ``_register()`` always creates a fresh, empty ``self.logbook`` (it
+        # also builds the toolbox/population/hof/stats, which are ``deap``
+        # objects that cannot be checkpointed and are intentionally rebuilt on
+        # every ``fit`` call). Put the restored per-candidate logbook back so
+        # resumed candidates are not dropped from ``cv_results_``/``history``.
+        if restored_logbook is not None:
+            self.logbook = restored_logbook
 
         # Optimization routine from the selected evolutionary algorithm
         pop, log, n_gen = self._select_algorithm(pop=self._pop, stats=self._stats, hof=self._hof)
