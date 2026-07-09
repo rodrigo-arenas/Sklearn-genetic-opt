@@ -374,3 +374,41 @@ def test_checkpoint_resume_preserves_logbook_and_fit_stats(tmp_path):
     assert len(resumed.logbook.chapters["parameters"]) > first_logbook_len
     # fit_stats_ counters must accumulate across the resume, not reset to 0.
     assert resumed.fit_stats_["evaluated_candidates"] > first_evaluated
+
+
+def test_checkpoint_resume_continues_generation_numbering(tmp_path):
+    """#299: resumed generations must continue, not restart, the gen count.
+
+    Every algorithm variant (``eaSimple``, ``eaMuPlusLambda``,
+    ``eaMuCommaLambda``) restarted its local ``gen`` counter at 0 on every
+    ``fit`` call, so a resumed run's ``history``/``logbook`` used to show
+    duplicate generation indices (e.g. ``0, 1`` from the first run followed by
+    another ``0, 1`` after resume) instead of one increasing sequence.
+    """
+    X, y = load_iris(return_X_y=True)
+    checkpoint_path = str(tmp_path / "resume_gen_checkpoint.pkl")
+
+    def build():
+        return GASearchCV(
+            estimator=DecisionTreeClassifier(random_state=0),
+            param_grid={"max_depth": Integer(1, 3)},
+            cv=2,
+            scoring="accuracy",
+            population_size=4,
+            generations=1,
+        )
+
+    first = build()
+    first.fit(X, y, callbacks=ModelCheckpoint(checkpoint_path=checkpoint_path))
+    first_gens = list(first.history["gen"])
+
+    resumed = build()
+    resumed.fit(X, y, callbacks=ModelCheckpoint(checkpoint_path=checkpoint_path))
+    resumed_gens = list(resumed.history["gen"])
+
+    # First run's generation indices are preserved verbatim at the front...
+    assert resumed_gens[: len(first_gens)] == first_gens
+    # ...the new generations continue strictly upward from there...
+    assert resumed_gens[len(first_gens) :] == [g + max(first_gens) + 1 for g in first_gens]
+    # ...so no generation index repeats.
+    assert len(resumed_gens) == len(set(resumed_gens))
