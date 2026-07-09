@@ -1,3 +1,5 @@
+import shutil
+
 import pytest
 from sklearn.datasets import load_iris
 from sklearn.exceptions import NotFittedError
@@ -412,3 +414,58 @@ def test_checkpoint_resume_continues_generation_numbering(tmp_path):
     assert resumed_gens[len(first_gens) :] == [g + max(first_gens) + 1 for g in first_gens]
     # ...so no generation index repeats.
     assert len(resumed_gens) == len(set(resumed_gens))
+
+
+def test_checkpoint_resume_preserves_random_state(tmp_path):
+    """#299: random_state must survive checkpoint resume and actually seed it.
+
+    ``_checkpoint_core_keys`` did not include ``random_state``, so a resumed
+    estimator silently fell back to whatever its own constructor set (often
+    None) instead of the value the checkpointed run was built with. Restoring
+    the key alone is not enough either: seeding happened *before* the
+    checkpoint's ``estimator_state`` was applied to ``self``, so it used the
+    pre-resume value regardless. Both are exercised here: the restored
+    attribute, and that two independent resumes from the same checkpoint (each
+    built without a random_state of their own) produce identical results --
+    the only source of determinism available to them is the seed restored
+    from the checkpoint.
+    """
+    X, y = load_iris(return_X_y=True)
+    base_checkpoint = tmp_path / "base_checkpoint.pkl"
+
+    # A wide, two-parameter grid sampled by a tiny population: different random
+    # trajectories are overwhelmingly likely to evaluate different candidates
+    # and land on different fitness values, so this is sensitive to exactly the
+    # kind of divergence an unseeded (or wrongly-seeded) resume would produce.
+    def build(random_state=None):
+        return GASearchCV(
+            estimator=DecisionTreeClassifier(random_state=0),
+            param_grid={
+                "max_depth": Integer(1, 50),
+                "min_samples_split": Integer(2, 50),
+            },
+            cv=2,
+            scoring="accuracy",
+            population_size=4,
+            generations=1,
+            random_state=random_state,
+        )
+
+    first = build(random_state=42)
+    first.fit(X, y, callbacks=ModelCheckpoint(checkpoint_path=str(base_checkpoint)))
+
+    def resume_from_base(name):
+        checkpoint_path = tmp_path / f"resume_{name}.pkl"
+        shutil.copy(base_checkpoint, checkpoint_path)
+        resumed = build(random_state=None)
+        resumed.fit(X, y, callbacks=ModelCheckpoint(checkpoint_path=str(checkpoint_path)))
+        return resumed
+
+    resumed_a = resume_from_base("a")
+    resumed_b = resume_from_base("b")
+
+    assert resumed_a.random_state == 42
+    assert resumed_b.random_state == 42
+    assert resumed_a.best_params_ == resumed_b.best_params_
+    assert resumed_a.best_score_ == resumed_b.best_score_
+    assert list(resumed_a.history["fitness"]) == list(resumed_b.history["fitness"])
