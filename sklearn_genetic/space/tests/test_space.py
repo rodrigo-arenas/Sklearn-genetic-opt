@@ -180,6 +180,35 @@ def test_categorical_random_state_zero_uses_numpy_generator():
 
 
 @pytest.mark.parametrize(
+    "choices, priors, random_state",
+    [
+        ([True, False], None, None),
+        ([True, False], None, 1),
+        ([1, 2, 3], None, None),
+        ([1, 2, 3], None, 1),
+        (["a", "b", "c"], [0.5, 0.3, 0.2], None),
+        (["a", "b", "c"], [0.5, 0.3, 0.2], 1),
+    ],
+)
+def test_categorical_sample_returns_native_python_types(choices, priors, random_state):
+    """sample() must return the exact stored object, not a numpy scalar (#324).
+
+    A seeded Categorical previously sampled via ``self.rng.choice(self.choices, ...)``,
+    which numpy coerces to one of its own scalar types (e.g. ``np.True_``,
+    ``np.int64``) -- unlike the unseeded ``random``-module path, which returns the
+    original Python object untouched. The return type should not depend on
+    whether a seed was given.
+    """
+    dimension = Categorical(choices, priors=priors, random_state=random_state)
+    expected_type = type(choices[0])
+
+    for _ in range(20):
+        value = dimension.sample()
+        assert value in choices
+        assert type(value) is expected_type, f"expected {expected_type}, got {type(value)}"
+
+
+@pytest.mark.parametrize(
     "data_object, parameters",
     [
         (Integer, {"lower": 1, "upper": 1000}),

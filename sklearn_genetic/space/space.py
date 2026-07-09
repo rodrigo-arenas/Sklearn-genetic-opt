@@ -192,9 +192,6 @@ class Categorical(BaseDimension):
             np.random.default_rng(self.random_state) if self.random_state is not None else None
         )
 
-        if self.distribution == CategoricalDistributions.choice.value:
-            self.rvs = self.rng.choice if self.rng else random.choice
-
     def __repr__(self) -> str:
         if self.priors is None:
             return f"{self.__class__.__name__}(choices={self.choices!r})"
@@ -204,11 +201,17 @@ class Categorical(BaseDimension):
     def sample(self) -> Any:
         """Sample a random value from the assigned distribution"""
 
-        if self.priors is None:
-            return self.rvs(self.choices)
+        n_choices = len(self.choices)
         if self.rng is not None:
-            return self.rvs(self.choices, p=self.priors)
-        return random.choices(self.choices, weights=self.priors, k=1)[0]
+            index = self.rng.choice(n_choices, p=self.priors)
+        elif self.priors is None:
+            index = random.randrange(n_choices)
+        else:
+            index = random.choices(range(n_choices), weights=self.priors, k=1)[0]
+        # Index into the original list so the exact Python object (and its
+        # type) is returned, instead of a value numpy has coerced to one of
+        # its own scalar types (e.g. np.True_, np.int64) -- see #324.
+        return self.choices[int(index)]
 
 
 def check_space(param_grid: dict = None):
