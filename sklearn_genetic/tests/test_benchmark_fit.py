@@ -60,7 +60,27 @@ def test_aggregate_results_separates_cache_modes_and_reports_cache_counters():
     assert summaries_by_cache[False]["actual_cross_validate_calls_mean"] == 7
 
 
-def test_comparison_matches_across_cache_modes_and_supports_old_summaries(capsys):
+def test_comparison_matches_same_cache_mode_when_baseline_contains_both(capsys):
+    cache_on = aggregate_results(
+        [_benchmark_result(use_cache=True, cache_hits=3, duplicate_candidates=1, cv_calls=4)]
+    )[0]
+    cache_off = aggregate_results(
+        [_benchmark_result(use_cache=False, cache_hits=0, duplicate_candidates=4, cv_calls=7)]
+    )[0]
+
+    current_on = dict(cache_on, fit_seconds_mean=10.0)
+    current_off = dict(cache_off, fit_seconds_mean=10.0)
+    baseline_on = dict(cache_on, fit_seconds_mean=2.0)
+    baseline_off = dict(cache_off, fit_seconds_mean=5.0)
+
+    print_comparison_table([current_on, current_off], [baseline_on, baseline_off])
+
+    rows = capsys.readouterr().out.splitlines()
+    assert rows[-2].split("\t")[5:9] == ["True", "True", "8.0000", "5.0000"]
+    assert rows[-1].split("\t")[5:9] == ["False", "False", "5.0000", "2.0000"]
+
+
+def test_comparison_supports_old_summaries_without_cache_mode(capsys):
     cache_on = aggregate_results(
         [_benchmark_result(use_cache=True, cache_hits=3, duplicate_candidates=1, cv_calls=4)]
     )[0]
@@ -73,9 +93,11 @@ def test_comparison_matches_across_cache_modes_and_supports_old_summaries(capsys
     assert comparison_key(cache_on) == comparison_key(cache_off)
     assert comparison_key(cache_on) == comparison_key(old_baseline)
 
-    print_comparison_table([cache_on], [old_baseline])
+    print_comparison_table([cache_on, cache_off], [old_baseline])
 
     output = capsys.readouterr().out
     assert "current_use_cache" in output
     assert "baseline_use_cache" in output
-    assert "True" in output
+    rows = output.splitlines()
+    assert rows[-1].split("\t")[5:7] == ["True", "True"]
+    assert len(rows) == 5

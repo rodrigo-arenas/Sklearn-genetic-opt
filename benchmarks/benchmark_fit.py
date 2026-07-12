@@ -754,13 +754,28 @@ def comparison_key(summary: dict[str, Any]) -> tuple[str, str, str, str, str]:
     )
 
 
+def cache_aware_comparison_key(
+    summary: dict[str, Any],
+) -> tuple[tuple[str, str, str, str, str], bool]:
+    return comparison_key(summary), summary["use_cache"]
+
+
 def print_comparison_table(current: list[dict[str, Any]], baseline: list[dict[str, Any]]) -> None:
-    baseline_by_key = {comparison_key(summary): summary for summary in baseline}
-    comparable = [
-        (summary, baseline_by_key[comparison_key(summary)])
-        for summary in current
-        if comparison_key(summary) in baseline_by_key
-    ]
+    baseline_by_cache_key = {
+        cache_aware_comparison_key(summary): summary
+        for summary in baseline
+        if "use_cache" in summary
+    }
+    legacy_baseline_by_key = {
+        comparison_key(summary): summary for summary in baseline if "use_cache" not in summary
+    }
+    comparable = []
+    for summary in current:
+        base = baseline_by_cache_key.get(cache_aware_comparison_key(summary))
+        if base is None and summary["use_cache"]:
+            base = legacy_baseline_by_key.get(comparison_key(summary))
+        if base is not None:
+            comparable.append((summary, base))
 
     if not comparable:
         print("\nNo comparable baseline rows found.")
