@@ -1560,3 +1560,34 @@ def test_gasearch_final_selection_splits_use_groups():
     assert len(final_splits) == 4
     for train_idx, test_idx in final_splits:
         assert set(groups[train_idx]).isdisjoint(set(groups[test_idx]))
+
+
+def test_fit_without_groups_keeps_old_style_custom_cv_working():
+    """A custom splitter written without a groups argument must keep working
+    when no groups are passed (groups is only forwarded when given).
+    """
+
+    class OldStyleCV:
+        def split(self, X, y=None):
+            n = len(X)
+            half = n // 2
+            yield np.arange(half), np.arange(half, n)
+            yield np.arange(half, n), np.arange(half)
+
+        def get_n_splits(self, X=None, y=None):
+            return 2
+
+    evolved_estimator = GASearchCV(
+        DecisionTreeClassifier(random_state=0),
+        cv=OldStyleCV(),
+        scoring="accuracy",
+        population_size=4,
+        generations=1,
+        param_grid={"max_depth": Integer(2, 8), "min_samples_split": Integer(2, 8)},
+        verbose=False,
+    )
+
+    evolved_estimator.fit(X_train, y_train)
+
+    assert evolved_estimator.n_splits_ == 2
+    assert len(evolved_estimator._cv_splits) == 2

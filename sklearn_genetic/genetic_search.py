@@ -933,7 +933,10 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
             return self._cv_splits
 
         cv = check_cv(self.final_selection_cv, self.y_, classifier=_is_classifier(self.estimator))
-        return list(cv.split(self.X_, self.y_, groups=getattr(self, "groups_", None)))
+        groups = getattr(self, "groups_", None)
+        if groups is None:
+            return list(cv.split(self.X_, self.y_))
+        return list(cv.split(self.X_, self.y_, groups=groups))
 
     def _score_final_candidate(self, params, cv_splits):
         local_estimator = clone(self.estimator)
@@ -1148,6 +1151,10 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
             self.metrics_list = self.scorer_.keys()
             self.multimetric_ = True
 
+        # Only pass groups when given, so custom splitters written without a
+        # groups argument keep working when no groups are used.
+        cv_groups_kwargs = {} if self.groups_ is None else {"groups": self.groups_}
+
         # Check cv and get the n_splits
         if _is_outlier_detector(self.estimator):
             # For outlier detectors, better to use KFold instead of classifier-based CV
@@ -1157,8 +1164,8 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
             self.n_splits_ = cv_orig.get_n_splits(X, self.y_)
         else:
             cv_orig = check_cv(self.cv, self.y_, classifier=_is_classifier(self.estimator))
-            self.n_splits_ = cv_orig.get_n_splits(X, self.y_, groups=self.groups_)
-        self._cv_splits = list(cv_orig.split(self.X_, self.y_, groups=self.groups_))
+            self.n_splits_ = cv_orig.get_n_splits(X, self.y_, **cv_groups_kwargs)
+        self._cv_splits = list(cv_orig.split(self.X_, self.y_, **cv_groups_kwargs))
 
         # Set the DEAPs necessary methods
         self._register()
@@ -2096,6 +2103,10 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
             self.metrics_list = self.scorer_.keys()
             self.multimetric_ = True
 
+        # Only pass groups when given, so custom splitters written without a
+        # groups argument keep working when no groups are used.
+        cv_groups_kwargs = {} if self.groups_ is None else {"groups": self.groups_}
+
         # Check cv and get the n_splits
         if _is_outlier_detector(self.estimator):
             from sklearn.model_selection import KFold
@@ -2104,8 +2115,8 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
             self.n_splits_ = cv_orig.get_n_splits(X, self.y_)
         else:
             cv_orig = check_cv(self.cv, self.y_, classifier=_is_classifier(self.estimator))
-            self.n_splits_ = cv_orig.get_n_splits(X, self.y_, groups=self.groups_)
-        self._cv_splits = list(cv_orig.split(self.X_, self.y_, groups=self.groups_))
+            self.n_splits_ = cv_orig.get_n_splits(X, self.y_, **cv_groups_kwargs)
+        self._cv_splits = list(cv_orig.split(self.X_, self.y_, **cv_groups_kwargs))
 
         # Set the DEAPs necessary methods
         self._register()
