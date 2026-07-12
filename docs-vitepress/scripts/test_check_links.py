@@ -111,3 +111,58 @@ def test_root_doc_rst_image_directive_broken_same_repo_blob_is_reported(tmp_path
     monkeypatch.setattr(check_links, "VERSION_DIRS", [])
     monkeypatch.setattr(check_links, "ROOT_DOCS", [root_doc])
     assert check_links.check() == [(root_doc, target)]
+
+
+@pytest.mark.parametrize("directive", ["image", "figure"])
+def test_root_doc_rst_directive_valid_local_target_passes(tmp_path, monkeypatch, directive):
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "guide.rst").write_text("x", encoding="utf-8")
+    (tmp_path / "logo.png").write_bytes(b"png")
+    root_doc = tmp_path / "README.rst"
+    root_doc.write_text(
+        f".. {directive}:: logo.png\n" "   :alt: Project logo\n" "   :target: docs/guide.rst\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(check_links, "ROOT", tmp_path)
+    monkeypatch.setattr(check_links, "VERSION_DIRS", [])
+    monkeypatch.setattr(check_links, "ROOT_DOCS", [root_doc])
+    assert check_links.check() == []
+
+
+def test_root_doc_rst_directive_missing_local_target_is_reported(tmp_path, monkeypatch):
+    (tmp_path / "logo.png").write_bytes(b"png")
+    root_doc = tmp_path / "README.rst"
+    root_doc.write_text(
+        ".. image:: logo.png\n   :target: docs/missing.rst\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(check_links, "ROOT", tmp_path)
+    monkeypatch.setattr(check_links, "VERSION_DIRS", [])
+    monkeypatch.setattr(check_links, "ROOT_DOCS", [root_doc])
+    assert check_links.check() == [(root_doc, "docs/missing.rst")]
+
+
+def test_root_doc_rst_directive_external_target_is_skipped(tmp_path, monkeypatch):
+    (tmp_path / "logo.png").write_bytes(b"png")
+    root_doc = tmp_path / "README.rst"
+    root_doc.write_text(
+        ".. figure:: logo.png\n   :target: https://example.com/guide\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(check_links, "ROOT", tmp_path)
+    monkeypatch.setattr(check_links, "VERSION_DIRS", [])
+    monkeypatch.setattr(check_links, "ROOT_DOCS", [root_doc])
+    assert check_links.check() == []
+
+
+def test_root_doc_rst_directive_target_like_prose_is_skipped(tmp_path, monkeypatch):
+    root_doc = tmp_path / "README.rst"
+    root_doc.write_text(
+        "Ordinary prose mentions :target: docs/missing.rst.\n"
+        "   :target: docs/also-missing.rst\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(check_links, "ROOT", tmp_path)
+    monkeypatch.setattr(check_links, "VERSION_DIRS", [])
+    monkeypatch.setattr(check_links, "ROOT_DOCS", [root_doc])
+    assert check_links.check() == []

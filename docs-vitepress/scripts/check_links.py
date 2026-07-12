@@ -47,6 +47,13 @@ LINK_RE = re.compile(r"!?\[[^\]]*\]\(\s*([^)\s]+)")
 # single-token so normal prose with angle brackets is not treated as a path.
 RST_LINK_RE = re.compile(r"`[^`<\n]+<([^\s>]+)>`_|^\.\.\s+_[^:]+:\s+(\S+)", re.MULTILINE)
 RST_DIRECTIVE_TARGET_RE = re.compile(r"^\.\.\s+(?:image|figure)::\s+(\S+)", re.MULTILINE)
+# Keep option targets scoped to an image/figure block so target-like prose is ignored.
+RST_DIRECTIVE_OPTION_TARGET_RE = re.compile(
+    r"^\.\.\s+(?:image|figure)::[^\n]*"
+    r"(?:\n(?![ \t]+:target:)[ \t]+\S[^\n]*)*"
+    r"\n[ \t]+:target:\s+(\S+)[ \t]*$",
+    re.MULTILINE,
+)
 
 _EXTERNAL_PREFIXES = ("http://", "https://", "mailto:", "//")
 
@@ -92,6 +99,7 @@ def _iter_targets(doc_file: Path) -> list[str]:
         for inline, named in RST_LINK_RE.findall(text):
             targets.append(inline or named)
         targets.extend(RST_DIRECTIVE_TARGET_RE.findall(text))
+        targets.extend(RST_DIRECTIVE_OPTION_TARGET_RE.findall(text))
         return targets
     return LINK_RE.findall(text)
 
