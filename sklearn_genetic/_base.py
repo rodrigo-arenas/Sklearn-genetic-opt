@@ -41,6 +41,7 @@ class GeneticEstimatorMixin:
         "crossover_probability",
         "mutation_probability",
         "algorithm",
+        "random_state",
     )
     _checkpoint_optional_defaults = {
         "local_search": False,

@@ -1047,8 +1047,6 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
             The callback is evaluated after fitting the estimators from the generation 1.
         """
 
-        _seed_global_rngs(self.random_state)
-
         self.X_ = X
         self.y_ = y
         self._n_iterations = self.generations + 1
@@ -1100,6 +1098,12 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
                         restored_generation_log = checkpoint_data.get("logbook")
                         checkpoint_loaded = True
                     break
+
+        # Seed after the checkpoint (if any) is loaded: ``self.__dict__.update()``
+        # above may have just replaced ``self.random_state`` with the value from
+        # a resumed run's checkpoint, and seeding before that point would use the
+        # pre-resume value instead (see #299).
+        _seed_global_rngs(self.random_state)
 
         if not checkpoint_loaded:
             _reset_adapters(self)
@@ -1980,8 +1984,6 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
             The callback is evaluated after fitting the estimators from the generation 1.
         """
 
-        _seed_global_rngs(self.random_state)
-
         self.X_, self.y_ = check_X_y(X, y, accept_sparse=True) if y is not None else (X, None)
 
         # Handle outlier detection case if y is none
@@ -2039,6 +2041,12 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
                         restored_generation_log = checkpoint_data.get("logbook")
                         checkpoint_loaded = True
                     break
+
+        # Seed after the checkpoint (if any) is loaded: ``self.__dict__.update()``
+        # above may have just replaced ``self.random_state`` with the value from
+        # a resumed run's checkpoint, and seeding before that point would use the
+        # pre-resume value instead (see #299).
+        _seed_global_rngs(self.random_state)
 
         if not checkpoint_loaded:
             _reset_adapters(self)
