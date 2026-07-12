@@ -139,3 +139,4 @@ dmypy.json
 
 #VSCode
 .vscode
+.codex_tmp/
