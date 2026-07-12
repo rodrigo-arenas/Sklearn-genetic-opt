@@ -7,6 +7,10 @@ Run from the repository root, for example:
     python benchmarks/benchmark_fit.py --parallel-backends auto cv --runs 3
     python benchmarks/benchmark_fit.py --label current --output-json benchmarks/current.json
     python benchmarks/benchmark_fit.py --compare-json benchmarks/baseline.json
+    python benchmarks/benchmark_fit.py --quick --scenarios classification_lr_collisions \
+        --estimators gasearch --n-jobs 1 --label cache_on --use-cache
+    python benchmarks/benchmark_fit.py --quick --scenarios classification_lr_collisions \
+        --estimators gasearch --n-jobs 1 --label cache_off --no-use-cache
 
 The benchmark intentionally lives outside the test suite. It measures wall time,
 candidate evaluation counters, serial/parallel strategies, and holdout model
@@ -152,6 +156,17 @@ SCENARIOS = {
         estimator_builder=logistic_pipeline,
         param_grid_builder=lambda: {
             "clf__C": Continuous(1e-4, 100.0, distribution="log-uniform"),
+            "clf__class_weight": Categorical([None, "balanced"]),
+        },
+    ),
+    "classification_lr_collisions": Scenario(
+        name="classification_lr_collisions",
+        task="classification",
+        scoring="roc_auc",
+        loader=classification_data,
+        estimator_builder=logistic_pipeline,
+        param_grid_builder=lambda: {
+            "clf__C": Integer(1, 2),
             "clf__class_weight": Categorical([None, "balanced"]),
         },
     ),
@@ -502,6 +517,7 @@ def run_one_benchmark(
     n_jobs: int | None,
     parallel_backend: str,
     population_initializer: str,
+    use_cache: bool,
     run_index: int,
 ) -> dict[str, Any]:
     counters = FitCounters()
@@ -523,6 +539,7 @@ def run_one_benchmark(
         "n_jobs": n_jobs,
         "parallel_backend": parallel_backend,
         "population_initializer": population_initializer,
+        "use_cache": use_cache,
         "fit_seconds": fit_seconds,
         **summarize_fit_mechanics(estimator, counters),
         **summarize_optimizer_telemetry(estimator),
@@ -552,7 +569,7 @@ def run_one_benchmark(
     return result
 
 
-def group_key(result: dict[str, Any]) -> tuple[str, str, str, str, str, str]:
+def group_key(result: dict[str, Any]) -> tuple[str, str, str, str, str, str, bool]:
     return (
         result["label"],
         result["scenario"],
@@ -560,11 +577,12 @@ def group_key(result: dict[str, Any]) -> tuple[str, str, str, str, str, str]:
         str(result["n_jobs"]),
         result["parallel_backend"],
         result["population_initializer"],
+        result["use_cache"],
     )
 
 
 def aggregate_results(results: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    grouped: dict[tuple[str, str, str, str, str, str], list[dict[str, Any]]] = {}
+    grouped: dict[tuple[str, str, str, str, str, str, bool], list[dict[str, Any]]] = {}
     for result in results:
         grouped.setdefault(group_key(result), []).append(result)
 
@@ -580,6 +598,7 @@ def aggregate_results(results: list[dict[str, Any]]) -> list[dict[str, Any]]:
         n_jobs,
         parallel_backend,
         population_initializer,
+        use_cache,
     ), items in grouped.items():
         metric_names = sorted(
             {metric_name for item in items for metric_name in item["holdout_metrics"].keys()}
@@ -597,11 +616,16 @@ def aggregate_results(results: list[dict[str, Any]]) -> list[dict[str, Any]]:
             "n_jobs": n_jobs,
             "parallel_backend": parallel_backend,
             "population_initializer": population_initializer,
+            "use_cache": use_cache,
             "runs": len(items),
             "fit_seconds_mean": float(np.mean([item["fit_seconds"] for item in items])),
             "fit_seconds_std": float(np.std([item["fit_seconds"] for item in items])),
             "actual_cross_validate_calls_mean": float(
                 np.mean([item["actual_cross_validate_calls"] for item in items])
+            ),
+            "cache_hits_mean": float(np.mean([item["cache_hits"] for item in items])),
+            "duplicate_candidates_mean": float(
+                np.mean([item["duplicate_candidates"] for item in items])
             ),
             "duplicate_or_cache_reuses_mean": float(
                 np.mean([item["duplicate_or_cache_reuses"] for item in items])
@@ -679,9 +703,12 @@ def print_summary_table(summaries: list[dict[str, Any]]) -> None:
         "n_jobs",
         "parallel_backend",
         "population_initializer",
+        "use_cache",
         "runs",
         "fit_seconds_mean",
         "actual_cross_validate_calls_mean",
+        "cache_hits_mean",
+        "duplicate_candidates_mean",
         "duplicate_or_cache_reuses_mean",
         "skipped_invalid_candidates_mean",
         "generations_ran_mean",
@@ -727,13 +754,28 @@ def comparison_key(summary: dict[str, Any]) -> tuple[str, str, str, str, str]:
     )
 
 
+def cache_aware_comparison_key(
+    summary: dict[str, Any],
+) -> tuple[tuple[str, str, str, str, str], bool]:
+    return comparison_key(summary), summary["use_cache"]
+
+
 def print_comparison_table(current: list[dict[str, Any]], baseline: list[dict[str, Any]]) -> None:
-    baseline_by_key = {comparison_key(summary): summary for summary in baseline}
-    comparable = [
-        (summary, baseline_by_key[comparison_key(summary)])
-        for summary in current
-        if comparison_key(summary) in baseline_by_key
-    ]
+    baseline_by_cache_key = {
+        cache_aware_comparison_key(summary): summary
+        for summary in baseline
+        if "use_cache" in summary
+    }
+    legacy_baseline_by_key = {
+        comparison_key(summary): summary for summary in baseline if "use_cache" not in summary
+    }
+    comparable = []
+    for summary in current:
+        base = baseline_by_cache_key.get(cache_aware_comparison_key(summary))
+        if base is None and summary["use_cache"]:
+            base = legacy_baseline_by_key.get(comparison_key(summary))
+        if base is not None:
+            comparable.append((summary, base))
 
     if not comparable:
         print("\nNo comparable baseline rows found.")
@@ -745,6 +787,8 @@ def print_comparison_table(current: list[dict[str, Any]], baseline: list[dict[st
         "n_jobs",
         "parallel_backend",
         "population_initializer",
+        "current_use_cache",
+        "baseline_use_cache",
         "fit_seconds_delta",
         "fit_seconds_ratio",
         "accuracy_delta",
@@ -762,6 +806,8 @@ def print_comparison_table(current: list[dict[str, Any]], baseline: list[dict[st
             "n_jobs": summary["n_jobs"],
             "parallel_backend": summary["parallel_backend"],
             "population_initializer": summary["population_initializer"],
+            "current_use_cache": summary.get("use_cache", True),
+            "baseline_use_cache": base.get("use_cache", True),
             "fit_seconds_delta": summary["fit_seconds_mean"] - base["fit_seconds_mean"],
             "fit_seconds_ratio": summary["fit_seconds_mean"] / base["fit_seconds_mean"],
         }
@@ -942,6 +988,7 @@ def main() -> None:
                                     n_jobs=n_jobs,
                                     parallel_backend=parallel_backend,
                                     population_initializer=population_initializer,
+                                    use_cache=args.use_cache,
                                     run_index=run_index,
                                 )
                             )
@@ -971,6 +1018,7 @@ def main() -> None:
                                     n_jobs=n_jobs,
                                     parallel_backend=parallel_backend,
                                     population_initializer=population_initializer,
+                                    use_cache=args.use_cache,
                                     run_index=run_index,
                                 )
                             )

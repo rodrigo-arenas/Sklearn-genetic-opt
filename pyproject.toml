@@ -106,6 +106,7 @@ testpaths = ["sklearn_genetic"]
 omit = [
     "./tests/*",
     "./venv/*",
+    "./benchmarks/*",
     "./examples/*",
     "./demo/*",
     "*/tests/*",
