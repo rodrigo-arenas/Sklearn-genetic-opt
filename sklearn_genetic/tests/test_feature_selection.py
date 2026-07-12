@@ -854,3 +854,39 @@ def test_feature_selection_fit_with_groups_supports_group_kfold():
     assert len(selector._cv_splits) == 3
     for train_idx, test_idx in selector._cv_splits:
         assert set(groups[train_idx]).isdisjoint(set(groups[test_idx]))
+
+
+def test_feature_selection_forwards_sample_weight_and_slices_only_features():
+    """#339: GAFeatureSelectionCV forwards sample_weight while only X is
+    feature-sliced.
+
+    Candidate fits see a feature-sliced X but per-fold sample_weight slices;
+    the final refit sees the full weight vector.
+    """
+    recorded = []
+
+    class WeightRecordingTree(DecisionTreeClassifier):
+        def fit(self, X, y, sample_weight=None):
+            recorded.append((X.shape[1], None if sample_weight is None else len(sample_weight)))
+            return super().fit(X, y, sample_weight=sample_weight)
+
+    n_samples, n_features_total = X_train.shape
+    weights = np.linspace(0.5, 1.5, n_samples)
+    selector = GAFeatureSelectionCV(
+        WeightRecordingTree(random_state=0),
+        cv=2,
+        scoring="accuracy",
+        population_size=4,
+        generations=2,
+        verbose=False,
+    )
+
+    selector.fit(X_train, y_train, sample_weight=weights)
+
+    assert recorded, "no fit calls were recorded"
+    # Every fit received weights, and X never grew beyond the original features.
+    assert all(w is not None for _, w in recorded)
+    assert all(f <= n_features_total for f, _ in recorded)
+    # Candidate CV fits get per-fold weight slices; the refit gets all samples.
+    assert all(w < n_samples for _, w in recorded[:-1])
+    assert recorded[-1][1] == n_samples
