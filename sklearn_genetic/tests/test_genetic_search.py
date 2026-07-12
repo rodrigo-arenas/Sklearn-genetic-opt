@@ -1591,3 +1591,25 @@ def test_fit_without_groups_keeps_old_style_custom_cv_working():
 
     assert evolved_estimator.n_splits_ == 2
     assert len(evolved_estimator._cv_splits) == 2
+
+
+def test_final_selection_cv_without_groups_still_splits():
+    """An explicit final_selection_cv with no groups uses the plain split path."""
+    evolved_estimator = GASearchCV(
+        DecisionTreeClassifier(random_state=0),
+        cv=2,
+        scoring="accuracy",
+        population_size=4,
+        generations=1,
+        param_grid={"max_depth": Integer(2, 8), "min_samples_split": Integer(2, 8)},
+        final_selection=True,
+        final_selection_top_k=2,
+        final_selection_cv=3,
+        verbose=False,
+    )
+
+    evolved_estimator.fit(X_train, y_train)
+
+    final_splits = evolved_estimator._final_selection_splits()
+    assert len(final_splits) == 3
+    assert evolved_estimator.best_params_
