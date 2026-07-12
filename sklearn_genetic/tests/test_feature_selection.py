@@ -828,3 +828,29 @@ def test_expected_ga_schedulers():
     assert "features" in cv_result_keys
 
     assert crossover_scheduler.current_value + mutation_scheduler.current_value <= 1
+
+
+def test_feature_selection_fit_with_groups_supports_group_kfold():
+    """#338: GAFeatureSelectionCV.fit(..., groups=...) enables group-aware CV.
+
+    Every materialized split must keep train and test groups disjoint, and the
+    selector must still produce a valid support mask.
+    """
+    from sklearn.model_selection import GroupKFold
+
+    groups = np.arange(X_train.shape[0]) % 3
+    selector = GAFeatureSelectionCV(
+        DecisionTreeClassifier(random_state=0),
+        cv=GroupKFold(n_splits=3),
+        scoring="accuracy",
+        population_size=4,
+        generations=2,
+        verbose=False,
+    )
+
+    selector.fit(X_train, y_train, groups=groups)
+
+    assert selector.support_.shape[0] == X_train.shape[1]
+    assert len(selector._cv_splits) == 3
+    for train_idx, test_idx in selector._cv_splits:
+        assert set(groups[train_idx]).isdisjoint(set(groups[test_idx]))

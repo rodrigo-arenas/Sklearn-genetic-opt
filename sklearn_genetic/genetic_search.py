@@ -933,7 +933,7 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
             return self._cv_splits
 
         cv = check_cv(self.final_selection_cv, self.y_, classifier=_is_classifier(self.estimator))
-        return list(cv.split(self.X_, self.y_))
+        return list(cv.split(self.X_, self.y_, groups=getattr(self, "groups_", None)))
 
     def _score_final_candidate(self, params, cv_splits):
         local_estimator = clone(self.estimator)
@@ -1027,7 +1027,7 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
 
         return selected_index, selected_score, selected_params
 
-    def fit(self, X, y=None, callbacks=None):
+    def fit(self, X, y=None, callbacks=None, groups=None):
         """
         Main method of GASearchCV, starts the optimization
         procedure with the hyperparameters of the given estimator
@@ -1045,10 +1045,15 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
             One or a list of the callbacks methods available in
             :class:`~sklearn_genetic.callbacks`.
             The callback is evaluated after fitting the estimators from the generation 1.
+        groups : array-like of shape (n_samples,), default=None
+            Group labels for the samples used while splitting the dataset into
+            train/test sets. Only used in conjunction with a "Group" cv
+            instance such as :class:`~sklearn.model_selection.GroupKFold`.
         """
 
         self.X_ = X
         self.y_ = y
+        self.groups_ = groups
         self._n_iterations = self.generations + 1
         self.refit_metric = "score"
         self.multimetric_ = False
@@ -1152,8 +1157,8 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
             self.n_splits_ = cv_orig.get_n_splits(X, self.y_)
         else:
             cv_orig = check_cv(self.cv, self.y_, classifier=_is_classifier(self.estimator))
-            self.n_splits_ = cv_orig.get_n_splits(X, self.y_)
-        self._cv_splits = list(cv_orig.split(self.X_, self.y_))
+            self.n_splits_ = cv_orig.get_n_splits(X, self.y_, groups=self.groups_)
+        self._cv_splits = list(cv_orig.split(self.X_, self.y_, groups=self.groups_))
 
         # Set the DEAPs necessary methods
         self._register()
@@ -1965,7 +1970,7 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
 
         return fitness_result
 
-    def fit(self, X, y=None, callbacks=None):
+    def fit(self, X, y=None, callbacks=None, groups=None):
         """
         Main method of GAFeatureSelectionCV, starts the optimization
         procedure with to find the best features set
@@ -1982,9 +1987,14 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
             One or a list of the callbacks methods available in
             :class:`~sklearn_genetic.callbacks`.
             The callback is evaluated after fitting the estimators from the generation 1.
+        groups : array-like of shape (n_samples,), default=None
+            Group labels for the samples used while splitting the dataset into
+            train/test sets. Only used in conjunction with a "Group" cv
+            instance such as :class:`~sklearn.model_selection.GroupKFold`.
         """
 
         self.X_, self.y_ = check_X_y(X, y, accept_sparse=True) if y is not None else (X, None)
+        self.groups_ = groups
 
         # Handle outlier detection case if y is none
         if _is_outlier_detector(self.estimator) and y is None:
@@ -2094,8 +2104,8 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
             self.n_splits_ = cv_orig.get_n_splits(X, self.y_)
         else:
             cv_orig = check_cv(self.cv, self.y_, classifier=_is_classifier(self.estimator))
-            self.n_splits_ = cv_orig.get_n_splits(X, self.y_)
-        self._cv_splits = list(cv_orig.split(self.X_, self.y_))
+            self.n_splits_ = cv_orig.get_n_splits(X, self.y_, groups=self.groups_)
+        self._cv_splits = list(cv_orig.split(self.X_, self.y_, groups=self.groups_))
 
         # Set the DEAPs necessary methods
         self._register()
