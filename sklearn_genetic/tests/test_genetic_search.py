@@ -237,6 +237,39 @@ def test_final_selection_can_replace_original_best_candidate(monkeypatch):
     assert len(estimator.final_selection_results_["candidates"]) == 2
 
 
+def test_final_selection_respects_criteria_min(monkeypatch):
+    estimator = GASearchCV(
+        DecisionTreeClassifier(random_state=42),
+        param_grid={"max_depth": Integer(1, 3)},
+        final_selection=True,
+        final_selection_top_k=3,
+        criteria="min",
+        verbose=False,
+    )
+    estimator.refit_metric = "score"
+    estimator.cv_results_ = {
+        "rank_test_score": np.array([2, 3, 1]),
+        "mean_test_score": np.array([0.85, 0.70, 0.90]),
+        "params": [{"max_depth": 1}, {"max_depth": 2}, {"max_depth": 3}],
+    }
+
+    monkeypatch.setattr(estimator, "_final_selection_splits", lambda: ["split"])
+
+    def score_candidate(params, cv_splits):
+        if params["max_depth"] == 2:
+            return 0.65, np.array([0.64, 0.66])
+        return 0.95, np.array([0.94, 0.96])
+
+    monkeypatch.setattr(estimator, "_score_final_candidate", score_candidate)
+
+    best_index, best_score, best_params = estimator._select_final_candidate()
+
+    assert best_index == 1
+    assert best_score == pytest.approx(0.65)
+    assert best_params == {"max_depth": 2}
+    assert estimator.final_selection_results_["changed"] is True
+
+
 def test_wrong_optimizer_control_parameters():
     with pytest.raises(ValueError, match="diversity_threshold must be in the interval"):
         GASearchCV(

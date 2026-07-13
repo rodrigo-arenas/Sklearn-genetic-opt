@@ -1007,7 +1007,10 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
             )
 
         if candidate_results:
-            selected = max(candidate_results, key=lambda item: item["score"])
+            if self.criteria == "min":
+                selected = min(candidate_results, key=lambda item: item["score"])
+            else:
+                selected = max(candidate_results, key=lambda item: item["score"])
             selected_index = selected["index"]
             selected_score = selected["score"]
             selected_params = selected["params"]
