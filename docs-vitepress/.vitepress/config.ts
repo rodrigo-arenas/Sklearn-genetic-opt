@@ -234,7 +234,7 @@ export default defineConfig({
 
   transformPageData(pageData) {
     const base = 'https://sklearngeneticopt.rodrigo-arenas.com'
-    const ogImage = `${base}/sklearn-genetic-opt-logo-128.png`
+    const ogImage = `${base}/brand/social-preview-1280x640.png`
     const pageTitle = pageData.title
       ? `${pageData.title} | sklearn-genetic-opt`
       : 'sklearn-genetic-opt'
@@ -255,9 +255,10 @@ export default defineConfig({
       ['meta', { property: 'og:description', content: pageDescription }],
       ['meta', { property: 'og:url',         content: pageUrl }],
       ['meta', { property: 'og:image',       content: ogImage }],
-      ['meta', { name: 'twitter:card',        content: 'summary' }],
+      ['meta', { name: 'twitter:card',        content: 'summary_large_image' }],
       ['meta', { name: 'twitter:title',       content: pageTitle }],
       ['meta', { name: 'twitter:description', content: pageDescription }],
+      ['meta', { name: 'twitter:image',       content: ogImage }],
     )
 
     if (pageData.relativePath === 'index.md') {
@@ -283,12 +284,13 @@ export default defineConfig({
   },
 
   head: [
-    ['link', { rel: 'icon', href: `${GITHUB_PAGES_BASE}logo.png` }],
+    ['link', { rel: 'icon', type: 'image/png', sizes: '32x32', href: `${GITHUB_PAGES_BASE}brand/favicon-32.png` }],
+    ['link', { rel: 'apple-touch-icon', sizes: '180x180', href: `${GITHUB_PAGES_BASE}brand/apple-touch-icon-180.png` }],
     ...gaHead,
   ],
 
   themeConfig: {
-    logo: '/logo.png',
+    logo: '/brand/icon.svg',
     siteTitle: 'sklearn-genetic-opt',
 
     nav: [

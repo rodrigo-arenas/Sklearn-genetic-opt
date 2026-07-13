@@ -9,7 +9,7 @@ hero:
   text: Hyperparameter Tuning for scikit-learn
   tagline: Find better parameters faster. Evolutionary search handles cross-parameter interactions that GridSearchCV and RandomizedSearchCV miss — with feature selection, callbacks, and MLflow built in.
   image:
-    src: /logo.png
+    src: /brand/icon.svg
     alt: sklearn-genetic-opt logo
   actions:
     - theme: brand
