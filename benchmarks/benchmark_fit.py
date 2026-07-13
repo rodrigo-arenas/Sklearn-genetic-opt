@@ -775,7 +775,7 @@ def print_comparison_table(current: list[dict[str, Any]], baseline: list[dict[st
     comparable = []
     for summary in current:
         base = baseline_by_key.get(comparison_key(summary))
-        if base is None:
+        if base is None and summary.get("use_cache", True):
             legacy_comparison = (
                 summary["scenario"],
                 summary["estimator"],

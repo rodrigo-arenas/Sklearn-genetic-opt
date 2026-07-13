@@ -137,3 +137,26 @@ def test_duplicate_cache_mode_keys_do_not_silently_overwrite(capsys):
 
     assert on_row.split("\t")[7] == "8.0000"
     assert off_row.split("\t")[7] == "5.0000"
+
+
+def test_legacy_baseline_only_matches_cache_on_current(capsys):
+    cache_on = aggregate_results(
+        [_benchmark_result(use_cache=True, cache_hits=3, duplicate_candidates=1, cv_calls=4)]
+    )[0]
+    cache_off = aggregate_results(
+        [_benchmark_result(use_cache=False, cache_hits=0, duplicate_candidates=4, cv_calls=7)]
+    )[0]
+
+    current_on = dict(cache_on, fit_seconds_mean=10.0)
+    current_off = dict(cache_off, fit_seconds_mean=10.0)
+
+    old_baseline = dict(cache_on)
+    old_baseline.pop("use_cache")
+    old_baseline["fit_seconds_mean"] = 2.0
+
+    print_comparison_table([current_on, current_off], [old_baseline])
+
+    rows = capsys.readouterr().out.splitlines()
+    data_rows = [r for r in rows if r.startswith("classification_lr_collisions")]
+    assert len(data_rows) == 1
+    assert data_rows[0].split("\t")[5:7] == ["True", "True"]
