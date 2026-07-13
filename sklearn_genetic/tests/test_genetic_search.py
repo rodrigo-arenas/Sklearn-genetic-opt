@@ -1506,3 +1506,110 @@ def test_random_state_makes_gasearch_reproducible():
 
     assert first_score == second_score
     assert first_params == second_params
+
+
+def test_gasearch_fit_with_groups_supports_group_kfold():
+    """#338: fit(..., groups=...) enables group-aware CV splitters.
+
+    Before groups support, materializing splits raised "The 'groups'
+    parameter should not be None." for GroupKFold. Besides not crashing,
+    every materialized split must keep train and test groups disjoint.
+    """
+    from sklearn.model_selection import GroupKFold
+
+    groups = np.arange(X_train.shape[0]) % 5
+    evolved_estimator = GASearchCV(
+        DecisionTreeClassifier(random_state=0),
+        cv=GroupKFold(n_splits=3),
+        scoring="accuracy",
+        population_size=4,
+        generations=1,
+        param_grid={"max_depth": Integer(2, 10), "min_samples_split": Integer(2, 10)},
+        verbose=False,
+    )
+
+    evolved_estimator.fit(X_train, y_train, groups=groups)
+
+    assert evolved_estimator.best_params_
+    assert len(evolved_estimator._cv_splits) == 3
+    for train_idx, test_idx in evolved_estimator._cv_splits:
+        assert set(groups[train_idx]).isdisjoint(set(groups[test_idx]))
+
+
+def test_gasearch_final_selection_splits_use_groups():
+    """#338: an explicit group-aware final_selection_cv receives groups too."""
+    from sklearn.model_selection import GroupKFold
+
+    groups = np.arange(X_train.shape[0]) % 4
+    evolved_estimator = GASearchCV(
+        DecisionTreeClassifier(random_state=0),
+        cv=GroupKFold(n_splits=2),
+        scoring="accuracy",
+        population_size=4,
+        generations=1,
+        param_grid={"max_depth": Integer(2, 10), "min_samples_split": Integer(2, 10)},
+        final_selection=True,
+        final_selection_top_k=2,
+        final_selection_cv=GroupKFold(n_splits=4),
+        verbose=False,
+    )
+
+    evolved_estimator.fit(X_train, y_train, groups=groups)
+
+    final_splits = evolved_estimator._final_selection_splits()
+    assert len(final_splits) == 4
+    for train_idx, test_idx in final_splits:
+        assert set(groups[train_idx]).isdisjoint(set(groups[test_idx]))
+
+
+def test_fit_without_groups_keeps_old_style_custom_cv_working():
+    """A custom splitter written without a groups argument must keep working
+    when no groups are passed (groups is only forwarded when given).
+    """
+
+    class OldStyleCV:
+        def split(self, X, y=None):
+            n = len(X)
+            half = n // 2
+            yield np.arange(half), np.arange(half, n)
+            yield np.arange(half, n), np.arange(half)
+
+        def get_n_splits(self, X=None, y=None):
+            return 2
+
+    evolved_estimator = GASearchCV(
+        DecisionTreeClassifier(random_state=0),
+        cv=OldStyleCV(),
+        scoring="accuracy",
+        population_size=4,
+        generations=1,
+        param_grid={"max_depth": Integer(2, 8), "min_samples_split": Integer(2, 8)},
+        verbose=False,
+    )
+
+    evolved_estimator.fit(X_train, y_train)
+
+    assert evolved_estimator.n_splits_ == 2
+    assert len(evolved_estimator._cv_splits) == 2
+
+
+def test_final_selection_cv_without_groups_still_splits():
+    """An explicit final_selection_cv with no groups uses the plain split path."""
+    evolved_estimator = GASearchCV(
+        DecisionTreeClassifier(random_state=0),
+        cv=2,
+        scoring="accuracy",
+        population_size=4,
+        generations=1,
+        param_grid={"max_depth": Integer(2, 8), "min_samples_split": Integer(2, 8)},
+        final_selection=True,
+        final_selection_top_k=2,
+        final_selection_cv=3,
+        verbose=False,
+    )
+
+    evolved_estimator.fit(X_train, y_train)
+
+    final_splits = evolved_estimator._final_selection_splits()
+    assert len(final_splits) == 3
+    assert evolved_estimator.best_params_
