@@ -744,36 +744,46 @@ def print_summary_table(summaries: list[dict[str, Any]]) -> None:
         print("\t".join(row))
 
 
-def comparison_key(summary: dict[str, Any]) -> tuple[str, str, str, str, str]:
+def comparison_key(summary: dict[str, Any]) -> tuple[str, str, str, str, str, bool | None]:
     return (
         summary["scenario"],
         summary["estimator"],
         str(summary["n_jobs"]),
         summary["parallel_backend"],
         summary["population_initializer"],
+        summary.get("use_cache"),
     )
 
 
-def cache_aware_comparison_key(
-    summary: dict[str, Any],
-) -> tuple[tuple[str, str, str, str, str], bool]:
-    return comparison_key(summary), summary["use_cache"]
-
-
 def print_comparison_table(current: list[dict[str, Any]], baseline: list[dict[str, Any]]) -> None:
-    baseline_by_cache_key = {
-        cache_aware_comparison_key(summary): summary
-        for summary in baseline
-        if "use_cache" in summary
-    }
-    legacy_baseline_by_key = {
-        comparison_key(summary): summary for summary in baseline if "use_cache" not in summary
-    }
+    baseline_by_key: dict[tuple, dict[str, Any]] = {}
+    for summary in baseline:
+        baseline_by_key[comparison_key(summary)] = summary
+
+    legacy_baseline_by_key: dict[tuple, dict[str, Any]] = {}
+    for summary in baseline:
+        if "use_cache" not in summary:
+            legacy_comparison = (
+                summary["scenario"],
+                summary["estimator"],
+                str(summary["n_jobs"]),
+                summary["parallel_backend"],
+                summary["population_initializer"],
+            )
+            legacy_baseline_by_key[legacy_comparison] = summary
+
     comparable = []
     for summary in current:
-        base = baseline_by_cache_key.get(cache_aware_comparison_key(summary))
-        if base is None and summary["use_cache"]:
-            base = legacy_baseline_by_key.get(comparison_key(summary))
+        base = baseline_by_key.get(comparison_key(summary))
+        if base is None:
+            legacy_comparison = (
+                summary["scenario"],
+                summary["estimator"],
+                str(summary["n_jobs"]),
+                summary["parallel_backend"],
+                summary["population_initializer"],
+            )
+            base = legacy_baseline_by_key.get(legacy_comparison)
         if base is not None:
             comparable.append((summary, base))
 
