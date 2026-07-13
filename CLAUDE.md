@@ -1,330 +1,51 @@
 # sklearn-genetic-opt — Claude Code Instructions
 
-## Documentation Migration: VitePress + GitHub Pages
+Open-source Python library on PyPI: hyperparameter tuning (`GASearchCV`) and feature selection (`GAFeatureSelectionCV`) for scikit-learn estimators using evolutionary algorithms (DEAP). Python >= 3.12. Docs site: https://sklearngeneticopt.rodrigo-arenas.com/.
 
-The project is migrating from Sphinx/Read the Docs to **VitePress** (static site) deployed to **GitHub Pages**.
+## Commands
 
-Source docs live in `docs-vitepress/`. Legacy Sphinx docs remain in `docs/` (with a deprecation banner pointing to the new site).
-
-### Versioning Strategy
-
-We maintain two versions:
-- **stable** — `docs-vitepress/versions/0.13/` (released, maps to `v0.13.*` tags)
-- **latest** — `docs-vitepress/versions/latest/` (in-development, tracks the `0.13.0dev` branch)
-
-Adding a new version means:
-1. Copy `latest/` → `versions/X.Y/`
-2. Add the version to `docs-vitepress/.vitepress/config.ts` `versions` array
-3. Tag the release
-
-**Never edit pages that live under `versions/X.Y/` after that version is released.** Only `latest/` and the current active stable are changed.
-
-### Site Structure
-
-```
-docs-vitepress/
-  .vitepress/
-    config.ts          # VitePress config, nav, sidebar, versions
-    theme/
-      index.ts         # Theme entry
-      custom.css       # Custom styles
-  public/              # Static assets (images, logo)
-  versions/
-    0.13/              # Stable version
-      index.md
-      guide/
-      api/
-    latest/            # Development version
-      index.md
-      guide/
-      api/
-  index.md             # Root — redirects to /versions/stable/
-```
-
-### Adding Pages
-
-Each page starts with:
-
-```yaml
----
-title: Page Title
-description: Brief description for search/preview
----
-```
-
-Use VitePress admonitions (`::: info`, `::: tip`, `::: warning`, `::: danger`, `::: details`).
-Internal links: `[text](./path-to-page)` (relative, no `.html`).
-
----
-
-## Documentation Writing Standards
-
-### Writing Style
-
-1. **Clear & Concise** — explain concepts without jargon
-2. **Active Voice** — "you can rename columns" not "columns can be renamed"
-3. **Examples First** — show before explaining
-4. **Beginner-Friendly** — no assumed knowledge of ML hyperparameter tuning
-5. **Consistent Terminology** — use terms from the glossary
-
-### Page Structure
-
-Every guide/tutorial page should have:
-
-1. **Brief intro** — what you'll learn (2-3 sentences)
-2. **Prerequisites** — what you need to know/have installed
-3. **Step-by-step guide** — with code blocks and screenshots
-4. **Examples** — working, self-contained Python code
-5. **Tips & Gotchas** — common mistakes
-6. **Next Steps** — links to related pages
-
-### Code Examples
-
-- All examples must run without modification
-- Keep code readable over optimized
-- Use `sklearn` built-in datasets (digits, iris, breast_cancer) so no CSV download is needed
-- Show imports at the top of each standalone snippet
-- Use `python` as the fenced code block language
-
-### Front Matter
-
-```yaml
----
-title: Page Title
-description: Brief description for search/preview
----
-```
-
-### Headings
-
-```markdown
-# Page Title (H1 — only one per page)
-
-## Major Section (H2)
-
-### Subsection (H3)
-```
-
-### Links
-
-- **Internal:** `[text](./path/to/page)` — relative, no `.html`
-- **External:** `[text](https://example.com)` — VitePress opens externals in new tab automatically
-- **Anchors:** `[Jump to section](#section-heading)`
-
-### Callouts
-
-```markdown
-:::info
-Informational tip
-:::
-
-:::tip
-Helpful advice
-:::
-
-:::warning
-Important caution
-:::
-
-:::danger
-Critical warning
-:::
-
-:::details Click to expand
-Hidden content
-:::
-```
-
-### Feature Documentation Template
-
-```markdown
----
-title: Feature Name
-description: One sentence — what it does and when to use it.
----
-
-# Feature Name
-
-Brief one-liner.
-
-## Use Cases
-
-- Scenario 1
-- Scenario 2
-
-## How It Works
-
-Explanation.
-
-## Configuration
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| param1    | str  | `"x"`   | ...         |
-
-## Examples
-
-### Basic Usage
-
-```python
-# working code here
-```
-
-### Advanced Usage
-
-```python
-# working code here
-```
-
-## Tips & Gotchas
-
-- Common mistake 1
-- Common mistake 2
-
-## Next Steps
-
-- [Related Page](./related-page)
-```
-
----
-
-## Workflow Notes
-
-- The GitHub Actions workflow at `.github/workflows/docs.yml` builds and deploys VitePress to `gh-pages` branch on push to `master` and on version tags.
-- To preview locally: `cd docs-vitepress && npm run docs:dev`
-- To build: `cd docs-vitepress && npm run docs:build`
-- The legacy `readthedocs.yml` is kept so the RTD site continues to build, but every page now shows a deprecation banner pointing to the GitHub Pages URL.
-
-<!-- rtk-instructions v2 -->
-# RTK (Rust Token Killer) - Token-Optimized Commands
-
-## Golden Rule
-
-**Always prefix commands with `rtk`**. If RTK has a dedicated filter, it uses it. If not, it passes through unchanged. This means RTK is always safe to use.
-
-**Important**: Even in command chains with `&&`, use `rtk`:
 ```bash
-# ❌ Wrong
-git add . && git commit -m "msg" && git push
-
-# ✅ Correct
-rtk git add . && rtk git commit -m "msg" && rtk git push
+pytest sklearn_genetic/                                                        # test suite (tests live inside the package)
+pytest sklearn_genetic/ --cov-fail-under=95 --cov=./ --cov-report=term-missing:skip-covered   # coverage gate: 95%
+black .                                                                        # formatting (pre-commit hook; CI runs black --check .)
+cd docs-vitepress && npm run docs:dev                                          # docs preview
+cd docs-vitepress && npm run docs:build                                        # docs build
 ```
 
-## RTK Commands by Workflow
+CI: `.github/workflows/ci-tests.yml` (tests), `docs.yml` (VitePress → GitHub Pages on push to `master` and on version tags), `docs-examples.yml`.
 
-### Build & Compile (80-90% savings)
-```bash
-rtk cargo build         # Cargo build output
-rtk cargo check         # Cargo check output
-rtk cargo clippy        # Clippy warnings grouped by file (80%)
-rtk tsc                 # TypeScript errors grouped by file/code (83%)
-rtk lint                # ESLint/Biome violations grouped (84%)
-rtk prettier --check    # Files needing format only (70%)
-rtk next build          # Next.js build with route metrics (87%)
-```
+## Release checklist
 
-### Test (90-99% savings)
-```bash
-rtk cargo test          # Cargo test failures only (90%)
-rtk vitest run          # Vitest failures only (99.5%)
-rtk playwright test     # Playwright failures only (94%)
-rtk test <cmd>          # Generic test wrapper - failures only
-```
+1. Version is dynamic from `sklearn_genetic/_version.py` (`pyproject.toml` uses `dynamic = ["version"]`) — bump it there ONLY.
+2. Update `CHANGELOG.md`: move `## Unreleased` content under the new `## X.Y.Z` heading, keeping the section names (`New Features` / `Bug Fixes` / `Breaking Changes`) and PR references (#NNN).
+3. Ensure docs in `versions/latest/` are current for the release (see Versioning below — the freeze itself is CI-automated).
+4. `python -m build` then `twine check dist/*` must pass.
+5. Tag (`v[0-9]*` or `[0-9]*`) triggers the docs deploy and version freeze. NEVER push a release tag without the user's explicit confirmation.
 
-### Git (59-80% savings)
-```bash
-rtk git status          # Compact status
-rtk git log             # Compact log (works with all git flags)
-rtk git diff            # Compact diff (80%)
-rtk git show            # Compact show (80%)
-rtk git add             # Ultra-compact confirmations (59%)
-rtk git commit          # Ultra-compact confirmations (59%)
-rtk git push            # Ultra-compact confirmations
-rtk git pull            # Ultra-compact confirmations
-rtk git branch          # Compact branch list
-rtk git fetch           # Compact fetch
-rtk git stash           # Compact stash
-rtk git worktree        # Compact worktree
-```
+## Code conventions
 
-Note: Git passthrough works for ALL subcommands, even those not explicitly listed.
+- Full test coverage for behavior changes (coverage gate is 95%); tests live next to the code under `sklearn_genetic/`.
+- Follow the scikit-learn estimator API conventions (fit/predict, `get_params`/`set_params`, sklearn checks) for anything public.
+- Public API changes require: docs page update, gallery example if user-facing, and a CHANGELOG entry.
+- Black is the only formatter; don't hand-format against it.
 
-### GitHub (26-87% savings)
-```bash
-rtk gh pr view <num>    # Compact PR view (87%)
-rtk gh pr checks        # Compact PR checks (79%)
-rtk gh run list         # Compact workflow runs (82%)
-rtk gh issue list       # Compact issue list (80%)
-rtk gh api              # Compact API responses (26%)
-```
+## Documentation (VitePress + GitHub Pages)
 
-### JavaScript/TypeScript Tooling (70-90% savings)
-```bash
-rtk pnpm list           # Compact dependency tree (70%)
-rtk pnpm outdated       # Compact outdated packages (80%)
-rtk pnpm install        # Compact install output (90%)
-rtk npm run <script>    # Compact npm script output
-rtk npx <cmd>           # Compact npx command output
-rtk prisma              # Prisma without ASCII art (88%)
-```
+Source in `docs-vitepress/`. The legacy Sphinx docs have been fully removed — VitePress is the only docs system.
 
-### Files & Search (60-75% savings)
-```bash
-rtk ls <path>           # Tree format, compact (65%)
-rtk read <file>         # Code reading with filtering (60%)
-rtk grep <pattern>      # Search grouped by file (75%)
-rtk find <pattern>      # Find grouped by directory (70%)
-```
+### Versioning (critical)
 
-### Analysis & Debug (70-90% savings)
-```bash
-rtk err <cmd>           # Filter errors only from any command
-rtk log <file>          # Deduplicated logs with counts
-rtk json <file>         # JSON structure without values
-rtk deps                # Dependency overview
-rtk env                 # Environment variables compact
-rtk summary <cmd>       # Smart summary of command output
-rtk diff                # Ultra-compact diffs
-```
+- **stable** = `docs-vitepress/versions/0.13/` (released tags) · **latest** = `docs-vitepress/versions/latest/` (in development).
+- NEVER edit pages under `versions/X.Y/` after that version is released. Only `latest/` changes during development.
+- Cutting a new docs version is CI-AUTOMATED: pushing a release tag runs `docs.yml` → `scripts/freeze-version.mjs`, which copies `latest/` to `versions/X.Y/`, strips dev banners, and updates the stable redirect. Version listing is auto-discovered by `discoverReleaseVersions()` in `.vitepress/config.ts` — do NOT hand-copy folders or hand-edit a versions array.
 
-### Infrastructure (85% savings)
-```bash
-rtk docker ps           # Compact container list
-rtk docker images       # Compact image list
-rtk docker logs <c>     # Deduplicated logs
-rtk kubectl get         # Compact resource list
-rtk kubectl logs        # Deduplicated pod logs
-```
+### Page standards
 
-### Network (65-70% savings)
-```bash
-rtk curl <url>          # Compact HTTP responses (70%)
-rtk wget <url>          # Compact download output (65%)
-```
+- Front-matter on every page: `title` + `description`.
+- VitePress admonitions (`::: info|tip|warning|danger|details`), internal links relative without `.html`, one H1 per page, `python` as the fence language for code blocks.
+- Guide/tutorial pages follow: brief intro (what you'll learn) → prerequisites → step-by-step with code → self-contained examples → Tips & Gotchas → Next Steps.
+- Style: clear, active voice, examples first, beginner-friendly (no assumed hyperparameter-tuning knowledge).
+- Code examples must run without modification: sklearn built-in datasets only (digits, iris, breast_cancer — no CSV downloads), imports at the top of every standalone snippet.
+- Feature pages follow the template: Use Cases → How It Works → Configuration (param table: Parameter/Type/Default/Description) → Examples (Basic + Advanced) → Tips & Gotchas → Next Steps.
 
-### Meta Commands
-```bash
-rtk gain                # View token savings statistics
-rtk gain --history      # View command history with savings
-rtk discover            # Analyze Claude Code sessions for missed RTK usage
-rtk proxy <cmd>         # Run command without filtering (for debugging)
-rtk init                # Add RTK instructions to CLAUDE.md
-rtk init --global       # Add RTK to ~/.claude/CLAUDE.md
-```
-
-## Token Savings Overview
-
-| Category | Commands | Typical Savings |
-|----------|----------|-----------------|
-| Tests | vitest, playwright, cargo test | 90-99% |
-| Build | next, tsc, lint, prettier | 70-87% |
-| Git | status, log, diff, add, commit | 59-80% |
-| GitHub | gh pr, gh run, gh issue | 26-87% |
-| Package Managers | pnpm, npm, npx | 70-90% |
-| Files | ls, read, grep, find | 60-75% |
-| Infrastructure | docker, kubectl | 85% |
-| Network | curl, wget | 65-70% |
-
-Overall average: **60-90% token reduction** on common development operations.
-<!-- /rtk-instructions -->
+For doc audits or post-change doc updates use the global `docs-sync` skill (it knows these conventions).
