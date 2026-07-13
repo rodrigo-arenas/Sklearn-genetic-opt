@@ -109,6 +109,15 @@ const recipes = [
     difficulty: 'Intermediate',
     link: '/versions/latest/recipes/regression/xgboost-regressor',
   },
+    {
+    icon: '🔬',
+    category: 'Regression',
+    title: 'Tune SGDRegressor',
+    desc: 'Perform genetic feature selection and hyperparameter tuning for SGDRegressor using GASearchCV and GAFeatureSelectionCV.',
+    time: '5 min',
+    difficulty: 'Intermediate',
+    link: '/versions/latest/recipes/regression/sgd-regressor',
+  },
 ]
 </script>
 

@@ -17,6 +17,7 @@ Five copy-paste recipes for common regression hyperparameter tuning tasks.
 | [Tune XGBRegressor](./xgboost-regressor) | `XGBRegressor` | 8 min |
 | [Tune LGBMRegressor](./lightgbm-regressor) | `LGBMRegressor` | 8 min |
 | [Tune CatBoostRegressor](./catboost-regressor) | `CatBoostRegressor` | 9 min |
+| [Tune SGDRegressor](./sgd-regressor) | `SGDRegressor` | 5 min |
 | [Tune ElasticNet](./elasticnet) | `ElasticNet` | 6 min |
 
 ## See Also
