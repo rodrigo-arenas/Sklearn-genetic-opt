@@ -4,9 +4,18 @@ Full release notes with code examples are in the [documentation](https://sklearn
 
 ## Unreleased
 
+## 0.13.4
+
+### New Features
+
+- Added cache-behavior benchmark coverage for candidate collisions, including checks for cache hits, duplicate candidates, and repeated `cross_validate` calls under controlled collision-heavy searches (#334).
+
 ### Bug Fixes
 
 - Fixed `ModelCheckpoint` resume dropping prior-run history: `logbook`, `cv_results_`, and `history` were silently reset to only the post-resume generations, and `fit_stats_` counters were zeroed on every resume. `ModelCheckpoint` now persists the real per-candidate logbook and `fit_stats_`, and `GASearchCV`/`GAFeatureSelectionCV.fit` restore them after `_register()` rebuilds the (unpicklable) DEAP toolbox/population/hof (#299).
+- Fixed checkpoint resume generation numbering so resumed runs continue from the saved generation instead of restarting the generation counter (#299, #331).
+- Fixed checkpoint resume reproducibility by preserving and restoring optimizer random-state context across save/load cycles (#332).
+- Fixed `Categorical.sample()` returning NumPy scalar values when seeded, preserving the original Python value types for sampled categorical choices (#333).
 
 ## 0.13.3
 
