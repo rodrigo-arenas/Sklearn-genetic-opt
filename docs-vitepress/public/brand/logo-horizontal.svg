@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="150" viewBox="0 0 600 150">
+  <svg x="8" y="15" width="120" height="120" viewBox="5 -3 120 120">
+  <defs>
+    <linearGradient id="hxc" x1="0" y1="8" x2="0" y2="50" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#2FBE8C"></stop><stop offset="1" stop-color="#12ADB6"></stop></linearGradient>
+    <linearGradient id="pgc" x1="30" y1="52" x2="74" y2="66" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#17B8A6"></stop><stop offset="1" stop-color="#8763F2"></stop></linearGradient>
+  </defs>
+  <circle cx="74" cy="66" r="40" stroke="#d3d6dd" stroke-width="1.6" fill="none"></circle>
+  <circle cx="74" cy="66" r="24" stroke="#d3d6dd" stroke-width="1.6" fill="none"></circle>
+  <path d="M30,52 C42,58 54,62 74,66" stroke="url(#pgc)" stroke-width="2.4" stroke-linecap="round" fill="none"></path>
+  <circle cx="40" cy="56" r="3" fill="#17B8A6"></circle><circle cx="52" cy="61" r="3" fill="#4C93C4"></circle><circle cx="63" cy="64" r="3" fill="#7A6BD3"></circle>
+  <g stroke="#a9d9d2" stroke-width="1.4" stroke-linecap="round"><line x1="18" y1="12" x2="34" y2="12"></line><line x1="18" y1="18" x2="34" y2="18"></line><line x1="18" y1="26" x2="34" y2="26"></line><line x1="18" y1="32" x2="34" y2="32"></line><line x1="18" y1="40" x2="34" y2="40"></line><line x1="18" y1="46" x2="34" y2="46"></line></g>
+  <path d="M26,8 C36,12 36,18 26,22 C16,26 16,32 26,36 C36,40 36,46 26,50" stroke="url(#hxc)" stroke-width="2.2" stroke-linecap="round" fill="none"></path>
+  <path d="M26,8 C16,12 16,18 26,22 C36,26 36,32 26,36 C16,40 16,46 26,50" stroke="url(#hxc)" stroke-width="2.2" stroke-linecap="round" fill="none"></path>
+  <circle cx="74" cy="66" r="13" fill="#8763F2"></circle><circle cx="74" cy="66" r="5" fill="#ffffff"></circle></svg>
+  <text x="150" y="93" font-family="&#39;Space Grotesk&#39;,sans-serif" font-weight="600" font-size="56" letter-spacing="-1.2"><tspan fill="#14181f">sklearn</tspan><tspan fill="#b9bdc7">-</tspan><tspan fill="#14181f">genetic</tspan><tspan fill="#b9bdc7">-</tspan><tspan fill="#8763F2" font-family="&#39;JetBrains Mono&#39;,monospace" font-weight="500">opt</tspan></text>
+</svg>

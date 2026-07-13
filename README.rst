@@ -1,9 +1,8 @@
 .. -*- mode: rst -*-
 
-.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/docs-vitepress/public/sklearn-genetic-opt-logo-128.png?raw=true
-   :alt: sklearn-genetic-opt logo
-   :width: 104px
-   :align: left
+.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/docs-vitepress/public/brand/readme-banner-1280x320.png?raw=true
+   :alt: sklearn-genetic-opt — hyperparameter tuning and feature selection with evolutionary algorithms
+   :target: https://sklearngeneticopt.rodrigo-arenas.com/
 
 sklearn-genetic-opt
 ###################

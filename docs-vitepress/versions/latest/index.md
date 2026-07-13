@@ -3,6 +3,8 @@ title: sklearn-genetic-opt (latest / dev)
 description: Development documentation for sklearn-genetic-opt — tracks the master branch and may contain unreleased features.
 ---
 
+![sklearn-genetic-opt logo](/brand/logo-horizontal.svg)
+
 # sklearn-genetic-opt
 
 `sklearn-genetic-opt` adds evolutionary optimization tools to the scikit-learn workflow. It can tune hyperparameters with `GASearchCV` and select feature subsets with `GAFeatureSelectionCV` using algorithms powered by DEAP.
