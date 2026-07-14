@@ -29,7 +29,7 @@
       </div>
 
       <div class="recipes-cta">
-        <a href="/versions/latest/recipes/" class="browse-all-btn">Browse all 30 recipes →</a>
+        <a href="/versions/latest/recipes/" class="browse-all-btn">Browse all 35 recipes →</a>
       </div>
     </div>
   </section>

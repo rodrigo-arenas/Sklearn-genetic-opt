@@ -28,6 +28,7 @@ from sklearn.model_selection import KFold, train_test_split
 from sklearn.linear_model import SGDRegressor
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import r2_score
+from sklearn.pipeline import Pipeline
 
 from sklearn_genetic import GASearchCV, GAFeatureSelectionCV
 from sklearn_genetic.space import Categorical, Continuous, Integer
@@ -53,10 +54,18 @@ X_train, X_test, y_train, y_test = train_test_split(
     random_state=42,
 )
 
-# Scale the features
-scaler = StandardScaler()
-X_train = scaler.fit_transform(X_train)
-X_test = scaler.transform(X_test)
+# Apply CV on each fold and then apply Standard scaler on the training fold
+# Using the statistics (i.e mean, standard deviation) of the training fold
+# Transform both the training and validation fold.
+# Next, use this transformed training fold data to fit the SGD Regressor
+# Evaluate on the validation fold
+
+pipe = Pipeline(
+    [
+        ("scaler", StandardScaler()),
+        ("sgd", SGDRegressor(random_state=42)),
+    ]
+)
 
 cv = KFold(
     n_splits=5,
@@ -66,7 +75,7 @@ cv = KFold(
 
 # Stage 1: Feature Selection
 selector = GAFeatureSelectionCV(
-    estimator=SGDRegressor(random_state=42),
+    estimator=pipe,
     cv=cv,
     scoring="neg_root_mean_squared_error",
     evolution_config=EvolutionConfig(
@@ -100,31 +109,31 @@ X_test_sel = X_test[:, mask]
 
 # Stage 2: Hyperparameter Tuning
 param_grid = {
-    "alpha": Continuous(1e-6, 1e-2, distribution="log-uniform"),
-    "l1_ratio": Continuous(0.0, 1.0),
-    "max_iter": Integer(500, 5000),
-    "tol": Continuous(1e-6, 1e-2),
-    "eta0": Continuous(1e-4, 1.0, distribution="log-uniform"),
-    "n_iter_no_change": Integer(5, 50),
-    "penalty": Categorical([
+    "sgd__alpha": Continuous(1e-6, 1e-2, distribution="log-uniform"),
+    "sgd__l1_ratio": Continuous(0.0, 1.0),
+    "sgd__max_iter": Integer(500, 5000),
+    "sgd__tol": Continuous(1e-6, 1e-2),
+    "sgd__eta0": Continuous(1e-4, 1.0, distribution="log-uniform"),
+    "sgd__n_iter_no_change": Integer(5, 50),
+    "sgd__penalty": Categorical([
         "l2",
         "l1",
         "elasticnet",
     ]),
-    "learning_rate": Categorical([
+    "sgd__learning_rate": Categorical([
         "constant",
         "optimal",
         "invscaling",
         "adaptive",
     ]),
-    "average": Categorical([
+    "sgd__average": Categorical([
         True,
         False,
     ]),
 }
 
 ga = GASearchCV(
-    estimator=SGDRegressor(random_state=42),
+    estimator=pipe,
     param_grid=param_grid,
     scoring="neg_root_mean_squared_error",
     cv=cv,

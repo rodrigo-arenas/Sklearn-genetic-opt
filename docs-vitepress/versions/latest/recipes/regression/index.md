@@ -9,7 +9,7 @@ You are reading the **latest (dev)** docs. For the stable version, see [stable](
 
 # Regression Recipes
 
-Five copy-paste recipes for common regression hyperparameter tuning tasks.
+Six copy-paste recipes for common regression hyperparameter tuning tasks.
 
 | Recipe | Estimator | Time |
 |--------|-----------|------|
