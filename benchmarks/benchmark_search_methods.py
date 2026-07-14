@@ -36,6 +36,7 @@ from sklearn.model_selection import (
 from benchmark_fit import (
     SCENARIOS,
     Scenario,
+    build_baseline_lookup,
     build_gasearch,
     holdout_metrics,
     make_cv,
@@ -467,7 +468,7 @@ def comparison_key(summary: dict[str, Any]) -> tuple[str, str, str]:
 
 
 def print_comparison_table(current: list[dict[str, Any]], baseline: list[dict[str, Any]]) -> None:
-    baseline_by_key = {comparison_key(summary): summary for summary in baseline}
+    baseline_by_key = build_baseline_lookup(baseline, key_func=comparison_key)
     comparable = [
         (summary, baseline_by_key[comparison_key(summary)])
         for summary in current
