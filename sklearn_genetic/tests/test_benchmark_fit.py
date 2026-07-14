@@ -1,6 +1,9 @@
+import pytest
+
 from benchmarks.benchmark_fit import (
     SCENARIOS,
     aggregate_results,
+    build_baseline_lookup,
     comparison_key,
     print_comparison_table,
 )
@@ -160,3 +163,47 @@ def test_legacy_baseline_only_matches_cache_on_current(capsys):
     data_rows = [r for r in rows if r.startswith("classification_lr_collisions")]
     assert len(data_rows) == 1
     assert data_rows[0].split("\t")[5:7] == ["True", "True"]
+
+
+def test_build_baseline_lookup_raises_on_duplicate_key():
+    with pytest.raises(ValueError, match="Duplicate baseline comparison key"):
+        build_baseline_lookup(
+            [{"scenario": "a", "n": 1}, {"scenario": "a", "n": 2}],
+            key_func=lambda summary: (summary["scenario"],),
+        )
+
+
+def test_build_baseline_lookup_allows_distinct_keys():
+    lookup = build_baseline_lookup(
+        [{"scenario": "a"}, {"scenario": "b"}],
+        key_func=lambda summary: (summary["scenario"],),
+    )
+
+    assert set(lookup) == {("a",), ("b",)}
+
+
+def test_duplicate_true_comparison_keys_raise():
+    """Two genuinely identical comparison keys (#336) must not silently pick
+    whichever baseline row happens to be built last."""
+    cache_on = aggregate_results(
+        [_benchmark_result(use_cache=True, cache_hits=3, duplicate_candidates=1, cv_calls=4)]
+    )[0]
+    baseline_a = dict(cache_on, fit_seconds_mean=2.0)
+    baseline_b = dict(cache_on, fit_seconds_mean=9.0)
+
+    with pytest.raises(ValueError, match="Duplicate baseline comparison key"):
+        print_comparison_table([cache_on], [baseline_a, baseline_b])
+
+
+def test_duplicate_legacy_comparison_keys_raise():
+    """Same as above, for the legacy (no use_cache) baseline lookup (#336)."""
+    cache_on = aggregate_results(
+        [_benchmark_result(use_cache=True, cache_hits=3, duplicate_candidates=1, cv_calls=4)]
+    )[0]
+    old_baseline_a = dict(cache_on)
+    old_baseline_a.pop("use_cache")
+    old_baseline_a["fit_seconds_mean"] = 2.0
+    old_baseline_b = dict(old_baseline_a, fit_seconds_mean=9.0)
+
+    with pytest.raises(ValueError, match="Duplicate baseline comparison key"):
+        print_comparison_table([cache_on], [old_baseline_a, old_baseline_b])
