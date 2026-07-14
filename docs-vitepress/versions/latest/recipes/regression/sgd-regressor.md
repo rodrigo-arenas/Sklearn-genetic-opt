@@ -100,11 +100,11 @@ X_test_sel = X_test[:, mask]
 
 # Stage 2: Hyperparameter Tuning
 param_grid = {
-    "alpha": Continuous(0.0, 0.01),
+    "alpha": Continuous(1e-6, 1e-2, distribution="log-uniform"),
     "l1_ratio": Continuous(0.0, 1.0),
     "max_iter": Integer(500, 5000),
     "tol": Continuous(1e-6, 1e-2),
-    "eta0": Continuous(0.0, 1.0),
+    "eta0": Continuous(1e-4, 1.0, distribution="log-uniform"),
     "n_iter_no_change": Integer(5, 50),
     "penalty": Categorical([
         "l2",
