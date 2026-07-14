@@ -1613,3 +1613,86 @@ def test_final_selection_cv_without_groups_still_splits():
     final_splits = evolved_estimator._final_selection_splits()
     assert len(final_splits) == 3
     assert evolved_estimator.best_params_
+
+
+def test_gasearch_forwards_sample_weight_to_candidate_cv_and_refit():
+    """#339: fit(..., sample_weight=...) reaches candidate CV fits and the refit.
+
+    A recording estimator captures the sample_weight length of every fit call:
+    candidate CV fits must receive per-fold slices (smaller than n_samples),
+    and the final refit must receive the full weight vector.
+    """
+    recorded = []
+
+    class WeightRecordingTree(DecisionTreeClassifier):
+        def fit(self, X, y, sample_weight=None):
+            recorded.append(None if sample_weight is None else len(sample_weight))
+            return super().fit(X, y, sample_weight=sample_weight)
+
+    n_samples = X_train.shape[0]
+    weights = np.linspace(0.5, 1.5, n_samples)
+    evolved_estimator = GASearchCV(
+        WeightRecordingTree(random_state=0),
+        cv=2,
+        scoring="accuracy",
+        population_size=4,
+        generations=1,
+        param_grid={"max_depth": Integer(2, 10), "min_samples_split": Integer(2, 10)},
+        verbose=False,
+    )
+
+    evolved_estimator.fit(X_train, y_train, sample_weight=weights)
+
+    assert recorded, "no fit calls were recorded"
+    # Every single fit (candidate folds and refit) received weights.
+    assert all(length is not None for length in recorded)
+    # Candidate CV fits get per-fold slices, strictly smaller than n_samples.
+    assert all(length < n_samples for length in recorded[:-1])
+    # The final refit gets the full, unsliced weight vector.
+    assert recorded[-1] == n_samples
+
+
+def test_gasearch_final_selection_scoring_receives_fit_params():
+    """#339: final-selection candidate re-scoring forwards fit params too."""
+    recorded = []
+
+    class WeightRecordingTree(DecisionTreeClassifier):
+        def fit(self, X, y, sample_weight=None):
+            recorded.append(sample_weight is not None)
+            return super().fit(X, y, sample_weight=sample_weight)
+
+    weights = np.ones(X_train.shape[0])
+    evolved_estimator = GASearchCV(
+        WeightRecordingTree(random_state=0),
+        cv=2,
+        scoring="accuracy",
+        population_size=4,
+        generations=1,
+        param_grid={"max_depth": Integer(2, 10), "min_samples_split": Integer(2, 10)},
+        final_selection=True,
+        final_selection_top_k=2,
+        final_selection_cv=3,
+        verbose=False,
+    )
+
+    evolved_estimator.fit(X_train, y_train, sample_weight=weights)
+
+    # Search CV fits + final-selection re-scoring fits + refit: all weighted.
+    assert recorded and all(recorded)
+
+
+def test_gasearch_unsupported_fit_param_raises_clearly():
+    """#339: an unsupported fit param must fail loudly, not be dropped."""
+    evolved_estimator = GASearchCV(
+        DecisionTreeClassifier(random_state=0),
+        cv=2,
+        scoring="accuracy",
+        population_size=4,
+        generations=1,
+        param_grid={"max_depth": Integer(2, 10), "min_samples_split": Integer(2, 10)},
+        error_score="raise",
+        verbose=False,
+    )
+
+    with pytest.raises(TypeError):
+        evolved_estimator.fit(X_train, y_train, not_a_real_fit_param=np.ones(X_train.shape[0]))

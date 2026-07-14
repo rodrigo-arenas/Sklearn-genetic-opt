@@ -833,6 +833,7 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
             pre_dispatch=self.pre_dispatch,
             error_score=self.error_score,
             return_train_score=self.return_train_score,
+            params=getattr(self, "_fit_params", None) or None,
         )
 
         cv_scores = cv_results[f"test_{self.refit_metric}"]
@@ -952,6 +953,7 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
             pre_dispatch=self.pre_dispatch,
             error_score=self.error_score,
             return_train_score=False,
+            params=getattr(self, "_fit_params", None) or None,
         )
         cv_scores = cv_results[f"test_{self.refit_metric}"]
         return float(np.mean(cv_scores)), cv_scores
@@ -1030,7 +1032,7 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
 
         return selected_index, selected_score, selected_params
 
-    def fit(self, X, y=None, callbacks=None, groups=None):
+    def fit(self, X, y=None, callbacks=None, groups=None, **fit_params):
         """
         Main method of GASearchCV, starts the optimization
         procedure with the hyperparameters of the given estimator
@@ -1052,11 +1054,18 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
             Group labels for the samples used while splitting the dataset into
             train/test sets. Only used in conjunction with a "Group" cv
             instance such as :class:`~sklearn.model_selection.GroupKFold`.
+        **fit_params : dict of str -> object
+            Parameters passed to the ``fit`` method of the underlying
+            estimator (e.g. ``sample_weight``). They are forwarded to every
+            candidate cross-validation, to final-selection scoring, and to
+            the final refit. Sample-aligned parameters are sliced per CV
+            fold by scikit-learn.
         """
 
         self.X_ = X
         self.y_ = y
         self.groups_ = groups
+        self._fit_params = fit_params
         self._n_iterations = self.generations + 1
         self.refit_metric = "score"
         self.multimetric_ = False
@@ -1226,6 +1235,7 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
             self.estimator.fit(
                 self.X_,
                 self.y_,
+                **getattr(self, "_fit_params", {}),
             )
             refit_end_time = time.time()
             self.refit_time_ = refit_end_time - refit_start_time
@@ -1886,7 +1896,9 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
 
         local_estimator = clone(self.estimator)
 
-        # Use standard cross_validate for all estimator types
+        # Use standard cross_validate for all estimator types. Only X is
+        # feature-sliced; fit params such as sample_weight stay aligned to
+        # samples and are sliced per CV fold by scikit-learn.
         cv_results = cross_validate(
             local_estimator,
             self.X_[:, bool_individual],
@@ -1897,6 +1909,7 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
             pre_dispatch=self.pre_dispatch,
             error_score=self.error_score,
             return_train_score=self.return_train_score,
+            params=getattr(self, "_fit_params", None) or None,
         )
 
         score, current_generation_params = self._build_feature_evaluation_record(
@@ -1977,7 +1990,7 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
 
         return fitness_result
 
-    def fit(self, X, y=None, callbacks=None, groups=None):
+    def fit(self, X, y=None, callbacks=None, groups=None, **fit_params):
         """
         Main method of GAFeatureSelectionCV, starts the optimization
         procedure with to find the best features set
@@ -1998,10 +2011,17 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
             Group labels for the samples used while splitting the dataset into
             train/test sets. Only used in conjunction with a "Group" cv
             instance such as :class:`~sklearn.model_selection.GroupKFold`.
+        **fit_params : dict of str -> object
+            Parameters passed to the ``fit`` method of the underlying
+            estimator (e.g. ``sample_weight``). They are forwarded to every
+            candidate cross-validation and to the final refit. Only ``X`` is
+            feature-sliced during the search; sample-aligned parameters stay
+            aligned to samples and are sliced per CV fold by scikit-learn.
         """
 
         self.X_, self.y_ = check_X_y(X, y, accept_sparse=True) if y is not None else (X, None)
         self.groups_ = groups
+        self._fit_params = fit_params
 
         # Handle outlier detection case if y is none
         if _is_outlier_detector(self.estimator) and y is None:
@@ -2173,7 +2193,11 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
             bool_individual = np.array(self.best_features_, dtype=bool)
 
             refit_start_time = time.time()
-            self.estimator.fit(self.X_[:, bool_individual], self.y_)
+            self.estimator.fit(
+                self.X_[:, bool_individual],
+                self.y_,
+                **getattr(self, "_fit_params", {}),
+            )
             refit_end_time = time.time()
             self.refit_time_ = refit_end_time - refit_start_time
 
