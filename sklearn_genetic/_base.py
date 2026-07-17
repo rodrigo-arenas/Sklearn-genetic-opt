@@ -1,3 +1,4 @@
+import logging
 import pickle
 
 from sklearn.exceptions import NotFittedError
@@ -5,6 +6,8 @@ from sklearn.utils.validation import check_is_fitted
 
 from .algorithms import algorithms_factory
 from .parameters import Algorithms
+
+logger = logging.getLogger(__name__)
 
 
 def reset_adapters(estimator):
@@ -82,17 +85,24 @@ class GeneticEstimatorMixin:
     def save(self, filepath):
         """Save the current state of the estimator instance to a file."""
         class_name = self.__class__.__name__
-        try:
-            checkpoint_data = {"estimator_state": self._serializable_state(), "logbook": None}
-            if hasattr(self, "logbook"):
-                checkpoint_data["logbook"] = self.logbook
+        checkpoint_data = {"estimator_state": self._serializable_state(), "logbook": None}
+        if hasattr(self, "logbook"):
+            checkpoint_data["logbook"] = self.logbook
 
+        try:
             serialized_checkpoint = pickle.dumps(checkpoint_data)
+        except (pickle.PicklingError, TypeError, AttributeError) as e:
+            logger.error("Error serializing %s: %s", class_name, e)
+            raise
+
+        try:
             with open(filepath, "wb") as f:
                 f.write(serialized_checkpoint)
-            print(f"{class_name} model successfully saved to {filepath}")
-        except Exception as e:
-            print(f"Error saving {class_name}: {e}")
+        except OSError as e:
+            logger.error("Error saving %s to %s: %s", class_name, filepath, e)
+            raise
+
+        logger.info("%s model successfully saved to %s", class_name, filepath)
 
     def load(self, filepath):
         """Load an estimator instance from a file."""
@@ -100,12 +110,25 @@ class GeneticEstimatorMixin:
         try:
             with open(filepath, "rb") as f:
                 checkpoint_data = pickle.load(f)
-                for key, value in checkpoint_data["estimator_state"].items():
-                    setattr(self, key, value)
-                self.logbook = checkpoint_data["logbook"]
-            print(f"{class_name} model successfully loaded from {filepath}")
-        except Exception as e:
-            print(f"Error loading {class_name}: {e}")
+        except FileNotFoundError:
+            logger.error("Error loading %s: file not found: %s", class_name, filepath)
+            raise
+        except (pickle.UnpicklingError, EOFError, ValueError) as e:
+            logger.error("Error loading %s: corrupted checkpoint: %s", class_name, e)
+            raise
+        except OSError as e:
+            logger.error("Error loading %s from %s: %s", class_name, filepath, e)
+            raise
+
+        try:
+            for key, value in checkpoint_data["estimator_state"].items():
+                setattr(self, key, value)
+            self.logbook = checkpoint_data["logbook"]
+        except KeyError as e:
+            logger.error("Error loading %s: missing key in checkpoint: %s", class_name, e)
+            raise
+
+        logger.info("%s model successfully loaded from %s", class_name, filepath)
 
     def _select_algorithm(self, pop, stats, hof):
         selected_algorithm = algorithms_factory.get(self.algorithm, None)

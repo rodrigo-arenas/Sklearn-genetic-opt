@@ -27,7 +27,10 @@ def test_space_sample_warm_start_fills_missing_parameters():
     assert sampled_params == {"provided": 1, "sampled": 2}
 
 
-def test_ga_search_save_and_load_round_trip(tmp_path, capsys):
+def test_ga_search_save_and_load_round_trip(tmp_path, caplog):
+    import logging
+
+    caplog.set_level(logging.INFO)
     search = GASearchCV(
         estimator=DecisionTreeClassifier(),
         param_grid={"max_depth": Integer(1, 2)},
@@ -47,10 +50,9 @@ def test_ga_search_save_and_load_round_trip(tmp_path, capsys):
         scoring="accuracy",
     )
     restored.load(checkpoint_path)
-    output = capsys.readouterr().out
 
-    assert "GASearchCV model successfully saved" in output
-    assert "GASearchCV model successfully loaded" in output
+    assert "GASearchCV model successfully saved" in caplog.text
+    assert "GASearchCV model successfully loaded" in caplog.text
     assert restored.extra_state == "persisted"
     assert restored.logbook == [{"generation": 0}]
 
@@ -92,7 +94,7 @@ def test_fitted_ga_search_save_and_load_round_trip(tmp_path):
     assert restored.predict(X_test).shape[0] == X_test.shape[0]
 
 
-def test_ga_search_save_and_load_errors_are_reported(tmp_path, capsys):
+def test_ga_search_save_and_load_errors_are_reported(tmp_path, caplog):
     search = GASearchCV(
         estimator=DecisionTreeClassifier(),
         param_grid={"max_depth": Integer(1, 2)},
@@ -100,15 +102,19 @@ def test_ga_search_save_and_load_errors_are_reported(tmp_path, capsys):
         scoring="accuracy",
     )
 
-    search.save(tmp_path / "missing" / "ga_search.pkl")
-    search.load(tmp_path / "missing.pkl")
-    output = capsys.readouterr().out
+    with pytest.raises(OSError):
+        search.save(tmp_path / "missing" / "ga_search.pkl")
+    with pytest.raises(FileNotFoundError):
+        search.load(tmp_path / "missing.pkl")
 
-    assert "Error saving GASearchCV" in output
-    assert "Error loading GASearchCV" in output
+    assert "Error saving GASearchCV" in caplog.text
+    assert "Error loading GASearchCV" in caplog.text
 
 
-def test_ga_feature_selection_save_and_load_round_trip(tmp_path, capsys):
+def test_ga_feature_selection_save_and_load_round_trip(tmp_path, caplog):
+    import logging
+
+    caplog.set_level(logging.INFO)
     selector = GAFeatureSelectionCV(
         estimator=DecisionTreeClassifier(),
         cv=2,
@@ -130,15 +136,14 @@ def test_ga_feature_selection_save_and_load_round_trip(tmp_path, capsys):
         generations=2,
     )
     restored.load(checkpoint_path)
-    output = capsys.readouterr().out
 
-    assert "GAFeatureSelectionCV model successfully saved" in output
-    assert "GAFeatureSelectionCV model successfully loaded" in output
+    assert "GAFeatureSelectionCV model successfully saved" in caplog.text
+    assert "GAFeatureSelectionCV model successfully loaded" in caplog.text
     assert restored.extra_state == "persisted"
     assert restored.logbook == [{"generation": 0}]
 
 
-def test_ga_feature_selection_save_and_load_errors_are_reported(tmp_path, capsys):
+def test_ga_feature_selection_save_and_load_errors_are_reported(tmp_path, caplog):
     selector = GAFeatureSelectionCV(
         estimator=DecisionTreeClassifier(),
         cv=2,
@@ -147,12 +152,13 @@ def test_ga_feature_selection_save_and_load_errors_are_reported(tmp_path, capsys
         generations=2,
     )
 
-    selector.save(tmp_path / "missing" / "ga_feature_selection.pkl")
-    selector.load(tmp_path / "missing.pkl")
-    output = capsys.readouterr().out
+    with pytest.raises(OSError):
+        selector.save(tmp_path / "missing" / "ga_feature_selection.pkl")
+    with pytest.raises(FileNotFoundError):
+        selector.load(tmp_path / "missing.pkl")
 
-    assert "Error saving GAFeatureSelectionCV" in output
-    assert "Error loading GAFeatureSelectionCV" in output
+    assert "Error saving GAFeatureSelectionCV" in caplog.text
+    assert "Error loading GAFeatureSelectionCV" in caplog.text
 
 
 def test_ga_feature_selection_support_mask_requires_fit():
@@ -179,7 +185,10 @@ def _checkpoint_estimator():
     )
 
 
-def test_model_checkpoint_save_load_and_error_paths(tmp_path, capsys):
+def test_model_checkpoint_save_load_and_error_paths(tmp_path, caplog):
+    import logging
+
+    caplog.set_level(logging.INFO)
     estimator = _checkpoint_estimator()
     checkpoint_path = tmp_path / "checkpoint.pkl"
     checkpoint = ModelCheckpoint(checkpoint_path)
@@ -189,15 +198,15 @@ def test_model_checkpoint_save_load_and_error_paths(tmp_path, capsys):
 
     failing_checkpoint = ModelCheckpoint(tmp_path / "missing" / "checkpoint.pkl")
     failing_checkpoint.on_step(logbook=None, estimator=estimator)
-    missing_checkpoint = ModelCheckpoint(tmp_path / "missing.pkl").load()
-    output = capsys.readouterr().out
 
-    assert "Checkpoint saved to" in output
-    assert "Error saving checkpoint" in output
-    assert "Error loading checkpoint" in output
+    with pytest.raises(FileNotFoundError):
+        ModelCheckpoint(tmp_path / "missing.pkl").load()
+
+    assert "Checkpoint saved to" in caplog.text
+    assert "Error saving checkpoint" in caplog.text
+    assert "Error loading checkpoint" in caplog.text
     assert loaded_checkpoint["estimator_state"]["scoring"] == "accuracy"
     assert loaded_checkpoint["logbook"] is None
-    assert missing_checkpoint is None
 
 
 def test_model_checkpoint_estimator_state_keys(tmp_path):
@@ -263,7 +272,7 @@ def test_checkpoint_state_honors_serialization_contract(estimator):
     assert set(checkpoint).issubset(full), set(checkpoint) - set(full)
 
 
-def test_model_checkpoint_supports_feature_selection_estimator(tmp_path, capsys):
+def test_model_checkpoint_supports_feature_selection_estimator(tmp_path, caplog):
     """Checkpointing and resuming a GAFeatureSelectionCV must work (#297).
 
     GAFeatureSelectionCV has no ``param_grid`` attribute; the checkpoint state
@@ -285,8 +294,7 @@ def test_model_checkpoint_supports_feature_selection_estimator(tmp_path, capsys)
         )
 
     build().fit(X, y, callbacks=ModelCheckpoint(checkpoint_path=checkpoint_path))
-    output = capsys.readouterr().out
-    assert "Error saving checkpoint" not in output
+    assert "Error saving checkpoint" not in caplog.text
 
     loaded = ModelCheckpoint(checkpoint_path=checkpoint_path).load()
     assert "estimator_state" in loaded
