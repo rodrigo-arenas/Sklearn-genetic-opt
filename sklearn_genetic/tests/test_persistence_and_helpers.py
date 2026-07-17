@@ -574,3 +574,36 @@ def test_checkpoint_on_step_warns_on_oserror(tmp_path, caplog):
     checkpoint = ModelCheckpoint(bad_path)
     checkpoint.on_step(logbook=None, estimator=estimator)
     assert "Error saving checkpoint" in caplog.text
+
+
+def test_load_raises_on_oserror(tmp_path, caplog):
+    import logging
+    from unittest.mock import mock_open, patch
+
+    caplog.set_level(logging.ERROR)
+    search = GASearchCV(
+        estimator=DecisionTreeClassifier(),
+        param_grid={"max_depth": Integer(1, 2)},
+        cv=2,
+        scoring="accuracy",
+    )
+    good_file = tmp_path / "good.pkl"
+    search.save(good_file)
+    with patch("builtins.open", side_effect=PermissionError("denied")):
+        with pytest.raises(PermissionError, match="denied"):
+            search.load(good_file)
+    assert "Error loading GASearchCV" in caplog.text
+
+
+def test_checkpoint_load_raises_on_oserror(tmp_path, caplog):
+    import logging
+    from unittest.mock import patch
+
+    caplog.set_level(logging.ERROR)
+    good_file = tmp_path / "checkpoint.pkl"
+    good_file.write_bytes(b"\x80\x04\x95\x05\x00\x00\x00\x00\x00\x00\x00N.")
+    checkpoint = ModelCheckpoint(good_file)
+    with patch("builtins.open", side_effect=PermissionError("denied")):
+        with pytest.raises(PermissionError, match="denied"):
+            checkpoint.load()
+    assert "Error loading checkpoint from" in caplog.text
