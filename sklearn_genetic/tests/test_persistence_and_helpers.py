@@ -477,3 +477,100 @@ def test_checkpoint_resume_preserves_random_state(tmp_path):
     assert resumed_a.best_params_ == resumed_b.best_params_
     assert resumed_a.best_score_ == resumed_b.best_score_
     assert list(resumed_a.history["fitness"]) == list(resumed_b.history["fitness"])
+
+
+import pickle
+from unittest.mock import patch
+
+
+def test_save_raises_on_serialization_error(tmp_path, caplog):
+    import logging
+
+    caplog.set_level(logging.ERROR)
+    search = GASearchCV(
+        estimator=DecisionTreeClassifier(),
+        param_grid={"max_depth": Integer(1, 2)},
+        cv=2,
+        scoring="accuracy",
+    )
+    with patch("sklearn_genetic._base.pickle.dumps", side_effect=pickle.PicklingError("boom")):
+        with pytest.raises(pickle.PicklingError, match="boom"):
+            search.save(tmp_path / "test.pkl")
+    assert "Error serializing GASearchCV" in caplog.text
+
+
+def test_load_raises_on_corrupted_file(tmp_path, caplog):
+    import logging
+
+    caplog.set_level(logging.ERROR)
+    corrupted = tmp_path / "corrupted.pkl"
+    corrupted.write_bytes(b"not a valid pickle")
+    search = GASearchCV(
+        estimator=DecisionTreeClassifier(),
+        param_grid={"max_depth": Integer(1, 2)},
+        cv=2,
+        scoring="accuracy",
+    )
+    with pytest.raises(pickle.UnpicklingError):
+        search.load(corrupted)
+    assert "corrupted checkpoint" in caplog.text
+
+
+def test_load_raises_on_missing_key(tmp_path, caplog):
+    import logging
+
+    caplog.set_level(logging.ERROR)
+    incomplete = tmp_path / "incomplete.pkl"
+    incomplete_data = {"estimator_state": {"some_key": "val"}}
+    with open(incomplete, "wb") as f:
+        pickle.dump(incomplete_data, f)
+    search = GASearchCV(
+        estimator=DecisionTreeClassifier(),
+        param_grid={"max_depth": Integer(1, 2)},
+        cv=2,
+        scoring="accuracy",
+    )
+    with pytest.raises(KeyError):
+        search.load(incomplete)
+    assert "missing key in checkpoint" in caplog.text
+
+
+def test_checkpoint_load_raises_on_corrupted_file(tmp_path, caplog):
+    import logging
+
+    caplog.set_level(logging.ERROR)
+    corrupted = tmp_path / "corrupted_checkpoint.pkl"
+    corrupted.write_bytes(b"not a valid pickle")
+    checkpoint = ModelCheckpoint(corrupted)
+    with pytest.raises(pickle.UnpicklingError):
+        checkpoint.load()
+    assert "corrupted file" in caplog.text
+
+
+def test_checkpoint_load_raises_on_oserror(tmp_path, caplog):
+    import logging
+
+    caplog.set_level(logging.ERROR)
+    inaccessible = tmp_path / "no_such_dir" / "checkpoint.pkl"
+    checkpoint = ModelCheckpoint(inaccessible)
+    with pytest.raises(FileNotFoundError):
+        checkpoint.load()
+    assert "file not found" in caplog.text
+
+
+def test_checkpoint_on_step_warns_on_oserror(tmp_path, caplog):
+    import logging
+
+    caplog.set_level(logging.WARNING)
+    estimator = GASearchCV(
+        estimator=DecisionTreeClassifier(),
+        param_grid={"max_depth": Integer(1, 2), "min_samples_split": Integer(2, 5)},
+        cv=2,
+        scoring="accuracy",
+        population_size=4,
+        generations=2,
+    )
+    bad_path = tmp_path / "missing_dir" / "checkpoint.pkl"
+    checkpoint = ModelCheckpoint(bad_path)
+    checkpoint.on_step(logbook=None, estimator=estimator)
+    assert "Error saving checkpoint" in caplog.text
