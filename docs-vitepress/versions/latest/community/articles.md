@@ -42,5 +42,5 @@ promotional.
 5. [From Scratch to Streamlined: Comparing My Hand-Built Genetic Algorithm with sklearn-genetic](https://mydatascienceacademy.com/2026/03/01/from-scratch-to-streamlined-comparing-my-hand-built-genetic-algorithm-with-sklearn-genetic/)  
    William on William's Data Science Blog. Walks through building a genetic feature-selection algorithm from scratch, then shows how `sklearn-genetic-opt` replaces over a hundred lines of custom code with a single library call.
 
-6. **Hyperparameter Tuning with GASearchCV on a Real Dataset** — by [Saadgi Puniwala](https://github.com/Saadgipuniwala), published on [dev.to](https://dev.to/saadgipuniwala/hyperparameter-tuning-with-gasearchcv-on-a-real-dataset-1jg9). A hands-on comparison of GASearchCV vs GridSearchCV on the UCI Student Performance dataset, including fitness evolution and search-space visualizations.
-7. 
+6. [Hyperparameter Tuning with GASearchCV on a Real Dataset](https://dev.to/saadgipuniwala/hyperparameter-tuning-with-gasearchcv-on-a-real-dataset-1jg9)  
+   Saadgi Puniwala on dev.to. A hands-on comparison of `GASearchCV` against `GridSearchCV` on the UCI Student Performance dataset, including fitness evolution and search-space visualizations.
