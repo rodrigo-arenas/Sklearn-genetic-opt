@@ -111,3 +111,68 @@ def test_root_doc_rst_image_directive_broken_same_repo_blob_is_reported(tmp_path
     monkeypatch.setattr(check_links, "VERSION_DIRS", [])
     monkeypatch.setattr(check_links, "ROOT_DOCS", [root_doc])
     assert check_links.check() == [(root_doc, target)]
+
+
+def test_root_doc_rst_image_directive_target_option_local_link_passes(tmp_path, monkeypatch):
+    logo = tmp_path / "docs-vitepress" / "public" / "logo.png"
+    logo.parent.mkdir(parents=True)
+    logo.write_text("x", encoding="utf-8")
+    guide_index = tmp_path / "docs-vitepress" / "versions" / "latest" / "guide" / "index.md"
+    guide_index.parent.mkdir(parents=True)
+    guide_index.write_text("x", encoding="utf-8")
+    root_doc = tmp_path / "README.rst"
+    root_doc.write_text(
+        ".. image:: docs-vitepress/public/logo.png\n"
+        "   :target: docs-vitepress/versions/latest/guide/\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(check_links, "ROOT", tmp_path)
+    monkeypatch.setattr(check_links, "VERSION_DIRS", [])
+    monkeypatch.setattr(check_links, "ROOT_DOCS", [root_doc])
+    assert check_links.check() == []
+
+
+def test_root_doc_rst_image_directive_target_option_missing_local_link_is_reported(
+    tmp_path, monkeypatch
+):
+    logo = tmp_path / "docs-vitepress" / "public" / "logo.png"
+    logo.parent.mkdir(parents=True)
+    logo.write_text("x", encoding="utf-8")
+    root_doc = tmp_path / "README.rst"
+    root_doc.write_text(
+        ".. image:: docs-vitepress/public/logo.png\n"
+        "   :target: docs-vitepress/versions/latest/missing/\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(check_links, "ROOT", tmp_path)
+    monkeypatch.setattr(check_links, "VERSION_DIRS", [])
+    monkeypatch.setattr(check_links, "ROOT_DOCS", [root_doc])
+    assert check_links.check() == [(root_doc, "docs-vitepress/versions/latest/missing/")]
+
+
+def test_root_doc_rst_image_directive_target_option_external_url_is_skipped(tmp_path, monkeypatch):
+    logo = tmp_path / "docs-vitepress" / "public" / "logo.png"
+    logo.parent.mkdir(parents=True)
+    logo.write_text("x", encoding="utf-8")
+    root_doc = tmp_path / "README.rst"
+    root_doc.write_text(
+        ".. image:: docs-vitepress/public/logo.png\n" "   :target: https://example.com/missing\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(check_links, "ROOT", tmp_path)
+    monkeypatch.setattr(check_links, "VERSION_DIRS", [])
+    monkeypatch.setattr(check_links, "ROOT_DOCS", [root_doc])
+    assert check_links.check() == []
+
+
+def test_root_doc_rst_target_option_prose_without_directive_is_ignored(tmp_path, monkeypatch):
+    root_doc = tmp_path / "README.rst"
+    root_doc.write_text(
+        "See the config key :target: some/missing/path mentioned in prose here,\n"
+        "not inside an image or figure directive.\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(check_links, "ROOT", tmp_path)
+    monkeypatch.setattr(check_links, "VERSION_DIRS", [])
+    monkeypatch.setattr(check_links, "ROOT_DOCS", [root_doc])
+    assert check_links.check() == []
