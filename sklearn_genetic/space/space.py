@@ -187,7 +187,6 @@ class Categorical(BaseDimension):
         self.choices = choices
         self.distribution = distribution
         self.random_state = random_state
-        random.seed(random_state)
         self.rng = (
             np.random.default_rng(self.random_state) if self.random_state is not None else None
         )
