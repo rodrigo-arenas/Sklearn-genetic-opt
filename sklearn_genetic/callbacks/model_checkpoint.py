@@ -38,6 +38,13 @@ class ModelCheckpoint(BaseCallback):
                 "fit_stats_": deepcopy(getattr(estimator, "fit_stats_", None)),
                 "candidate_logbook": deepcopy(getattr(estimator, "logbook", None)),
             }
+            crossover_adapter = getattr(estimator, "crossover_adapter", None)
+            mutation_adapter = getattr(estimator, "mutation_adapter", None)
+            if crossover_adapter is not None and mutation_adapter is not None:
+                runtime_state["adapter_state"] = {
+                    "crossover": crossover_adapter.state_dict(),
+                    "mutation": mutation_adapter.state_dict(),
+                }
             checkpoint_data = {
                 "estimator_state": estimator_state,
                 "logbook": deepcopy(logbook),
