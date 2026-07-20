@@ -547,7 +547,7 @@ def test_checkpoint_load_raises_on_corrupted_file(tmp_path, caplog):
     assert "corrupted file" in caplog.text
 
 
-def test_checkpoint_load_raises_on_oserror(tmp_path, caplog):
+def test_checkpoint_load_raises_on_file_not_found(tmp_path, caplog):
     import logging
 
     caplog.set_level(logging.ERROR)
@@ -573,6 +573,29 @@ def test_checkpoint_on_step_warns_on_oserror(tmp_path, caplog):
     bad_path = tmp_path / "missing_dir" / "checkpoint.pkl"
     checkpoint = ModelCheckpoint(bad_path)
     checkpoint.on_step(logbook=None, estimator=estimator)
+    assert "Error saving checkpoint" in caplog.text
+
+
+def test_checkpoint_on_step_warns_on_non_serializable_state(tmp_path, caplog):
+    import logging
+    import pickle
+    from unittest.mock import patch
+
+    caplog.set_level(logging.WARNING)
+    estimator = GASearchCV(
+        estimator=DecisionTreeClassifier(),
+        param_grid={"max_depth": Integer(1, 2), "min_samples_split": Integer(2, 5)},
+        cv=2,
+        scoring="accuracy",
+        population_size=4,
+        generations=2,
+    )
+    good_path = tmp_path / "checkpoint.pkl"
+    checkpoint = ModelCheckpoint(good_path)
+    with patch.object(
+        pickle, "dump", side_effect=AttributeError("cannot pickle lambda")
+    ):
+        checkpoint.on_step(logbook=None, estimator=estimator)
     assert "Error saving checkpoint" in caplog.text
 
 

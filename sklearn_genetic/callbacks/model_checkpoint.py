@@ -49,7 +49,7 @@ class ModelCheckpoint(BaseCallback):
         try:
             with open(self.checkpoint_path, "wb") as f:
                 pickle.dump(checkpoint_data, f)
-        except (OSError, pickle.PicklingError) as e:
+        except (OSError, pickle.PicklingError, AttributeError, TypeError) as e:
             logger.warning("Error saving checkpoint to %s: %s", self.checkpoint_path, e)
             return
 
