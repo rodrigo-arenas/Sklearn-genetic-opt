@@ -469,3 +469,100 @@ def test_checkpoint_resume_preserves_random_state(tmp_path):
     assert resumed_a.best_params_ == resumed_b.best_params_
     assert resumed_a.best_score_ == resumed_b.best_score_
     assert list(resumed_a.history["fitness"]) == list(resumed_b.history["fitness"])
+
+
+def test_checkpoint_resume_restores_adapter_state(tmp_path):
+    """Adapter step counters must survive checkpoint resume.
+
+    The crossover/mutation adapters are stateful: they track ``current_step``
+    and ``current_value`` which control the probability schedule across
+    generations. Before this fix the adapters were not included in the
+    checkpoint's ``runtime_state``, so a resumed run restarted from step 0
+    instead of continuing from where the previous run left off.
+    """
+    from ..schedules.schedulers import ExponentialAdapter
+
+    X, y = load_iris(return_X_y=True)
+    checkpoint_path = str(tmp_path / "adapter_checkpoint.pkl")
+
+    def build():
+        return GASearchCV(
+            estimator=DecisionTreeClassifier(random_state=0),
+            param_grid={"max_depth": Integer(1, 3)},
+            cv=2,
+            scoring="accuracy",
+            population_size=4,
+            generations=3,
+            crossover_probability=ExponentialAdapter(0.8, 0.2, 0.1),
+            mutation_probability=ExponentialAdapter(0.6, 0.1, 0.1),
+        )
+
+    first = build()
+    first.fit(X, y, callbacks=ModelCheckpoint(checkpoint_path=checkpoint_path))
+
+    cx_step_after_first = first.crossover_adapter.current_step
+    mut_step_after_first = first.mutation_adapter.current_step
+    cx_value_after_first = first.crossover_adapter.current_value
+    mut_value_after_first = first.mutation_adapter.current_value
+    assert cx_step_after_first > 0
+    assert mut_step_after_first > 0
+
+    resumed = build()
+    resumed.fit(X, y, callbacks=ModelCheckpoint(checkpoint_path=checkpoint_path))
+
+    # After resume, the adapter must continue from the first run's final
+    # state, not restart from step 0. With 3 more generations the final
+    # step count should be first_run_steps + 3.
+    assert resumed.crossover_adapter.current_step == cx_step_after_first + 3
+    assert resumed.mutation_adapter.current_step == mut_step_after_first + 3
+    # Values must continue decaying, not restart from initial values.
+    assert resumed.crossover_adapter.current_value < cx_value_after_first
+    assert resumed.mutation_adapter.current_value < mut_value_after_first
+
+
+def test_checkpoint_resume_restores_adapter_state_feature_selection(tmp_path):
+    """GAFeatureSelectionCV must also restore adapter state on resume."""
+    from ..schedules.schedulers import InverseAdapter
+
+    X, y = load_iris(return_X_y=True)
+    checkpoint_path = str(tmp_path / "fs_adapter_checkpoint.pkl")
+
+    def build():
+        return GAFeatureSelectionCV(
+            estimator=DecisionTreeClassifier(random_state=0),
+            cv=2,
+            scoring="accuracy",
+            population_size=4,
+            generations=3,
+            crossover_probability=InverseAdapter(0.8, 0.2, 0.1),
+            mutation_probability=InverseAdapter(0.6, 0.1, 0.1),
+        )
+
+    first = build()
+    first.fit(X, y, callbacks=ModelCheckpoint(checkpoint_path=checkpoint_path))
+
+    cx_step_after_first = first.crossover_adapter.current_step
+    mut_step_after_first = first.mutation_adapter.current_step
+
+    resumed = build()
+    resumed.fit(X, y, callbacks=ModelCheckpoint(checkpoint_path=checkpoint_path))
+
+    assert resumed.crossover_adapter.current_step == cx_step_after_first + 3
+    assert resumed.mutation_adapter.current_step == mut_step_after_first + 3
+
+
+def test_adapter_state_dict_round_trip():
+    """BaseAdapter.state_dict/load_state_dict preserve mutable state."""
+    from ..schedules.schedulers import ExponentialAdapter, InverseAdapter, PotentialAdapter
+
+    for cls in (ExponentialAdapter, InverseAdapter, PotentialAdapter):
+        adapter = cls(initial_value=0.8, end_value=0.2, adaptive_rate=0.1)
+        for _ in range(5):
+            adapter.step()
+        state = adapter.state_dict()
+
+        fresh = cls(initial_value=0.8, end_value=0.2, adaptive_rate=0.1)
+        assert fresh.current_step == 0
+        fresh.load_state_dict(state)
+        assert fresh.current_step == adapter.current_step
+        assert fresh.current_value == pytest.approx(adapter.current_value)

@@ -1085,6 +1085,7 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         restored_logbook = None
         restored_fit_stats = None
         restored_generation_log = None
+        restored_adapter_state = None
 
         # Load state if a checkpoint exists
         for callback in self.callbacks:
@@ -1116,6 +1117,7 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
                         # numbering needs to continue from -- see
                         # ``_seed_logbook`` in ``algorithms.py``.
                         restored_generation_log = checkpoint_data.get("logbook")
+                        restored_adapter_state = runtime_state.get("adapter_state")
                         checkpoint_loaded = True
                     break
 
@@ -1125,7 +1127,13 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         # pre-resume value instead (see #299).
         _seed_global_rngs(self.random_state)
 
-        if not checkpoint_loaded:
+        if checkpoint_loaded and restored_adapter_state is not None:
+            # Restore the crossover/mutation adapter step counters so the
+            # schedule continues from where the previous run left off
+            # instead of restarting from step 0 (see adapter checkpoint).
+            self.crossover_adapter.load_state_dict(restored_adapter_state["crossover"])
+            self.mutation_adapter.load_state_dict(restored_adapter_state["mutation"])
+        elif not checkpoint_loaded:
             _reset_adapters(self)
 
         # Preserve cumulative counters across a resume instead of zeroing them,
@@ -2048,6 +2056,7 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         restored_logbook = None
         restored_fit_stats = None
         restored_generation_log = None
+        restored_adapter_state = None
 
         # Load state if a checkpoint exists
         for callback in self.callbacks:
@@ -2079,6 +2088,7 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
                         # numbering needs to continue from -- see
                         # ``_seed_logbook`` in ``algorithms.py``.
                         restored_generation_log = checkpoint_data.get("logbook")
+                        restored_adapter_state = runtime_state.get("adapter_state")
                         checkpoint_loaded = True
                     break
 
@@ -2088,7 +2098,13 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         # pre-resume value instead (see #299).
         _seed_global_rngs(self.random_state)
 
-        if not checkpoint_loaded:
+        if checkpoint_loaded and restored_adapter_state is not None:
+            # Restore the crossover/mutation adapter step counters so the
+            # schedule continues from where the previous run left off
+            # instead of restarting from step 0 (see adapter checkpoint).
+            self.crossover_adapter.load_state_dict(restored_adapter_state["crossover"])
+            self.mutation_adapter.load_state_dict(restored_adapter_state["mutation"])
+        elif not checkpoint_loaded:
             _reset_adapters(self)
 
         # Preserve cumulative counters across a resume instead of zeroing them,
