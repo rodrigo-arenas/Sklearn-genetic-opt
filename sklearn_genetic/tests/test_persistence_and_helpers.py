@@ -592,9 +592,7 @@ def test_checkpoint_on_step_warns_on_non_serializable_state(tmp_path, caplog):
     )
     good_path = tmp_path / "checkpoint.pkl"
     checkpoint = ModelCheckpoint(good_path)
-    with patch.object(
-        pickle, "dump", side_effect=AttributeError("cannot pickle lambda")
-    ):
+    with patch.object(pickle, "dump", side_effect=AttributeError("cannot pickle lambda")):
         checkpoint.on_step(logbook=None, estimator=estimator)
     assert "Error saving checkpoint" in caplog.text
 
