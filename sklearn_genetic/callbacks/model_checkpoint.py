@@ -1,7 +1,11 @@
+import logging
 import pickle
+
 from .base import BaseCallback
 from .loggers import LogbookSaver
 from copy import deepcopy
+
+logger = logging.getLogger(__name__)
 
 
 class ModelCheckpoint(BaseCallback):
@@ -10,11 +14,11 @@ class ModelCheckpoint(BaseCallback):
         self.dump_options = dump_options
 
     def on_step(self, record=None, logbook=None, estimator=None):
-        try:
-            if logbook is not None and len(logbook) > 0:
-                logbook_saver = LogbookSaver(self.checkpoint_path, **self.dump_options)  # noqa
-                logbook_saver.on_step(record, logbook, estimator)
+        if logbook is not None and len(logbook) > 0:
+            logbook_saver = LogbookSaver(self.checkpoint_path, **self.dump_options)
+            logbook_saver.on_step(record, logbook, estimator)
 
+        try:
             estimator_state = estimator._checkpoint_state()
             # Runtime state is kept separate from ``estimator_state`` so the
             # latter stays constructor-compatible (it is consumed as
@@ -52,17 +56,25 @@ class ModelCheckpoint(BaseCallback):
             }
             with open(self.checkpoint_path, "wb") as f:
                 pickle.dump(checkpoint_data, f)
-                print(f"Checkpoint saved to {self.checkpoint_path}")
+        except (OSError, pickle.PicklingError, AttributeError, TypeError) as e:
+            logger.warning("Error saving checkpoint to %s: %s", self.checkpoint_path, e)
+            return
 
-        except Exception as e:
-            print(f"Error saving checkpoint: {e}")
+        logger.info("Checkpoint saved to %s", self.checkpoint_path)
 
     def load(self):
         """Load the model state from the checkpoint file."""
         try:
             with open(self.checkpoint_path, "rb") as f:
                 checkpoint_data = pickle.load(f)
-                return checkpoint_data
-        except Exception as e:
-            print(f"Error loading checkpoint: {e}")
-            return None
+        except FileNotFoundError:
+            logger.error("Error loading checkpoint: file not found: %s", self.checkpoint_path)
+            raise
+        except (pickle.UnpicklingError, EOFError, ValueError) as e:
+            logger.error("Error loading checkpoint: corrupted file: %s", e)
+            raise
+        except OSError as e:
+            logger.error("Error loading checkpoint from %s: %s", self.checkpoint_path, e)
+            raise
+
+        return checkpoint_data

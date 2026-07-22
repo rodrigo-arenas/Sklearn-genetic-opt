@@ -179,7 +179,10 @@ def _checkpoint_estimator():
     )
 
 
-def test_model_checkpoint_save_load_and_error_paths(tmp_path, capsys):
+def test_model_checkpoint_save_load_and_error_paths(tmp_path, caplog):
+    import logging
+
+    caplog.set_level(logging.DEBUG)
     estimator = _checkpoint_estimator()
     checkpoint_path = tmp_path / "checkpoint.pkl"
     checkpoint = ModelCheckpoint(checkpoint_path)
@@ -189,15 +192,15 @@ def test_model_checkpoint_save_load_and_error_paths(tmp_path, capsys):
 
     failing_checkpoint = ModelCheckpoint(tmp_path / "missing" / "checkpoint.pkl")
     failing_checkpoint.on_step(logbook=None, estimator=estimator)
-    missing_checkpoint = ModelCheckpoint(tmp_path / "missing.pkl").load()
-    output = capsys.readouterr().out
 
-    assert "Checkpoint saved to" in output
-    assert "Error saving checkpoint" in output
-    assert "Error loading checkpoint" in output
+    with pytest.raises(FileNotFoundError):
+        ModelCheckpoint(tmp_path / "missing.pkl").load()
+
+    assert "Checkpoint saved to" in caplog.text
+    assert "Error saving checkpoint" in caplog.text
+    assert "Error loading checkpoint" in caplog.text
     assert loaded_checkpoint["estimator_state"]["scoring"] == "accuracy"
     assert loaded_checkpoint["logbook"] is None
-    assert missing_checkpoint is None
 
 
 def test_model_checkpoint_estimator_state_keys(tmp_path):
@@ -263,7 +266,7 @@ def test_checkpoint_state_honors_serialization_contract(estimator):
     assert set(checkpoint).issubset(full), set(checkpoint) - set(full)
 
 
-def test_model_checkpoint_supports_feature_selection_estimator(tmp_path, capsys):
+def test_model_checkpoint_supports_feature_selection_estimator(tmp_path, caplog):
     """Checkpointing and resuming a GAFeatureSelectionCV must work (#297).
 
     GAFeatureSelectionCV has no ``param_grid`` attribute; the checkpoint state
@@ -272,6 +275,9 @@ def test_model_checkpoint_supports_feature_selection_estimator(tmp_path, capsys)
     saved. ``param_grid`` is now only included when the estimator defines it, so
     the saved state is both correct and usable by the resume path.
     """
+    import logging
+
+    caplog.set_level(logging.DEBUG)
     X, y = load_iris(return_X_y=True)
     checkpoint_path = str(tmp_path / "fs_checkpoint.pkl")
 
@@ -285,8 +291,7 @@ def test_model_checkpoint_supports_feature_selection_estimator(tmp_path, capsys)
         )
 
     build().fit(X, y, callbacks=ModelCheckpoint(checkpoint_path=checkpoint_path))
-    output = capsys.readouterr().out
-    assert "Error saving checkpoint" not in output
+    assert "Error saving checkpoint" not in caplog.text
 
     loaded = ModelCheckpoint(checkpoint_path=checkpoint_path).load()
     assert "estimator_state" in loaded
