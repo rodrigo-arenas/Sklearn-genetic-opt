@@ -17,7 +17,7 @@ def history_record(history, index):
 
 
 class GeneticEstimatorMixin:
-    _volatile_pickle_attrs = {"toolbox", "_stats", "_pop", "_hof", "hof"}
+    _volatile_pickle_attrs = {"toolbox", "_stats", "_pop", "_hof"}
 
     # Contract for the two serialization paths (see #297):
     #
@@ -58,12 +58,21 @@ class GeneticEstimatorMixin:
         "sharing_alpha": 1.0,
     }
 
-    def _serializable_state(self):
+    def __getstate__(self):
+        """Exclude unpicklable DEAP internals from the serialized state."""
         return {
             key: value
             for key, value in self.__dict__.items()
             if key not in self._volatile_pickle_attrs
         }
+
+    def __setstate__(self, state):
+        """Restore instance state, leaving DEAP attrs unset (rebuilt on fit)."""
+        self.__dict__.update(state)
+
+    def _serializable_state(self):
+        """Backward-compatible accessor for save/load internals."""
+        return self.__getstate__()
 
     def _checkpoint_state(self):
         """Constructor-compatible subset of the state used to resume a search.
@@ -80,29 +89,42 @@ class GeneticEstimatorMixin:
         return state
 
     def save(self, filepath):
-        """Save the current state of the estimator instance to a file."""
+        """Save the current state of the estimator instance to a file.
+
+        Uses ``__getstate__`` to exclude unpicklable DEAP internals.
+        The saved file is a pickled ``dict`` with keys ``estimator_state``
+        and ``logbook`` for backward compatibility with ``load()``.
+        """
         class_name = self.__class__.__name__
         try:
-            checkpoint_data = {"estimator_state": self._serializable_state(), "logbook": None}
+            checkpoint_data = {"estimator_state": self.__getstate__(), "logbook": None}
             if hasattr(self, "logbook"):
                 checkpoint_data["logbook"] = self.logbook
 
-            serialized_checkpoint = pickle.dumps(checkpoint_data)
             with open(filepath, "wb") as f:
-                f.write(serialized_checkpoint)
+                pickle.dump(checkpoint_data, f)
             print(f"{class_name} model successfully saved to {filepath}")
         except Exception as e:
             print(f"Error saving {class_name}: {e}")
 
     def load(self, filepath):
-        """Load an estimator instance from a file."""
+        """Load an estimator instance from a file.
+
+        Restores state via ``__setstate__``.  Accepts both the current format
+        (pickled ``dict`` with ``estimator_state`` key) and a raw pickled
+        instance produced by ``pickle.dumps(self)``.
+        """
         class_name = self.__class__.__name__
         try:
             with open(filepath, "rb") as f:
                 checkpoint_data = pickle.load(f)
-                for key, value in checkpoint_data["estimator_state"].items():
-                    setattr(self, key, value)
+
+            if isinstance(checkpoint_data, dict) and "estimator_state" in checkpoint_data:
+                self.__setstate__(checkpoint_data["estimator_state"])
                 self.logbook = checkpoint_data["logbook"]
+            else:
+                self.__setstate__(checkpoint_data)
+
             print(f"{class_name} model successfully loaded from {filepath}")
         except Exception as e:
             print(f"Error loading {class_name}: {e}")
