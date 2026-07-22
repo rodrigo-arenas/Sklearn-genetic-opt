@@ -1,4 +1,5 @@
 import random
+import threading
 import time
 import warnings
 
@@ -403,6 +404,15 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         duplicate candidates, skipped invalid candidates, and population-level
         parallel/serial batch counts.
     """
+
+    _creator_lock = threading.Lock()
+
+    @staticmethod
+    def _cleanup_creator():
+        """Remove DEAP creator globals so stale classes don't leak between fits."""
+        for name in ("FitnessMax", "Individual"):
+            if hasattr(creator, name):
+                delattr(creator, name)
 
     def __init__(
         self,
@@ -1197,77 +1207,82 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         if restored_logbook is not None:
             self.logbook = restored_logbook
 
-        # Optimization routine from the selected evolutionary algorithm
-        pop, log, n_gen = self._select_algorithm(pop=self._pop, stats=self._stats, hof=self._hof)
+        with self._creator_lock:
+            try:
+                # Optimization routine from the selected evolutionary algorithm
+                pop, log, n_gen = self._select_algorithm(
+                    pop=self._pop, stats=self._stats, hof=self._hof
+                )
 
-        # Update the _n_iterations value as the algorithm could stop earlier due a callback
-        self._n_iterations = n_gen
+                # Update the _n_iterations value as the algorithm could stop earlier due a callback
+                self._n_iterations = n_gen
 
-        self.cv_results_ = create_gasearch_cv_results_(
-            logbook=self.logbook,
-            space=self.space,
-            return_train_score=self.return_train_score,
-            metrics=self.metrics_list,
-        )
+                self.cv_results_ = create_gasearch_cv_results_(
+                    logbook=self.logbook,
+                    space=self.space,
+                    return_train_score=self.return_train_score,
+                    metrics=self.metrics_list,
+                )
 
-        self.history = {
-            "gen": log.select("gen"),
-            "fitness": log.select("fitness"),
-            "fitness_std": log.select("fitness_std"),
-            "fitness_best": log.select("fitness_best"),
-            "fitness_max": log.select("fitness_max"),
-            "fitness_min": log.select("fitness_min"),
-            "population_size": log.select("population_size"),
-            "unique_individuals": log.select("unique_individuals"),
-            "unique_individual_ratio": log.select("unique_individual_ratio"),
-            "genotype_diversity": log.select("genotype_diversity"),
-            "fitness_improvement": log.select("fitness_improvement"),
-            "fitness_improved": log.select("fitness_improved"),
-            "stagnation_generations": log.select("stagnation_generations"),
-            "best_generation": log.select("best_generation"),
-            "mutation_probability": log.select("mutation_probability"),
-            "selection_pressure": log.select("selection_pressure"),
-            "diversity_control_triggered": log.select("diversity_control_triggered"),
-            "random_immigrants": log.select("random_immigrants"),
-            "duplicate_replacements": log.select("duplicate_replacements"),
-            "local_refinements": log.select("local_refinements"),
-            "fitness_sharing_applied": log.select("fitness_sharing_applied"),
-            "mean_niche_count": log.select("mean_niche_count"),
-            "max_niche_count": log.select("max_niche_count"),
-        }
+                self.history = {
+                    "gen": log.select("gen"),
+                    "fitness": log.select("fitness"),
+                    "fitness_std": log.select("fitness_std"),
+                    "fitness_best": log.select("fitness_best"),
+                    "fitness_max": log.select("fitness_max"),
+                    "fitness_min": log.select("fitness_min"),
+                    "population_size": log.select("population_size"),
+                    "unique_individuals": log.select("unique_individuals"),
+                    "unique_individual_ratio": log.select("unique_individual_ratio"),
+                    "genotype_diversity": log.select("genotype_diversity"),
+                    "fitness_improvement": log.select("fitness_improvement"),
+                    "fitness_improved": log.select("fitness_improved"),
+                    "stagnation_generations": log.select("stagnation_generations"),
+                    "best_generation": log.select("best_generation"),
+                    "mutation_probability": log.select("mutation_probability"),
+                    "selection_pressure": log.select("selection_pressure"),
+                    "diversity_control_triggered": log.select("diversity_control_triggered"),
+                    "random_immigrants": log.select("random_immigrants"),
+                    "duplicate_replacements": log.select("duplicate_replacements"),
+                    "local_refinements": log.select("local_refinements"),
+                    "fitness_sharing_applied": log.select("fitness_sharing_applied"),
+                    "mean_niche_count": log.select("mean_niche_count"),
+                    "max_niche_count": log.select("max_niche_count"),
+                }
 
-        # Imitate the logic of scikit-learn refit parameter
-        if self.refit:
-            self.best_index_, self.best_score_, self.best_params_ = self._select_final_candidate()
+                # Imitate the logic of scikit-learn refit parameter
+                if self.refit:
+                    self.best_index_, self.best_score_, self.best_params_ = (
+                        self._select_final_candidate()
+                    )
 
-            self.estimator.set_params(**self.best_params_)
+                    self.estimator.set_params(**self.best_params_)
 
-            refit_start_time = time.time()
-            self.estimator.fit(
-                self.X_,
-                self.y_,
-                **getattr(self, "_fit_params", {}),
-            )
-            refit_end_time = time.time()
-            self.refit_time_ = refit_end_time - refit_start_time
+                    refit_start_time = time.time()
+                    self.estimator.fit(
+                        self.X_,
+                        self.y_,
+                        **getattr(self, "_fit_params", {}),
+                    )
+                    refit_end_time = time.time()
+                    self.refit_time_ = refit_end_time - refit_start_time
 
-            self.best_estimator_ = self.estimator
-            self.estimator_ = self.best_estimator_
+                    self.best_estimator_ = self.estimator
+                    self.estimator_ = self.best_estimator_
 
-            # hof keeps the best params according to the fitness value
-            # To be consistent with self.best_estimator_, if more than 1 model gets the
-            # same score, it could lead to differences between hof and self.best_estimator_
-            self._hof.remove(0)
-            self._hof.items.insert(0, list(self.best_params_.values()))
-            self._hof.keys.insert(0, self.best_score_)
+                    # hof keeps the best params according to the fitness value
+                    # To be consistent with self.best_estimator_, if more than 1 model gets the
+                    # same score, it could lead to differences between hof and self.best_estimator_
+                    self._hof.remove(0)
+                    self._hof.items.insert(0, list(self.best_params_.values()))
+                    self._hof.keys.insert(0, self.best_score_)
 
-        self.hof = {
-            k: {key: self._hof[k][n] for n, key in enumerate(self.space.parameters)}
-            for k in range(len(self._hof))
-        }
-
-        del creator.FitnessMax
-        del creator.Individual
+                self.hof = {
+                    k: {key: self._hof[k][n] for n, key in enumerate(self.space.parameters)}
+                    for k in range(len(self._hof))
+                }
+            finally:
+                self._cleanup_creator()
 
         return self
 
@@ -1532,6 +1547,15 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         duplicate candidates, skipped invalid candidates, and population-level
         parallel/serial batch counts.
     """
+
+    _creator_lock = threading.Lock()
+
+    @staticmethod
+    def _cleanup_creator():
+        """Remove DEAP creator globals so stale classes don't leak between fits."""
+        for name in ("FitnessMax", "Individual"):
+            if hasattr(creator, name):
+                delattr(creator, name)
 
     def __init__(
         self,
@@ -2167,66 +2191,69 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         if restored_logbook is not None:
             self.logbook = restored_logbook
 
-        # Optimization routine from the selected evolutionary algorithm
-        pop, log, n_gen = self._select_algorithm(pop=self._pop, stats=self._stats, hof=self._hof)
+        with self._creator_lock:
+            try:
+                # Optimization routine from the selected evolutionary algorithm
+                pop, log, n_gen = self._select_algorithm(
+                    pop=self._pop, stats=self._stats, hof=self._hof
+                )
 
-        # Update the _n_iterations value as the algorithm could stop earlier due a callback
-        self._n_iterations = n_gen
+                # Update the _n_iterations value as the algorithm could stop earlier due a callback
+                self._n_iterations = n_gen
 
-        self.best_features_ = np.array(self._hof[0], dtype=bool)
-        self.support_ = self.best_features_
+                self.best_features_ = np.array(self._hof[0], dtype=bool)
+                self.support_ = self.best_features_
 
-        self.cv_results_ = create_feature_selection_cv_results_(
-            logbook=self.logbook,
-            return_train_score=self.return_train_score,
-            metrics=self.metrics_list,
-        )
+                self.cv_results_ = create_feature_selection_cv_results_(
+                    logbook=self.logbook,
+                    return_train_score=self.return_train_score,
+                    metrics=self.metrics_list,
+                )
 
-        self.history = {
-            "gen": log.select("gen"),
-            "fitness": log.select("fitness"),
-            "fitness_std": log.select("fitness_std"),
-            "fitness_best": log.select("fitness_best"),
-            "fitness_max": log.select("fitness_max"),
-            "fitness_min": log.select("fitness_min"),
-            "population_size": log.select("population_size"),
-            "unique_individuals": log.select("unique_individuals"),
-            "unique_individual_ratio": log.select("unique_individual_ratio"),
-            "genotype_diversity": log.select("genotype_diversity"),
-            "fitness_improvement": log.select("fitness_improvement"),
-            "fitness_improved": log.select("fitness_improved"),
-            "stagnation_generations": log.select("stagnation_generations"),
-            "best_generation": log.select("best_generation"),
-            "mutation_probability": log.select("mutation_probability"),
-            "selection_pressure": log.select("selection_pressure"),
-            "diversity_control_triggered": log.select("diversity_control_triggered"),
-            "random_immigrants": log.select("random_immigrants"),
-            "duplicate_replacements": log.select("duplicate_replacements"),
-            "local_refinements": log.select("local_refinements"),
-            "fitness_sharing_applied": log.select("fitness_sharing_applied"),
-            "mean_niche_count": log.select("mean_niche_count"),
-            "max_niche_count": log.select("max_niche_count"),
-        }
+                self.history = {
+                    "gen": log.select("gen"),
+                    "fitness": log.select("fitness"),
+                    "fitness_std": log.select("fitness_std"),
+                    "fitness_best": log.select("fitness_best"),
+                    "fitness_max": log.select("fitness_max"),
+                    "fitness_min": log.select("fitness_min"),
+                    "population_size": log.select("population_size"),
+                    "unique_individuals": log.select("unique_individuals"),
+                    "unique_individual_ratio": log.select("unique_individual_ratio"),
+                    "genotype_diversity": log.select("genotype_diversity"),
+                    "fitness_improvement": log.select("fitness_improvement"),
+                    "fitness_improved": log.select("fitness_improved"),
+                    "stagnation_generations": log.select("stagnation_generations"),
+                    "best_generation": log.select("best_generation"),
+                    "mutation_probability": log.select("mutation_probability"),
+                    "selection_pressure": log.select("selection_pressure"),
+                    "diversity_control_triggered": log.select("diversity_control_triggered"),
+                    "random_immigrants": log.select("random_immigrants"),
+                    "duplicate_replacements": log.select("duplicate_replacements"),
+                    "local_refinements": log.select("local_refinements"),
+                    "fitness_sharing_applied": log.select("fitness_sharing_applied"),
+                    "mean_niche_count": log.select("mean_niche_count"),
+                    "max_niche_count": log.select("max_niche_count"),
+                }
 
-        if self.refit:
-            bool_individual = np.array(self.best_features_, dtype=bool)
+                if self.refit:
+                    bool_individual = np.array(self.best_features_, dtype=bool)
 
-            refit_start_time = time.time()
-            self.estimator.fit(
-                self.X_[:, bool_individual],
-                self.y_,
-                **getattr(self, "_fit_params", {}),
-            )
-            refit_end_time = time.time()
-            self.refit_time_ = refit_end_time - refit_start_time
+                    refit_start_time = time.time()
+                    self.estimator.fit(
+                        self.X_[:, bool_individual],
+                        self.y_,
+                        **getattr(self, "_fit_params", {}),
+                    )
+                    refit_end_time = time.time()
+                    self.refit_time_ = refit_end_time - refit_start_time
 
-            self.best_estimator_ = self.estimator
-            self.estimator_ = self.best_estimator_
+                    self.best_estimator_ = self.estimator
+                    self.estimator_ = self.best_estimator_
 
-        self.hof = self._hof
-
-        del creator.FitnessMax
-        del creator.Individual
+                self.hof = self._hof
+            finally:
+                self._cleanup_creator()
 
         return self
 
