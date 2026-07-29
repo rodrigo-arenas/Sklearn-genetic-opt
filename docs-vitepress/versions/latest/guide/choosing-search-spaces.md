@@ -108,6 +108,64 @@ Best params     : {'n_estimators': 247, 'ccp_alpha': 0.0012, 'max_features': 'sq
 
 ---
 
+## Migrating from RandomizedSearchCV
+
+Use `from_sklearn_space` when you already have a `param_distributions` mapping
+written for scikit-learn's `RandomizedSearchCV`. It converts the common list and
+SciPy distribution forms into the native dimensions expected by `GASearchCV`, so
+you do not have to rewrite the whole search space by hand.
+
+```python
+from scipy.stats import loguniform, randint, uniform
+
+from sklearn_genetic.space import from_sklearn_space
+
+# A mapping that could be passed to RandomizedSearchCV
+param_distributions = {
+    "criterion": ["gini", "entropy"],
+    "max_depth": randint(2, 12),
+    "max_features": uniform(loc=0.2, scale=0.8),
+    "ccp_alpha": loguniform(1e-6, 1e-2),
+}
+
+# Convert every value to a native sklearn_genetic dimension
+param_grid = from_sklearn_space(param_distributions)
+```
+
+This produces the same search space as:
+
+```python
+from sklearn_genetic.space import Categorical, Continuous, Integer
+
+param_grid = {
+    "criterion": Categorical(["gini", "entropy"]),
+    "max_depth": Integer(2, 11),
+    "max_features": Continuous(0.2, 1.0),
+    "ccp_alpha": Continuous(1e-6, 1e-2, distribution="log-uniform"),
+}
+```
+
+The bounds look slightly different because `scipy.stats.randint(low, high)`
+excludes `high`, while both bounds of `Integer(lower, upper)` are inclusive.
+Likewise, `scipy.stats.uniform(loc, scale)` spans from `loc` to `loc + scale`;
+its second argument is not the upper bound.
+
+The converter supports lists and other list-like choices, `scipy.stats.randint`,
+`scipy.stats.uniform`, and `scipy.stats.loguniform` (including its
+`reciprocal` alias). Unsupported SciPy distributions cannot always be represented
+by a bounded native dimension and raise a `ValueError`. Convert those parameters
+manually with `Continuous`, `Integer`, or `Categorical`.
+
+You can pass the converted mapping directly as
+`GASearchCV(..., param_grid=param_grid)`. If you are designing a new search space
+rather than migrating an existing one, prefer the native dimensions: they make
+the bounds and sampling distribution explicit.
+
+See the [`from_sklearn_space` conversion table](../api/space#convert-sklearn-scipy-style-spaces)
+for every supported input form.
+
+---
+
 ## When to Use log-uniform Distribution
 
 A uniform distribution over `[0.0001, 1.0]` is deceptive. Because most of the interval sits above `0.1`, about 90% of uniform samples land in `[0.1, 1.0]` and only 10% in `[0.0001, 0.1]`. Yet for parameters like learning rates and regularization strengths, the interesting region is often at the low end.
