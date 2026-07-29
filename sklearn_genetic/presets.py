@@ -1,6 +1,8 @@
 from .space import Categorical, Continuous, Integer
 
 __all__ = [
+    "extra_trees_classifier_space",
+    "extra_trees_regressor_space",
     "hist_gradient_boosting_classifier_space",
     "hist_gradient_boosting_regressor_space",
     "logistic_regression_space",
@@ -87,6 +89,52 @@ def random_forest_classifier_space(profile="balanced", prefix=""):
 
 def random_forest_regressor_space(profile="balanced", prefix=""):
     """Return a starter search space for ``RandomForestRegressor``."""
+    _check_profile(profile)
+    bounds = {
+        "fast": (50, 180, 2, 16, 1, 6),
+        "balanced": (80, 350, 2, 24, 1, 10),
+        "wide": (100, 700, 2, 40, 1, 20),
+    }[profile]
+    n_low, n_high, depth_low, depth_high, leaf_low, leaf_high = bounds
+
+    return _with_prefix(
+        {
+            "n_estimators": Integer(n_low, n_high),
+            "max_depth": Integer(depth_low, depth_high),
+            "min_samples_split": Integer(2, max(8, leaf_high * 2)),
+            "min_samples_leaf": Integer(leaf_low, leaf_high),
+            "max_features": Categorical(["sqrt", "log2", None]),
+            "criterion": Categorical(["squared_error", "absolute_error", "friedman_mse"]),
+        },
+        prefix,
+    )
+
+
+def extra_trees_classifier_space(profile="balanced", prefix=""):
+    """Return a starter search space for ``ExtraTreesClassifier``."""
+    _check_profile(profile)
+    bounds = {
+        "fast": (50, 180, 2, 16, 1, 6),
+        "balanced": (80, 350, 2, 24, 1, 10),
+        "wide": (100, 700, 2, 40, 1, 20),
+    }[profile]
+    n_low, n_high, depth_low, depth_high, leaf_low, leaf_high = bounds
+
+    return _with_prefix(
+        {
+            "n_estimators": Integer(n_low, n_high),
+            "max_depth": Integer(depth_low, depth_high),
+            "min_samples_split": Integer(2, max(8, leaf_high * 2)),
+            "min_samples_leaf": Integer(leaf_low, leaf_high),
+            "max_features": Categorical(["sqrt", "log2", None]),
+            "criterion": Categorical(["gini", "entropy"]),
+            "class_weight": Categorical([None, "balanced", "balanced_subsample"]),
+        },
+        prefix,
+    )
+
+def extra_trees_regressor_space(profile="balanced", prefix=""):
+    """Return a starter search space for ``ExtraTreesRegressor``."""
     _check_profile(profile)
     bounds = {
         "fast": (50, 180, 2, 16, 1, 6),
