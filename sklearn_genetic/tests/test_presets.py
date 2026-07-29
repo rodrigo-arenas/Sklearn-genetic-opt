@@ -45,6 +45,7 @@ def test_random_forest_regressor_preset_uses_regression_criteria():
     assert space["criterion"].choices == ["squared_error", "absolute_error", "friedman_mse"]
     assert "class_weight" not in space
 
+
 def test_extra_trees_classifier_preset_returns_native_space_dimensions():
     space = extra_trees_classifier_space(profile="fast")
     
