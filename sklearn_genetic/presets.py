@@ -133,6 +133,7 @@ def extra_trees_classifier_space(profile="balanced", prefix=""):
         prefix,
     )
 
+
 def extra_trees_regressor_space(profile="balanced", prefix=""):
     """Return a starter search space for ``ExtraTreesRegressor``."""
     _check_profile(profile)
