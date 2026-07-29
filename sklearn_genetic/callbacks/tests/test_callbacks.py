@@ -122,6 +122,12 @@ def test_threshold_callback():
     assert str(excinfo.value) == "At least one of record or logbook parameters must be provided"
 
 
+@pytest.mark.parametrize("threshold", ["0.8", None, object()])
+def test_threshold_callback_rejects_non_numeric_threshold(threshold):
+    with pytest.raises((TypeError, ValueError), match="threshold"):
+        ThresholdStopping(threshold=threshold)
+
+
 def test_consecutive_callback():
     callback = ConsecutiveStopping(generations=3)
     assert check_callback(callback) == [callback]
@@ -150,6 +156,18 @@ def test_consecutive_callback():
     with pytest.raises(Exception) as excinfo:
         callback()
     assert str(excinfo.value) == "logbook parameter must be provided"
+
+
+@pytest.mark.parametrize("generations", ["3", None, object()])
+def test_consecutive_callback_rejects_non_numeric_generations(generations):
+    with pytest.raises((TypeError, ValueError), match="generations"):
+        ConsecutiveStopping(generations=generations)
+
+
+@pytest.mark.parametrize("generations", [0, -1])
+def test_consecutive_callback_rejects_non_positive_generations(generations):
+    with pytest.raises((TypeError, ValueError), match="generations"):
+        ConsecutiveStopping(generations=generations)
 
 
 def test_delta_callback():
@@ -181,6 +199,42 @@ def test_delta_callback():
     with pytest.raises(Exception) as excinfo:
         callback()
     assert str(excinfo.value) == "logbook parameter must be provided"
+
+
+@pytest.mark.parametrize("threshold", ["0.001", None, object()])
+def test_delta_callback_rejects_non_numeric_threshold(threshold):
+    with pytest.raises((TypeError, ValueError), match="threshold"):
+        DeltaThreshold(threshold=threshold)
+
+
+@pytest.mark.parametrize("generations", ["2", None, object()])
+def test_delta_callback_rejects_non_numeric_generations(generations):
+    with pytest.raises((TypeError, ValueError), match="generations"):
+        DeltaThreshold(threshold=0.001, generations=generations)
+
+
+@pytest.mark.parametrize("generations", [0, -1])
+def test_delta_callback_rejects_non_positive_generations(generations):
+    with pytest.raises((TypeError, ValueError), match="generations"):
+        DeltaThreshold(threshold=0.001, generations=generations)
+
+
+def test_timer_callback_accepts_numeric_total_seconds():
+    callback = TimerStopping(total_seconds=0.1)
+
+    assert callback.total_seconds == 0.1
+
+
+@pytest.mark.parametrize("total_seconds", ["10", None, object()])
+def test_timer_callback_rejects_non_numeric_total_seconds(total_seconds):
+    with pytest.raises((TypeError, ValueError), match="total_seconds"):
+        TimerStopping(total_seconds=total_seconds)
+
+
+@pytest.mark.parametrize("total_seconds", [0, -1])
+def test_timer_callback_rejects_non_positive_total_seconds(total_seconds):
+    with pytest.raises((TypeError, ValueError), match="total_seconds"):
+        TimerStopping(total_seconds=total_seconds)
 
 
 def test_logbook_saver_callback(caplog):
