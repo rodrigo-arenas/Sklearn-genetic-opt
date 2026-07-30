@@ -1,6 +1,8 @@
 from .genetic_search import GASearchCV, GAFeatureSelectionCV
 from .config import EvolutionConfig, OptimizationConfig, PopulationConfig, RuntimeConfig
 from .presets import (
+    extra_trees_classifier_space,
+    extra_trees_regressor_space,
     hist_gradient_boosting_classifier_space,
     hist_gradient_boosting_regressor_space,
     logistic_regression_space,
@@ -36,6 +38,8 @@ __all__ = [
     "OptimizationConfig",
     "PopulationConfig",
     "RuntimeConfig",
+    "extra_trees_classifier_space",
+    "extra_trees_regressor_space",
     "hist_gradient_boosting_classifier_space",
     "hist_gradient_boosting_regressor_space",
     "logistic_regression_space",
