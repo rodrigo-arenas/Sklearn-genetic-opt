@@ -1,3 +1,5 @@
+import numbers
+
 from ..parameters import Metrics, CallbackMethods
 from .base import BaseCallback
 
@@ -5,6 +7,27 @@ from .base import BaseCallback
 def check_stats(metric):
     if metric not in Metrics.list():
         raise ValueError(f"metric must be one of {Metrics.list()}, but got {metric} instead")
+
+
+def check_number(name, value):
+    """Raise a TypeError if value is not a real number (bool is rejected)."""
+    if isinstance(value, bool) or not isinstance(value, numbers.Real):
+        raise TypeError(f"{name} must be a number, but got {type(value).__name__} instead")
+
+
+def check_positive_number(name, value):
+    """Raise if value is not a strictly positive real number."""
+    check_number(name, value)
+    if value <= 0:
+        raise ValueError(f"{name} must be a positive number, but got {value} instead")
+
+
+def check_positive_integer(name, value):
+    """Raise if value is not a strictly positive integer (bool is rejected)."""
+    if isinstance(value, bool) or not isinstance(value, numbers.Integral):
+        raise TypeError(f"{name} must be an integer, but got {type(value).__name__} instead")
+    if value <= 0:
+        raise ValueError(f"{name} must be a positive integer, but got {value} instead")
 
 
 def check_callback(callback):
