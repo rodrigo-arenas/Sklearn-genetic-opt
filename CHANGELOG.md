@@ -4,6 +4,10 @@ Full release notes with code examples are in the [documentation](https://sklearn
 
 ## Unreleased
 
+### New Features
+
+- `GASearchCV` and `GAFeatureSelectionCV` now reject unsupported `fit` metadata up front with a clear error naming the parameter and the wrapped estimator, instead of failing deep inside cross-validation. Estimators whose `fit` takes `**kwargs` (e.g. `Pipeline`) are left to validate at fit time, so routed keys like `clf__sample_weight` keep working (#364).
+
 ## 0.13.4
 
 ### New Features

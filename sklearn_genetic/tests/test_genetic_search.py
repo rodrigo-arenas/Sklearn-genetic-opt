@@ -1715,7 +1715,11 @@ def test_gasearch_final_selection_scoring_receives_fit_params():
 
 
 def test_gasearch_unsupported_fit_param_raises_clearly():
-    """#339: an unsupported fit param must fail loudly, not be dropped."""
+    """#364: an unsupported fit param must fail up front with a clear message.
+
+    The message names the offending metadata and the wrapped estimator, and the
+    error is raised before the search runs (not deep inside cross-validation).
+    """
     evolved_estimator = GASearchCV(
         DecisionTreeClassifier(random_state=0),
         cv=2,
@@ -1727,5 +1731,33 @@ def test_gasearch_unsupported_fit_param_raises_clearly():
         verbose=False,
     )
 
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError) as excinfo:
         evolved_estimator.fit(X_train, y_train, not_a_real_fit_param=np.ones(X_train.shape[0]))
+
+    message = str(excinfo.value)
+    assert "not_a_real_fit_param" in message
+    assert "DecisionTreeClassifier" in message
+    # Failed up front, so the search never populated a logbook.
+    assert not hasattr(evolved_estimator, "logbook")
+
+
+def test_gasearch_pipeline_routed_fit_param_is_not_falsely_rejected():
+    """#364: a Pipeline forwards ``step__param``; the up-front check must not
+    reject it, since Pipeline.fit takes ``**params`` and validates at fit time."""
+    from sklearn.pipeline import Pipeline
+    from sklearn.preprocessing import StandardScaler
+
+    pipe = Pipeline([("scaler", StandardScaler()), ("clf", DecisionTreeClassifier(random_state=0))])
+    evolved_estimator = GASearchCV(
+        pipe,
+        cv=2,
+        scoring="accuracy",
+        population_size=4,
+        generations=1,
+        param_grid={"clf__max_depth": Integer(2, 10)},
+        verbose=False,
+    )
+
+    # Should run cleanly: clf__sample_weight is a valid routed metadata key.
+    evolved_estimator.fit(X_train, y_train, clf__sample_weight=np.ones(X_train.shape[0]))
+    assert hasattr(evolved_estimator, "best_estimator_")
