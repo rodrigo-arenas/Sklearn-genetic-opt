@@ -20,8 +20,13 @@ class ThresholdStopping(BaseCallback):
         metric: {'fitness', 'fitness_std', 'fitness_best', 'fitness_max', 'fitness_min'}, default ='fitness'
             Name of the metric inside 'record' logged in each iteration
         """
-
         check_stats(metric)
+
+        if not isinstance(threshold, (int, float)):
+            raise TypeError(
+                f"threshold must be a numeric value (int or float), "
+                f"but got {type(threshold).__name__}"
+            )
 
         self.threshold = threshold
         self.metric = metric
@@ -57,8 +62,17 @@ class ConsecutiveStopping(BaseCallback):
         metric: {'fitness', 'fitness_std', 'fitness_best', 'fitness_max', 'fitness_min'}, default ='fitness'
             Name of the metric inside 'record' logged in each iteration
         """
-
         check_stats(metric)
+
+        if not isinstance(generations, int):
+            raise TypeError(
+                f"generations must be an integer, "
+                f"but got {type(generations).__name__}"
+            )
+        if generations <= 0:
+            raise ValueError(
+                f"generations must be a positive integer, but got {generations}"
+            )
 
         self.generations = generations
         self.metric = metric
@@ -103,8 +117,22 @@ class DeltaThreshold(BaseCallback):
         metric: {'fitness', 'fitness_std', 'fitness_best', 'fitness_max', 'fitness_min'}, default ='fitness'
             Name of the metric inside 'record' logged in each iteration.
         """
-
         check_stats(metric)
+
+        if not isinstance(threshold, (int, float)):
+            raise TypeError(
+                f"threshold must be a numeric value (int or float), "
+                f"but got {type(threshold).__name__}"
+            )
+        if not isinstance(generations, int):
+            raise TypeError(
+                f"generations must be an integer, "
+                f"but got {type(generations).__name__}"
+            )
+        if generations <= 0:
+            raise ValueError(
+                f"generations must be a positive integer, but got {generations}"
+            )
 
         self.threshold = threshold
         self.generations = generations
@@ -141,6 +169,16 @@ class TimerStopping(BaseCallback):
         total_seconds: int
             Total time in seconds that the estimator is allowed to fit
         """
+        if not isinstance(total_seconds, (int, float)):
+            raise TypeError(
+                f"total_seconds must be a numeric value (int or float), "
+                f"but got {type(total_seconds).__name__}"
+            )
+        if total_seconds <= 0:
+            raise ValueError(
+                f"total_seconds must be a positive value, but got {total_seconds}"
+            )
+
         self.initial_training_time = None
         self.total_seconds = total_seconds
 

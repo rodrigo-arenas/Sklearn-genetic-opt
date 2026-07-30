@@ -116,7 +116,6 @@ def test_threshold_callback():
     logbook.record(fitness=0.95)
 
     assert callback(logbook=logbook)
-
     with pytest.raises(Exception) as excinfo:
         callback()
     assert str(excinfo.value) == "At least one of record or logbook parameters must be provided"
@@ -125,7 +124,6 @@ def test_threshold_callback():
 def test_consecutive_callback():
     callback = ConsecutiveStopping(generations=3)
     assert check_callback(callback) == [callback]
-
     logbook = Logbook()
 
     logbook.record(fitness=0.9)
@@ -155,7 +153,6 @@ def test_consecutive_callback():
 def test_delta_callback():
     callback = DeltaThreshold(0.001)
     assert check_callback(callback) == [callback]
-
     logbook = Logbook()
 
     logbook.record(fitness=0.9)
@@ -204,9 +201,7 @@ def test_logbook_saver_callback(caplog):
     evolved_estimator.fit(X_train, y_train, callbacks=callback)
 
     assert os.path.exists("./logbook.pkl")
-
     os.remove("./logbook.pkl")
-
     with caplog.at_level(logging.ERROR):
         callback = LogbookSaver(checkpoint_path="./no_folder/logbook.pkl", estimator=4)
         callback()
@@ -244,7 +239,103 @@ def test_tensorboard_callback(callback, path):
     )
 
     evolved_estimator.fit(X_train, y_train, callbacks=callback)
-
     assert os.path.exists(path)
-
     shutil.rmtree(path)
+
+
+# ============================================================
+# Input validation tests (issue #359)
+# ============================================================
+
+
+class TestThresholdStoppingValidation:
+    def test_valid_threshold_int(self):
+        cb = ThresholdStopping(threshold=1)
+        assert cb.threshold == 1
+
+    def test_valid_threshold_float(self):
+        cb = ThresholdStopping(threshold=0.8)
+        assert cb.threshold == 0.8
+
+    def test_invalid_threshold_string(self):
+        with pytest.raises(TypeError, match="threshold must be a numeric value"):
+            ThresholdStopping(threshold="invalid")
+
+    def test_invalid_threshold_none(self):
+        with pytest.raises(TypeError, match="threshold must be a numeric value"):
+            ThresholdStopping(threshold=None)
+
+    def test_invalid_threshold_list(self):
+        with pytest.raises(TypeError, match="threshold must be a numeric value"):
+            ThresholdStopping(threshold=[0.5])
+
+
+class TestConsecutiveStoppingValidation:
+    def test_valid_generations(self):
+        cb = ConsecutiveStopping(generations=3)
+        assert cb.generations == 3
+
+    def test_invalid_generations_string(self):
+        with pytest.raises(TypeError, match="generations must be an integer"):
+            ConsecutiveStopping(generations="3")
+
+    def test_invalid_generations_float(self):
+        with pytest.raises(TypeError, match="generations must be an integer"):
+            ConsecutiveStopping(generations=3.5)
+
+    def test_invalid_generations_zero(self):
+        with pytest.raises(ValueError, match="generations must be a positive integer"):
+            ConsecutiveStopping(generations=0)
+
+    def test_invalid_generations_negative(self):
+        with pytest.raises(ValueError, match="generations must be a positive integer"):
+            ConsecutiveStopping(generations=-1)
+
+
+class TestDeltaThresholdValidation:
+    def test_valid_inputs(self):
+        cb = DeltaThreshold(threshold=0.001, generations=3)
+        assert cb.threshold == 0.001
+        assert cb.generations == 3
+
+    def test_invalid_threshold_string(self):
+        with pytest.raises(TypeError, match="threshold must be a numeric value"):
+            DeltaThreshold(threshold="bad", generations=3)
+
+    def test_invalid_generations_string(self):
+        with pytest.raises(TypeError, match="generations must be an integer"):
+            DeltaThreshold(threshold=0.1, generations="2")
+
+    def test_invalid_generations_zero(self):
+        with pytest.raises(ValueError, match="generations must be a positive integer"):
+            DeltaThreshold(threshold=0.1, generations=0)
+
+    def test_invalid_generations_negative(self):
+        with pytest.raises(ValueError, match="generations must be a positive integer"):
+            DeltaThreshold(threshold=0.1, generations=-5)
+
+
+class TestTimerStoppingValidation:
+    def test_valid_total_seconds(self):
+        cb = TimerStopping(total_seconds=60)
+        assert cb.total_seconds == 60
+
+    def test_valid_total_seconds_float(self):
+        cb = TimerStopping(total_seconds=30.5)
+        assert cb.total_seconds == 30.5
+
+    def test_invalid_total_seconds_string(self):
+        with pytest.raises(TypeError, match="total_seconds must be a numeric value"):
+            TimerStopping(total_seconds="abc")
+
+    def test_invalid_total_seconds_none(self):
+        with pytest.raises(TypeError, match="total_seconds must be a numeric value"):
+            TimerStopping(total_seconds=None)
+
+    def test_invalid_total_seconds_zero(self):
+        with pytest.raises(ValueError, match="total_seconds must be a positive value"):
+            TimerStopping(total_seconds=0)
+
+    def test_invalid_total_seconds_negative(self):
+        with pytest.raises(ValueError, match="total_seconds must be a positive value"):
+            TimerStopping(total_seconds=-5)
