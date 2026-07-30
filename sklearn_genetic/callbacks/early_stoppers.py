@@ -1,6 +1,11 @@
 from datetime import datetime
 
-from .validations import check_stats
+from .validations import (
+    check_stats,
+    check_number,
+    check_positive_number,
+    check_positive_integer,
+)
 from .base import BaseCallback
 
 
@@ -22,6 +27,7 @@ class ThresholdStopping(BaseCallback):
         """
 
         check_stats(metric)
+        check_number("threshold", threshold)
 
         self.threshold = threshold
         self.metric = metric
@@ -59,6 +65,7 @@ class ConsecutiveStopping(BaseCallback):
         """
 
         check_stats(metric)
+        check_positive_integer("generations", generations)
 
         self.generations = generations
         self.metric = metric
@@ -105,6 +112,8 @@ class DeltaThreshold(BaseCallback):
         """
 
         check_stats(metric)
+        check_number("threshold", threshold)
+        check_positive_integer("generations", generations)
 
         self.threshold = threshold
         self.generations = generations
@@ -141,6 +150,8 @@ class TimerStopping(BaseCallback):
         total_seconds: int
             Total time in seconds that the estimator is allowed to fit
         """
+        check_positive_number("total_seconds", total_seconds)
+
         self.initial_training_time = None
         self.total_seconds = total_seconds
 

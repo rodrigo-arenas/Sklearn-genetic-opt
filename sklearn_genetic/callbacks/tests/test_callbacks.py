@@ -248,3 +248,53 @@ def test_tensorboard_callback(callback, path):
     assert os.path.exists(path)
 
     shutil.rmtree(path)
+
+
+@pytest.mark.parametrize("threshold", ["a", None, [0.1], True])
+def test_threshold_stopping_rejects_non_numeric_threshold(threshold):
+    with pytest.raises(TypeError, match="threshold must be a number"):
+        ThresholdStopping(threshold=threshold)
+
+
+@pytest.mark.parametrize("threshold", ["a", None, True])
+def test_delta_threshold_rejects_non_numeric_threshold(threshold):
+    with pytest.raises(TypeError, match="threshold must be a number"):
+        DeltaThreshold(threshold=threshold)
+
+
+@pytest.mark.parametrize("generations", ["a", 1.5, None, True])
+def test_consecutive_stopping_rejects_non_integer_generations(generations):
+    with pytest.raises(TypeError, match="generations must be an integer"):
+        ConsecutiveStopping(generations=generations)
+
+
+@pytest.mark.parametrize("generations", [0, -1])
+def test_consecutive_stopping_rejects_non_positive_generations(generations):
+    with pytest.raises(ValueError, match="generations must be a positive integer"):
+        ConsecutiveStopping(generations=generations)
+
+
+@pytest.mark.parametrize("generations", [0, -3])
+def test_delta_threshold_rejects_non_positive_generations(generations):
+    with pytest.raises(ValueError, match="generations must be a positive integer"):
+        DeltaThreshold(threshold=0.01, generations=generations)
+
+
+@pytest.mark.parametrize("total_seconds", ["a", None, True])
+def test_timer_stopping_rejects_non_numeric_total_seconds(total_seconds):
+    with pytest.raises(TypeError, match="total_seconds must be a number"):
+        TimerStopping(total_seconds=total_seconds)
+
+
+@pytest.mark.parametrize("total_seconds", [0, -5])
+def test_timer_stopping_rejects_non_positive_total_seconds(total_seconds):
+    with pytest.raises(ValueError, match="total_seconds must be a positive number"):
+        TimerStopping(total_seconds=total_seconds)
+
+
+def test_stopping_callbacks_accept_valid_inputs():
+    # These should not raise.
+    ThresholdStopping(threshold=-0.5)
+    ConsecutiveStopping(generations=3)
+    DeltaThreshold(threshold=0.001, generations=2)
+    TimerStopping(total_seconds=0.5)
