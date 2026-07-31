@@ -1,6 +1,8 @@
 import pytest
 
 from sklearn_genetic import (
+    extra_trees_classifier_space,
+    extra_trees_regressor_space,
     hist_gradient_boosting_classifier_space,
     hist_gradient_boosting_regressor_space,
     logistic_regression_space,
@@ -16,6 +18,8 @@ from sklearn_genetic.space.base import BaseDimension
 PRESET_FUNCTIONS = [
     random_forest_classifier_space,
     random_forest_regressor_space,
+    extra_trees_classifier_space,
+    extra_trees_regressor_space,
     hist_gradient_boosting_classifier_space,
     hist_gradient_boosting_regressor_space,
     logistic_regression_space,
@@ -37,6 +41,23 @@ def test_random_forest_classifier_preset_returns_native_space_dimensions():
 
 def test_random_forest_regressor_preset_uses_regression_criteria():
     space = random_forest_regressor_space()
+
+    assert space["criterion"].choices == ["squared_error", "absolute_error", "friedman_mse"]
+    assert "class_weight" not in space
+
+
+def test_extra_trees_classifier_preset_returns_native_space_dimensions():
+    space = extra_trees_classifier_space(profile="fast")
+
+    assert isinstance(space["n_estimators"], Integer)
+    assert space["n_estimators"].lower == 50
+    assert space["n_estimators"].upper == 180
+    assert isinstance(space["max_features"], Categorical)
+    assert space["class_weight"].choices == [None, "balanced", "balanced_subsample"]
+
+
+def test_extra_trees_regressor_preset_uses_regression_criteria():
+    space = extra_trees_regressor_space()
 
     assert space["criterion"].choices == ["squared_error", "absolute_error", "friedman_mse"]
     assert "class_weight" not in space
