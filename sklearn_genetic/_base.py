@@ -171,3 +171,27 @@ class GeneticEstimatorMixin:
 
     def __len__(self):
         return self._n_iterations
+
+    def cv_results_dataframe(self):
+        """
+        Returns a pandas.DataFrame representation of the cv_results_ dictionary,
+        sorted by the test score rank.
+
+        Returns
+        -------
+        pandas.DataFrame
+            DataFrame of candidate results including parameters, metrics, and ranks.
+
+        Examples
+        --------
+        >>> from sklearn_genetic import GASearchCV
+        >>> search = GASearchCV(estimator, param_grid=param_grid)
+        >>> search.fit(X, y)
+        >>> df_results = search.cv_results_dataframe()
+        >>> print(df_results.head())
+        """
+        check_is_fitted(self, "cv_results_")
+
+        from .utils.cv_scores import get_results_to_dataframe
+
+        return get_results_to_dataframe(self.cv_results_)

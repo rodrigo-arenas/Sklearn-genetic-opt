@@ -13,6 +13,8 @@ from sklearn.metrics import make_scorer
 
 import numpy as np
 import os
+import pandas as pd
+from sklearn.exceptions import NotFittedError
 
 from .. import (
     EvolutionConfig,
@@ -42,6 +44,24 @@ y = data["target"]
 X = data["data"]
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
+
+
+@pytest.fixture
+def data():
+    return load_digits(return_X_y=True)
+
+
+@pytest.fixture
+def estimator():
+    return DecisionTreeClassifier(random_state=42)
+
+
+@pytest.fixture
+def param_grid():
+    return {
+        "max_depth": Integer(1, 4),
+        "criterion": Categorical(["gini", "entropy"]),
+    }
 
 
 def test_default_n_jobs_is_none():
@@ -1729,3 +1749,40 @@ def test_gasearch_unsupported_fit_param_raises_clearly():
 
     with pytest.raises(TypeError):
         evolved_estimator.fit(X_train, y_train, not_a_real_fit_param=np.ones(X_train.shape[0]))
+
+
+def test_cv_results_dataframe_single_metric(data, estimator, param_grid):
+    X, y = data
+    search = GASearchCV(estimator, param_grid=param_grid, cv=2, scoring="accuracy")
+
+    with pytest.raises(NotFittedError):
+        search.cv_results_dataframe()
+
+    search.fit(X, y)
+    df = search.cv_results_dataframe()
+
+    assert isinstance(df, pd.DataFrame)
+    assert "mean_test_score" in df.columns
+    assert "rank_test_score" in df.columns
+    assert "params" in df.columns
+    assert len(df) > 0
+
+    assert df["rank_test_score"].iloc[0] == 1
+    assert df["rank_test_score"].is_monotonic_increasing
+
+
+def test_cv_results_dataframe_multi_metric(data, estimator, param_grid):
+    X, y = data
+    scoring = {"Accuracy": "accuracy", "Precision": "precision"}
+    search = GASearchCV(estimator, param_grid=param_grid, cv=2, scoring=scoring, refit="Accuracy")
+    search.fit(X, y)
+
+    df = search.cv_results_dataframe()
+
+    assert isinstance(df, pd.DataFrame)
+    assert "mean_test_Accuracy" in df.columns
+    assert "rank_test_Accuracy" in df.columns
+    assert "mean_test_Precision" in df.columns
+
+    assert df["rank_test_Accuracy"].iloc[0] == 1
+    assert df["rank_test_Accuracy"].is_monotonic_increasing
