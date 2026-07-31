@@ -67,6 +67,7 @@ GAFeatureSelectionCV(
 | `logbook` | DEAP logbook |
 | `fit_stats_` | Evaluation counters |
 | `n_features_` | Number of selected features |
+| `feature_names_in_` | Feature names seen during `fit` when `X` has string column names |
 
 ## Methods
 
@@ -74,6 +75,7 @@ GAFeatureSelectionCV(
 |--------|-------------|
 | `fit(X, y, callbacks=None)` | Run the genetic feature selection |
 | `transform(X)` | Return `X` with only the selected features |
+| `get_feature_names_out(input_features=None)` | Return the selected feature names |
 | `predict(X)` | Predict using `best_estimator_` on selected features |
 | `predict_proba(X)` | Predict class probabilities |
 | `score(X, y)` | Score using `best_estimator_` on selected features |
