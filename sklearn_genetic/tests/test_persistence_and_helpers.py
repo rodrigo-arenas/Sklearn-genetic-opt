@@ -628,6 +628,8 @@ def test_checkpoint_load_raises_on_oserror(tmp_path, caplog):
         with pytest.raises(PermissionError, match="denied"):
             checkpoint.load()
     assert "Error loading checkpoint from" in caplog.text
+
+
 def test_checkpoint_resume_restores_adapter_state(tmp_path):
     """Adapter step counters must survive checkpoint resume.
 
