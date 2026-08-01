@@ -1,3 +1,4 @@
+import pickle
 import shutil
 
 import pytest
@@ -201,6 +202,38 @@ def test_model_checkpoint_save_load_and_error_paths(tmp_path, caplog):
     assert "Error loading checkpoint" in caplog.text
     assert loaded_checkpoint["estimator_state"]["scoring"] == "accuracy"
     assert loaded_checkpoint["logbook"] is None
+
+
+def test_model_checkpoint_load_raises_on_corrupted_file(tmp_path, caplog):
+    import logging
+
+    caplog.set_level(logging.DEBUG)
+    checkpoint_path = tmp_path / "corrupted.pkl"
+    checkpoint_path.write_bytes(b"this is not a pickle")
+
+    with pytest.raises(pickle.UnpicklingError):
+        ModelCheckpoint(checkpoint_path).load()
+
+    assert "corrupted file" in caplog.text
+
+
+def test_model_checkpoint_load_reraises_permission_error(tmp_path, caplog, monkeypatch):
+    import builtins
+    import logging
+
+    caplog.set_level(logging.DEBUG)
+    checkpoint_path = tmp_path / "denied.pkl"
+    checkpoint_path.write_bytes(b"x")
+
+    def raise_permission_error(*args, **kwargs):
+        raise PermissionError("permission denied")
+
+    monkeypatch.setattr(builtins, "open", raise_permission_error)
+
+    with pytest.raises(PermissionError):
+        ModelCheckpoint(checkpoint_path).load()
+
+    assert "Error loading checkpoint" in caplog.text
 
 
 def test_model_checkpoint_estimator_state_keys(tmp_path):
