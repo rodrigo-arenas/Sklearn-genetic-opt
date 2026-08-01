@@ -4,6 +4,9 @@ Full release notes with code examples are in the [documentation](https://sklearn
 
 ## Unreleased
 
+### Bug Fixes
+
+- Fixed pickling of fitted `GASearchCV` and `GAFeatureSelectionCV` instances. `pickle.dumps`/`pickle.loads` and `joblib.dump`/`joblib.load` previously failed on the DEAP toolbox captured in `__dict__` (`Can't pickle <function ...>`) and now exclude the unpicklable DEAP internals (`toolbox`, `_stats`, `_pop`, `_hof`) via `__getstate__`/`__setstate__`. `save()`/`load()` use the same protocol, and `load()` also accepts files written directly with `pickle.dump(self, f)` (#358).
 ## 0.13.4
 
 ### New Features

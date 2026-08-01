@@ -123,7 +123,7 @@ class GeneticEstimatorMixin:
                 self.__setstate__(checkpoint_data["estimator_state"])
                 self.logbook = checkpoint_data["logbook"]
             else:
-                self.__setstate__(checkpoint_data)
+                self.__setstate__(checkpoint_data.__dict__)
 
             print(f"{class_name} model successfully loaded from {filepath}")
         except Exception as e:

@@ -1,5 +1,7 @@
+import pickle
 import shutil
 
+import numpy as np
 import pytest
 from sklearn.datasets import load_iris
 from sklearn.exceptions import NotFittedError
@@ -90,6 +92,59 @@ def test_fitted_ga_search_save_and_load_round_trip(tmp_path):
     assert restored.best_score_ == search.best_score_
     assert restored.best_params_ == search.best_params_
     assert restored.predict(X_test).shape[0] == X_test.shape[0]
+
+
+@pytest.mark.parametrize(
+    "build",
+    [
+        lambda: GASearchCV(
+            estimator=DecisionTreeClassifier(random_state=0),
+            param_grid={
+                "max_depth": Integer(1, 3),
+                "min_samples_split": Integer(2, 5),
+            },
+            cv=2,
+            scoring="accuracy",
+            population_size=4,
+            generations=2,
+        ),
+        lambda: GAFeatureSelectionCV(
+            estimator=DecisionTreeClassifier(random_state=0),
+            cv=2,
+            scoring="accuracy",
+            population_size=4,
+            generations=2,
+        ),
+    ],
+    ids=["GASearchCV", "GAFeatureSelectionCV"],
+)
+def test_load_accepts_raw_pickled_instance(build, tmp_path):
+    X, y = load_iris(return_X_y=True)
+    X_train, X_test, y_train, _ = train_test_split(
+        X,
+        y,
+        test_size=0.25,
+        stratify=y,
+        random_state=0,
+    )
+
+    estimator = build()
+    estimator.fit(X_train, y_train)
+
+    checkpoint_path = tmp_path / "raw_instance.pkl"
+    with open(checkpoint_path, "wb") as f:
+        pickle.dump(estimator, f)
+
+    restored = build()
+    restored.load(checkpoint_path)
+
+    assert restored.predict(X_test).shape[0] == X_test.shape[0]
+    if isinstance(restored, GAFeatureSelectionCV):
+        assert np.array_equal(restored.support_, estimator.support_)
+        assert np.array_equal(restored.best_features_, estimator.best_features_)
+    else:
+        assert restored.best_score_ == estimator.best_score_
+        assert restored.best_params_ == estimator.best_params_
 
 
 def test_ga_search_save_and_load_errors_are_reported(tmp_path, capsys):
