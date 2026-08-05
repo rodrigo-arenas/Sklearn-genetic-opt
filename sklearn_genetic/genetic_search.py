@@ -1,3 +1,4 @@
+import inspect
 import random
 import time
 import warnings
@@ -103,6 +104,46 @@ def _resolve_config_value(config, field_name, fallback):
         return fallback
 
     return getattr(config, field_name, fallback)
+
+
+def _check_fit_params_supported(estimator, fit_params):
+    """Fail early and clearly when the wrapped estimator can't take a metadata key.
+
+    ``fit_params`` (e.g. ``sample_weight``) are forwarded to the estimator's
+    ``fit`` during cross-validation and refit. If the estimator doesn't accept a
+    given key it would otherwise blow up mid-search with scikit-learn's generic
+    "unexpected keyword argument" error, so we check up front and name the
+    offending parameter and estimator instead.
+
+    The check is intentionally conservative: if ``fit`` takes ``**kwargs`` (as
+    Pipeline and many meta-estimators do) we can't tell statically which keys are
+    valid, so we skip it and let the estimator decide at fit time. That keeps
+    valid routed usage like ``clf__sample_weight`` working untouched.
+    """
+    if not fit_params:
+        return
+
+    try:
+        parameters = inspect.signature(estimator.fit).parameters.values()
+    except (TypeError, ValueError):
+        # Can't introspect fit (e.g. a C-level callable); leave it to fit time.
+        return
+
+    if any(p.kind == inspect.Parameter.VAR_KEYWORD for p in parameters):
+        return
+
+    accepted = {
+        p.name
+        for p in parameters
+        if p.kind in (inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.KEYWORD_ONLY)
+    }
+    unsupported = sorted(name for name in fit_params if name not in accepted)
+    if unsupported:
+        raise TypeError(
+            f"{type(estimator).__name__}.fit does not accept the metadata "
+            f"{unsupported}; it was passed to fit() but the wrapped estimator "
+            f"cannot use it. Remove it or use an estimator whose fit accepts it."
+        )
 
 
 class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
@@ -1069,6 +1110,7 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         self.y_ = y
         self.groups_ = groups
         self._fit_params = fit_params
+        _check_fit_params_supported(self.estimator, fit_params)
         self._n_iterations = self.generations + 1
         self.refit_metric = "score"
         self.multimetric_ = False
@@ -2033,6 +2075,7 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         self.X_, self.y_ = check_X_y(X, y, accept_sparse=True) if y is not None else (X, None)
         self.groups_ = groups
         self._fit_params = fit_params
+        _check_fit_params_supported(self.estimator, fit_params)
 
         # Handle outlier detection case if y is none
         if _is_outlier_detector(self.estimator) and y is None:

@@ -890,3 +890,24 @@ def test_feature_selection_forwards_sample_weight_and_slices_only_features():
     # Candidate CV fits get per-fold weight slices; the refit gets all samples.
     assert all(w < n_samples for _, w in recorded[:-1])
     assert recorded[-1][1] == n_samples
+
+
+def test_feature_selection_unsupported_fit_param_raises_clearly():
+    """#364: GAFeatureSelectionCV rejects unsupported metadata up front with a
+    clear message naming the parameter and the wrapped estimator."""
+    selector = GAFeatureSelectionCV(
+        DecisionTreeClassifier(random_state=0),
+        cv=2,
+        scoring="accuracy",
+        population_size=4,
+        generations=1,
+        error_score="raise",
+        verbose=False,
+    )
+
+    with pytest.raises(TypeError) as excinfo:
+        selector.fit(X_train, y_train, not_a_real_fit_param=np.ones(X_train.shape[0]))
+
+    message = str(excinfo.value)
+    assert "not_a_real_fit_param" in message
+    assert "DecisionTreeClassifier" in message
