@@ -16,6 +16,14 @@ except ImportError:
         return hasattr(estimator, "fit_predict") and hasattr(estimator, "decision_function")
 
 
+try:
+    from sklearn.utils.validation import _check_feature_names
+except ImportError:
+
+    def _check_feature_names(estimator, X, *, reset):
+        estimator._check_feature_names(X, reset=reset)
+
+
 def _safe_estimator_check(check, estimator):
     try:
         return check(estimator)
@@ -2030,6 +2038,7 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
             aligned to samples and are sliced per CV fold by scikit-learn.
         """
 
+        _check_feature_names(self, X, reset=True)
         self.X_, self.y_ = check_X_y(X, y, accept_sparse=True) if y is not None else (X, None)
         self.groups_ = groups
         self._fit_params = fit_params

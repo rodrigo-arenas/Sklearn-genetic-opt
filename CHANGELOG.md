@@ -4,6 +4,10 @@ Full release notes with code examples are in the [documentation](https://sklearn
 
 ## Unreleased
 
+### New Features
+
+- Added `GAFeatureSelectionCV.get_feature_names_out()` support for DataFrame column names and generated NumPy feature names.
+
 ## 0.13.4
 
 ### New Features

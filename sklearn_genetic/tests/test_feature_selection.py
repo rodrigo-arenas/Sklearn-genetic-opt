@@ -1,7 +1,9 @@
 import pytest
 from deap import tools
+import pandas as pd
 from sklearn.base import clone
 from sklearn.datasets import load_iris, load_diabetes
+from sklearn.exceptions import NotFittedError
 from sklearn.linear_model import SGDClassifier
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.model_selection import train_test_split
@@ -38,6 +40,62 @@ noise = np.random.uniform(1, 4, size=(X.shape[0], 10))
 X = np.hstack((X, noise))
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
+
+
+def _fit_feature_name_selector(X, y):
+    selector = GAFeatureSelectionCV(
+        DecisionTreeClassifier(random_state=42),
+        cv=2,
+        scoring="accuracy",
+        population_size=4,
+        generations=1,
+        verbose=False,
+        n_jobs=1,
+        random_state=42,
+    )
+    return selector.fit(X, y)
+
+
+def test_get_feature_names_out_requires_fitted_selector():
+    selector = GAFeatureSelectionCV(DecisionTreeClassifier())
+
+    with pytest.raises(NotFittedError, match="not fitted"):
+        selector.get_feature_names_out()
+
+
+def test_get_feature_names_out_generates_numpy_feature_names():
+    iris = load_iris()
+    selector = _fit_feature_name_selector(iris.data, iris.target)
+    input_features = np.asarray([f"x{index}" for index in range(iris.data.shape[1])])
+
+    assert not hasattr(selector, "feature_names_in_")
+    np.testing.assert_array_equal(
+        selector.get_feature_names_out(),
+        input_features[selector.get_support()],
+    )
+
+    with pytest.raises(ValueError, match="input_features should have length equal"):
+        selector.get_feature_names_out(["first", "second"])
+
+
+def test_get_feature_names_out_preserves_dataframe_feature_names():
+    iris = load_iris()
+    input_features = np.asarray(
+        ["sepal_length", "sepal_width", "petal_length", "petal_width"],
+        dtype=object,
+    )
+    X_frame = pd.DataFrame(iris.data, columns=input_features)
+    selector = _fit_feature_name_selector(X_frame, iris.target)
+    expected = input_features[selector.get_support()]
+
+    np.testing.assert_array_equal(selector.feature_names_in_, input_features)
+    np.testing.assert_array_equal(selector.get_feature_names_out(), expected)
+    np.testing.assert_array_equal(selector.get_feature_names_out(input_features), expected)
+
+    mismatched = input_features.copy()
+    mismatched[0] = "different"
+    with pytest.raises(ValueError, match="input_features is not equal to feature_names_in_"):
+        selector.get_feature_names_out(mismatched)
 
 
 def test_default_n_jobs_is_none():
