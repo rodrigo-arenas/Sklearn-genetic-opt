@@ -44,3 +44,7 @@ promotional.
 
 6. [Hyperparameter Tuning with GASearchCV on a Real Dataset](https://dev.to/saadgipuniwala/hyperparameter-tuning-with-gasearchcv-on-a-real-dataset-1jg9)  
    Saadgi Puniwala on dev.to. A hands-on comparison of `GASearchCV` against `GridSearchCV` on the UCI Student Performance dataset, including fitness evolution and search-space visualizations.
+
+7. [Smart Feature Selection in Machine Learning: How GAFeatureSelectionCV Solved My Noisy Dataset Problem](https://dev.to/arun_pandian_5276918b9e3b/smart-feature-selection-in-machine-learning-how-gafeatureselectioncv-solved-my-noisy-dataset-1mf9)  
+   Arun Pandian (@arun-pandian-p) on dev.to. A step-by-step tutorial on using genetic algorithms to remove noise and select optimal features with `GAFeatureSelectionCV` in scikit-learn.
+
