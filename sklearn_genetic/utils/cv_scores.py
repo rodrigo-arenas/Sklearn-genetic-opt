@@ -182,6 +182,8 @@ def create_feature_selection_cv_results_(logbook, return_train_score, metrics):
 
     cv_results["features"] = logbook.chapters["parameters"].select("features")
 
+    cv_results["params"] = [{"features": list(features)} for features in cv_results["features"]]
+
     return cv_results
 
 

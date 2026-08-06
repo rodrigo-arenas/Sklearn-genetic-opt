@@ -948,3 +948,30 @@ def test_feature_selection_forwards_sample_weight_and_slices_only_features():
     # Candidate CV fits get per-fold weight slices; the refit gets all samples.
     assert all(w < n_samples for _, w in recorded[:-1])
     assert recorded[-1][1] == n_samples
+
+
+def test_ga_feature_selection_cv_results_dataframe():
+    X, y = load_iris(return_X_y=True)
+    clf = DecisionTreeClassifier(random_state=42)
+    selector = GAFeatureSelectionCV(
+        estimator=clf,
+        cv=2,
+        population_size=4,
+        generations=2,
+        random_state=42,
+    )
+
+    # Verify unfitted state raises NotFittedError
+    with pytest.raises(NotFittedError):
+        selector.cv_results_dataframe()
+
+    selector.fit(X, y)
+    df = selector.cv_results_dataframe()
+
+    # Assert DataFrame structural integrity and rank sorting
+    assert isinstance(df, pd.DataFrame)
+    assert "mean_test_score" in df.columns
+    assert "rank_test_score" in df.columns
+    assert "params" in df.columns
+    assert df["rank_test_score"].iloc[0] == 1
+    assert df["rank_test_score"].is_monotonic_increasing

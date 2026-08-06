@@ -197,21 +197,30 @@ class GeneticEstimatorMixin:
 
     def cv_results_dataframe(self):
         """
-        Returns a pandas.DataFrame representation of the cv_results_ dictionary,
-        sorted by the test score rank.
+        Return a pandas.DataFrame representation of cv_results_, sorted by rank.
 
         Returns
         -------
         pandas.DataFrame
-            DataFrame of candidate results including parameters, metrics, and ranks.
+            DataFrame containing candidate results, parameters, scores, and ranks.
 
         Examples
         --------
+        >>> from sklearn.datasets import load_iris
+        >>> from sklearn.tree import DecisionTreeClassifier
         >>> from sklearn_genetic import GASearchCV
-        >>> search = GASearchCV(estimator, param_grid=param_grid)
+        >>> from sklearn_genetic.space import Integer
+        >>> X, y = load_iris(return_X_y=True)
+        >>> search = GASearchCV(
+        ...     estimator=DecisionTreeClassifier(),
+        ...     param_grid={"max_depth": Integer(1, 4)},
+        ...     cv=2,
+        ...     population_size=4,
+        ...     generations=2,
+        ... )
         >>> search.fit(X, y)
         >>> df_results = search.cv_results_dataframe()
-        >>> print(df_results.head())
+        >>> print(df_results[["rank_test_score", "mean_test_score"]].head(2))
         """
         check_is_fitted(self, "cv_results_")
 
