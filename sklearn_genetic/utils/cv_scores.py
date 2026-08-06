@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from scipy.stats import rankdata
 
 
@@ -181,4 +182,35 @@ def create_feature_selection_cv_results_(logbook, return_train_score, metrics):
 
     cv_results["features"] = logbook.chapters["parameters"].select("features")
 
+    cv_results["params"] = [{"features": list(features)} for features in cv_results["features"]]
+
     return cv_results
+
+
+def get_results_to_dataframe(cv_results_):
+    """
+    Convert cv_results_ dictionary to a pandas DataFrame and sort by rank.
+
+    Parameters
+    ----------
+    cv_results_ : dict
+        The cv_results_ dictionary from a fitted genetic search estimator.
+
+    Returns
+    -------
+    df : pandas.DataFrame
+        A DataFrame containing candidate results, sorted by test score rank.
+    """
+    df = pd.DataFrame(cv_results_)
+
+    # Determine primary rank column to sort by
+    if "rank_test_score" in df.columns:
+        sort_by = "rank_test_score"
+    else:
+        rank_cols = [col for col in df.columns if col.startswith("rank_test_")]
+        sort_by = rank_cols[0] if rank_cols else None
+
+    if sort_by:
+        df = df.sort_values(by=sort_by).reset_index(drop=True)
+
+    return df

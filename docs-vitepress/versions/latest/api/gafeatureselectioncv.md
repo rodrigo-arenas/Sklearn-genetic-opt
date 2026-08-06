@@ -113,6 +113,18 @@ print("CV accuracy:", round(selector.best_score_, 4))
 print("Test accuracy:", round(selector.score(X_test, y_test), 4))
 ```
 
+## Inspecting Candidate Results
+
+After fitting, `cv_results_dataframe()` returns the candidate results as a rank-sorted pandas `DataFrame`, so you can inspect every evaluated feature subset:
+
+```python
+# Inspect candidate results as a rank-sorted pandas DataFrame
+df_results = selector.cv_results_dataframe()
+
+# Display top 5 candidate configurations
+print(df_results[["rank_test_score", "mean_test_score", "params"]].head())
+```
+
 ## See Also
 
 - [Basic Usage](../guide/basic-usage) — feature selection tutorial

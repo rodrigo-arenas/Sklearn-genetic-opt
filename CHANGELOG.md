@@ -7,6 +7,7 @@ Full release notes with code examples are in the [documentation](https://sklearn
 ### New Features
 
 - Added `GAFeatureSelectionCV.get_feature_names_out()` support for DataFrame column names and generated NumPy feature names.
+- Added `cv_results_dataframe()` — returns `cv_results_` as a rank-sorted `pandas.DataFrame` for both `GASearchCV` and `GAFeatureSelectionCV`, with `GAFeatureSelectionCV` now exposing a `params` column (feature mask) for parity (#363).
 
 ## 0.13.4
 
