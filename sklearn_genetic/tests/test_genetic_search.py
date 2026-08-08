@@ -1729,3 +1729,34 @@ def test_gasearch_unsupported_fit_param_raises_clearly():
 
     with pytest.raises(TypeError):
         evolved_estimator.fit(X_train, y_train, not_a_real_fit_param=np.ones(X_train.shape[0]))
+
+
+def test_results_to_dataframe():
+    import pandas as pd
+    
+    evolved_estimator = GASearchCV(
+        DecisionTreeClassifier(),
+        cv=2,
+        scoring="accuracy",
+        population_size=4,
+        generations=1,
+        param_grid={"max_depth": Integer(2, 10), "min_samples_split": Integer(2, 10)},
+        verbose=False,
+    )
+    
+    # Should raise NotFittedError before fit
+    with pytest.raises(Exception):
+        evolved_estimator.results_to_dataframe()
+        
+    evolved_estimator.fit(X_train, y_train)
+    
+    df = evolved_estimator.results_to_dataframe()
+    assert isinstance(df, pd.DataFrame)
+    
+    # It should have parameter columns and ranks
+    assert "param_max_depth" in df.columns
+    assert "rank_test_score" in df.columns
+    
+    # It should be sorted by rank_test_score
+    ranks = df["rank_test_score"].values
+    assert all(ranks[i] <= ranks[i + 1] for i in range(len(ranks) - 1))

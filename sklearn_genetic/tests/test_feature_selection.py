@@ -948,3 +948,34 @@ def test_feature_selection_forwards_sample_weight_and_slices_only_features():
     # Candidate CV fits get per-fold weight slices; the refit gets all samples.
     assert all(w < n_samples for _, w in recorded[:-1])
     assert recorded[-1][1] == n_samples
+
+
+def test_results_to_dataframe():
+    import pandas as pd
+    
+    selector = GAFeatureSelectionCV(
+        DecisionTreeClassifier(),
+        cv=2,
+        scoring="accuracy",
+        population_size=4,
+        generations=1,
+        verbose=False,
+    )
+    
+    # Should raise NotFittedError before fit
+    with pytest.raises(Exception):
+        selector.results_to_dataframe()
+        
+    selector.fit(X_train, y_train)
+    
+    df = selector.results_to_dataframe()
+    assert isinstance(df, pd.DataFrame)
+    
+    # It should have ranks and n_features
+    assert "rank_test_score" in df.columns
+    assert "n_features" in df.columns
+    
+    # It should be sorted by rank_test_score
+    ranks = df["rank_test_score"].values
+    assert all(ranks[i] <= ranks[i + 1] for i in range(len(ranks) - 1))
+
