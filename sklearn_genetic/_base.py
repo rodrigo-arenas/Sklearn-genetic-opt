@@ -194,3 +194,30 @@ class GeneticEstimatorMixin:
 
     def __len__(self):
         return self._n_iterations
+
+    def results_to_dataframe(self):
+        """Returns the cv_results_ as a pandas DataFrame sorted by the primary rank."""
+        import pandas as pd
+
+        if not hasattr(self, "cv_results_"):
+            raise NotFittedError(
+                f"This {self.__class__.__name__} instance is not fitted yet. "
+                f"Call 'fit' with appropriate arguments before using this method."
+            )
+
+        df = pd.DataFrame(self.cv_results_)
+
+        primary_rank_col = None
+        if hasattr(self, "refit") and isinstance(self.refit, str):
+            primary_rank_col = f"rank_test_{self.refit}"
+        elif hasattr(self, "metrics_list") and len(self.metrics_list) > 0:
+            primary_rank_col = f"rank_test_{self.metrics_list[0]}"
+        elif hasattr(self, "scoring") and isinstance(self.scoring, str):
+            primary_rank_col = f"rank_test_{self.scoring}"
+        else:
+            primary_rank_col = "rank_test_score"
+
+        if primary_rank_col in df.columns:
+            df = df.sort_values(by=primary_rank_col).reset_index(drop=True)
+
+        return df
