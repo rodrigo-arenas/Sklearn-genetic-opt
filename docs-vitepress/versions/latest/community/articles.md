@@ -44,3 +44,6 @@ promotional.
 
 6. [Hyperparameter Tuning with GASearchCV on a Real Dataset](https://dev.to/saadgipuniwala/hyperparameter-tuning-with-gasearchcv-on-a-real-dataset-1jg9)  
    Saadgi Puniwala on dev.to. A hands-on comparison of `GASearchCV` against `GridSearchCV` on the UCI Student Performance dataset, including fitness evolution and search-space visualizations.
+
+7.7. [Hyperparameter Tuning Made Easy with GASearchCV](https://dev.to/shivampandey261/hyperparameter-tuning-made-easy-with-gasearchcv-26b6)  
+   Shivam Pandey (@shivampandey261) on dev.to. A step-by-step walkthrough of tuning hyperparameters with `GASearchCV`, covering setup, search space design, and interpreting results.
