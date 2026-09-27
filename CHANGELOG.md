@@ -8,6 +8,11 @@ Full release notes with code examples are in the [documentation](https://sklearn
 
 - Added `GAFeatureSelectionCV.get_feature_names_out()` support for DataFrame column names and generated NumPy feature names.
 
+### Bug Fixes
+
+- `Continuous` now rejects a non-positive `lower` bound when `distribution="log-uniform"` at construction time, instead of failing later during `fit` with an opaque SciPy "Domain error in arguments".
+- `Categorical` now rejects negative `priors`. Previously they passed validation because they summed to one, then either raised a NumPy error (seeded) or silently sampled with distorted weights (unseeded).
+
 ## 0.13.4
 
 ### New Features
