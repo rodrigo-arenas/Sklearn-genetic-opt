@@ -113,6 +113,11 @@ class Continuous(BaseDimension):
                 f"distribution must be one of {ContinuousDistributions.list()}, got {distribution} instead"
             )
 
+        if distribution == ContinuousDistributions.log_uniform.value and lower <= 0:
+            raise ValueError(
+                f"lower bound must be greater than zero for the log-uniform distribution, got {lower} instead"
+            )
+
         self.lower = lower
         self.upper = upper
         self.distribution = distribution
@@ -170,6 +175,8 @@ class Categorical(BaseDimension):
 
         if priors is None:
             self.priors = priors
+        elif any(p < 0 for p in priors):
+            raise ValueError(f"priors must be non-negative, got {priors} instead")
         elif sum(priors) != 1:
             raise ValueError(
                 f"The sum of the probabilities in the priors must be one, got {sum(priors)} instead"
