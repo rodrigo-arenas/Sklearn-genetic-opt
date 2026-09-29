@@ -44,3 +44,6 @@ promotional.
 
 6. [Hyperparameter Tuning with GASearchCV on a Real Dataset](https://dev.to/saadgipuniwala/hyperparameter-tuning-with-gasearchcv-on-a-real-dataset-1jg9)  
    Saadgi Puniwala on dev.to. A hands-on comparison of `GASearchCV` against `GridSearchCV` on the UCI Student Performance dataset, including fitness evolution and search-space visualizations.
+
+7. [Building ML Pipelines with sklearn-genetic-opt](https://medium.com/@hardikpandey0903/building-ml-pipelines-with-sklearn-genetic-opt-e02c0d2d3da6)  
+   Hardik Pandey (@hardik0903) on Medium. A beginner-friendly walkthrough of combining `GASearchCV` with a full scikit-learn `Pipeline` and `ColumnTransformer` on the Telecom Customer Churn dataset, covering data leakage, mixed categorical/numerical preprocessing, and tuning three different model types.
