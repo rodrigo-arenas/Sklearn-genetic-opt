@@ -90,6 +90,34 @@ The `plot_fitness_evolution` chart shows:
 
 A healthy search shows the mean and best fitness rising together, then plateauing as the population converges.
 
+## Passing Metadata (groups & sample_weight)
+
+Both `GASearchCV` and `GAFeatureSelectionCV` forward metadata from `fit` through
+cross-validation and the final refit:
+
+```python
+from sklearn.model_selection import GroupKFold
+
+evolved_estimator = GASearchCV(clf, cv=GroupKFold(n_splits=5), param_grid=param_grid)
+
+# groups drives the CV splitter; sample_weight reaches the estimator's fit
+evolved_estimator.fit(X, y, groups=groups, sample_weight=weights)
+```
+
+- `groups` is passed to group-aware splitters (`GroupKFold`, `LeaveOneGroupOut`, ...)
+  when materializing the folds, so groups are never silently dropped.
+- `sample_weight` (and any other `fit` metadata) reaches the wrapped estimator during
+  candidate evaluation, final-selection scoring, and the final refit. Sample-aligned
+  values are sliced per fold by scikit-learn.
+
+**Limitations**
+
+- Metadata the wrapped estimator's `fit` cannot accept fails up front with a clear
+  error naming the parameter and the estimator, rather than being ignored. For a
+  `Pipeline`, route it with the step prefix (e.g. `clf__sample_weight`).
+- Full scikit-learn metadata routing (`sklearn.set_config(enable_metadata_routing=True)`)
+  is not wrapped; pass `groups`/`sample_weight` directly to `fit` with routing disabled.
+
 ## Tips & Gotchas
 
 - Use `StratifiedKFold` for classification tasks to keep class balance across folds.
