@@ -13,6 +13,7 @@ Full release notes with code examples are in the [documentation](https://sklearn
 
 - `Continuous` now rejects a non-positive `lower` bound when `distribution="log-uniform"` at construction time, instead of failing later during `fit` with an opaque SciPy "Domain error in arguments".
 - `Categorical` now rejects negative `priors`. Previously they passed validation because they summed to one, then either raised a NumPy error (seeded) or silently sampled with distorted weights (unseeded).
+- Fixed pickling of fitted `GASearchCV` and `GAFeatureSelectionCV` instances. `pickle.dumps`/`pickle.loads` and `joblib.dump`/`joblib.load` previously failed on the unpicklable DEAP toolbox captured in `__dict__` (`Can't pickle <function ...>`) and now exclude the unpicklable DEAP internals (`toolbox`, `_stats`, `_pop`, `_hof`) via new `__getstate__`/`__setstate__` hooks on `GeneticEstimatorMixin`. The user-facing `hof` result is still preserved. `save()`/`load()` share the same protocol, and `load()` also accepts files written directly with `pickle.dump(self, f)` (#358).
 
 ## 0.13.4
 
