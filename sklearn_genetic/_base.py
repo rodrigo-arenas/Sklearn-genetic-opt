@@ -20,7 +20,10 @@ def history_record(history, index):
 
 
 class GeneticEstimatorMixin:
-    _volatile_pickle_attrs = {"toolbox", "_stats", "_pop", "_hof", "hof"}
+    # ``hof`` is a DEAP HallOfFame but is part of the public, user-facing
+    # result surface, so it is deliberately NOT excluded: it is plain
+    # picklable data and ``test_estimator_serialization`` asserts on it.
+    _volatile_pickle_attrs = {"toolbox", "_stats", "_pop", "_hof"}
 
     # Contract for the two serialization paths (see #297):
     #
@@ -61,12 +64,21 @@ class GeneticEstimatorMixin:
         "sharing_alpha": 1.0,
     }
 
-    def _serializable_state(self):
+    def __getstate__(self):
+        """Exclude unpicklable DEAP internals from the serialized state."""
         return {
             key: value
             for key, value in self.__dict__.items()
             if key not in self._volatile_pickle_attrs
         }
+
+    def __setstate__(self, state):
+        """Restore instance state, leaving DEAP attrs unset (rebuilt on fit)."""
+        self.__dict__.update(state)
+
+    def _serializable_state(self):
+        """Backward-compatible accessor for save/load internals."""
+        return self.__getstate__()
 
     def _checkpoint_state(self):
         """Constructor-compatible subset of the state used to resume a search.
@@ -83,9 +95,14 @@ class GeneticEstimatorMixin:
         return state
 
     def save(self, filepath):
-        """Save the current state of the estimator instance to a file."""
+        """Save the current state of the estimator instance to a file.
+
+        Uses ``__getstate__`` to exclude unpicklable DEAP internals.
+        The saved file is a pickled ``dict`` with keys ``estimator_state``
+        and ``logbook`` for backward compatibility with ``load()``.
+        """
         class_name = self.__class__.__name__
-        checkpoint_data = {"estimator_state": self._serializable_state(), "logbook": None}
+        checkpoint_data = {"estimator_state": self.__getstate__(), "logbook": None}
         if hasattr(self, "logbook"):
             checkpoint_data["logbook"] = self.logbook
 
@@ -105,7 +122,12 @@ class GeneticEstimatorMixin:
         logger.info("%s model successfully saved to %s", class_name, filepath)
 
     def load(self, filepath):
-        """Load an estimator instance from a file."""
+        """Load an estimator instance from a file.
+
+        Restores state via ``__setstate__``.  Accepts both the current format
+        (pickled ``dict`` with ``estimator_state`` key) and a raw pickled
+        instance produced by ``pickle.dumps(self)``.
+        """
         class_name = self.__class__.__name__
         try:
             with open(filepath, "rb") as f:
@@ -121,11 +143,18 @@ class GeneticEstimatorMixin:
             raise
 
         try:
-            for key, value in checkpoint_data["estimator_state"].items():
-                setattr(self, key, value)
-            self.logbook = checkpoint_data["logbook"]
+            if isinstance(checkpoint_data, dict) and "estimator_state" in checkpoint_data:
+                self.__setstate__(checkpoint_data["estimator_state"])
+                self.logbook = checkpoint_data["logbook"]
+            else:
+                # Raw instance written with ``pickle.dump(self, f)``; its DEAP
+                # internals were already stripped by ``__getstate__``.
+                self.__setstate__(checkpoint_data.__dict__)
         except KeyError as e:
             logger.error("Error loading %s: missing key in checkpoint: %s", class_name, e)
+            raise
+        except AttributeError as e:
+            logger.error("Error loading %s: invalid checkpoint payload: %s", class_name, e)
             raise
 
         logger.info("%s model successfully loaded from %s", class_name, filepath)
