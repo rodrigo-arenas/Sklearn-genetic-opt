@@ -770,3 +770,28 @@ New-Item -ItemType Directory -Force -Path .agent-runs/performance-v2 | Out-Null
 .\.venv\Scripts\python.exe .agent-runs/performance-v2/random-mask-ablation.py --seed-start 954 --seeds 5 --output .agent-runs/performance-v2/random-mask-ablation-validation.jsonl
 .\.venv\Scripts\python.exe .agent-runs/performance-v2/summarize-random-mask.py
 ```
+
+## Diverse feature finalists: exploratory tradeoff
+
+The eight-finalist, one-fold search can spend its full-validation budget on similar masks. To test a diversity adjustment without changing the library, each paired run used one `GAFeatureSelectionCV` trajectory (population eight, ten generations, at most 168 one-fold candidate CV calls), then evaluated the union of two eight-mask finalist sets on the original five folds. The baseline uses the existing top-eight ranking. The exploratory selector starts with the top mask and greedily combines preliminary rank with minimum normalized Hamming distance from masks already chosen. Both choose a winner solely by five-fold accuracy, breaking ties toward fewer features, then fit on the complete outer-training data. No outer holdout information selects finalists or winners. The datasets, SVC model, half-column cap and 25% holdout match the five-fold experiments above.
+
+A moderate setting (top-24 pool, distance weight 0.5) selected almost the same masks as the baseline across three pilot seeds 971–973. A stronger setting (top-64 pool, weight 2.0) was tried on seeds 974–976 and then held fixed for five new validation seeds 977–981. Its validation results are:
+
+| Dataset | Top-eight holdout accuracy | Diverse-eight holdout accuracy | Mean change | Diverse wins/ties/losses |
+|---|---:|---:|---:|---:|
+| Breast Cancer | .95385 | .95804 | +.00420 | 2/2/1 |
+| Digits | .97644 | .97511 | −.00133 | 1/2/2 |
+| Synthetic | .89600 | .90600 | +.01000 | 2/3/0 |
+
+The stronger selector changes most finalist masks, but loses accuracy on two Digits splits and one Breast Cancer split; its worst Digits change is −.01111. The default finalist ranking is therefore unchanged. These exploratory timings include an extra preliminary-model refit before the manual final-selection simulation and are not presented as production workflow speedups. The [paired artifact](results/performance-v2/diverse-finalists-pilot.json) records all 33 trajectories, finalist indices, held-out results, pilot/validation summaries, source hashes and reproduction scripts. As with the other comparisons, the overlapping splits do not establish a general quality guarantee.
+
+The recorded scripts can be extracted and rerun from the repository root in PowerShell after installing the benchmark dependencies in `.venv`:
+
+```powershell
+New-Item -ItemType Directory -Force -Path .agent-runs/performance-v2 | Out-Null
+.\.venv\Scripts\python.exe -c "import json,pathlib; a=json.loads(pathlib.Path('benchmarks/results/performance-v2/diverse-finalists-pilot.json').read_text(encoding='utf-8')); w=pathlib.Path('.agent-runs/performance-v2'); (w/'diverse-finalists-pilot.py').write_text(a['reproduction_script'], encoding='utf-8'); (w/'summarize-diverse-finalists.py').write_text(a['summary_script'], encoding='utf-8')"
+.\.venv\Scripts\python.exe .agent-runs/performance-v2/diverse-finalists-pilot.py
+.\.venv\Scripts\python.exe .agent-runs/performance-v2/diverse-finalists-pilot.py --seed-start 974 --seeds 3 --pool 64 --diversity-weight 2 --output .agent-runs/performance-v2/diverse-finalists-strong.jsonl
+.\.venv\Scripts\python.exe .agent-runs/performance-v2/diverse-finalists-pilot.py --seed-start 977 --seeds 5 --pool 64 --diversity-weight 2 --output .agent-runs/performance-v2/diverse-finalists-validation.jsonl
+.\.venv\Scripts\python.exe .agent-runs/performance-v2/summarize-diverse-finalists.py
+```

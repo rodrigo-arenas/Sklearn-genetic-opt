@@ -1,0 +1,1624 @@
+{
+  "question": "Can diversity-aware eight-finalist selection recover low-fold feature quality without more full-CV finalists?",
+  "conclusion": "mixed_holdout_reject_default_change",
+  "source_commit": "91c2a910da7efb470d6a663aaac0083a1b55746b",
+  "environment": {
+    "python": "3.12.0",
+    "numpy": "2.5.3",
+    "scikit-learn": "1.9.1",
+    "scipy": "1.18.1",
+    "deap": "1.4.4"
+  },
+  "source_sha256": {
+    "sklearn_genetic/genetic_search.py": "c7d49583e0250cd2208c2e9b6321b44ea8f850cb07816ef244adb72527a13600",
+    "sklearn_genetic/algorithms.py": "2f1b607b8c671923d4ea604f8ed81b8b502e609b4ebb5c49e904612c0b7affd7"
+  },
+  "summary": [
+    {
+      "cohort": "moderate_pilot",
+      "dataset": "breast",
+      "pool": 24,
+      "diversity_weight": 0.5,
+      "pairs": 3,
+      "top8_holdout_mean": 0.9743589743589743,
+      "diverse8_holdout_mean": 0.9743589743589743,
+      "delta_mean": 0.0,
+      "worst_delta": 0.0,
+      "wins": 0,
+      "ties": 3,
+      "losses": 0,
+      "overlap_mean": 7
+    },
+    {
+      "cohort": "moderate_pilot",
+      "dataset": "digits",
+      "pool": 24,
+      "diversity_weight": 0.5,
+      "pairs": 3,
+      "top8_holdout_mean": 0.98,
+      "diverse8_holdout_mean": 0.98,
+      "delta_mean": 0.0,
+      "worst_delta": 0.0,
+      "wins": 0,
+      "ties": 3,
+      "losses": 0,
+      "overlap_mean": 7.666666666666667
+    },
+    {
+      "cohort": "moderate_pilot",
+      "dataset": "synthetic",
+      "pool": 24,
+      "diversity_weight": 0.5,
+      "pairs": 3,
+      "top8_holdout_mean": 0.915,
+      "diverse8_holdout_mean": 0.9183333333333333,
+      "delta_mean": 0.0033333333333332993,
+      "worst_delta": 0.0,
+      "wins": 1,
+      "ties": 2,
+      "losses": 0,
+      "overlap_mean": 7.666666666666667
+    },
+    {
+      "cohort": "strong_pilot",
+      "dataset": "breast",
+      "pool": 64,
+      "diversity_weight": 2.0,
+      "pairs": 3,
+      "top8_holdout_mean": 0.9673659673659674,
+      "diverse8_holdout_mean": 0.965034965034965,
+      "delta_mean": -0.002331002331002363,
+      "worst_delta": -0.006993006993007089,
+      "wins": 1,
+      "ties": 0,
+      "losses": 2,
+      "overlap_mean": 2
+    },
+    {
+      "cohort": "strong_pilot",
+      "dataset": "digits",
+      "pool": 64,
+      "diversity_weight": 2.0,
+      "pairs": 3,
+      "top8_holdout_mean": 0.9696296296296296,
+      "diverse8_holdout_mean": 0.9755555555555556,
+      "delta_mean": 0.005925925925925927,
+      "worst_delta": 0.0,
+      "wins": 1,
+      "ties": 2,
+      "losses": 0,
+      "overlap_mean": 3.6666666666666665
+    },
+    {
+      "cohort": "strong_pilot",
+      "dataset": "synthetic",
+      "pool": 64,
+      "diversity_weight": 2.0,
+      "pairs": 3,
+      "top8_holdout_mean": 0.9033333333333333,
+      "diverse8_holdout_mean": 0.905,
+      "delta_mean": 0.001666666666666668,
+      "worst_delta": 0.0,
+      "wins": 1,
+      "ties": 2,
+      "losses": 0,
+      "overlap_mean": 3.3333333333333335
+    },
+    {
+      "cohort": "strong_validation",
+      "dataset": "breast",
+      "pool": 64,
+      "diversity_weight": 2.0,
+      "pairs": 5,
+      "top8_holdout_mean": 0.9538461538461538,
+      "diverse8_holdout_mean": 0.958041958041958,
+      "delta_mean": 0.004195804195804187,
+      "worst_delta": -0.006993006993006978,
+      "wins": 2,
+      "ties": 2,
+      "losses": 1,
+      "overlap_mean": 2.8
+    },
+    {
+      "cohort": "strong_validation",
+      "dataset": "digits",
+      "pool": 64,
+      "diversity_weight": 2.0,
+      "pairs": 5,
+      "top8_holdout_mean": 0.9764444444444444,
+      "diverse8_holdout_mean": 0.9751111111111112,
+      "delta_mean": -0.001333333333333342,
+      "worst_delta": -0.011111111111111183,
+      "wins": 1,
+      "ties": 2,
+      "losses": 2,
+      "overlap_mean": 3.4
+    },
+    {
+      "cohort": "strong_validation",
+      "dataset": "synthetic",
+      "pool": 64,
+      "diversity_weight": 2.0,
+      "pairs": 5,
+      "top8_holdout_mean": 0.896,
+      "diverse8_holdout_mean": 0.906,
+      "delta_mean": 0.010000000000000009,
+      "worst_delta": 0.0,
+      "wins": 2,
+      "ties": 3,
+      "losses": 0,
+      "overlap_mean": 2.4
+    }
+  ],
+  "raw": [
+    {
+      "cohort": "moderate_pilot",
+      "dataset": "breast",
+      "seed": 971,
+      "search_seconds": 0.9810772000055294,
+      "candidate_cv_calls": 168,
+      "finalist_union_size": 8,
+      "top8_overlap": 8,
+      "top8": {
+        "finalist_indices": [
+          142,
+          111,
+          32,
+          97,
+          78,
+          67,
+          41,
+          8
+        ],
+        "selected_index": 8,
+        "score": 0.9718467852257182,
+        "holdout": 0.965034965034965,
+        "features": 4,
+        "seconds": 1.1730445999710355
+      },
+      "diverse8": {
+        "finalist_indices": [
+          142,
+          41,
+          111,
+          32,
+          97,
+          78,
+          67,
+          8
+        ],
+        "selected_index": 8,
+        "score": 0.9718467852257182,
+        "holdout": 0.965034965034965,
+        "features": 4,
+        "seconds": 1.1728773999784607
+      }
+    },
+    {
+      "cohort": "moderate_pilot",
+      "dataset": "breast",
+      "seed": 972,
+      "search_seconds": 1.0235617000143975,
+      "candidate_cv_calls": 166,
+      "finalist_union_size": 9,
+      "top8_overlap": 7,
+      "top8": {
+        "finalist_indices": [
+          153,
+          157,
+          96,
+          105,
+          164,
+          155,
+          126,
+          122
+        ],
+        "selected_index": 164,
+        "score": 0.9717647058823531,
+        "holdout": 0.972027972027972,
+        "features": 11,
+        "seconds": 1.23642839997774
+      },
+      "diverse8": {
+        "finalist_indices": [
+          153,
+          157,
+          105,
+          155,
+          96,
+          164,
+          126,
+          132
+        ],
+        "selected_index": 164,
+        "score": 0.9717647058823531,
+        "holdout": 0.972027972027972,
+        "features": 11,
+        "seconds": 1.233846499962965
+      }
+    },
+    {
+      "cohort": "moderate_pilot",
+      "dataset": "breast",
+      "seed": 973,
+      "search_seconds": 0.9803626000066288,
+      "candidate_cv_calls": 167,
+      "finalist_union_size": 10,
+      "top8_overlap": 6,
+      "top8": {
+        "finalist_indices": [
+          141,
+          25,
+          56,
+          31,
+          68,
+          152,
+          51,
+          29
+        ],
+        "selected_index": 152,
+        "score": 0.976497948016416,
+        "holdout": 0.986013986013986,
+        "features": 12,
+        "seconds": 1.195858099963516
+      },
+      "diverse8": {
+        "finalist_indices": [
+          141,
+          25,
+          11,
+          56,
+          152,
+          93,
+          31,
+          68
+        ],
+        "selected_index": 93,
+        "score": 0.9788508891928865,
+        "holdout": 0.986013986013986,
+        "features": 14,
+        "seconds": 1.1872824999445584
+      }
+    },
+    {
+      "cohort": "moderate_pilot",
+      "dataset": "digits",
+      "seed": 971,
+      "search_seconds": 7.499308500002371,
+      "candidate_cv_calls": 168,
+      "finalist_union_size": 8,
+      "top8_overlap": 8,
+      "top8": {
+        "finalist_indices": [
+          146,
+          127,
+          138,
+          148,
+          164,
+          91,
+          111,
+          120
+        ],
+        "selected_index": 111,
+        "score": 0.974005231997797,
+        "holdout": 0.9711111111111111,
+        "features": 32,
+        "seconds": 9.14198269994813
+      },
+      "diverse8": {
+        "finalist_indices": [
+          146,
+          127,
+          138,
+          148,
+          164,
+          120,
+          91,
+          111
+        ],
+        "selected_index": 111,
+        "score": 0.974005231997797,
+        "holdout": 0.9711111111111111,
+        "features": 32,
+        "seconds": 9.144679199962411
+      }
+    },
+    {
+      "cohort": "moderate_pilot",
+      "dataset": "digits",
+      "seed": 972,
+      "search_seconds": 7.305052199983038,
+      "candidate_cv_calls": 168,
+      "finalist_union_size": 9,
+      "top8_overlap": 7,
+      "top8": {
+        "finalist_indices": [
+          158,
+          149,
+          141,
+          90,
+          123,
+          163,
+          120,
+          139
+        ],
+        "selected_index": 158,
+        "score": 0.982178163293405,
+        "holdout": 0.9911111111111112,
+        "features": 30,
+        "seconds": 9.132111600076314
+      },
+      "diverse8": {
+        "finalist_indices": [
+          158,
+          149,
+          141,
+          90,
+          123,
+          163,
+          105,
+          120
+        ],
+        "selected_index": 158,
+        "score": 0.982178163293405,
+        "holdout": 0.9911111111111112,
+        "features": 30,
+        "seconds": 9.139476000098512
+      }
+    },
+    {
+      "cohort": "moderate_pilot",
+      "dataset": "digits",
+      "seed": 973,
+      "search_seconds": 7.2397699000139255,
+      "candidate_cv_calls": 166,
+      "finalist_union_size": 8,
+      "top8_overlap": 8,
+      "top8": {
+        "finalist_indices": [
+          155,
+          153,
+          152,
+          137,
+          142,
+          132,
+          135,
+          139
+        ],
+        "selected_index": 142,
+        "score": 0.9829271650832989,
+        "holdout": 0.9777777777777777,
+        "features": 31,
+        "seconds": 9.046228900086135
+      },
+      "diverse8": {
+        "finalist_indices": [
+          155,
+          152,
+          153,
+          137,
+          142,
+          135,
+          132,
+          139
+        ],
+        "selected_index": 142,
+        "score": 0.9829271650832989,
+        "holdout": 0.9777777777777777,
+        "features": 31,
+        "seconds": 9.045469000091543
+      }
+    },
+    {
+      "cohort": "moderate_pilot",
+      "dataset": "synthetic",
+      "seed": 971,
+      "search_seconds": 1.7774303999904078,
+      "candidate_cv_calls": 165,
+      "finalist_union_size": 9,
+      "top8_overlap": 7,
+      "top8": {
+        "finalist_indices": [
+          109,
+          112,
+          84,
+          99,
+          54,
+          107,
+          80,
+          147
+        ],
+        "selected_index": 112,
+        "score": 0.9199999999999999,
+        "holdout": 0.93,
+        "features": 9,
+        "seconds": 2.1106249000295065
+      },
+      "diverse8": {
+        "finalist_indices": [
+          109,
+          112,
+          84,
+          99,
+          54,
+          107,
+          114,
+          80
+        ],
+        "selected_index": 114,
+        "score": 0.9216666666666666,
+        "holdout": 0.94,
+        "features": 9,
+        "seconds": 2.1072142999910284
+      }
+    },
+    {
+      "cohort": "moderate_pilot",
+      "dataset": "synthetic",
+      "seed": 972,
+      "search_seconds": 1.857243100006599,
+      "candidate_cv_calls": 164,
+      "finalist_union_size": 8,
+      "top8_overlap": 8,
+      "top8": {
+        "finalist_indices": [
+          158,
+          115,
+          162,
+          122,
+          150,
+          164,
+          120,
+          125
+        ],
+        "selected_index": 162,
+        "score": 0.9099999999999999,
+        "holdout": 0.905,
+        "features": 10,
+        "seconds": 2.2164907999977004
+      },
+      "diverse8": {
+        "finalist_indices": [
+          158,
+          115,
+          162,
+          122,
+          150,
+          164,
+          120,
+          125
+        ],
+        "selected_index": 162,
+        "score": 0.9099999999999999,
+        "holdout": 0.905,
+        "features": 10,
+        "seconds": 2.2164885999518447
+      }
+    },
+    {
+      "cohort": "moderate_pilot",
+      "dataset": "synthetic",
+      "seed": 973,
+      "search_seconds": 1.8363361000083387,
+      "candidate_cv_calls": 164,
+      "finalist_union_size": 8,
+      "top8_overlap": 8,
+      "top8": {
+        "finalist_indices": [
+          27,
+          115,
+          125,
+          120,
+          75,
+          76,
+          163,
+          43
+        ],
+        "selected_index": 115,
+        "score": 0.9199999999999999,
+        "holdout": 0.91,
+        "features": 7,
+        "seconds": 2.2091309999814257
+      },
+      "diverse8": {
+        "finalist_indices": [
+          27,
+          76,
+          115,
+          125,
+          120,
+          75,
+          163,
+          43
+        ],
+        "selected_index": 115,
+        "score": 0.9199999999999999,
+        "holdout": 0.91,
+        "features": 7,
+        "seconds": 2.2086564999772236
+      }
+    },
+    {
+      "cohort": "strong_pilot",
+      "dataset": "breast",
+      "seed": 974,
+      "pool": 64,
+      "diversity_weight": 2.0,
+      "search_seconds": 0.901494299992919,
+      "candidate_cv_calls": 165,
+      "finalist_union_size": 13,
+      "top8_overlap": 3,
+      "top8": {
+        "finalist_indices": [
+          124,
+          63,
+          148,
+          156,
+          35,
+          112,
+          132,
+          139
+        ],
+        "selected_index": 156,
+        "score": 0.9858823529411765,
+        "holdout": 0.951048951048951,
+        "features": 10,
+        "seconds": 1.0942613999650348
+      },
+      "diverse8": {
+        "finalist_indices": [
+          124,
+          139,
+          68,
+          164,
+          147,
+          122,
+          152,
+          148
+        ],
+        "selected_index": 122,
+        "score": 0.9835567715458277,
+        "holdout": 0.958041958041958,
+        "features": 14,
+        "seconds": 1.109022599965101
+      }
+    },
+    {
+      "cohort": "strong_pilot",
+      "dataset": "breast",
+      "seed": 975,
+      "pool": 64,
+      "diversity_weight": 2.0,
+      "search_seconds": 0.9230402999965008,
+      "candidate_cv_calls": 166,
+      "finalist_union_size": 14,
+      "top8_overlap": 2,
+      "top8": {
+        "finalist_indices": [
+          45,
+          74,
+          25,
+          41,
+          94,
+          138,
+          53,
+          167
+        ],
+        "selected_index": 167,
+        "score": 0.9506429548563613,
+        "holdout": 0.972027972027972,
+        "features": 15,
+        "seconds": 1.1117260999744758
+      },
+      "diverse8": {
+        "finalist_indices": [
+          45,
+          73,
+          85,
+          119,
+          52,
+          78,
+          130,
+          167
+        ],
+        "selected_index": 130,
+        "score": 0.9765253077975377,
+        "holdout": 0.965034965034965,
+        "features": 15,
+        "seconds": 1.1238352999498602
+      }
+    },
+    {
+      "cohort": "strong_pilot",
+      "dataset": "breast",
+      "seed": 976,
+      "pool": 64,
+      "diversity_weight": 2.0,
+      "search_seconds": 0.9577857999829575,
+      "candidate_cv_calls": 164,
+      "finalist_union_size": 15,
+      "top8_overlap": 1,
+      "top8": {
+        "finalist_indices": [
+          2,
+          138,
+          152,
+          52,
+          56,
+          98,
+          163,
+          166
+        ],
+        "selected_index": 166,
+        "score": 0.9600273597811217,
+        "holdout": 0.9790209790209791,
+        "features": 15,
+        "seconds": 1.1498928999353666
+      },
+      "diverse8": {
+        "finalist_indices": [
+          2,
+          4,
+          30,
+          116,
+          149,
+          84,
+          45,
+          54
+        ],
+        "selected_index": 54,
+        "score": 0.976497948016416,
+        "holdout": 0.972027972027972,
+        "features": 13,
+        "seconds": 1.158900199981872
+      }
+    },
+    {
+      "cohort": "strong_pilot",
+      "dataset": "digits",
+      "seed": 974,
+      "pool": 64,
+      "diversity_weight": 2.0,
+      "search_seconds": 7.6123093999922276,
+      "candidate_cv_calls": 167,
+      "finalist_union_size": 15,
+      "top8_overlap": 1,
+      "top8": {
+        "finalist_indices": [
+          103,
+          91,
+          129,
+          131,
+          132,
+          72,
+          77,
+          104
+        ],
+        "selected_index": 103,
+        "score": 0.9754922208453808,
+        "holdout": 0.9733333333333334,
+        "features": 27,
+        "seconds": 9.460230299941031
+      },
+      "diverse8": {
+        "finalist_indices": [
+          103,
+          40,
+          158,
+          101,
+          165,
+          155,
+          60,
+          151
+        ],
+        "selected_index": 103,
+        "score": 0.9754922208453808,
+        "holdout": 0.9733333333333334,
+        "features": 27,
+        "seconds": 9.342861699988134
+      }
+    },
+    {
+      "cohort": "strong_pilot",
+      "dataset": "digits",
+      "seed": 975,
+      "pool": 64,
+      "diversity_weight": 2.0,
+      "search_seconds": 7.43100240000058,
+      "candidate_cv_calls": 167,
+      "finalist_union_size": 10,
+      "top8_overlap": 6,
+      "top8": {
+        "finalist_indices": [
+          62,
+          120,
+          73,
+          146,
+          89,
+          132,
+          139,
+          127
+        ],
+        "selected_index": 120,
+        "score": 0.982175409610354,
+        "holdout": 0.9822222222222222,
+        "features": 28,
+        "seconds": 9.250869500043336
+      },
+      "diverse8": {
+        "finalist_indices": [
+          62,
+          37,
+          70,
+          132,
+          120,
+          73,
+          146,
+          89
+        ],
+        "selected_index": 120,
+        "score": 0.982175409610354,
+        "holdout": 0.9822222222222222,
+        "features": 28,
+        "seconds": 9.211403199995402
+      }
+    },
+    {
+      "cohort": "strong_pilot",
+      "dataset": "digits",
+      "seed": 976,
+      "pool": 64,
+      "diversity_weight": 2.0,
+      "search_seconds": 7.517688799998723,
+      "candidate_cv_calls": 168,
+      "finalist_union_size": 12,
+      "top8_overlap": 4,
+      "top8": {
+        "finalist_indices": [
+          153,
+          145,
+          125,
+          159,
+          77,
+          96,
+          128,
+          129
+        ],
+        "selected_index": 96,
+        "score": 0.9717775024094726,
+        "holdout": 0.9533333333333334,
+        "features": 32,
+        "seconds": 9.231506299984176
+      },
+      "diverse8": {
+        "finalist_indices": [
+          153,
+          128,
+          111,
+          71,
+          157,
+          120,
+          96,
+          77
+        ],
+        "selected_index": 157,
+        "score": 0.9762384689522235,
+        "holdout": 0.9711111111111111,
+        "features": 30,
+        "seconds": 9.291204000008292
+      }
+    },
+    {
+      "cohort": "strong_pilot",
+      "dataset": "synthetic",
+      "seed": 974,
+      "pool": 64,
+      "diversity_weight": 2.0,
+      "search_seconds": 1.9398229999933392,
+      "candidate_cv_calls": 168,
+      "finalist_union_size": 12,
+      "top8_overlap": 4,
+      "top8": {
+        "finalist_indices": [
+          155,
+          78,
+          104,
+          80,
+          63,
+          75,
+          23,
+          28
+        ],
+        "selected_index": 80,
+        "score": 0.9199999999999999,
+        "holdout": 0.9,
+        "features": 8,
+        "seconds": 2.3195720999792684
+      },
+      "diverse8": {
+        "finalist_indices": [
+          155,
+          24,
+          63,
+          80,
+          136,
+          148,
+          28,
+          113
+        ],
+        "selected_index": 80,
+        "score": 0.9199999999999999,
+        "holdout": 0.9,
+        "features": 8,
+        "seconds": 2.3242573000025004
+      }
+    },
+    {
+      "cohort": "strong_pilot",
+      "dataset": "synthetic",
+      "seed": 975,
+      "pool": 64,
+      "diversity_weight": 2.0,
+      "search_seconds": 1.8882434999977704,
+      "candidate_cv_calls": 165,
+      "finalist_union_size": 13,
+      "top8_overlap": 3,
+      "top8": {
+        "finalist_indices": [
+          158,
+          133,
+          128,
+          157,
+          129,
+          60,
+          96,
+          156
+        ],
+        "selected_index": 60,
+        "score": 0.9183333333333333,
+        "holdout": 0.895,
+        "features": 7,
+        "seconds": 2.224897400010377
+      },
+      "diverse8": {
+        "finalist_indices": [
+          158,
+          38,
+          143,
+          55,
+          129,
+          53,
+          128,
+          77
+        ],
+        "selected_index": 128,
+        "score": 0.915,
+        "holdout": 0.895,
+        "features": 10,
+        "seconds": 2.240595300012501
+      }
+    },
+    {
+      "cohort": "strong_pilot",
+      "dataset": "synthetic",
+      "seed": 976,
+      "pool": 64,
+      "diversity_weight": 2.0,
+      "search_seconds": 1.845304299989948,
+      "candidate_cv_calls": 165,
+      "finalist_union_size": 13,
+      "top8_overlap": 3,
+      "top8": {
+        "finalist_indices": [
+          145,
+          91,
+          127,
+          133,
+          156,
+          92,
+          56,
+          84
+        ],
+        "selected_index": 91,
+        "score": 0.9266666666666667,
+        "holdout": 0.915,
+        "features": 9,
+        "seconds": 2.1698535999748856
+      },
+      "diverse8": {
+        "finalist_indices": [
+          145,
+          81,
+          45,
+          133,
+          90,
+          156,
+          152,
+          83
+        ],
+        "selected_index": 145,
+        "score": 0.9233333333333332,
+        "holdout": 0.92,
+        "features": 8,
+        "seconds": 2.1984993999358267
+      }
+    },
+    {
+      "cohort": "strong_validation",
+      "dataset": "breast",
+      "seed": 977,
+      "pool": 64,
+      "diversity_weight": 2.0,
+      "search_seconds": 0.9592178000020795,
+      "candidate_cv_calls": 167,
+      "finalist_union_size": 14,
+      "top8_overlap": 2,
+      "top8": {
+        "finalist_indices": [
+          63,
+          143,
+          28,
+          113,
+          156,
+          123,
+          153,
+          150
+        ],
+        "selected_index": 153,
+        "score": 0.9741450068399452,
+        "holdout": 0.972027972027972,
+        "features": 9,
+        "seconds": 1.1606442999618594
+      },
+      "diverse8": {
+        "finalist_indices": [
+          63,
+          126,
+          104,
+          86,
+          112,
+          114,
+          152,
+          150
+        ],
+        "selected_index": 86,
+        "score": 0.9741450068399453,
+        "holdout": 0.965034965034965,
+        "features": 15,
+        "seconds": 1.163724700018065
+      }
+    },
+    {
+      "cohort": "strong_validation",
+      "dataset": "breast",
+      "seed": 978,
+      "pool": 64,
+      "diversity_weight": 2.0,
+      "search_seconds": 0.9517096999916248,
+      "candidate_cv_calls": 168,
+      "finalist_union_size": 14,
+      "top8_overlap": 2,
+      "top8": {
+        "finalist_indices": [
+          41,
+          100,
+          32,
+          81,
+          96,
+          109,
+          131,
+          87
+        ],
+        "selected_index": 131,
+        "score": 0.9812038303693571,
+        "holdout": 0.9370629370629371,
+        "features": 12,
+        "seconds": 1.1411025999987032
+      },
+      "diverse8": {
+        "finalist_indices": [
+          41,
+          78,
+          109,
+          35,
+          162,
+          136,
+          106,
+          46
+        ],
+        "selected_index": 109,
+        "score": 0.9788508891928865,
+        "holdout": 0.9440559440559441,
+        "features": 12,
+        "seconds": 1.1411880000086967
+      }
+    },
+    {
+      "cohort": "strong_validation",
+      "dataset": "breast",
+      "seed": 979,
+      "pool": 64,
+      "diversity_weight": 2.0,
+      "search_seconds": 0.928243400005158,
+      "candidate_cv_calls": 163,
+      "finalist_union_size": 14,
+      "top8_overlap": 2,
+      "top8": {
+        "finalist_indices": [
+          60,
+          163,
+          113,
+          116,
+          125,
+          142,
+          149,
+          155
+        ],
+        "selected_index": 155,
+        "score": 0.9882626538987689,
+        "holdout": 0.965034965034965,
+        "features": 15,
+        "seconds": 1.1298372999881394
+      },
+      "diverse8": {
+        "finalist_indices": [
+          60,
+          80,
+          70,
+          65,
+          56,
+          66,
+          121,
+          149
+        ],
+        "selected_index": 80,
+        "score": 0.9859097127222982,
+        "holdout": 0.965034965034965,
+        "features": 12,
+        "seconds": 1.146019100007834
+      }
+    },
+    {
+      "cohort": "strong_validation",
+      "dataset": "breast",
+      "seed": 980,
+      "pool": 64,
+      "diversity_weight": 2.0,
+      "search_seconds": 0.957148599991342,
+      "candidate_cv_calls": 168,
+      "finalist_union_size": 13,
+      "top8_overlap": 3,
+      "top8": {
+        "finalist_indices": [
+          136,
+          86,
+          114,
+          93,
+          129,
+          144,
+          165,
+          88
+        ],
+        "selected_index": 165,
+        "score": 0.9600273597811217,
+        "holdout": 0.951048951048951,
+        "features": 14,
+        "seconds": 1.1506624000321608
+      },
+      "diverse8": {
+        "finalist_indices": [
+          136,
+          60,
+          88,
+          124,
+          113,
+          154,
+          44,
+          93
+        ],
+        "selected_index": 124,
+        "score": 0.9741723666210671,
+        "holdout": 0.972027972027972,
+        "features": 8,
+        "seconds": 1.1521101000253111
+      }
+    },
+    {
+      "cohort": "strong_validation",
+      "dataset": "breast",
+      "seed": 981,
+      "pool": 64,
+      "diversity_weight": 2.0,
+      "search_seconds": 0.9855524000013247,
+      "candidate_cv_calls": 167,
+      "finalist_union_size": 11,
+      "top8_overlap": 5,
+      "top8": {
+        "finalist_indices": [
+          148,
+          128,
+          96,
+          163,
+          24,
+          93,
+          99,
+          125
+        ],
+        "selected_index": 125,
+        "score": 0.9764705882352942,
+        "holdout": 0.9440559440559441,
+        "features": 15,
+        "seconds": 1.1937588000728283
+      },
+      "diverse8": {
+        "finalist_indices": [
+          148,
+          99,
+          128,
+          125,
+          62,
+          126,
+          86,
+          93
+        ],
+        "selected_index": 125,
+        "score": 0.9764705882352942,
+        "holdout": 0.9440559440559441,
+        "features": 15,
+        "seconds": 1.1867006000538822
+      }
+    },
+    {
+      "cohort": "strong_validation",
+      "dataset": "digits",
+      "seed": 977,
+      "pool": 64,
+      "diversity_weight": 2.0,
+      "search_seconds": 7.2581262000021525,
+      "candidate_cv_calls": 168,
+      "finalist_union_size": 12,
+      "top8_overlap": 4,
+      "top8": {
+        "finalist_indices": [
+          52,
+          79,
+          39,
+          149,
+          106,
+          162,
+          82,
+          94
+        ],
+        "selected_index": 52,
+        "score": 0.9829161503510946,
+        "holdout": 0.9711111111111111,
+        "features": 32,
+        "seconds": 8.982580199983204
+      },
+      "diverse8": {
+        "finalist_indices": [
+          52,
+          162,
+          72,
+          108,
+          94,
+          164,
+          39,
+          35
+        ],
+        "selected_index": 52,
+        "score": 0.9829161503510946,
+        "holdout": 0.9711111111111111,
+        "features": 32,
+        "seconds": 8.935667699930491
+      }
+    },
+    {
+      "cohort": "strong_validation",
+      "dataset": "digits",
+      "seed": 978,
+      "pool": 64,
+      "diversity_weight": 2.0,
+      "search_seconds": 7.349810899992008,
+      "candidate_cv_calls": 168,
+      "finalist_union_size": 11,
+      "top8_overlap": 5,
+      "top8": {
+        "finalist_indices": [
+          128,
+          156,
+          146,
+          140,
+          135,
+          109,
+          131,
+          74
+        ],
+        "selected_index": 140,
+        "score": 0.979217954013493,
+        "holdout": 0.9755555555555555,
+        "features": 32,
+        "seconds": 9.082555599947227
+      },
+      "diverse8": {
+        "finalist_indices": [
+          128,
+          109,
+          140,
+          40,
+          155,
+          51,
+          135,
+          146
+        ],
+        "selected_index": 140,
+        "score": 0.979217954013493,
+        "holdout": 0.9755555555555555,
+        "features": 32,
+        "seconds": 9.117611299996497
+      }
+    },
+    {
+      "cohort": "strong_validation",
+      "dataset": "digits",
+      "seed": 979,
+      "pool": 64,
+      "diversity_weight": 2.0,
+      "search_seconds": 7.493967499991413,
+      "candidate_cv_calls": 168,
+      "finalist_union_size": 11,
+      "top8_overlap": 5,
+      "top8": {
+        "finalist_indices": [
+          141,
+          149,
+          138,
+          156,
+          160,
+          133,
+          97,
+          123
+        ],
+        "selected_index": 160,
+        "score": 0.9836651521409886,
+        "holdout": 0.9866666666666667,
+        "features": 30,
+        "seconds": 9.277169799985131
+      },
+      "diverse8": {
+        "finalist_indices": [
+          141,
+          156,
+          101,
+          82,
+          138,
+          106,
+          97,
+          149
+        ],
+        "selected_index": 149,
+        "score": 0.982175409610354,
+        "holdout": 0.9755555555555555,
+        "features": 31,
+        "seconds": 9.278432899998734
+      }
+    },
+    {
+      "cohort": "strong_validation",
+      "dataset": "digits",
+      "seed": 980,
+      "pool": 64,
+      "diversity_weight": 2.0,
+      "search_seconds": 7.531591599981766,
+      "candidate_cv_calls": 168,
+      "finalist_union_size": 15,
+      "top8_overlap": 1,
+      "top8": {
+        "finalist_indices": [
+          146,
+          158,
+          144,
+          130,
+          164,
+          129,
+          118,
+          136
+        ],
+        "selected_index": 129,
+        "score": 0.9710505300839873,
+        "holdout": 0.9711111111111111,
+        "features": 32,
+        "seconds": 9.269447099941317
+      },
+      "diverse8": {
+        "finalist_indices": [
+          146,
+          125,
+          127,
+          124,
+          87,
+          123,
+          61,
+          148
+        ],
+        "selected_index": 87,
+        "score": 0.9703097893432465,
+        "holdout": 0.9644444444444444,
+        "features": 32,
+        "seconds": 9.202496899990365
+      }
+    },
+    {
+      "cohort": "strong_validation",
+      "dataset": "digits",
+      "seed": 981,
+      "pool": 64,
+      "diversity_weight": 2.0,
+      "search_seconds": 7.210355300019728,
+      "candidate_cv_calls": 167,
+      "finalist_union_size": 14,
+      "top8_overlap": 2,
+      "top8": {
+        "finalist_indices": [
+          155,
+          146,
+          127,
+          126,
+          128,
+          109,
+          121,
+          144
+        ],
+        "selected_index": 144,
+        "score": 0.9754867134792786,
+        "holdout": 0.9777777777777777,
+        "features": 32,
+        "seconds": 9.002564099937445
+      },
+      "diverse8": {
+        "finalist_indices": [
+          155,
+          153,
+          112,
+          105,
+          134,
+          96,
+          101,
+          128
+        ],
+        "selected_index": 101,
+        "score": 0.9777171967506539,
+        "holdout": 0.9888888888888889,
+        "features": 32,
+        "seconds": 8.897218599944608
+      }
+    },
+    {
+      "cohort": "strong_validation",
+      "dataset": "synthetic",
+      "seed": 977,
+      "pool": 64,
+      "diversity_weight": 2.0,
+      "search_seconds": 1.8238446000032127,
+      "candidate_cv_calls": 166,
+      "finalist_union_size": 13,
+      "top8_overlap": 3,
+      "top8": {
+        "finalist_indices": [
+          65,
+          78,
+          132,
+          58,
+          64,
+          72,
+          97,
+          108
+        ],
+        "selected_index": 65,
+        "score": 0.9066666666666666,
+        "holdout": 0.895,
+        "features": 8,
+        "seconds": 2.200172199984081
+      },
+      "diverse8": {
+        "finalist_indices": [
+          65,
+          38,
+          166,
+          108,
+          132,
+          148,
+          114,
+          55
+        ],
+        "selected_index": 65,
+        "score": 0.9066666666666666,
+        "holdout": 0.895,
+        "features": 8,
+        "seconds": 2.209855399967637
+      }
+    },
+    {
+      "cohort": "strong_validation",
+      "dataset": "synthetic",
+      "seed": 978,
+      "pool": 64,
+      "diversity_weight": 2.0,
+      "search_seconds": 1.9654777999967337,
+      "candidate_cv_calls": 163,
+      "finalist_union_size": 14,
+      "top8_overlap": 2,
+      "top8": {
+        "finalist_indices": [
+          30,
+          29,
+          107,
+          84,
+          8,
+          93,
+          115,
+          7
+        ],
+        "selected_index": 107,
+        "score": 0.915,
+        "holdout": 0.87,
+        "features": 9,
+        "seconds": 2.374716299964348
+      },
+      "diverse8": {
+        "finalist_indices": [
+          30,
+          154,
+          167,
+          55,
+          163,
+          51,
+          111,
+          84
+        ],
+        "selected_index": 51,
+        "score": 0.9133333333333333,
+        "holdout": 0.9,
+        "features": 8,
+        "seconds": 2.3663436000060756
+      }
+    },
+    {
+      "cohort": "strong_validation",
+      "dataset": "synthetic",
+      "seed": 979,
+      "pool": 64,
+      "diversity_weight": 2.0,
+      "search_seconds": 1.9191938000149094,
+      "candidate_cv_calls": 161,
+      "finalist_union_size": 14,
+      "top8_overlap": 2,
+      "top8": {
+        "finalist_indices": [
+          80,
+          144,
+          50,
+          117,
+          35,
+          94,
+          106,
+          88
+        ],
+        "selected_index": 50,
+        "score": 0.9283333333333333,
+        "holdout": 0.895,
+        "features": 10,
+        "seconds": 2.2898084999760613
+      },
+      "diverse8": {
+        "finalist_indices": [
+          80,
+          123,
+          90,
+          68,
+          28,
+          7,
+          94,
+          83
+        ],
+        "selected_index": 94,
+        "score": 0.9199999999999999,
+        "holdout": 0.915,
+        "features": 10,
+        "seconds": 2.3155828999588266
+      }
+    },
+    {
+      "cohort": "strong_validation",
+      "dataset": "synthetic",
+      "seed": 980,
+      "pool": 64,
+      "diversity_weight": 2.0,
+      "search_seconds": 1.8210694000008516,
+      "candidate_cv_calls": 162,
+      "finalist_union_size": 14,
+      "top8_overlap": 2,
+      "top8": {
+        "finalist_indices": [
+          127,
+          111,
+          156,
+          167,
+          95,
+          153,
+          147,
+          99
+        ],
+        "selected_index": 127,
+        "score": 0.93,
+        "holdout": 0.92,
+        "features": 8,
+        "seconds": 2.169068499992136
+      },
+      "diverse8": {
+        "finalist_indices": [
+          127,
+          64,
+          130,
+          65,
+          41,
+          51,
+          167,
+          91
+        ],
+        "selected_index": 127,
+        "score": 0.93,
+        "holdout": 0.92,
+        "features": 8,
+        "seconds": 2.199207400029991
+      }
+    },
+    {
+      "cohort": "strong_validation",
+      "dataset": "synthetic",
+      "seed": 981,
+      "pool": 64,
+      "diversity_weight": 2.0,
+      "search_seconds": 1.9418459000007715,
+      "candidate_cv_calls": 166,
+      "finalist_union_size": 13,
+      "top8_overlap": 3,
+      "top8": {
+        "finalist_indices": [
+          148,
+          108,
+          124,
+          161,
+          89,
+          164,
+          40,
+          162
+        ],
+        "selected_index": 148,
+        "score": 0.915,
+        "holdout": 0.9,
+        "features": 8,
+        "seconds": 2.3063394000346307
+      },
+      "diverse8": {
+        "finalist_indices": [
+          148,
+          162,
+          161,
+          115,
+          114,
+          44,
+          75,
+          15
+        ],
+        "selected_index": 148,
+        "score": 0.915,
+        "holdout": 0.9,
+        "features": 8,
+        "seconds": 2.339988200023072
+      }
+    }
+  ],
+  "reproduction_script": "\"\"\"Compare rank-only and diversity-aware feature finalists from one GA trajectory.\"\"\"\n\nimport argparse\nimport json\nimport time\nfrom pathlib import Path\n\nimport numpy as np\nfrom sklearn.base import clone\nfrom sklearn.datasets import load_breast_cancer, load_digits, make_classification\nfrom sklearn.metrics import accuracy_score\nfrom sklearn.model_selection import StratifiedKFold, cross_val_score, train_test_split\nfrom sklearn.pipeline import make_pipeline\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.svm import SVC\nfrom threadpoolctl import threadpool_limits\n\nfrom sklearn_genetic import GAFeatureSelectionCV\n\n\nparser = argparse.ArgumentParser()\nparser.add_argument(\"--seed-start\", type=int, default=971)\nparser.add_argument(\"--seeds\", type=int, default=3)\nparser.add_argument(\"--pool\", type=int, default=24)\nparser.add_argument(\"--diversity-weight\", type=float, default=0.5)\nparser.add_argument(\"--output\", type=Path, default=Path(\".agent-runs/performance-v2/diverse-finalists-pilot.jsonl\"))\nargs = parser.parse_args()\nwork = Path(\".agent-runs/performance-v2\")\ndatasets = {\n    \"breast\": load_breast_cancer(return_X_y=True),\n    \"digits\": load_digits(return_X_y=True),\n    \"synthetic\": make_classification(\n        n_samples=800, n_features=20, n_informative=8, n_redundant=4, random_state=19\n    ),\n}\n\n\ndef diverse_indices(candidates, masks):\n    selected = [candidates[0]]\n    while len(selected) < min(8, len(candidates)):\n        choices = [index for index in candidates if index not in selected]\n        next_index = max(\n            choices,\n            key=lambda index: (\n                (len(candidates) - candidates.index(index)) / len(candidates)\n                + args.diversity_weight\n                * min(np.mean(masks[index] != masks[prior]) for prior in selected),\n                -candidates.index(index),\n            ),\n        )\n        selected.append(next_index)\n    return selected\n\n\nwith threadpool_limits(limits=1), args.output.open(\n    \"w\", encoding=\"utf-8\"\n) as stream:\n    for dataset, (X, y) in datasets.items():\n        for seed in range(args.seed_start, args.seed_start + args.seeds):\n            train, test = train_test_split(\n                np.arange(len(y)), test_size=0.25, stratify=y, random_state=seed\n            )\n            Xtr, Xte, ytr, yte = X[train], X[test], y[train], y[test]\n            folds = list(StratifiedKFold(5, shuffle=True, random_state=seed).split(Xtr, ytr))\n            model = make_pipeline(StandardScaler(), SVC(kernel=\"rbf\", C=10))\n            search = GAFeatureSelectionCV(\n                clone(model),\n                cv=folds[:1],\n                scoring=\"accuracy\",\n                max_features=X.shape[1] // 2,\n                population_size=8,\n                generations=10,\n                random_state=seed,\n                n_jobs=1,\n                verbose=False,\n                error_score=\"raise\",\n                final_selection=False,\n            )\n            started = time.perf_counter()\n            search.fit(Xtr, ytr)\n            search_seconds = time.perf_counter() - started\n            search.final_selection_top_k = 8\n            top8 = search._top_candidate_indices()\n            search.final_selection_top_k = args.pool\n            pool = search._top_candidate_indices()\n            masks = [np.asarray(mask, dtype=bool) for mask in search.cv_results_[\"features\"]]\n            diverse8 = diverse_indices(pool, masks)\n            union = sorted(set(top8) | set(diverse8))\n            full_scores = {}\n            validation_seconds = {}\n            for index in union:\n                began = time.perf_counter()\n                full_scores[index] = float(\n                    np.mean(\n                        cross_val_score(\n                            clone(model),\n                            Xtr[:, masks[index]],\n                            ytr,\n                            cv=folds,\n                            scoring=\"accuracy\",\n                            n_jobs=1,\n                            error_score=\"raise\",\n                        )\n                    )\n                )\n                validation_seconds[index] = time.perf_counter() - began\n            variants = {}\n            for name, finalists in ((\"top8\", top8), (\"diverse8\", diverse8)):\n                winner = max(finalists, key=lambda index: (full_scores[index], -masks[index].sum()))\n                began = time.perf_counter()\n                fitted = clone(model).fit(Xtr[:, masks[winner]], ytr)\n                refit_seconds = time.perf_counter() - began\n                variants[name] = dict(\n                    finalist_indices=[int(index) for index in finalists],\n                    selected_index=int(winner),\n                    score=full_scores[winner],\n                    holdout=float(accuracy_score(yte, fitted.predict(Xte[:, masks[winner]]))),\n                    features=int(masks[winner].sum()),\n                    seconds=search_seconds\n                    + sum(validation_seconds[index] for index in finalists)\n                    + refit_seconds,\n                )\n            row = dict(\n                dataset=dataset,\n                seed=seed,\n                pool=args.pool,\n                diversity_weight=args.diversity_weight,\n                search_seconds=search_seconds,\n                candidate_cv_calls=search.fit_stats_[\"cross_validate_calls\"],\n                finalist_union_size=len(union),\n                top8_overlap=len(set(top8) & set(diverse8)),\n                top8=variants[\"top8\"],\n                diverse8=variants[\"diverse8\"],\n            )\n            stream.write(json.dumps(row) + \"\\n\")\n            stream.flush()\n            print(json.dumps(row), flush=True)\n",
+  "summary_script": "\"\"\"Freeze paired feature-finalist diversity pilot and validation.\"\"\"\n\nimport hashlib\nimport importlib.metadata\nimport json\nimport math\nimport platform\nimport statistics\nimport subprocess\nfrom pathlib import Path\n\n\nwork = Path(\".agent-runs/performance-v2\")\npaths = [\n    work / \"diverse-finalists-pilot.jsonl\",\n    work / \"diverse-finalists-strong.jsonl\",\n    work / \"diverse-finalists-validation.jsonl\",\n]\ncohorts = [\n    (\"moderate_pilot\", range(971, 974), 24, 0.5),\n    (\"strong_pilot\", range(974, 977), 64, 2.0),\n    (\"strong_validation\", range(977, 982), 64, 2.0),\n]\nrecords = []\nfor path, (cohort, seeds, pool, weight) in zip(paths, cohorts):\n    rows = [json.loads(line) for line in path.read_text(encoding=\"utf-8\").splitlines()]\n    expected = {(dataset, seed) for dataset in (\"breast\", \"digits\", \"synthetic\") for seed in seeds}\n    by_key = {(row[\"dataset\"], row[\"seed\"]): row for row in rows}\n    assert len(rows) == len(by_key) == len(expected)\n    assert set(by_key) == expected\n    for row in rows:\n        assert row[\"candidate_cv_calls\"] <= 168\n        assert row[\"finalist_union_size\"] == len(\n            set(row[\"top8\"][\"finalist_indices\"]) | set(row[\"diverse8\"][\"finalist_indices\"])\n        )\n        assert len(row[\"top8\"][\"finalist_indices\"]) == len(row[\"diverse8\"][\"finalist_indices\"]) == 8\n        assert row[\"top8_overlap\"] == len(\n            set(row[\"top8\"][\"finalist_indices\"]) & set(row[\"diverse8\"][\"finalist_indices\"])\n        )\n        assert all(\n            row[method][\"selected_index\"] in row[method][\"finalist_indices\"]\n            and math.isfinite(row[method][\"score\"])\n            and 0 <= row[method][\"holdout\"] <= 1\n            for method in (\"top8\", \"diverse8\")\n        )\n        if cohort != \"moderate_pilot\":\n            assert row[\"pool\"] == pool and row[\"diversity_weight\"] == weight\n        records.append(dict(cohort=cohort, **row))\n\nsummary = []\nfor cohort, _, pool, weight in cohorts:\n    for dataset in (\"breast\", \"digits\", \"synthetic\"):\n        subset = [row for row in records if row[\"cohort\"] == cohort and row[\"dataset\"] == dataset]\n        deltas = [row[\"diverse8\"][\"holdout\"] - row[\"top8\"][\"holdout\"] for row in subset]\n        summary.append(\n            dict(\n                cohort=cohort,\n                dataset=dataset,\n                pool=pool,\n                diversity_weight=weight,\n                pairs=len(subset),\n                top8_holdout_mean=statistics.mean(row[\"top8\"][\"holdout\"] for row in subset),\n                diverse8_holdout_mean=statistics.mean(row[\"diverse8\"][\"holdout\"] for row in subset),\n                delta_mean=statistics.mean(deltas),\n                worst_delta=min(deltas),\n                wins=sum(delta > 0 for delta in deltas),\n                ties=sum(delta == 0 for delta in deltas),\n                losses=sum(delta < 0 for delta in deltas),\n                overlap_mean=statistics.mean(row[\"top8_overlap\"] for row in subset),\n            )\n        )\n\nsource_paths = [Path(\"sklearn_genetic/genetic_search.py\"), Path(\"sklearn_genetic/algorithms.py\")]\npayload = dict(\n    question=\"Can diversity-aware eight-finalist selection recover low-fold feature quality without more full-CV finalists?\",\n    conclusion=\"mixed_holdout_reject_default_change\",\n    source_commit=subprocess.check_output([\"git\", \"rev-parse\", \"HEAD\"], text=True).strip(),\n    environment={\n        \"python\": platform.python_version(),\n        **{\n            name: importlib.metadata.version(name)\n            for name in (\"numpy\", \"scikit-learn\", \"scipy\", \"deap\")\n        },\n    },\n    source_sha256={str(path).replace(\"\\\\\", \"/\"): hashlib.sha256(path.read_bytes()).hexdigest() for path in source_paths},\n    summary=summary,\n    raw=records,\n    reproduction_script=(work / \"diverse-finalists-pilot.py\").read_text(encoding=\"utf-8\"),\n    summary_script=Path(__file__).read_text(encoding=\"utf-8\"),\n)\ndestination = Path(\"benchmarks/results/performance-v2/diverse-finalists-pilot.json\")\ndestination.write_text(json.dumps(payload, indent=2), encoding=\"utf-8\")\nprint(json.dumps(summary, indent=2))\n"
+}
