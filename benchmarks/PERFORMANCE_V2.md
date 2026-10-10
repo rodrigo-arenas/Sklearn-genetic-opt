@@ -640,3 +640,26 @@ The matrix contains 48 real `GASearchCV` fits: baseline versus proposed space, b
 Across the 12 fixed pairs, total fit time falls from 239.52 to 166.68 seconds (1.44×), but the 2,400-row case at seed 2603 drops from .91833 to .88333 held-out accuracy with the proposed space. The baseline's winning candidate uses `max_features=None`, which the alternative excludes. Under the timer, the proposed space evaluates 94 instead of 71 candidates overall, but the same seed drops from .905 to .890 accuracy. This is enough to reject the preset change despite its useful speed gain. There is no claimed broad statistical equivalence from three overlapping splits, and the unchanged `balanced` and `wide` profiles were not re-benchmarked in this rejected experiment.
 
 The [raw artifact](results/performance-v2/rf-fast-classifier-rejected.json) preserves all 48 candidate histories, split hashes, source hashes, dispersion, environment versions and reproduction scripts. Every pair used the same split, all scores are finite, each fixed run made 18 CV calls, and the frozen library source remained unchanged. Total measured fitting time was 550.99 seconds. This negative result guides further work toward cheaper evaluations that retain the useful candidate.
+
+## Rejected smaller fast classification forests
+
+A second classifier-preset experiment kept the full candidate space, including `max_features=None`, but reduced `n_estimators` from 50–180 to 25–90 in the `fast` Random Forest and Extra Trees spaces. The library preset was **not changed**. On breast cancer, digits and 800/2,400-row synthetic classification, six stratified train/test seeds (2701–2706) produced 96 fixed-budget fits: both spaces received 18 candidate CV calls, three folds, one CPU and one evolutionary generation. The first three seeds were a pilot; the other three were held apart for validation. A further 48 fits on validation seeds used a five-second soft timer and at most 1,000 generations. All fits include final refit in their elapsed time.
+
+Means over six fixed-budget seeds (baseline → fewer trees):
+
+| Dataset | Forest | Seconds | Held-out accuracy |
+|---|---|---:|---:|
+| breast | RF | 11.046 → 5.464 | .95921 → .95571 |
+| breast | ET | 6.550 → 3.304 | .96970 → .96853 |
+| digits | RF | 21.085 → 10.567 | .97593 → .97259 |
+| digits | ET | 13.167 → 6.674 | .98370 → .98222 |
+| synthetic 800 | RF | 13.980 → 7.139 | .88167 → .87750 |
+| synthetic 800 | ET | 7.371 → 3.692 | .91000 → .90417 |
+| synthetic 2,400 | RF | 30.297 → 14.803 | .89528 → .89389 |
+| synthetic 2,400 | ET | 10.678 → 5.313 | .90917 → .91000 |
+
+Across fixed runs, mean time fell from 19.102 to 9.493 seconds for RF (**2.01×**) and 9.442 to 4.746 seconds for ET (**1.99×**). Held-out accuracy fell by .00310 for RF and .00191 for ET. The proposed range lost on 25 of 48 pairs, won on 15 and tied on eight. The independent validation included a 2.8-point RF loss on breast and a 2.5-point RF loss on synthetic 800.
+
+Under the five-second timer, RF evaluated 5.83 → 11.92 candidates on average, but mean accuracy fell .92620 → .92408 and elapsed time improved only 6.215 → 5.619 seconds. ET evaluated 11.08 → 22.33 candidates, while accuracy fell .94759 → .94282 and elapsed time improved 5.665 → 5.301 seconds. The fixed-budget speed gain therefore does not translate into a reliable short-deadline quality gain. Reducing the tree range is rejected as a default `fast` preset change; users who explicitly value speed over this measured quality loss can still define an `Integer(25, 90)` dimension themselves.
+
+The [raw artifact](results/performance-v2/fast-classifier-tree-range-rejected.json) preserves all 144 fits, per-seed scores, times, winning parameters, CV counts, source hashes, dependency versions and scripts. The experiment used source commit `065300e`; the source files were unchanged throughout these runs. The data are descriptive: six overlapping splits per fixed workload and three timed splits do not establish statistical equivalence or broad superiority.
