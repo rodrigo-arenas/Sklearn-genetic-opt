@@ -19,6 +19,8 @@ Full release notes with code examples are in the [documentation](https://sklearn
 
 ### Bug Fixes
 
+- Feature finalist selection preserves sparse and dense masks when preliminary scores tie at the cutoff, instead of spending every tied finalist slot on small masks. Better preliminary scores and the configured CV budget retain priority; final-score ties still favor fewer features.
+
 - Numeric smart initialization works with SciPy versions before 1.15 by using their `seed` argument, while preserving the existing `rng` path and seeded samples on newer versions.
 
 - `TimerStopping` stops new candidate batches within generations in both searches, including local refinement. Completed candidates remain eligible to win; in-flight CV and final selection/refit finish, and at least one initial batch is evaluated.

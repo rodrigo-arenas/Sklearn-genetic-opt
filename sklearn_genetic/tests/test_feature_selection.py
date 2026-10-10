@@ -996,8 +996,23 @@ def test_prediction_methods_require_refitted_winner(method, fitted_without_refit
 
 
 @pytest.mark.parametrize("criteria", ["max", "min"])
-@pytest.mark.parametrize("final_tie", [False, True])
-def test_feature_final_selection_rechecks_masks_and_refits_full_winner(criteria, final_tie):
+@pytest.mark.parametrize(
+    "proxy_scores,final_scores,top_k,expected_counts,max_features",
+    [
+        pytest.param([2, 1], [1, 2], 3, [1, 1, 2], None, id="rank-reversal"),
+        pytest.param([1, 2], [1, 1], 3, [2, 1, 1], None, id="final-tie"),
+        pytest.param([1] * 5, [1, 2, 3, 4, 5], 2, [1, 5], None, id="proxy-tie"),
+        pytest.param([1] * 5, [1, 2, 3, 4, 5], 1, [1], None, id="one-finalist"),
+        pytest.param([2, 1, 1, 1, 1], [1, 2, 3, 4, 5], 3, [1, 2, 5], None, id="cutoff-tie"),
+        pytest.param([2, 1, 1, 1, 1], [1, 2, 3, 4, 5], 2, [1, 2], None, id="single-cutoff"),
+        pytest.param([2, 2, 2, 2, 1], [1, 2, 3, 4, 5], 2, [1, 4], None, id="rank-priority"),
+        pytest.param([1] * 5, [1] * 5, 2, [1, 5], None, id="both-tied"),
+        pytest.param([1] * 5, [1, 2, 3, 4, 5], 2, [1, 3], 3, id="bounded-mask"),
+    ],
+)
+def test_feature_final_selection_rechecks_masks_and_refits_full_winner(
+    criteria, proxy_scores, final_scores, top_k, expected_counts, max_features
+):
     from sklearn.model_selection import KFold
 
     fits = []
@@ -1010,7 +1025,7 @@ def test_feature_final_selection_rechecks_masks_and_refits_full_winner(criteria,
             return super().fit(X, y, sample_weight=sample_weight)
 
     rows = np.arange(40)
-    values = np.column_stack((rows, rows + 100))
+    values = np.column_stack([rows + 100 * i for i in range(len(proxy_scores))])
     labels = rows % 2
     full_cv = list(KFold(2, shuffle=True, random_state=2).split(values))
     from sklearn_genetic import subsample_cv
@@ -1020,9 +1035,8 @@ def test_feature_final_selection_rechecks_masks_and_refits_full_winner(criteria,
 
     def learning_curve(model, X, y):
         count = model.n_features_in_
-        if final_tie:
-            return sign * (1 if model.training_rows_ >= 20 else count)
-        return sign * (count if model.training_rows_ >= 20 else 3 - count)
+        scores = final_scores if model.training_rows_ >= 20 else proxy_scores
+        return sign * scores[count - 1]
 
     search = GAFeatureSelectionCV(
         RecordedTree(random_state=0),
@@ -1034,20 +1048,61 @@ def test_feature_final_selection_rechecks_masks_and_refits_full_winner(criteria,
         n_jobs=1,
         verbose=False,
         criteria=criteria,
+        max_features=max_features,
         final_selection=True,
-        final_selection_top_k=3,
+        final_selection_top_k=top_k,
         final_selection_cv=full_cv,
     ).fit(values, labels, sample_weight=rows + 1)
-    expected_features = 1 if final_tie else 2
+    expected_features = max(expected_counts, key=lambda count: (final_scores[count - 1], -count))
     assert search.support_.sum() == expected_features
-    assert search.best_score_ == sign * expected_features
-    assert search.final_selection_results_["changed"] is True
+    assert search.best_score_ == sign * final_scores[expected_features - 1]
+    assert search.final_selection_results_["changed"] == (expected_features != expected_counts[0])
+    candidates = search.final_selection_results_["candidates"]
+    assert [sum(item["params"]["features"]) for item in candidates] == expected_counts
+    assert len({tuple(item["params"]["features"]) for item in candidates}) == len(expected_counts)
+    assert sum(rows == 20 for rows, _ in fits) == 2 * len(expected_counts)
+    assert fits[-1] == (40, expected_features)
+    assert search.predict(values).shape == labels.shape
+
+
+@pytest.mark.parametrize("criteria", ["max", "min"])
+def test_feature_finalists_remain_distinct_with_uncached_score_ties(criteria):
+    full_mask_scores = 0
+    sign = 1 if criteria == "max" else -1
+
+    def changing_score(model, X, y):
+        nonlocal full_mask_scores
+        if model.n_features_in_ == 2:
+            full_mask_scores += 1
+            return sign * (3 if full_mask_scores <= 2 else 2)
+        return sign * 2
+
+    search = GAFeatureSelectionCV(
+        DecisionTreeClassifier(random_state=0),
+        cv=2,
+        scoring=changing_score,
+        criteria=criteria,
+        population_size=8,
+        generations=0,
+        use_cache=False,
+        random_state=0,
+        n_jobs=1,
+        verbose=False,
+        final_selection=True,
+        final_selection_top_k=3,
+    ).fit(X_train[:40, :2], y_train[:40])
+    full_proxy_scores = {
+        score
+        for mask, score in zip(
+            search.cv_results_["features"], search.cv_results_["mean_test_score"]
+        )
+        if sum(mask) == 2
+    }
+    assert full_proxy_scores == {sign * 2, sign * 3}
     candidates = search.final_selection_results_["candidates"]
     assert len(candidates) == 3
     assert len({tuple(item["params"]["features"]) for item in candidates}) == 3
-    assert sum(rows == 20 for rows, _ in fits) == 6
-    assert fits[-1] == (40, expected_features)
-    assert search.predict(values).shape == labels.shape
+    assert search.support_.sum() == 1
 
 
 @pytest.mark.parametrize("kind", ["hpo", "features"])

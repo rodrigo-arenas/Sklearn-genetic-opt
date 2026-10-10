@@ -187,6 +187,23 @@ class _FinalSelectionMixin:
                 indices.append(index)
                 if len(indices) == self.final_selection_top_k:
                     break
+        if (
+            "n_features" in self.cv_results_
+            and len(indices) > 1
+            and ranks[indices[-2]] == ranks[indices[-1]]
+        ):
+            # A flat proxy must not reserve every tied slot for sparse masks.
+            # Keep the smallest finalist and include a denser mask at the same
+            # cutoff rank, without displacing a better score or adding CV calls.
+            counts = self.cv_results_["n_features"]
+            cutoff = indices[-1]
+            for index in reversed(order):
+                if ranks[index] != ranks[cutoff] or counts[index] <= counts[cutoff]:
+                    continue
+                key = tuple(sorted(self._candidate_params_from_index(index).items()))
+                if key not in seen:
+                    indices[-1] = index
+                    break
         return indices
 
     def _final_selection_splits(self):
@@ -1536,7 +1553,10 @@ class GAFeatureSelectionCV(
 
     final_selection_top_k : int, default=3
         Positive number of distinct masks to re-evaluate. This bounds extra
-        cross-validation calls independently of ``keep_top_k``.
+        cross-validation calls independently of ``keep_top_k``. If multiple
+        finalist slots share the cutoff search score, include both a sparse
+        and a dense mask from that tie. Better search scores retain priority;
+        equal final scores still prefer fewer features.
 
     final_selection_cv : int, cross-validation splitter or iterable, default=None
         Validation used to choose among finalists. None reuses the search
