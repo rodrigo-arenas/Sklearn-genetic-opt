@@ -6,6 +6,8 @@ Full release notes with code examples are in the [documentation](https://sklearn
 
 ### New Features
 
+- Fast Random Forest and Extra Trees regression presets search only `squared_error`; the default `balanced` and the `wide` profiles retain `absolute_error`. A 104-fit comparison measures faster searches with the same candidate budget, with a documented MAE tradeoff on contaminated targets.
+
 - Fresh feature searches with smart initialization and `TimerStopping` evaluate their largest initial feature set first, so a short deadline does not leave only small masks evaluated. The same candidate masks and `max_features` bound are retained; random initialization and checkpoint resumes preserve their ordering.
 
 - Added `subsample_cv` to reduce training rows while retaining full validation folds. Both searches can re-evaluate finalists on full-training CV; `GAFeatureSelectionCV` now shares `final_selection`, `final_selection_top_k`, and `final_selection_cv` with `GASearchCV`. The default full-data search is unchanged.
@@ -21,7 +23,7 @@ Full release notes with code examples are in the [documentation](https://sklearn
 
 ### Bug Fixes
 
-- Random Forest and Extra Trees regression presets omit the redundant `friedman_mse` criterion, which fails CV cloning after parameter assignment on scikit-learn 1.9. All profiles retain `squared_error` and `absolute_error`.
+- Random Forest and Extra Trees regression presets omit the redundant `friedman_mse` criterion, which fails CV cloning after parameter assignment on scikit-learn 1.9. The default `balanced` and the `wide` profiles retain `squared_error` and `absolute_error`.
 
 - Feature finalist selection preserves sparse and dense masks when preliminary scores tie at the cutoff, instead of spending every tied finalist slot on small masks. Better preliminary scores and the configured CV budget retain priority; final-score ties still favor fewer features.
 

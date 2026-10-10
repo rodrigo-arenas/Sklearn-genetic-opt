@@ -584,3 +584,38 @@ Real `GASearchCV.fit` checks of the regression forest presets found a current co
 The two regression presets now offer `squared_error` and `absolute_error`, removing the redundant alias. The [scikit-learn documentation](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestRegressor.html) marks `friedman_mse` as deprecated; its installed constructor states it maps to `squared_error`. No model family, numeric range, profile name or prefix behavior changes. This prerequisite repairs usable searches; it is not a claimed training-speed improvement. Caller-supplied search spaces containing the upstream problematic alias are outside this preset-only change.
 
 Twelve public preset/CV cases failed before the fix. All 76 focused preset checks pass on scikit-learn 1.9.1 and again on 1.5.0. Two duplicated factory-only criterion tests were replaced by one parametrized real-fit test covering both forests, all three profiles and direct/pipeline estimators; the absence-of-class-weight assertion is retained. The test guard reports a textual net reduction of two assertions for this consolidation, with both former contracts exercised by the replacement. Black and diff checks pass; no full suite was run. [Verification](results/performance-v2/forest-alias-verification.txt).
+
+## Faster regression-forest presets, with an explicit robust-loss tradeoff
+
+The `fast` profiles of `random_forest_regressor_space` and `extra_trees_regressor_space` now search only `squared_error`. The default `balanced` profile and `wide` retain both supported criteria. Names, prefixes, dimension keys and numeric ranges are unchanged. This reduces expensive candidate fits and frees a fixed time budget for more evaluations; it changes the search space and trajectory, not the implementation of scikit-learn trees. It applies to preset-driven `GASearchCV`, with no claimed feature-selection speedup from this particular change.
+
+The baseline is the functional alias-repair commit `5ba9fe30dba5b5ce4ce3d9e6c0d2bce6b4d88094`. The matrix contains 96 searches: two versions × two forests × four datasets × three seeds (2501–2503) × two regimes. Each uses one CPU, a 25% held-out split, full-training three-fold CV and population six. Fixed searches run one generation and complete 18 CV evaluations each; timed searches use a five-second soft limit, at most 1,000 generations, and finish in-flight CV and final refit. Timings include that refit. Before/after execution order alternates by seed. Eight additional initial-generation fits test unchanged `balanced`/`wide` profiles with two-tree estimators.
+
+Datasets are the real diabetes regression dataset, Friedman1 with 800 or 2,400 rows and 15 features (noise 1), and an 800-row Friedman1 case where independently sampled 10% target entries receive symmetric ±30 offsets before the outer split. The contaminated case optimizes MAE; others optimize MSE. Both held-out metrics are recorded for every run. A minus sign below means less held-out error. Ratios compare mean total fit times over three seeds.
+
+| Forest | Budget | Dataset | Before → after seconds | Speedup | Held-out error change | CV calls before → after |
+|---|---|---|---:|---:|---:|---:|
+| rf | fixed | diabetes | 10.002 → 6.802 | 1.47× | -0.63% | 18.0 → 18.0 |
+| rf | fixed | friedman800 | 18.816 → 9.617 | 1.96× | -1.02% | 18.0 → 18.0 |
+| rf | fixed | friedman2400 | 56.034 → 21.050 | 2.66× | -1.49% | 18.0 → 18.0 |
+| rf | fixed | outliers | 21.699 → 9.950 | 2.18× | +5.73% | 18.0 → 18.0 |
+| rf | timer | diabetes | 5.432 → 5.419 | 1.00× | -0.78% | 9.0 → 14.0 |
+| rf | timer | friedman800 | 7.179 → 5.698 | 1.26× | -4.27% | 5.7 → 9.0 |
+| rf | timer | friedman2400 | 14.270 → 7.769 | 1.84× | -2.70% | 2.3 → 5.0 |
+| rf | timer | outliers | 7.093 → 5.672 | 1.25× | +5.17% | 5.0 → 9.3 |
+| et | fixed | diabetes | 13.855 → 4.727 | 2.93× | +1.10% | 18.0 → 18.0 |
+| et | fixed | friedman800 | 32.937 → 9.536 | 3.45× | -1.05% | 18.0 → 18.0 |
+| et | fixed | friedman2400 | 67.933 → 13.009 | 5.22× | -2.94% | 18.0 → 18.0 |
+| et | fixed | outliers | 21.723 → 6.349 | 3.42× | +12.96% | 18.0 → 18.0 |
+| et | timer | diabetes | 5.770 → 5.304 | 1.09× | +1.10% | 9.3 → 20.3 |
+| et | timer | friedman800 | 8.191 → 5.434 | 1.51× | -3.87% | 5.7 → 16.3 |
+| et | timer | friedman2400 | 18.128 → 5.811 | 3.12× | -6.08% | 2.3 → 9.3 |
+| et | timer | outliers | 7.950 → 5.459 | 1.46× | +12.43% | 5.7 → 16.7 |
+
+The strongest fixed-budget result is Extra Trees on 2,400-row Friedman1: 5.22× faster with 2.94% lower MSE. The same workload under the soft deadline completes four times as many CV evaluations on average, finishes 3.12× faster and lowers MSE by 6.08%. This is a workload-specific result, not a universal speedup. On diabetes, Extra Trees increases MSE by 1.10% in both regimes.
+
+The contaminated-target experiment exposes the cost of removing the robust criterion: fixed-budget MAE rises 5.73% for Random Forest and 12.96% for Extra Trees; timed MAE rises 5.17% and 12.43%. [Scikit-learn describes the absolute-error criterion as using terminal-node medians](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestRegressor.html), unlike squared error's means. The change is accepted only for the explicitly fast profile; the ordinary default remains `balanced`. Three seeds, one small real dataset and synthetic workloads do not establish broad statistical superiority, and these numbers do not compare against native AutoML.
+
+All four nonfast before/after control pairs preserve exact candidate/score hashes, predictions, best parameters, held-out/CV scores and evaluation counters. All 104 successful fits use matching before/after data and splits, finite scores, and valid full CV partitions; frozen sources are unchanged. Total measured fitting time is 1,334.48 seconds. The [raw artifact](results/performance-v2/fast-forest.json) contains per-seed results, dispersion, split hashes and sizes, raw-record hashes, dependency versions, all source hashes, the two changed source files and the execution/aggregation scripts. To reconstruct the experiment, populate `fast-forest-before` from the recorded baseline, copy it to `fast-forest-after` and replace the files in `changed_source_files`; extract the scripts and source manifests into `.agent-runs/performance-v2` and run the runner from the repository root using the recorded environment.
+
+Four public fast-profile cases fail on the baseline while eight nonfast cases pass; the same 76 focused preset checks pass after the change on scikit-learn 1.9.1 and on 1.5.0. The cases exercise actual CV for both forests, every profile and direct/pipeline prefixes. Independent review exposed a rare-choice mutant that retained `absolute_error` with a 0.001 prior; all four fast cases now additionally reject that criterion through a fresh public warm-start request and kill the mutant. The artifact separates this later verification-test source from the original benchmark snapshots, and includes additional dependency versions captured at aggregation without an environment change. Black and test guard pass. No full suite or documentation build was run. [Verification](results/performance-v2/fast-forest-verification.txt).

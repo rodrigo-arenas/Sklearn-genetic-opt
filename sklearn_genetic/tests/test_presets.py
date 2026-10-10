@@ -228,5 +228,12 @@ def test_regressor_preset_search_respects_profile_criteria(preset, model_name, p
         error_score="raise",
     ).fit(X, y)
     criteria = {params[prefix + "criterion"] for params in search.cv_results_["params"]}
-    assert criteria == {"squared_error", "absolute_error"}
+    expected = {"squared_error"} if profile == "fast" else {"squared_error", "absolute_error"}
+    assert criteria == expected
     assert prefix + "class_weight" not in space
+
+    if profile == "fast":
+        settings = search.get_params(deep=False)
+        settings["warm_start_configs"] = [{prefix + "criterion": "absolute_error"}]
+        with pytest.raises(ValueError, match="absolute_error.*outside"):
+            GASearchCV(**settings).fit(X, y)

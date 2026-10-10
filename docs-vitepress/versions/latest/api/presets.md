@@ -54,6 +54,13 @@ param_grid = random_forest_classifier_space(profile="fast")
 | `balanced` | You want a practical default for real tuning |
 | `wide` | You have more budget and want broader exploration |
 
+For Random Forest and Extra Trees regression, `fast` searches only
+`criterion="squared_error"` to avoid the cost of training with absolute error.
+`balanced` and `wide` retain both `squared_error` and `absolute_error`.
+Use those profiles, or customize the returned dictionary, when robustness to
+outliers or mean absolute error is important: the faster criterion can produce
+worse solutions for that objective.
+
 ## Discovering presets
 
 Two helpers let you list the available presets and profiles from Python — handy
