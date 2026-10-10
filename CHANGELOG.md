@@ -19,6 +19,8 @@ Full release notes with code examples are in the [documentation](https://sklearn
 
 ### Bug Fixes
 
+- Numeric smart initialization works with SciPy versions before 1.15 by using their `seed` argument, while preserving the existing `rng` path and seeded samples on newer versions.
+
 - `TimerStopping` stops new candidate batches within generations in both searches, including local refinement. Completed candidates remain eligible to win; in-flight CV and final selection/refit finish, and at least one initial batch is evaluated.
 
 - Estimator-valued categorical choices preserve their configuration through crossover and cloned warm starts, reuse cached evaluations, and occupy distinct hall-of-fame slots. Applying nested parameters during search or finalist evaluation no longer modifies the caller's model choices.

@@ -1,3 +1,4 @@
+import inspect
 import random
 
 import numpy as np
@@ -167,7 +168,12 @@ def smart_search_population(estimator, toolbox, individual_cls):
             lhs_seed = random.randint(0, 2**31 - 1)
         else:
             lhs_seed = int(check_random_state(random_state).randint(0, 2**31 - 1))
-        sampler = qmc.LatinHypercube(d=len(numeric_parameters), rng=lhs_seed)
+        # SciPy < 1.15 calls this argument seed; retain rng on newer releases
+        # because switching keywords can change their seeded sample sequence.
+        seed_keyword = (
+            "rng" if "rng" in inspect.signature(qmc.LatinHypercube).parameters else "seed"
+        )
+        sampler = qmc.LatinHypercube(d=len(numeric_parameters), **{seed_keyword: lhs_seed})
         lhs_samples = sampler.random(n=remaining)
 
     for sample_index in range(remaining):
