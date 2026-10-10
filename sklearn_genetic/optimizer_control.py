@@ -189,14 +189,13 @@ def _bounded_integer_neighbor(dimension, value, radius):
     value = int(round(float(value)))
     value = int(np.clip(value, dimension.lower, dimension.upper))
     step = max(1, int(np.ceil((dimension.upper - dimension.lower) * radius)))
-    candidates = [
-        candidate
-        for candidate in range(
-            max(dimension.lower, value - step), min(dimension.upper, value + step) + 1
-        )
-        if candidate != value
-    ]
-    return random.choice(candidates) if candidates else value
+    lower = max(dimension.lower, value - step)
+    upper = min(dimension.upper, value + step)
+    if lower == upper:
+        return value
+    # Draw uniformly from all neighbors without allocating the integer interval.
+    sampled = random.randint(lower, upper - 1)
+    return sampled + (sampled >= value)
 
 
 def _bounded_continuous_neighbor(dimension, value, radius):

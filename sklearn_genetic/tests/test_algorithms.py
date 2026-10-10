@@ -271,3 +271,49 @@ def test_algorithm_records_fitness_sharing_telemetry(simple_toolbox):
     assert logbook[1]["fitness_sharing_applied"] is True
     assert logbook[1]["mean_niche_count"] >= 1.0
     assert logbook[1]["max_niche_count"] >= 1.0
+
+
+@pytest.mark.parametrize(
+    "algorithm,kwargs",
+    [
+        (eaSimple, {}),
+        (eaMuPlusLambda, {"mu": 10, "lambda_": 10}),
+        (eaMuCommaLambda, {"mu": 10, "lambda_": 10}),
+    ],
+)
+@pytest.mark.parametrize("kind", ["binary", "continuous", "collapsed"])
+def test_balanced_binary_population_does_not_trigger_diversity_recovery(
+    simple_toolbox, algorithm, kwargs, kind
+):
+    masks = np.eye(5, dtype=int).tolist()
+    masks += [[1 - value for value in mask] for mask in masks]
+    if kind == "continuous":
+        masks = [[i / 10.0] for i in range(10)]
+    elif kind == "collapsed":
+        masks = [[1, 0, 0, 0, 0] for _ in range(10)]
+    population = [creator.IndividualAlgorithmTest(mask) for mask in masks]
+    estimator = SimpleNamespace(
+        elitism=False,
+        diversity_control=True,
+        diversity_threshold=0.25,
+        diversity_stagnation_generations=5,
+        diversity_mutation_boost=2,
+        random_immigrants_fraction=0.1,
+        local_search=False,
+        fit_stats_=create_fit_stats(),
+    )
+    _, logbook, _ = algorithm(
+        population,
+        simple_toolbox,
+        cxpb=ConstantAdapter(0, 0, 0),
+        mutpb=ConstantAdapter(0, 0, 0),
+        ngen=1,
+        verbose=False,
+        estimator=estimator,
+        halloffame=tools.HallOfFame(1),
+        **kwargs,
+    )
+    expected = {"binary": 5 / 9, "continuous": 1.0, "collapsed": 0.0}[kind]
+    assert logbook[0]["genotype_diversity"] == pytest.approx(expected)
+    assert logbook[1]["diversity_control_triggered"] is (kind == "collapsed")
+    assert logbook[1]["random_immigrants"] == (1 if kind == "collapsed" else 0)

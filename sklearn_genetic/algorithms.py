@@ -1,3 +1,5 @@
+from collections import Counter
+
 import numpy as np
 from deap import tools
 from deap.algorithms import varAnd, varOr
@@ -183,8 +185,12 @@ def _population_diversity(population):
     else:
         gene_diversities = []
         for gene_values in zip(*population):
-            unique_gene_values = len(set(gene_values))
-            gene_diversities.append((unique_gene_values - 1) / (population_size - 1))
+            counts = Counter(gene_values)
+            # Probability that two distinct population members disagree at this
+            # gene. Unlike distinct-allele counts, this stays meaningful for
+            # binary/categorical genes as the population grows.
+            equal_pairs = sum(count * (count - 1) for count in counts.values())
+            gene_diversities.append(1 - equal_pairs / (population_size * (population_size - 1)))
         genotype_diversity = float(np.mean(gene_diversities)) if gene_diversities else 0.0
 
     return {

@@ -11,6 +11,9 @@ Full release notes with code examples are in the [documentation](https://sklearn
 
 ### Bug Fixes
 
+- Diversity telemetry uses pairwise allele disagreement, avoiding permanent diversity recovery for balanced binary feature masks in larger populations.
+- Integer local refinement samples neighbors in constant memory instead of allocating the full integer interval.
+
 - Fresh fits clear cached scores while explicit checkpoint resumes retain their cache.
 - Both searches use fitness-aware tournament selection with `elitism=False`, supporting negative scores and minimization without losing population members.
 - Candidate ranks respect `criteria="min"`; final selection compares the requested number of distinct configurations rather than duplicate log rows.

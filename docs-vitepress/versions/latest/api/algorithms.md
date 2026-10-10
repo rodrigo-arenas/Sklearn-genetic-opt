@@ -42,3 +42,16 @@ A simple generational genetic algorithm. Each generation fully replaces the prev
 
 - [DEAP documentation](https://deap.readthedocs.io/en/master/api/algo.html) — upstream algorithm documentation
 - [Advanced Optimizer Control](../guide/advanced-optimizer-control) — configure algorithm behavior via `EvolutionConfig`
+
+## Diversity telemetry
+
+`history["genotype_diversity"]` is the mean probability that two distinct population
+members have different values at a gene. Identical populations score zero;
+populations with distinct values at every gene score one. Balanced binary genes
+score approximately 0.5 even in large populations. `unique_individual_ratio`
+continues to describe the fraction of distinct complete candidates.
+
+This corrects the older distinct-allele normalization that made large feature
+populations appear collapsed. Custom diversity thresholds may need recalibration.
+Local integer refinement now samples directly from the bounded neighborhood,
+excluding the parent's value when alternatives exist, with constant memory.

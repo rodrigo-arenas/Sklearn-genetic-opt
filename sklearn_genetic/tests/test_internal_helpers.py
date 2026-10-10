@@ -699,3 +699,35 @@ def test_feature_minimization_ranks_train_and_test_scores():
         ranks = search.cv_results_[f"rank_{split}_score"]
         assert np.all(ranks[scores == 1] == 1)
         assert np.all(ranks[scores > 1] > 1)
+
+
+@pytest.mark.parametrize("value", [0, 500000, 1000000])
+def test_integer_local_search_has_bounded_memory(value):
+    import tracemalloc
+
+    estimator = SimpleNamespace(space=Space({"size": Integer(0, 1000000)}), local_search_radius=0.1)
+    tracemalloc.start()
+    try:
+        neighbors = [local_neighbor(estimator, [value], list)[0] for _ in range(3)]
+        _, peak = tracemalloc.get_traced_memory()
+    finally:
+        tracemalloc.stop()
+    assert all(
+        max(0, value - 100000) <= x <= min(1000000, value + 100000) and x != value
+        for x in neighbors
+    )
+    assert peak < 1000000
+
+
+@pytest.mark.parametrize("lower,upper,value", [(1, 5, 1), (1, 5, 3), (1, 5, 5), (7, 7, 7)])
+def test_integer_local_search_reaches_all_neighbors(lower, upper, value):
+    estimator = SimpleNamespace(
+        space=Space({"size": Integer(lower, upper)}), local_search_radius=1.0
+    )
+    random.seed(23)
+    from collections import Counter
+
+    observed = Counter(local_neighbor(estimator, [value], list)[0] for _ in range(10000))
+    expected = set(range(lower, upper + 1)) - {value} or {value}
+    assert set(observed) == expected
+    assert all(abs(count - 10000 / len(expected)) < 250 for count in observed.values())
