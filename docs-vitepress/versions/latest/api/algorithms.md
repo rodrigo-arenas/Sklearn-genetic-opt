@@ -55,3 +55,11 @@ This corrects the older distinct-allele normalization that made large feature
 populations appear collapsed. Custom diversity thresholds may need recalibration.
 Local integer refinement now samples directly from the bounded neighborhood,
 excluding the parent's value when alternatives exist, with constant memory.
+
+## Elites and progress
+
+With `elitism=True`, the mu/lambda algorithms reserve up to `keep_top_k` survivor
+slots for copies of the best archived candidates. With `elitism=False`, all
+survivors are selected from the algorithm's candidate pool. In both cases,
+`fitness_best` tracks the best evaluated candidate in the hall of fame, while
+`fitness_min`, `fitness_max` and `fitness` describe the current population.

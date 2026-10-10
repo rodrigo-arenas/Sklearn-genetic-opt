@@ -11,6 +11,8 @@ Full release notes with code examples are in the [documentation](https://sklearn
 
 ### Bug Fixes
 
+- Mu/lambda algorithms now preserve hall-of-fame elites in the next population when `elitism=True`. Best-so-far telemetry includes evaluated candidates even if stochastic survivor selection drops them.
+
 - Diversity telemetry uses pairwise allele disagreement, avoiding permanent diversity recovery for balanced binary feature masks in larger populations.
 - Integer local refinement samples neighbors in constant memory instead of allocating the full integer interval.
 

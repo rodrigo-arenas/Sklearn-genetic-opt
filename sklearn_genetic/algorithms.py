@@ -201,7 +201,7 @@ def _population_diversity(population):
     }
 
 
-def _compile_generation_record(stats, population, state, gen, control_record=None):
+def _compile_generation_record(stats, population, state, gen, control_record=None, halloffame=None):
     record = stats.compile(population) if stats else {}
     record = _flatten_record(record)
 
@@ -209,7 +209,11 @@ def _compile_generation_record(stats, population, state, gen, control_record=Non
 
     primary_weight = _primary_fitness_weight(population)
     current_best_key = "fitness_max" if primary_weight >= 0 else "fitness_min"
-    current_best = record.get(current_best_key)
+    current_best = (
+        halloffame[0].fitness.values[0]
+        if halloffame is not None and len(halloffame)
+        else record.get(current_best_key)
+    )
     if current_best is None:
         fitness_improvement = 0.0
         fitness_improved = False
@@ -254,7 +258,7 @@ def _compile_generation_record(stats, population, state, gen, control_record=Non
 
 
 def _refresh_last_record_after_local_refinement(
-    logbook, stats, population, state, local_refinements
+    logbook, stats, population, state, local_refinements, halloffame
 ):
     if not local_refinements or len(logbook) == 0:
         return
@@ -281,7 +285,7 @@ def _refresh_last_record_after_local_refinement(
     control_record["local_refinements"] = local_refinements
 
     refreshed_record = _compile_generation_record(
-        stats, population, state.copy(), gen, control_record
+        stats, population, state.copy(), gen, control_record, halloffame=halloffame
     )
     logbook[-1].clear()
     logbook[-1].update(
@@ -350,6 +354,18 @@ def _run_local_refinement(population, toolbox, halloffame, estimator):
 
     _record_optimizer_control_stats(estimator, local_refinements=len(neighbors))
     return len(neighbors)
+
+
+def _select_survivors(candidates, toolbox, size, halloffame, estimator):
+    elites = (
+        halloffame.items[:size]
+        if getattr(estimator, "elitism", False) and halloffame is not None
+        else []
+    )
+    with shared_fitness(candidates, estimator) as sharing_record:
+        survivors = toolbox.select(candidates, size - len(elites))
+    survivors.extend(toolbox.clone(elite) for elite in elites)
+    return survivors, sharing_record
 
 
 def _control_record(
@@ -461,7 +477,9 @@ def eaSimple(
     hof_size = len(halloffame.items) if (halloffame.items and estimator.elitism) else 0
 
     n_gen = gen = 0
-    record = _compile_generation_record(stats, population, telemetry_state, gen)
+    record = _compile_generation_record(
+        stats, population, telemetry_state, gen, halloffame=halloffame
+    )
     logbook.record(gen=n_gen + gen_offset, nevals=len(invalid_ind), **record)
 
     if verbose:
@@ -542,6 +560,7 @@ def eaSimple(
                     duplicate_replacements,
                     sharing_record,
                 ),
+                halloffame=halloffame,
             )
             logbook.record(gen=gen + gen_offset, nevals=len(invalid_ind), **record)
 
@@ -570,7 +589,7 @@ def eaSimple(
     n_gen = gen + 1 + gen_offset
     local_refinements = _run_local_refinement(population, toolbox, halloffame, estimator)
     _refresh_last_record_after_local_refinement(
-        logbook, stats, population, telemetry_state, local_refinements
+        logbook, stats, population, telemetry_state, local_refinements, halloffame
     )
 
     callbacks_end_args = {
@@ -679,7 +698,9 @@ def eaMuPlusLambda(
         halloffame.update(population)
 
     n_gen = gen = 0
-    record = _compile_generation_record(stats, population, telemetry_state, gen)
+    record = _compile_generation_record(
+        stats, population, telemetry_state, gen, halloffame=halloffame
+    )
     logbook.record(gen=n_gen + gen_offset, nevals=len(invalid_ind), **record)
 
     if verbose:
@@ -737,8 +758,9 @@ def eaMuPlusLambda(
             selection_pool = population + offspring
             if estimator is not None:
                 estimator._last_generation_record = record
-            with shared_fitness(selection_pool, estimator) as sharing_record:
-                population[:] = toolbox.select(selection_pool, mu)
+            population[:], sharing_record = _select_survivors(
+                selection_pool, toolbox, mu, halloffame, estimator
+            )
             selection_pressure = getattr(estimator, "_selection_pressure_", None)
 
             # Update the statistics with the new population
@@ -755,6 +777,7 @@ def eaMuPlusLambda(
                     duplicate_replacements,
                     sharing_record,
                 ),
+                halloffame=halloffame,
             )
             logbook.record(gen=gen + gen_offset, nevals=len(invalid_ind), **record)
 
@@ -783,7 +806,7 @@ def eaMuPlusLambda(
     n_gen = gen + 1 + gen_offset
     local_refinements = _run_local_refinement(population, toolbox, halloffame, estimator)
     _refresh_last_record_after_local_refinement(
-        logbook, stats, population, telemetry_state, local_refinements
+        logbook, stats, population, telemetry_state, local_refinements, halloffame
     )
 
     callbacks_end_args = {
@@ -895,7 +918,9 @@ def eaMuCommaLambda(
     logbook, gen_offset = _seed_logbook(resume_log, stats)
 
     n_gen = gen = 0
-    record = _compile_generation_record(stats, population, telemetry_state, gen)
+    record = _compile_generation_record(
+        stats, population, telemetry_state, gen, halloffame=halloffame
+    )
     logbook.record(gen=n_gen + gen_offset, nevals=len(invalid_ind), **record)
 
     if verbose:
@@ -951,8 +976,9 @@ def eaMuCommaLambda(
             # Select the next generation population
             if estimator is not None:
                 estimator._last_generation_record = record
-            with shared_fitness(offspring, estimator) as sharing_record:
-                population[:] = toolbox.select(offspring, mu)
+            population[:], sharing_record = _select_survivors(
+                offspring, toolbox, mu, halloffame, estimator
+            )
             selection_pressure = getattr(estimator, "_selection_pressure_", None)
 
             # Update the statistics with the new population
@@ -969,6 +995,7 @@ def eaMuCommaLambda(
                     duplicate_replacements,
                     sharing_record,
                 ),
+                halloffame=halloffame,
             )
             logbook.record(gen=gen + gen_offset, nevals=len(invalid_ind), **record)
 
@@ -998,7 +1025,7 @@ def eaMuCommaLambda(
     n_gen = gen + 1 + gen_offset
     local_refinements = _run_local_refinement(population, toolbox, halloffame, estimator)
     _refresh_last_record_after_local_refinement(
-        logbook, stats, population, telemetry_state, local_refinements
+        logbook, stats, population, telemetry_state, local_refinements, halloffame
     )
 
     callbacks_end_args = {

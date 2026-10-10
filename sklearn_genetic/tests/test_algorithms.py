@@ -317,3 +317,60 @@ def test_balanced_binary_population_does_not_trigger_diversity_recovery(
     assert logbook[0]["genotype_diversity"] == pytest.approx(expected)
     assert logbook[1]["diversity_control_triggered"] is (kind == "collapsed")
     assert logbook[1]["random_immigrants"] == (1 if kind == "collapsed" else 0)
+
+
+@pytest.mark.parametrize("algorithm", [eaMuPlusLambda, eaMuCommaLambda])
+@pytest.mark.parametrize("direction", [1.0, -1.0])
+@pytest.mark.parametrize("elitism", [True, False])
+def test_survivors_and_history_keep_best_evaluated_candidate(
+    simple_toolbox, algorithm, direction, elitism
+):
+    from itertools import cycle
+
+    class Fitness(base.Fitness):
+        weights = (direction,)
+
+    class Individual(list):
+        def __init__(self, values):
+            super().__init__(values)
+            self.fitness = Fitness()
+
+    scores = cycle([direction * 10, direction * 5, 0, 0])
+
+    def mutate(individual):
+        individual[0] = next(scores)
+        return (individual,)
+
+    simple_toolbox.register("mutate", mutate)
+    # A stochastic selector is allowed to miss the best candidate entirely.
+    simple_toolbox.register("select", lambda population, k: tools.selWorst(population, 1) * k)
+    population = [Individual([0]) for _ in range(4)]
+    hof = tools.HallOfFame(2)
+    stats = tools.Statistics(lambda individual: individual.fitness.values[0])
+    stats.register("fitness_max", max)
+    stats.register("fitness_min", min)
+    population, log, _ = algorithm(
+        population,
+        simple_toolbox,
+        mu=4,
+        lambda_=4,
+        cxpb=ConstantAdapter(0, 0, 0),
+        mutpb=ConstantAdapter(1, 1, 0),
+        ngen=2,
+        stats=stats,
+        halloffame=hof,
+        verbose=False,
+        estimator=SimpleNamespace(elitism=elitism),
+    )
+    assert len(population) == 4
+    assert hof[0][0] == direction * 10
+    assert any(ind[0] == direction * 10 for ind in population) is elitism
+    assert log.select("fitness_best") == [0, direction * 10, direction * 10]
+    assert log[-1]["best_generation"] == 1
+    assert log[-1]["stagnation_generations"] == 1
+    if elitism:
+        assert all(any(ind == elite for ind in population) for elite in hof)
+        archived_values = [list(elite) for elite in hof]
+        for individual in population:
+            individual[0] = 99
+        assert [list(elite) for elite in hof] == archived_values
