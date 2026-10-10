@@ -13,6 +13,7 @@ Timing note: HPO comparisons below through the four-family random-search transfe
 - **A more local feature mutation is not a general default improvement either.** In 60 new searches across the same four model families, flipping exactly one bit at either a 0.1 or 0.8 individual mutation rate produced mixed classification results and worse mean Ridge regression holdout than the current method. It was not promoted.
 - **HPO quality remains an open gap.** Default `GASearchCV` improves its best CV score after initialization in 23 of 24 runs, yet a same-budget random SVC search matches or exceeds its mean held-out accuracy on all three datasets and completes the sequentially timed cohorts faster. CV progress alone is not evidence of improved generalization.
 - **HPO does transfer to other model families, but efficiency varies.** A new four-task control against `RandomizedSearchCV` has higher GA mean held-out score for Digits/KNN, Diabetes/ElasticNet and synthetic/random forest, but lower for Wine/tree. After removing redundant train-fold scoring, the GA/random time ratio is .81× on KNN, .93× on forest, 1.05× on ElasticNet and 1.44× on tree. The gains are small or split-dependent; no HPO search policy was retuned to this matrix.
+- **A corrected-default Optuna TPE control is similarly mixed.** On three new splits of each of the same four model families, GA and Optuna tie all Wine/tree and Digits/KNN holdouts; GA loses mean Diabetes/ElasticNet negative MSE by 3.05 points and wins synthetic-forest accuracy by .00667. GA/Optuna mean time ratios range from .68× to 1.13×. This small matrix supports task-dependent parity, not a general SOTA claim.
 - **Penalizing HPO fold variance is not a general repair.** A post-hoc one-standard-error lower-confidence-bound rule left Wine/tree and Digits/KNN winners unchanged but reduced mean held-out scores on Diabetes/ElasticNet and synthetic/random forest. The rule was rejected without changing the API.
 - **Native AutoML parity is workload-specific.** On three Dry Bean splits, reduced-training SVM HPO averages .930649 accuracy in 12.096 seconds versus AutoGluon .928886 in 13.168 seconds and FLAML .926437 in 15.524 seconds under the recorded CPU configuration. On other tasks, AutoGluon or Optuna remains faster or more accurate. TPOT and H2O have not been measured here.
 
@@ -1055,4 +1056,23 @@ The change saves material time for cheap estimators that spend much of a fold co
 New-Item -ItemType Directory -Force -Path .agent-runs/performance-v2 | Out-Null
 .\.venv\Scripts\python.exe -c "import json,pathlib; a=json.loads(pathlib.Path('benchmarks/results/performance-v2/train-score-overhead.json').read_text(encoding='utf-8')); pathlib.Path('.agent-runs/performance-v2/train-score-overhead.py').write_text(a['reproduction_script'], encoding='utf-8')"
 .\.venv\Scripts\python.exe .agent-runs/performance-v2/train-score-overhead.py
+```
+
+## Corrected HPO against Optuna TPE across model families
+
+The final cross-family comparison uses the corrected `return_train_score=False` default against Optuna 5.0.0 TPE on the same four task definitions and ranges as the random-search transfer matrix, with new outer-holdout seeds 1111–1113. Both methods receive 72 proposals, three identical CV folds, one CPU worker, the same metric and a final refit. Optuna starts with eight random trials; its repeated parameter combinations reuse their previous CV score, matching GA's duplicate-cache policy. Method order alternates by split. The table reports actual distinct candidate CV evaluations, which differ from proposal counts. Holdouts never influence the searches.
+
+| Task | GA / Optuna mean held-out score | GA minus Optuna | GA wins/ties/losses | Mean GA/Optuna time ratio | Mean GA / Optuna CV evaluations |
+|---|---:|---:|---:|---:|---:|
+| Wine tree | .87407 / .87407 accuracy | .00000 | 0/3/0 | .676× | 27.3 / 27.0 |
+| Digits KNN | .97185 / .97185 accuracy | .00000 | 0/3/0 | 1.128× | 39.0 / 30.0 |
+| Diabetes ElasticNet | −2724.81 / −2721.76 negative MSE | −3.05 | 1/0/2 | .893× | 69.7 / 72.0 |
+| Synthetic forest | .88444 / .87778 accuracy | +.00667 | 1/2/0 | 1.004× | 64.7 / 65.3 |
+
+With only three overlapping outer splits per task, these differences are descriptive. No method dominates both quality and time; on the finite KNN space, Optuna evaluates fewer distinct combinations because many trials repeat a configuration, while GA evaluates more and takes 12.8% longer. On Wine/tree the same holdout scores arise with GA taking less time. A result on these task definitions cannot establish general dominance over Optuna or other AutoML systems. The [24-fit artifact](results/performance-v2/hpo-optuna-transfer.json) preserves every parameter choice, CV/holdout score, time, candidate count, environment, source hash and exact script. To rerun from the repository root in PowerShell with Optuna installed:
+
+```powershell
+New-Item -ItemType Directory -Force -Path .agent-runs/performance-v2 | Out-Null
+.\.venv\Scripts\python.exe -c "import json,pathlib; a=json.loads(pathlib.Path('benchmarks/results/performance-v2/hpo-optuna-transfer.json').read_text(encoding='utf-8')); pathlib.Path('.agent-runs/performance-v2/hpo-optuna-transfer.py').write_text(a['reproduction_script'], encoding='utf-8')"
+.\.venv\Scripts\python.exe .agent-runs/performance-v2/hpo-optuna-transfer.py
 ```

@@ -89,6 +89,11 @@ fix, the GA/random time ratio was .81× for Digits/KNN, .93× for synthetic fore
 results and chosen parameters matched the pre-fix benchmark exactly.
 These controls are documented with per-split results and reproduction scripts
 in the benchmark report.
+A further corrected-default comparison with Optuna TPE on three new splits of
+each family tied all Wine/tree and Digits/KNN holdouts, lost the mean
+Diabetes/ElasticNet negative MSE by 3.05 points, and gained .00667 mean
+synthetic-forest accuracy. GA/Optuna time ratios ranged from .68× to 1.13×;
+the small sample does not establish a universal winner.
 
 The repository [changelog](https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/CHANGELOG.md)
 lists the remaining changes in this upcoming release.

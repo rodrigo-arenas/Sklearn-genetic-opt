@@ -1,0 +1,424 @@
+{
+  "question": "How does corrected-default GASearchCV compare with Optuna TPE across model families?",
+  "source_commit": "ce190c83f5f40edb328898346442c99627427952",
+  "library_source_sha256": "9514d00c7b00677c01d5863cf3a05305d36a8d1ad16eff62ba08b8668bb6f8ad",
+  "settings": {
+    "outer_test_fraction": 0.25,
+    "seeds": [
+      1111,
+      1112,
+      1113
+    ],
+    "cv_folds": 3,
+    "ga_population_size": 8,
+    "ga_generations": 4,
+    "optuna_sampler": "TPESampler(n_startup_trials=8, seed=split_seed)",
+    "proposals_per_method": 72,
+    "optuna_duplicate_scores_cached": true,
+    "workers": 1,
+    "metrics": {
+      "wine-tree": "accuracy",
+      "digits-knn": "accuracy",
+      "diabetes-elasticnet": "neg_mean_squared_error",
+      "synthetic-forest": "accuracy"
+    }
+  },
+  "environment": {
+    "python": "3.12.0",
+    "numpy": "2.5.3",
+    "scipy": "1.18.1",
+    "scikit_learn": "1.9.1",
+    "optuna": "5.0.0"
+  },
+  "source_sha256": "c675c67fea56a5b1f0bf74750e022c0c988f3e5277c59f337c6f1d05b2964a66",
+  "raw_sha256": "ccacf9ab8fa5ca832079aebf6d1b4f3b1b40eb415982c0eef8a2928d5f051a03",
+  "summary": [
+    {
+      "task": "wine-tree",
+      "mean_genetic_holdout": 0.8740740740740741,
+      "mean_optuna_holdout": 0.8740740740740741,
+      "mean_holdout_delta": 0.0,
+      "wins": 0,
+      "ties": 3,
+      "losses": 0,
+      "mean_time_ratio_genetic_to_optuna": 0.6758340984111122,
+      "mean_genetic_candidate_cv_calls": 27.333333333333332,
+      "mean_optuna_candidate_cv_calls": 27
+    },
+    {
+      "task": "digits-knn",
+      "mean_genetic_holdout": 0.9718518518518519,
+      "mean_optuna_holdout": 0.9718518518518519,
+      "mean_holdout_delta": 0.0,
+      "wins": 0,
+      "ties": 3,
+      "losses": 0,
+      "mean_time_ratio_genetic_to_optuna": 1.1275558718581447,
+      "mean_genetic_candidate_cv_calls": 39,
+      "mean_optuna_candidate_cv_calls": 30
+    },
+    {
+      "task": "diabetes-elasticnet",
+      "mean_genetic_holdout": -2724.8091677204047,
+      "mean_optuna_holdout": -2721.7634317481434,
+      "mean_holdout_delta": -3.045735972261506,
+      "wins": 1,
+      "ties": 0,
+      "losses": 2,
+      "mean_time_ratio_genetic_to_optuna": 0.8928010559502205,
+      "mean_genetic_candidate_cv_calls": 69.66666666666667,
+      "mean_optuna_candidate_cv_calls": 72
+    },
+    {
+      "task": "synthetic-forest",
+      "mean_genetic_holdout": 0.8844444444444445,
+      "mean_optuna_holdout": 0.8777777777777778,
+      "mean_holdout_delta": 0.006666666666666672,
+      "wins": 1,
+      "ties": 2,
+      "losses": 0,
+      "mean_time_ratio_genetic_to_optuna": 1.0035937165131483,
+      "mean_genetic_candidate_cv_calls": 64.66666666666667,
+      "mean_optuna_candidate_cv_calls": 65.33333333333333
+    }
+  ],
+  "records": [
+    {
+      "task": "wine-tree",
+      "seed": 1111,
+      "method": "genetic",
+      "seconds": 0.24312649999046698,
+      "cv_score": 0.9393939393939393,
+      "holdout": 0.8666666666666667,
+      "params": {
+        "max_depth": 15,
+        "criterion": "gini"
+      },
+      "candidate_cv_calls": 28,
+      "proposals": 72
+    },
+    {
+      "task": "wine-tree",
+      "seed": 1111,
+      "method": "optuna",
+      "seconds": 0.3702962000097614,
+      "cv_score": 0.9393939393939393,
+      "holdout": 0.8666666666666667,
+      "params": {
+        "max_depth": 3,
+        "criterion": "gini"
+      },
+      "candidate_cv_calls": 27,
+      "proposals": 72
+    },
+    {
+      "task": "wine-tree",
+      "seed": 1112,
+      "method": "optuna",
+      "seconds": 0.3710002999869175,
+      "cv_score": 0.9097643097643098,
+      "holdout": 0.9333333333333333,
+      "params": {
+        "max_depth": 3,
+        "criterion": "entropy"
+      },
+      "candidate_cv_calls": 27,
+      "proposals": 72
+    },
+    {
+      "task": "wine-tree",
+      "seed": 1112,
+      "method": "genetic",
+      "seconds": 0.2572288999799639,
+      "cv_score": 0.9097643097643098,
+      "holdout": 0.9333333333333333,
+      "params": {
+        "max_depth": 4,
+        "criterion": "entropy"
+      },
+      "candidate_cv_calls": 28,
+      "proposals": 72
+    },
+    {
+      "task": "wine-tree",
+      "seed": 1113,
+      "method": "genetic",
+      "seconds": 0.2366875000006985,
+      "cv_score": 0.8946127946127946,
+      "holdout": 0.8222222222222222,
+      "params": {
+        "max_depth": 10,
+        "criterion": "entropy"
+      },
+      "candidate_cv_calls": 26,
+      "proposals": 72
+    },
+    {
+      "task": "wine-tree",
+      "seed": 1113,
+      "method": "optuna",
+      "seconds": 0.34930760000133887,
+      "cv_score": 0.8946127946127946,
+      "holdout": 0.8222222222222222,
+      "params": {
+        "max_depth": 7,
+        "criterion": "entropy"
+      },
+      "candidate_cv_calls": 27,
+      "proposals": 72
+    },
+    {
+      "task": "digits-knn",
+      "seed": 1111,
+      "method": "genetic",
+      "seconds": 1.159713400003966,
+      "cv_score": 0.9725315515961395,
+      "holdout": 0.9755555555555555,
+      "params": {
+        "kneighborsclassifier__n_neighbors": 4,
+        "kneighborsclassifier__weights": "distance"
+      },
+      "candidate_cv_calls": 42,
+      "proposals": 72
+    },
+    {
+      "task": "digits-knn",
+      "seed": 1111,
+      "method": "optuna",
+      "seconds": 0.9736320999800228,
+      "cv_score": 0.9725315515961395,
+      "holdout": 0.9755555555555555,
+      "params": {
+        "kneighborsclassifier__n_neighbors": 4,
+        "kneighborsclassifier__weights": "distance"
+      },
+      "candidate_cv_calls": 31,
+      "proposals": 72
+    },
+    {
+      "task": "digits-knn",
+      "seed": 1112,
+      "method": "optuna",
+      "seconds": 0.9885934999911115,
+      "cv_score": 0.9762435040831478,
+      "holdout": 0.9688888888888889,
+      "params": {
+        "kneighborsclassifier__n_neighbors": 4,
+        "kneighborsclassifier__weights": "distance"
+      },
+      "candidate_cv_calls": 31,
+      "proposals": 72
+    },
+    {
+      "task": "digits-knn",
+      "seed": 1112,
+      "method": "genetic",
+      "seconds": 0.9808255999814719,
+      "cv_score": 0.9762435040831478,
+      "holdout": 0.9688888888888889,
+      "params": {
+        "kneighborsclassifier__n_neighbors": 4,
+        "kneighborsclassifier__weights": "distance"
+      },
+      "candidate_cv_calls": 37,
+      "proposals": 72
+    },
+    {
+      "task": "digits-knn",
+      "seed": 1113,
+      "method": "genetic",
+      "seconds": 1.041063100012252,
+      "cv_score": 0.9673348181143281,
+      "holdout": 0.9711111111111111,
+      "params": {
+        "kneighborsclassifier__n_neighbors": 1,
+        "kneighborsclassifier__weights": "distance"
+      },
+      "candidate_cv_calls": 38,
+      "proposals": 72
+    },
+    {
+      "task": "digits-knn",
+      "seed": 1113,
+      "method": "optuna",
+      "seconds": 0.8679834000067785,
+      "cv_score": 0.9673348181143281,
+      "holdout": 0.9711111111111111,
+      "params": {
+        "kneighborsclassifier__n_neighbors": 1,
+        "kneighborsclassifier__weights": "uniform"
+      },
+      "candidate_cv_calls": 28,
+      "proposals": 72
+    },
+    {
+      "task": "diabetes-elasticnet",
+      "seed": 1111,
+      "method": "genetic",
+      "seconds": 0.8376584000070579,
+      "cv_score": -3300.81084777114,
+      "holdout": -2709.8701539416074,
+      "params": {
+        "elasticnet__alpha": 2.0242940376207685,
+        "elasticnet__l1_ratio": 0.9334315019872181
+      },
+      "candidate_cv_calls": 71,
+      "proposals": 72
+    },
+    {
+      "task": "diabetes-elasticnet",
+      "seed": 1111,
+      "method": "optuna",
+      "seconds": 0.9186375999997836,
+      "cv_score": -3298.466611268756,
+      "holdout": -2697.4952265076718,
+      "params": {
+        "elasticnet__alpha": 2.346995620190933,
+        "elasticnet__l1_ratio": 0.9711787903395509
+      },
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "task": "diabetes-elasticnet",
+      "seed": 1112,
+      "method": "optuna",
+      "seconds": 0.9155496999737807,
+      "cv_score": -3098.8112499588497,
+      "holdout": -2831.783392488442,
+      "params": {
+        "elasticnet__alpha": 0.11084932505750855,
+        "elasticnet__l1_ratio": 0.026708439787140922
+      },
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "task": "diabetes-elasticnet",
+      "seed": 1112,
+      "method": "genetic",
+      "seconds": 0.9125777000153903,
+      "cv_score": -3100.3765699393384,
+      "holdout": -2827.7909478027873,
+      "params": {
+        "elasticnet__alpha": 0.19170125263029453,
+        "elasticnet__l1_ratio": 0.5
+      },
+      "candidate_cv_calls": 70,
+      "proposals": 72
+    },
+    {
+      "task": "diabetes-elasticnet",
+      "seed": 1113,
+      "method": "genetic",
+      "seconds": 0.8210424999997485,
+      "cv_score": -3256.427037478609,
+      "holdout": -2636.7664014168195,
+      "params": {
+        "elasticnet__alpha": 0.0012206415031991158,
+        "elasticnet__l1_ratio": 0.12372071368383362
+      },
+      "candidate_cv_calls": 68,
+      "proposals": 72
+    },
+    {
+      "task": "diabetes-elasticnet",
+      "seed": 1113,
+      "method": "optuna",
+      "seconds": 1.0665650000155438,
+      "cv_score": -3256.4168803192,
+      "holdout": -2636.011676248316,
+      "params": {
+        "elasticnet__alpha": 0.001251958514659518,
+        "elasticnet__l1_ratio": 0.08426803467875707
+      },
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "task": "synthetic-forest",
+      "seed": 1111,
+      "method": "genetic",
+      "seconds": 12.683058800001163,
+      "cv_score": 0.8666666666666666,
+      "holdout": 0.9,
+      "params": {
+        "n_estimators": 60,
+        "max_depth": 9
+      },
+      "candidate_cv_calls": 62,
+      "proposals": 72
+    },
+    {
+      "task": "synthetic-forest",
+      "seed": 1111,
+      "method": "optuna",
+      "seconds": 15.065614499995718,
+      "cv_score": 0.8666666666666666,
+      "holdout": 0.9,
+      "params": {
+        "n_estimators": 60,
+        "max_depth": 9
+      },
+      "candidate_cv_calls": 60,
+      "proposals": 72
+    },
+    {
+      "task": "synthetic-forest",
+      "seed": 1112,
+      "method": "optuna",
+      "seconds": 13.926820599997882,
+      "cv_score": 0.86,
+      "holdout": 0.8266666666666667,
+      "params": {
+        "n_estimators": 45,
+        "max_depth": 10
+      },
+      "candidate_cv_calls": 65,
+      "proposals": 72
+    },
+    {
+      "task": "synthetic-forest",
+      "seed": 1112,
+      "method": "genetic",
+      "seconds": 15.500823999987915,
+      "cv_score": 0.8555555555555555,
+      "holdout": 0.8466666666666667,
+      "params": {
+        "n_estimators": 35,
+        "max_depth": 11
+      },
+      "candidate_cv_calls": 68,
+      "proposals": 72
+    },
+    {
+      "task": "synthetic-forest",
+      "seed": 1113,
+      "method": "genetic",
+      "seconds": 15.993110000010347,
+      "cv_score": 0.8444444444444444,
+      "holdout": 0.9066666666666666,
+      "params": {
+        "n_estimators": 33,
+        "max_depth": 11
+      },
+      "candidate_cv_calls": 64,
+      "proposals": 72
+    },
+    {
+      "task": "synthetic-forest",
+      "seed": 1113,
+      "method": "optuna",
+      "seconds": 15.146326699992642,
+      "cv_score": 0.8444444444444444,
+      "holdout": 0.9066666666666666,
+      "params": {
+        "n_estimators": 33,
+        "max_depth": 11
+      },
+      "candidate_cv_calls": 71,
+      "proposals": 72
+    }
+  ],
+  "reproduction_script": "\"\"\"Cross-family holdout comparison of corrected GA HPO and Optuna TPE.\"\"\"\n\nimport json\nimport time\nfrom pathlib import Path\n\nimport numpy as np\nimport optuna\nfrom sklearn.base import clone\nfrom sklearn.datasets import load_diabetes, load_digits, load_wine, make_classification\nfrom sklearn.ensemble import RandomForestClassifier\nfrom sklearn.linear_model import ElasticNet\nfrom sklearn.metrics import accuracy_score, mean_squared_error\nfrom sklearn.model_selection import KFold, StratifiedKFold, cross_validate, train_test_split\nfrom sklearn.neighbors import KNeighborsClassifier\nfrom sklearn.pipeline import make_pipeline\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.tree import DecisionTreeClassifier\nfrom threadpoolctl import threadpool_limits\n\nfrom sklearn_genetic import GASearchCV\nfrom sklearn_genetic.space import Categorical, Continuous, Integer\n\n\noptuna.logging.set_verbosity(optuna.logging.ERROR)\ntasks = {\n    \"wine-tree\": dict(\n        data=load_wine(return_X_y=True), model=DecisionTreeClassifier(random_state=0),\n        ga_space={\"max_depth\": Integer(2, 15), \"criterion\": Categorical([\"gini\", \"entropy\"])},\n        tpe_params=lambda trial: {\n            \"max_depth\": trial.suggest_int(\"max_depth\", 2, 15),\n            \"criterion\": trial.suggest_categorical(\"criterion\", [\"gini\", \"entropy\"]),\n        }, regression=False,\n    ),\n    \"digits-knn\": dict(\n        data=load_digits(return_X_y=True), model=make_pipeline(StandardScaler(), KNeighborsClassifier(n_jobs=1)),\n        ga_space={\"kneighborsclassifier__n_neighbors\": Integer(1, 25), \"kneighborsclassifier__weights\": Categorical([\"uniform\", \"distance\"])},\n        tpe_params=lambda trial: {\n            \"kneighborsclassifier__n_neighbors\": trial.suggest_int(\"kneighborsclassifier__n_neighbors\", 1, 25),\n            \"kneighborsclassifier__weights\": trial.suggest_categorical(\"kneighborsclassifier__weights\", [\"uniform\", \"distance\"]),\n        }, regression=False,\n    ),\n    \"diabetes-elasticnet\": dict(\n        data=load_diabetes(return_X_y=True), model=make_pipeline(StandardScaler(), ElasticNet(max_iter=2000, random_state=0)),\n        ga_space={\"elasticnet__alpha\": Continuous(.001, 10, distribution=\"log-uniform\"), \"elasticnet__l1_ratio\": Continuous(.01, .99)},\n        tpe_params=lambda trial: {\n            \"elasticnet__alpha\": trial.suggest_float(\"elasticnet__alpha\", .001, 10, log=True),\n            \"elasticnet__l1_ratio\": trial.suggest_float(\"elasticnet__l1_ratio\", .01, .99),\n        }, regression=True,\n    ),\n    \"synthetic-forest\": dict(\n        data=make_classification(n_samples=600, n_features=20, n_informative=8, n_redundant=4, random_state=29),\n        model=RandomForestClassifier(random_state=0, n_jobs=1),\n        ga_space={\"n_estimators\": Integer(20, 60), \"max_depth\": Integer(2, 12)},\n        tpe_params=lambda trial: {\n            \"n_estimators\": trial.suggest_int(\"n_estimators\", 20, 60),\n            \"max_depth\": trial.suggest_int(\"max_depth\", 2, 12),\n        }, regression=False,\n    ),\n}\noutput = Path(\".agent-runs/performance-v2/hpo-optuna-transfer.jsonl\")\nwith threadpool_limits(limits=1), output.open(\"w\", encoding=\"utf-8\") as stream:\n    for task_name, task in tasks.items():\n        X, y = task[\"data\"]\n        for seed in range(1111, 1114):\n            train, test = train_test_split(\n                np.arange(len(y)), test_size=.25,\n                stratify=None if task[\"regression\"] else y, random_state=seed,\n            )\n            Xtr, Xte, ytr, yte = X[train], X[test], y[train], y[test]\n            splitter = KFold(3, shuffle=True, random_state=seed) if task[\"regression\"] else StratifiedKFold(3, shuffle=True, random_state=seed)\n            folds = list(splitter.split(Xtr, ytr))\n            metric = \"neg_mean_squared_error\" if task[\"regression\"] else \"accuracy\"\n            methods = (\"genetic\", \"optuna\") if seed % 2 else (\"optuna\", \"genetic\")\n            for method in methods:\n                started = time.perf_counter()\n                if method == \"genetic\":\n                    search = GASearchCV(\n                        clone(task[\"model\"]), param_grid=task[\"ga_space\"], cv=folds,\n                        scoring=metric, population_size=8, generations=4,\n                        random_state=seed, n_jobs=1, verbose=False, error_score=\"raise\",\n                    ).fit(Xtr, ytr)\n                    best_cv = float(search.best_score_)\n                    best_params = search.best_params_\n                    cv_evaluations = int(search.fit_stats_[\"cross_validate_calls\"])\n                    model = search.best_estimator_\n                else:\n                    score_cache = {}\n\n                    def objective(trial):\n                        params = task[\"tpe_params\"](trial)\n                        key = tuple(sorted(params.items()))\n                        if key not in score_cache:\n                            score_cache[key] = float(np.mean(cross_validate(\n                                clone(task[\"model\"]).set_params(**params), Xtr, ytr,\n                                cv=folds, scoring=metric, n_jobs=1, error_score=\"raise\",\n                            )[\"test_score\"]))\n                        return score_cache[key]\n\n                    study = optuna.create_study(\n                        direction=\"maximize\",\n                        sampler=optuna.samplers.TPESampler(seed=seed, n_startup_trials=8),\n                    )\n                    study.optimize(objective, n_trials=72, n_jobs=1, show_progress_bar=False)\n                    best_cv = float(study.best_value)\n                    best_params = study.best_params\n                    cv_evaluations = len(score_cache)\n                    model = clone(task[\"model\"]).set_params(**best_params).fit(Xtr, ytr)\n                seconds = time.perf_counter() - started\n                predictions = model.predict(Xte)\n                holdout = -mean_squared_error(yte, predictions) if task[\"regression\"] else accuracy_score(yte, predictions)\n                row = {\n                    \"task\": task_name, \"seed\": seed, \"method\": method,\n                    \"seconds\": seconds, \"cv_score\": best_cv, \"holdout\": float(holdout),\n                    \"params\": {key: value.item() if isinstance(value, np.generic) else value for key, value in best_params.items()},\n                    \"candidate_cv_calls\": cv_evaluations, \"proposals\": 72,\n                }\n                stream.write(json.dumps(row) + \"\\n\")\n                stream.flush()\n                print(task_name, seed, method, f\"holdout={holdout:.6f}\", f\"seconds={seconds:.3f}\", flush=True)\n"
+}

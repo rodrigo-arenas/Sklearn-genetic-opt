@@ -21,6 +21,7 @@ Full release notes with code examples are in the [documentation](https://sklearn
 - Fitness sharing uses vectorized distances with bounded auxiliary memory for feature masks and mixed hyperparameter spaces. The isolated sharing benchmark is 7.9–14.8× faster; complete-fit timings remain dominated by model evaluation.
 
 - Added a paired holdout benchmark against Optuna TPE, RandomizedSearchCV and optional FLAML-CFO, with per-run CV budgets, dependency versions and before/after evidence in `benchmarks/PERFORMANCE.md`.
+- Extended the 0.14.0 benchmark record with sparse/imbalanced/regression feature-selection transfer tasks and corrected-default HPO comparisons against `RandomizedSearchCV` and Optuna TPE across four model families. The documented wins and losses use held-out data and retain per-run reproduction artifacts; they do not change evolutionary defaults.
 
 - `GASearchCV` and `GAFeatureSelectionCV` now reject unsupported `fit` metadata up front with a clear error naming the parameter and the wrapped estimator, instead of failing deep inside cross-validation. Estimators whose `fit` takes `**kwargs` (e.g. `Pipeline`) are left to validate at fit time, so routed keys like `clf__sample_weight` keep working (#364).
 - Added `GAFeatureSelectionCV.get_feature_names_out()` support for DataFrame column names and generated NumPy feature names.
