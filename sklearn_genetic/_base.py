@@ -190,10 +190,12 @@ class GeneticEstimatorMixin:
 
     @property
     def _fitted(self):
+        if not hasattr(self, "best_estimator_"):
+            return False
         try:
-            check_is_fitted(self.estimator)
+            check_is_fitted(self.best_estimator_)
             is_fitted = True
-        except Exception:
+        except NotFittedError:
             is_fitted = False
 
         has_history = hasattr(self, "history") and bool(self.history)

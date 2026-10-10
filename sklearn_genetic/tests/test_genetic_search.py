@@ -2146,3 +2146,76 @@ def test_initial_population_retains_retries_without_proven_capacity(monkeypatch,
     assert calls >= 240
     assert search.history["population_size"] == [12]
     assert not search.search_space_exhausted_
+
+
+@pytest.mark.parametrize("kind", ["parameters", "integer", "features"])
+def test_refit_preserves_constructor_estimator_and_postfit_clone(kind, tmp_path):
+    from sklearn.datasets import load_iris
+    from sklearn.exceptions import NotFittedError
+    from sklearn.linear_model import LogisticRegression
+
+    data, target = load_iris(return_X_y=True)
+    model = LogisticRegression(C=1, max_iter=200, random_state=0)
+    original_params = model.get_params(deep=True)
+    common = dict(population_size=4, generations=1, cv=2, random_state=17, n_jobs=1, verbose=False)
+    search = (
+        GASearchCV(
+            model,
+            param_grid=(
+                {"C": Continuous(0.01, 0.1)}
+                if kind == "parameters"
+                else {"max_iter": Integer(250, 500)}
+            ),
+            **common,
+        )
+        if kind != "features"
+        else genetic_search.GAFeatureSelectionCV(model, max_features=2, **common)
+    )
+    search.fit(data, target)
+    assert search.estimator is model
+    assert model.get_params(deep=True) == original_params
+    with pytest.raises(NotFittedError):
+        check_is_fitted(model)
+    assert search.best_estimator_ is not model
+    selected = data if kind != "features" else search.transform(data)
+    for method in ["predict", "predict_proba", "predict_log_proba", "decision_function"]:
+        np.testing.assert_allclose(
+            getattr(search, method)(data), getattr(search.best_estimator_, method)(selected)
+        )
+    assert search.score(data, target) == search.best_estimator_.score(selected, target)
+    assert search[0]["gen"] == 0
+    repeated = clone(search).fit(data, target)
+    np.testing.assert_allclose(
+        repeated.cv_results_["mean_test_score"], search.cv_results_["mean_test_score"]
+    )
+    if kind != "features":
+        assert repeated.cv_results_["params"] == search.cv_results_["params"]
+    else:
+        np.testing.assert_array_equal(repeated.support_, search.support_)
+    saved = tmp_path / "search.pkl"
+    search.save(saved)
+    restored = clone(search)
+    restored.load(saved)
+    np.testing.assert_array_equal(restored.predict(data), search.predict(data))
+
+
+def test_refit_clones_estimator_valued_hyperparameters():
+    from sklearn.pipeline import Pipeline
+    from sklearn.exceptions import NotFittedError
+
+    candidate = DecisionTreeClassifier(max_depth=2, random_state=0)
+    search = GASearchCV(
+        Pipeline([("model", DecisionTreeClassifier(random_state=1))]),
+        param_grid={"model": Categorical([candidate])},
+        population_size=2,
+        generations=0,
+        cv=2,
+        n_jobs=1,
+        verbose=False,
+        random_state=17,
+    ).fit(X_train[:40], y_train[:40])
+    assert search.best_params_["model"] is candidate
+    with pytest.raises(NotFittedError):
+        check_is_fitted(candidate)
+    assert search.best_estimator_["model"] is not candidate
+    assert search.predict(X_train[:40]).shape == (40,)

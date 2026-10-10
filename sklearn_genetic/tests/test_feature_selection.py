@@ -969,3 +969,27 @@ def test_feature_selection_unsupported_fit_param_raises_clearly():
     message = str(excinfo.value)
     assert "not_a_real_fit_param" in message
     assert "DecisionTreeClassifier" in message
+
+
+@pytest.mark.parametrize(
+    "method", ["predict", "predict_proba", "predict_log_proba", "decision_function", "score"]
+)
+@pytest.mark.parametrize("fitted_without_refit", [False, True])
+def test_prediction_methods_require_refitted_winner(method, fitted_without_refit):
+    from sklearn.linear_model import LogisticRegression
+
+    selector = GAFeatureSelectionCV(
+        LogisticRegression(),
+        population_size=2,
+        generations=0,
+        cv=2,
+        n_jobs=1,
+        verbose=False,
+        refit=not fitted_without_refit,
+        random_state=0,
+    )
+    if fitted_without_refit:
+        selector.fit(X_train[:40, :2], y_train[:40])
+    args = (X_test[:, :2], y_test) if method == "score" else (X_test[:, :2],)
+    with pytest.raises(NotFittedError, match="GAFeatureSelectionCV instance is not fitted"):
+        getattr(selector, method)(*args)

@@ -3,6 +3,7 @@ from typing import Any, List, Optional, Union
 
 import numpy as np
 from scipy import stats
+from sklearn.utils import check_random_state
 
 from .space_parameters import (
     IntegerDistributions,
@@ -71,7 +72,11 @@ class Integer(BaseDimension):
     def sample(self) -> int:
         """Sample a random value from the assigned distribution"""
 
-        return self.rvs(self.lower, self.upper + 1, random_state=self.rng)
+        return self.rvs(
+            self.lower,
+            self.upper + 1,
+            random_state=self.rng if self.rng is not None else check_random_state(None),
+        )
 
 
 class Continuous(BaseDimension):
@@ -142,7 +147,11 @@ class Continuous(BaseDimension):
     def sample(self) -> float:
         """Sample a random value from the assigned distribution"""
 
-        return self.rvs(self.lower, self.shifted_upper, random_state=self.rng)
+        return self.rvs(
+            self.lower,
+            self.shifted_upper,
+            random_state=self.rng if self.rng is not None else check_random_state(None),
+        )
 
 
 class Categorical(BaseDimension):

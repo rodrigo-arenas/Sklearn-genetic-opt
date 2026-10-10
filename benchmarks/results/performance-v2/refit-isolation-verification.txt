@@ -1,0 +1,348 @@
+Refit isolation and numeric sampling verification; base97335e5230fdcbaf68c49922e77b529b7f331a02
+
+--- refit-isolation-red.txt ---
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 114 items / 112 deselected / 2 selected
+
+sklearn_genetic\tests\test_genetic_search.py FF                          [100%]
+
+================================== FAILURES ===================================
+__ test_refit_preserves_constructor_estimator_and_postfit_clone[parameters] ___
+sklearn_genetic\tests\test_genetic_search.py:2169: in test_refit_preserves_constructor_estimator_and_postfit_clone
+    assert model.get_params(deep=True) == original_params
+E   AssertionError
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:717: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+___ test_refit_preserves_constructor_estimator_and_postfit_clone[features] ____
+sklearn_genetic\tests\test_genetic_search.py:2170: in test_refit_preserves_constructor_estimator_and_postfit_clone
+    with pytest.raises(NotFittedError):
+E   Failed: DID NOT RAISE NotFittedError
+=========================== short test summary info ===========================
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_refit_preserves_constructor_estimator_and_postfit_clone[parameters] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_refit_preserves_constructor_estimator_and_postfit_clone[features] - Failed: DID NOT RAISE NotFittedError
+====================== 2 failed, 112 deselected in 3.83s ======================
+
+--- refit-isolation-green.txt ---
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 233 items / 216 deselected / 17 selected
+
+sklearn_genetic\tests\test_genetic_search.py ....F.                      [ 35%]
+sklearn_genetic\tests\test_feature_selection.py ....                     [ 58%]
+sklearn_genetic\tests\test_internal_helpers.py .                         [ 64%]
+sklearn_genetic\tests\test_serialization.py ......                       [100%]
+
+================================== FAILURES ===================================
+__ test_refit_preserves_constructor_estimator_and_postfit_clone[parameters] ___
+sklearn_genetic\tests\test_genetic_search.py:2180: in test_refit_preserves_constructor_estimator_and_postfit_clone
+    np.testing.assert_allclose(repeated.cv_results_["mean_test_score"],
+E   AssertionError:
+E   Not equal to tolerance rtol=1e-07, atol=0
+E
+E   Mismatched elements: 6 / 12 (50%)
+E   First 5 mismatches are at indices:
+E    [4]: 0.88 (ACTUAL), 0.9466666666666668 (DESIRED)
+E    [5]: 0.9266666666666667 (ACTUAL), 0.9466666666666668 (DESIRED)
+E    [6]: 0.9466666666666668 (ACTUAL), 0.9066666666666667 (DESIRED)
+E    [7]: 0.94 (ACTUAL), 0.9066666666666667 (DESIRED)
+E    [9]: 0.9 (ACTUAL), 0.94 (DESIRED)
+E   Max absolute difference among violations: 0.06666667
+E   Max relative difference among violations: 0.07042254
+E    ACTUAL: array([0.946667, 0.94    , 0.9     , 0.9     , 0.88    , 0.926667,
+E          0.946667, 0.94    , 0.9     , 0.9     , 0.846667, 0.94    ])
+E    DESIRED: array([0.946667, 0.94    , 0.9     , 0.9     , 0.946667, 0.946667,
+E          0.906667, 0.906667, 0.9     , 0.94    , 0.886667, 0.94    ])
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:717: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:717: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+=========================== short test summary info ===========================
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_refit_preserves_constructor_estimator_and_postfit_clone[parameters] - AssertionError:
+================ 1 failed, 16 passed, 216 deselected in 34.70s ================
+
+--- refit-numeric-red.txt ---
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 115 items / 112 deselected / 3 selected
+
+sklearn_genetic\tests\test_genetic_search.py FF.                         [100%]
+
+================================== FAILURES ===================================
+__ test_refit_preserves_constructor_estimator_and_postfit_clone[parameters] ___
+sklearn_genetic\tests\test_genetic_search.py:2180: in test_refit_preserves_constructor_estimator_and_postfit_clone
+    np.testing.assert_allclose(repeated.cv_results_["mean_test_score"],
+E   AssertionError:
+E   Not equal to tolerance rtol=1e-07, atol=0
+E
+E   Mismatched elements: 6 / 12 (50%)
+E   First 5 mismatches are at indices:
+E    [4]: 0.88 (ACTUAL), 0.9466666666666668 (DESIRED)
+E    [5]: 0.9266666666666667 (ACTUAL), 0.9466666666666668 (DESIRED)
+E    [6]: 0.9466666666666668 (ACTUAL), 0.9066666666666667 (DESIRED)
+E    [7]: 0.94 (ACTUAL), 0.9066666666666667 (DESIRED)
+E    [9]: 0.9 (ACTUAL), 0.94 (DESIRED)
+E   Max absolute difference among violations: 0.06666667
+E   Max relative difference among violations: 0.07042254
+E    ACTUAL: array([0.946667, 0.94    , 0.9     , 0.9     , 0.88    , 0.926667,
+E          0.946667, 0.94    , 0.9     , 0.9     , 0.846667, 0.94    ])
+E    DESIRED: array([0.946667, 0.94    , 0.9     , 0.9     , 0.946667, 0.946667,
+E          0.906667, 0.906667, 0.9     , 0.94    , 0.886667, 0.94    ])
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:718: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:718: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+____ test_refit_preserves_constructor_estimator_and_postfit_clone[integer] ____
+sklearn_genetic\tests\test_genetic_search.py:2183: in test_refit_preserves_constructor_estimator_and_postfit_clone
+    assert repeated.cv_results_["params"] == search.cv_results_["params"]
+E   AssertionError
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:718: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:718: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+=========================== short test summary info ===========================
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_refit_preserves_constructor_estimator_and_postfit_clone[parameters] - AssertionError:
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_refit_preserves_constructor_estimator_and_postfit_clone[integer] - AssertionError
+================= 2 failed, 1 passed, 112 deselected in 3.20s =================
+
+--- refit-space-green.txt ---
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 170 items / 93 deselected / 77 selected
+
+sklearn_genetic\space\tests\test_space.py .............................. [ 38%]
+.........................                                                [ 71%]
+sklearn_genetic\tests\test_genetic_search.py ......................      [100%]
+
+====================== 77 passed, 93 deselected in 7.95s ======================
+
+--- refit-nested-red.txt ---
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 116 items / 115 deselected / 1 selected
+
+sklearn_genetic\tests\test_genetic_search.py F                           [100%]
+
+================================== FAILURES ===================================
+_____________ test_refit_clones_estimator_valued_hyperparameters ______________
+sklearn_genetic\tests\test_genetic_search.py:2214: in test_refit_clones_estimator_valued_hyperparameters
+    with pytest.raises(NotFittedError):
+E   Failed: DID NOT RAISE NotFittedError
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:718: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+=========================== short test summary info ===========================
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_refit_clones_estimator_valued_hyperparameters - Failed: DID NOT RAISE NotFittedError
+====================== 1 failed, 115 deselected in 0.78s ======================
+
+--- refit-nested-green.txt ---
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 116 items / 115 deselected / 1 selected
+
+sklearn_genetic\tests\test_genetic_search.py .                           [100%]
+
+====================== 1 passed, 115 deselected in 2.01s ======================
+
+--- refit-guard-red.txt ---
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 57 items / 47 deselected / 10 selected
+
+sklearn_genetic\tests\test_feature_selection.py FFFFFFFFFF               [100%]
+
+================================== FAILURES ===================================
+_______ test_prediction_methods_require_refitted_winner[False-predict] ________
+sklearn_genetic\tests\test_feature_selection.py:987: in test_prediction_methods_require_refitted_winner
+    getattr(selector, method)(*args)
+sklearn_genetic\genetic_search.py:2406: in predict
+    return self.best_estimator_.predict(self.transform(X))
+           ^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'GAFeatureSelectionCV' object has no attribute 'best_estimator_'
+____ test_prediction_methods_require_refitted_winner[False-predict_proba] _____
+sklearn_genetic\tests\test_feature_selection.py:987: in test_prediction_methods_require_refitted_winner
+    getattr(selector, method)(*args)
+sklearn_genetic\genetic_search.py:2448: in predict_proba
+    return self.best_estimator_.predict_proba(self.transform(X))
+           ^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'GAFeatureSelectionCV' object has no attribute 'best_estimator_'
+__ test_prediction_methods_require_refitted_winner[False-predict_log_proba] ___
+sklearn_genetic\tests\test_feature_selection.py:987: in test_prediction_methods_require_refitted_winner
+    getattr(selector, method)(*args)
+sklearn_genetic\genetic_search.py:2427: in predict_log_proba
+    return self.best_estimator_.predict_log_proba(self.transform(X))
+           ^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'GAFeatureSelectionCV' object has no attribute 'best_estimator_'
+__ test_prediction_methods_require_refitted_winner[False-decision_function] ___
+sklearn_genetic\tests\test_feature_selection.py:987: in test_prediction_methods_require_refitted_winner
+    getattr(selector, method)(*args)
+sklearn_genetic\genetic_search.py:2386: in decision_function
+    return self.best_estimator_.decision_function(self.transform(X))
+           ^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'GAFeatureSelectionCV' object has no attribute 'best_estimator_'
+________ test_prediction_methods_require_refitted_winner[False-score] _________
+sklearn_genetic\tests\test_feature_selection.py:987: in test_prediction_methods_require_refitted_winner
+    getattr(selector, method)(*args)
+sklearn_genetic\genetic_search.py:2472: in score
+    return self.best_estimator_.score(self.transform(X), y)
+           ^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'GAFeatureSelectionCV' object has no attribute 'best_estimator_'
+________ test_prediction_methods_require_refitted_winner[True-predict] ________
+sklearn_genetic\tests\test_feature_selection.py:987: in test_prediction_methods_require_refitted_winner
+    getattr(selector, method)(*args)
+sklearn_genetic\genetic_search.py:2406: in predict
+    return self.best_estimator_.predict(self.transform(X))
+           ^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'GAFeatureSelectionCV' object has no attribute 'best_estimator_'
+_____ test_prediction_methods_require_refitted_winner[True-predict_proba] _____
+sklearn_genetic\tests\test_feature_selection.py:987: in test_prediction_methods_require_refitted_winner
+    getattr(selector, method)(*args)
+sklearn_genetic\genetic_search.py:2448: in predict_proba
+    return self.best_estimator_.predict_proba(self.transform(X))
+           ^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'GAFeatureSelectionCV' object has no attribute 'best_estimator_'
+___ test_prediction_methods_require_refitted_winner[True-predict_log_proba] ___
+sklearn_genetic\tests\test_feature_selection.py:987: in test_prediction_methods_require_refitted_winner
+    getattr(selector, method)(*args)
+sklearn_genetic\genetic_search.py:2427: in predict_log_proba
+    return self.best_estimator_.predict_log_proba(self.transform(X))
+           ^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'GAFeatureSelectionCV' object has no attribute 'best_estimator_'
+___ test_prediction_methods_require_refitted_winner[True-decision_function] ___
+sklearn_genetic\tests\test_feature_selection.py:987: in test_prediction_methods_require_refitted_winner
+    getattr(selector, method)(*args)
+sklearn_genetic\genetic_search.py:2386: in decision_function
+    return self.best_estimator_.decision_function(self.transform(X))
+           ^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'GAFeatureSelectionCV' object has no attribute 'best_estimator_'
+_________ test_prediction_methods_require_refitted_winner[True-score] _________
+sklearn_genetic\tests\test_feature_selection.py:987: in test_prediction_methods_require_refitted_winner
+    getattr(selector, method)(*args)
+sklearn_genetic\genetic_search.py:2472: in score
+    return self.best_estimator_.score(self.transform(X), y)
+           ^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'GAFeatureSelectionCV' object has no attribute 'best_estimator_'
+=========================== short test summary info ===========================
+FAILED sklearn_genetic/tests/test_feature_selection.py::test_prediction_methods_require_refitted_winner[False-predict] - AttributeError: 'GAFeatureSelectionCV' object has no attribute 'best_estima...
+FAILED sklearn_genetic/tests/test_feature_selection.py::test_prediction_methods_require_refitted_winner[False-predict_proba] - AttributeError: 'GAFeatureSelectionCV' object has no attribute 'best_estima...
+FAILED sklearn_genetic/tests/test_feature_selection.py::test_prediction_methods_require_refitted_winner[False-predict_log_proba] - AttributeError: 'GAFeatureSelectionCV' object has no attribute 'best_estima...
+FAILED sklearn_genetic/tests/test_feature_selection.py::test_prediction_methods_require_refitted_winner[False-decision_function] - AttributeError: 'GAFeatureSelectionCV' object has no attribute 'best_estima...
+FAILED sklearn_genetic/tests/test_feature_selection.py::test_prediction_methods_require_refitted_winner[False-score] - AttributeError: 'GAFeatureSelectionCV' object has no attribute 'best_estima...
+FAILED sklearn_genetic/tests/test_feature_selection.py::test_prediction_methods_require_refitted_winner[True-predict] - AttributeError: 'GAFeatureSelectionCV' object has no attribute 'best_estima...
+FAILED sklearn_genetic/tests/test_feature_selection.py::test_prediction_methods_require_refitted_winner[True-predict_proba] - AttributeError: 'GAFeatureSelectionCV' object has no attribute 'best_estima...
+FAILED sklearn_genetic/tests/test_feature_selection.py::test_prediction_methods_require_refitted_winner[True-predict_log_proba] - AttributeError: 'GAFeatureSelectionCV' object has no attribute 'best_estima...
+FAILED sklearn_genetic/tests/test_feature_selection.py::test_prediction_methods_require_refitted_winner[True-decision_function] - AttributeError: 'GAFeatureSelectionCV' object has no attribute 'best_estima...
+FAILED sklearn_genetic/tests/test_feature_selection.py::test_prediction_methods_require_refitted_winner[True-score] - AttributeError: 'GAFeatureSelectionCV' object has no attribute 'best_estima...
+====================== 10 failed, 47 deselected in 3.53s ======================
+
+--- refit-final-green.txt ---
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 173 items / 159 deselected / 14 selected
+
+sklearn_genetic\tests\test_genetic_search.py ....                        [ 28%]
+sklearn_genetic\tests\test_feature_selection.py ..........               [100%]
+
+===================== 14 passed, 159 deselected in 4.69s ======================
+
+The first integration run had16passes/1failure; the numericRNGrepair addresses that failure, with77focusedspace/seedchecks and14finalfitted/guardcasesgreen. No fullsuite. Blackformattedchangedfiles;testguardcleanagainstbase;diffcheckclean.
+
+--- refit-checkpoint-red.txt ---
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 34 items / 28 deselected / 6 selected
+
+sklearn_genetic\tests\test_persistence_and_helpers.py ....F.             [100%]
+
+================================== FAILURES ===================================
+________________ test_checkpoint_resume_restores_adapter_state ________________
+sklearn_genetic\tests\test_persistence_and_helpers.py:741: in test_checkpoint_resume_restores_adapter_state
+    assert cx_step_after_first > 0
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+ gen evals           avg          best     div  unique  stag     mut   sel             events
+---- ----- ------------- ------------- ------- ------- ----- ------- ----- ------------------
+   0     4       0.88000       0.95333   0.833   0.750     0       -     - -
+INFO: Stopping the algorithm
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:718: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+=========================== short test summary info ===========================
+FAILED sklearn_genetic/tests/test_persistence_and_helpers.py::test_checkpoint_resume_restores_adapter_state - AssertionError
+================= 1 failed, 5 passed, 28 deselected in 3.16s ==================
+
+--- refit-checkpoint-baseline-red.txt ---
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\.agent-runs/performance-v2/saturation-baseline\sklearn_genetic\__init__.py
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 1 item
+
+.agent-runs\performance-v2\saturation-baseline\sklearn_genetic\tests\test_persistence_and_helpers.py F [100%]
+
+================================== FAILURES ===================================
+________________ test_checkpoint_resume_restores_adapter_state ________________
+.agent-runs\performance-v2\saturation-baseline\sklearn_genetic\tests\test_persistence_and_helpers.py:741: in test_checkpoint_resume_restores_adapter_state
+    assert cx_step_after_first > 0
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+ gen evals           avg          best     div  unique  stag     mut   sel             events
+---- ----- ------------- ------------- ------- ------- ----- ------- ----- ------------------
+   0     4       0.88000       0.95333   0.833   0.750     0       -     - -
+INFO: Stopping the algorithm
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\.agent-runs/performance-v2/saturation-baseline\sklearn_genetic\genetic_search.py:717: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+=========================== short test summary info ===========================
+FAILED .agent-runs/performance-v2/saturation-baseline/sklearn_genetic/tests/test_persistence_and_helpers.py::test_checkpoint_resume_restores_adapter_state - AssertionError
+============================== 1 failed in 0.77s ==============================
+
+--- refit-checkpoint-green.txt ---
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 34 items / 28 deselected / 6 selected
+
+sklearn_genetic\tests\test_persistence_and_helpers.py ......             [100%]
+
+====================== 6 passed, 28 deselected in 2.96s =======================
+
+--- refit-guard.txt ---
+test_guard: clean against 97335e5230fdcbaf68c49922e77b529b7f331a02
+
+Checkpoint fixture repair preserves all assertions; space50 exceeds per-run proposalbudget28. Exhaustion observes current-run proposals only, not cumulative cachedkeys. Sixresumechecks passafterrepair.

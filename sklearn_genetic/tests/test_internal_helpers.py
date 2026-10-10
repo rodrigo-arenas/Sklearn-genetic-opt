@@ -4,6 +4,7 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 from deap import base, creator, tools
+from sklearn.base import clone
 from sklearn.exceptions import NotFittedError
 from sklearn.tree import DecisionTreeClassifier
 
@@ -517,7 +518,8 @@ def test_genetic_estimator_mixin_history_iteration_and_fitted_guard():
         pass
 
     search = DummySearch()
-    search.estimator = DecisionTreeClassifier().fit([[0], [1]], [0, 1])
+    search.estimator = DecisionTreeClassifier()
+    search.best_estimator_ = clone(search.estimator).fit([[0], [1]], [0, 1])
     search.refit = True
     search._n_iterations = 1
     search.history = {"gen": [0, 1], "fitness": [0.5, 0.8]}

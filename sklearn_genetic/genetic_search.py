@@ -170,7 +170,8 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
     ----------
     estimator : estimator object, default=None
         estimator object implementing 'fit'
-        The object to use to fit the data.
+        Template to clone for candidate evaluation and final refit. The supplied
+        object is not fitted or modified; the fitted winner is ``best_estimator_``.
 
     cv : int, cross-validation generator or an iterable, default=None
         Determines the cross-validation splitting strategy.
@@ -1310,10 +1311,12 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         if self.refit:
             self.best_index_, self.best_score_, self.best_params_ = self._select_final_candidate()
 
-            self.estimator.set_params(**self.best_params_)
+            self.best_estimator_ = clone(self.estimator).set_params(
+                **clone(self.best_params_, safe=False)
+            )
 
             refit_start_time = time.time()
-            self.estimator.fit(
+            self.best_estimator_.fit(
                 self.X_,
                 self.y_,
                 **getattr(self, "_fit_params", {}),
@@ -1321,7 +1324,6 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
             refit_end_time = time.time()
             self.refit_time_ = refit_end_time - refit_start_time
 
-            self.best_estimator_ = self.estimator
             self.estimator_ = self.best_estimator_
 
             # hof keeps the best params according to the fitness value
@@ -1357,7 +1359,8 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
     ----------
     estimator : estimator object, default=None
         estimator object implementing 'fit'
-        The object to use to fit the data.
+        Template to clone for candidate evaluation and final refit. The supplied
+        object is not fitted or modified; the fitted winner is ``best_estimator_``.
 
     cv : int, cross-validation generator or an iterable, default=None
         Determines the cross-validation splitting strategy.
@@ -2304,9 +2307,10 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
 
         if self.refit:
             bool_individual = np.array(self.best_features_, dtype=bool)
+            self.best_estimator_ = clone(self.estimator)
 
             refit_start_time = time.time()
-            self.estimator.fit(
+            self.best_estimator_.fit(
                 self.X_[:, bool_individual],
                 self.y_,
                 **getattr(self, "_fit_params", {}),
@@ -2314,7 +2318,6 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
             refit_end_time = time.time()
             self.refit_time_ = refit_end_time - refit_start_time
 
-            self.best_estimator_ = self.estimator
             self.estimator_ = self.best_estimator_
 
         self.hof = self._hof
@@ -2380,7 +2383,8 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
            Result of the decision function for `X` based on the estimator with
            the best found parameters.
        """
-        return self.estimator.decision_function(self.transform(X))
+        X = self.transform(X)
+        return self.best_estimator_.decision_function(X)
 
     @available_if(_estimator_has("predict"))
     def predict(self, X):
@@ -2400,7 +2404,8 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
             The predicted labels or values for `X` based on the estimator with
             the best found parameters.
         """
-        return self.estimator.predict(self.transform(X))
+        X = self.transform(X)
+        return self.best_estimator_.predict(X)
 
     @available_if(_estimator_has("predict_log_proba"))
     def predict_log_proba(self, X):
@@ -2421,7 +2426,8 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
             with the best found parameters. The order of the classes
             corresponds to that in the fitted attribute :term:`classes_`.
         """
-        return self.estimator.predict_log_proba(self.transform(X))
+        X = self.transform(X)
+        return self.best_estimator_.predict_log_proba(X)
 
     @available_if(_estimator_has("predict_proba"))
     def predict_proba(self, X):
@@ -2442,7 +2448,8 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
             the best found parameters. The order of the classes corresponds
             to that in the fitted attribute :term:`classes_`.
         """
-        return self.estimator.predict_proba(self.transform(X))
+        X = self.transform(X)
+        return self.best_estimator_.predict_proba(X)
 
     @available_if(_estimator_has("score"))
     def score(self, X, y):
@@ -2466,7 +2473,8 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
             The score defined by ``scoring`` if provided, and the
             ``best_estimator_.score`` method otherwise.
         """
-        return self.estimator.score(self.transform(X), y)
+        X = self.transform(X)
+        return self.best_estimator_.score(X, y)
 
 
 # helpers

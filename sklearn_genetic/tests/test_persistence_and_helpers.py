@@ -722,7 +722,8 @@ def test_checkpoint_resume_restores_adapter_state(tmp_path):
     def build():
         return GASearchCV(
             estimator=DecisionTreeClassifier(random_state=0),
-            param_grid={"max_depth": Integer(1, 3)},
+            # Keep the space larger than the 28-proposal run so schedules advance.
+            param_grid={"max_depth": Integer(1, 50)},
             cv=2,
             scoring="accuracy",
             population_size=4,

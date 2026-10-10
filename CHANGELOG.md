@@ -17,6 +17,8 @@ Full release notes with code examples are in the [documentation](https://sklearn
 
 ### Bug Fixes
 
+- Both searches clone the winning estimator for final refit instead of fitting or changing the caller's estimator. Use `best_estimator_` (or prediction methods on the search) for the fitted model; `estimator` remains the constructor template. Numeric dimension sampling also retains global-seed reproducibility after cloning a search.
+
 - Mu/lambda algorithms now preserve hall-of-fame elites in the next population when `elitism=True`. Best-so-far telemetry includes evaluated candidates even if stochastic survivor selection drops them.
 
 - Diversity telemetry uses pairwise allele disagreement, avoiding permanent diversity recovery for balanced binary feature masks in larger populations.
