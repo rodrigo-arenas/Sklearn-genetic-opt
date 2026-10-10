@@ -333,3 +333,62 @@ def test_categorical_flaml_benchmark_normalizes_numpy_choices(monkeypatch, tmp_p
     assert result["evaluations"] == 8
     assert 0 <= result["cv_score"] <= 1
     assert 0 <= result["holdout_score"] <= 1
+
+
+@pytest.mark.parametrize(
+    "option,value",
+    [
+        ("--seconds", "0"),
+        ("--seconds", "-1"),
+        ("--seconds", "nan"),
+        ("--seconds", "inf"),
+        ("--seeds", "0"),
+    ],
+)
+def test_native_automl_benchmark_rejects_invalid_budget(monkeypatch, capsys, option, value):
+    from benchmarks import benchmark_native_automl
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "benchmark_native_automl",
+            "--output",
+            "unused.json",
+            "--model-dir",
+            "unused-models",
+            option,
+            value,
+        ],
+    )
+    monkeypatch.setattr(benchmark_native_automl, "run", lambda args: None)
+    with pytest.raises(SystemExit) as error:
+        benchmark_native_automl.main()
+    assert error.value.code == 2
+    assert "seconds must be finite and positive" in capsys.readouterr().err
+
+
+def test_native_automl_benchmark_accepts_minimum_seed_count(monkeypatch):
+    from benchmarks import benchmark_native_automl
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "benchmark_native_automl",
+            "--output",
+            "unused.json",
+            "--model-dir",
+            "unused-models",
+            "--seconds",
+            "0.5",
+            "--seeds",
+            "1",
+        ],
+    )
+    calls = []
+    monkeypatch.setattr(benchmark_native_automl, "run", calls.append)
+    benchmark_native_automl.main()
+    assert len(calls) == 1
+    assert calls[0].seeds == 1
+    assert calls[0].seconds == 0.5
