@@ -57,3 +57,51 @@ def test_duplicate_comparison_keys_raise():
 
     with pytest.raises(ValueError, match="Duplicate baseline comparison key"):
         print_comparison_table([_summary()], [baseline_a, baseline_b])
+
+
+@pytest.mark.parametrize("budget", [2, 8, 24, 40, 80])
+def test_bayesmark_ga_respects_candidate_budget(budget):
+    from benchmark_bayesmark import ga_budget
+
+    population, generations = ga_budget(budget)
+    assert population >= 2
+    assert generations >= 0
+    assert population * (1 + 2 * generations) <= budget
+
+
+@pytest.mark.parametrize("budget", [8, 24])
+def test_bayesmark_runner_reports_reproducible_bounded_evaluations(monkeypatch, budget):
+    from benchmark_bayesmark import DATASETS, MODELS, build_task, run_gasearch
+
+    from sklearn_genetic import genetic_search
+
+    calls = []
+    original = genetic_search.cross_validate
+
+    def counting_cv(*args, **kwargs):
+        calls.append(1)
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(genetic_search, "cross_validate", counting_cv)
+    task = build_task(DATASETS["iris"], MODELS["dt"])
+    X, y = task.dataset.loader()
+    first = run_gasearch(task, X, y, seed=3, budget=budget, cv_splits=2)
+    assert first.evaluations == len(calls)
+    calls.clear()
+    second = run_gasearch(task, X, y, seed=3, budget=budget, cv_splits=2)
+    assert second.evaluations == len(calls)
+    assert 0 < first.evaluations <= budget
+    assert first.evaluations == second.evaluations
+    assert first.best_score == second.best_score
+    assert 0 <= first.best_score <= 1
+
+
+def test_randomized_benchmark_counts_exhausted_finite_space():
+    from dataclasses import replace
+    from benchmark_bayesmark import DATASETS, MODELS, build_task, run_randomized
+
+    model = replace(MODELS["knn"], space=[("n_neighbors", "cat", "linear", [1, 2])])
+    task = build_task(DATASETS["iris"], model)
+    X, y = task.dataset.loader()
+    result = run_randomized(task, X, y, seed=3, budget=8, cv_splits=2)
+    assert result.evaluations == 2

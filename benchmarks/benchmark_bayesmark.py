@@ -43,12 +43,10 @@ from __future__ import annotations
 
 import argparse
 import json
-import math
 import os
 import statistics
 import tempfile
 import time
-import warnings
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable
@@ -457,14 +455,16 @@ def run_randomized(task: Task, X, y, seed: int, budget: int, cv_splits: int) -> 
         scoring=task.scoring,
         cv=make_cv(task, seed, cv_splits),
         random_state=seed,
-        n_jobs=-1,
+        n_jobs=1,
         refit=False,
         error_score="raise",
     )
     started = time.perf_counter()
     search.fit(X, y)
     elapsed = time.perf_counter() - started
-    return RunResult("randomized", float(search.best_score_), budget, elapsed)
+    return RunResult(
+        "randomized", float(search.best_score_), len(search.cv_results_["params"]), elapsed
+    )
 
 
 def run_optuna(task: Task, X, y, seed: int, budget: int, cv_splits: int) -> RunResult:
@@ -475,7 +475,7 @@ def run_optuna(task: Task, X, y, seed: int, budget: int, cv_splits: int) -> RunR
         estimator, prefix = make_pipeline(task, seed)
         params = suggest_with_optuna(trial, specs, prefix)
         estimator.set_params(**params)
-        scores = cross_val_score(estimator, X, y, scoring=task.scoring, cv=cv, n_jobs=-1)
+        scores = cross_val_score(estimator, X, y, scoring=task.scoring, cv=cv, n_jobs=1)
         return float(np.mean(scores))
 
     sampler = optuna.samplers.TPESampler(seed=seed)
@@ -501,38 +501,38 @@ def run_gasearch(task: Task, X, y, seed: int, budget: int, cv_splits: int) -> Ru
             elitism=True,
             keep_top_k=3,
         ),
+        random_state=seed,
+        refit=False,
         population_config=PopulationConfig(initializer="smart"),
         runtime_config=RuntimeConfig(
-            n_jobs=-1, parallel_backend="auto", use_cache=True, verbose=False
+            n_jobs=1, parallel_backend="auto", use_cache=True, verbose=False, error_score="raise"
         ),
         optimization_config=OptimizationConfig(
-            local_search=True,
-            local_search_top_k=2,
-            local_search_steps=1,
+            local_search=False,
             diversity_control=True,
             random_immigrants_fraction=0.10,
             fitness_sharing=True,
         ),
     )
     started = time.perf_counter()
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        search.fit(X, y)
+    search.fit(X, y)
     elapsed = time.perf_counter() - started
-    evaluations = int(
-        search.fit_stats_.get("evaluated_candidates", population_size * (generations + 1))
+    evaluations = search.fit_stats_["cross_validate_calls"]
+    return RunResult(
+        "gasearch", float(max(search.cv_results_["mean_test_score"])), evaluations, elapsed
     )
-    return RunResult("gasearch", float(search.best_score_), evaluations, elapsed)
 
 
 def ga_budget(budget: int) -> tuple[int, int]:
-    """Split an evaluation budget into (population_size, generations).
+    """Bound CV calls for the initial population plus lambda=2*population.
 
-    ``eaMuPlusLambda`` evaluates ``population_size * (generations + 1)`` candidates
-    before caching/deduplication, so we size the grid to land near ``budget``.
+    Caching can reduce actual evaluations. Local search is disabled in the
+    budgeted runner because it would consume evaluations after the last generation.
     """
-    population_size = max(8, int(round(math.sqrt(budget * 2))))
-    generations = max(2, round(budget / population_size) - 1)
+    if budget < 2:
+        raise ValueError("budget must be at least 2")
+    population_size = min(8, budget)
+    generations = (budget - population_size) // (2 * population_size)
     return population_size, generations
 
 

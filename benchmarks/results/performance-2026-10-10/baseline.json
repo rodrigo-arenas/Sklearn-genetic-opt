@@ -1,0 +1,880 @@
+{
+  "label": "baseline-8476a7f",
+  "budget": 40,
+  "seeds": 3,
+  "feature_evaluation_budget": 208,
+  "python": "3.12.0",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "source_root": ".agent-runs\\performance\\baseline",
+  "versions": {
+    "numpy": "2.5.3",
+    "scipy": "1.18.1",
+    "scikit-learn": "1.9.1",
+    "deap": "1.4.4",
+    "optuna": "5.0.0",
+    "flaml": "2.7.0"
+  },
+  "results": [
+    {
+      "dataset": "wine",
+      "model": "svm",
+      "seed": 0,
+      "method": "gasearch",
+      "cv_score": 0.9772727272727272,
+      "holdout_score": 1.0,
+      "seconds": 0.8431343999982346,
+      "evaluations": 40,
+      "evaluation_budget": 40,
+      "fitness_best": [
+        0.9772727272727272,
+        0.9772727272727272,
+        0.9772727272727272
+      ],
+      "fit_stats": {
+        "evaluated_candidates": 40,
+        "unique_candidates": 40,
+        "cross_validate_calls": 40,
+        "cache_hits": 0,
+        "duplicate_candidates": 0,
+        "skipped_invalid_candidates": 0,
+        "population_parallel_batches": 0,
+        "population_serial_batches": 3,
+        "random_immigrants": 0,
+        "local_refinement_candidates": 0
+      }
+    },
+    {
+      "dataset": "wine",
+      "model": "svm",
+      "seed": 0,
+      "method": "optuna",
+      "cv_score": 0.9772727272727272,
+      "holdout_score": 1.0,
+      "seconds": 0.5533359000110067,
+      "evaluations": 40,
+      "evaluation_budget": 40
+    },
+    {
+      "dataset": "wine",
+      "model": "svm",
+      "seed": 0,
+      "method": "randomized",
+      "cv_score": 0.9772727272727272,
+      "holdout_score": 1.0,
+      "seconds": 0.49080729999695905,
+      "evaluations": 40,
+      "evaluation_budget": 40
+    },
+    {
+      "dataset": "wine",
+      "model": "svm",
+      "seed": 0,
+      "method": "flaml",
+      "cv_score": 0.9772727272727272,
+      "holdout_score": 1.0,
+      "seconds": 0.5475254999764729,
+      "evaluations": 40,
+      "evaluation_budget": 40
+    },
+    {
+      "dataset": "wine",
+      "model": "svm",
+      "seed": 1,
+      "method": "gasearch",
+      "cv_score": 0.9776094276094276,
+      "holdout_score": 0.9333333333333333,
+      "seconds": 0.8621576999721583,
+      "evaluations": 40,
+      "evaluation_budget": 40,
+      "fitness_best": [
+        0.9776094276094276,
+        0.9776094276094276,
+        0.9776094276094276
+      ],
+      "fit_stats": {
+        "evaluated_candidates": 40,
+        "unique_candidates": 40,
+        "cross_validate_calls": 40,
+        "cache_hits": 0,
+        "duplicate_candidates": 0,
+        "skipped_invalid_candidates": 0,
+        "population_parallel_batches": 0,
+        "population_serial_batches": 3,
+        "random_immigrants": 0,
+        "local_refinement_candidates": 0
+      }
+    },
+    {
+      "dataset": "wine",
+      "model": "svm",
+      "seed": 1,
+      "method": "optuna",
+      "cv_score": 0.9776094276094277,
+      "holdout_score": 1.0,
+      "seconds": 0.6987296000006609,
+      "evaluations": 40,
+      "evaluation_budget": 40
+    },
+    {
+      "dataset": "wine",
+      "model": "svm",
+      "seed": 1,
+      "method": "randomized",
+      "cv_score": 0.9776094276094277,
+      "holdout_score": 1.0,
+      "seconds": 0.5793443000002299,
+      "evaluations": 40,
+      "evaluation_budget": 40
+    },
+    {
+      "dataset": "wine",
+      "model": "svm",
+      "seed": 1,
+      "method": "flaml",
+      "cv_score": 0.9776094276094276,
+      "holdout_score": 0.9333333333333333,
+      "seconds": 0.66456449998077,
+      "evaluations": 40,
+      "evaluation_budget": 40
+    },
+    {
+      "dataset": "wine",
+      "model": "svm",
+      "seed": 2,
+      "method": "gasearch",
+      "cv_score": 0.985016835016835,
+      "holdout_score": 0.9777777777777777,
+      "seconds": 1.4343043000262696,
+      "evaluations": 40,
+      "evaluation_budget": 40,
+      "fitness_best": [
+        0.985016835016835,
+        0.985016835016835,
+        0.985016835016835
+      ],
+      "fit_stats": {
+        "evaluated_candidates": 40,
+        "unique_candidates": 40,
+        "cross_validate_calls": 40,
+        "cache_hits": 0,
+        "duplicate_candidates": 0,
+        "skipped_invalid_candidates": 0,
+        "population_parallel_batches": 0,
+        "population_serial_batches": 3,
+        "random_immigrants": 0,
+        "local_refinement_candidates": 0
+      }
+    },
+    {
+      "dataset": "wine",
+      "model": "svm",
+      "seed": 2,
+      "method": "optuna",
+      "cv_score": 0.985016835016835,
+      "holdout_score": 1.0,
+      "seconds": 0.9682586999842897,
+      "evaluations": 40,
+      "evaluation_budget": 40
+    },
+    {
+      "dataset": "wine",
+      "model": "svm",
+      "seed": 2,
+      "method": "randomized",
+      "cv_score": 0.985016835016835,
+      "holdout_score": 1.0,
+      "seconds": 0.5977236999897286,
+      "evaluations": 40,
+      "evaluation_budget": 40
+    },
+    {
+      "dataset": "wine",
+      "model": "svm",
+      "seed": 2,
+      "method": "flaml",
+      "cv_score": 0.985016835016835,
+      "holdout_score": 0.9777777777777777,
+      "seconds": 0.5841337000019848,
+      "evaluations": 40,
+      "evaluation_budget": 40
+    },
+    {
+      "dataset": "wine",
+      "model": "dt",
+      "seed": 0,
+      "method": "gasearch",
+      "cv_score": 0.7215488215488216,
+      "holdout_score": 0.8,
+      "seconds": 0.38872549997176975,
+      "evaluations": 40,
+      "evaluation_budget": 40,
+      "fitness_best": [
+        0.7215488215488216,
+        0.7215488215488216,
+        0.7215488215488216
+      ],
+      "fit_stats": {
+        "evaluated_candidates": 40,
+        "unique_candidates": 40,
+        "cross_validate_calls": 40,
+        "cache_hits": 0,
+        "duplicate_candidates": 0,
+        "skipped_invalid_candidates": 0,
+        "population_parallel_batches": 0,
+        "population_serial_batches": 3,
+        "random_immigrants": 0,
+        "local_refinement_candidates": 0
+      }
+    },
+    {
+      "dataset": "wine",
+      "model": "dt",
+      "seed": 0,
+      "method": "optuna",
+      "cv_score": 0.8796296296296297,
+      "holdout_score": 0.7555555555555555,
+      "seconds": 0.40196560000185855,
+      "evaluations": 40,
+      "evaluation_budget": 40
+    },
+    {
+      "dataset": "wine",
+      "model": "dt",
+      "seed": 0,
+      "method": "randomized",
+      "cv_score": 0.8722222222222222,
+      "holdout_score": 0.7555555555555555,
+      "seconds": 0.27218689999426715,
+      "evaluations": 40,
+      "evaluation_budget": 40
+    },
+    {
+      "dataset": "wine",
+      "model": "dt",
+      "seed": 0,
+      "method": "flaml",
+      "cv_score": 0.6767676767676768,
+      "holdout_score": 0.5777777777777777,
+      "seconds": 0.2783380000037141,
+      "evaluations": 40,
+      "evaluation_budget": 40
+    },
+    {
+      "dataset": "wine",
+      "model": "dt",
+      "seed": 1,
+      "method": "gasearch",
+      "cv_score": 0.8873737373737374,
+      "holdout_score": 0.9111111111111111,
+      "seconds": 0.37250359999598004,
+      "evaluations": 40,
+      "evaluation_budget": 40,
+      "fitness_best": [
+        0.8873737373737374,
+        0.8873737373737374,
+        0.8873737373737374
+      ],
+      "fit_stats": {
+        "evaluated_candidates": 40,
+        "unique_candidates": 40,
+        "cross_validate_calls": 40,
+        "cache_hits": 0,
+        "duplicate_candidates": 0,
+        "skipped_invalid_candidates": 0,
+        "population_parallel_batches": 0,
+        "population_serial_batches": 3,
+        "random_immigrants": 0,
+        "local_refinement_candidates": 0
+      }
+    },
+    {
+      "dataset": "wine",
+      "model": "dt",
+      "seed": 1,
+      "method": "optuna",
+      "cv_score": 0.8947811447811448,
+      "holdout_score": 0.9111111111111111,
+      "seconds": 0.39326069998787716,
+      "evaluations": 40,
+      "evaluation_budget": 40
+    },
+    {
+      "dataset": "wine",
+      "model": "dt",
+      "seed": 1,
+      "method": "randomized",
+      "cv_score": 0.8873737373737374,
+      "holdout_score": 0.9111111111111111,
+      "seconds": 0.2592737000086345,
+      "evaluations": 40,
+      "evaluation_budget": 40
+    },
+    {
+      "dataset": "wine",
+      "model": "dt",
+      "seed": 1,
+      "method": "flaml",
+      "cv_score": 0.6161616161616162,
+      "holdout_score": 0.6,
+      "seconds": 0.2965754000179004,
+      "evaluations": 40,
+      "evaluation_budget": 40
+    },
+    {
+      "dataset": "wine",
+      "model": "dt",
+      "seed": 2,
+      "method": "gasearch",
+      "cv_score": 0.8646464646464646,
+      "holdout_score": 0.8888888888888888,
+      "seconds": 0.3889115000201855,
+      "evaluations": 40,
+      "evaluation_budget": 40,
+      "fitness_best": [
+        0.8646464646464646,
+        0.8646464646464646,
+        0.8646464646464646
+      ],
+      "fit_stats": {
+        "evaluated_candidates": 40,
+        "unique_candidates": 40,
+        "cross_validate_calls": 40,
+        "cache_hits": 0,
+        "duplicate_candidates": 0,
+        "skipped_invalid_candidates": 0,
+        "population_parallel_batches": 0,
+        "population_serial_batches": 3,
+        "random_immigrants": 0,
+        "local_refinement_candidates": 0
+      }
+    },
+    {
+      "dataset": "wine",
+      "model": "dt",
+      "seed": 2,
+      "method": "optuna",
+      "cv_score": 0.9025252525252525,
+      "holdout_score": 0.8888888888888888,
+      "seconds": 0.38490259999525733,
+      "evaluations": 40,
+      "evaluation_budget": 40
+    },
+    {
+      "dataset": "wine",
+      "model": "dt",
+      "seed": 2,
+      "method": "randomized",
+      "cv_score": 0.8572390572390572,
+      "holdout_score": 0.8888888888888888,
+      "seconds": 0.2982860000047367,
+      "evaluations": 40,
+      "evaluation_budget": 40
+    },
+    {
+      "dataset": "wine",
+      "model": "dt",
+      "seed": 2,
+      "method": "flaml",
+      "cv_score": 0.39848484848484844,
+      "holdout_score": 0.4,
+      "seconds": 0.31982410000637174,
+      "evaluations": 40,
+      "evaluation_budget": 40
+    },
+    {
+      "dataset": "breast",
+      "model": "svm",
+      "seed": 0,
+      "method": "gasearch",
+      "cv_score": 0.983568075117371,
+      "holdout_score": 0.958041958041958,
+      "seconds": 1.0963128000148572,
+      "evaluations": 40,
+      "evaluation_budget": 40,
+      "fitness_best": [
+        0.9812206572769954,
+        0.983568075117371,
+        0.983568075117371
+      ],
+      "fit_stats": {
+        "evaluated_candidates": 40,
+        "unique_candidates": 40,
+        "cross_validate_calls": 40,
+        "cache_hits": 0,
+        "duplicate_candidates": 0,
+        "skipped_invalid_candidates": 0,
+        "population_parallel_batches": 0,
+        "population_serial_batches": 3,
+        "random_immigrants": 0,
+        "local_refinement_candidates": 0
+      }
+    },
+    {
+      "dataset": "breast",
+      "model": "svm",
+      "seed": 0,
+      "method": "optuna",
+      "cv_score": 0.9859154929577465,
+      "holdout_score": 0.965034965034965,
+      "seconds": 0.694805200007977,
+      "evaluations": 40,
+      "evaluation_budget": 40
+    },
+    {
+      "dataset": "breast",
+      "model": "svm",
+      "seed": 0,
+      "method": "randomized",
+      "cv_score": 0.983568075117371,
+      "holdout_score": 0.958041958041958,
+      "seconds": 0.740288100001635,
+      "evaluations": 40,
+      "evaluation_budget": 40
+    },
+    {
+      "dataset": "breast",
+      "model": "svm",
+      "seed": 0,
+      "method": "flaml",
+      "cv_score": 0.983568075117371,
+      "holdout_score": 0.958041958041958,
+      "seconds": 0.6731303000124171,
+      "evaluations": 40,
+      "evaluation_budget": 40
+    },
+    {
+      "dataset": "breast",
+      "model": "svm",
+      "seed": 1,
+      "method": "gasearch",
+      "cv_score": 0.9788732394366196,
+      "holdout_score": 0.972027972027972,
+      "seconds": 1.1079850000096485,
+      "evaluations": 39,
+      "evaluation_budget": 40,
+      "fitness_best": [
+        0.9765258215962441,
+        0.9765258215962441,
+        0.9788732394366196
+      ],
+      "fit_stats": {
+        "evaluated_candidates": 40,
+        "unique_candidates": 39,
+        "cross_validate_calls": 39,
+        "cache_hits": 1,
+        "duplicate_candidates": 0,
+        "skipped_invalid_candidates": 0,
+        "population_parallel_batches": 0,
+        "population_serial_batches": 3,
+        "random_immigrants": 0,
+        "local_refinement_candidates": 0
+      }
+    },
+    {
+      "dataset": "breast",
+      "model": "svm",
+      "seed": 1,
+      "method": "optuna",
+      "cv_score": 0.9788732394366196,
+      "holdout_score": 0.972027972027972,
+      "seconds": 0.8155765999981668,
+      "evaluations": 40,
+      "evaluation_budget": 40
+    },
+    {
+      "dataset": "breast",
+      "model": "svm",
+      "seed": 1,
+      "method": "randomized",
+      "cv_score": 0.9788732394366196,
+      "holdout_score": 0.972027972027972,
+      "seconds": 0.8338371000136249,
+      "evaluations": 40,
+      "evaluation_budget": 40
+    },
+    {
+      "dataset": "breast",
+      "model": "svm",
+      "seed": 1,
+      "method": "flaml",
+      "cv_score": 0.9765258215962441,
+      "holdout_score": 0.972027972027972,
+      "seconds": 0.6506236999994144,
+      "evaluations": 40,
+      "evaluation_budget": 40
+    },
+    {
+      "dataset": "breast",
+      "model": "svm",
+      "seed": 2,
+      "method": "gasearch",
+      "cv_score": 0.983568075117371,
+      "holdout_score": 0.965034965034965,
+      "seconds": 1.2318697999871802,
+      "evaluations": 39,
+      "evaluation_budget": 40,
+      "fitness_best": [
+        0.983568075117371,
+        0.983568075117371,
+        0.983568075117371
+      ],
+      "fit_stats": {
+        "evaluated_candidates": 40,
+        "unique_candidates": 39,
+        "cross_validate_calls": 39,
+        "cache_hits": 1,
+        "duplicate_candidates": 0,
+        "skipped_invalid_candidates": 0,
+        "population_parallel_batches": 0,
+        "population_serial_batches": 3,
+        "random_immigrants": 0,
+        "local_refinement_candidates": 0
+      }
+    },
+    {
+      "dataset": "breast",
+      "model": "svm",
+      "seed": 2,
+      "method": "optuna",
+      "cv_score": 0.983568075117371,
+      "holdout_score": 0.965034965034965,
+      "seconds": 0.8765800000110175,
+      "evaluations": 40,
+      "evaluation_budget": 40
+    },
+    {
+      "dataset": "breast",
+      "model": "svm",
+      "seed": 2,
+      "method": "randomized",
+      "cv_score": 0.9812206572769954,
+      "holdout_score": 0.972027972027972,
+      "seconds": 0.819508600019617,
+      "evaluations": 40,
+      "evaluation_budget": 40
+    },
+    {
+      "dataset": "breast",
+      "model": "svm",
+      "seed": 2,
+      "method": "flaml",
+      "cv_score": 0.983568075117371,
+      "holdout_score": 0.965034965034965,
+      "seconds": 0.7316448999918066,
+      "evaluations": 40,
+      "evaluation_budget": 40
+    },
+    {
+      "dataset": "breast",
+      "model": "dt",
+      "seed": 0,
+      "method": "gasearch",
+      "cv_score": 0.9272300469483569,
+      "holdout_score": 0.8881118881118881,
+      "seconds": 0.44165459999931045,
+      "evaluations": 40,
+      "evaluation_budget": 40,
+      "fitness_best": [
+        0.9178403755868545,
+        0.9225352112676056,
+        0.9272300469483569
+      ],
+      "fit_stats": {
+        "evaluated_candidates": 40,
+        "unique_candidates": 40,
+        "cross_validate_calls": 40,
+        "cache_hits": 0,
+        "duplicate_candidates": 0,
+        "skipped_invalid_candidates": 0,
+        "population_parallel_batches": 0,
+        "population_serial_batches": 3,
+        "random_immigrants": 0,
+        "local_refinement_candidates": 0
+      }
+    },
+    {
+      "dataset": "breast",
+      "model": "dt",
+      "seed": 0,
+      "method": "optuna",
+      "cv_score": 0.9295774647887324,
+      "holdout_score": 0.8881118881118881,
+      "seconds": 0.44827349999104626,
+      "evaluations": 40,
+      "evaluation_budget": 40
+    },
+    {
+      "dataset": "breast",
+      "model": "dt",
+      "seed": 0,
+      "method": "randomized",
+      "cv_score": 0.9272300469483569,
+      "holdout_score": 0.8881118881118881,
+      "seconds": 0.3027680999948643,
+      "evaluations": 40,
+      "evaluation_budget": 40
+    },
+    {
+      "dataset": "breast",
+      "model": "dt",
+      "seed": 0,
+      "method": "flaml",
+      "cv_score": 0.92018779342723,
+      "holdout_score": 0.9090909090909091,
+      "seconds": 0.38133409997681156,
+      "evaluations": 40,
+      "evaluation_budget": 40
+    },
+    {
+      "dataset": "breast",
+      "model": "dt",
+      "seed": 1,
+      "method": "gasearch",
+      "cv_score": 0.9131455399061034,
+      "holdout_score": 0.9020979020979021,
+      "seconds": 0.473346999991918,
+      "evaluations": 40,
+      "evaluation_budget": 40,
+      "fitness_best": [
+        0.9131455399061034,
+        0.9131455399061034,
+        0.9131455399061034
+      ],
+      "fit_stats": {
+        "evaluated_candidates": 40,
+        "unique_candidates": 40,
+        "cross_validate_calls": 40,
+        "cache_hits": 0,
+        "duplicate_candidates": 0,
+        "skipped_invalid_candidates": 0,
+        "population_parallel_batches": 0,
+        "population_serial_batches": 3,
+        "random_immigrants": 0,
+        "local_refinement_candidates": 0
+      }
+    },
+    {
+      "dataset": "breast",
+      "model": "dt",
+      "seed": 1,
+      "method": "optuna",
+      "cv_score": 0.9131455399061034,
+      "holdout_score": 0.9020979020979021,
+      "seconds": 0.42699949999223463,
+      "evaluations": 40,
+      "evaluation_budget": 40
+    },
+    {
+      "dataset": "breast",
+      "model": "dt",
+      "seed": 1,
+      "method": "randomized",
+      "cv_score": 0.9014084507042254,
+      "holdout_score": 0.9020979020979021,
+      "seconds": 0.32828140002675354,
+      "evaluations": 40,
+      "evaluation_budget": 40
+    },
+    {
+      "dataset": "breast",
+      "model": "dt",
+      "seed": 1,
+      "method": "flaml",
+      "cv_score": 0.9131455399061034,
+      "holdout_score": 0.916083916083916,
+      "seconds": 0.3257875999843236,
+      "evaluations": 40,
+      "evaluation_budget": 40
+    },
+    {
+      "dataset": "breast",
+      "model": "dt",
+      "seed": 2,
+      "method": "gasearch",
+      "cv_score": 0.9131455399061034,
+      "holdout_score": 0.916083916083916,
+      "seconds": 0.41857680000248365,
+      "evaluations": 40,
+      "evaluation_budget": 40,
+      "fitness_best": [
+        0.9131455399061034,
+        0.9131455399061034,
+        0.9131455399061034
+      ],
+      "fit_stats": {
+        "evaluated_candidates": 40,
+        "unique_candidates": 40,
+        "cross_validate_calls": 40,
+        "cache_hits": 0,
+        "duplicate_candidates": 0,
+        "skipped_invalid_candidates": 0,
+        "population_parallel_batches": 0,
+        "population_serial_batches": 3,
+        "random_immigrants": 0,
+        "local_refinement_candidates": 0
+      }
+    },
+    {
+      "dataset": "breast",
+      "model": "dt",
+      "seed": 2,
+      "method": "optuna",
+      "cv_score": 0.9178403755868545,
+      "holdout_score": 0.916083916083916,
+      "seconds": 0.4134208000032231,
+      "evaluations": 40,
+      "evaluation_budget": 40
+    },
+    {
+      "dataset": "breast",
+      "model": "dt",
+      "seed": 2,
+      "method": "randomized",
+      "cv_score": 0.9131455399061034,
+      "holdout_score": 0.916083916083916,
+      "seconds": 0.298560199997155,
+      "evaluations": 40,
+      "evaluation_budget": 40
+    },
+    {
+      "dataset": "breast",
+      "model": "dt",
+      "seed": 2,
+      "method": "flaml",
+      "cv_score": 0.6267605633802817,
+      "holdout_score": 0.6293706293706294,
+      "seconds": 0.34409679999225773,
+      "evaluations": 40,
+      "evaluation_budget": 40
+    },
+    {
+      "dataset": "synthetic_features",
+      "model": "dt",
+      "seed": 0,
+      "method": "features",
+      "seconds": 1.4035350999911316,
+      "holdout_score": 0.8833333333333333,
+      "cv_score": 0.8333333333333334,
+      "evaluations": 207,
+      "evaluation_budget": 208,
+      "selected_features": 7,
+      "fitness_best": [
+        0.7944444444444446,
+        0.7944444444444446,
+        0.8166666666666668,
+        0.8277777777777778,
+        0.8333333333333334,
+        0.8333333333333334,
+        0.8333333333333334
+      ],
+      "fit_stats": {
+        "evaluated_candidates": 208,
+        "unique_candidates": 207,
+        "cross_validate_calls": 207,
+        "cache_hits": 1,
+        "duplicate_candidates": 0,
+        "skipped_invalid_candidates": 0,
+        "population_parallel_batches": 0,
+        "population_serial_batches": 7,
+        "random_immigrants": 24,
+        "local_refinement_candidates": 0
+      },
+      "diversity": [
+        0.06666666666666667,
+        0.06666666666666667,
+        0.06666666666666667,
+        0.06333333333333332,
+        0.05,
+        0.06666666666666667,
+        0.06
+      ],
+      "recovery_generations": 6
+    },
+    {
+      "dataset": "synthetic_features",
+      "model": "dt",
+      "seed": 1,
+      "method": "features",
+      "seconds": 1.4579263999767136,
+      "holdout_score": 0.7666666666666667,
+      "cv_score": 0.8111111111111112,
+      "evaluations": 207,
+      "evaluation_budget": 208,
+      "selected_features": 10,
+      "fitness_best": [
+        0.7333333333333333,
+        0.75,
+        0.7833333333333333,
+        0.7833333333333333,
+        0.8111111111111112,
+        0.8111111111111112,
+        0.8111111111111112
+      ],
+      "fit_stats": {
+        "evaluated_candidates": 208,
+        "unique_candidates": 207,
+        "cross_validate_calls": 207,
+        "cache_hits": 1,
+        "duplicate_candidates": 0,
+        "skipped_invalid_candidates": 0,
+        "population_parallel_batches": 0,
+        "population_serial_batches": 7,
+        "random_immigrants": 24,
+        "local_refinement_candidates": 0
+      },
+      "diversity": [
+        0.06666666666666667,
+        0.06333333333333332,
+        0.06666666666666667,
+        0.06666666666666667,
+        0.06333333333333332,
+        0.06,
+        0.04666666666666667
+      ],
+      "recovery_generations": 6
+    },
+    {
+      "dataset": "synthetic_features",
+      "model": "dt",
+      "seed": 2,
+      "method": "features",
+      "seconds": 1.5778645999962464,
+      "holdout_score": 0.8666666666666667,
+      "cv_score": 0.85,
+      "evaluations": 207,
+      "evaluation_budget": 208,
+      "selected_features": 10,
+      "fitness_best": [
+        0.7833333333333333,
+        0.7888888888888888,
+        0.7999999999999999,
+        0.8111111111111112,
+        0.8333333333333334,
+        0.85,
+        0.85
+      ],
+      "fit_stats": {
+        "evaluated_candidates": 208,
+        "unique_candidates": 207,
+        "cross_validate_calls": 207,
+        "cache_hits": 1,
+        "duplicate_candidates": 0,
+        "skipped_invalid_candidates": 0,
+        "population_parallel_batches": 0,
+        "population_serial_batches": 7,
+        "random_immigrants": 24,
+        "local_refinement_candidates": 0
+      },
+      "diversity": [
+        0.06666666666666667,
+        0.06333333333333332,
+        0.06333333333333332,
+        0.06,
+        0.06,
+        0.056666666666666664,
+        0.05333333333333333
+      ],
+      "recovery_generations": 6
+    }
+  ]
+}
