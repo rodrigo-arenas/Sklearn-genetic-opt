@@ -27,7 +27,7 @@ Full release notes with code examples are in the [documentation](https://sklearn
 
 ### Bug Fixes
 
-- Unsupervised `GAFeatureSelectionCV.fit(X)` now accepts pandas DataFrames with outlier detectors. Input validation converts `X` to a sliceable array while retaining the original column names for `get_feature_names_out()`; previously mask evaluation raised `InvalidIndexError`.
+- Unsupervised `GAFeatureSelectionCV.fit(X)` now accepts pandas DataFrames with outlier detectors. Input validation converts `X` to a sliceable array while retaining the original column names for `get_feature_names_out()`; previously mask evaluation raised `InvalidIndexError`. Unsupervised `GASearchCV.fit(X)` also accepts list input instead of assuming `X.shape` exists.
 
 - `GAFeatureSelectionCV.score(X, y)` now uses the configured scorer on the selected columns, including a callable scorer or the chosen `refit` metric in multi-metric searches. Previously it always returned `best_estimator_.score(X_selected, y)`, which could report a different metric from the one optimized.
 

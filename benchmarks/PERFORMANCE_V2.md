@@ -10,9 +10,12 @@ Baseline: `d6b2f3aab9cee50322934ec8c00c585e2fcbac2f`. This is an ongoing investi
 - **Do not prefer smaller masks merely because their CV scores are close.** A separate 20-fit transfer pilot selected the smallest mask within one standard error of the CV winner. It lost held-out score on all five Diabetes/Ridge splits and two Wine splits, so this rule was rejected rather than tuned into the default.
 - **A more local feature mutation is not a general default improvement either.** In 60 new searches across the same four model families, flipping exactly one bit at either a 0.1 or 0.8 individual mutation rate produced mixed classification results and worse mean Ridge regression holdout than the current method. It was not promoted.
 - **HPO quality remains an open gap.** Default `GASearchCV` improves its best CV score after initialization in 23 of 24 runs, yet a same-budget random SVC search matches or exceeds its mean held-out accuracy on all three datasets and completes the sequentially timed cohorts faster. CV progress alone is not evidence of improved generalization.
+- **Penalizing HPO fold variance is not a general repair.** A post-hoc one-standard-error lower-confidence-bound rule left Wine/tree and Digits/KNN winners unchanged but reduced mean held-out scores on Diabetes/ElasticNet and synthetic/random forest. The rule was rejected without changing the API.
 - **Native AutoML parity is workload-specific.** On three Dry Bean splits, reduced-training SVM HPO averages .930649 accuracy in 12.096 seconds versus AutoGluon .928886 in 13.168 seconds and FLAML .926437 in 15.524 seconds under the recorded CPU configuration. On other tasks, AutoGluon or Optuna remains faster or more accurate. TPOT and H2O have not been measured here.
 
 The linked sections below preserve dataset definitions, limits, per-seed measurements, source hashes and reproduction scripts. Solution-quality comparisons use held-out partitions, but the small, overlapping split cohorts do not establish statistical superiority or performance on arbitrary datasets.
+
+For changes to the default search policy, the transfer check here uses new outer-split seeds, equal candidate/CV budgets and multiple estimator families, including regression. A gain confined to the motivating SVC tasks is treated as an experiment, not a default improvement. The library keeps workload-dependent acceleration and alternative evolutionary strategies opt-in where held-out quality is mixed. This protocol reduces benchmark-specific tuning; it cannot guarantee the best optimizer for every dataset.
 
 ## Profile
 
@@ -961,4 +964,23 @@ The high-frequency local variant is directionally better for these classifiers b
 New-Item -ItemType Directory -Force -Path .agent-runs/performance-v2 | Out-Null
 .\.venv\Scripts\python.exe -c "import json,pathlib; a=json.loads(pathlib.Path('benchmarks/results/performance-v2/feature-local-mutation-pilot.json').read_text(encoding='utf-8')); pathlib.Path('.agent-runs/performance-v2/feature-local-mutation-pilot.py').write_text(a['reproduction_script'], encoding='utf-8')"
 .\.venv\Scripts\python.exe .agent-runs/performance-v2/feature-local-mutation-pilot.py
+```
+
+## HPO finalist stability across model families
+
+An exploratory finalist rule selected the evaluated configuration with the largest `mean_test_score - std_test_score / sqrt(3)`, instead of the largest mean CV score. It used exactly the same GA trajectory and candidate CV evaluations as the default; an alternative full-training refit was performed only for holdout reporting. The rule was tested on new outer-split seeds 1071–1075 for Wine/decision tree, Digits/KNN, Diabetes/ElasticNet and synthetic/random forest. Each search used three fixed CV folds, population eight, four generations, at most 72 proposals, an untouched 25% holdout, and one CPU thread.
+
+| Model/dataset | Stability rule minus default mean held-out score | Wins/ties/losses | Changed winners |
+|---|---:|---:|---:|
+| Wine decision tree | 0 accuracy | 0/5/0 | 0/5 |
+| Digits KNN | 0 accuracy | 0/5/0 | 0/5 |
+| Diabetes ElasticNet | −22.21 negative-MSE points | 1/2/2 | 3/5 |
+| Synthetic random forest | −.00933 accuracy | 1/2/2 | 3/5 |
+
+The rule did not help this diverse transfer set, so it was not added to `GASearchCV` or used to tune the SVC benchmark. The holdout was used only to compare finalists. Five overlapping splits per task remain descriptive. The [20-fit artifact](results/performance-v2/hpo-stability-finalist-pilot.json) includes the raw scores and parameters, source hash, and exact script. To rerun from the repository root in PowerShell:
+
+```powershell
+New-Item -ItemType Directory -Force -Path .agent-runs/performance-v2 | Out-Null
+.\.venv\Scripts\python.exe -c "import json,pathlib; a=json.loads(pathlib.Path('benchmarks/results/performance-v2/hpo-stability-finalist-pilot.json').read_text(encoding='utf-8')); pathlib.Path('.agent-runs/performance-v2/hpo-stability-finalist-pilot.py').write_text(a['reproduction_script'], encoding='utf-8')"
+.\.venv\Scripts\python.exe .agent-runs/performance-v2/hpo-stability-finalist-pilot.py
 ```

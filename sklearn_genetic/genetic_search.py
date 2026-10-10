@@ -1207,7 +1207,7 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
         # added a handle outlier detection jussst in case where y might be None
         if _is_outlier_detector(self.estimator) and y is None:
             # and for unsupervised outlier detection, it will create dummy y for cv compatibility :)
-            self.y_ = np.zeros(X.shape[0])
+            self.y_ = np.zeros(X.shape[0] if hasattr(X, "shape") else len(X))
 
         # Make sure the callbacks are valid
         self.callbacks = check_callback(callbacks)

@@ -2,6 +2,7 @@ import pytest
 from deap import tools
 from sklearn.base import clone
 from sklearn.datasets import load_digits, load_diabetes
+from sklearn.ensemble import IsolationForest
 from sklearn.linear_model import SGDClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
@@ -42,6 +43,27 @@ y = data["target"]
 X = data["data"]
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
+
+
+def test_outlier_search_accepts_list_without_target():
+    samples = np.random.default_rng(0).normal(size=(30, 4)).tolist()
+    search = GASearchCV(
+        IsolationForest(n_estimators=5, random_state=0, n_jobs=1),
+        param_grid={
+            "contamination": Categorical(["auto", 0.1]),
+            "max_samples": Categorical([0.5, 1.0]),
+        },
+        cv=2,
+        population_size=2,
+        generations=0,
+        verbose=False,
+        n_jobs=1,
+        random_state=0,
+    )
+
+    search.fit(samples)
+
+    assert search.best_estimator_.n_features_in_ == 4
 
 
 def test_default_n_jobs_is_none():

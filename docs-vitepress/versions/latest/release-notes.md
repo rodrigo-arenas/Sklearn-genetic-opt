@@ -36,7 +36,7 @@ space or seed configuration active.
 selected features, including the chosen `refit` metric in multi-metric searches.
 Unsupervised feature selection with an outlier detector now accepts a pandas
 DataFrame without a target, preserving its column names in
-`get_feature_names_out()`.
+`get_feature_names_out()`. Unsupervised `GASearchCV` also accepts list input.
 
 Benchmarks include Optuna, FLAML and AutoGluon, with reproducible settings in
 [`benchmarks/PERFORMANCE_V2.md`](https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/benchmarks/PERFORMANCE_V2.md).
