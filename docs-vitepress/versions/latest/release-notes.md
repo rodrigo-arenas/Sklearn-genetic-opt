@@ -65,6 +65,10 @@ all three datasets. The GA's mean deficit was 0.00175 on breast cancer,
 0.00056 on digits and 0.00750 on synthetic data. This remains an open HPO
 quality target for future work; the feature-mask random control above gave the
 opposite result for feature selection.
+A broader equal-budget feature-mask control also favored the GA on three
+classifier/model families, but random masks did better on Diabetes/Ridge
+regression despite the GA's higher mean CV score. These results reinforce the
+need to validate both methods on the user's own model and data.
 
 The repository [changelog](https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/CHANGELOG.md)
 lists the remaining changes in this upcoming release.

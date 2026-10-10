@@ -890,3 +890,25 @@ New-Item -ItemType Directory -Force -Path .agent-runs/performance-v2 | Out-Null
 .\.venv\Scripts\python.exe .agent-runs/performance-v2/hpo-crossover-transfer.py
 .\.venv\Scripts\python.exe .agent-runs/performance-v2/summarize-hpo-crossover-transfer.py
 ```
+
+## Feature-mask evolution across model families
+
+The earlier [feature-mask random control](#evolutionary-feature-masks-versus-random-search) used one RBF SVC family. A new 40-fit control tests transfer to a decision tree on Wine, scaled KNN on Digits, scaled Ridge regression on Diabetes, and a random forest on a separate synthetic classification problem. Five new outer-split seeds 1041–1045 use a stratified 25% holdout for classification and an ordinary 25% holdout for regression. Both methods propose 72 masks, select one to half the columns, use the same three CV folds and one CPU, cache duplicate mask scores, refit the CV winner, and alternate execution order. The random control samples mask cardinality uniformly from one to the cap, then samples columns uniformly. Accuracy is reported for classifiers and negative MSE for Ridge (larger is better). The holdout is never used to choose a mask.
+
+| Model/dataset | GA / random mean CV score | GA / random mean held-out score | GA wins/ties/losses | GA / random mean seconds |
+|---|---:|---:|---:|---:|
+| Wine decision tree | .94778 / .93993 | .89333 / .86667 | 2/2/1 | .560 / .532 |
+| Digits KNN | .96110 / .95160 | .96178 / .95422 | 3/0/2 | 1.651 / 1.794 |
+| Diabetes Ridge | −3126.14 / −3161.71 | −3117.52 / −3058.21 | 2/0/3 | .676 / .622 |
+| Synthetic random forest | .89422 / .88267 | .89333 / .87733 | 3/1/1 | 14.905 / 13.721 |
+
+The GA improves mean held-out accuracy by .02667, .00756 and .01600 for the three classifiers, but loses 59.31 negative-MSE points on Ridge despite a better mean CV score; one Ridge split loses 257.75 points. The GA is faster only for KNN in these timings. Classification results extend the evidence that evolutionary mask search is useful beyond SVC, while the regression loss shows that neither solution quality nor time generalizes uniformly. Five overlapping splits per task are descriptive, not statistical proof. The [40-fit artifact](results/performance-v2/feature-random-transfer.json) records raw masks, scores, times, proposal and CV-call counts, source and split hashes, dependencies, and the exact scripts.
+
+To rerun from the repository root in PowerShell after installing benchmark dependencies in `.venv`:
+
+```powershell
+New-Item -ItemType Directory -Force -Path .agent-runs/performance-v2 | Out-Null
+.\.venv\Scripts\python.exe -c "import json,pathlib; a=json.loads(pathlib.Path('benchmarks/results/performance-v2/feature-random-transfer.json').read_text(encoding='utf-8')); w=pathlib.Path('.agent-runs/performance-v2'); (w/'feature-random-transfer.py').write_text(a['reproduction_script'], encoding='utf-8'); (w/'summarize-feature-random-transfer.py').write_text(a['summary_script'], encoding='utf-8')"
+.\.venv\Scripts\python.exe .agent-runs/performance-v2/feature-random-transfer.py
+.\.venv\Scripts\python.exe .agent-runs/performance-v2/summarize-feature-random-transfer.py
+```
