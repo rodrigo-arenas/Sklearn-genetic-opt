@@ -619,3 +619,24 @@ The contaminated-target experiment exposes the cost of removing the robust crite
 All four nonfast before/after control pairs preserve exact candidate/score hashes, predictions, best parameters, held-out/CV scores and evaluation counters. All 104 successful fits use matching before/after data and splits, finite scores, and valid full CV partitions; frozen sources are unchanged. Total measured fitting time is 1,334.48 seconds. The [raw artifact](results/performance-v2/fast-forest.json) contains per-seed results, dispersion, split hashes and sizes, raw-record hashes, dependency versions, all source hashes, the two changed source files and the execution/aggregation scripts. To reconstruct the experiment, populate `fast-forest-before` from the recorded baseline, copy it to `fast-forest-after` and replace the files in `changed_source_files`; extract the scripts and source manifests into `.agent-runs/performance-v2` and run the runner from the repository root using the recorded environment.
 
 Four public fast-profile cases fail on the baseline while eight nonfast cases pass; the same 76 focused preset checks pass after the change on scikit-learn 1.9.1 and on 1.5.0. The cases exercise actual CV for both forests, every profile and direct/pipeline prefixes. Independent review exposed a rare-choice mutant that retained `absolute_error` with a 0.001 prior; all four fast cases now additionally reject that criterion through a fresh public warm-start request and kill the mutant. The artifact separates this later verification-test source from the original benchmark snapshots, and includes additional dependency versions captured at aggregation without an environment change. Black and test guard pass. No full suite or documentation build was run. [Verification](results/performance-v2/fast-forest-verification.txt).
+
+## Rejected fast Random Forest classifier search-space reduction
+
+After the regression-forest result, a paired classification experiment tested removing `max_features=None` from only the `fast` Random Forest classifier preset. The alternative kept `sqrt` and `log2`; the library preset was **not changed**. Pilot fits showed that all-feature tree splits can be expensive, but the full search exposed a material quality risk.
+
+The matrix contains 48 real `GASearchCV` fits: baseline versus proposed space, breast cancer, digits, and 800/2,400-row synthetic classification, three seeds (2601–2603), one CPU, three-fold CV, 25% stratified holdout and population six. Fixed searches run one generation and 18 CV candidate evaluations each. Timed searches use a five-second soft limit, at most 1,000 generations, and include in-flight CV and final refit. Before/after order alternates by seed. Results below are means over three paired splits; the speed ratio divides baseline by proposed mean fitting time.
+
+| Budget | Dataset | Baseline → proposed seconds | Speed ratio | Held-out accuracy baseline → proposed | CV calls baseline → proposed |
+|---|---|---:|---:|---:|---:|
+| fixed | breast | 12.088 → 9.716 | 1.24× | .94639 → .95105 | 18 → 18 |
+| fixed | digits | 22.163 → 13.991 | 1.58× | .96963 → .97333 | 18 → 18 |
+| fixed | synthetic 800 | 14.149 → 11.627 | 1.22× | .86833 → .86833 | 18 → 18 |
+| fixed | synthetic 2,400 | 31.440 → 20.227 | 1.55× | .90444 → .89278 | 18 → 18 |
+| timer | breast | 5.474 → 5.408 | 1.01× | .94406 → .94406 | 8.7 → 10.0 |
+| timer | digits | 5.941 → 5.916 | 1.00× | .96889 → .96963 | 4.3 → 7.3 |
+| timer | synthetic 800 | 6.471 → 5.718 | 1.13× | .86333 → .87000 | 7.0 → 9.0 |
+| timer | synthetic 2,400 | 7.358 → 5.977 | 1.23× | .90000 → .89500 | 3.7 → 5.0 |
+
+Across the 12 fixed pairs, total fit time falls from 239.52 to 166.68 seconds (1.44×), but the 2,400-row case at seed 2603 drops from .91833 to .88333 held-out accuracy with the proposed space. The baseline's winning candidate uses `max_features=None`, which the alternative excludes. Under the timer, the proposed space evaluates 94 instead of 71 candidates overall, but the same seed drops from .905 to .890 accuracy. This is enough to reject the preset change despite its useful speed gain. There is no claimed broad statistical equivalence from three overlapping splits, and the unchanged `balanced` and `wide` profiles were not re-benchmarked in this rejected experiment.
+
+The [raw artifact](results/performance-v2/rf-fast-classifier-rejected.json) preserves all 48 candidate histories, split hashes, source hashes, dispersion, environment versions and reproduction scripts. Every pair used the same split, all scores are finite, each fixed run made 18 CV calls, and the frozen library source remained unchanged. Total measured fitting time was 550.99 seconds. This negative result guides further work toward cheaper evaluations that retain the useful candidate.
