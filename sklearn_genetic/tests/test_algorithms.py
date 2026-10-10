@@ -479,6 +479,33 @@ def test_shared_fitness_temporarily_penalizes_crowded_niches(simple_toolbox):
     assert isolated.fitness.values == (10,)
 
 
+@pytest.mark.parametrize("weight", [1.0, -1.0])
+def test_shared_fitness_keeps_nonfinite_candidate_below_finite_candidates(weight):
+    fitness_type = type("Fitness", (base.Fitness,), {"weights": (weight,)})
+
+    class Individual(list):
+        def __init__(self, genes):
+            super().__init__(genes)
+            self.fitness = fitness_type()
+
+    population = []
+    for value, score in [(0, -weight * np.inf), (1, weight * -1e15), (2, weight * 1.0)]:
+        individual = Individual([value, value, value, value])
+        individual.fitness.values = (score,)
+        population.append(individual)
+
+    estimator = SimpleNamespace(
+        fitness_sharing=True,
+        sharing_radius=0.25,
+        sharing_alpha=1.0,
+    )
+    original = [item.fitness.values for item in population]
+    with shared_fitness(population, estimator):
+        assert all(not np.isnan(item.fitness.values[0]) for item in population)
+        assert tools.selBest(population, 1)[0] is population[2]
+    assert [item.fitness.values for item in population] == original
+
+
 @pytest.mark.parametrize("mixed", [False, True])
 @pytest.mark.parametrize("radius, alpha", [(0.25, 1.0), (0.8, 2.0)])
 def test_shared_fitness_matches_pairwise_reference(simple_toolbox, mixed, radius, alpha):

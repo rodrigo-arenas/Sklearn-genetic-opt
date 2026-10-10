@@ -535,6 +535,52 @@ def test_gasearch_accepts_valid_error_score(error_score):
         assert estimator.error_score == error_score
 
 
+@pytest.mark.parametrize("fitness_sharing", [False, True])
+@pytest.mark.parametrize("nonfinite", [np.nan, np.inf])
+@pytest.mark.parametrize("criteria", ["max", "min"])
+def test_nonfinite_scoring_candidate_cannot_displace_valid_hpo_elite(
+    criteria, nonfinite, fitness_sharing
+):
+    iris = load_digits()
+    direction = 1 if criteria == "max" else -1
+    search = GASearchCV(
+        DecisionTreeClassifier(random_state=0),
+        param_grid={
+            "max_depth": Categorical([1, 2, 3]),
+            "min_samples_leaf": Integer(1, 10),
+        },
+        scoring=lambda estimator, X, y: (
+            direction * nonfinite if estimator.max_depth == 1 else direction * estimator.max_depth
+        ),
+        cv=2,
+        population_size=6,
+        generations=1,
+        criteria=criteria,
+        fitness_sharing=fitness_sharing,
+        random_state=3,
+        verbose=False,
+        n_jobs=1,
+    ).fit(iris.data[:60], iris.target[:60])
+
+    assert search.best_params_["max_depth"] == 3
+    assert search.history["fitness_best"][-1] == direction * 3
+    invalid_indices = [
+        index
+        for index, params in enumerate(search.cv_results_["params"])
+        if params["max_depth"] == 1
+    ]
+    assert invalid_indices
+    for index in invalid_indices:
+        for score in (
+            search.cv_results_["mean_test_score"][index],
+            *(search.cv_results_[f"split{split}_test_score"][index] for split in range(2)),
+        ):
+            if np.isnan(nonfinite):
+                assert np.isnan(score)
+            else:
+                assert score == direction * nonfinite
+
+
 def test_fit_param_check_skips_uninspectable_fit():
     class UninspectableEstimator:
         fit = object()

@@ -9,6 +9,14 @@ You are reading the **latest (dev)** docs. For the stable version, see [stable](
 
 # Release Notes
 
+## Unreleased
+
+Both search classes now rank candidates with non-finite cross-validation scores
+last during evolution and final selection, including when only one fold fails.
+The original fold scores remain visible in `cv_results_`. Fitness sharing and
+resumed checkpoints preserve valid candidate ordering in maximization and
+minimization searches.
+
 ## 0.14.0
 
 The documentation sitemap lists released pages, `robots.txt` advertises it, and the homepage links to the current stable version. The homepage removes redundant sections and broken routes; the method guide states search trade-offs without universal performance claims.

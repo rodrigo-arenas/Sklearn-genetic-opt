@@ -116,6 +116,26 @@ def _resolve_config_value(config, field_name, fallback):
     return getattr(config, field_name, fallback)
 
 
+def _evolution_score(score, criteria_sign):
+    # DEAP does not order NaN reliably, and infinite scores do not describe
+    # usable fitness. Keep raw CV scores visible, but rank these candidates last.
+    if not np.isfinite(score):
+        return -np.inf if criteria_sign > 0 else np.inf
+    return score
+
+
+def _normalize_cached_fitness(cache, criteria_sign):
+    # Checkpoints made before non-finite fitness was penalized can still hold
+    # raw NaN/Inf values. Convert only the evolutionary fitness on restore;
+    # their recorded CV scores remain available in the candidate logbook.
+    for result in cache.values():
+        fitness = result["fitness"]
+        if not np.isfinite(fitness[0]):
+            normalized = _evolution_score(fitness[0], criteria_sign)
+            result["fitness"] = type(fitness)((normalized, *fitness[1:]))
+    return cache
+
+
 def _check_fit_params_supported(estimator, fit_params):
     """Fail early and clearly when the wrapped estimator can't take a metadata key.
 
@@ -289,9 +309,9 @@ class _FinalSelectionMixin:
                 }
             )
 
-        valid_results = [item for item in candidate_results if not np.isnan(item["score"])]
+        valid_results = [item for item in candidate_results if np.isfinite(item["score"])]
         if not valid_results:
-            raise ValueError("All final-selection candidates produced NaN scores")
+            raise ValueError("All final-selection candidates produced non-finite scores")
         direction = -1 if self.criteria == "min" else 1
         selected = max(
             valid_results,
@@ -1100,7 +1120,7 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
             if self.return_train_score:
                 current_generation_params[f"train_{metric}"] = cv_results[f"train_{metric}"]
 
-        fitness_result = (score,)
+        fitness_result = (_evolution_score(score, self.criteria_sign),)
 
         return fitness_result, current_generation_params, True, False
 
@@ -1233,7 +1253,9 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
                         runtime_state = checkpoint_data.get("runtime_state") or {}
                         cached = runtime_state.get("fitness_cache")
                         if cached is not None:
-                            self.fitness_cache = cached
+                            self.fitness_cache = _normalize_cached_fitness(
+                                cached, self.criteria_sign
+                            )
                         restored_fit_stats = runtime_state.get("fit_stats_")
                         # ``checkpoint_data["logbook"]`` is the per-*generation*
                         # summary log (see ModelCheckpoint.on_step), not
@@ -2139,7 +2161,7 @@ class GAFeatureSelectionCV(
                 estimator=local_estimator,
             )
 
-        fitness_result = [score, n_selected_features]
+        fitness_result = [_evolution_score(score, self.criteria_sign), n_selected_features]
 
         return fitness_result, current_generation_params, True, False
 
@@ -2282,7 +2304,9 @@ class GAFeatureSelectionCV(
                         runtime_state = checkpoint_data.get("runtime_state") or {}
                         cached = runtime_state.get("fitness_cache")
                         if cached is not None:
-                            self.fitness_cache = cached
+                            self.fitness_cache = _normalize_cached_fitness(
+                                cached, self.criteria_sign
+                            )
                         restored_fit_stats = runtime_state.get("fit_stats_")
                         # ``checkpoint_data["logbook"]`` is the per-*generation*
                         # summary log (see ModelCheckpoint.on_step), not

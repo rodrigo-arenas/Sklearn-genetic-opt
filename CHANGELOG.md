@@ -2,6 +2,10 @@
 
 Full release notes with code examples are in the [documentation](https://sklearngeneticopt.rodrigo-arenas.com/).
 
+## Unreleased
+
+- `GASearchCV` and `GAFeatureSelectionCV` now rank non-finite cross-validation scores last during evolution and final candidate selection, for both maximization and minimization. A candidate with one failed fold no longer receives a misleading average from its remaining folds. Raw fold scores remain visible in `cv_results_`; fitness sharing preserves valid ordering, and resumed checkpoints normalize older cached fitness values.
+
 ## 0.14.0
 
 - Documentation now separates released pages from development pages in the sitemap, publishes `robots.txt`, and points the homepage at the current stable version. The release freeze updates homepage and component links for each new minor version. The homepage drops redundant sections, fixes broken routes, and describes trade-offs without claiming a universal speed or accuracy advantage.

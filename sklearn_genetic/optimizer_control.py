@@ -454,13 +454,21 @@ def _shared_primary_fitness(population, counts):
     primary_weight = population[0].fitness.weights[0]
     sign = 1.0 if primary_weight >= 0 else -1.0
     utilities = [value * sign for value in primary_values]
-    minimum_utility = min(utilities)
+    finite_utilities = [utility for utility in utilities if np.isfinite(utility)]
+    if not finite_utilities:
+        return [individual.fitness.values for individual in population]
+    minimum_utility = min(finite_utilities)
     shift = -minimum_utility + 1e-12 if minimum_utility <= 0 else 0.0
 
     shared_values = []
     for individual, utility, count in zip(population, utilities, counts):
-        shared_utility = (utility + shift) / count
-        shared_primary = (shared_utility - shift) * sign
+        if np.isfinite(utility):
+            shared_utility = (utility + shift) / count
+            shared_primary = (shared_utility - shift) * sign
+        else:
+            # Preserve the worst sentinel; including it in the shift would
+            # turn every otherwise valid candidate's shared fitness into NaN.
+            shared_primary = individual.fitness.values[0]
         shared_values.append((shared_primary, *individual.fitness.values[1:]))
 
     return shared_values

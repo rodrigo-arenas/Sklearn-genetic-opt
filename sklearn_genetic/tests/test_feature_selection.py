@@ -1,4 +1,5 @@
 import pytest
+from functools import partial
 from deap import tools
 import pandas as pd
 from sklearn.base import BaseEstimator, OutlierMixin, clone
@@ -255,6 +256,165 @@ def test_feature_selection_accepts_valid_error_score(error_score):
         assert np.isnan(estimator.error_score)
     else:
         assert estimator.error_score == error_score
+
+
+@pytest.mark.parametrize("fitness_sharing", [False, True])
+@pytest.mark.parametrize("nonfinite", [np.nan, np.inf])
+@pytest.mark.parametrize("criteria", ["max", "min"])
+def test_nonfinite_scoring_mask_cannot_displace_valid_feature_elite(
+    criteria, nonfinite, fitness_sharing
+):
+    iris = load_iris()
+    direction = 1 if criteria == "max" else -1
+    selector = GAFeatureSelectionCV(
+        DecisionTreeClassifier(random_state=0),
+        scoring=lambda estimator, X, y: (
+            direction * nonfinite if X.shape[1] == 1 else direction * X.shape[1]
+        ),
+        cv=2,
+        population_size=6,
+        generations=1,
+        criteria=criteria,
+        fitness_sharing=fitness_sharing,
+        random_state=3,
+        verbose=False,
+        n_jobs=1,
+    ).fit(iris.data[:60], iris.target[:60])
+
+    assert selector.support_.sum() == iris.data.shape[1]
+    assert selector.history["fitness_best"][-1] == direction * iris.data.shape[1]
+    invalid_indices = [
+        index for index, mask in enumerate(selector.cv_results_["features"]) if sum(mask) == 1
+    ]
+    assert invalid_indices
+    for index in invalid_indices:
+        for score in (
+            selector.cv_results_["mean_test_score"][index],
+            *(selector.cv_results_[f"split{split}_test_score"][index] for split in range(2)),
+        ):
+            if np.isnan(nonfinite):
+                assert np.isnan(score)
+            else:
+                assert score == direction * nonfinite
+
+
+@pytest.mark.parametrize("kind", ["hpo", "features"])
+@pytest.mark.parametrize("criteria", ["max", "min"])
+def test_partially_undefined_candidate_cannot_win_final_selection(kind, criteria):
+    from sklearn_genetic import GASearchCV
+    from sklearn_genetic.space import Categorical, Integer
+
+    values = np.arange(60).reshape(30, 2)
+    labels = np.arange(30) % 2
+    indices = np.arange(30)
+    cv = [(indices[~np.isin(indices, test)], test) for test in np.split(indices, 3)]
+    direction = 1 if criteria == "max" else -1
+
+    def scorer(estimator, X, y):
+        size = estimator.max_depth if kind == "hpo" else X.shape[1]
+        if size == 1:
+            return np.nan if X[0, 0] < 10 else direction * 100.0
+        return direction * size
+
+    common = dict(
+        cv=cv,
+        scoring=scorer,
+        population_size=6,
+        generations=1,
+        criteria=criteria,
+        random_state=3,
+        n_jobs=1,
+        verbose=False,
+        optimization_config=OptimizationConfig(final_selection=True, final_selection_top_k=1),
+    )
+    model = DecisionTreeClassifier(random_state=0)
+    search = (
+        GASearchCV(
+            model,
+            param_grid={"max_depth": Categorical([1, 2, 3]), "min_samples_leaf": Integer(1, 3)},
+            **common,
+        )
+        if kind == "hpo"
+        else GAFeatureSelectionCV(model, **common)
+    ).fit(values, labels)
+
+    assert np.isfinite(search.best_score_)
+    if kind == "hpo":
+        assert search.best_params_["max_depth"] == 3
+    else:
+        assert search.support_.sum() == 2
+    assert any(np.isnan(score) for score in search.cv_results_["mean_test_score"])
+
+
+def _checkpoint_nonfinite_score(estimator, X, y, invalid):
+    objective = estimator.max_depth if estimator.max_depth is not None else X.shape[1]
+    return invalid if objective == 1 else float(objective)
+
+
+@pytest.mark.parametrize("kind", ["hpo", "features"])
+@pytest.mark.parametrize("criteria", ["max", "min"])
+@pytest.mark.parametrize("nonfinite", [np.nan, np.inf])
+def test_resume_normalizes_legacy_nonfinite_cached_fitness(kind, criteria, nonfinite, tmp_path):
+    import pickle
+
+    from sklearn_genetic import GASearchCV
+    from sklearn_genetic.space import Categorical, Integer
+    from ..callbacks import ModelCheckpoint
+
+    values, labels = load_iris(return_X_y=True)
+    path = str(tmp_path / "legacy_nonfinite_fitness.pkl")
+    invalid_score = nonfinite if np.isnan(nonfinite) or criteria == "max" else -nonfinite
+    common = dict(
+        cv=2,
+        scoring=partial(_checkpoint_nonfinite_score, invalid=invalid_score),
+        population_size=6,
+        generations=1,
+        criteria=criteria,
+        random_state=3,
+        n_jobs=1,
+        verbose=False,
+    )
+
+    def build():
+        model = DecisionTreeClassifier(random_state=0)
+        if kind == "hpo":
+            return GASearchCV(
+                model,
+                param_grid={
+                    "max_depth": Categorical([1, 2, 3]),
+                    "min_samples_leaf": Integer(1, 10),
+                },
+                **common,
+            )
+        return GAFeatureSelectionCV(model, **common)
+
+    original = build().fit(values[:60], labels[:60], callbacks=ModelCheckpoint(path))
+    with open(path, "rb") as file:
+        checkpoint = pickle.load(file)
+    cached = checkpoint["runtime_state"]["fitness_cache"]
+    record_key = "current_generation_params" if kind == "hpo" else "current_generation_features"
+    invalid = [item for item in cached.values() if not np.isfinite(item[record_key]["score"])]
+    assert invalid
+    assert all(not np.isnan(item["fitness"][0]) for item in invalid)
+    for item in invalid:
+        fitness = item["fitness"]
+        item["fitness"] = (
+            (invalid_score, *fitness[1:]) if kind == "hpo" else [invalid_score, *fitness[1:]]
+        )
+    with open(path, "wb") as file:
+        pickle.dump(checkpoint, file)
+
+    resumed = build().fit(values[:60], labels[:60], callbacks=ModelCheckpoint(path))
+    assert resumed.fit_stats_["cache_hits"] > original.fit_stats_["cache_hits"]
+    assert np.isfinite(resumed.history["fitness_best"][-1])
+    assert any(
+        (np.isnan(score) if np.isnan(nonfinite) else score == invalid_score)
+        for score in resumed.cv_results_["mean_test_score"]
+    )
+    if kind == "hpo":
+        assert resumed.best_params_["max_depth"] == (3 if criteria == "max" else 2)
+    else:
+        assert resumed.support_.sum() == (values.shape[1] if criteria == "max" else 2)
 
 
 def test_smart_population_initializer_creates_diverse_feature_masks():
@@ -1194,7 +1354,8 @@ def test_feature_finalists_remain_distinct_with_uncached_score_ties(criteria):
 
 @pytest.mark.parametrize("kind", ["hpo", "features"])
 @pytest.mark.parametrize("all_failed", [False, True])
-def test_final_selection_excludes_nan_scores(kind, all_failed):
+@pytest.mark.parametrize("invalid", [np.nan, np.inf])
+def test_final_selection_excludes_nonfinite_scores(kind, all_failed, invalid):
     from sklearn_genetic import GASearchCV
     from sklearn_genetic.space import Integer
 
@@ -1211,7 +1372,7 @@ def test_final_selection_excludes_nan_scores(kind, all_failed):
     def learning_curve(model, X, y):
         size = model.max_depth if kind == "hpo" else model.n_features_in_
         if model.training_rows_ == 20:
-            return np.nan if all_failed or size == 1 else 1.0
+            return invalid if all_failed or size == 1 else 1.0
         return 3 - size
 
     common = dict(

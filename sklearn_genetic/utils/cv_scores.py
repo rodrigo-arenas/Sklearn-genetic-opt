@@ -71,18 +71,17 @@ def select_dict_keys(dictionary, keys):
 
 
 def _rank_scores(scores, greater_is_better=True):
-    """Rank candidate scores, always placing NaN scores last.
+    """Rank candidate scores, always placing non-finite scores last.
 
     Candidates with finite scores are ranked first; ties share the lowest rank
-    (scipy's ``method="min"``). NaN scores—produced when a candidate fails under
-    the default ``error_score=np.nan``—are assigned the worst ranks so they never
-    outrank a valid candidate. An all-NaN input does not crash and returns
-    descending ranks for every candidate.
+    (scipy's ``method="min"``). Non-finite scores—such as NaN produced when a
+    candidate fails under the default ``error_score=np.nan``—are assigned the
+    worst rank so they never outrank a valid candidate.
 
     Parameters
     ----------
     scores : array-like
-        The mean scores for each candidate. May contain NaN.
+        The mean scores for each candidate. May contain non-finite values.
     greater_is_better : bool, default=True
         If True, higher scores rank better (e.g. accuracy). If False, lower
         scores rank better (e.g. an error/loss metric).
@@ -90,10 +89,10 @@ def _rank_scores(scores, greater_is_better=True):
     Returns
     -------
     numpy.ndarray of int
-        1-based ranks, where rank 1 is the best candidate and NaN scores rank last.
+        1-based ranks, where rank 1 is the best candidate and non-finite scores rank last.
     """
     scores = np.asarray(scores, dtype=float)
-    finite_mask = ~np.isnan(scores)
+    finite_mask = np.isfinite(scores)
 
     ranks = np.empty(scores.shape[0], dtype=int)
 
@@ -101,10 +100,10 @@ def _rank_scores(scores, greater_is_better=True):
         finite_scores = scores[finite_mask]
         ordered = -finite_scores if greater_is_better else finite_scores
         ranks[finite_mask] = rankdata(ordered, method="min").astype(int)
-        # NaN candidates rank strictly worse than every finite candidate.
+        # Non-finite candidates rank strictly worse than every finite candidate.
         ranks[~finite_mask] = finite_mask.sum() + 1
     else:
-        # All scores are NaN: keep a deterministic, non-crashing ranking.
+        # All scores are non-finite: keep a deterministic, non-crashing ranking.
         ranks[:] = 1
 
     return ranks
@@ -128,11 +127,11 @@ def create_gasearch_cv_results_(
             ]
 
         cv_results[f"mean_test_{metric}"] = [
-            np.nanmean(cv_scores)
+            np.mean(cv_scores)
             for cv_scores in logbook.chapters["parameters"].select(f"test_{metric}")
         ]
         cv_results[f"std_test_{metric}"] = [
-            np.nanstd(cv_scores)
+            np.std(cv_scores)
             for cv_scores in logbook.chapters["parameters"].select(f"test_{metric}")
         ]
 
@@ -148,12 +147,12 @@ def create_gasearch_cv_results_(
                 ]
 
             cv_results[f"mean_train_{metric}"] = [
-                np.nanmean(cv_scores)
+                np.mean(cv_scores)
                 for cv_scores in logbook.chapters["parameters"].select(f"train_{metric}")
             ]
 
             cv_results[f"std_train_{metric}"] = [
-                np.nanstd(cv_scores)
+                np.std(cv_scores)
                 for cv_scores in logbook.chapters["parameters"].select(f"train_{metric}")
             ]
 
@@ -199,11 +198,11 @@ def create_feature_selection_cv_results_(
             ]
 
         cv_results[f"mean_test_{metric}"] = [
-            np.nanmean(cv_scores)
+            np.mean(cv_scores)
             for cv_scores in logbook.chapters["parameters"].select(f"test_{metric}")
         ]
         cv_results[f"std_test_{metric}"] = [
-            np.nanstd(cv_scores)
+            np.std(cv_scores)
             for cv_scores in logbook.chapters["parameters"].select(f"test_{metric}")
         ]
 
@@ -219,12 +218,12 @@ def create_feature_selection_cv_results_(
                 ]
 
             cv_results[f"mean_train_{metric}"] = [
-                np.nanmean(cv_scores)
+                np.mean(cv_scores)
                 for cv_scores in logbook.chapters["parameters"].select(f"train_{metric}")
             ]
 
             cv_results[f"std_train_{metric}"] = [
-                np.nanstd(cv_scores)
+                np.std(cv_scores)
                 for cv_scores in logbook.chapters["parameters"].select(f"train_{metric}")
             ]
 
