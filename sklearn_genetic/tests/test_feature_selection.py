@@ -993,3 +993,201 @@ def test_prediction_methods_require_refitted_winner(method, fitted_without_refit
     args = (X_test[:, :2], y_test) if method == "score" else (X_test[:, :2],)
     with pytest.raises(NotFittedError, match="GAFeatureSelectionCV instance is not fitted"):
         getattr(selector, method)(*args)
+
+
+@pytest.mark.parametrize("criteria", ["max", "min"])
+@pytest.mark.parametrize("final_tie", [False, True])
+def test_feature_final_selection_rechecks_masks_and_refits_full_winner(criteria, final_tie):
+    from sklearn.model_selection import KFold
+
+    fits = []
+
+    class RecordedTree(DecisionTreeClassifier):
+        def fit(self, X, y, sample_weight=None):
+            self.training_rows_ = len(X)
+            np.testing.assert_array_equal(sample_weight, X[:, 0] % 100 + 1)
+            fits.append((len(X), X.shape[1]))
+            return super().fit(X, y, sample_weight=sample_weight)
+
+    rows = np.arange(40)
+    values = np.column_stack((rows, rows + 100))
+    labels = rows % 2
+    full_cv = list(KFold(2, shuffle=True, random_state=2).split(values))
+    from sklearn_genetic import subsample_cv
+
+    reduced_cv = subsample_cv(full_cv, 0.2, stratify=labels, random_state=2)
+    sign = 1 if criteria == "max" else -1
+
+    def learning_curve(model, X, y):
+        count = model.n_features_in_
+        if final_tie:
+            return sign * (1 if model.training_rows_ >= 20 else count)
+        return sign * (count if model.training_rows_ >= 20 else 3 - count)
+
+    search = GAFeatureSelectionCV(
+        RecordedTree(random_state=0),
+        cv=reduced_cv,
+        scoring=learning_curve,
+        population_size=4,
+        generations=0,
+        random_state=0,
+        n_jobs=1,
+        verbose=False,
+        criteria=criteria,
+        final_selection=True,
+        final_selection_top_k=3,
+        final_selection_cv=full_cv,
+    ).fit(values, labels, sample_weight=rows + 1)
+    expected_features = 1 if final_tie else 2
+    assert search.support_.sum() == expected_features
+    assert search.best_score_ == sign * expected_features
+    assert search.final_selection_results_["changed"] is True
+    candidates = search.final_selection_results_["candidates"]
+    assert len(candidates) == 3
+    assert len({tuple(item["params"]["features"]) for item in candidates}) == 3
+    assert sum(rows == 20 for rows, _ in fits) == 6
+    assert fits[-1] == (40, expected_features)
+    assert search.predict(values).shape == labels.shape
+
+
+@pytest.mark.parametrize("kind", ["hpo", "features"])
+@pytest.mark.parametrize("all_failed", [False, True])
+def test_final_selection_excludes_nan_scores(kind, all_failed):
+    from sklearn_genetic import GASearchCV
+    from sklearn_genetic.space import Integer
+
+    class RowCountTree(DecisionTreeClassifier):
+        def fit(self, X, y, sample_weight=None):
+            self.training_rows_ = len(X)
+            return super().fit(X, y, sample_weight=sample_weight)
+
+    values = np.arange(80).reshape(40, 2)
+    labels = np.arange(40) % 2
+    reduced_cv = [(np.arange(4), np.arange(20, 40))]
+    full_cv = [(np.arange(20), np.arange(20, 40))]
+
+    def learning_curve(model, X, y):
+        size = model.max_depth if kind == "hpo" else model.n_features_in_
+        if model.training_rows_ == 20:
+            return np.nan if all_failed or size == 1 else 1.0
+        return 3 - size
+
+    common = dict(
+        cv=reduced_cv,
+        scoring=learning_curve,
+        population_size=4,
+        generations=0,
+        random_state=0,
+        n_jobs=1,
+        verbose=False,
+        optimization_config=OptimizationConfig(
+            final_selection=True, final_selection_top_k=3, final_selection_cv=full_cv
+        ),
+    )
+    model = RowCountTree(max_depth=1, random_state=0)
+    search = (
+        GASearchCV(model, param_grid={"max_depth": Integer(1, 2)}, **common)
+        if kind == "hpo"
+        else GAFeatureSelectionCV(model, **common)
+    )
+    search = clone(search)
+    if all_failed:
+        with pytest.raises(ValueError, match="All final-selection candidates"):
+            search.fit(values, labels)
+    else:
+        search.fit(values, labels)
+        assert search.best_score_ == 1.0
+        if kind == "hpo":
+            assert search.best_params_["max_depth"] == 2
+        else:
+            assert search.support_.tolist() == [True, True]
+
+
+@pytest.mark.parametrize("kind", ["hpo", "features"])
+@pytest.mark.parametrize("top_k", [True, 1.5, np.nan])
+def test_final_selection_requires_a_positive_integer_budget(kind, top_k):
+    from sklearn_genetic import GASearchCV
+    from sklearn_genetic.space import Integer
+
+    cls = GASearchCV if kind == "hpo" else GAFeatureSelectionCV
+    extra = {"param_grid": {"max_depth": Integer(1, 2)}} if kind == "hpo" else {}
+    with pytest.raises(ValueError, match="final_selection_top_k must be"):
+        cls(DecisionTreeClassifier(), final_selection_top_k=top_k, **extra)
+
+
+@pytest.mark.parametrize("fraction", [0.25, 0.99, 1.0])
+def test_subsample_cv_preserves_validation_and_reproducible_training(fraction):
+    from sklearn_genetic import subsample_cv
+    from sklearn.model_selection import StratifiedKFold
+
+    labels = np.tile([0, 1, 2], 40)
+    splits = list(StratifiedKFold(3).split(np.zeros((120, 1)), labels))
+    sampled = subsample_cv(splits, fraction, stratify=labels, random_state=4)
+    repeated = subsample_cv(splits, fraction, stratify=labels, random_state=4)
+    assert len(sampled) == len(splits)
+    for (train, test), (small, validation), (again, _) in zip(splits, sampled, repeated):
+        np.testing.assert_array_equal(validation, test)
+        np.testing.assert_array_equal(small, again)
+        assert len(small) == int(len(train) * fraction)
+        assert len(np.unique(small)) == len(small)
+        assert set(small).issubset(train)
+        assert not set(small).intersection(test)
+        counts = np.bincount(labels[small], minlength=3)
+        assert counts.min() >= len(small) // 3
+        assert counts.max() <= (len(small) + 2) // 3
+        if fraction == 1:
+            np.testing.assert_array_equal(small, train)
+
+
+@pytest.mark.parametrize("fraction", [0, 1.1, np.nan, True])
+def test_subsample_cv_rejects_invalid_training_fraction(fraction):
+    from sklearn_genetic import subsample_cv
+
+    with pytest.raises(ValueError, match="train_size must be"):
+        subsample_cv([(np.arange(10), np.arange(10, 15))], fraction)
+
+
+@pytest.mark.parametrize("splits", [[(np.array([True, False, True]), [1])], []])
+def test_subsample_cv_rejects_invalid_splits(splits):
+    from sklearn_genetic import subsample_cv
+
+    with pytest.raises(ValueError, match="cv_splits must contain"):
+        subsample_cv(splits, 0.5)
+
+
+def test_subsample_cv_rejects_loss_of_rare_class():
+    from sklearn_genetic import subsample_cv
+
+    labels = np.array([0] * 80 + [1] * 2)
+    with pytest.raises(ValueError, match="retain every class"):
+        subsample_cv([(np.arange(82), np.arange(82, 90))], 0.1, stratify=labels, random_state=4)
+
+
+def test_subsample_cv_rejects_multidimensional_labels():
+    from sklearn_genetic import subsample_cv
+
+    with pytest.raises(ValueError, match="one-dimensional class labels"):
+        subsample_cv(
+            [(np.arange(10), np.arange(10, 15))], 0.5, stratify=np.zeros((15, 2)), random_state=4
+        )
+
+
+@pytest.mark.parametrize("disabled_option", ["final_selection", "refit"])
+def test_feature_refit_clears_inactive_finalist_results(disabled_option):
+    search = GAFeatureSelectionCV(
+        DecisionTreeClassifier(random_state=2),
+        cv=2,
+        scoring="accuracy",
+        population_size=4,
+        generations=0,
+        random_state=2,
+        n_jobs=1,
+        verbose=False,
+        final_selection=True,
+        final_selection_top_k=2,
+    ).fit(X_train, y_train)
+    assert search.final_selection_results_["enabled"]
+    search.set_params(**{disabled_option: False})
+    search.fit(X_train, y_train)
+    for attribute in ("best_index_", "best_score_", "final_selection_results_"):
+        assert not hasattr(search, attribute)

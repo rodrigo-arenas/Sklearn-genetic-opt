@@ -282,3 +282,57 @@ Start simple and add controls based on telemetry:
 - [Adaptive Schedules](./adapters) — schedule mutation and crossover rates over generations
 - [Troubleshooting](./troubleshooting) — diagnose convergence problems using `fit_stats_` and `history`
 - [Config Objects API](../api/config) — full parameter reference for `OptimizationConfig`
+
+## Cheaper search with full-training finalist validation
+
+Both searches can explore using fewer training rows per CV fold, then re-evaluate a small number of distinct finalists on the original folds. `subsample_cv` changes only the training indices; every validation row stays in place. The evolutionary operators continue to select and generate candidates using these cheaper scores.
+
+Use a separate outer test set to measure whether the speed/quality tradeoff suits your data:
+
+```python
+from sklearn.base import clone
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import StratifiedKFold, train_test_split
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import SVC
+from sklearn_genetic import GASearchCV, GAFeatureSelectionCV, subsample_cv
+from sklearn_genetic.space import Continuous
+
+X, y = load_breast_cancer(return_X_y=True)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.25, stratify=y, random_state=42
+)
+full_cv = list(StratifiedKFold(3, shuffle=True, random_state=42).split(X_train, y_train))
+search_cv = subsample_cv(full_cv, 0.25, stratify=y_train, random_state=42)
+model = make_pipeline(StandardScaler(), SVC())
+common = dict(
+    cv=search_cv,
+    scoring="accuracy",
+    population_size=8,
+    generations=4,
+    random_state=42,
+    n_jobs=1,
+    verbose=False,
+    final_selection=True,
+    final_selection_top_k=4,
+    final_selection_cv=full_cv,
+)
+hpo = GASearchCV(
+    clone(model),
+    param_grid={
+        "svc__C": Continuous(0.01, 1000, distribution="log-uniform"),
+        "svc__gamma": Continuous(0.0001, 1, distribution="log-uniform"),
+    },
+    **common,
+).fit(X_train, y_train)
+features = GAFeatureSelectionCV(clone(model), **common).fit(X_train, y_train)
+print(hpo.best_score_, hpo.score(X_test, y_test))
+print(features.best_score_, features.score(X_test, y_test), features.support_.sum())
+```
+
+`cv_results_`, `history` and the hall of fame retain the original search scores and candidates. `final_selection_results_` records each promoted candidate's original and final scores, full-validation fold scores, the winner and validation time. `best_score_` describes the final-validation winner, so it need not equal a value in `cv_results_`. Feature selection breaks equal final scores by preferring fewer columns. Invalid NaN finalists cannot replace valid candidates; if every finalist score is NaN, fitting raises an error.
+
+Final selection runs with `refit=True`. Its extra CV evaluations and final refit are additional to the evolutionary budget; generation stopping callbacks do not cap those stages. Include them when timing a workflow. An explicit non-None `final_selection_cv` overrides the corresponding `OptimizationConfig` value. Both settings and explicit fold arrays survive cloning and checkpoints.
+
+Use `stratify=y_train` for classification, and omit it for regression. Sampling that drops a class raises an error; increase the fraction in that case. The discarded rows do not need to contain every class. A fraction of 1 keeps the original training folds. This is opt-in: ordinary searches still use full training folds. Smaller training sets can change candidate rankings, and full validation of finalists cannot recover a good candidate discarded earlier. Measure held-out quality and total time; small datasets or models with high fixed training cost may gain little.

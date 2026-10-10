@@ -6,6 +6,8 @@ Full release notes with code examples are in the [documentation](https://sklearn
 
 ### New Features
 
+- Added `subsample_cv` to reduce training rows while retaining full validation folds. Both searches can re-evaluate finalists on full-training CV; `GAFeatureSelectionCV` now shares `final_selection`, `final_selection_top_k`, and `final_selection_cv` with `GASearchCV`. The default full-data search is unchanged.
+
 - Local refinement in both searches now chains accepted elite improvements across `local_search_steps`, retaining per-step population batching and the configured candidate count.
 
 - Fitness sharing uses vectorized distances with bounded auxiliary memory for feature masks and mixed hyperparameter spaces. The isolated sharing benchmark is 7.9–14.8× faster; complete-fit timings remain dominated by model evaluation.
@@ -16,6 +18,8 @@ Full release notes with code examples are in the [documentation](https://sklearn
 - Added `GAFeatureSelectionCV.get_feature_names_out()` support for DataFrame column names and generated NumPy feature names.
 
 ### Bug Fixes
+
+- Finalist selection excludes NaN scores, raises when every finalist score is NaN, and validates an integer evaluation budget. Checkpoints retain finalist settings. An explicit non-None `final_selection_cv` takes precedence over its grouped configuration value, preserving sklearn cloning when that value contains explicit fold arrays.
 
 - Both searches clone the winning estimator for final refit instead of fitting or changing the caller's estimator. Use `best_estimator_` (or prediction methods on the search) for the fitted model; `estimator` remains the constructor template. Numeric dimension sampling also retains global-seed reproducibility after cloning a search.
 

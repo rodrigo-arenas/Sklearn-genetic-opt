@@ -1,0 +1,1514 @@
+{
+  "label": "public-fidelity",
+  "config": {
+    "output": ".agent-runs\\performance-v2\\fidelity-public-rf.json",
+    "datasets": [
+      "synthetic",
+      "diabetes"
+    ],
+    "models": [
+      "rf"
+    ],
+    "kinds": [
+      "hpo",
+      "features"
+    ],
+    "fractions": [
+      1,
+      0.25,
+      0.125
+    ],
+    "seeds": 3,
+    "seed_start": 1201,
+    "samples": 2000,
+    "generations": 4,
+    "finalists": 4,
+    "label": "public-fidelity"
+  },
+  "python": "3.12.0",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "versions": {
+    "numpy": "2.5.3",
+    "scipy": "1.18.1",
+    "scikit-learn": "1.9.1",
+    "deap": "1.4.4"
+  },
+  "results": [
+    {
+      "dataset": "synthetic",
+      "model": "rf",
+      "kind": "hpo",
+      "seed": 1201,
+      "fraction": 1,
+      "seconds": 99.09754740001517,
+      "cv_score": 0.9166666666666666,
+      "holdout_score": 0.906,
+      "selected_features": 40,
+      "proxy_cv": 0.9166666666666666,
+      "selected_params": {
+        "max_depth": 12,
+        "min_samples_leaf": 1,
+        "max_features": 0.21617430254048936
+      },
+      "selected_mask": null,
+      "search_cv_calls": 72,
+      "promotion_cv_calls": 0,
+      "train_fold_sizes": [
+        1000,
+        1000,
+        1000
+      ],
+      "full_fold_sizes": [
+        1000,
+        1000,
+        1000
+      ]
+    },
+    {
+      "dataset": "synthetic",
+      "model": "rf",
+      "kind": "hpo",
+      "seed": 1201,
+      "fraction": 0.25,
+      "seconds": 33.89280800000415,
+      "cv_score": 0.914,
+      "holdout_score": 0.91,
+      "selected_features": 40,
+      "proxy_cv": 0.8893333333333334,
+      "selected_params": {
+        "max_depth": 16,
+        "min_samples_leaf": 1,
+        "max_features": 0.3496083058998711
+      },
+      "selected_mask": null,
+      "search_cv_calls": 72,
+      "promotion_cv_calls": 4,
+      "train_fold_sizes": [
+        250,
+        250,
+        250
+      ],
+      "full_fold_sizes": [
+        1000,
+        1000,
+        1000
+      ]
+    },
+    {
+      "dataset": "synthetic",
+      "model": "rf",
+      "kind": "hpo",
+      "seed": 1201,
+      "fraction": 0.125,
+      "seconds": 31.56012290000217,
+      "cv_score": 0.9086666666666666,
+      "holdout_score": 0.904,
+      "selected_features": 40,
+      "proxy_cv": 0.8813333333333334,
+      "selected_params": {
+        "max_depth": 16,
+        "min_samples_leaf": 2,
+        "max_features": 0.6134570375597012
+      },
+      "selected_mask": null,
+      "search_cv_calls": 71,
+      "promotion_cv_calls": 4,
+      "train_fold_sizes": [
+        125,
+        125,
+        125
+      ],
+      "full_fold_sizes": [
+        1000,
+        1000,
+        1000
+      ]
+    },
+    {
+      "dataset": "synthetic",
+      "model": "rf",
+      "kind": "features",
+      "seed": 1201,
+      "fraction": 1,
+      "seconds": 43.69497439998668,
+      "cv_score": 0.916,
+      "holdout_score": 0.92,
+      "selected_features": 32,
+      "proxy_cv": 0.916,
+      "selected_params": null,
+      "selected_mask": [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        false,
+        true,
+        false,
+        true,
+        true,
+        true,
+        false
+      ],
+      "search_cv_calls": 72,
+      "promotion_cv_calls": 0,
+      "train_fold_sizes": [
+        1000,
+        1000,
+        1000
+      ],
+      "full_fold_sizes": [
+        1000,
+        1000,
+        1000
+      ]
+    },
+    {
+      "dataset": "synthetic",
+      "model": "rf",
+      "kind": "features",
+      "seed": 1201,
+      "fraction": 0.25,
+      "seconds": 24.547272600000724,
+      "cv_score": 0.91,
+      "holdout_score": 0.9,
+      "selected_features": 32,
+      "proxy_cv": 0.8913333333333333,
+      "selected_params": null,
+      "selected_mask": [
+        true,
+        true,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        true,
+        true,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        false,
+        true,
+        false,
+        true,
+        true,
+        true,
+        true
+      ],
+      "search_cv_calls": 72,
+      "promotion_cv_calls": 4,
+      "train_fold_sizes": [
+        250,
+        250,
+        250
+      ],
+      "full_fold_sizes": [
+        1000,
+        1000,
+        1000
+      ]
+    },
+    {
+      "dataset": "synthetic",
+      "model": "rf",
+      "kind": "features",
+      "seed": 1201,
+      "fraction": 0.125,
+      "seconds": 22.137704100023257,
+      "cv_score": 0.9086666666666666,
+      "holdout_score": 0.9,
+      "selected_features": 32,
+      "proxy_cv": 0.8733333333333334,
+      "selected_params": null,
+      "selected_mask": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        true,
+        true,
+        false,
+        true,
+        false,
+        true,
+        true,
+        false,
+        true,
+        true,
+        false,
+        true,
+        false,
+        true,
+        true,
+        true,
+        false
+      ],
+      "search_cv_calls": 72,
+      "promotion_cv_calls": 4,
+      "train_fold_sizes": [
+        125,
+        125,
+        125
+      ],
+      "full_fold_sizes": [
+        1000,
+        1000,
+        1000
+      ]
+    },
+    {
+      "dataset": "synthetic",
+      "model": "rf",
+      "kind": "hpo",
+      "seed": 1202,
+      "fraction": 1,
+      "seconds": 112.49221890000626,
+      "cv_score": 0.914,
+      "holdout_score": 0.882,
+      "selected_features": 40,
+      "proxy_cv": 0.914,
+      "selected_params": {
+        "max_depth": 16,
+        "min_samples_leaf": 2,
+        "max_features": 0.5169704069346623
+      },
+      "selected_mask": null,
+      "search_cv_calls": 72,
+      "promotion_cv_calls": 0,
+      "train_fold_sizes": [
+        1000,
+        1000,
+        1000
+      ],
+      "full_fold_sizes": [
+        1000,
+        1000,
+        1000
+      ]
+    },
+    {
+      "dataset": "synthetic",
+      "model": "rf",
+      "kind": "hpo",
+      "seed": 1202,
+      "fraction": 0.25,
+      "seconds": 35.095986799977254,
+      "cv_score": 0.9113333333333333,
+      "holdout_score": 0.904,
+      "selected_features": 40,
+      "proxy_cv": 0.8853333333333334,
+      "selected_params": {
+        "max_depth": 11,
+        "min_samples_leaf": 1,
+        "max_features": 0.23766729150876204
+      },
+      "selected_mask": null,
+      "search_cv_calls": 72,
+      "promotion_cv_calls": 4,
+      "train_fold_sizes": [
+        250,
+        250,
+        250
+      ],
+      "full_fold_sizes": [
+        1000,
+        1000,
+        1000
+      ]
+    },
+    {
+      "dataset": "synthetic",
+      "model": "rf",
+      "kind": "hpo",
+      "seed": 1202,
+      "fraction": 0.125,
+      "seconds": 27.949654299998656,
+      "cv_score": 0.912,
+      "holdout_score": 0.902,
+      "selected_features": 40,
+      "proxy_cv": 0.8513333333333333,
+      "selected_params": {
+        "max_depth": 16,
+        "min_samples_leaf": 3,
+        "max_features": 0.42370159209045277
+      },
+      "selected_mask": null,
+      "search_cv_calls": 71,
+      "promotion_cv_calls": 4,
+      "train_fold_sizes": [
+        125,
+        125,
+        125
+      ],
+      "full_fold_sizes": [
+        1000,
+        1000,
+        1000
+      ]
+    },
+    {
+      "dataset": "synthetic",
+      "model": "rf",
+      "kind": "features",
+      "seed": 1202,
+      "fraction": 1,
+      "seconds": 43.37512500002049,
+      "cv_score": 0.914,
+      "holdout_score": 0.904,
+      "selected_features": 40,
+      "proxy_cv": 0.914,
+      "selected_params": null,
+      "selected_mask": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "search_cv_calls": 72,
+      "promotion_cv_calls": 0,
+      "train_fold_sizes": [
+        1000,
+        1000,
+        1000
+      ],
+      "full_fold_sizes": [
+        1000,
+        1000,
+        1000
+      ]
+    },
+    {
+      "dataset": "synthetic",
+      "model": "rf",
+      "kind": "features",
+      "seed": 1202,
+      "fraction": 0.25,
+      "seconds": 25.971776599995792,
+      "cv_score": 0.9086666666666666,
+      "holdout_score": 0.896,
+      "selected_features": 32,
+      "proxy_cv": 0.8906666666666667,
+      "selected_params": null,
+      "selected_mask": [
+        true,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        true,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "search_cv_calls": 72,
+      "promotion_cv_calls": 4,
+      "train_fold_sizes": [
+        250,
+        250,
+        250
+      ],
+      "full_fold_sizes": [
+        1000,
+        1000,
+        1000
+      ]
+    },
+    {
+      "dataset": "synthetic",
+      "model": "rf",
+      "kind": "features",
+      "seed": 1202,
+      "fraction": 0.125,
+      "seconds": 23.415028599993093,
+      "cv_score": 0.91,
+      "holdout_score": 0.902,
+      "selected_features": 37,
+      "proxy_cv": 0.8673333333333333,
+      "selected_params": null,
+      "selected_mask": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        true,
+        true,
+        true,
+        true
+      ],
+      "search_cv_calls": 71,
+      "promotion_cv_calls": 4,
+      "train_fold_sizes": [
+        125,
+        125,
+        125
+      ],
+      "full_fold_sizes": [
+        1000,
+        1000,
+        1000
+      ]
+    },
+    {
+      "dataset": "synthetic",
+      "model": "rf",
+      "kind": "hpo",
+      "seed": 1203,
+      "fraction": 1,
+      "seconds": 94.52095800000825,
+      "cv_score": 0.91,
+      "holdout_score": 0.906,
+      "selected_features": 40,
+      "proxy_cv": 0.91,
+      "selected_params": {
+        "max_depth": 20,
+        "min_samples_leaf": 2,
+        "max_features": 0.22652985851667315
+      },
+      "selected_mask": null,
+      "search_cv_calls": 70,
+      "promotion_cv_calls": 0,
+      "train_fold_sizes": [
+        1000,
+        1000,
+        1000
+      ],
+      "full_fold_sizes": [
+        1000,
+        1000,
+        1000
+      ]
+    },
+    {
+      "dataset": "synthetic",
+      "model": "rf",
+      "kind": "hpo",
+      "seed": 1203,
+      "fraction": 0.25,
+      "seconds": 31.652079499996034,
+      "cv_score": 0.9093333333333334,
+      "holdout_score": 0.914,
+      "selected_features": 40,
+      "proxy_cv": 0.8873333333333333,
+      "selected_params": {
+        "max_depth": 18,
+        "min_samples_leaf": 1,
+        "max_features": 0.16124510378497658
+      },
+      "selected_mask": null,
+      "search_cv_calls": 70,
+      "promotion_cv_calls": 4,
+      "train_fold_sizes": [
+        250,
+        250,
+        250
+      ],
+      "full_fold_sizes": [
+        1000,
+        1000,
+        1000
+      ]
+    },
+    {
+      "dataset": "synthetic",
+      "model": "rf",
+      "kind": "hpo",
+      "seed": 1203,
+      "fraction": 0.125,
+      "seconds": 25.29482520002057,
+      "cv_score": 0.908,
+      "holdout_score": 0.914,
+      "selected_features": 40,
+      "proxy_cv": 0.848,
+      "selected_params": {
+        "max_depth": 17,
+        "min_samples_leaf": 1,
+        "max_features": 0.16124510378497658
+      },
+      "selected_mask": null,
+      "search_cv_calls": 72,
+      "promotion_cv_calls": 4,
+      "train_fold_sizes": [
+        125,
+        125,
+        125
+      ],
+      "full_fold_sizes": [
+        1000,
+        1000,
+        1000
+      ]
+    },
+    {
+      "dataset": "synthetic",
+      "model": "rf",
+      "kind": "features",
+      "seed": 1203,
+      "fraction": 1,
+      "seconds": 45.29869759999565,
+      "cv_score": 0.912,
+      "holdout_score": 0.918,
+      "selected_features": 34,
+      "proxy_cv": 0.912,
+      "selected_params": null,
+      "selected_mask": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "search_cv_calls": 72,
+      "promotion_cv_calls": 0,
+      "train_fold_sizes": [
+        1000,
+        1000,
+        1000
+      ],
+      "full_fold_sizes": [
+        1000,
+        1000,
+        1000
+      ]
+    },
+    {
+      "dataset": "synthetic",
+      "model": "rf",
+      "kind": "features",
+      "seed": 1203,
+      "fraction": 0.25,
+      "seconds": 25.508854899992002,
+      "cv_score": 0.9106666666666667,
+      "holdout_score": 0.91,
+      "selected_features": 36,
+      "proxy_cv": 0.888,
+      "selected_params": null,
+      "selected_mask": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "search_cv_calls": 72,
+      "promotion_cv_calls": 4,
+      "train_fold_sizes": [
+        250,
+        250,
+        250
+      ],
+      "full_fold_sizes": [
+        1000,
+        1000,
+        1000
+      ]
+    },
+    {
+      "dataset": "synthetic",
+      "model": "rf",
+      "kind": "features",
+      "seed": 1203,
+      "fraction": 0.125,
+      "seconds": 22.80416349999723,
+      "cv_score": 0.9066666666666667,
+      "holdout_score": 0.9,
+      "selected_features": 28,
+      "proxy_cv": 0.8593333333333333,
+      "selected_params": null,
+      "selected_mask": [
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        false,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        true,
+        true
+      ],
+      "search_cv_calls": 72,
+      "promotion_cv_calls": 4,
+      "train_fold_sizes": [
+        125,
+        125,
+        125
+      ],
+      "full_fold_sizes": [
+        1000,
+        1000,
+        1000
+      ]
+    },
+    {
+      "dataset": "diabetes",
+      "model": "rf",
+      "kind": "hpo",
+      "seed": 1201,
+      "fraction": 1,
+      "seconds": 16.992837300000247,
+      "cv_score": -3036.6754245973116,
+      "holdout_score": -3170.0031727822325,
+      "selected_features": 10,
+      "proxy_cv": -3036.6754245973116,
+      "selected_params": {
+        "max_depth": 12,
+        "min_samples_leaf": 2,
+        "max_features": 0.46704167976109046
+      },
+      "selected_mask": null,
+      "search_cv_calls": 71,
+      "promotion_cv_calls": 0,
+      "train_fold_sizes": [
+        220,
+        221,
+        221
+      ],
+      "full_fold_sizes": [
+        220,
+        221,
+        221
+      ]
+    },
+    {
+      "dataset": "diabetes",
+      "model": "rf",
+      "kind": "hpo",
+      "seed": 1201,
+      "fraction": 0.25,
+      "seconds": 15.142135800007964,
+      "cv_score": -3084.1535917225865,
+      "holdout_score": -3099.233324265838,
+      "selected_features": 10,
+      "proxy_cv": -3507.884942690421,
+      "selected_params": {
+        "max_depth": 5,
+        "min_samples_leaf": 1,
+        "max_features": 0.3496083058998711
+      },
+      "selected_mask": null,
+      "search_cv_calls": 69,
+      "promotion_cv_calls": 4,
+      "train_fold_sizes": [
+        55,
+        55,
+        55
+      ],
+      "full_fold_sizes": [
+        220,
+        221,
+        221
+      ]
+    },
+    {
+      "dataset": "diabetes",
+      "model": "rf",
+      "kind": "hpo",
+      "seed": 1201,
+      "fraction": 0.125,
+      "seconds": 15.149535899981856,
+      "cv_score": -3057.635863625672,
+      "holdout_score": -3345.5176360342025,
+      "selected_features": 10,
+      "proxy_cv": -3768.6774457113365,
+      "selected_params": {
+        "max_depth": 12,
+        "min_samples_leaf": 1,
+        "max_features": 0.3496083058998711
+      },
+      "selected_mask": null,
+      "search_cv_calls": 70,
+      "promotion_cv_calls": 4,
+      "train_fold_sizes": [
+        27,
+        27,
+        27
+      ],
+      "full_fold_sizes": [
+        220,
+        221,
+        221
+      ]
+    },
+    {
+      "dataset": "diabetes",
+      "model": "rf",
+      "kind": "features",
+      "seed": 1201,
+      "fraction": 1,
+      "seconds": 18.21684040001128,
+      "cv_score": -3146.2020169772045,
+      "holdout_score": -3385.93987331081,
+      "selected_features": 9,
+      "proxy_cv": -3146.2020169772045,
+      "selected_params": null,
+      "selected_mask": [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "search_cv_calls": 70,
+      "promotion_cv_calls": 0,
+      "train_fold_sizes": [
+        220,
+        221,
+        221
+      ],
+      "full_fold_sizes": [
+        220,
+        221,
+        221
+      ]
+    },
+    {
+      "dataset": "diabetes",
+      "model": "rf",
+      "kind": "features",
+      "seed": 1201,
+      "fraction": 0.25,
+      "seconds": 14.799913499999093,
+      "cv_score": -3146.2020169772045,
+      "holdout_score": -3385.93987331081,
+      "selected_features": 9,
+      "proxy_cv": -3691.2769087368615,
+      "selected_params": null,
+      "selected_mask": [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "search_cv_calls": 68,
+      "promotion_cv_calls": 4,
+      "train_fold_sizes": [
+        55,
+        55,
+        55
+      ],
+      "full_fold_sizes": [
+        220,
+        221,
+        221
+      ]
+    },
+    {
+      "dataset": "diabetes",
+      "model": "rf",
+      "kind": "features",
+      "seed": 1201,
+      "fraction": 0.125,
+      "seconds": 14.168370799976401,
+      "cv_score": -3146.2020169772045,
+      "holdout_score": -3385.93987331081,
+      "selected_features": 9,
+      "proxy_cv": -3928.7872464637935,
+      "selected_params": null,
+      "selected_mask": [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "search_cv_calls": 67,
+      "promotion_cv_calls": 4,
+      "train_fold_sizes": [
+        27,
+        27,
+        27
+      ],
+      "full_fold_sizes": [
+        220,
+        221,
+        221
+      ]
+    },
+    {
+      "dataset": "diabetes",
+      "model": "rf",
+      "kind": "hpo",
+      "seed": 1202,
+      "fraction": 1,
+      "seconds": 15.875921999977436,
+      "cv_score": -3548.172559901049,
+      "holdout_score": -2470.0210217712256,
+      "selected_features": 10,
+      "proxy_cv": -3548.172559901049,
+      "selected_params": {
+        "max_depth": 16,
+        "min_samples_leaf": 11,
+        "max_features": 0.5169704069346623
+      },
+      "selected_mask": null,
+      "search_cv_calls": 68,
+      "promotion_cv_calls": 0,
+      "train_fold_sizes": [
+        220,
+        221,
+        221
+      ],
+      "full_fold_sizes": [
+        220,
+        221,
+        221
+      ]
+    },
+    {
+      "dataset": "diabetes",
+      "model": "rf",
+      "kind": "hpo",
+      "seed": 1202,
+      "fraction": 0.25,
+      "seconds": 15.318762899987632,
+      "cv_score": -3608.5538705540202,
+      "holdout_score": -2669.8503332462515,
+      "selected_features": 10,
+      "proxy_cv": -3779.701281760705,
+      "selected_params": {
+        "max_depth": 16,
+        "min_samples_leaf": 2,
+        "max_features": 0.3456931127996837
+      },
+      "selected_mask": null,
+      "search_cv_calls": 70,
+      "promotion_cv_calls": 4,
+      "train_fold_sizes": [
+        55,
+        55,
+        55
+      ],
+      "full_fold_sizes": [
+        220,
+        221,
+        221
+      ]
+    },
+    {
+      "dataset": "diabetes",
+      "model": "rf",
+      "kind": "hpo",
+      "seed": 1202,
+      "fraction": 0.125,
+      "seconds": 15.5359494999866,
+      "cv_score": -3752.069337620024,
+      "holdout_score": -2793.0103676405897,
+      "selected_features": 10,
+      "proxy_cv": -4196.364990359678,
+      "selected_params": {
+        "max_depth": 18,
+        "min_samples_leaf": 1,
+        "max_features": 0.4358296907898722
+      },
+      "selected_mask": null,
+      "search_cv_calls": 71,
+      "promotion_cv_calls": 4,
+      "train_fold_sizes": [
+        27,
+        27,
+        27
+      ],
+      "full_fold_sizes": [
+        220,
+        221,
+        221
+      ]
+    },
+    {
+      "dataset": "diabetes",
+      "model": "rf",
+      "kind": "features",
+      "seed": 1202,
+      "fraction": 1,
+      "seconds": 18.334011200000532,
+      "cv_score": -3715.6755227912577,
+      "holdout_score": -2610.672471846847,
+      "selected_features": 6,
+      "proxy_cv": -3715.6755227912577,
+      "selected_params": null,
+      "selected_mask": [
+        false,
+        true,
+        true,
+        false,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true
+      ],
+      "search_cv_calls": 70,
+      "promotion_cv_calls": 0,
+      "train_fold_sizes": [
+        220,
+        221,
+        221
+      ],
+      "full_fold_sizes": [
+        220,
+        221,
+        221
+      ]
+    },
+    {
+      "dataset": "diabetes",
+      "model": "rf",
+      "kind": "features",
+      "seed": 1202,
+      "fraction": 0.25,
+      "seconds": 15.15882270000293,
+      "cv_score": -3783.177770389708,
+      "holdout_score": -2878.8567567567566,
+      "selected_features": 8,
+      "proxy_cv": -3968.099561561561,
+      "selected_params": null,
+      "selected_mask": [
+        true,
+        true,
+        true,
+        true,
+        false,
+        true,
+        false,
+        true,
+        true,
+        true
+      ],
+      "search_cv_calls": 69,
+      "promotion_cv_calls": 4,
+      "train_fold_sizes": [
+        55,
+        55,
+        55
+      ],
+      "full_fold_sizes": [
+        220,
+        221,
+        221
+      ]
+    },
+    {
+      "dataset": "diabetes",
+      "model": "rf",
+      "kind": "features",
+      "seed": 1202,
+      "fraction": 0.125,
+      "seconds": 14.330126500019105,
+      "cv_score": -3958.956329323642,
+      "holdout_score": -2972.5165582770273,
+      "selected_features": 7,
+      "proxy_cv": -4163.971610957548,
+      "selected_params": null,
+      "selected_mask": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        false
+      ],
+      "search_cv_calls": 69,
+      "promotion_cv_calls": 4,
+      "train_fold_sizes": [
+        27,
+        27,
+        27
+      ],
+      "full_fold_sizes": [
+        220,
+        221,
+        221
+      ]
+    },
+    {
+      "dataset": "diabetes",
+      "model": "rf",
+      "kind": "hpo",
+      "seed": 1203,
+      "fraction": 1,
+      "seconds": 16.564312899979996,
+      "cv_score": -3172.439992400594,
+      "holdout_score": -3385.114347041759,
+      "selected_features": 10,
+      "proxy_cv": -3172.439992400594,
+      "selected_params": {
+        "max_depth": 17,
+        "min_samples_leaf": 3,
+        "max_features": 0.4605182285932491
+      },
+      "selected_mask": null,
+      "search_cv_calls": 71,
+      "promotion_cv_calls": 0,
+      "train_fold_sizes": [
+        220,
+        221,
+        221
+      ],
+      "full_fold_sizes": [
+        220,
+        221,
+        221
+      ]
+    },
+    {
+      "dataset": "diabetes",
+      "model": "rf",
+      "kind": "hpo",
+      "seed": 1203,
+      "fraction": 0.25,
+      "seconds": 15.848464700015029,
+      "cv_score": -3172.439992400594,
+      "holdout_score": -3385.114347041759,
+      "selected_features": 10,
+      "proxy_cv": -3504.6941746496036,
+      "selected_params": {
+        "max_depth": 17,
+        "min_samples_leaf": 3,
+        "max_features": 0.4605182285932491
+      },
+      "selected_mask": null,
+      "search_cv_calls": 72,
+      "promotion_cv_calls": 4,
+      "train_fold_sizes": [
+        55,
+        55,
+        55
+      ],
+      "full_fold_sizes": [
+        220,
+        221,
+        221
+      ]
+    },
+    {
+      "dataset": "diabetes",
+      "model": "rf",
+      "kind": "hpo",
+      "seed": 1203,
+      "fraction": 0.125,
+      "seconds": 15.692900199996075,
+      "cv_score": -3204.487385565119,
+      "holdout_score": -3422.403868264194,
+      "selected_features": 10,
+      "proxy_cv": -4168.808757911504,
+      "selected_params": {
+        "max_depth": 8,
+        "min_samples_leaf": 2,
+        "max_features": 0.7249937583935644
+      },
+      "selected_mask": null,
+      "search_cv_calls": 71,
+      "promotion_cv_calls": 4,
+      "train_fold_sizes": [
+        27,
+        27,
+        27
+      ],
+      "full_fold_sizes": [
+        220,
+        221,
+        221
+      ]
+    },
+    {
+      "dataset": "diabetes",
+      "model": "rf",
+      "kind": "features",
+      "seed": 1203,
+      "fraction": 1,
+      "seconds": 17.707118200021796,
+      "cv_score": -3220.0900556920556,
+      "holdout_score": -3617.879767736486,
+      "selected_features": 7,
+      "proxy_cv": -3220.0900556920556,
+      "selected_params": null,
+      "selected_mask": [
+        true,
+        false,
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true
+      ],
+      "search_cv_calls": 68,
+      "promotion_cv_calls": 0,
+      "train_fold_sizes": [
+        220,
+        221,
+        221
+      ],
+      "full_fold_sizes": [
+        220,
+        221,
+        221
+      ]
+    },
+    {
+      "dataset": "diabetes",
+      "model": "rf",
+      "kind": "features",
+      "seed": 1203,
+      "fraction": 0.25,
+      "seconds": 14.77449229999911,
+      "cv_score": -3245.5660834186456,
+      "holdout_score": -3766.626692004504,
+      "selected_features": 5,
+      "proxy_cv": -3720.43323379914,
+      "selected_params": null,
+      "selected_mask": [
+        false,
+        false,
+        true,
+        true,
+        false,
+        false,
+        true,
+        false,
+        true,
+        true
+      ],
+      "search_cv_calls": 68,
+      "promotion_cv_calls": 4,
+      "train_fold_sizes": [
+        55,
+        55,
+        55
+      ],
+      "full_fold_sizes": [
+        220,
+        221,
+        221
+      ]
+    },
+    {
+      "dataset": "diabetes",
+      "model": "rf",
+      "kind": "features",
+      "seed": 1203,
+      "fraction": 0.125,
+      "seconds": 14.168637800001306,
+      "cv_score": -3209.2088431656084,
+      "holdout_score": -3576.9092708333333,
+      "selected_features": 8,
+      "proxy_cv": -4025.011640808422,
+      "selected_params": null,
+      "selected_mask": [
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        true,
+        true,
+        true,
+        true
+      ],
+      "search_cv_calls": 68,
+      "promotion_cv_calls": 4,
+      "train_fold_sizes": [
+        27,
+        27,
+        27
+      ],
+      "full_fold_sizes": [
+        220,
+        221,
+        221
+      ]
+    }
+  ]
+}

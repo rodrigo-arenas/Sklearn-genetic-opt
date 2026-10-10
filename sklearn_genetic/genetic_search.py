@@ -155,7 +155,153 @@ def _check_fit_params_supported(estimator, fit_params):
         )
 
 
-class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
+class _FinalSelectionMixin:
+    """Shared finalist ranking, validation and selection for both search types."""
+
+    def _validate_final_selection_top_k(self):
+        if isinstance(self.final_selection_top_k, (bool, np.bool_)) or not isinstance(
+            self.final_selection_top_k, Integral
+        ):
+            raise ValueError("final_selection_top_k must be a positive integer")
+        if self.final_selection_top_k < 1:
+            raise ValueError("final_selection_top_k must be greater than or equal to 1")
+
+    def _candidate_params_from_index(self, index):
+        if hasattr(self, "space"):
+            return self.cv_results_["params"][index]
+        return {"features": tuple(bool(value) for value in self.cv_results_["features"][index])}
+
+    def _top_candidate_indices(self):
+        ranks = np.asarray(self.cv_results_[f"rank_test_{self.refit_metric}"])
+        indices = []
+        seen = set()
+        order = (
+            np.lexsort((self.cv_results_["n_features"], ranks))
+            if "n_features" in self.cv_results_
+            else np.argsort(ranks, kind="stable")
+        )
+        for index in order:
+            key = tuple(sorted(self._candidate_params_from_index(index).items()))
+            if key not in seen:
+                seen.add(key)
+                indices.append(index)
+                if len(indices) == self.final_selection_top_k:
+                    break
+        return indices
+
+    def _final_selection_splits(self):
+        if self.final_selection_cv is None:
+            return self._cv_splits
+
+        cv = check_cv(self.final_selection_cv, self.y_, classifier=_is_classifier(self.estimator))
+        groups = getattr(self, "groups_", None)
+        if groups is None:
+            return list(cv.split(self.X_, self.y_))
+        return list(cv.split(self.X_, self.y_, groups=groups))
+
+    def _score_final_candidate(self, params, cv_splits):
+        local_estimator = clone(self.estimator)
+        if hasattr(self, "space"):
+            local_estimator.set_params(**params)
+            X = self.X_
+        else:
+            X = self.X_[:, np.asarray(params["features"], dtype=bool)]
+
+        cv_results = cross_validate(
+            local_estimator,
+            X,
+            self.y_,
+            cv=cv_splits,
+            scoring=self.scorer_,
+            n_jobs=self.n_jobs,
+            pre_dispatch=self.pre_dispatch,
+            error_score=self.error_score,
+            return_train_score=False,
+            params=getattr(self, "_fit_params", None) or None,
+        )
+        cv_scores = cv_results[f"test_{self.refit_metric}"]
+        return float(np.mean(cv_scores)), cv_scores
+
+    def _select_final_candidate(self):
+        indices = self._top_candidate_indices() if self.final_selection else None
+        original_best_index = int(
+            indices[0]
+            if indices is not None
+            else np.asarray(self.cv_results_[f"rank_test_{self.refit_metric}"]).argmin()
+        )
+        original_best_score = float(
+            self.cv_results_[f"mean_test_{self.refit_metric}"][original_best_index]
+        )
+        original_best_params = self._candidate_params_from_index(original_best_index)
+
+        self.final_selection_results_ = {
+            "enabled": bool(self.final_selection),
+            "top_k": 1,
+            "cv": self.final_selection_cv,
+            "original_best_index": original_best_index,
+            "original_best_score": original_best_score,
+            "original_best_params": original_best_params,
+            "selected_index": original_best_index,
+            "selected_score": original_best_score,
+            "selected_params": original_best_params,
+            "changed": False,
+            "candidates": [],
+            "time_seconds": 0.0,
+        }
+
+        if not self.final_selection:
+            return original_best_index, original_best_score, original_best_params
+
+        started_at = time.time()
+        cv_splits = self._final_selection_splits()
+        candidate_results = []
+
+        for index in indices:
+            params = self._candidate_params_from_index(index)
+            score, cv_scores = self._score_final_candidate(params, cv_splits)
+            candidate_results.append(
+                {
+                    "index": int(index),
+                    "original_score": float(
+                        self.cv_results_[f"mean_test_{self.refit_metric}"][index]
+                    ),
+                    "score": score,
+                    "cv_scores": cv_scores.tolist(),
+                    "params": params,
+                }
+            )
+
+        valid_results = [item for item in candidate_results if not np.isnan(item["score"])]
+        if not valid_results:
+            raise ValueError("All final-selection candidates produced NaN scores")
+        direction = -1 if self.criteria == "min" else 1
+        selected = max(
+            valid_results,
+            key=lambda item: (
+                direction * item["score"],
+                -sum(item["params"]["features"]) if not hasattr(self, "space") else 0,
+            ),
+        )
+        selected_index = selected["index"]
+        selected_score = selected["score"]
+        selected_params = selected["params"]
+
+        self.final_selection_results_.update(
+            {
+                "top_k": self.final_selection_top_k,
+                "selected_index": selected_index,
+                "selected_score": selected_score,
+                "selected_params": selected_params,
+                "changed": selected_index != original_best_index,
+                "candidates": candidate_results,
+                "time_seconds": time.time() - started_at,
+            }
+        )
+
+        return selected_index, selected_score, selected_params
+
+
+class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
     """
     Evolutionary optimization over hyperparameters.
 
@@ -354,7 +500,8 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
 
     final_selection_cv : int, cross-validation splitter or iterable, default=None
         Cross-validation strategy used for final selection. If ``None``, the
-        same CV splits used during the GA are reused.
+        same CV splits used during the GA are reused. An explicit non-None
+        value takes precedence over ``optimization_config.final_selection_cv``.
 
     verbose : bool, default=True
         If ``True``, shows the metrics on the optimization routine.
@@ -615,9 +762,10 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         final_selection_top_k = _resolve_config_value(
             optimization_config, "final_selection_top_k", final_selection_top_k
         )
-        final_selection_cv = _resolve_config_value(
-            optimization_config, "final_selection_cv", final_selection_cv
-        )
+        if final_selection_cv is None:
+            final_selection_cv = _resolve_config_value(
+                optimization_config, "final_selection_cv", final_selection_cv
+            )
 
         self.evolution_config = evolution_config
         self.population_config = population_config
@@ -676,8 +824,7 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         _validate_parallel_backend(self.parallel_backend)
         _validate_error_score(self.error_score)
         _validate_population_initializer(self.population_initializer)
-        if self.final_selection_top_k < 1:
-            raise ValueError("final_selection_top_k must be greater than or equal to 1")
+        self._validate_final_selection_top_k()
         _validate_optimizer_control(
             self.local_search_top_k,
             self.local_search_steps,
@@ -987,122 +1134,6 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
 
         return fitness_result
 
-    def _candidate_params_from_index(self, index):
-        return self.cv_results_["params"][index]
-
-    def _top_candidate_indices(self):
-        ranks = np.asarray(self.cv_results_[f"rank_test_{self.refit_metric}"])
-        indices = []
-        seen = set()
-        for index in np.argsort(ranks, kind="stable"):
-            key = tuple(sorted(self._candidate_params_from_index(index).items()))
-            if key not in seen:
-                seen.add(key)
-                indices.append(index)
-                if len(indices) == self.final_selection_top_k:
-                    break
-        return indices
-
-    def _final_selection_splits(self):
-        if self.final_selection_cv is None:
-            return self._cv_splits
-
-        cv = check_cv(self.final_selection_cv, self.y_, classifier=_is_classifier(self.estimator))
-        groups = getattr(self, "groups_", None)
-        if groups is None:
-            return list(cv.split(self.X_, self.y_))
-        return list(cv.split(self.X_, self.y_, groups=groups))
-
-    def _score_final_candidate(self, params, cv_splits):
-        local_estimator = clone(self.estimator)
-        local_estimator.set_params(**params)
-
-        cv_results = cross_validate(
-            local_estimator,
-            self.X_,
-            self.y_,
-            cv=cv_splits,
-            scoring=self.scorer_,
-            n_jobs=self.n_jobs,
-            pre_dispatch=self.pre_dispatch,
-            error_score=self.error_score,
-            return_train_score=False,
-            params=getattr(self, "_fit_params", None) or None,
-        )
-        cv_scores = cv_results[f"test_{self.refit_metric}"]
-        return float(np.mean(cv_scores)), cv_scores
-
-    def _select_final_candidate(self):
-        original_best_index = int(self.cv_results_[f"rank_test_{self.refit_metric}"].argmin())
-        original_best_score = float(
-            self.cv_results_[f"mean_test_{self.refit_metric}"][original_best_index]
-        )
-        original_best_params = self._candidate_params_from_index(original_best_index)
-
-        self.final_selection_results_ = {
-            "enabled": bool(self.final_selection),
-            "top_k": 1,
-            "cv": self.final_selection_cv,
-            "original_best_index": original_best_index,
-            "original_best_score": original_best_score,
-            "original_best_params": original_best_params,
-            "selected_index": original_best_index,
-            "selected_score": original_best_score,
-            "selected_params": original_best_params,
-            "changed": False,
-            "candidates": [],
-            "time_seconds": 0.0,
-        }
-
-        if not self.final_selection:
-            return original_best_index, original_best_score, original_best_params
-
-        started_at = time.time()
-        cv_splits = self._final_selection_splits()
-        candidate_results = []
-
-        for index in self._top_candidate_indices():
-            params = self._candidate_params_from_index(index)
-            score, cv_scores = self._score_final_candidate(params, cv_splits)
-            candidate_results.append(
-                {
-                    "index": int(index),
-                    "original_score": float(
-                        self.cv_results_[f"mean_test_{self.refit_metric}"][index]
-                    ),
-                    "score": score,
-                    "cv_scores": cv_scores.tolist(),
-                    "params": params,
-                }
-            )
-
-        if candidate_results:
-            if self.criteria == "min":
-                selected = min(candidate_results, key=lambda item: item["score"])
-            else:
-                selected = max(candidate_results, key=lambda item: item["score"])
-            selected_index = selected["index"]
-            selected_score = selected["score"]
-            selected_params = selected["params"]
-        else:  # pragma: no cover
-            selected_index = original_best_index
-            selected_score = original_best_score
-            selected_params = original_best_params
-
-        self.final_selection_results_.update(
-            {
-                "top_k": self.final_selection_top_k,
-                "selected_index": selected_index,
-                "selected_score": selected_score,
-                "selected_params": selected_params,
-                "changed": selected_index != original_best_index,
-                "candidates": candidate_results,
-                "time_seconds": time.time() - started_at,
-            }
-        )
-
-        return selected_index, selected_score, selected_params
-
     def fit(self, X, y=None, callbacks=None, groups=None, **fit_params):
         """
         Main method of GASearchCV, starts the optimization
@@ -1344,7 +1375,9 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         return self
 
 
-class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMixin, BaseEstimator):
+class GAFeatureSelectionCV(
+    _FinalSelectionMixin, GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMixin, BaseEstimator
+):
     """
     Evolutionary optimization for feature selection.
 
@@ -1482,6 +1515,23 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
     elitism : bool, default=True
         If True takes the *tournament_size* best solution to the next generation.
 
+    final_selection : bool, default=False
+        With ``refit=True``, re-evaluate the best distinct feature masks after
+        evolution and choose the refitted winner using these final scores.
+        Equal final scores prefer fewer features. Search scores in
+        ``cv_results_`` and ``history`` remain unchanged; final scores are
+        available in ``final_selection_results_`` and ``best_score_``.
+
+    final_selection_top_k : int, default=3
+        Positive number of distinct masks to re-evaluate. This bounds extra
+        cross-validation calls independently of ``keep_top_k``.
+
+    final_selection_cv : int, cross-validation splitter or iterable, default=None
+        Validation used to choose among finalists. None reuses the search
+        folds. Supply the original full-training folds when searching with
+        :func:`subsample_cv`. An explicit non-None value takes precedence
+        over ``optimization_config.final_selection_cv``.
+
     max_features : int, default=None
         The upper bound number of features to be selected. Must be None or an
         integer between 1 and the number of input features (validated at fit).
@@ -1607,6 +1657,14 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         1 means the feature was selected, 0 means the features was discarded.
     support_ : list
         The mask of selected features.
+    best_score_ : float
+        Winning final-validation score when ``final_selection=True`` and
+        ``refit=True``. This can differ from the search scores in ``cv_results_``.
+    best_index_ : int
+        Search-result row corresponding to that final-validation winner.
+    final_selection_results_ : dict
+        Candidate masks, original scores, final fold scores, selected winner
+        and elapsed validation time. Present when final selection runs.
     scorer_ : function or a dict
         Scorer function used on the held out data to choose the best
         parameters for the model.
@@ -1670,6 +1728,9 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         fitness_sharing=False,
         sharing_radius=0.2,
         sharing_alpha=1.0,
+        final_selection=False,
+        final_selection_top_k=3,
+        final_selection_cv=None,
     ):
         population_size = _resolve_config_value(
             evolution_config, "population_size", population_size
@@ -1751,6 +1812,16 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
             optimization_config, "sharing_radius", sharing_radius
         )
         sharing_alpha = _resolve_config_value(optimization_config, "sharing_alpha", sharing_alpha)
+        final_selection = _resolve_config_value(
+            optimization_config, "final_selection", final_selection
+        )
+        final_selection_top_k = _resolve_config_value(
+            optimization_config, "final_selection_top_k", final_selection_top_k
+        )
+        if final_selection_cv is None:
+            final_selection_cv = _resolve_config_value(
+                optimization_config, "final_selection_cv", final_selection_cv
+            )
 
         self.evolution_config = evolution_config
         self.population_config = population_config
@@ -1800,6 +1871,10 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         self.fitness_sharing = fitness_sharing
         self.sharing_radius = sharing_radius
         self.sharing_alpha = sharing_alpha
+        self.final_selection = final_selection
+        self.final_selection_top_k = final_selection_top_k
+        self.final_selection_cv = final_selection_cv
+        self._validate_final_selection_top_k()
 
         _validate_parallel_backend(self.parallel_backend)
         _validate_error_score(self.error_score)
@@ -2117,6 +2192,9 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
             aligned to samples and are sliced per CV fold by scikit-learn.
         """
 
+        for attribute in ("best_index_", "best_score_", "final_selection_results_"):
+            self.__dict__.pop(attribute, None)
+
         _check_feature_names(self, X, reset=True)
         self.X_, self.y_ = check_X_y(X, y, accept_sparse=True) if y is not None else (X, None)
         self.groups_ = groups
@@ -2306,6 +2384,10 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         }
 
         if self.refit:
+            if self.final_selection:
+                self.best_index_, self.best_score_, selected = self._select_final_candidate()
+                self.best_features_ = np.asarray(selected["features"], dtype=bool)
+                self.support_ = self.best_features_
             bool_individual = np.array(self.best_features_, dtype=bool)
             self.best_estimator_ = clone(self.estimator)
 

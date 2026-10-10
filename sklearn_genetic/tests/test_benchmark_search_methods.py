@@ -392,3 +392,48 @@ def test_native_automl_benchmark_accepts_minimum_seed_count(monkeypatch):
     assert len(calls) == 1
     assert calls[0].seeds == 1
     assert calls[0].seconds == 0.5
+
+
+@pytest.mark.parametrize(
+    "option,value",
+    [("--seeds", "0"), ("--generations", "-1"), ("--finalists", "0"), ("--fractions", "nan")],
+)
+def test_fidelity_benchmark_rejects_invalid_workload(monkeypatch, capsys, option, value):
+    from benchmarks import benchmark_fidelity
+
+    monkeypatch.setattr(
+        sys, "argv", ["benchmark_fidelity", "--output", "unused.json", option, value]
+    )
+    monkeypatch.setattr(benchmark_fidelity, "run", lambda args: None)
+    with pytest.raises(SystemExit) as error:
+        benchmark_fidelity.main()
+    assert error.value.code == 2
+    assert "fractions in (0, 1]" in capsys.readouterr().err
+
+
+def test_fidelity_benchmark_dispatches_legal_boundaries(monkeypatch):
+    from benchmarks import benchmark_fidelity
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "benchmark_fidelity",
+            "--output",
+            "unused.json",
+            "--seeds",
+            "1",
+            "--generations",
+            "0",
+            "--finalists",
+            "1",
+            "--fractions",
+            "1",
+        ],
+    )
+    calls = []
+    monkeypatch.setattr(benchmark_fidelity, "run", calls.append)
+    benchmark_fidelity.main()
+    assert len(calls) == 1
+    args = calls[0]
+    assert (args.seeds, args.generations, args.finalists, args.fractions) == (1, 0, 1, [1.0])

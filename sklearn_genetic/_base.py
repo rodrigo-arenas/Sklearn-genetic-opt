@@ -62,6 +62,9 @@ class GeneticEstimatorMixin:
         "fitness_sharing": False,
         "sharing_radius": 0.2,
         "sharing_alpha": 1.0,
+        "final_selection": False,
+        "final_selection_top_k": 3,
+        "final_selection_cv": None,
     }
 
     def __getstate__(self):
