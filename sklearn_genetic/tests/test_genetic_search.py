@@ -709,7 +709,8 @@ def test_schedulers_reset_on_fresh_fit():
     assert mutation_scheduler.current_value == first_mutation_value
 
 
-def test_evaluate_population_reuses_duplicate_individual_cache(monkeypatch):
+@pytest.mark.parametrize("container", [list, tuple])
+def test_evaluate_population_reuses_duplicate_individual_cache(monkeypatch, container):
     calls = []
     cv_splits = [(np.array([0, 1]), np.array([2, 3])), (np.array([2, 3]), np.array([0, 1]))]
 
@@ -744,7 +745,7 @@ def test_evaluate_population_reuses_duplicate_individual_cache(monkeypatch):
     estimator._pop = []
     estimator.fit_stats_ = genetic_search._create_fit_stats()
 
-    fitnesses = estimator.evaluate_population([[2], [2]])
+    fitnesses = estimator.evaluate_population(container([[2], [2]]))
 
     assert len(calls) == 1
     assert fitnesses[0] == fitnesses[1]
@@ -810,6 +811,12 @@ def test_evaluate_population_parallelizes_unique_individuals_without_nested_cv(m
         def __init__(self, n_jobs, prefer=None):
             observed_parallel_n_jobs.append(n_jobs)
             assert prefer == "threads"
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
 
         def __call__(self, jobs):
             results = []
@@ -2318,3 +2325,129 @@ def test_estimator_categories_preserve_parent_inheritance(algorithm, cloned, mon
     ]
     assert len(set(retained)) == len(retained)
     assert search.predict(data).shape == target.shape
+
+
+@pytest.mark.parametrize("kind", ["gasearch", "features"])
+@pytest.mark.parametrize(
+    "algorithm,n_jobs,backend,phase,use_cache",
+    [
+        (algorithm, n_jobs, "population", phase, use_cache)
+        for algorithm, n_jobs in [
+            ("eaSimple", 1),
+            ("eaMuPlusLambda", 1),
+            ("eaMuCommaLambda", 1),
+            ("eaDifferentialEvolution", 1),
+            ("eaMuPlusLambda", 2),
+        ]
+        for phase in ("initial", "later")
+        for use_cache in (False, True)
+    ]
+    + [("eaMuPlusLambda", n_jobs, "population", "refinement", False) for n_jobs in (1, 2)]
+    + [("eaMuPlusLambda", 2, "cv", phase, True) for phase in ("initial", "later")]
+    + [("eaMuPlusLambda", n_jobs, "population", "setup", True) for n_jobs in (1, 2)],
+)
+def test_timer_stops_candidate_batches_with_valid_results(
+    kind, phase, use_cache, algorithm, n_jobs, backend, monkeypatch
+):
+    from datetime import datetime, timedelta
+    from threading import Lock
+    from sklearn.datasets import load_iris
+    from sklearn_genetic import GAFeatureSelectionCV
+    from sklearn_genetic.callbacks import early_stoppers
+
+    data, target = load_iris(return_X_y=True)
+    ticks = [0]
+    observed = []
+    lock = Lock()
+    seconds_per_candidate = 6 if phase == "initial" else 2
+
+    class ControlledClock:
+        @staticmethod
+        def utcnow():
+            return datetime(2026, 1, 1) + timedelta(seconds=ticks[0])
+
+    original_cv = genetic_search.cross_validate
+
+    def timed_cv(*args, **kwargs):
+        result = original_cv(*args, **kwargs)
+        with lock:
+            ticks[0] += seconds_per_candidate
+            observed.append(float(np.mean(result["test_score"])))
+        return result
+
+    monkeypatch.setattr(early_stoppers, "datetime", ControlledClock)
+    monkeypatch.setattr(genetic_search, "cross_validate", timed_cv)
+    settings = dict(
+        population_size=4,
+        generations=0 if phase == "refinement" else 5,
+        cv=2,
+        n_jobs=n_jobs,
+        parallel_backend=backend,
+        random_state=31,
+        verbose=False,
+        algorithm=algorithm,
+        use_cache=use_cache,
+        error_score="raise",
+        local_search=True,
+        local_search_steps=3,
+        local_search_top_k=2 if phase == "refinement" else 1,
+        keep_top_k=2 if phase == "refinement" else 1,
+    )
+    model = DecisionTreeClassifier(random_state=0)
+    search = (
+        GASearchCV(model, param_grid={"max_depth": Integer(1, 20)}, **settings)
+        if kind == "gasearch"
+        else GAFeatureSelectionCV(model, **settings)
+    )
+
+    class SetupDelayTimer(TimerStopping):
+        def on_start(self, *args, **kwargs):
+            super().on_start(*args, **kwargs)
+            ticks[0] += 20
+
+    timer = SetupDelayTimer(10) if phase == "setup" else TimerStopping(10)
+    search.fit(data, target, callbacks=[timer])
+    expected = (
+        n_jobs
+        if phase == "setup"
+        else (2 if phase == "initial" else (6 if n_jobs == 2 and backend == "population" else 5))
+    )
+    assert len(observed) == expected
+    assert search.fit_stats_["cross_validate_calls"] == expected
+    assert search.fit_stats_["unique_candidates"] == expected
+    assert search.fit_stats_["evaluated_candidates"] == len(search.cv_results_["mean_test_score"])
+    assert search.fit_stats_["evaluated_candidates"] == sum(
+        search.fit_stats_[key]
+        for key in ("unique_candidates", "cache_hits", "duplicate_candidates")
+    )
+    assert search.fit_stats_["local_refinement_candidates"] == (
+        expected - 4 if phase == "refinement" else 0
+    )
+    assert np.isfinite(search.cv_results_["mean_test_score"]).all()
+    assert set(search.cv_results_["mean_test_score"]) <= set(observed)
+    assert max(search.cv_results_["mean_test_score"]) == max(observed)
+    assert search.predict(data).shape == target.shape
+    if kind == "features":
+        assert search.support_.any()
+        assert any(
+            np.array_equal(search.support_, mask) and score == max(observed)
+            for mask, score in zip(
+                search.cv_results_["features"], search.cv_results_["mean_test_score"]
+            )
+        )
+    else:
+        assert search.best_score_ == max(observed)
+
+    # A subsequent fit without a timer must evaluate the complete initial population.
+    observed.clear()
+    search.set_params(generations=0, local_search=False)
+    search.fit(data, target)
+    assert len(observed) == 4
+    assert search.fit_stats_["cross_validate_calls"] == 4
+
+    # Reusing the callback starts a fresh deadline for the next fit.
+    observed.clear()
+    search.fit(data, target, callbacks=[timer])
+    expected_reuse = n_jobs if phase == "setup" else (2 if phase == "initial" else 4)
+    assert len(observed) == expected_reuse
+    assert search.fit_stats_["cross_validate_calls"] == expected_reuse

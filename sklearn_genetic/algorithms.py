@@ -5,6 +5,7 @@ from deap import tools
 from deap.algorithms import varAnd, varOr
 
 from .callbacks.validations import eval_callbacks
+from .evaluation import _time_budget_exhausted
 from .optimizer_control import (
     differential_offspring,
     finite_search_space_size,
@@ -346,6 +347,8 @@ def _run_local_refinement(population, toolbox, halloffame, estimator):
     top_k = min(estimator.local_search_top_k, len(halloffame.items))
     count = 0
     for _ in range(estimator.local_search_steps):
+        if _time_budget_exhausted(estimator):
+            break
         # Each step starts from the current elites so accepted improvements
         # guide the next neighborhood. Evaluate independent elites as a batch.
         neighbors = [
@@ -496,6 +499,7 @@ def eaSimple(
     fitnesses = _evaluate_invalid_individuals(toolbox, invalid_ind)
     for ind, fit in zip(invalid_ind, fitnesses):
         ind.fitness.values = fit
+    population[:] = [individual for individual in population if individual.fitness.valid]
 
     if halloffame is not None:
         halloffame.update(population)
@@ -564,6 +568,7 @@ def eaSimple(
             fitnesses = _evaluate_invalid_individuals(toolbox, invalid_ind)
             for ind, fit in zip(invalid_ind, fitnesses):
                 ind.fitness.values = fit
+            offspring[:] = [individual for individual in offspring if individual.fitness.valid]
 
             if halloffame is not None and getattr(estimator, "elitism", False):
                 offspring.extend(halloffame.items)
@@ -574,7 +579,8 @@ def eaSimple(
 
             # Replace the current population by the offspring
             exhausted = _update_search_coverage(estimator, offspring, space_size, seen_candidates)
-            population[:] = offspring
+            if not _time_budget_exhausted(estimator):
+                population[:] = offspring
 
             # Append the current generation statistics to the logbook
             record = _compile_generation_record(
@@ -733,6 +739,7 @@ def eaMuPlusLambda(
     fitnesses = _evaluate_invalid_individuals(toolbox, invalid_ind)
     for ind, fit in zip(invalid_ind, fitnesses):
         ind.fitness.values = fit
+    population[:] = [individual for individual in population if individual.fitness.valid]
 
     if halloffame is not None:
         halloffame.update(
@@ -799,6 +806,7 @@ def eaMuPlusLambda(
             fitnesses = _evaluate_invalid_individuals(toolbox, invalid_ind)
             for ind, fit in zip(invalid_ind, fitnesses):
                 ind.fitness.values = fit
+            offspring[:] = [individual for individual in offspring if individual.fitness.valid]
 
             # Update the hall of fame with the generated individuals
             if halloffame is not None:
@@ -813,7 +821,9 @@ def eaMuPlusLambda(
             # Select the next generation population
             if estimator is not None:
                 estimator._last_generation_record = record
-            if differential:
+            if _time_budget_exhausted(estimator):
+                sharing_record, selection_pressure = {}, None
+            elif differential:
                 population[:] = [
                     (
                         trial
@@ -984,6 +994,7 @@ def eaMuCommaLambda(
     fitnesses = _evaluate_invalid_individuals(toolbox, invalid_ind)
     for ind, fit in zip(invalid_ind, fitnesses):
         ind.fitness.values = fit
+    population[:] = [individual for individual in population if individual.fitness.valid]
 
     if halloffame is not None:
         halloffame.update(population)
@@ -1044,6 +1055,7 @@ def eaMuCommaLambda(
             fitnesses = _evaluate_invalid_individuals(toolbox, invalid_ind)
             for ind, fit in zip(invalid_ind, fitnesses):
                 ind.fitness.values = fit
+            offspring[:] = [individual for individual in offspring if individual.fitness.valid]
 
             # Update the hall of fame with the generated individuals
             if halloffame is not None:
@@ -1054,10 +1066,13 @@ def eaMuCommaLambda(
             # Select the next generation population
             if estimator is not None:
                 estimator._last_generation_record = record
-            population[:], sharing_record = _select_survivors(
-                offspring, toolbox, mu, halloffame, estimator
-            )
-            selection_pressure = getattr(estimator, "_selection_pressure_", None)
+            if _time_budget_exhausted(estimator):
+                sharing_record, selection_pressure = {}, None
+            else:
+                population[:], sharing_record = _select_survivors(
+                    offspring, toolbox, mu, halloffame, estimator
+                )
+                selection_pressure = getattr(estimator, "_selection_pressure_", None)
 
             # Update the statistics with the new population
             record = _compile_generation_record(

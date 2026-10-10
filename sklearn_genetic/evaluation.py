@@ -1,3 +1,4 @@
+from contextlib import nullcontext
 from numbers import Real
 
 from joblib import Parallel, delayed, effective_n_jobs
@@ -72,6 +73,18 @@ def record_fit_stats(
     estimator.fit_stats_["skipped_invalid_candidates"] += skipped
 
 
+def _time_budget_exhausted(estimator):
+    if getattr(estimator, "_evaluation_budget_exhausted", False):
+        return True
+    # Complete at least one initial batch, even if setup already used the budget.
+    if not getattr(estimator, "_evaluation_started", False):
+        return False
+    if any(timer._time_exceeded() for timer in getattr(estimator, "_evaluation_timers", ())):
+        estimator._evaluation_budget_exhausted = True
+        return True
+    return False
+
+
 def evaluate_population(estimator, individuals, cache_record_key):
     if not individuals:
         return []
@@ -79,18 +92,14 @@ def evaluate_population(estimator, individuals, cache_record_key):
     pending_items = []
     pending_lookup_keys = []
     seen_pending_keys = set()
-    batch_cache_hits = 0
-    batch_duplicates = 0
 
     for individual in individuals:
         individual_key = estimator._individual_key(individual)
         if estimator.use_cache and individual_key in estimator.fitness_cache:
-            batch_cache_hits += 1
             pending_lookup_keys.append(None)
             continue
 
         if estimator.use_cache and individual_key in seen_pending_keys:
-            batch_duplicates += 1
             pending_lookup_keys.append(individual_key)
             continue
 
@@ -102,20 +111,43 @@ def evaluate_population(estimator, individuals, cache_record_key):
     pending_results = {}
 
     if pending_items:
-        if use_population_parallelism(estimator, len(pending_items)):
-            estimator.fit_stats_["population_parallel_batches"] += 1
-            results = Parallel(n_jobs=estimator.n_jobs, prefer="threads")(
-                delayed(estimator._evaluate_individual)(individual, n_jobs=1)
-                for _, individual in pending_items
+        population_parallel = use_population_parallelism(estimator, len(pending_items))
+        candidate_n_jobs = estimator.n_jobs if estimator.parallel_backend == "cv" else 1
+        batch_size = len(pending_items)
+        if getattr(estimator, "_evaluation_timers", ()):
+            batch_size = effective_n_jobs(estimator.n_jobs) if population_parallel else 1
+        executor = (
+            Parallel(n_jobs=estimator.n_jobs, prefer="threads")
+            if population_parallel
+            else nullcontext()
+        )
+        results = []
+        with executor as parallel:
+            for start in range(0, len(pending_items), batch_size):
+                if _time_budget_exhausted(estimator):
+                    break
+                batch = pending_items[start : start + batch_size]
+                if population_parallel:
+                    results.extend(
+                        parallel(
+                            delayed(estimator._evaluate_individual)(individual, n_jobs=1)
+                            for _, individual in batch
+                        )
+                    )
+                else:
+                    results.extend(
+                        estimator._evaluate_individual(individual, n_jobs=candidate_n_jobs)
+                        for _, individual in batch
+                    )
+                if hasattr(estimator, "_evaluation_started"):
+                    estimator._evaluation_started = True
+        if results:
+            stat = (
+                "population_parallel_batches"
+                if population_parallel
+                else "population_serial_batches"
             )
-        else:
-            estimator.fit_stats_["population_serial_batches"] += 1
-            candidate_n_jobs = estimator.n_jobs if estimator.parallel_backend == "cv" else 1
-            results = [
-                estimator._evaluate_individual(individual, n_jobs=candidate_n_jobs)
-                for _, individual in pending_items
-            ]
-
+            estimator.fit_stats_[stat] += 1
         pending_results = {
             lookup_key: result for (lookup_key, _), result in zip(pending_items, results)
         }
@@ -131,6 +163,8 @@ def evaluate_population(estimator, individuals, cache_record_key):
             cached_result = estimator.fitness_cache[individual_key]
             estimator.logbook.record(parameters=cached_result[cache_record_key])
         else:
+            if lookup_key not in pending_results:
+                break
             fitness, current_generation_record, used_cv, skipped_invalid = pending_results[
                 lookup_key
             ]
@@ -151,10 +185,18 @@ def evaluate_population(estimator, individuals, cache_record_key):
             estimator.fitness_cache[individual_key]["fitness"] if estimator.use_cache else fitness
         )
 
+    # Keep only completed individuals; callers must not assign phantom fitnesses
+    # or retain unevaluated candidates when a timer truncates the population.
+    if len(fitnesses) < len(individuals):
+        del individuals[len(fitnesses) :]
+    if fitnesses and hasattr(estimator, "_evaluation_started"):
+        estimator._evaluation_started = True
+    batch_cache_hits = sum(key is None for key in pending_lookup_keys[: len(fitnesses)])
+    batch_duplicates = len(fitnesses) - len(pending_results) - batch_cache_hits
     record_fit_stats(
         estimator,
-        evaluated=len(individuals),
-        unique=len(pending_items),
+        evaluated=len(fitnesses),
+        unique=len(pending_results),
         cv_calls=batch_cv_calls,
         cache_hits=batch_cache_hits,
         duplicates=batch_duplicates,

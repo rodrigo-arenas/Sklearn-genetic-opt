@@ -156,7 +156,9 @@ class DeltaThreshold(BaseCallback):
 class TimerStopping(BaseCallback):
     """
     Stops the optimization process if a limit training time has been elapsed.
-    This time is checked after each generation fit
+    New candidate batches stop when the time limit expires. An in-flight CV
+    batch and final selection/refit are allowed to finish. At least one initial
+    batch completes so the search can return a fitted model.
     """
 
     def __init__(self, total_seconds):
@@ -174,12 +176,13 @@ class TimerStopping(BaseCallback):
     def on_start(self, estimator=None):
         self.initial_training_time = datetime.utcnow()
 
-    def on_step(self, record=None, logbook=None, estimator=None):
-        current_time = datetime.utcnow()
-        difference = current_time - self.initial_training_time
-        difference_seconds = difference.total_seconds()
+    def _time_exceeded(self):
+        return (
+            datetime.utcnow() - self.initial_training_time
+        ).total_seconds() >= self.total_seconds
 
-        if difference_seconds >= self.total_seconds:
+    def on_step(self, record=None, logbook=None, estimator=None):
+        if self._time_exceeded():
             print(f"INFO: {self.__class__.__name__} callback met its criteria")
             return True
         return False
