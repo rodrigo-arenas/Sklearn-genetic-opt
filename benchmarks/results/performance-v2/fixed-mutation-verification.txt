@@ -1,0 +1,42 @@
+PASS104 finite fits /52pairs; immutable source hashes; full folds, budgets, generation counts and selected parameter bounds verified. Ordinary no-fixed controls preserve exact search hashes, scores, parameters and counters.
+Total measured fit seconds: 1789.820
+| Model | Budget | Dataset | Baseline score / seconds / CV calls / replacements | Current score / seconds / CV calls / replacements | Holdout difference |
+|---|---|---|---:|---:|---:|
+| svm | generations | breast | 0.972028 / 2.289 / 70.7 / 41.0 | 0.969697 / 2.259 / 70.7 / 36.3 | -0.002331 |
+Score SD: 0.018502, 0.020187
+| svm | generations | digits | 0.982222 / 25.138 / 70.3 / 42.7 | 0.977778 / 25.791 / 71.3 / 36.3 | -0.004444 |
+Score SD: 0.006667, 0.007698
+| svm | generations | diabetes | -3169.560603 / 2.135 / 72.0 / 45.3 | -3169.221639 / 2.129 / 71.3 / 38.3 | +0.338964 |
+Score SD: 448.288042, 409.579955
+| svm | generations | synthetic | 0.881333 / 32.004 / 71.3 / 44.3 | 0.880667 / 31.526 / 71.7 / 36.7 | -0.000667 |
+Score SD: 0.014742, 0.015535
+| svm | time | breast | 0.969697 / 5.057 / 161.7 / 117.7 | 0.969697 / 5.049 / 165.7 / 99.3 | +0.000000 |
+Score SD: 0.014557, 0.020187
+| svm | time | digits | 0.979259 / 5.297 / 13.7 / 11.0 | 0.979259 / 5.211 / 13.7 / 10.0 | +0.000000 |
+Score SD: 0.005132, 0.005132
+| svm | time | diabetes | -3155.955765 / 5.052 / 169.3 / 125.3 | -3156.900599 / 5.058 / 171.3 / 105.3 | -0.944834 |
+Score SD: 419.177314, 421.089783
+| svm | time | synthetic | 0.880000 / 5.408 / 11.3 / 11.0 | 0.880000 / 5.482 / 11.7 / 10.0 | +0.000000 |
+Score SD: 0.014422, 0.014422
+| lightgbm | generations | breast | 0.951049 / 5.581 / 72.0 / 24.7 | 0.941725 / 5.395 / 71.7 / 22.0 | -0.009324 |
+Score SD: 0.000000, 0.010682
+| lightgbm | generations | digits | 0.972593 / 67.280 / 72.0 / 27.0 | 0.973333 / 69.129 / 71.3 / 19.7 | +0.000741 |
+Score SD: 0.001283, 0.000000
+| lightgbm | generations | diabetes | -3496.545699 / 3.233 / 72.0 / 25.7 | -3532.346414 / 3.320 / 71.7 / 23.7 | -35.800715 |
+Score SD: 384.202577, 392.226646
+| lightgbm | generations | synthetic | 0.904667 / 90.244 / 71.0 / 23.3 | 0.904667 / 101.569 / 71.7 / 22.0 | +0.000000 |
+Score SD: 0.003055, 0.002309
+| lightgbm | time | breast | 0.951049 / 5.100 / 67.3 / 24.7 | 0.944056 / 5.082 / 69.3 / 22.0 | -0.006993 |
+Score SD: 0.000000, 0.013986
+| lightgbm | time | digits | 0.973333 / 5.901 / 5.7 / 0.0 | 0.973333 / 5.930 / 5.7 / 0.0 | +0.000000 |
+Score SD: 0.003849, 0.003849
+| lightgbm | time | diabetes | -3524.866826 / 5.048 / 116.7 / 52.3 | -3554.999184 / 5.051 / 114.3 / 46.0 | -30.132358 |
+Score SD: 389.134292, 411.388573
+| lightgbm | time | synthetic | 0.899333 / 6.241 / 5.0 / 0.0 | 0.899333 / 6.352 / 5.3 / 0.0 | +0.000000 |
+Score SD: 0.004619, 0.004619
+
+Prototype evidence only; production proposal rejected. Final source/tests/changelog restored to HEAD.
+Original operator: 5 failed, 4 passed; proposed operator: 28 passed.
+
+Independent review closed with no unresolved material findings. All104records match26rawfiles; all16aggregatecells, ordinarycontrolhistories and source/Git hashes independently verified. Interleaved-coordinate and weighted-sampling probes pass; uniform-sampling mutant rejected.
+Test guard clean against aa61cd20b9aa4914bace5ab0f4b023a5b745b3f4. Evidence-only change: no production or test changes; full suite not run.

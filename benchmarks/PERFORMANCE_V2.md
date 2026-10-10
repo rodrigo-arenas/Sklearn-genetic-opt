@@ -468,3 +468,39 @@ The improvement preserves predictive quality by retaining more features: breast 
 Reproduce each source with the native harness using `--methods features --evolutionary-model lightgbm --train-fraction .125 --generations 4 --finalists 4 --seeds 5 --seed-start 1901 --seconds 3600`; repeat at fraction `.25`. HPO controls use `--methods gasearch --train-fraction .25 --seeds 1 --seed-start 1906`. Supply the usual `--output`, `--model-dir` and `--label` arguments. The [paired raw artifact](results/performance-v2/feature-plateau.json) preserves per-seed masks, finalists, preliminary-score counts, exact candidate/score hashes, timing, settings and source hashes.
 
 Verification: ten public regression cases fail without the change; 49 focused feature/HPO/final-selection/subsample checks pass. Coverage includes score direction, full-training refit and sample weights, score priority, fixed finalist counts, one finalist, bounded masks, final-score parsimony and uncached duplicate masks with differing observed scores. A mutant that removes duplicate protection fails both dedicated cases; independent review also rejects a mutant that ignores score rank and closes without material findings. Black, test guard and diff checks pass. No test file was added or renamed; the full suite was not run. [Verification and dispersion](results/performance-v2/feature-plateau-verification.txt).
+
+
+## Rejected mutation-only change for fixed dimensions
+
+An experiment changed `GASearchCV.mutate` to skip singleton categories and equal numeric bounds. The current operator can spend a mutation on an unchanged value; default diversity control can then replace that duplicate with a random candidate. The proposal reduced these replacements and preserved custom sampling, weighted priors and ordinary all-mutable seeded trajectories. However, it showed no consistent measured speed or held-out quality benefit, so **the production change was not adopted**.
+
+The matrix contains 104 fits: two source snapshots x SVM/LightGBM x four datasets x three fresh seeds (2101-2103) x two budget regimes, plus eight ordinary SVM controls without fixed dimensions at seed 2104. One regime uses exactly four generations with a nonbinding 3,600-second timer; the other uses a five-second soft evolutionary budget and at most 1,000 generations. Population eight, full-training three-fold CV, a 25% held-out split, one CPU and no finalist promotion are shared within every pair. Execution order rotates across seeds. Final refit is included in elapsed time and can exceed the soft budget.
+
+SVM adds fixed kernel=rbf, shrinking=True, max_iter=-1, tol=.001 and cache_size=200 to its C/gamma search. LightGBM adds n_jobs=1, verbosity=-1, random_state=seed, boosting_type=gbdt, objective=None, subsample=1 and colsample_bytree=1 to its five-variable search. These match estimator settings and introduce no new degrees of freedom. Each before/after pair has identical initialization and model domain.
+
+Mean held-out score / fitting seconds over three seeds; classification uses accuracy and diabetes negative MSE (higher is better):
+
+| Model / budget | Dataset | Existing mutation | Skip fixed dimensions |
+|---|---|---:|---:|
+| svm / 4 generations | breast | 0.972028 / 2.289 | 0.969697 / 2.259 |
+| svm / 4 generations | digits | 0.982222 / 25.138 | 0.977778 / 25.791 |
+| svm / 4 generations | diabetes | -3169.560603 / 2.135 | -3169.221639 / 2.129 |
+| svm / 4 generations | synthetic | 0.881333 / 32.004 | 0.880667 / 31.526 |
+| svm / 5 seconds | breast | 0.969697 / 5.057 | 0.969697 / 5.049 |
+| svm / 5 seconds | digits | 0.979259 / 5.297 | 0.979259 / 5.211 |
+| svm / 5 seconds | diabetes | -3155.955765 / 5.052 | -3156.900599 / 5.058 |
+| svm / 5 seconds | synthetic | 0.880000 / 5.408 | 0.880000 / 5.482 |
+| lightgbm / 4 generations | breast | 0.951049 / 5.581 | 0.941725 / 5.395 |
+| lightgbm / 4 generations | digits | 0.972593 / 67.280 | 0.973333 / 69.129 |
+| lightgbm / 4 generations | diabetes | -3496.545699 / 3.233 | -3532.346414 / 3.320 |
+| lightgbm / 4 generations | synthetic | 0.904667 / 90.244 | 0.904667 / 101.569 |
+| lightgbm / 5 seconds | breast | 0.951049 / 5.100 | 0.944056 / 5.082 |
+| lightgbm / 5 seconds | digits | 0.973333 / 5.901 | 0.973333 / 5.930 |
+| lightgbm / 5 seconds | diabetes | -3524.866826 / 5.048 | -3554.999184 / 5.051 |
+| lightgbm / 5 seconds | synthetic | 0.899333 / 6.241 | 0.899333 / 6.352 |
+
+At four generations, duplicate replacements fall from 520 to 443 for SVM and 302 to 262 for LightGBM across all datasets/seeds. Yet total SVM fitting time remains 184.69 versus 185.11 seconds; LightGBM rises from 499.01 to 538.24 seconds. Mean classification accuracy falls by 0.00248 and 0.00286 respectively. Under five seconds, SVM classification accuracy is unchanged; LightGBM loses 0.00233 on average. On expensive LightGBM tasks the deadline can end during initial population evaluation, before mutation runs, so identical scores there are not evidence that the mutation strategy is effective. Changes in sampled model complexity also affect fixed-generation timings.
+
+These three overlapping train/test splits do not establish universal superiority of either strategy. They provide no basis for shipping this proposal as a performance improvement. The earlier native benchmark spaces contain no fixed dimensions and would not benefit from it. Total measured fitting time is 1,789.82 seconds. The eight ordinary controls preserve exact candidate/score hashes, selected parameters, scores, CV counts, cache hits and duplicate-replacement counters. All source snapshots remain unchanged.
+
+The [raw experiment](results/performance-v2/fixed-mutation-experiment.json) preserves the rejected mutation method, execution/aggregation scripts, dependency versions, settings, per-seed scores, counters, histories and source hashes; baseline is `aa61cd20b9aa4914bace5ab0f4b023a5b745b3f4`. Scripts reuse `benchmark_native_automl.py` and add the constants listed above. The prototype had five discriminating public regressions fail against the original operator and 28 focused checks pass with the proposal. Independent mutation checks covered interleaved fixed coordinates, custom and weighted sampling, and exact Python/NumPy RNG preservation on mutable spaces. Prototype tests and implementation are retained with the local experiment, not shipped as a library change. [Validation and dispersion](results/performance-v2/fixed-mutation-verification.txt).
