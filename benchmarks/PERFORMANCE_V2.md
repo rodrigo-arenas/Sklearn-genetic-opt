@@ -724,3 +724,27 @@ Ten additional paired experiments (99 pairs) tested whether changing how individ
 | Elite-neighborhood offspring | 9 | 3/5/1 | 1.09× | −.0210 |
 
 The tenth experiment was a nine-pair differential-HPO pilot: 3 wins, 4 ties, 2 losses, median speed ratio 1.30× and worst accuracy change −.0050. Its baseline and proposed runs used separate processes, so the alternating validation above is the more reliable timing check. Differential evolution improves mean candidate scores on the SVC tasks, but cannot be recommended as the new default after its holdout loss and the feature-selection regressions. The other proposals likewise fail to show a repeatable improvement in both outcomes. None changed library behavior. The [raw proposal artifact](results/performance-v2/evolution-proposal-pilots.json) includes all per-fit records, versions, source hashes, paired summaries and exact reproduction scripts. A slow baseline outlier inflates the numeric-blend aggregate timing ratio; the table uses the median paired ratio.
+
+## Does promoting more finalists recover accuracy?
+
+A further 63 fits on fresh seeds 943–945 kept the same datasets, outer split, five original folds, one CPU, RBF-SVC models and maximum of 168 search proposals. They compared full five-fold GA, one-fold GA with eight or 24 five-fold finalists, and full five-fold Optuna TPE. Timings include finalist validation and final refit. For `GAFeatureSelectionCV`, C=10 and at most half the columns were selected. Task order reversed on odd seeds. Mean held-out accuracy / total fitting seconds:
+
+| Dataset | GA HPO full | GA HPO top 8 | GA HPO top 24 | Optuna full | Features full | Features top 8 | Features top 24 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| breast | .96037 / 11.537 | .96737 / 2.845 | .96737 / 3.793 | .96270 / 6.541 | .95338 / 4.909 | .95804 / 1.456 | .95338 / 2.363 |
+| digits | .98222 / 136.647 | .98519 / 27.646 | .98370 / 31.618 | .98148 / 40.878 | .98074 / 37.597 | .97778 / 9.683 | .97852 / 13.212 |
+| synthetic | .86333 / 21.207 | .86667 / 4.815 | .86833 / 5.722 | .87000 / 10.693 | .92000 / 8.513 | .90667 / 2.178 | .90167 / 2.891 |
+
+Twenty-four finalists did not consistently recover external accuracy. Against eight, they tied on breast, lost .00148 on digits and gained .00167 on synthetic for HPO, while taking longer in every group. For feature selection they helped digits by only .00074, tied or lost on the other datasets, and cost about 33–62% more. A larger finalist pool can increase selection bias even with five-fold finalist scores; more validation candidates are not a monotonic quality guarantee.
+
+The source hashes and settings match the earlier [72-fit five-fold cohort](results/performance-v2/five-fold-promotion-svm.json), so its seeds 907–909 can be pooled descriptively with these new seeds. Across all six splits, the eight-finalist HPO workflow is **4.09–4.81× faster** than full five-fold GA search. Its mean held-out accuracy changes by +.00233 on breast, +.00296 on digits and −.00583 on synthetic; the worst single loss is .025. Against full five-fold Optuna, it is faster in these workloads, but this comparison uses fewer preliminary folds for GA. Under matching fold policies, the earlier cohort found Optuna faster. The feature-selection workflow is **3.48–3.92× faster**, with mean accuracy losses of .00350, .00296 and .01667 respectively; its worst single loss is .040. These six overlapping outer splits do not establish a general speed/quality guarantee or SOTA equivalence.
+
+The [raw 63-fit artifact](results/performance-v2/top24-fivefold-validation.json) contains every score and timing, actual CV calls, finalist counts, split and source hashes, dependency versions, the exact script, per-cohort summaries and the six-seed synthesis. Each split hash is SHA-256 of the concatenated little-endian int64 training indices, test indices, then the training and validation indices for each of the five CV folds. No finalist count or fold policy was changed in the library; users can make this tradeoff through the existing opt-in API.
+
+To reproduce those 63 fits from the repository root in PowerShell, install the benchmark dependencies in `.venv`, create the output directory, extract the recorded script, then run it. It writes the raw JSON and JSONL files under `.agent-runs/performance-v2`:
+
+```powershell
+New-Item -ItemType Directory -Force -Path .agent-runs/performance-v2 | Out-Null
+.\.venv\Scripts\python.exe -c "import json,pathlib; a=json.loads(pathlib.Path('benchmarks/results/performance-v2/top24-fivefold-validation.json').read_text(encoding='utf-8')); pathlib.Path('.agent-runs/performance-v2/top24-fivefold-validation.py').write_text(a['reproduction_script'], encoding='utf-8')"
+.\.venv\Scripts\python.exe .agent-runs/performance-v2/top24-fivefold-validation.py
+```

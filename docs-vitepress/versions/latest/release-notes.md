@@ -40,9 +40,13 @@ Benchmarks include Optuna, FLAML and AutoGluon, with reproducible settings in
 Several workloads improve by more than four times, while others regress in
 quality or time; these results do not establish a general 4× gain or superiority
 over every AutoML system.
-In a five-fold SVC comparison, one-fold evolution with eight full-CV finalists
-made `GASearchCV` 4.13–4.68× faster than its full-fold search, but accuracy fell
-on two of three datasets. Optuna TPE remained faster under matching fold policies.
+Across six held-out splits per dataset in a five-fold SVC comparison, one-fold
+evolution with eight full-CV finalists made `GASearchCV` 4.09–4.81× faster than
+its full-fold search. Mean accuracy increased slightly on breast cancer and
+digits, but fell by 0.00583 on synthetic data. Feature selection was 3.48–3.92×
+faster and lost mean accuracy on all three datasets. Validating 24 finalists
+instead of eight did not consistently recover accuracy. Optuna TPE remained
+faster under matching fold policies in the earlier three-split comparison.
 
 The repository [changelog](https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/CHANGELOG.md)
 lists the remaining changes in this upcoming release.
