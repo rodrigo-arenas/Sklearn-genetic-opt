@@ -1,0 +1,757 @@
+Accelerated SVM workflows versus native CPU AutoML: verification
+
+Base:3615a2c6b17ea8051a2399c0e5eaf410d4573a04.
+Clean baseline:6 native CLI tests passed.
+New behavior: explicit SVM/LightGBM model, training fraction, generation cap, finalist count; both evolutionary searches use the same outer split and promote with full training CV.
+Focused checks only; full suite not run. All added tests extend existing test file; test guard scans changes against base.
+
+
+=== native-fidelity-red.txt ===
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 38 items / 31 deselected / 7 selected
+
+sklearn_genetic\tests\test_benchmark_search_methods.py FFFFFFF           [100%]
+
+================================== FAILURES ===================================
+___ test_native_benchmark_runs_both_svm_searches_with_full_finalists[iris] ____
+sklearn_genetic\tests\test_benchmark_search_methods.py:465: in test_native_benchmark_runs_both_svm_searches_with_full_finalists
+    benchmark_native_automl.main()
+benchmarks\benchmark_native_automl.py:250: in main
+    args = parser.parse_args()
+           ^^^^^^^^^^^^^^^^^^^
+..\..\AppData\Local\Programs\Python\Python312\Lib\argparse.py:1894: in parse_args
+    self.error(msg % ' '.join(argv))
+..\..\AppData\Local\Programs\Python\Python312\Lib\argparse.py:2655: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+..\..\AppData\Local\Programs\Python\Python312\Lib\argparse.py:2642: in exit
+    _sys.exit(status)
+E   SystemExit: 2
+---------------------------- Captured stderr call -----------------------------
+usage: benchmark_native_automl [-h] --output OUTPUT --model-dir MODEL_DIR
+                               [--label LABEL]
+                               [--datasets {iris,breast,digits,diabetes,synthetic} [{iris,breast,digits,diabetes,synthetic} ...]]
+                               [--methods {gasearch,features,flaml,autogluon} [{gasearch,features,flaml,autogluon} ...]]
+                               [--seconds SECONDS] [--seeds SEEDS]
+                               [--seed-start SEED_START]
+benchmark_native_automl: error: unrecognized arguments: --evolutionary-model svm --train-fraction 0.5 --generations 0 --finalists 2
+_ test_native_benchmark_runs_both_svm_searches_with_full_finalists[diabetes] __
+sklearn_genetic\tests\test_benchmark_search_methods.py:465: in test_native_benchmark_runs_both_svm_searches_with_full_finalists
+    benchmark_native_automl.main()
+benchmarks\benchmark_native_automl.py:250: in main
+    args = parser.parse_args()
+           ^^^^^^^^^^^^^^^^^^^
+..\..\AppData\Local\Programs\Python\Python312\Lib\argparse.py:1894: in parse_args
+    self.error(msg % ' '.join(argv))
+..\..\AppData\Local\Programs\Python\Python312\Lib\argparse.py:2655: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+..\..\AppData\Local\Programs\Python\Python312\Lib\argparse.py:2642: in exit
+    _sys.exit(status)
+E   SystemExit: 2
+---------------------------- Captured stderr call -----------------------------
+usage: benchmark_native_automl [-h] --output OUTPUT --model-dir MODEL_DIR
+                               [--label LABEL]
+                               [--datasets {iris,breast,digits,diabetes,synthetic} [{iris,breast,digits,diabetes,synthetic} ...]]
+                               [--methods {gasearch,features,flaml,autogluon} [{gasearch,features,flaml,autogluon} ...]]
+                               [--seconds SECONDS] [--seeds SEEDS]
+                               [--seed-start SEED_START]
+benchmark_native_automl: error: unrecognized arguments: --evolutionary-model svm --train-fraction 0.5 --generations 0 --finalists 2
+_____ test_native_benchmark_rejects_invalid_fidelity[--train-fraction-0] ______
+sklearn_genetic\tests\test_benchmark_search_methods.py:495: in test_native_benchmark_rejects_invalid_fidelity
+    assert "train-fraction in (0, 1]" in capsys.readouterr().err
+E   AssertionError
+____ test_native_benchmark_rejects_invalid_fidelity[--train-fraction-1.1] _____
+sklearn_genetic\tests\test_benchmark_search_methods.py:495: in test_native_benchmark_rejects_invalid_fidelity
+    assert "train-fraction in (0, 1]" in capsys.readouterr().err
+E   AssertionError
+____ test_native_benchmark_rejects_invalid_fidelity[--train-fraction-nan] _____
+sklearn_genetic\tests\test_benchmark_search_methods.py:495: in test_native_benchmark_rejects_invalid_fidelity
+    assert "train-fraction in (0, 1]" in capsys.readouterr().err
+E   AssertionError
+______ test_native_benchmark_rejects_invalid_fidelity[--generations--1] _______
+sklearn_genetic\tests\test_benchmark_search_methods.py:495: in test_native_benchmark_rejects_invalid_fidelity
+    assert "train-fraction in (0, 1]" in capsys.readouterr().err
+E   AssertionError
+________ test_native_benchmark_rejects_invalid_fidelity[--finalists-0] ________
+sklearn_genetic\tests\test_benchmark_search_methods.py:495: in test_native_benchmark_rejects_invalid_fidelity
+    assert "train-fraction in (0, 1]" in capsys.readouterr().err
+E   AssertionError
+=========================== short test summary info ===========================
+FAILED sklearn_genetic/tests/test_benchmark_search_methods.py::test_native_benchmark_runs_both_svm_searches_with_full_finalists[iris] - SystemExit: 2
+FAILED sklearn_genetic/tests/test_benchmark_search_methods.py::test_native_benchmark_runs_both_svm_searches_with_full_finalists[diabetes] - SystemExit: 2
+FAILED sklearn_genetic/tests/test_benchmark_search_methods.py::test_native_benchmark_rejects_invalid_fidelity[--train-fraction-0] - AssertionError
+FAILED sklearn_genetic/tests/test_benchmark_search_methods.py::test_native_benchmark_rejects_invalid_fidelity[--train-fraction-1.1] - AssertionError
+FAILED sklearn_genetic/tests/test_benchmark_search_methods.py::test_native_benchmark_rejects_invalid_fidelity[--train-fraction-nan] - AssertionError
+FAILED sklearn_genetic/tests/test_benchmark_search_methods.py::test_native_benchmark_rejects_invalid_fidelity[--generations--1] - AssertionError
+FAILED sklearn_genetic/tests/test_benchmark_search_methods.py::test_native_benchmark_rejects_invalid_fidelity[--finalists-0] - AssertionError
+====================== 7 failed, 31 deselected in 2.85s =======================
+
+
+=== native-fidelity-green.txt ===
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 39 items / 25 deselected / 14 selected
+
+sklearn_genetic\tests\test_benchmark_search_methods.py ..............    [100%]
+
+====================== 14 passed, 25 deselected in 3.82s ======================
+
+
+=== native-fidelity-guard.txt ===
+test_guard: clean against 3615a2c6b17ea8051a2399c0e5eaf410d4573a04
+
+
+=== native-fidelity-review.txt ===
+Holdout-leakage mutant: search.fit(Xtr,ytr) -> search.fit(X,y), in-memory only.
+......FFF.....                                                           [100%]
+================================== FAILURES ===================================
+_ test_native_benchmark_runs_both_svm_searches_with_full_finalists[iris-0.5-0] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002F4E175FB90>
+tmp_path = WindowsPath('C:/Users/dsdotpy/AppData/Local/Temp/pytest-of-dsdotpy/pytest-2410/test_native_benchmark_runs_bot0')
+dataset = 'iris', fraction = 0.5, generations = 0
+
+    @pytest.mark.parametrize(
+        "dataset,fraction,generations", [("iris", 0.5, 0), ("diabetes", 0.5, 1), ("iris", 1, 1)]
+    )
+    def test_native_benchmark_runs_both_svm_searches_with_full_finalists(
+        monkeypatch, tmp_path, dataset, fraction, generations
+    ):
+        import json
+        import numpy as np
+        from benchmarks import benchmark_native_automl
+        from sklearn_genetic import genetic_search
+
+        from sklearn.model_selection import train_test_split
+
+        X, y, classification = benchmark_native_automl.dataset(dataset)
+        expected_X, _, expected_y, _ = train_test_split(
+            X, y, test_size=0.25, random_state=901, stratify=y if classification else None
+        )
+        monkeypatch.setitem(sys.modules, "lightgbm", None)
+        original = genetic_search.cross_validate
+        calls = []
+
+        def recording_cv(estimator, *args, **kwargs):
+            np.testing.assert_array_equal(args[1], expected_y)
+            assert args[0].shape[0] == expected_X.shape[0]
+            for column in args[0].T:
+                assert any(np.array_equal(column, original_column) for original_column in expected_X.T)
+            calls.append((estimator, [len(train) for train, _ in kwargs["cv"]]))
+            return original(estimator, *args, **kwargs)
+
+        monkeypatch.setattr(genetic_search, "cross_validate", recording_cv)
+        output = tmp_path / "native-svm.json"
+        monkeypatch.setattr(
+            sys,
+            "argv",
+            [
+                "benchmark_native_automl",
+                "--output",
+                str(output),
+                "--model-dir",
+                str(tmp_path / "models"),
+                "--datasets",
+                dataset,
+                "--methods",
+                "gasearch",
+                "features",
+                "--seeds",
+                "1",
+                "--seconds",
+                "60",
+                "--evolutionary-model",
+                "svm",
+                "--train-fraction",
+                str(fraction),
+                "--generations",
+                str(generations),
+                "--finalists",
+                "2",
+            ],
+        )
+>       benchmark_native_automl.main()
+
+sklearn_genetic\tests\test_benchmark_search_methods.py:506:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+benchmarks\benchmark_native_automl.py:304: in main
+    run(args)
+benchmarks\benchmark_native_automl.py:164: in run
+    search.fit(Xtr, ytr, callbacks=TimerStopping(args.seconds))
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\genetic_search.py:1302: in fit
+    pop, log, n_gen = self._select_algorithm(pop=self._pop, stats=self._stats, hof=self._hof)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\_base.py:168: in _select_algorithm
+    pop, log, gen = selected_algorithm(
+sklearn_genetic\algorithms.py:733: in eaMuPlusLambda
+    fitnesses = _evaluate_invalid_individuals(toolbox, invalid_ind)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\algorithms.py:124: in _evaluate_invalid_individuals
+    return toolbox.evaluate_population(invalid_individuals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\genetic_search.py:1025: in evaluate_population
+    return _evaluate_population_batch(self, individuals, "current_generation_params")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\evaluation.py:115: in evaluate_population
+    estimator._evaluate_individual(individual, n_jobs=candidate_n_jobs)
+sklearn_genetic\genetic_search.py:1038: in _evaluate_individual
+    cv_results = cross_validate(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+estimator = Pipeline(steps=[('standardscaler', StandardScaler()),
+                ('svc', SVC(C=2.693528165161853, gamma=0.0002728478223610913))])
+args = (array([[5.1, 3.5, 1.4, 0.2],
+       [4.9, 3. , 1.4, 0.2],
+       [4.7, 3.2, 1.3, 0.2],
+       [4.6, 3.1, 1.5, 0.2],
+ ...2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+       2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]))
+kwargs = {'cv': [(array([  0,  57,  22,  79,  99,  18,  58, 108,  16,  41,  91,  59,  53,
+        92,  75,  14,  78,  62,  64, ...0]))], 'scoring': make_scorer(accuracy_score, response_method='predict'), 'n_jobs': 1, 'pre_dispatch': '2*n_jobs', ...}
+
+    def recording_cv(estimator, *args, **kwargs):
+>       np.testing.assert_array_equal(args[1], expected_y)
+E       AssertionError:
+E       Arrays are not equal
+E
+E       (shapes (150,), (112,) mismatch)
+E        ACTUAL: array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+E              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+E              0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,...
+E        DESIRED: array([0, 0, 1, 1, 1, 0, 0, 2, 0, 0, 1, 1, 2, 0, 1, 1, 2, 1, 2, 0, 0, 2,
+E              0, 0, 0, 2, 0, 1, 2, 0, 0, 2, 2, 1, 1, 2, 0, 2, 1, 2, 2, 1, 0, 1,
+E              1, 2, 2, 0, 2, 0, 1, 0, 0, 0, 2, 0, 2, 0, 1, 0, 0, 0, 1, 1, 1, 1,...
+
+sklearn_genetic\tests\test_benchmark_search_methods.py:469: AssertionError
+_ test_native_benchmark_runs_both_svm_searches_with_full_finalists[diabetes-0.5-1] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002F4E175FD70>
+tmp_path = WindowsPath('C:/Users/dsdotpy/AppData/Local/Temp/pytest-of-dsdotpy/pytest-2410/test_native_benchmark_runs_bot1')
+dataset = 'diabetes', fraction = 0.5, generations = 1
+
+    @pytest.mark.parametrize(
+        "dataset,fraction,generations", [("iris", 0.5, 0), ("diabetes", 0.5, 1), ("iris", 1, 1)]
+    )
+    def test_native_benchmark_runs_both_svm_searches_with_full_finalists(
+        monkeypatch, tmp_path, dataset, fraction, generations
+    ):
+        import json
+        import numpy as np
+        from benchmarks import benchmark_native_automl
+        from sklearn_genetic import genetic_search
+
+        from sklearn.model_selection import train_test_split
+
+        X, y, classification = benchmark_native_automl.dataset(dataset)
+        expected_X, _, expected_y, _ = train_test_split(
+            X, y, test_size=0.25, random_state=901, stratify=y if classification else None
+        )
+        monkeypatch.setitem(sys.modules, "lightgbm", None)
+        original = genetic_search.cross_validate
+        calls = []
+
+        def recording_cv(estimator, *args, **kwargs):
+            np.testing.assert_array_equal(args[1], expected_y)
+            assert args[0].shape[0] == expected_X.shape[0]
+            for column in args[0].T:
+                assert any(np.array_equal(column, original_column) for original_column in expected_X.T)
+            calls.append((estimator, [len(train) for train, _ in kwargs["cv"]]))
+            return original(estimator, *args, **kwargs)
+
+        monkeypatch.setattr(genetic_search, "cross_validate", recording_cv)
+        output = tmp_path / "native-svm.json"
+        monkeypatch.setattr(
+            sys,
+            "argv",
+            [
+                "benchmark_native_automl",
+                "--output",
+                str(output),
+                "--model-dir",
+                str(tmp_path / "models"),
+                "--datasets",
+                dataset,
+                "--methods",
+                "gasearch",
+                "features",
+                "--seeds",
+                "1",
+                "--seconds",
+                "60",
+                "--evolutionary-model",
+                "svm",
+                "--train-fraction",
+                str(fraction),
+                "--generations",
+                str(generations),
+                "--finalists",
+                "2",
+            ],
+        )
+>       benchmark_native_automl.main()
+
+sklearn_genetic\tests\test_benchmark_search_methods.py:506:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+benchmarks\benchmark_native_automl.py:304: in main
+    run(args)
+benchmarks\benchmark_native_automl.py:164: in run
+    search.fit(Xtr, ytr, callbacks=TimerStopping(args.seconds))
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\genetic_search.py:1302: in fit
+    pop, log, n_gen = self._select_algorithm(pop=self._pop, stats=self._stats, hof=self._hof)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\_base.py:168: in _select_algorithm
+    pop, log, gen = selected_algorithm(
+sklearn_genetic\algorithms.py:733: in eaMuPlusLambda
+    fitnesses = _evaluate_invalid_individuals(toolbox, invalid_ind)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\algorithms.py:124: in _evaluate_invalid_individuals
+    return toolbox.evaluate_population(invalid_individuals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\genetic_search.py:1025: in evaluate_population
+    return _evaluate_population_batch(self, individuals, "current_generation_params")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\evaluation.py:115: in evaluate_population
+    estimator._evaluate_individual(individual, n_jobs=candidate_n_jobs)
+sklearn_genetic\genetic_search.py:1038: in _evaluate_individual
+    cv_results = cross_validate(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+estimator = Pipeline(steps=[('standardscaler', StandardScaler()),
+                ('svr', SVR(C=2.693528165161853, gamma=0.0002728478223610913))])
+args = (array([[ 0.03807591,  0.05068012,  0.06169621, ..., -0.00259226,
+         0.01990749, -0.01764613],
+       [-0.001882..., 152., 120.,  67., 310.,
+        94., 183.,  66., 173.,  72.,  49.,  64.,  48., 178., 104., 132.,
+       220.,  57.]))
+kwargs = {'cv': [(array([156, 123,  18, 270, 114, 180, 243, 106, 293,   5, 301, 234, 154,
+        28, 286, 221,  57,  21, 126, ...(mean_squared_error, greater_is_better=False, response_method='predict'), 'n_jobs': 1, 'pre_dispatch': '2*n_jobs', ...}
+
+    def recording_cv(estimator, *args, **kwargs):
+>       np.testing.assert_array_equal(args[1], expected_y)
+E       AssertionError:
+E       Arrays are not equal
+E
+E       (shapes (442,), (331,) mismatch)
+E        ACTUAL: array([151.,  75., 141., 206., 135.,  97., 138.,  63., 110., 310., 101.,
+E               69., 179., 185., 118., 171., 166., 144.,  97., 168.,  68.,  49.,
+E               68., 245., 184., 202., 137.,  85., 131., 283., 129.,  59., 341.,...
+E        DESIRED: array([ 51., 258., 200., 138., 174., 261., 107., 131., 202., 262., 270.,
+E               45., 201., 220.,  84., 197., 185., 265., 131., 150.,  90., 214.,
+E               85., 132., 152., 101., 297., 110., 178., 283., 220., 129., 129.,...
+
+sklearn_genetic\tests\test_benchmark_search_methods.py:469: AssertionError
+_ test_native_benchmark_runs_both_svm_searches_with_full_finalists[iris-1-1] __
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002F4E178E960>
+tmp_path = WindowsPath('C:/Users/dsdotpy/AppData/Local/Temp/pytest-of-dsdotpy/pytest-2410/test_native_benchmark_runs_bot2')
+dataset = 'iris', fraction = 1, generations = 1
+
+    @pytest.mark.parametrize(
+        "dataset,fraction,generations", [("iris", 0.5, 0), ("diabetes", 0.5, 1), ("iris", 1, 1)]
+    )
+    def test_native_benchmark_runs_both_svm_searches_with_full_finalists(
+        monkeypatch, tmp_path, dataset, fraction, generations
+    ):
+        import json
+        import numpy as np
+        from benchmarks import benchmark_native_automl
+        from sklearn_genetic import genetic_search
+
+        from sklearn.model_selection import train_test_split
+
+        X, y, classification = benchmark_native_automl.dataset(dataset)
+        expected_X, _, expected_y, _ = train_test_split(
+            X, y, test_size=0.25, random_state=901, stratify=y if classification else None
+        )
+        monkeypatch.setitem(sys.modules, "lightgbm", None)
+        original = genetic_search.cross_validate
+        calls = []
+
+        def recording_cv(estimator, *args, **kwargs):
+            np.testing.assert_array_equal(args[1], expected_y)
+            assert args[0].shape[0] == expected_X.shape[0]
+            for column in args[0].T:
+                assert any(np.array_equal(column, original_column) for original_column in expected_X.T)
+            calls.append((estimator, [len(train) for train, _ in kwargs["cv"]]))
+            return original(estimator, *args, **kwargs)
+
+        monkeypatch.setattr(genetic_search, "cross_validate", recording_cv)
+        output = tmp_path / "native-svm.json"
+        monkeypatch.setattr(
+            sys,
+            "argv",
+            [
+                "benchmark_native_automl",
+                "--output",
+                str(output),
+                "--model-dir",
+                str(tmp_path / "models"),
+                "--datasets",
+                dataset,
+                "--methods",
+                "gasearch",
+                "features",
+                "--seeds",
+                "1",
+                "--seconds",
+                "60",
+                "--evolutionary-model",
+                "svm",
+                "--train-fraction",
+                str(fraction),
+                "--generations",
+                str(generations),
+                "--finalists",
+                "2",
+            ],
+        )
+>       benchmark_native_automl.main()
+
+sklearn_genetic\tests\test_benchmark_search_methods.py:506:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+benchmarks\benchmark_native_automl.py:304: in main
+    run(args)
+benchmarks\benchmark_native_automl.py:164: in run
+    search.fit(Xtr, ytr, callbacks=TimerStopping(args.seconds))
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\genetic_search.py:1302: in fit
+    pop, log, n_gen = self._select_algorithm(pop=self._pop, stats=self._stats, hof=self._hof)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\_base.py:168: in _select_algorithm
+    pop, log, gen = selected_algorithm(
+sklearn_genetic\algorithms.py:733: in eaMuPlusLambda
+    fitnesses = _evaluate_invalid_individuals(toolbox, invalid_ind)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\algorithms.py:124: in _evaluate_invalid_individuals
+    return toolbox.evaluate_population(invalid_individuals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\genetic_search.py:1025: in evaluate_population
+    return _evaluate_population_batch(self, individuals, "current_generation_params")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\evaluation.py:115: in evaluate_population
+    estimator._evaluate_individual(individual, n_jobs=candidate_n_jobs)
+sklearn_genetic\genetic_search.py:1038: in _evaluate_individual
+    cv_results = cross_validate(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+estimator = Pipeline(steps=[('standardscaler', StandardScaler()),
+                ('svc', SVC(C=2.693528165161853, gamma=0.0002728478223610913))])
+args = (array([[5.1, 3.5, 1.4, 0.2],
+       [4.9, 3. , 1.4, 0.2],
+       [4.7, 3.2, 1.3, 0.2],
+       [4.6, 3.1, 1.5, 0.2],
+ ...2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+       2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]))
+kwargs = {'cv': [(array([  0,   3,   5,   6,   8,   9,  12,  13,  14,  15,  16,  17,  18,
+        20,  22,  24,  26,  30,  31, ...0]))], 'scoring': make_scorer(accuracy_score, response_method='predict'), 'n_jobs': 1, 'pre_dispatch': '2*n_jobs', ...}
+
+    def recording_cv(estimator, *args, **kwargs):
+>       np.testing.assert_array_equal(args[1], expected_y)
+E       AssertionError:
+E       Arrays are not equal
+E
+E       (shapes (150,), (112,) mismatch)
+E        ACTUAL: array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+E              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+E              0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,...
+E        DESIRED: array([0, 0, 1, 1, 1, 0, 0, 2, 0, 0, 1, 1, 2, 0, 1, 1, 2, 1, 2, 0, 0, 2,
+E              0, 0, 0, 2, 0, 1, 2, 0, 0, 2, 2, 1, 1, 2, 0, 2, 1, 2, 2, 1, 0, 1,
+E              1, 2, 2, 0, 2, 0, 1, 0, 0, 0, 2, 0, 2, 0, 1, 0, 0, 0, 1, 1, 1, 1,...
+
+sklearn_genetic\tests\test_benchmark_search_methods.py:469: AssertionError
+============================== warnings summary ===============================
+sklearn_genetic/tests/test_benchmark_search_methods.py::test_native_benchmark_runs_both_svm_searches_with_full_finalists[iris-0.5-0]
+sklearn_genetic/tests/test_benchmark_search_methods.py::test_native_benchmark_runs_both_svm_searches_with_full_finalists[diabetes-0.5-1]
+sklearn_genetic/tests/test_benchmark_search_methods.py::test_native_benchmark_runs_both_svm_searches_with_full_finalists[iris-1-1]
+  C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\callbacks\early_stoppers.py:175: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    self.initial_training_time = datetime.utcnow()
+
+sklearn_genetic/tests/test_benchmark_search_methods.py::test_native_benchmark_runs_both_svm_searches_with_full_finalists[diabetes-0.5-1]
+sklearn_genetic/tests/test_benchmark_search_methods.py::test_native_benchmark_runs_both_svm_searches_with_full_finalists[iris-1-1]
+  C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\.venv\Lib\site-packages\deap\creator.py:185: RuntimeWarning: A class named 'FitnessMax' has already been created and it will be overwritten. Consider deleting previous creation of that class or rename it.
+    warnings.warn("A class named '{0}' has already been created and it "
+
+sklearn_genetic/tests/test_benchmark_search_methods.py::test_native_benchmark_runs_both_svm_searches_with_full_finalists[diabetes-0.5-1]
+sklearn_genetic/tests/test_benchmark_search_methods.py::test_native_benchmark_runs_both_svm_searches_with_full_finalists[iris-1-1]
+  C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\.venv\Lib\site-packages\deap\creator.py:185: RuntimeWarning: A class named 'Individual' has already been created and it will be overwritten. Consider deleting previous creation of that class or rename it.
+    warnings.warn("A class named '{0}' has already been created and it "
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED sklearn_genetic/tests/test_benchmark_search_methods.py::test_native_benchmark_runs_both_svm_searches_with_full_finalists[iris-0.5-0]
+FAILED sklearn_genetic/tests/test_benchmark_search_methods.py::test_native_benchmark_runs_both_svm_searches_with_full_finalists[diabetes-0.5-1]
+FAILED sklearn_genetic/tests/test_benchmark_search_methods.py::test_native_benchmark_runs_both_svm_searches_with_full_finalists[iris-1-1]
+3 failed, 11 passed, 25 deselected, 7 warnings in 1.38s
+
+MUTANT_EXIT 1
+
+Ignored-generations mutant: generations=args.generations ->0, in-memory only.
+.......FF.....                                                           [100%]
+================================== FAILURES ===================================
+_ test_native_benchmark_runs_both_svm_searches_with_full_finalists[diabetes-0.5-1] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001FA37797E30>
+tmp_path = WindowsPath('C:/Users/dsdotpy/AppData/Local/Temp/pytest-of-dsdotpy/pytest-2411/test_native_benchmark_runs_bot1')
+dataset = 'diabetes', fraction = 0.5, generations = 1
+
+    @pytest.mark.parametrize(
+        "dataset,fraction,generations", [("iris", 0.5, 0), ("diabetes", 0.5, 1), ("iris", 1, 1)]
+    )
+    def test_native_benchmark_runs_both_svm_searches_with_full_finalists(
+        monkeypatch, tmp_path, dataset, fraction, generations
+    ):
+        import json
+        import numpy as np
+        from benchmarks import benchmark_native_automl
+        from sklearn_genetic import genetic_search
+
+        from sklearn.model_selection import train_test_split
+
+        X, y, classification = benchmark_native_automl.dataset(dataset)
+        expected_X, _, expected_y, _ = train_test_split(
+            X, y, test_size=0.25, random_state=901, stratify=y if classification else None
+        )
+        monkeypatch.setitem(sys.modules, "lightgbm", None)
+        original = genetic_search.cross_validate
+        calls = []
+
+        def recording_cv(estimator, *args, **kwargs):
+            np.testing.assert_array_equal(args[1], expected_y)
+            assert args[0].shape[0] == expected_X.shape[0]
+            for column in args[0].T:
+                assert any(np.array_equal(column, original_column) for original_column in expected_X.T)
+            calls.append((estimator, [len(train) for train, _ in kwargs["cv"]]))
+            return original(estimator, *args, **kwargs)
+
+        monkeypatch.setattr(genetic_search, "cross_validate", recording_cv)
+        output = tmp_path / "native-svm.json"
+        monkeypatch.setattr(
+            sys,
+            "argv",
+            [
+                "benchmark_native_automl",
+                "--output",
+                str(output),
+                "--model-dir",
+                str(tmp_path / "models"),
+                "--datasets",
+                dataset,
+                "--methods",
+                "gasearch",
+                "features",
+                "--seeds",
+                "1",
+                "--seconds",
+                "60",
+                "--evolutionary-model",
+                "svm",
+                "--train-fraction",
+                str(fraction),
+                "--generations",
+                str(generations),
+                "--finalists",
+                "2",
+            ],
+        )
+        benchmark_native_automl.main()
+        payload = json.loads(output.read_text(encoding="utf-8"))
+        assert "lightgbm" not in payload["versions"]
+        assert payload["settings"]["evolutionary_model"] == "svm"
+        assert payload["settings"]["train_fraction"] == fraction
+        assert {row["method"] for row in payload["results"]} == {"gasearch", "features"}
+        for row in payload["results"]:
+>           assert row["generations"] == generations + 1
+E           assert 1 == (1 + 1)
+
+sklearn_genetic\tests\test_benchmark_search_methods.py:513: AssertionError
+---------------------------- Captured stdout call -----------------------------
+{"dataset": "diabetes", "seed": 901, "method": "gasearch", "metric": "neg_mean_squared_error", "holdout_score": -2678.428197230996, "seconds": 0.17697420000331476, "requested_seconds": 60.0, "train_samples": 331, "test_samples": 111, "cv_score": -3477.8057321348533, "evaluations": 8, "promotion_cv_calls": 2, "train_fold_sizes": [110, 110, 110], "full_fold_sizes": [220, 221, 221], "selected_params": {"svr__C": 163.15050562688, "svr__gamma": 0.0008564164143583848}, "selected_mask": null, "generations": 1, "selected_features": 10}
+{"dataset": "diabetes", "seed": 901, "method": "features", "metric": "neg_mean_squared_error", "holdout_score": -2541.369035577816, "seconds": 0.14342459998442791, "requested_seconds": 60.0, "train_samples": 331, "test_samples": 111, "cv_score": -3812.6646108989776, "evaluations": 8, "promotion_cv_calls": 2, "train_fold_sizes": [110, 110, 110], "full_fold_sizes": [220, 221, 221], "selected_params": null, "selected_mask": [true, true, true, true, true, true, true, true, true, true], "generations": 1, "selected_features": 10}
+_ test_native_benchmark_runs_both_svm_searches_with_full_finalists[iris-1-1] __
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001FA37930E00>
+tmp_path = WindowsPath('C:/Users/dsdotpy/AppData/Local/Temp/pytest-of-dsdotpy/pytest-2411/test_native_benchmark_runs_bot2')
+dataset = 'iris', fraction = 1, generations = 1
+
+    @pytest.mark.parametrize(
+        "dataset,fraction,generations", [("iris", 0.5, 0), ("diabetes", 0.5, 1), ("iris", 1, 1)]
+    )
+    def test_native_benchmark_runs_both_svm_searches_with_full_finalists(
+        monkeypatch, tmp_path, dataset, fraction, generations
+    ):
+        import json
+        import numpy as np
+        from benchmarks import benchmark_native_automl
+        from sklearn_genetic import genetic_search
+
+        from sklearn.model_selection import train_test_split
+
+        X, y, classification = benchmark_native_automl.dataset(dataset)
+        expected_X, _, expected_y, _ = train_test_split(
+            X, y, test_size=0.25, random_state=901, stratify=y if classification else None
+        )
+        monkeypatch.setitem(sys.modules, "lightgbm", None)
+        original = genetic_search.cross_validate
+        calls = []
+
+        def recording_cv(estimator, *args, **kwargs):
+            np.testing.assert_array_equal(args[1], expected_y)
+            assert args[0].shape[0] == expected_X.shape[0]
+            for column in args[0].T:
+                assert any(np.array_equal(column, original_column) for original_column in expected_X.T)
+            calls.append((estimator, [len(train) for train, _ in kwargs["cv"]]))
+            return original(estimator, *args, **kwargs)
+
+        monkeypatch.setattr(genetic_search, "cross_validate", recording_cv)
+        output = tmp_path / "native-svm.json"
+        monkeypatch.setattr(
+            sys,
+            "argv",
+            [
+                "benchmark_native_automl",
+                "--output",
+                str(output),
+                "--model-dir",
+                str(tmp_path / "models"),
+                "--datasets",
+                dataset,
+                "--methods",
+                "gasearch",
+                "features",
+                "--seeds",
+                "1",
+                "--seconds",
+                "60",
+                "--evolutionary-model",
+                "svm",
+                "--train-fraction",
+                str(fraction),
+                "--generations",
+                str(generations),
+                "--finalists",
+                "2",
+            ],
+        )
+        benchmark_native_automl.main()
+        payload = json.loads(output.read_text(encoding="utf-8"))
+        assert "lightgbm" not in payload["versions"]
+        assert payload["settings"]["evolutionary_model"] == "svm"
+        assert payload["settings"]["train_fraction"] == fraction
+        assert {row["method"] for row in payload["results"]} == {"gasearch", "features"}
+        for row in payload["results"]:
+>           assert row["generations"] == generations + 1
+E           assert 1 == (1 + 1)
+
+sklearn_genetic\tests\test_benchmark_search_methods.py:513: AssertionError
+---------------------------- Captured stdout call -----------------------------
+{"dataset": "iris", "seed": 901, "method": "gasearch", "metric": "accuracy", "holdout_score": 0.9210526315789473, "seconds": 0.11954109999351203, "requested_seconds": 60.0, "train_samples": 112, "test_samples": 38, "cv_score": 0.9732100521574205, "evaluations": 8, "promotion_cv_calls": 0, "train_fold_sizes": [74, 75, 75], "full_fold_sizes": [74, 75, 75], "selected_params": {"svc__C": 22.293541335640477, "svc__gamma": 0.3850171088531451}, "selected_mask": null, "generations": 1, "selected_features": 4}
+{"dataset": "iris", "seed": 901, "method": "features", "metric": "accuracy", "holdout_score": 0.8947368421052632, "seconds": 0.08230879998882301, "requested_seconds": 60.0, "train_samples": 112, "test_samples": 38, "cv_score": 0.9822190611664295, "evaluations": 8, "promotion_cv_calls": 0, "train_fold_sizes": [74, 75, 75], "full_fold_sizes": [74, 75, 75], "selected_params": null, "selected_mask": [false, false, false, true], "generations": 1, "selected_features": 1}
+============================== warnings summary ===============================
+sklearn_genetic/tests/test_benchmark_search_methods.py::test_native_benchmark_runs_both_svm_searches_with_full_finalists[iris-0.5-0]
+sklearn_genetic/tests/test_benchmark_search_methods.py::test_native_benchmark_runs_both_svm_searches_with_full_finalists[iris-0.5-0]
+sklearn_genetic/tests/test_benchmark_search_methods.py::test_native_benchmark_runs_both_svm_searches_with_full_finalists[diabetes-0.5-1]
+sklearn_genetic/tests/test_benchmark_search_methods.py::test_native_benchmark_runs_both_svm_searches_with_full_finalists[diabetes-0.5-1]
+sklearn_genetic/tests/test_benchmark_search_methods.py::test_native_benchmark_runs_both_svm_searches_with_full_finalists[iris-1-1]
+sklearn_genetic/tests/test_benchmark_search_methods.py::test_native_benchmark_runs_both_svm_searches_with_full_finalists[iris-1-1]
+  C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\callbacks\early_stoppers.py:175: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    self.initial_training_time = datetime.utcnow()
+
+sklearn_genetic/tests/test_benchmark_search_methods.py::test_native_benchmark_runs_both_svm_searches_with_full_finalists[iris-0.5-0]
+sklearn_genetic/tests/test_benchmark_search_methods.py::test_native_benchmark_runs_both_svm_searches_with_full_finalists[iris-0.5-0]
+sklearn_genetic/tests/test_benchmark_search_methods.py::test_native_benchmark_runs_both_svm_searches_with_full_finalists[diabetes-0.5-1]
+sklearn_genetic/tests/test_benchmark_search_methods.py::test_native_benchmark_runs_both_svm_searches_with_full_finalists[diabetes-0.5-1]
+sklearn_genetic/tests/test_benchmark_search_methods.py::test_native_benchmark_runs_both_svm_searches_with_full_finalists[iris-1-1]
+sklearn_genetic/tests/test_benchmark_search_methods.py::test_native_benchmark_runs_both_svm_searches_with_full_finalists[iris-1-1]
+  C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\callbacks\early_stoppers.py:178: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    current_time = datetime.utcnow()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED sklearn_genetic/tests/test_benchmark_search_methods.py::test_native_benchmark_runs_both_svm_searches_with_full_finalists[diabetes-0.5-1]
+FAILED sklearn_genetic/tests/test_benchmark_search_methods.py::test_native_benchmark_runs_both_svm_searches_with_full_finalists[iris-1-1]
+2 failed, 12 passed, 25 deselected, 12 warnings in 1.80s
+
+MUTANT_EXIT 1
+
+test_guard: clean against 3615a2c
+GUARD_EXIT 0
+benchmarks/benchmark_native_automl.py SHA256 630c6b3b8a1bbbf3eee0ed32531c8899a3ca7c7fec47ac19368e4319b6a1f22a
+sklearn_genetic/tests/test_benchmark_search_methods.py SHA256 6302ac61411b88ddf94ce94311014d248c9587d092b7c2c6434b66304c005323
+
+Independent review closure (base 3615a2c, code/test scope only):
+AC-NF1: Both GASearchCV and GAFeatureSelectionCV receive the selected SVM pipeline, fraction, generation cap and full-fold finalist CV. Full fraction bypasses sampling and promotion. LightGBM default constructor/grid and native FLAML/AutoGluon settings are preserved.
+AC-NF2: CLI rejects invalid fidelity before run/optional imports. Recorded fold sizes, configuration, selected parameters/mask, evaluation and promotion counts agree with the implemented paths. Elapsed fitting time includes search, full-fold promotion and final refit, and stops before prediction. Outer train/test partition and training-only scaler pipeline are correct.
+VER-NF-001 (material regression gap, resolved): The fit(X,y) holdout-leakage mutant originally passed 14 native tests. New target/feature training-partition assertions kill it (3 failed, 11 passed). Ignoring positive generation requests is also killed (2 failed, 12 passed). No production files were modified for mutants.
+Evidence inspected: original native-fidelity-red.txt shows seven regression failures on missing options/validation; current native-fidelity-green.txt shows 14 passed, 25 deselected, 3.82s. Independently rerun test_guard against 3615a2c: clean, exit0. Raw mutant outputs and SHA256 inputs are above.
+AC-NF3 remains open pending the four-dataset, five-fresh-seed raw benchmark/report. No pre-run methodology blocker: disclose SVM-vs-tree family differences, native CV/ensembles, shared outer splits, four-generation cap, soft 15s limits, promotion/refit overshoot and execution order. Compare actual fitting times; avoid identical-CV/optimizer-only/universal-superiority claims.
+No unresolved material code/test findings. Full suite and heavy benchmarks were not run by reviewer.
+
+
+=== native-fidelity-smoke.log ===
+{"dataset": "iris", "seed": 901, "method": "gasearch", "metric": "accuracy", "holdout_score": 1.0, "seconds": 0.15333199998713098, "requested_seconds": 2.0, "train_samples": 112, "test_samples": 38, "cv_score": 0.9732100521574205, "evaluations": 8, "promotion_cv_calls": 2, "train_fold_sizes": [37, 37, 37], "full_fold_sizes": [74, 75, 75], "selected_params": {"svc__C": 163.15050562688, "svc__gamma": 0.0008564164143583848}, "selected_mask": null, "generations": 1, "selected_features": 4}
+{"dataset": "iris", "seed": 901, "method": "features", "metric": "accuracy", "holdout_score": 0.8947368421052632, "seconds": 0.11516100002336316, "requested_seconds": 2.0, "train_samples": 112, "test_samples": 38, "cv_score": 0.9822190611664295, "evaluations": 8, "promotion_cv_calls": 2, "train_fold_sizes": [37, 37, 37], "full_fold_sizes": [74, 75, 75], "selected_params": null, "selected_mask": [false, false, false, true], "generations": 1, "selected_features": 1}
+
+=== Complete matrix integrity and summary ===
+PASS160 complete Cartesian rows; finite scores/times; folds, promotions, masks, seeds, configuration and source hashes verified.
+Total measured fit seconds: 894.850
+| Dataset | Workflow | Mean seconds | Mean holdout | Holdout SD | Mean evaluations | Mean features |
+|---|---|---:|---:|---:|---:|---:|
+| breast | full/gasearch | 2.293 | 0.973427 | 0.009118 | 71.4 | 30.0 |
+| breast | full/features | 1.058 | 0.970629 | 0.011491 | 71.6 | 18.4 |
+| breast | quarter/gasearch | 1.154 | 0.974825 | 0.006255 | 70.8 | 30.0 |
+| breast | quarter/features | 0.833 | 0.972028 | 0.017829 | 71.6 | 16.0 |
+| breast | eighth/gasearch | 1.113 | 0.972028 | 0.004945 | 71.4 | 30.0 |
+| breast | eighth/features | 0.846 | 0.972028 | 0.017129 | 71.8 | 15.2 |
+| breast | native/flaml | 14.996 | 0.962238 | 0.010605 | - | 30.0 |
+| breast | native/autogluon | 2.027 | 0.952448 | 0.020626 | - | 30.0 |
+| digits | full/gasearch | 16.347 | 0.983111 | 0.005578 | 42.8 | 64.0 |
+| digits | full/features | 10.136 | 0.980444 | 0.007269 | 72.0 | 57.4 |
+| digits | quarter/gasearch | 4.785 | 0.981778 | 0.006555 | 71.6 | 64.0 |
+| digits | quarter/features | 3.745 | 0.980889 | 0.008692 | 72.0 | 57.2 |
+| digits | eighth/gasearch | 2.785 | 0.984000 | 0.006166 | 71.4 | 64.0 |
+| digits | eighth/features | 2.571 | 0.978667 | 0.009763 | 71.8 | 53.4 |
+| digits | native/flaml | 15.302 | 0.973333 | 0.007536 | - | 64.0 |
+| digits | native/autogluon | 6.553 | 0.977333 | 0.005067 | - | 64.0 |
+| diabetes | full/gasearch | 2.078 | -3145.062374 | 271.642916 | 71.8 | 10.0 |
+| diabetes | full/features | 1.339 | -4236.900372 | 863.224419 | 69.2 | 5.8 |
+| diabetes | quarter/gasearch | 0.948 | -3152.263565 | 295.395823 | 71.2 | 10.0 |
+| diabetes | quarter/features | 0.747 | -4000.683418 | 819.995909 | 68.8 | 7.2 |
+| diabetes | eighth/gasearch | 0.856 | -3158.196144 | 267.733803 | 71.4 | 10.0 |
+| diabetes | eighth/features | 0.664 | -3815.687391 | 649.419338 | 68.8 | 7.4 |
+| diabetes | native/flaml | 15.010 | -3462.585533 | 459.437715 | - | 10.0 |
+| diabetes | native/autogluon | 1.547 | -3356.238167 | 477.393515 | - | 10.0 |
+| synthetic | full/gasearch | 17.917 | 0.852800 | 0.017181 | 39.8 | 80.0 |
+| synthetic | full/features | 12.697 | 0.863600 | 0.024347 | 72.0 | 51.8 |
+| synthetic | quarter/gasearch | 5.229 | 0.854800 | 0.013161 | 70.6 | 80.0 |
+| synthetic | quarter/features | 3.773 | 0.856400 | 0.014926 | 72.0 | 60.4 |
+| synthetic | eighth/gasearch | 3.265 | 0.849200 | 0.015786 | 71.2 | 80.0 |
+| synthetic | eighth/features | 2.654 | 0.862400 | 0.016517 | 72.0 | 59.6 |
+| synthetic | native/flaml | 15.258 | 0.882400 | 0.024058 | - | 80.0 |
+| synthetic | native/autogluon | 8.442 | 0.884800 | 0.011541 | - | 80.0 |
+
+| Dataset | Search | Quarter speedup | Quarter holdout delta | Eighth speedup | Eighth holdout delta |
+|---|---|---:|---:|---:|---:|
+| breast | gasearch | 1.986x | +0.001399 | 2.061x | -0.001399 |
+| breast | features | 1.271x | +0.001399 | 1.250x | +0.001399 |
+| digits | gasearch | 3.416x | -0.001333 | 5.869x | +0.000889 |
+| digits | features | 2.706x | +0.000444 | 3.943x | -0.001778 |
+| diabetes | gasearch | 2.193x | -7.201191 | 2.429x | -13.133770 |
+| diabetes | features | 1.792x | +236.216955 | 2.016x | +421.212981 |
+| synthetic | gasearch | 3.426x | +0.002000 | 5.487x | -0.003600 |
+| synthetic | features | 3.365x | -0.007200 | 4.785x | -0.001200 |
+
+Independent report closure
+AC-NF3 independent review CLOSED: no unresolved material findings.
+The durable matrix has exactly 160 unique combinations (four datasets, five seeds 1301-1305, eight configured workflows). Every row matches the original profile JSON and captured stdout; all four profile metadata records and five runtime source hashes match. Benchmark/test hashes remain identical to the prior code-review closure.
+Independent arithmetic checks match every report table cell, all 32 verification summary groups including sample standard deviations, reported Digits/synthetic speedups, evaluation counts and feature counts. Total measured fitting time is 894.8499068001984 seconds, reported correctly as 894.85. A non-material rounding error in synthetic eighth-training feature speedup was corrected from 4.78x to 4.79x before closure.
+The cheap supplied validator passes: completeness, finite scores/times, fold sizes, four promotions, parameter domains, nonempty masks and generation limits. Separate checks verify valid score domains and generation-dependent candidate budgets. No benchmark or full suite was rerun.
+The source and locked regression evidence support training-only outer partitions, full-fold promotion and refit, and elapsed timing before prediction. The report correctly separates the 80-column synthetic dataset from the earlier 40-column experiment, discloses fixed execution order/shared-machine timing noise, native family/CV/ensemble differences, the four-generation cap, unequal candidate counts, and evolution-only soft stopping with uncapped promotion/refit.
+The claimed competitive measured SVM HPO results on Breast Cancer, Digits and Diabetes, and feature results on Breast Cancer/Digits, agree with the means. Synthetic quality lag and weaker Diabetes feature selection are explicit. Five overlapping splits are not presented as independent datasets, statistical superiority, quality equivalence or general SOTA.

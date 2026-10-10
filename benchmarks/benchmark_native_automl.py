@@ -49,16 +49,26 @@ def dataset(name):
 
 
 def run(args):
-    from lightgbm import LGBMClassifier, LGBMRegressor
-    from sklearn_genetic import GASearchCV, GAFeatureSelectionCV
+    from sklearn_genetic import GASearchCV, GAFeatureSelectionCV, subsample_cv
     from sklearn_genetic.callbacks import TimerStopping
     from sklearn_genetic.space import Integer, Continuous
+
+    if args.evolutionary_model == "svm":
+        from sklearn.pipeline import make_pipeline
+        from sklearn.preprocessing import StandardScaler
+        from sklearn.svm import SVC, SVR
+    else:
+        from lightgbm import LGBMClassifier, LGBMRegressor
 
     if "autogluon" in args.methods:
         from autogluon.tabular import TabularPredictor
     if "flaml" in args.methods:
         from flaml import AutoML
-    packages = ["numpy", "scipy", "scikit-learn", "lightgbm", "deap"]
+    packages = ["numpy", "scipy", "scikit-learn", "deap"]
+    if args.evolutionary_model == "lightgbm" or any(
+        method in args.methods for method in ("flaml", "autogluon")
+    ):
+        packages.append("lightgbm")
     packages += ["autogluon.tabular"] if "autogluon" in args.methods else []
     packages += ["flaml"] if "flaml" in args.methods else []
     payload = dict(
@@ -71,7 +81,10 @@ def run(args):
         versions={name: importlib.metadata.version(name) for name in packages},
         settings={
             "native_families": ["lightgbm", "random_forest", "extra_trees"],
-            "evolutionary_model": "lightgbm",
+            "evolutionary_model": args.evolutionary_model,
+            "train_fraction": args.train_fraction,
+            "max_generations": args.generations,
+            "finalists": args.finalists,
             "cv_folds": 3,
             "population": 8,
             "native_threads": 1,
@@ -89,40 +102,61 @@ def run(args):
                     X, y, test_size=0.25, random_state=seed, stratify=y if classification else None
                 )
                 for method in args.methods:
-                    model_cls = LGBMClassifier if classification else LGBMRegressor
-                    model = model_cls(
-                        n_estimators=100, num_leaves=31, n_jobs=1, verbosity=-1, random_state=seed
-                    )
                     cv_cls = StratifiedKFold if classification else KFold
                     cv = list(cv_cls(3, shuffle=True, random_state=seed).split(Xtr, ytr))
                     scoring = "accuracy" if classification else "neg_mean_squared_error"
                     extra = {}
                     start = time.perf_counter()
                     if method in ("gasearch", "features"):
+                        if args.evolutionary_model == "svm":
+                            model = make_pipeline(
+                                StandardScaler(),
+                                SVC(C=1) if classification else SVR(C=100),
+                            )
+                            prefix = "svc" if classification else "svr"
+                            space = {
+                                prefix + "__C": Continuous(0.01, 1000, distribution="log-uniform"),
+                                prefix + "__gamma": Continuous(1e-4, 1, distribution="log-uniform"),
+                            }
+                        else:
+                            model_cls = LGBMClassifier if classification else LGBMRegressor
+                            model = model_cls(
+                                n_estimators=100,
+                                num_leaves=31,
+                                n_jobs=1,
+                                verbosity=-1,
+                                random_state=seed,
+                            )
+                            space = {
+                                "n_estimators": Integer(30, 200),
+                                "num_leaves": Integer(7, 63),
+                                "learning_rate": Continuous(0.01, 0.2, distribution="log-uniform"),
+                                "min_child_samples": Integer(5, 50),
+                                "reg_lambda": Continuous(1e-4, 10.0, distribution="log-uniform"),
+                            }
+                        search_cv = subsample_cv(
+                            cv,
+                            args.train_fraction,
+                            stratify=ytr if classification else None,
+                            random_state=seed,
+                        )
                         common = dict(
-                            cv=cv,
+                            cv=search_cv,
                             scoring=scoring,
                             population_size=8,
-                            generations=1000,
+                            generations=args.generations,
                             n_jobs=1,
                             verbose=False,
                             random_state=seed,
                             error_score="raise",
+                            final_selection=args.train_fraction < 1,
+                            final_selection_top_k=args.finalists,
+                            final_selection_cv=cv,
                         )
                         if method == "gasearch":
                             search = GASearchCV(
                                 model,
-                                param_grid={
-                                    "n_estimators": Integer(30, 200),
-                                    "num_leaves": Integer(7, 63),
-                                    "learning_rate": Continuous(
-                                        0.01, 0.2, distribution="log-uniform"
-                                    ),
-                                    "min_child_samples": Integer(5, 50),
-                                    "reg_lambda": Continuous(
-                                        1e-4, 10.0, distribution="log-uniform"
-                                    ),
-                                },
+                                param_grid=space,
                                 **common,
                             )
                         else:
@@ -133,10 +167,21 @@ def run(args):
                         extra = dict(
                             cv_score=(
                                 float(search.best_score_)
-                                if method == "gasearch"
+                                if method == "gasearch" or args.train_fraction < 1
                                 else float(max(search.cv_results_["mean_test_score"]))
                             ),
                             evaluations=search.fit_stats_["cross_validate_calls"],
+                            promotion_cv_calls=(
+                                len(search.final_selection_results_["candidates"])
+                                if args.train_fraction < 1
+                                else 0
+                            ),
+                            train_fold_sizes=[len(train) for train, _ in search_cv],
+                            full_fold_sizes=[len(train) for train, _ in cv],
+                            selected_params=search.best_params_ if method == "gasearch" else None,
+                            selected_mask=(
+                                search.support_.tolist() if method == "features" else None
+                            ),
                             generations=len(search.history["gen"]),
                             selected_features=(
                                 int(search.support_.sum()) if method == "features" else X.shape[1]
@@ -247,9 +292,15 @@ def main():
     parser.add_argument("--seconds", type=float, default=15)
     parser.add_argument("--seeds", type=int, default=3)
     parser.add_argument("--seed-start", type=int, default=901)
+    parser.add_argument("--evolutionary-model", choices=["lightgbm", "svm"], default="lightgbm")
+    parser.add_argument("--train-fraction", type=float, default=1)
+    parser.add_argument("--generations", type=int, default=1000)
+    parser.add_argument("--finalists", type=int, default=4)
     args = parser.parse_args()
     if args.seconds <= 0 or not np.isfinite(args.seconds) or args.seeds < 1:
         parser.error("seconds must be finite and positive, and seeds must be >=1")
+    if not 0 < args.train_fraction <= 1 or args.generations < 0 or args.finalists < 1:
+        parser.error("train-fraction in (0, 1], generations >=0, and finalists >=1 required")
     run(args)
 
 

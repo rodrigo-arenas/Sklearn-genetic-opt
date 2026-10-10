@@ -392,6 +392,11 @@ def test_native_automl_benchmark_accepts_minimum_seed_count(monkeypatch):
     assert len(calls) == 1
     assert calls[0].seeds == 1
     assert calls[0].seconds == 0.5
+    assert (calls[0].evolutionary_model, calls[0].train_fraction, calls[0].generations) == (
+        "lightgbm",
+        1,
+        1000,
+    )
 
 
 @pytest.mark.parametrize(
@@ -437,3 +442,118 @@ def test_fidelity_benchmark_dispatches_legal_boundaries(monkeypatch):
     assert len(calls) == 1
     args = calls[0]
     assert (args.seeds, args.generations, args.finalists, args.fractions) == (1, 0, 1, [1.0])
+
+
+@pytest.mark.parametrize(
+    "dataset,fraction,generations", [("iris", 0.5, 0), ("diabetes", 0.5, 1), ("iris", 1, 1)]
+)
+def test_native_benchmark_runs_both_svm_searches_with_full_finalists(
+    monkeypatch, tmp_path, dataset, fraction, generations
+):
+    import json
+    import numpy as np
+    from benchmarks import benchmark_native_automl
+    from sklearn_genetic import genetic_search
+
+    from sklearn.model_selection import train_test_split
+
+    X, y, classification = benchmark_native_automl.dataset(dataset)
+    expected_X, _, expected_y, _ = train_test_split(
+        X, y, test_size=0.25, random_state=901, stratify=y if classification else None
+    )
+    monkeypatch.setitem(sys.modules, "lightgbm", None)
+    original = genetic_search.cross_validate
+    calls = []
+
+    def recording_cv(estimator, *args, **kwargs):
+        np.testing.assert_array_equal(args[1], expected_y)
+        assert args[0].shape[0] == expected_X.shape[0]
+        for column in args[0].T:
+            assert any(np.array_equal(column, original_column) for original_column in expected_X.T)
+        calls.append((estimator, [len(train) for train, _ in kwargs["cv"]]))
+        return original(estimator, *args, **kwargs)
+
+    monkeypatch.setattr(genetic_search, "cross_validate", recording_cv)
+    output = tmp_path / "native-svm.json"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "benchmark_native_automl",
+            "--output",
+            str(output),
+            "--model-dir",
+            str(tmp_path / "models"),
+            "--datasets",
+            dataset,
+            "--methods",
+            "gasearch",
+            "features",
+            "--seeds",
+            "1",
+            "--seconds",
+            "60",
+            "--evolutionary-model",
+            "svm",
+            "--train-fraction",
+            str(fraction),
+            "--generations",
+            str(generations),
+            "--finalists",
+            "2",
+        ],
+    )
+    benchmark_native_automl.main()
+    payload = json.loads(output.read_text(encoding="utf-8"))
+    assert "lightgbm" not in payload["versions"]
+    assert payload["settings"]["evolutionary_model"] == "svm"
+    assert payload["settings"]["train_fraction"] == fraction
+    assert {row["method"] for row in payload["results"]} == {"gasearch", "features"}
+    for row in payload["results"]:
+        assert row["generations"] == generations + 1
+        assert row["promotion_cv_calls"] == (2 if fraction < 1 else 0)
+        assert row["train_fold_sizes"] == [int(fraction * n) for n in row["full_fold_sizes"]]
+        assert 0 < row["selected_features"] <= (4 if dataset == "iris" else 10)
+        assert np.isfinite(row["cv_score"]) and np.isfinite(row["holdout_score"])
+        assert row["seconds"] > 0
+    assert len(calls) == sum(
+        row["evaluations"] + row["promotion_cv_calls"] for row in payload["results"]
+    )
+    full = payload["results"][0]["full_fold_sizes"]
+    assert sum(sizes == full for _, sizes in calls) == (4 if fraction < 1 else len(calls))
+    assert all(
+        type(est.steps[-1][1]).__name__ == ("SVC" if dataset == "iris" else "SVR")
+        for est, _ in calls
+    )
+
+
+@pytest.mark.parametrize(
+    "option,value",
+    [
+        ("--train-fraction", "0"),
+        ("--train-fraction", "1.1"),
+        ("--train-fraction", "nan"),
+        ("--generations", "-1"),
+        ("--finalists", "0"),
+    ],
+)
+def test_native_benchmark_rejects_invalid_fidelity(monkeypatch, capsys, option, value):
+    from benchmarks import benchmark_native_automl
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "benchmark_native_automl",
+            "--output",
+            "unused.json",
+            "--model-dir",
+            "unused-models",
+            option,
+            value,
+        ],
+    )
+    with pytest.raises(SystemExit) as error:
+        benchmark_native_automl.main()
+    assert error.value.code == 2
+    assert "train-fraction in (0, 1]" in capsys.readouterr().err
