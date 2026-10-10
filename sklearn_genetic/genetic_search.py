@@ -1541,10 +1541,10 @@ class GAFeatureSelectionCV(
         stop earlier once every configuration in a finite space has been
         observed by the current run.
 
-    crossover_probability : float or a Scheduler, default=0.2
+    crossover_probability : float or a Scheduler, default=0.8
         Probability of crossover operation between two individuals.
 
-    mutation_probability : float or a Scheduler, default=0.8
+    mutation_probability : float or a Scheduler, default=0.1
         Probability of child mutation.
 
     tournament_size : int, default=3

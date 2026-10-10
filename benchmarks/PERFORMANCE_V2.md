@@ -7,6 +7,7 @@ Baseline: `d6b2f3aab9cee50322934ec8c00c585e2fcbac2f`. This is an ongoing investi
 - **Measured speed gains are conditional.** Cached finite spaces finish 7.82–9.01× faster for small HPO and 5.82–5.94× faster for small feature-mask spaces, with identical solutions. One-fold SVC evolution plus eight five-fold finalists is 4.09–4.81× faster for HPO and 3.48–3.92× faster for feature selection across six held-out splits, but synthetic HPO and all three feature-selection means lose held-out accuracy. These shortcuts are opt-in; full-fold search remains the default.
 - **Short-deadline feature searches have a genuine quality repair.** Starting smart-initialized timed searches with the largest legal mask lowers mean classification error 5.45× on Dry Bean SVM at a one-second request, while total fitting time falls 3.40×. On Digits LightGBM, error falls 11.56× but total time rises 12.4%. The gain comes from evaluating a viable dense baseline before the deadline; it does not imply more compact selections or universal improvement.
 - **Evolution is useful for some feature tasks, but not every task.** Against equal-budget random masks, default feature search improves mean held-out accuracy on Breast Cancer, Digits and synthetic SVC classification. A separate tree/KNN/forest control also favors it on three classifier tasks, whereas Diabetes/Ridge regression loses 59.31 negative-MSE points on average.
+- **Do not prefer smaller masks merely because their CV scores are close.** A separate 20-fit transfer pilot selected the smallest mask within one standard error of the CV winner. It lost held-out score on all five Diabetes/Ridge splits and two Wine splits, so this rule was rejected rather than tuned into the default.
 - **HPO quality remains an open gap.** Default `GASearchCV` improves its best CV score after initialization in 23 of 24 runs, yet a same-budget random SVC search matches or exceeds its mean held-out accuracy on all three datasets and completes the sequentially timed cohorts faster. CV progress alone is not evidence of improved generalization.
 - **Native AutoML parity is workload-specific.** On three Dry Bean splits, reduced-training SVM HPO averages .930649 accuracy in 12.096 seconds versus AutoGluon .928886 in 13.168 seconds and FLAML .926437 in 15.524 seconds under the recorded CPU configuration. On other tasks, AutoGluon or Optuna remains faster or more accurate. TPOT and H2O have not been measured here.
 
@@ -921,4 +922,23 @@ New-Item -ItemType Directory -Force -Path .agent-runs/performance-v2 | Out-Null
 .\.venv\Scripts\python.exe -c "import json,pathlib; a=json.loads(pathlib.Path('benchmarks/results/performance-v2/feature-random-transfer.json').read_text(encoding='utf-8')); w=pathlib.Path('.agent-runs/performance-v2'); (w/'feature-random-transfer.py').write_text(a['reproduction_script'], encoding='utf-8'); (w/'summarize-feature-random-transfer.py').write_text(a['summary_script'], encoding='utf-8')"
 .\.venv\Scripts\python.exe .agent-runs/performance-v2/feature-random-transfer.py
 .\.venv\Scripts\python.exe .agent-runs/performance-v2/summarize-feature-random-transfer.py
+```
+
+## One-standard-error mask selection transfer check
+
+To investigate the Ridge regression loss without changing the search trajectory, a separate pilot reused each GA run's evaluated masks and selected the smallest mask whose three-fold mean CV score was within one standard error of the top mean. The standard error was the top candidate's fold-score standard deviation divided by the square root of three. Ties favored the higher CV mean. Both the ordinary GA winner and the proposed mask were refitted on the same outer-training data and scored on an untouched 25% holdout. This is a finalist-selection experiment, not a new evolutionary operator. It used five new seeds 1051–1055 for the same four model families as the transfer control, at most 72 proposals per search and one CPU thread.
+
+| Model/dataset | Proposed minus default mean held-out score | Proposed wins/ties/losses | Mean feature-count change |
+|---|---:|---:|---:|
+| Wine decision tree | −.02667 accuracy | 0/3/2 | −0.6 |
+| Digits KNN | −.00044 accuracy | 0/4/1 | −0.2 |
+| Diabetes Ridge | −273.03 negative-MSE points | 0/0/5 | −2.0 |
+| Synthetic random forest | +.00800 accuracy | 1/4/0 | −0.6 |
+
+The proposed rule substantially worsens Ridge and does not transfer across classifiers. It is **not** part of the library. This negative result also cautions against solving a regression holdout loss by choosing fewer features from noisy CV scores. The [20-fit artifact](results/performance-v2/feature-one-se-pilot.json) contains per-split masks, CV and holdout scores, timings, source hash and the reproduction script. To rerun from the repository root in PowerShell:
+
+```powershell
+New-Item -ItemType Directory -Force -Path .agent-runs/performance-v2 | Out-Null
+.\.venv\Scripts\python.exe -c "import json,pathlib; a=json.loads(pathlib.Path('benchmarks/results/performance-v2/feature-one-se-pilot.json').read_text(encoding='utf-8')); pathlib.Path('.agent-runs/performance-v2/feature-one-se-pilot.py').write_text(a['reproduction_script'], encoding='utf-8')"
+.\.venv\Scripts\python.exe .agent-runs/performance-v2/feature-one-se-pilot.py
 ```
