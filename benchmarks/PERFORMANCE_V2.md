@@ -2,6 +2,16 @@
 
 Baseline: `d6b2f3aab9cee50322934ec8c00c585e2fcbac2f`. This is an ongoing investigation of both `GASearchCV` and `GAFeatureSelectionCV`; a general 4× training or solution-quality improvement has not been established.
 
+## Executive evidence summary
+
+- **Measured speed gains are conditional.** Cached finite spaces finish 7.82–9.01× faster for small HPO and 5.82–5.94× faster for small feature-mask spaces, with identical solutions. One-fold SVC evolution plus eight five-fold finalists is 4.09–4.81× faster for HPO and 3.48–3.92× faster for feature selection across six held-out splits, but synthetic HPO and all three feature-selection means lose held-out accuracy. These shortcuts are opt-in; full-fold search remains the default.
+- **Short-deadline feature searches have a genuine quality repair.** Starting smart-initialized timed searches with the largest legal mask lowers mean classification error 5.45× on Dry Bean SVM at a one-second request, while total fitting time falls 3.40×. On Digits LightGBM, error falls 11.56× but total time rises 12.4%. The gain comes from evaluating a viable dense baseline before the deadline; it does not imply more compact selections or universal improvement.
+- **Evolution is useful for some feature tasks, but not every task.** Against equal-budget random masks, default feature search improves mean held-out accuracy on Breast Cancer, Digits and synthetic SVC classification. A separate tree/KNN/forest control also favors it on three classifier tasks, whereas Diabetes/Ridge regression loses 59.31 negative-MSE points on average.
+- **HPO quality remains an open gap.** Default `GASearchCV` improves its best CV score after initialization in 23 of 24 runs, yet a same-budget random SVC search matches or exceeds its mean held-out accuracy on all three datasets and completes the sequentially timed cohorts faster. CV progress alone is not evidence of improved generalization.
+- **Native AutoML parity is workload-specific.** On three Dry Bean splits, reduced-training SVM HPO averages .930649 accuracy in 12.096 seconds versus AutoGluon .928886 in 13.168 seconds and FLAML .926437 in 15.524 seconds under the recorded CPU configuration. On other tasks, AutoGluon or Optuna remains faster or more accurate. TPOT and H2O have not been measured here.
+
+The linked sections below preserve dataset definitions, limits, per-seed measurements, source hashes and reproduction scripts. Solution-quality comparisons use held-out partitions, but the small, overlapping split cohorts do not establish statistical superiority or performance on arbitrary datasets.
+
 ## Profile
 
 A cProfile run of the existing paired benchmark (four HPO tasks and one feature task, one seed) attributed 9.27 of 9.36 seconds in the evolutionary loop to candidate evaluation, including 8.75 seconds in scikit-learn cross-validation. Profile overhead affects absolute times. Most end-to-end gains therefore need fewer expensive evaluations at comparable quality, rather than only faster Python evolution operators.
