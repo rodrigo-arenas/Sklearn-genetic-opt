@@ -2,14 +2,17 @@
 
 Baseline: `d6b2f3aab9cee50322934ec8c00c585e2fcbac2f`. This is an ongoing investigation of both `GASearchCV` and `GAFeatureSelectionCV`; a general 4× training or solution-quality improvement has not been established.
 
+Timing note: HPO comparisons below through the four-family random-search transfer matrix were measured before the `return_train_score=False` fix. The constructor advertised `False` but scikit-learn's base initializer reset it to `True`, adding training-fold scoring. Their solution-quality observations remain useful; their elapsed-time ratios do not directly describe the corrected 0.14.0 code. The final paired overhead section measures the correction across model families.
+
 ## Executive evidence summary
 
 - **Measured speed gains are conditional.** Cached finite spaces finish 7.82–9.01× faster for small HPO and 5.82–5.94× faster for small feature-mask spaces, with identical solutions. One-fold SVC evolution plus eight five-fold finalists is 4.09–4.81× faster for HPO and 3.48–3.92× faster for feature selection across six held-out splits, but synthetic HPO and all three feature-selection means lose held-out accuracy. These shortcuts are opt-in; full-fold search remains the default.
 - **Short-deadline feature searches have a genuine quality repair.** Starting smart-initialized timed searches with the largest legal mask lowers mean classification error 5.45× on Dry Bean SVM at a one-second request, while total fitting time falls 3.40×. On Digits LightGBM, error falls 11.56× but total time rises 12.4%. The gain comes from evaluating a viable dense baseline before the deadline; it does not imply more compact selections or universal improvement.
-- **Evolution is useful for some feature tasks, but not every task.** Against equal-budget random masks, default feature search improves mean held-out accuracy on Breast Cancer, Digits and synthetic SVC classification. A separate tree/KNN/forest control also favors it on three classifier tasks, whereas Diabetes/Ridge regression loses 59.31 negative-MSE points on average.
+- **Evolution is useful for some feature tasks, but not every task.** Against equal-budget random masks, default feature search improves mean held-out accuracy on Breast Cancer, Digits and synthetic SVC classification. A separate tree/KNN/forest control also favors it on three classifier tasks, whereas Diabetes/Ridge regression loses 59.31 negative-MSE points on average. A further imbalanced/sparse/linear/nonlinear transfer matrix has two task means in each direction.
 - **Do not prefer smaller masks merely because their CV scores are close.** A separate 20-fit transfer pilot selected the smallest mask within one standard error of the CV winner. It lost held-out score on all five Diabetes/Ridge splits and two Wine splits, so this rule was rejected rather than tuned into the default.
 - **A more local feature mutation is not a general default improvement either.** In 60 new searches across the same four model families, flipping exactly one bit at either a 0.1 or 0.8 individual mutation rate produced mixed classification results and worse mean Ridge regression holdout than the current method. It was not promoted.
 - **HPO quality remains an open gap.** Default `GASearchCV` improves its best CV score after initialization in 23 of 24 runs, yet a same-budget random SVC search matches or exceeds its mean held-out accuracy on all three datasets and completes the sequentially timed cohorts faster. CV progress alone is not evidence of improved generalization.
+- **HPO does transfer to other model families, but efficiency varies.** A new four-task control against `RandomizedSearchCV` has higher GA mean held-out score for Digits/KNN, Diabetes/ElasticNet and synthetic/random forest, but lower for Wine/tree. After removing redundant train-fold scoring, the GA/random time ratio is .81× on KNN, .93× on forest, 1.05× on ElasticNet and 1.44× on tree. The gains are small or split-dependent; no HPO search policy was retuned to this matrix.
 - **Penalizing HPO fold variance is not a general repair.** A post-hoc one-standard-error lower-confidence-bound rule left Wine/tree and Digits/KNN winners unchanged but reduced mean held-out scores on Diabetes/ElasticNet and synthetic/random forest. The rule was rejected without changing the API.
 - **Native AutoML parity is workload-specific.** On three Dry Bean splits, reduced-training SVM HPO averages .930649 accuracy in 12.096 seconds versus AutoGluon .928886 in 13.168 seconds and FLAML .926437 in 15.524 seconds under the recorded CPU configuration. On other tasks, AutoGluon or Optuna remains faster or more accurate. TPOT and H2O have not been measured here.
 
@@ -983,4 +986,73 @@ The rule did not help this diverse transfer set, so it was not added to `GASearc
 New-Item -ItemType Directory -Force -Path .agent-runs/performance-v2 | Out-Null
 .\.venv\Scripts\python.exe -c "import json,pathlib; a=json.loads(pathlib.Path('benchmarks/results/performance-v2/hpo-stability-finalist-pilot.json').read_text(encoding='utf-8')); pathlib.Path('.agent-runs/performance-v2/hpo-stability-finalist-pilot.py').write_text(a['reproduction_script'], encoding='utf-8')"
 .\.venv\Scripts\python.exe .agent-runs/performance-v2/hpo-stability-finalist-pilot.py
+```
+
+## Feature selection on unseen data shapes and metrics
+
+The previous feature controls used mostly dense, balanced classification data and one real regression dataset. A further equal-budget transfer matrix uses four fixed new tasks: imbalanced synthetic classification (90% majority, 40 columns) with balanced logistic regression; threshold-sparsified CSR classification (80 columns) with SGD; six-signal linear regression (30 columns) with Ridge; and nonlinear Friedman1 regression (20 columns) with a 30-tree random forest. Five new 25% outer-holdout splits per task (seeds 1081–1085) use three fixed CV folds. Both methods propose 72 masks, select one to half the columns, cache duplicate evaluations, and use one CPU thread. The random control samples mask size uniformly, then columns uniformly. Classification uses balanced accuracy and regression uses negative MSE; larger scores are better. Run order alternates by split. Holdouts are used only for reporting.
+
+| Task | GA / random mean held-out score | GA minus random | GA wins/ties/losses | Mean GA/random time ratio |
+|---|---:|---:|---:|---:|
+| Imbalanced logistic | .70700 / .68302 balanced accuracy | +.02397 | 4/0/1 | 1.091× |
+| Sparse SGD | .66149 / .67301 balanced accuracy | −.01152 | 2/0/3 | 1.003× |
+| Linear Ridge | −981.77 / −1146.89 negative MSE | +165.13 | 3/0/2 | 1.114× |
+| Friedman forest | −6.65 / −6.17 negative MSE | −.48035 | 3/0/2 | 1.066× |
+
+The GA wins two task means and loses two; even a positive mean can hide large losses on individual splits. This supports maintaining the general evolutionary defaults without claiming superiority over random masks on arbitrary data, particularly sparse linear classification or nonlinear regression. The extra work also does not demonstrate a general time saving. These five overlapping splits per task are descriptive. The [40-fit artifact](results/performance-v2/feature-generalization-matrix.json) includes per-split masks, CV scores, holdout scores, times, source hash and exact script. To rerun from the repository root in PowerShell:
+
+```powershell
+New-Item -ItemType Directory -Force -Path .agent-runs/performance-v2 | Out-Null
+.\.venv\Scripts\python.exe -c "import json,pathlib; a=json.loads(pathlib.Path('benchmarks/results/performance-v2/feature-generalization-matrix.json').read_text(encoding='utf-8')); pathlib.Path('.agent-runs/performance-v2/feature-generalization-matrix.py').write_text(a['reproduction_script'], encoding='utf-8')"
+.\.venv\Scripts\python.exe .agent-runs/performance-v2/feature-generalization-matrix.py
+```
+
+## HPO transfer against random search
+
+To check whether the earlier SVC control generalizes, this separate matrix compares default `GASearchCV` with scikit-learn `RandomizedSearchCV` on Wine/decision tree, Digits/standardized KNN, Diabetes/standardized ElasticNet, and synthetic 20-column classification/random forest. Each task has five new 25% outer-holdout splits (seeds 1091–1095) with three fixed CV folds. Both methods use the same estimator, search ranges, split indices, scoring and one CPU worker; run order alternates by split. GA uses population 8 and four generations (at most 72 proposals). Random search uses 72 candidates when the space permits; the two finite spaces contain only 28 and 50 distinct combinations, respectively, so random search exhausts them. GA also caches repeats; its actual mean CV evaluation counts appear below. Holdouts are used only for reporting. Regression uses negative MSE, so higher is better in every row.
+
+| Task | GA / random mean held-out score | GA minus random | GA wins/ties/losses | Mean GA/random time ratio | Mean GA / random CV evaluations |
+|---|---:|---:|---:|---:|---:|
+| Wine tree | .88000 / .88444 accuracy | −.00444 | 1/3/1 | 1.508× | 27.8 / 28 |
+| Digits KNN | .97556 / .97511 accuracy | +.00044 | 1/3/1 | 1.745× | 39.8 / 50 |
+| Diabetes ElasticNet | −3463.34 / −3478.71 negative MSE | +15.36 | 3/0/2 | 1.169× | 70.6 / 72 |
+| Synthetic forest | .87333 / .86533 accuracy | +.00800 | 2/2/1 | .950× | 65.6 / 72 |
+
+The four means are mixed: the GA wins three and loses one on held-out score, but does not generally match random-search time in this pre-fix measurement. In Digits/KNN it is slower despite fewer distinct CV evaluations, so counting evaluations alone misses overhead relevant to cheap estimators. Investigation found that `GASearchCV` was also computing unused training-fold scores; the paired measurement of that fix appears below. The new results contrast with the earlier SVC losses, but do not establish a universal HPO winner. The overlapping splits and small task count are descriptive.
+
+The [40-fit HPO artifact](results/performance-v2/hpo-random-transfer.json) includes all per-split scores, times, parameters, CV evaluation counts, source hash and exact script. To rerun from the repository root in PowerShell:
+
+```powershell
+New-Item -ItemType Directory -Force -Path .agent-runs/performance-v2 | Out-Null
+.\.venv\Scripts\python.exe -c "import json,pathlib; a=json.loads(pathlib.Path('benchmarks/results/performance-v2/hpo-random-transfer.json').read_text(encoding='utf-8')); pathlib.Path('.agent-runs/performance-v2/hpo-random-transfer.py').write_text(a['reproduction_script'], encoding='utf-8')"
+.\.venv\Scripts\python.exe .agent-runs/performance-v2/hpo-random-transfer.py
+```
+
+The complete 40-fit matrix was repeated after forwarding the documented `return_train_score=False` setting. Every per-split CV score, held-out score, best parameter set, candidate count and proposal count matched the earlier run exactly. The new mean paired GA/random time ratios were 1.442× for Wine/tree, .807× for Digits/KNN, 1.047× for Diabetes/ElasticNet and .929× for synthetic/random forest. Thus the corrected HPO search is faster than random search for KNN and forest in this matrix, near parity for ElasticNet, and still slower for tree. These elapsed-time comparisons remain subject to run-to-run variation and the small task sample. The [post-fix 40-fit artifact](results/performance-v2/hpo-random-transfer-post-fix.json) contains every run and its reproduction script. To rerun from the repository root in PowerShell:
+
+```powershell
+New-Item -ItemType Directory -Force -Path .agent-runs/performance-v2 | Out-Null
+.\.venv\Scripts\python.exe -c "import json,pathlib; a=json.loads(pathlib.Path('benchmarks/results/performance-v2/hpo-random-transfer-post-fix.json').read_text(encoding='utf-8')); pathlib.Path('.agent-runs/performance-v2/hpo-random-transfer-post-fix.py').write_text(a['reproduction_script'], encoding='utf-8')"
+.\.venv\Scripts\python.exe .agent-runs/performance-v2/hpo-random-transfer-post-fix.py
+```
+
+## Removing unused train-fold scoring in HPO
+
+Profiling Digits/KNN exposed an avoidable scoring pass: `GASearchCV` declared `return_train_score=False` in its constructor but did not forward it to scikit-learn's `BaseSearchCV`, whose default on the measured version is `True`. Consequently, a 39-candidate, three-fold KNN fit called scoring for both train and validation folds. The 0.14.0 fix forwards the configured value. Users who need train-fold metrics can still request `return_train_score=True`.
+
+To isolate the performance effect from evolutionary randomness, each of four tasks ran the same GA search twice per new outer split (seeds 1101–1103), with `return_train_score=True` representing the previous effective behavior and `False` the corrected default. The same estimator, search space, three fixed CV folds, population 8, four generations, random seed and single CPU worker were used; run order alternated. All 12 pairs returned identical best parameters, best CV scores and distinct CV evaluation counts. The false mode omitted `mean_train_score` from `cv_results_` as documented.
+
+| Task | Old effective / corrected mean seconds | Mean paired old/corrected time ratio | Identical CV winners |
+|---|---:|---:|---:|
+| Wine tree | .362 / .298 | 1.230× | 3/3 |
+| Digits KNN | 2.017 / 1.108 | 1.839× | 3/3 |
+| Diabetes ElasticNet | 1.047 / .786 | 1.331× | 3/3 |
+| Synthetic forest | 14.600 / 15.472 | .943× | 3/3 |
+
+The change saves material time for cheap estimators that spend much of a fold computing predictions, but not for the slower forest in this small sample. This is a general redundant-work fix, not a search-policy adjustment tuned to one dataset. The [24-fit paired artifact](results/performance-v2/train-score-overhead.json) contains per-run timings, CV winners, source hash and exact script. To rerun from the repository root in PowerShell:
+
+```powershell
+New-Item -ItemType Directory -Force -Path .agent-runs/performance-v2 | Out-Null
+.\.venv\Scripts\python.exe -c "import json,pathlib; a=json.loads(pathlib.Path('benchmarks/results/performance-v2/train-score-overhead.json').read_text(encoding='utf-8')); pathlib.Path('.agent-runs/performance-v2/train-score-overhead.py').write_text(a['reproduction_script'], encoding='utf-8')"
+.\.venv\Scripts\python.exe .agent-runs/performance-v2/train-score-overhead.py
 ```

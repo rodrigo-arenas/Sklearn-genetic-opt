@@ -86,6 +86,35 @@ def test_default_n_jobs_is_none():
     assert estimator.get_params()["population_initializer"] == "smart"
 
 
+def test_search_default_omits_train_cv_scores():
+    scored_rows = []
+
+    def score(model, X, y):
+        scored_rows.append(len(X))
+        return model.score(X, y)
+
+    search = GASearchCV(
+        DecisionTreeClassifier(random_state=0),
+        param_grid={
+            "max_depth": Integer(2, 5),
+            "criterion": Categorical(["gini", "entropy"]),
+        },
+        cv=3,
+        population_size=2,
+        generations=0,
+        scoring=score,
+        verbose=False,
+        n_jobs=1,
+        random_state=0,
+    )
+
+    search.fit(X_train[:90], y_train[:90])
+
+    assert search.return_train_score is False
+    assert "mean_train_score" not in search.cv_results_
+    assert scored_rows and set(scored_rows) == {30}
+
+
 @pytest.mark.parametrize("kind", ["parameters", "features"])
 @pytest.mark.parametrize("criteria", ["max", "min"])
 def test_differential_evolution_search_improves_with_bounded_evaluations(kind, criteria):

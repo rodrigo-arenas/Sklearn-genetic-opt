@@ -894,6 +894,7 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
             verbose=verbose,
             pre_dispatch=pre_dispatch,
             error_score=error_score,
+            return_train_score=return_train_score,
         )
 
     def _register(self):

@@ -20,6 +20,10 @@ Finite cached spaces stop after full coverage, and `TimerStopping` checks the
 deadline between candidate batches. These are workload-dependent gains: reduced
 training can change candidate rankings, and final validation and refitting add
 time beyond the requested search budget.
+`GASearchCV` also now honors its documented `return_train_score=False` default:
+it skips train-fold scoring unless explicitly requested. A paired four-family
+benchmark found identical CV winners; cheap tree, KNN and ElasticNet searches
+finished 1.23–1.84× sooner, while random-forest timing did not improve.
 
 The optional `eaDifferentialEvolution` algorithm and chained local refinement
 offer additional evolutionary strategies. Regression forest `fast` presets now
@@ -43,6 +47,9 @@ Benchmarks include Optuna, FLAML and AutoGluon, with reproducible settings in
 Several workloads improve by more than four times, while others regress in
 quality or time; these results do not establish a general 4× gain or superiority
 over every AutoML system.
+The HPO timing comparisons in that report preceding the train-fold scoring fix
+were measured with its former effective setting. They should not be read as
+timings of the corrected default; the paired correction benchmark appears there.
 Across six held-out splits per dataset in a five-fold SVC comparison, one-fold
 evolution with eight full-CV finalists made `GASearchCV` 4.09–4.81× faster than
 its full-fold search. Mean accuracy increased slightly on breast cancer and
@@ -72,6 +79,16 @@ A broader equal-budget feature-mask control also favored the GA on three
 classifier/model families, but random masks did better on Diabetes/Ridge
 regression despite the GA's higher mean CV score. These results reinforce the
 need to validate both methods on the user's own model and data.
+On four additional imbalanced, sparse, linear-regression and nonlinear-regression
+tasks, the GA won two mean held-out scores and lost two against equal-budget
+random masks. The defaults were not retuned to the earlier datasets.
+An additional four-family HPO transfer check against `RandomizedSearchCV`
+found three GA mean held-out wins and one loss. After the train-fold scoring
+fix, the GA/random time ratio was .81× for Digits/KNN, .93× for synthetic forest,
+1.05× for Diabetes/ElasticNet and 1.44× for Wine/tree. All 40 per-run quality
+results and chosen parameters matched the pre-fix benchmark exactly.
+These controls are documented with per-split results and reproduction scripts
+in the benchmark report.
 
 The repository [changelog](https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/CHANGELOG.md)
 lists the remaining changes in this upcoming release.

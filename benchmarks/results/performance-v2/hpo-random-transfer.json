@@ -1,0 +1,652 @@
+{
+  "question": "Does default GA HPO beat equal-budget RandomizedSearchCV across model families?",
+  "source_commit": "5505804443e263c3b2978f62087ab10d2b115434",
+  "settings": {
+    "outer_test_fraction": 0.25,
+    "seeds": [
+      1091,
+      1092,
+      1093,
+      1094,
+      1095
+    ],
+    "cv_folds": 3,
+    "ga_population_size": 8,
+    "ga_generations": 4,
+    "max_proposals": 72,
+    "random_candidate_limit": {
+      "wine-tree": 28,
+      "digits-knn": 50,
+      "diabetes-elasticnet": 72,
+      "synthetic-forest": 72
+    },
+    "workers": 1,
+    "metrics": {
+      "wine-tree": "accuracy",
+      "digits-knn": "accuracy",
+      "diabetes-elasticnet": "neg_mean_squared_error",
+      "synthetic-forest": "accuracy"
+    }
+  },
+  "environment": {
+    "python": "3.12.0",
+    "numpy": "2.5.3",
+    "scipy": "1.18.1",
+    "scikit_learn": "1.9.1"
+  },
+  "source_sha256": "6ac1a3d1c60675324a6cf250141cc9831f8508086073a4fdfc3d38d6af6947dd",
+  "raw_sha256": "519d19ba76fc68cc8766b2443e1bf45086807fc0794dfc1a3999b6eccfee4af9",
+  "summary": [
+    {
+      "task": "wine-tree",
+      "mean_genetic_holdout": 0.88,
+      "mean_random_holdout": 0.8844444444444445,
+      "mean_holdout_delta": -0.004444444444444429,
+      "wins": 1,
+      "ties": 3,
+      "losses": 1,
+      "mean_time_ratio_genetic_to_random": 1.5078564523069036,
+      "mean_genetic_candidate_cv_calls": 27.8,
+      "mean_random_candidate_cv_calls": 28
+    },
+    {
+      "task": "digits-knn",
+      "mean_genetic_holdout": 0.9755555555555555,
+      "mean_random_holdout": 0.975111111111111,
+      "mean_holdout_delta": 0.0004444444444444695,
+      "wins": 1,
+      "ties": 3,
+      "losses": 1,
+      "mean_time_ratio_genetic_to_random": 1.7449542981656714,
+      "mean_genetic_candidate_cv_calls": 39.8,
+      "mean_random_candidate_cv_calls": 50
+    },
+    {
+      "task": "diabetes-elasticnet",
+      "mean_genetic_holdout": -3463.343956896543,
+      "mean_random_holdout": -3478.708638188256,
+      "mean_holdout_delta": 15.364681291712714,
+      "wins": 3,
+      "ties": 0,
+      "losses": 2,
+      "mean_time_ratio_genetic_to_random": 1.168981769123242,
+      "mean_genetic_candidate_cv_calls": 70.6,
+      "mean_random_candidate_cv_calls": 72
+    },
+    {
+      "task": "synthetic-forest",
+      "mean_genetic_holdout": 0.8733333333333334,
+      "mean_random_holdout": 0.8653333333333333,
+      "mean_holdout_delta": 0.00800000000000003,
+      "wins": 2,
+      "ties": 2,
+      "losses": 1,
+      "mean_time_ratio_genetic_to_random": 0.9503789925366201,
+      "mean_genetic_candidate_cv_calls": 65.6,
+      "mean_random_candidate_cv_calls": 72
+    }
+  ],
+  "records": [
+    {
+      "task": "wine-tree",
+      "seed": 1091,
+      "method": "genetic",
+      "seconds": 0.3245212000038009,
+      "cv_score": 0.9323232323232323,
+      "holdout": 0.9555555555555556,
+      "params": {
+        "max_depth": 9,
+        "criterion": "gini"
+      },
+      "candidate_cv_calls": 28,
+      "proposals": 72
+    },
+    {
+      "task": "wine-tree",
+      "seed": 1091,
+      "method": "random",
+      "seconds": 0.20948609997867607,
+      "cv_score": 0.9323232323232323,
+      "holdout": 0.9333333333333333,
+      "params": {
+        "max_depth": 5,
+        "criterion": "gini"
+      },
+      "candidate_cv_calls": 28,
+      "proposals": 28
+    },
+    {
+      "task": "wine-tree",
+      "seed": 1092,
+      "method": "random",
+      "seconds": 0.21082439998281188,
+      "cv_score": 0.9173400673400672,
+      "holdout": 0.8222222222222222,
+      "params": {
+        "max_depth": 3,
+        "criterion": "entropy"
+      },
+      "candidate_cv_calls": 28,
+      "proposals": 28
+    },
+    {
+      "task": "wine-tree",
+      "seed": 1092,
+      "method": "genetic",
+      "seconds": 0.30124470000737347,
+      "cv_score": 0.9173400673400672,
+      "holdout": 0.7777777777777778,
+      "params": {
+        "max_depth": 5,
+        "criterion": "entropy"
+      },
+      "candidate_cv_calls": 28,
+      "proposals": 72
+    },
+    {
+      "task": "wine-tree",
+      "seed": 1093,
+      "method": "genetic",
+      "seconds": 0.2729166000208352,
+      "cv_score": 0.9099326599326599,
+      "holdout": 0.9111111111111111,
+      "params": {
+        "max_depth": 3,
+        "criterion": "entropy"
+      },
+      "candidate_cv_calls": 28,
+      "proposals": 72
+    },
+    {
+      "task": "wine-tree",
+      "seed": 1093,
+      "method": "random",
+      "seconds": 0.17377169997780584,
+      "cv_score": 0.9099326599326599,
+      "holdout": 0.9111111111111111,
+      "params": {
+        "max_depth": 3,
+        "criterion": "entropy"
+      },
+      "candidate_cv_calls": 28,
+      "proposals": 28
+    },
+    {
+      "task": "wine-tree",
+      "seed": 1094,
+      "method": "random",
+      "seconds": 0.17353900001035072,
+      "cv_score": 0.9099326599326599,
+      "holdout": 0.8666666666666667,
+      "params": {
+        "max_depth": 3,
+        "criterion": "gini"
+      },
+      "candidate_cv_calls": 28,
+      "proposals": 28
+    },
+    {
+      "task": "wine-tree",
+      "seed": 1094,
+      "method": "genetic",
+      "seconds": 0.25707279998459853,
+      "cv_score": 0.9099326599326599,
+      "holdout": 0.8666666666666667,
+      "params": {
+        "max_depth": 7,
+        "criterion": "gini"
+      },
+      "candidate_cv_calls": 27,
+      "proposals": 72
+    },
+    {
+      "task": "wine-tree",
+      "seed": 1095,
+      "method": "genetic",
+      "seconds": 0.27530619999743067,
+      "cv_score": 0.902020202020202,
+      "holdout": 0.8888888888888888,
+      "params": {
+        "max_depth": 14,
+        "criterion": "entropy"
+      },
+      "candidate_cv_calls": 28,
+      "proposals": 72
+    },
+    {
+      "task": "wine-tree",
+      "seed": 1095,
+      "method": "random",
+      "seconds": 0.18239910001284443,
+      "cv_score": 0.902020202020202,
+      "holdout": 0.8888888888888888,
+      "params": {
+        "max_depth": 4,
+        "criterion": "entropy"
+      },
+      "candidate_cv_calls": 28,
+      "proposals": 28
+    },
+    {
+      "task": "digits-knn",
+      "seed": 1091,
+      "method": "genetic",
+      "seconds": 1.845694400020875,
+      "cv_score": 0.9688195991091314,
+      "holdout": 0.9733333333333334,
+      "params": {
+        "kneighborsclassifier__n_neighbors": 3,
+        "kneighborsclassifier__weights": "distance"
+      },
+      "candidate_cv_calls": 39,
+      "proposals": 72
+    },
+    {
+      "task": "digits-knn",
+      "seed": 1091,
+      "method": "random",
+      "seconds": 1.0319617000059225,
+      "cv_score": 0.969561989606533,
+      "holdout": 0.9755555555555555,
+      "params": {
+        "kneighborsclassifier__weights": "distance",
+        "kneighborsclassifier__n_neighbors": 4
+      },
+      "candidate_cv_calls": 50,
+      "proposals": 50
+    },
+    {
+      "task": "digits-knn",
+      "seed": 1092,
+      "method": "random",
+      "seconds": 1.0210534000070766,
+      "cv_score": 0.9777282850779511,
+      "holdout": 0.9577777777777777,
+      "params": {
+        "kneighborsclassifier__weights": "uniform",
+        "kneighborsclassifier__n_neighbors": 3
+      },
+      "candidate_cv_calls": 50,
+      "proposals": 50
+    },
+    {
+      "task": "digits-knn",
+      "seed": 1092,
+      "method": "genetic",
+      "seconds": 1.9159107999876142,
+      "cv_score": 0.9777282850779511,
+      "holdout": 0.9577777777777777,
+      "params": {
+        "kneighborsclassifier__n_neighbors": 3,
+        "kneighborsclassifier__weights": "uniform"
+      },
+      "candidate_cv_calls": 43,
+      "proposals": 72
+    },
+    {
+      "task": "digits-knn",
+      "seed": 1093,
+      "method": "genetic",
+      "seconds": 1.843695099989418,
+      "cv_score": 0.9755011135857461,
+      "holdout": 0.9888888888888889,
+      "params": {
+        "kneighborsclassifier__n_neighbors": 3,
+        "kneighborsclassifier__weights": "distance"
+      },
+      "candidate_cv_calls": 39,
+      "proposals": 72
+    },
+    {
+      "task": "digits-knn",
+      "seed": 1093,
+      "method": "random",
+      "seconds": 1.1367230999749154,
+      "cv_score": 0.9755011135857461,
+      "holdout": 0.9888888888888889,
+      "params": {
+        "kneighborsclassifier__weights": "distance",
+        "kneighborsclassifier__n_neighbors": 3
+      },
+      "candidate_cv_calls": 50,
+      "proposals": 50
+    },
+    {
+      "task": "digits-knn",
+      "seed": 1094,
+      "method": "random",
+      "seconds": 1.1570369999972172,
+      "cv_score": 0.9703043801039346,
+      "holdout": 0.9755555555555555,
+      "params": {
+        "kneighborsclassifier__weights": "distance",
+        "kneighborsclassifier__n_neighbors": 8
+      },
+      "candidate_cv_calls": 50,
+      "proposals": 50
+    },
+    {
+      "task": "digits-knn",
+      "seed": 1094,
+      "method": "genetic",
+      "seconds": 1.912608899991028,
+      "cv_score": 0.9688195991091314,
+      "holdout": 0.98,
+      "params": {
+        "kneighborsclassifier__n_neighbors": 4,
+        "kneighborsclassifier__weights": "distance"
+      },
+      "candidate_cv_calls": 37,
+      "proposals": 72
+    },
+    {
+      "task": "digits-knn",
+      "seed": 1095,
+      "method": "genetic",
+      "seconds": 2.1623060000129044,
+      "cv_score": 0.9725315515961395,
+      "holdout": 0.9777777777777777,
+      "params": {
+        "kneighborsclassifier__n_neighbors": 4,
+        "kneighborsclassifier__weights": "distance"
+      },
+      "candidate_cv_calls": 41,
+      "proposals": 72
+    },
+    {
+      "task": "digits-knn",
+      "seed": 1095,
+      "method": "random",
+      "seconds": 1.2114616000035312,
+      "cv_score": 0.9725315515961395,
+      "holdout": 0.9777777777777777,
+      "params": {
+        "kneighborsclassifier__weights": "distance",
+        "kneighborsclassifier__n_neighbors": 4
+      },
+      "candidate_cv_calls": 50,
+      "proposals": 50
+    },
+    {
+      "task": "diabetes-elasticnet",
+      "seed": 1091,
+      "method": "genetic",
+      "seconds": 0.8542548000114039,
+      "cv_score": -3109.2795976992347,
+      "holdout": -3103.054567067527,
+      "params": {
+        "elasticnet__alpha": 0.6599023255061479,
+        "elasticnet__l1_ratio": 0.8440307953447075
+      },
+      "candidate_cv_calls": 69,
+      "proposals": 72
+    },
+    {
+      "task": "diabetes-elasticnet",
+      "seed": 1091,
+      "method": "random",
+      "seconds": 0.7923136999888811,
+      "cv_score": -3112.7387861625816,
+      "holdout": -3096.294277966395,
+      "params": {
+        "elasticnet__alpha": 0.5101254057634768,
+        "elasticnet__l1_ratio": 0.8324297587389508
+      },
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "task": "diabetes-elasticnet",
+      "seed": 1092,
+      "method": "random",
+      "seconds": 0.8853371000150219,
+      "cv_score": -2956.3168718490856,
+      "holdout": -3511.1155633530234,
+      "params": {
+        "elasticnet__alpha": 0.12797680554543797,
+        "elasticnet__l1_ratio": 0.2836752090922507
+      },
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "task": "diabetes-elasticnet",
+      "seed": 1092,
+      "method": "genetic",
+      "seconds": 1.0497579000075348,
+      "cv_score": -2955.3890678105877,
+      "holdout": -3504.479016855434,
+      "params": {
+        "elasticnet__alpha": 0.14985344452354646,
+        "elasticnet__l1_ratio": 0.26767525224692407
+      },
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "task": "diabetes-elasticnet",
+      "seed": 1093,
+      "method": "genetic",
+      "seconds": 1.1132374000153504,
+      "cv_score": -2841.088083172832,
+      "holdout": -3585.558623687882,
+      "params": {
+        "elasticnet__alpha": 0.6290821150906929,
+        "elasticnet__l1_ratio": 0.9764466029280037
+      },
+      "candidate_cv_calls": 71,
+      "proposals": 72
+    },
+    {
+      "task": "diabetes-elasticnet",
+      "seed": 1093,
+      "method": "random",
+      "seconds": 0.794140799989691,
+      "cv_score": -2842.1024778353944,
+      "holdout": -3652.7865732689397,
+      "params": {
+        "elasticnet__alpha": 2.5476360600836845,
+        "elasticnet__l1_ratio": 0.9886991462921884
+      },
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "task": "diabetes-elasticnet",
+      "seed": 1094,
+      "method": "random",
+      "seconds": 0.8184066999820061,
+      "cv_score": -2823.4860442076897,
+      "holdout": -3424.8578408934895,
+      "params": {
+        "elasticnet__alpha": 0.07880465855478506,
+        "elasticnet__l1_ratio": 0.42337546549041055
+      },
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "task": "diabetes-elasticnet",
+      "seed": 1094,
+      "method": "genetic",
+      "seconds": 0.8793653000029735,
+      "cv_score": -2823.3665330833755,
+      "holdout": -3428.217379004396,
+      "params": {
+        "elasticnet__alpha": 0.0958884955060502,
+        "elasticnet__l1_ratio": 0.4358204882275632
+      },
+      "candidate_cv_calls": 71,
+      "proposals": 72
+    },
+    {
+      "task": "diabetes-elasticnet",
+      "seed": 1095,
+      "method": "genetic",
+      "seconds": 0.9262516000017058,
+      "cv_score": -2816.819306720357,
+      "holdout": -3695.4101978674776,
+      "params": {
+        "elasticnet__alpha": 0.4675697186706783,
+        "elasticnet__l1_ratio": 0.8592892825091102
+      },
+      "candidate_cv_calls": 70,
+      "proposals": 72
+    },
+    {
+      "task": "diabetes-elasticnet",
+      "seed": 1095,
+      "method": "random",
+      "seconds": 0.8384508999879472,
+      "cv_score": -2816.182296232644,
+      "holdout": -3708.488935459433,
+      "params": {
+        "elasticnet__alpha": 0.12873140978029024,
+        "elasticnet__l1_ratio": 0.12901740812365592
+      },
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "task": "synthetic-forest",
+      "seed": 1091,
+      "method": "genetic",
+      "seconds": 11.27546910001547,
+      "cv_score": 0.851111111111111,
+      "holdout": 0.8866666666666667,
+      "params": {
+        "n_estimators": 39,
+        "max_depth": 9
+      },
+      "candidate_cv_calls": 66,
+      "proposals": 72
+    },
+    {
+      "task": "synthetic-forest",
+      "seed": 1091,
+      "method": "random",
+      "seconds": 12.390526100003626,
+      "cv_score": 0.8555555555555555,
+      "holdout": 0.8733333333333333,
+      "params": {
+        "n_estimators": 52,
+        "max_depth": 9
+      },
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "task": "synthetic-forest",
+      "seed": 1092,
+      "method": "random",
+      "seconds": 11.828031499986537,
+      "cv_score": 0.8711111111111111,
+      "holdout": 0.8866666666666667,
+      "params": {
+        "n_estimators": 57,
+        "max_depth": 12
+      },
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "task": "synthetic-forest",
+      "seed": 1092,
+      "method": "genetic",
+      "seconds": 12.024686999997357,
+      "cv_score": 0.8711111111111111,
+      "holdout": 0.8866666666666667,
+      "params": {
+        "n_estimators": 57,
+        "max_depth": 12
+      },
+      "candidate_cv_calls": 68,
+      "proposals": 72
+    },
+    {
+      "task": "synthetic-forest",
+      "seed": 1093,
+      "method": "genetic",
+      "seconds": 10.582347699993988,
+      "cv_score": 0.8622222222222223,
+      "holdout": 0.8866666666666667,
+      "params": {
+        "n_estimators": 46,
+        "max_depth": 12
+      },
+      "candidate_cv_calls": 64,
+      "proposals": 72
+    },
+    {
+      "task": "synthetic-forest",
+      "seed": 1093,
+      "method": "random",
+      "seconds": 10.095767799997702,
+      "cv_score": 0.8622222222222223,
+      "holdout": 0.8866666666666667,
+      "params": {
+        "n_estimators": 46,
+        "max_depth": 12
+      },
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "task": "synthetic-forest",
+      "seed": 1094,
+      "method": "random",
+      "seconds": 11.251128499978222,
+      "cv_score": 0.8488888888888889,
+      "holdout": 0.84,
+      "params": {
+        "n_estimators": 59,
+        "max_depth": 6
+      },
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "task": "synthetic-forest",
+      "seed": 1094,
+      "method": "genetic",
+      "seconds": 11.096468200004892,
+      "cv_score": 0.8488888888888889,
+      "holdout": 0.82,
+      "params": {
+        "n_estimators": 54,
+        "max_depth": 6
+      },
+      "candidate_cv_calls": 67,
+      "proposals": 72
+    },
+    {
+      "task": "synthetic-forest",
+      "seed": 1095,
+      "method": "genetic",
+      "seconds": 12.239238900016062,
+      "cv_score": 0.8644444444444445,
+      "holdout": 0.8866666666666667,
+      "params": {
+        "n_estimators": 60,
+        "max_depth": 9
+      },
+      "candidate_cv_calls": 63,
+      "proposals": 72
+    },
+    {
+      "task": "synthetic-forest",
+      "seed": 1095,
+      "method": "random",
+      "seconds": 15.476814800000284,
+      "cv_score": 0.8488888888888889,
+      "holdout": 0.84,
+      "params": {
+        "n_estimators": 26,
+        "max_depth": 9
+      },
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    }
+  ],
+  "reproduction_script": "\"\"\"Equal-budget HPO GA versus sklearn random search across model families.\"\"\"\n\nimport json\nimport time\nfrom pathlib import Path\n\nimport numpy as np\nfrom scipy.stats import loguniform, uniform\nfrom sklearn.base import clone\nfrom sklearn.datasets import load_diabetes, load_digits, load_wine, make_classification\nfrom sklearn.ensemble import RandomForestClassifier\nfrom sklearn.linear_model import ElasticNet\nfrom sklearn.metrics import accuracy_score, mean_squared_error\nfrom sklearn.model_selection import KFold, RandomizedSearchCV, StratifiedKFold, train_test_split\nfrom sklearn.neighbors import KNeighborsClassifier\nfrom sklearn.pipeline import make_pipeline\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.tree import DecisionTreeClassifier\nfrom threadpoolctl import threadpool_limits\n\nfrom sklearn_genetic import GASearchCV\nfrom sklearn_genetic.space import Categorical, Continuous, Integer\n\n\ntasks = {\n    \"wine-tree\": dict(\n        data=load_wine(return_X_y=True), model=DecisionTreeClassifier(random_state=0),\n        ga_space={\"max_depth\": Integer(2, 15), \"criterion\": Categorical([\"gini\", \"entropy\"])},\n        random_space={\"max_depth\": list(range(2, 16)), \"criterion\": [\"gini\", \"entropy\"]},\n        random_budget=28, regression=False,\n    ),\n    \"digits-knn\": dict(\n        data=load_digits(return_X_y=True),\n        model=make_pipeline(StandardScaler(), KNeighborsClassifier(n_jobs=1)),\n        ga_space={\"kneighborsclassifier__n_neighbors\": Integer(1, 25), \"kneighborsclassifier__weights\": Categorical([\"uniform\", \"distance\"])},\n        random_space={\"kneighborsclassifier__n_neighbors\": list(range(1, 26)), \"kneighborsclassifier__weights\": [\"uniform\", \"distance\"]},\n        random_budget=50, regression=False,\n    ),\n    \"diabetes-elasticnet\": dict(\n        data=load_diabetes(return_X_y=True),\n        model=make_pipeline(StandardScaler(), ElasticNet(max_iter=2000, random_state=0)),\n        ga_space={\"elasticnet__alpha\": Continuous(0.001, 10, distribution=\"log-uniform\"), \"elasticnet__l1_ratio\": Continuous(0.01, 0.99)},\n        random_space={\"elasticnet__alpha\": loguniform(0.001, 10), \"elasticnet__l1_ratio\": uniform(0.01, 0.98)},\n        random_budget=72, regression=True,\n    ),\n    \"synthetic-forest\": dict(\n        data=make_classification(n_samples=600, n_features=20, n_informative=8, n_redundant=4, random_state=29),\n        model=RandomForestClassifier(random_state=0, n_jobs=1),\n        ga_space={\"n_estimators\": Integer(20, 60), \"max_depth\": Integer(2, 12)},\n        random_space={\"n_estimators\": list(range(20, 61)), \"max_depth\": list(range(2, 13))},\n        random_budget=72, regression=False,\n    ),\n}\noutput = Path(\".agent-runs/performance-v2/hpo-random-transfer.jsonl\")\nwith threadpool_limits(limits=1), output.open(\"w\", encoding=\"utf-8\") as stream:\n    for task_name, task in tasks.items():\n        X, y = task[\"data\"]\n        for seed in range(1091, 1096):\n            train, test = train_test_split(\n                np.arange(len(y)), test_size=0.25,\n                stratify=None if task[\"regression\"] else y, random_state=seed,\n            )\n            Xtr, Xte, ytr, yte = X[train], X[test], y[train], y[test]\n            splitter = KFold(3, shuffle=True, random_state=seed) if task[\"regression\"] else StratifiedKFold(3, shuffle=True, random_state=seed)\n            folds = list(splitter.split(Xtr, ytr))\n            metric = \"neg_mean_squared_error\" if task[\"regression\"] else \"accuracy\"\n            methods = (\"genetic\", \"random\") if seed % 2 else (\"random\", \"genetic\")\n            for method in methods:\n                if method == \"genetic\":\n                    search = GASearchCV(\n                        clone(task[\"model\"]), param_grid=task[\"ga_space\"], cv=folds,\n                        scoring=metric, population_size=8, generations=4,\n                        random_state=seed, n_jobs=1, verbose=False, error_score=\"raise\",\n                    )\n                else:\n                    search = RandomizedSearchCV(\n                        clone(task[\"model\"]), param_distributions=task[\"random_space\"],\n                        n_iter=task[\"random_budget\"], cv=folds, scoring=metric,\n                        random_state=seed, n_jobs=1, error_score=\"raise\",\n                    )\n                started = time.perf_counter()\n                search.fit(Xtr, ytr)\n                seconds = time.perf_counter() - started\n                predictions = search.best_estimator_.predict(Xte)\n                holdout = -mean_squared_error(yte, predictions) if task[\"regression\"] else accuracy_score(yte, predictions)\n                params = {k: v.item() if isinstance(v, np.generic) else v for k, v in search.best_params_.items()}\n                row = dict(\n                    task=task_name, seed=seed, method=method,\n                    seconds=seconds, cv_score=float(search.best_score_),\n                    holdout=float(holdout), params=params,\n                    candidate_cv_calls=int(search.fit_stats_[\"cross_validate_calls\"])\n                    if method == \"genetic\" else len(search.cv_results_[\"params\"]),\n                    proposals=int(search.fit_stats_[\"evaluated_candidates\"])\n                    if method == \"genetic\" else task[\"random_budget\"],\n                )\n                stream.write(json.dumps(row) + \"\\n\")\n                stream.flush()\n                print(task_name, seed, method, f\"holdout={holdout:.6f}\",\n                      f\"seconds={seconds:.3f}\", flush=True)\n"
+}
