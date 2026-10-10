@@ -1,6 +1,6 @@
 # Continued performance work
 
-Baseline: `d6b2f3aab9cee50322934ec8c00c585e2fcbac2f`. This is an ongoing investigation of both `GASearchCV` and `GAFeatureSelectionCV`; a general 4× training or solution-quality improvement has not been established.
+Baseline: `d6b2f3aab9cee50322934ec8c00c585e2fcbac2f`. This is an ongoing investigation of both `GASearchCV` and `GAFeatureSelectionCV`.
 
 Timing note: HPO comparisons below through the four-family random-search transfer matrix were measured before the `return_train_score=False` fix. The constructor advertised `False` but scikit-learn's base initializer reset it to `True`, adding training-fold scoring. Their solution-quality observations remain useful; their elapsed-time ratios do not directly describe the corrected 0.14.0 code. The final paired overhead section measures the correction across model families.
 
