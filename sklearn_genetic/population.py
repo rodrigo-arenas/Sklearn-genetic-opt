@@ -5,6 +5,7 @@ from scipy.stats import qmc
 from sklearn.utils import check_random_state
 
 from .space import Categorical, Continuous, Integer, Space
+from .optimizer_control import finite_search_space_size
 
 
 def validate_population_initializer(population_initializer):
@@ -189,9 +190,14 @@ def smart_search_population(estimator, toolbox, individual_cls):
 
         _append_unique_individual(population, seen_individuals, individual_values, individual_cls)
 
+    space_size = finite_search_space_size(estimator, estimator.population_size)
     attempts = 0
     max_attempts = max(100, estimator.population_size * 20)
-    while len(population) < estimator.population_size and attempts < max_attempts:
+    while (
+        len(population) < estimator.population_size
+        and attempts < max_attempts
+        and (space_size is None or len(seen_individuals) < space_size)
+    ):
         individual = toolbox.individual()
         _append_unique_individual(population, seen_individuals, list(individual), individual_cls)
         attempts += 1
@@ -230,9 +236,14 @@ def smart_feature_population(estimator, toolbox, individual_cls):
 
         _append_unique_individual(population, seen_individuals, values, individual_cls)
 
+    space_size = finite_search_space_size(estimator, estimator.population_size)
     attempts = 0
     max_attempts = max(100, estimator.population_size * 20)
-    while len(population) < estimator.population_size and attempts < max_attempts:
+    while (
+        len(population) < estimator.population_size
+        and attempts < max_attempts
+        and (space_size is None or len(seen_individuals) < space_size)
+    ):
         values = _bounded_feature_mask(estimator.n_features, max_selected)
         _append_unique_individual(population, seen_individuals, values, individual_cls)
         attempts += 1

@@ -2035,3 +2035,114 @@ def test_smart_initialization_samples_beyond_category_prefix(weighted):
         assert set(counts) == {17, 18, 19, 20}
     else:
         assert set(counts) == set(range(1, 21))
+
+
+@pytest.mark.parametrize("kind", ["parameters", "features"])
+@pytest.mark.parametrize("size", [1, 2])
+def test_saturated_initial_population_avoids_impossible_unique_sampling(monkeypatch, kind, size):
+    import random
+
+    calls = 0
+    original = Integer.sample if kind == "parameters" else random.sample
+
+    def counted_sample(*args, **kwargs):
+        nonlocal calls
+        calls += 1
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(Integer if kind == "parameters" else random, "sample", counted_sample)
+    common = dict(
+        population_size=12,
+        generations=0,
+        random_state=17,
+        cv=2,
+        n_jobs=1,
+        verbose=False,
+        scoring="accuracy",
+    )
+    model = DecisionTreeClassifier(random_state=17)
+    search = (
+        GASearchCV(model, param_grid={"max_depth": Integer(1, size)}, **common)
+        if kind == "parameters"
+        else genetic_search.GAFeatureSelectionCV(model, max_features=1, **common)
+    )
+    data = X_train[:40, :size]
+    search.fit(data, y_train[:40])
+    assert search.fit_stats_["cross_validate_calls"] == size
+    assert search.history["population_size"] == [12]
+    assert calls <= 12
+    assert search.predict(data).shape == (40,)
+
+
+@pytest.mark.parametrize("kind,seed", [("parameters", 1), ("features", 3)])
+def test_initial_population_keeps_sampling_until_finite_coverage(kind, seed):
+    from sklearn.datasets import load_iris
+
+    data, target = load_iris(return_X_y=True)
+    common = dict(
+        population_size=8, generations=0, random_state=seed, cv=2, n_jobs=1, verbose=False
+    )
+    model = DecisionTreeClassifier(random_state=0)
+    search = (
+        GASearchCV(
+            model,
+            param_grid={"max_depth": Integer(1, 3), "min_samples_leaf": Integer(1, 2)},
+            **common,
+        )
+        if kind == "parameters"
+        else genetic_search.GAFeatureSelectionCV(model, max_features=2, **common)
+    )
+    search.fit(data[:, :3], target)
+    assert search.fit_stats_["cross_validate_calls"] == 6
+    assert search.search_space_exhausted_
+    assert search.history["population_size"] == [8]
+
+
+@pytest.mark.parametrize("kind", ["parameters", "features", "custom", "continuous"])
+def test_initial_population_retains_retries_without_proven_capacity(monkeypatch, kind):
+    import random
+    from ..space.base import BaseDimension
+
+    calls = 0
+
+    class CustomDepth(BaseDimension):
+        def sample(self):
+            return 1
+
+    dimension = (
+        CustomDepth()
+        if kind == "custom"
+        else Continuous(0.0, np.nextafter(0.0, 1.0)) if kind == "continuous" else Integer(1, 1)
+    )
+    owner = random if kind == "features" else type(dimension)
+    original = owner.sample
+
+    def counted_sample(*args, **kwargs):
+        nonlocal calls
+        calls += 1
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(owner, "sample", counted_sample)
+    common = dict(
+        population_size=12,
+        generations=0,
+        random_state=17,
+        cv=2,
+        n_jobs=1,
+        verbose=False,
+        use_cache=kind in ("custom", "continuous"),
+    )
+    model = DecisionTreeClassifier(random_state=17)
+    search = (
+        genetic_search.GAFeatureSelectionCV(model, max_features=1, **common)
+        if kind == "features"
+        else GASearchCV(
+            model,
+            param_grid={"ccp_alpha" if kind == "continuous" else "max_depth": dimension},
+            **common,
+        )
+    )
+    search.fit(X_train[:40, :1], y_train[:40])
+    assert calls >= 240
+    assert search.history["population_size"] == [12]
+    assert not search.search_space_exhausted_

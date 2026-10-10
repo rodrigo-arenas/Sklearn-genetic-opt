@@ -26,7 +26,7 @@ def run(args):
 
     rows = []
     with threadpool_limits(limits=1):
-        for case in (
+        for case in args.cases or (
             "hpo-small",
             "hpo-medium",
             "hpo-continuous",
@@ -47,8 +47,8 @@ def run(args):
                 common = dict(
                     cv=cv,
                     scoring="accuracy",
-                    population_size=20,
-                    generations=40,
+                    population_size=args.population_size,
+                    generations=args.generations,
                     n_jobs=1,
                     random_state=seed,
                     verbose=False,
@@ -91,6 +91,8 @@ def run(args):
         json.dumps(
             dict(
                 results=rows,
+                population_size=args.population_size,
+                generations=args.generations,
                 source_root=str(args.source_root),
                 python=platform.python_version(),
                 platform=platform.platform(),
@@ -110,9 +112,23 @@ def main():
     parser.add_argument("--source-root", type=Path)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--seeds", type=int, default=3)
+    parser.add_argument("--population-size", type=int, default=20)
+    parser.add_argument("--generations", type=int, default=40)
+    parser.add_argument(
+        "--cases",
+        nargs="+",
+        choices=[
+            "hpo-small",
+            "hpo-medium",
+            "hpo-continuous",
+            "features-small",
+            "features-medium",
+            "features-wide",
+        ],
+    )
     args = parser.parse_args()
-    if args.seeds < 1:
-        parser.error("seeds must be >=1")
+    if args.seeds < 1 or args.population_size < 2 or args.generations < 0:
+        parser.error("seeds must be >=1, population-size >=2 and generations >=0")
     run(args)
 
 
