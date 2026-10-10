@@ -114,3 +114,39 @@ Baseline history has 41 records for every run (generation zero included). Small 
 Reproduce with `benchmarks/benchmark_exhaustion.py --output current.json`; export the baseline package with `git archive` and add `--source-root <export-directory>` for the baseline run.
 
 [Baseline data](results/performance-v2/exhaustion-baseline.json), [current data](results/performance-v2/exhaustion-current.json), [verification](results/performance-v2/exhaustion-verification.txt).
+
+## Feature masks compared with TPE and CFO
+
+This comparison uses Optuna TPE and FLAML CFO as optimizers of a binary feature mask, not their complete AutoML workflows. All four methods use the same model, training/holdout split, three CV folds, 72 proposed candidates, one native thread, duplicate-score caching and timed final refit. Empty masks are infeasible; the GA repairs them and external optimizers receive negative infinity without a fit. No empty proposals occurred in the recorded runs. There is no feature-count cap, unlike the previous half-feature benchmark.
+
+Data: synthetic classification with 400 samples, eight informative and four redundant variables, widths 20/60/120, seeds 501–503, depth-five decision tree and scaled logistic regression. All 72 runs completed. The holdout is used only for reporting.
+
+| Method | Mean CV accuracy | Mean holdout accuracy | Mean seconds | Mean selected features |
+|---|---:|---:|---:|---:|
+| genetic | 0.7469 | 0.7178 | 1.1659 | 31.7222 |
+| differential | 0.7496 | 0.7283 | 1.0845 | 31.7222 |
+| optuna | 0.7648 | 0.7267 | 1.9438 | 35.1111 |
+| flaml | 0.7448 | 0.7122 | 1.2497 | 32.4444 |
+
+Means above cover 18 runs per method. Per-workload mean held-out accuracy follows; all timing and CV details remain in the raw results.
+
+| Width/model | GA | Differential | TPE | CFO |
+|---|---:|---:|---:|---:|
+| 20/dt | 0.7033 | 0.7533 | 0.7367 | 0.7133 |
+| 20/logistic | 0.7633 | 0.7767 | 0.7767 | 0.7700 |
+| 60/dt | 0.7300 | 0.7067 | 0.7267 | 0.7200 |
+| 60/logistic | 0.7367 | 0.7333 | 0.7000 | 0.7167 |
+| 120/dt | 0.6667 | 0.7133 | 0.7033 | 0.6633 |
+| 120/logistic | 0.7067 | 0.6867 | 0.7167 | 0.6900 |
+
+Differential evolution takes about 1.79× less time than TPE on the aggregate mean, with similar average held-out accuracy; TPE has the better average CV score. This small synthetic suite does not establish statistical superiority or equivalence to native TPOT/H2O/AutoGluon feature handling. Method order is fixed and machine load is shared, so timing is descriptive.
+
+The original bounded benchmark remains reproducible: all twelve seed-301 rows match the prior committed data exactly for CV/holdout scores, masks counts and evaluation counts. Regression tests exercise empty masks, duplicates, selection of an earlier CV winner, final refit, and CLI domain restrictions.
+
+```powershell
+.venv\Scripts\python.exe benchmarks\benchmark_features.py --output feature-optimizers.json --seed-start 501 --seeds 3 --methods genetic differential optuna flaml --unconstrained
+```
+
+[Raw data](results/performance-v2/feature-optimizers.json), [verification](results/performance-v2/feature-optimizers-verification.txt).
+
+Additional exploratory ideas were rejected: partial default seeding and boundary seeding worsened several HPO tasks; heavy-tailed feature mutation did not retain its exploratory gains on five new seeds. These experiments did not change library behavior.

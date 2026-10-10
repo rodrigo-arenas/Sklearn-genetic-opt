@@ -105,3 +105,70 @@ def test_randomized_benchmark_counts_exhausted_finite_space():
     X, y = task.dataset.loader()
     result = run_randomized(task, X, y, seed=3, budget=8, cv_splits=2)
     assert result.evaluations == 2
+
+
+@pytest.mark.parametrize("method", ["optuna", "flaml"])
+def test_feature_optimizer_rejects_empty_caches_duplicates_and_refits_best(monkeypatch, method):
+    from types import SimpleNamespace
+    import numpy as np
+    from sklearn.tree import DecisionTreeClassifier
+    from benchmarks import benchmark_features
+
+    configs = [dict(f0=0, f1=0), dict(f0=1, f1=0), dict(f0=1, f1=0), dict(f0=0, f1=1)]
+
+    class Study:
+        def optimize(self, objective, n_trials):
+            for config in configs[:n_trials]:
+                objective(SimpleNamespace(suggest_categorical=lambda name, choices: config[name]))
+
+    def tune_run(objective, num_samples, **kwargs):
+        for config in configs[:num_samples]:
+            objective(config)
+
+    monkeypatch.setitem(
+        sys.modules,
+        "optuna",
+        SimpleNamespace(
+            create_study=lambda **kwargs: Study(),
+            samplers=SimpleNamespace(TPESampler=lambda **kwargs: None),
+        ),
+    )
+    monkeypatch.setitem(
+        sys.modules,
+        "flaml",
+        SimpleNamespace(
+            CFO=lambda **kwargs: None,
+            tune=SimpleNamespace(choice=lambda choices: choices, run=tune_run),
+        ),
+    )
+    labels = np.tile([0, 1], 8)
+    X = np.column_stack([labels, np.zeros(len(labels))])
+    original_cv = benchmark_features.cross_val_score
+    evaluated = []
+
+    def counted_cv(model, features, y, **kwargs):
+        evaluated.append(features.copy())
+        return original_cv(model, features, y, **kwargs)
+
+    monkeypatch.setattr(benchmark_features, "cross_val_score", counted_cv)
+    best, mask, score, evaluations, proposals, invalid = benchmark_features.optimize_mask(
+        method, DecisionTreeClassifier(random_state=0), X, labels, 2, 0, 4
+    )
+    assert (evaluations, proposals, invalid) == (2, 4, 1)
+    assert len(evaluated) == 2
+    assert mask.tolist() == [True, False]
+    assert score == 1.0
+    assert np.array_equal(best.predict(X[:, mask]), labels)
+
+
+@pytest.mark.parametrize("method", ["optuna", "flaml"])
+def test_feature_optimizer_cli_requires_unconstrained_domain(monkeypatch, capsys, method):
+    from benchmarks import benchmark_features
+
+    monkeypatch.setattr(
+        sys, "argv", ["benchmark_features", "--output", "unused.json", "--methods", method]
+    )
+    with pytest.raises(SystemExit) as error:
+        benchmark_features.main()
+    assert error.value.code == 2
+    assert "HPO mask comparisons require --unconstrained" in capsys.readouterr().err
