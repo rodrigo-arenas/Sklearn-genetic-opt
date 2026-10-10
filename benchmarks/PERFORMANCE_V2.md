@@ -706,3 +706,21 @@ For HPO, one fold plus eight finalists is **4.13–4.68× faster** than the full
 Optuna is **1.60–3.05× faster** than GA under the matching HPO fold policy in these measurements and has higher mean held-out accuracy in five of the six dataset/policy comparisons. Both methods' reduced workflow loses .01500 accuracy on synthetic. This is evidence that lowering CV fidelity cannot simply be made the new default, and that GA candidate generation remains an important speed target. Optuna made 168 CV candidate calls per fit; `GASearchCV` made 158–167 after cache reuse. The three outer splits overlap, so small accuracy differences are descriptive. These fixed-model results do not compare full AutoML pipelines.
 
 The [raw 72-fit artifact](results/performance-v2/five-fold-promotion-svm.json) retains each paired score, time, candidate/finalist count, selected feature count, source hash, dependency version and exact reproduction scripts. The one-fold pattern is documented in the [advanced optimizer guide](../docs-vitepress/versions/latest/guide/advanced-optimizer-control.md); evaluating candidates on all configured CV folds remains the default.
+
+## Further evolutionary proposal screening
+
+Ten additional paired experiments (99 pairs) tested whether changing how individuals are generated improves the quality/time tradeoff. Most HPO runs used one-fold evolution followed by eight finalists on the original five folds, with population eight and at most 168 proposals. Post-search local refinement adds three neighbors (at most 171 proposals). The feature-mask mutation experiment used 20/60/120-variable synthetic classification, a tree and logistic regression, three folds and 72 proposals. The feature-ranking experiment used full five-fold search; its supervised ranking sees all outer-training labels, so its inner search CV is not a nested performance estimate. All runs used one CPU and untouched outer holdouts. These experiments are exploratory; their seeds and exact scripts differ by proposal.
+
+| Proposal | Pairs | Holdout wins/ties/losses | Median paired speed ratio | Worst accuracy change |
+|---|---:|---:|---:|---:|
+| Mixed local/global HPO mutation | 9 | 1/4/4 | 1.01× | −.0150 |
+| Differential HPO, new validation seeds | 9 | 1/7/1 | 1.22× | −.0200 |
+| Differential feature selection | 9 | 2/0/7 | 1.04× | −.0222 |
+| Ranked feature-mask initialization | 9 | 5/1/3 | 1.03× | −.0210 |
+| One-bit mask mutation with higher mutation probability | 18 | 7/1/10 | 1.03× | −.0900 |
+| Tournament-selected parents | 9 | 2/4/3 | 1.00× | −.0100 |
+| Bounded numeric blend crossover | 9 | 4/2/3 | 1.10× | −.0250 |
+| Post-search local refinement | 9 | 0/9/0 | .99× | .0000 |
+| Elite-neighborhood offspring | 9 | 3/5/1 | 1.09× | −.0210 |
+
+The tenth experiment was a nine-pair differential-HPO pilot: 3 wins, 4 ties, 2 losses, median speed ratio 1.30× and worst accuracy change −.0050. Its baseline and proposed runs used separate processes, so the alternating validation above is the more reliable timing check. Differential evolution improves mean candidate scores on the SVC tasks, but cannot be recommended as the new default after its holdout loss and the feature-selection regressions. The other proposals likewise fail to show a repeatable improvement in both outcomes. None changed library behavior. The [raw proposal artifact](results/performance-v2/evolution-proposal-pilots.json) includes all per-fit records, versions, source hashes, paired summaries and exact reproduction scripts. A slow baseline outlier inflates the numeric-blend aggregate timing ratio; the table uses the median paired ratio.
