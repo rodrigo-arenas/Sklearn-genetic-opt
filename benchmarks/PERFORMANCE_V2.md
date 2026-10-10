@@ -837,3 +837,24 @@ New-Item -ItemType Directory -Force -Path .agent-runs/performance-v2 | Out-Null
 .\.venv\Scripts\python.exe .agent-runs/performance-v2/hpo-progress.py
 .\.venv\Scripts\python.exe .agent-runs/performance-v2/summarize-hpo-progress.py
 ```
+
+## Default HPO evolution versus equal-budget random search
+
+The [HPO trajectory cohort above](#does-hyperparameter-evolution-improve-after-initialization) also permits an external optimizer control. On the identical 24 dataset/split/fold combinations, `RandomizedSearchCV` sampled 72 configurations from the same log-uniform `C` and `gamma` intervals and refit its CV winner. It used the same scaled RBF SVC, one CPU thread and accuracy metric. The GA proposed 72 candidates per run and made 69–72 actual CV calls after duplicate caching; random search made 72. The train/test split and CV folds match by seed, but the two cohorts were timed sequentially with every GA run first, so elapsed-time ratios are descriptive rather than clean paired timing evidence.
+
+| Dataset | GA / random mean CV accuracy | GA / random mean held-out accuracy | GA wins/ties/losses on holdout | GA / random mean seconds |
+|---|---:|---:|---:|---:|
+| Breast Cancer | .97741 / .97770 | .97465 / .97640 | 1/5/2 | 2.385 / 1.519 |
+| Digits | .98033 / .98033 | .98361 / .98417 | 3/2/3 | 28.083 / 16.725 |
+| Synthetic | .87375 / .87146 | .85687 / .86438 | 1/3/4 | 4.681 / 2.800 |
+
+On these fixed SVC tasks, default GA evolution does **not** beat independent log-uniform random sampling in mean held-out accuracy. Its mean score is lower by .00175, .00056 and .00750, respectively, despite a higher mean CV score on synthetic data. Random search also completed the timed cohorts faster, but different parameter values can have different SVC fitting cost and the fixed run order confounds exact speed ratios. The negative result is consistent with CV overfitting in the synthetic trajectory; it does not establish that random search is universally better, or explain performance of feature selection, where a separate equal-budget mask control favored the GA.
+
+The [24-pair random-control artifact](results/performance-v2/hpo-random-control.json) contains all raw random-search scores, times and winning parameters, paired summaries, split/source hashes and reproduction scripts. The GA raw records are in the [trajectory artifact](results/performance-v2/hpo-progress.json). To rerun the random cohort and summaries from the repository root in PowerShell:
+
+```powershell
+New-Item -ItemType Directory -Force -Path .agent-runs/performance-v2 | Out-Null
+.\.venv\Scripts\python.exe -c "import json,pathlib; a=json.loads(pathlib.Path('benchmarks/results/performance-v2/hpo-random-control.json').read_text(encoding='utf-8')); w=pathlib.Path('.agent-runs/performance-v2'); (w/'hpo-random-control.py').write_text(a['reproduction_script'], encoding='utf-8'); (w/'summarize-hpo-random-control.py').write_text(a['summary_script'], encoding='utf-8')"
+.\.venv\Scripts\python.exe .agent-runs/performance-v2/hpo-random-control.py
+.\.venv\Scripts\python.exe .agent-runs/performance-v2/summarize-hpo-random-control.py
+```

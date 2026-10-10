@@ -59,6 +59,12 @@ A separate 24-fit `GASearchCV` trajectory check found CV improvement in 23 runs,
 with mean held-out gains of 0.00175 on breast cancer and 0.00194 on digits,
 but a loss of 0.00125 on synthetic data. Evolutionary progress therefore
 remains workload-dependent for both public search methods.
+At the same 72-proposal budget, an additional 24-pair SVC control found that
+`RandomizedSearchCV` matched or exceeded `GASearchCV` mean held-out accuracy on
+all three datasets. The GA's mean deficit was 0.00175 on breast cancer,
+0.00056 on digits and 0.00750 on synthetic data. This remains an open HPO
+quality target for future work; the feature-mask random control above gave the
+opposite result for feature selection.
 
 The repository [changelog](https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/CHANGELOG.md)
 lists the remaining changes in this upcoming release.
