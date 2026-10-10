@@ -1,0 +1,27 @@
+PASS42finitefits;1CPU/settings,split sizes,mask bounds,training-fold fractions,promotion counts,source/data hashes.
+Total fitting seconds: 618.0808413999039
+lightgbm / autogluon / native: score 0.928886 +/- 0.004838; seconds 13.168 +/- 3.494; features 16.00
+lightgbm / features / eighth: score 0.925850 +/- 0.002943; seconds 11.900 +/- 0.467; features 16.00
+lightgbm / features / full: score 0.925850 +/- 0.002943; seconds 16.590 +/- 0.229; features 16.00
+lightgbm / features / quarter: score 0.925850 +/- 0.002943; seconds 12.230 +/- 0.133; features 16.00
+lightgbm / flaml / native: score 0.926437 +/- 0.001389; seconds 15.524 +/- 0.773; features 16.00
+lightgbm / gasearch / eighth: score 0.927025 +/- 0.002166; seconds 16.651 +/- 0.136; features 16.00
+lightgbm / gasearch / full: score 0.928299 +/- 0.004349; seconds 17.906 +/- 1.115; features 16.00
+lightgbm / gasearch / quarter: score 0.927025 +/- 0.002166; seconds 16.303 +/- 2.106; features 16.00
+svm / features / eighth: score 0.928984 +/- 0.005110; seconds 11.355 +/- 0.279; features 12.33
+svm / features / full: score 0.929376 +/- 0.004421; seconds 16.885 +/- 0.489; features 13.00
+svm / features / quarter: score 0.929376 +/- 0.004421; seconds 11.600 +/- 0.134; features 13.00
+svm / gasearch / eighth: score 0.930649 +/- 0.000777; seconds 12.096 +/- 0.684; features 16.00
+svm / gasearch / full: score 0.930845 +/- 0.002393; seconds 17.683 +/- 1.015; features 16.00
+svm / gasearch / quarter: score 0.931433 +/- 0.001957; seconds 16.137 +/- 1.261; features 16.00
+svm/gasearch/quarter: speedup 1.096, accuracy delta +0.000588
+svm/gasearch/eighth: speedup 1.462, accuracy delta -0.000196
+svm/features/quarter: speedup 1.456, accuracy delta +0.000000
+svm/features/eighth: speedup 1.487, accuracy delta -0.000392
+lightgbm/gasearch/quarter: speedup 1.098, accuracy delta -0.001273
+lightgbm/gasearch/eighth: speedup 1.075, accuracy delta -0.001273
+lightgbm/features/quarter: speedup 1.356, accuracy delta +0.000000
+lightgbm/features/eighth: speedup 1.394, accuracy delta +0.000000
+
+Dataset rebuilt from official UCI ZIP/ARFF: exact ZIP, ARFF and compressed NPZ SHA256 match recorded source. No library implementation or test files changed in this benchmark slice; no full suite run.
+Independent review PASS AC-DB1/2/3, no unresolved material findings. Recomputed42fits/14groups, matched21raw records/logs,54source files againstgit78a9f2d andmanifest, all embedded scripts, original/rebuiltNPZ/classcounts, exact outer/full/reduced split indices. Rejected4negative artifacts: wrong reduced budget, incomplete full folds, empty mask, altered mean. Test guard clean; no expensive fit or application suite rerun.

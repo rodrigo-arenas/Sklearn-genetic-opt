@@ -548,3 +548,31 @@ Other scenarios are mixed: SVM accuracy decreases by .00466 on breast and .00222
 Every timed current run starts with the dense mask, every baseline with one feature, and every returned mask is nonempty and within the feature bounds. The no-timer controls preserve exact candidate/score hashes, full histories, scores, chosen masks/parameters and counters in both APIs. Frozen source hashes remain unchanged. The [raw artifact](results/performance-v2/feature-timer.json) includes settings, dependencies, dataset provenance and driver/runner/reducer scripts that reuse `benchmark_native_automl.py`; baseline is `dac3879d15a26764f2107a133a2f11065c2a0192`. [Validation and dispersion](results/performance-v2/feature-timer-verification.txt).
 
 Verification: 66 focused checks pass across both search APIs, including timed candidate batching, smart initialization, unchanged complete initial candidate sets and real checkpoint resume. The new behavior failed eight cases against the baseline; random-initialization controls already passed. An independent mutant probe exposed a population-backfill coverage gap; extending the existing parameterization now rejects taking the last mask instead of the densest. Black and the test guard pass. The full suite was not run.
+
+## Larger real-data comparison on Dry Bean
+
+A further 42 fits compare both evolutionary search APIs against native FLAML and AutoGluon on the 13,611-row, 16-feature, seven-class Dry Bean dataset above. Three new stratified 75/25 train/test splits use seeds 2401-2403. Every workflow receives one CPU. Evolutionary search uses SVM or LightGBM, population eight, up to 1,000 generations and three-fold CV. Full-training search requests 15 seconds; reduced workflows request 3.75 seconds using a quarter or an eighth of each training fold, then re-evaluate up to four finalists using full training folds. Validation rows are retained, and holdout labels are excluded from fitting. Actual times include final validation and refit.
+
+FLAML and AutoGluon each request 15 seconds using their native validation/search and LightGBM, random-forest and extra-trees families. AutoGluon uses three bagging folds, no stacking and sequential fitting. Their model families, folds, ensembling and resource allocation differ from the fixed-model evolutionary workflows: this compares complete CPU workflows, not isolated optimizer quality or every configuration of those libraries.
+
+Mean held-out accuracy / elapsed fitting seconds / selected features over three splits:
+
+| Model / method | Full training | Quarter training + promotion | Eighth training + promotion |
+|---|---:|---:|---:|
+| svm / gasearch | 0.930845 / 17.683 / 16.00 | 0.931433 / 16.137 / 16.00 | 0.930649 / 12.096 / 16.00 |
+| svm / features | 0.929376 / 16.885 / 13.00 | 0.929376 / 11.600 / 13.00 | 0.928984 / 11.355 / 12.33 |
+| lightgbm / gasearch | 0.928299 / 17.906 / 16.00 | 0.927025 / 16.303 / 16.00 | 0.927025 / 16.651 / 16.00 |
+| lightgbm / features | 0.925850 / 16.590 / 16.00 | 0.925850 / 12.230 / 16.00 | 0.925850 / 11.900 / 16.00 |
+
+| Native workflow | Accuracy | Fitting seconds | Features |
+|---|---:|---:|---:|
+| flaml | 0.926437 | 15.524 | 16 |
+| autogluon | 0.928886 | 13.168 | 16 |
+
+SVM HPO with one-eighth training is **1.46x faster** than full search (12.096 versus 17.683 seconds), with a mean accuracy change of -0.000196. Quarter training improves accuracy by 0.000588 but provides only a 1.10x speedup. Feature selection with SVM is 1.46x faster at quarter training with unchanged mean accuracy, or 1.49x faster at eighth training with a -0.000392 change and 12.33 versus 13 selected features on average. LightGBM feature search keeps identical accuracy and all 16 features, at 1.36-1.39x speedups; LightGBM HPO gains only 1.08-1.10x and loses 0.001273 accuracy.
+
+The reduced SVM HPO workflow averages .930649 accuracy in 12.096 seconds, versus .928886 in 13.168 seconds for AutoGluon and .926437 in 15.524 seconds for FLAML. This supports comparable measured time and quality on this dataset and CPU setting. It does not establish statistical superiority from three overlapping splits or general SOTA performance. AutoGluon finishes one split in 9.230 seconds, faster than that split's reduced SVM workflow. All per-seed values and standard deviations are preserved.
+
+A fourfold smaller requested evolutionary budget does **not** produce fourfold lower total time here. Full-training finalist validation is a substantial remaining cost. The matrix totals 618.08 measured fitting seconds. Raw records verify finite scores, nonempty/bounded feature masks, explicit training-fold sizes and promotion counts; frozen sources remain unchanged.
+
+[Raw results and reproduction scripts](results/performance-v2/drybean-native.json), [validation and dispersion](results/performance-v2/drybean-native-verification.txt). Source commit: `78a9f2d46cf20c11f47194fd1bc13ce0fcfb7329`. The embedded data-preparation script rebuilds the exact compressed NumPy dataset from the official UCI ZIP, checking ZIP, ARFF and array-file hashes. The drivers reuse `benchmark_native_automl.py`; no library behavior changes in this slice.
