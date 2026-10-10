@@ -1,0 +1,1482 @@
+{
+  "question": "Does forced one-coordinate crossover generalize beyond SVC?",
+  "source_commit": "015cbad1b48d20666fdd0264810b47816d4b2162",
+  "settings": {
+    "population_size": 8,
+    "generations": 4,
+    "proposal_budget": 72,
+    "cv_folds": 3,
+    "holdout_fraction": 0.25,
+    "cpu_threads": 1,
+    "order": "Alternated by seed",
+    "svc_pilot_seeds": [
+      1009,
+      1010,
+      1011
+    ],
+    "svc_validation_seeds": [
+      1012,
+      1013,
+      1014,
+      1015,
+      1016
+    ],
+    "transfer_seeds": [
+      1021,
+      1022,
+      1023,
+      1024,
+      1025
+    ]
+  },
+  "environment": {
+    "python": "3.12.0",
+    "numpy": "2.5.3",
+    "scikit-learn": "1.9.1",
+    "scipy": "1.18.1",
+    "deap": "1.4.4"
+  },
+  "source_sha256": {
+    "sklearn_genetic/genetic_search.py": "c7d49583e0250cd2208c2e9b6321b44ea8f850cb07816ef244adb72527a13600",
+    "sklearn_genetic/algorithms.py": "2f1b607b8c671923d4ea604f8ed81b8b502e609b4ebb5c49e904612c0b7affd7",
+    "sklearn_genetic/population.py": "84f210e606355a687cc91d220fe318ac4ea9e17a85a4acc62f53643a1b4928bf"
+  },
+  "split_sha256": {
+    "svc/breast/1009": "72a66d79f92664471ece0ae2972bbe3f748213f10d22f2e9393ee1c200a0ed89",
+    "svc/breast/1010": "59f3136e389b01509bdafdcbb7a8b20ecf7cdec992b5e1dafa8640f43a33cec4",
+    "svc/breast/1011": "998670b3a433d5e09682c7eb2a43cef71655324020aed09ec34863e9add3e473",
+    "svc/breast/1012": "ba0f8c0015aa9a71272d7fd4369514f59692c46544ab5f5a345724f45e502708",
+    "svc/breast/1013": "8c7d25ce52388d2b013c441554f79af81d4cd53326c8b8b06fb255b5100ad561",
+    "svc/breast/1014": "a82dfb81b490e908967518bd19519a05df003a99f3acab7f674737b9b6fdf549",
+    "svc/breast/1015": "e5d2837d47c5e0fdd5e016e1992de69ba3f38a2559b66918605116eedb85d00f",
+    "svc/breast/1016": "406c07ad83019e0637b3461501079de626582cbf25ca30c3926c9ab01b1a7f96",
+    "svc/digits/1009": "fa5d6a1a041700d21052b1332bbe85782ce15eab872b07b6d390e23ec29e6562",
+    "svc/digits/1010": "6a0fb7dc23d3b7a1ed08cbc3af84c72e4185f556ae69199aed7ea657b527c845",
+    "svc/digits/1011": "5703495003346a579d03bdcc962d2747b826965cdc8f88e58a5caa5300b017f8",
+    "svc/digits/1012": "e2caa2a04940b2a8ff2d24c97d99397e4f7a7c41846970cbe8dcd531e902fbbd",
+    "svc/digits/1013": "79256ea4d0a96284a516e70bd815f668b469501454252e5460278688ac38e25f",
+    "svc/digits/1014": "b261de9cc7746bf3f18a19587825bfe165a285b5eebfce46326200691c48d65f",
+    "svc/digits/1015": "94d069c4ba9248e80fded227817f137c11dd7297309b8995435c3e3a96466370",
+    "svc/digits/1016": "d6b29c9946a2b15b24014a2f2b720529b7e92955e707acb70fa3313af4d4ebc5",
+    "svc/synthetic/1009": "130fde77300fe8b1a5773832ab0e0ada10fb34a43017ec4e2cb742c62e47c3e3",
+    "svc/synthetic/1010": "df26b4b866b6353cad53aaefcd23b63d11e00b5db40162afcf4257b5c8c66c0a",
+    "svc/synthetic/1011": "1109941e658ac5aabafcc495f4d4958f26a034558617a3f9fd665e34f1a9c9f8",
+    "svc/synthetic/1012": "2244f4160d2b8acd58cf56f3ccaddf18f78284b63d9d422f2fb4fce83bcf867d",
+    "svc/synthetic/1013": "953b69a3d9e140f8634fad5c8a94c1c512a3eee3ded9de6901baed187d9cf8cb",
+    "svc/synthetic/1014": "da327230d76f301415407517439f36c3557ff3e42568a79920d19800561af46d",
+    "svc/synthetic/1015": "6bc96ae51d6d6f24c7aca11780685845dae773c0f85e077662075c836c8155e8",
+    "svc/synthetic/1016": "2bbe8225eb71f025d0c18c8e416bafe6b0cb0e0c4c2513645426d072f0ecd79a",
+    "transfer/wine-tree/1021": "72cfab273d974acf42c75f816ce1d8f779ee9e3599595625d1ddb735eff51d12",
+    "transfer/wine-tree/1022": "f548ad8947a6fbe55a8d843a7df67eab36d9dd5a7b8c0e0a0f5ec64369f13e48",
+    "transfer/wine-tree/1023": "dd0446061bc9c0392adc057bc604205c22926537ab24c006747ac335c60f379b",
+    "transfer/wine-tree/1024": "b0d89f07cf3a35a1c65f74a0ded702a5d09254c22e329f860bd37f4d89cbc5f9",
+    "transfer/wine-tree/1025": "1c0dff41d3ca2e43343a1e51b869514633c10d99dec0b491d50df88524497002",
+    "transfer/digits-knn/1021": "db875e825d29f1a64fa711ae0ff9786dafcfeb646cd5df45c66a812d0fd1a7ee",
+    "transfer/digits-knn/1022": "7808f6092428cb7f916ee22799c388b380f8242ca55e0b98bfa81e419ab38f74",
+    "transfer/digits-knn/1023": "8c4f4d9a14bf55a9875ff6b960de9adb93450d1264e0fda96dbe77fcbe29ff8e",
+    "transfer/digits-knn/1024": "fb49deea93dc0a97d98dd4316f15ffb9837bad65aa8c270edf7a48193f805e48",
+    "transfer/digits-knn/1025": "95b68763d035ce914b18b5f7f819ac7c9ff778bcff65ba10f5bb652f53779226",
+    "transfer/diabetes-elasticnet/1021": "6dfcf054c0de6204d95dcf62d62be8ebc3ff0cac29bcbedb20b7a515a5d6c057",
+    "transfer/diabetes-elasticnet/1022": "2bab4997409a904d63816f05e52b740bb10550bf28a5067ba23c03abd4612f8d",
+    "transfer/diabetes-elasticnet/1023": "5b15a1a9915e0f5a8c6cfbb073b5b8eaf6e0a8e747ef66084e01e028c1887cd6",
+    "transfer/diabetes-elasticnet/1024": "85ee88c8d13d44f34d261bdc62456db2d96c6524e8b43be7f15c964c57bd7730",
+    "transfer/diabetes-elasticnet/1025": "c7a22854935dccc998c348463bd9009d4f54df68c0a74964fc62777d6368c270",
+    "transfer/synthetic-forest/1021": "41609d559509ebeaa4557befabcb62711cd5cda46ec7b7b7ae7cef94f6abb371",
+    "transfer/synthetic-forest/1022": "2db2a29291613ba869350e7227d002374baafd43c0ad9f621511dc1e58048b31",
+    "transfer/synthetic-forest/1023": "17ba1ea7eb5d0874a3faa8f9f70be6a87004008f4cf809edb0a066334d6e0d51",
+    "transfer/synthetic-forest/1024": "a3f886a38a2f772e80595c4132530c9b450431ead327c972dfe6163fa9b20750",
+    "transfer/synthetic-forest/1025": "eb9ac5321d2e8f2ad7685f9f67892085a124a2e716b2952a24a4702bf9b9d0ee"
+  },
+  "raw_sha256": {
+    "svc_pilot": "276eca718663e8fa6202125b4275cf8fdda46317716b9b719f5677261a381cdf",
+    "svc_validation": "e2a44c4aacdad9b401fc7d511977fac7bb6a1d60f33484a1fd4083f8c56cb02f",
+    "transfer": "4e6c61512bfac103156d96ef10ed0dc21804f0c2c80a72be2701134b38381ea2"
+  },
+  "summary": {
+    "svc_pilot": [
+      {
+        "name": "breast",
+        "seeds": [
+          1009,
+          1010,
+          1011
+        ],
+        "baseline_cv_mean": 0.9765258215962441,
+        "forced_cv_mean": 0.9773082942097027,
+        "baseline_holdout_mean": 0.9766899766899767,
+        "forced_holdout_mean": 0.979020979020979,
+        "holdout_delta_mean": 0.0023310023310023262,
+        "worst_holdout_delta": 0.0,
+        "forced_wins": 1,
+        "ties": 2,
+        "forced_losses": 0,
+        "baseline_seconds_mean": 2.456872333326222,
+        "forced_seconds_mean": 2.330436633337134,
+        "baseline_cv_calls_mean": 70.66666666666667,
+        "forced_cv_calls_mean": 69
+      },
+      {
+        "name": "digits",
+        "seeds": [
+          1009,
+          1010,
+          1011
+        ],
+        "baseline_cv_mean": 0.9799554565701559,
+        "forced_cv_mean": 0.9797079930710221,
+        "baseline_holdout_mean": 0.9785185185185186,
+        "forced_holdout_mean": 0.9785185185185186,
+        "holdout_delta_mean": 0.0,
+        "worst_holdout_delta": 0.0,
+        "forced_wins": 0,
+        "ties": 3,
+        "forced_losses": 0,
+        "baseline_seconds_mean": 27.865301166661084,
+        "forced_seconds_mean": 26.46141343333875,
+        "baseline_cv_calls_mean": 70.66666666666667,
+        "forced_cv_calls_mean": 69
+      },
+      {
+        "name": "synthetic",
+        "seeds": [
+          1009,
+          1010,
+          1011
+        ],
+        "baseline_cv_mean": 0.87,
+        "forced_cv_mean": 0.8688888888888889,
+        "baseline_holdout_mean": 0.8716666666666667,
+        "forced_holdout_mean": 0.885,
+        "holdout_delta_mean": 0.013333333333333345,
+        "worst_holdout_delta": -0.015000000000000013,
+        "forced_wins": 2,
+        "ties": 0,
+        "forced_losses": 1,
+        "baseline_seconds_mean": 5.0757506666608,
+        "forced_seconds_mean": 4.852747766679386,
+        "baseline_cv_calls_mean": 71.66666666666667,
+        "forced_cv_calls_mean": 69.66666666666667
+      }
+    ],
+    "svc_validation": [
+      {
+        "name": "breast",
+        "seeds": [
+          1012,
+          1013,
+          1014,
+          1015,
+          1016
+        ],
+        "baseline_cv_mean": 0.9793427230046948,
+        "forced_cv_mean": 0.9793427230046948,
+        "baseline_holdout_mean": 0.9622377622377623,
+        "forced_holdout_mean": 0.9664335664335664,
+        "holdout_delta_mean": 0.004195804195804187,
+        "worst_holdout_delta": 0.0,
+        "forced_wins": 2,
+        "ties": 3,
+        "forced_losses": 0,
+        "baseline_seconds_mean": 2.483944120001979,
+        "forced_seconds_mean": 2.407358640007442,
+        "baseline_cv_calls_mean": 71.2,
+        "forced_cv_calls_mean": 68.6
+      },
+      {
+        "name": "digits",
+        "seeds": [
+          1012,
+          1013,
+          1014,
+          1015,
+          1016
+        ],
+        "baseline_cv_mean": 0.9820341499628805,
+        "forced_cv_mean": 0.9821826280623609,
+        "baseline_holdout_mean": 0.9764444444444444,
+        "forced_holdout_mean": 0.9773333333333334,
+        "holdout_delta_mean": 0.0008888888888888725,
+        "worst_holdout_delta": 0.0,
+        "forced_wins": 2,
+        "ties": 3,
+        "forced_losses": 0,
+        "baseline_seconds_mean": 28.445914479997008,
+        "forced_seconds_mean": 27.498483279993525,
+        "baseline_cv_calls_mean": 71,
+        "forced_cv_calls_mean": 69.2
+      },
+      {
+        "name": "synthetic",
+        "seeds": [
+          1012,
+          1013,
+          1014,
+          1015,
+          1016
+        ],
+        "baseline_cv_mean": 0.8706666666666667,
+        "forced_cv_mean": 0.87,
+        "baseline_holdout_mean": 0.866,
+        "forced_holdout_mean": 0.875,
+        "holdout_delta_mean": 0.009000000000000008,
+        "worst_holdout_delta": 0.0,
+        "forced_wins": 3,
+        "ties": 2,
+        "forced_losses": 0,
+        "baseline_seconds_mean": 5.0464712000044525,
+        "forced_seconds_mean": 5.177646659995662,
+        "baseline_cv_calls_mean": 71,
+        "forced_cv_calls_mean": 69.6
+      }
+    ],
+    "transfer": [
+      {
+        "name": "diabetes-elasticnet",
+        "seeds": [
+          1021,
+          1022,
+          1023,
+          1024,
+          1025
+        ],
+        "baseline_cv_mean": -3142.3210310219615,
+        "forced_cv_mean": -3142.451108236563,
+        "baseline_holdout_mean": -2798.6665685008666,
+        "forced_holdout_mean": -2799.0775908726782,
+        "holdout_delta_mean": -0.41102237181166856,
+        "worst_holdout_delta": -8.441352886644381,
+        "forced_wins": 2,
+        "ties": 1,
+        "forced_losses": 2,
+        "baseline_seconds_mean": 0.7934464999998454,
+        "forced_seconds_mean": 0.7806089400022757,
+        "baseline_cv_calls_mean": 70.6,
+        "forced_cv_calls_mean": 70
+      },
+      {
+        "name": "digits-knn",
+        "seeds": [
+          1021,
+          1022,
+          1023,
+          1024,
+          1025
+        ],
+        "baseline_cv_mean": 0.9723830734966592,
+        "forced_cv_mean": 0.9723830734966592,
+        "baseline_holdout_mean": 0.9706666666666667,
+        "forced_holdout_mean": 0.9711111111111111,
+        "holdout_delta_mean": 0.0004444444444444473,
+        "worst_holdout_delta": 0.0,
+        "forced_wins": 1,
+        "ties": 4,
+        "forced_losses": 0,
+        "baseline_seconds_mean": 1.7687360399984755,
+        "forced_seconds_mean": 1.8179195799923036,
+        "baseline_cv_calls_mean": 39.4,
+        "forced_cv_calls_mean": 40.4
+      },
+      {
+        "name": "synthetic-forest",
+        "seeds": [
+          1021,
+          1022,
+          1023,
+          1024,
+          1025
+        ],
+        "baseline_cv_mean": 0.851111111111111,
+        "forced_cv_mean": 0.8511111111111112,
+        "baseline_holdout_mean": 0.884,
+        "forced_holdout_mean": 0.8853333333333333,
+        "holdout_delta_mean": 0.001333333333333342,
+        "worst_holdout_delta": 0.0,
+        "forced_wins": 1,
+        "ties": 4,
+        "forced_losses": 0,
+        "baseline_seconds_mean": 11.903038300003391,
+        "forced_seconds_mean": 11.39263044000254,
+        "baseline_cv_calls_mean": 66,
+        "forced_cv_calls_mean": 64.2
+      },
+      {
+        "name": "wine-tree",
+        "seeds": [
+          1021,
+          1022,
+          1023,
+          1024,
+          1025
+        ],
+        "baseline_cv_mean": 0.8944781144781144,
+        "forced_cv_mean": 0.8944781144781144,
+        "baseline_holdout_mean": 0.8933333333333333,
+        "forced_holdout_mean": 0.8933333333333333,
+        "holdout_delta_mean": 0.0,
+        "worst_holdout_delta": 0.0,
+        "forced_wins": 0,
+        "ties": 5,
+        "forced_losses": 0,
+        "baseline_seconds_mean": 0.2712591400137171,
+        "forced_seconds_mean": 0.2591297000006307,
+        "baseline_cv_calls_mean": 27,
+        "forced_cv_calls_mean": 26.6
+      }
+    ]
+  },
+  "raw": {
+    "svc_pilot": [
+      {
+        "dataset": "breast",
+        "seed": 1009,
+        "variant": "baseline",
+        "seconds": 2.574153399997158,
+        "cv": 0.971830985915493,
+        "holdout": 0.972027972027972,
+        "cv_calls": 71,
+        "params": {
+          "svc__C": 4.90890841686415,
+          "svc__gamma": 0.03834931844232787
+        }
+      },
+      {
+        "dataset": "breast",
+        "seed": 1009,
+        "variant": "forced",
+        "seconds": 2.2581123000127263,
+        "cv": 0.971830985915493,
+        "holdout": 0.972027972027972,
+        "cv_calls": 69,
+        "params": {
+          "svc__C": 4.90890841686415,
+          "svc__gamma": 0.03834931844232787
+        }
+      },
+      {
+        "dataset": "breast",
+        "seed": 1010,
+        "variant": "forced",
+        "seconds": 2.5707261000061408,
+        "cv": 0.9765258215962441,
+        "holdout": 0.993006993006993,
+        "cv_calls": 71,
+        "params": {
+          "svc__C": 6.301098760858206,
+          "svc__gamma": 0.01872402309664647
+        }
+      },
+      {
+        "dataset": "breast",
+        "seed": 1010,
+        "variant": "baseline",
+        "seconds": 2.3785597999813035,
+        "cv": 0.9741784037558685,
+        "holdout": 0.986013986013986,
+        "cv_calls": 71,
+        "params": {
+          "svc__C": 11.524995234413057,
+          "svc__gamma": 0.003717140545530422
+        }
+      },
+      {
+        "dataset": "breast",
+        "seed": 1011,
+        "variant": "baseline",
+        "seconds": 2.4179038000002038,
+        "cv": 0.983568075117371,
+        "holdout": 0.972027972027972,
+        "cv_calls": 70,
+        "params": {
+          "svc__C": 6.128012697381576,
+          "svc__gamma": 0.013101194907804222
+        }
+      },
+      {
+        "dataset": "breast",
+        "seed": 1011,
+        "variant": "forced",
+        "seconds": 2.1624714999925345,
+        "cv": 0.983568075117371,
+        "holdout": 0.972027972027972,
+        "cv_calls": 67,
+        "params": {
+          "svc__C": 13.190907414680849,
+          "svc__gamma": 0.016985619107149727
+        }
+      },
+      {
+        "dataset": "digits",
+        "seed": 1009,
+        "variant": "baseline",
+        "seconds": 29.518952799990075,
+        "cv": 0.9814402375649592,
+        "holdout": 0.98,
+        "cv_calls": 71,
+        "params": {
+          "svc__C": 73.67188794832119,
+          "svc__gamma": 0.004895528533835605
+        }
+      },
+      {
+        "dataset": "digits",
+        "seed": 1009,
+        "variant": "forced",
+        "seconds": 27.462838900013594,
+        "cv": 0.9814402375649592,
+        "holdout": 0.98,
+        "cv_calls": 70,
+        "params": {
+          "svc__C": 73.67188794832119,
+          "svc__gamma": 0.004895528533835605
+        }
+      },
+      {
+        "dataset": "digits",
+        "seed": 1010,
+        "variant": "forced",
+        "seconds": 26.912611400010064,
+        "cv": 0.9799554565701559,
+        "holdout": 0.9711111111111111,
+        "cv_calls": 70,
+        "params": {
+          "svc__C": 34.219998832995635,
+          "svc__gamma": 0.011307661920826929
+        }
+      },
+      {
+        "dataset": "digits",
+        "seed": 1010,
+        "variant": "baseline",
+        "seconds": 26.72279649999109,
+        "cv": 0.9806978470675576,
+        "holdout": 0.9711111111111111,
+        "cv_calls": 69,
+        "params": {
+          "svc__C": 15.340184377478316,
+          "svc__gamma": 0.010380492024733392
+        }
+      },
+      {
+        "dataset": "digits",
+        "seed": 1011,
+        "variant": "baseline",
+        "seconds": 27.354154200002085,
+        "cv": 0.9777282850779511,
+        "holdout": 0.9844444444444445,
+        "cv_calls": 72,
+        "params": {
+          "svc__C": 1.9125123737833534,
+          "svc__gamma": 0.02042056904160451
+        }
+      },
+      {
+        "dataset": "digits",
+        "seed": 1011,
+        "variant": "forced",
+        "seconds": 25.008789999992587,
+        "cv": 0.9777282850779511,
+        "holdout": 0.9844444444444445,
+        "cv_calls": 67,
+        "params": {
+          "svc__C": 1.4506047740098031,
+          "svc__gamma": 0.01836493700349306
+        }
+      },
+      {
+        "dataset": "synthetic",
+        "seed": 1009,
+        "variant": "baseline",
+        "seconds": 4.762356199993519,
+        "cv": 0.8633333333333333,
+        "holdout": 0.855,
+        "cv_calls": 71,
+        "params": {
+          "svc__C": 0.3415499089325251,
+          "svc__gamma": 0.09514084596788983
+        }
+      },
+      {
+        "dataset": "synthetic",
+        "seed": 1009,
+        "variant": "forced",
+        "seconds": 4.525934400007827,
+        "cv": 0.8650000000000001,
+        "holdout": 0.87,
+        "cv_calls": 71,
+        "params": {
+          "svc__C": 2.2458574279876986,
+          "svc__gamma": 0.021727873645499014
+        }
+      },
+      {
+        "dataset": "synthetic",
+        "seed": 1010,
+        "variant": "forced",
+        "seconds": 4.815347900002962,
+        "cv": 0.8733333333333334,
+        "holdout": 0.905,
+        "cv_calls": 70,
+        "params": {
+          "svc__C": 1.8158807141763966,
+          "svc__gamma": 0.11389160902040726
+        }
+      },
+      {
+        "dataset": "synthetic",
+        "seed": 1010,
+        "variant": "baseline",
+        "seconds": 5.264010799990501,
+        "cv": 0.8733333333333334,
+        "holdout": 0.865,
+        "cv_calls": 72,
+        "params": {
+          "svc__C": 34.219998832995635,
+          "svc__gamma": 0.07268879591084258
+        }
+      },
+      {
+        "dataset": "synthetic",
+        "seed": 1011,
+        "variant": "baseline",
+        "seconds": 5.2008849999983795,
+        "cv": 0.8733333333333334,
+        "holdout": 0.895,
+        "cv_calls": 72,
+        "params": {
+          "svc__C": 1.9125123737833534,
+          "svc__gamma": 0.02042056904160451
+        }
+      },
+      {
+        "dataset": "synthetic",
+        "seed": 1011,
+        "variant": "forced",
+        "seconds": 5.216961000027368,
+        "cv": 0.8683333333333333,
+        "holdout": 0.88,
+        "cv_calls": 68,
+        "params": {
+          "svc__C": 19.681151526926932,
+          "svc__gamma": 0.006375563066196023
+        }
+      }
+    ],
+    "svc_validation": [
+      {
+        "dataset": "breast",
+        "seed": 1012,
+        "variant": "forced",
+        "seconds": 2.73855460001505,
+        "cv": 0.983568075117371,
+        "holdout": 0.951048951048951,
+        "cv_calls": 72,
+        "params": {
+          "svc__C": 14.701719932318138,
+          "svc__gamma": 0.0030309289101531998
+        }
+      },
+      {
+        "dataset": "breast",
+        "seed": 1012,
+        "variant": "baseline",
+        "seconds": 2.3679177000012714,
+        "cv": 0.9859154929577465,
+        "holdout": 0.9440559440559441,
+        "cv_calls": 72,
+        "params": {
+          "svc__C": 76.1809234574297,
+          "svc__gamma": 0.0014242798650295901
+        }
+      },
+      {
+        "dataset": "breast",
+        "seed": 1013,
+        "variant": "baseline",
+        "seconds": 2.6060533999989275,
+        "cv": 0.9765258215962441,
+        "holdout": 0.986013986013986,
+        "cv_calls": 71,
+        "params": {
+          "svc__C": 34.005751489367775,
+          "svc__gamma": 0.0010642713740162955
+        }
+      },
+      {
+        "dataset": "breast",
+        "seed": 1013,
+        "variant": "forced",
+        "seconds": 2.2322401000128593,
+        "cv": 0.9765258215962441,
+        "holdout": 0.986013986013986,
+        "cv_calls": 68,
+        "params": {
+          "svc__C": 53.50016724483086,
+          "svc__gamma": 0.0010642713740162955
+        }
+      },
+      {
+        "dataset": "breast",
+        "seed": 1014,
+        "variant": "forced",
+        "seconds": 2.2362198999908287,
+        "cv": 0.9788732394366196,
+        "holdout": 0.958041958041958,
+        "cv_calls": 66,
+        "params": {
+          "svc__C": 1.500303087447964,
+          "svc__gamma": 0.01557700637155306
+        }
+      },
+      {
+        "dataset": "breast",
+        "seed": 1014,
+        "variant": "baseline",
+        "seconds": 2.4365915000089444,
+        "cv": 0.9788732394366196,
+        "holdout": 0.958041958041958,
+        "cv_calls": 72,
+        "params": {
+          "svc__C": 1.500303087447964,
+          "svc__gamma": 0.01557700637155306
+        }
+      },
+      {
+        "dataset": "breast",
+        "seed": 1015,
+        "variant": "baseline",
+        "seconds": 2.357299099996453,
+        "cv": 0.9788732394366196,
+        "holdout": 0.965034965034965,
+        "cv_calls": 70,
+        "params": {
+          "svc__C": 21.426085532363327,
+          "svc__gamma": 0.0008685332836544655
+        }
+      },
+      {
+        "dataset": "breast",
+        "seed": 1015,
+        "variant": "forced",
+        "seconds": 2.4267019999970216,
+        "cv": 0.9788732394366196,
+        "holdout": 0.965034965034965,
+        "cv_calls": 71,
+        "params": {
+          "svc__C": 24.734946217524232,
+          "svc__gamma": 0.0007032424079248488
+        }
+      },
+      {
+        "dataset": "breast",
+        "seed": 1016,
+        "variant": "forced",
+        "seconds": 2.40307660002145,
+        "cv": 0.9788732394366196,
+        "holdout": 0.972027972027972,
+        "cv_calls": 66,
+        "params": {
+          "svc__C": 2.209586692830869,
+          "svc__gamma": 0.028025709018006467
+        }
+      },
+      {
+        "dataset": "breast",
+        "seed": 1016,
+        "variant": "baseline",
+        "seconds": 2.6518589000042994,
+        "cv": 0.9765258215962441,
+        "holdout": 0.958041958041958,
+        "cv_calls": 71,
+        "params": {
+          "svc__C": 25.614326066099736,
+          "svc__gamma": 0.003033217731682927
+        }
+      },
+      {
+        "dataset": "digits",
+        "seed": 1012,
+        "variant": "forced",
+        "seconds": 29.536674800008768,
+        "cv": 0.9873793615441723,
+        "holdout": 0.9688888888888889,
+        "cv_calls": 71,
+        "params": {
+          "svc__C": 57.69006705371892,
+          "svc__gamma": 0.0072944967836268935
+        }
+      },
+      {
+        "dataset": "digits",
+        "seed": 1012,
+        "variant": "baseline",
+        "seconds": 26.631534299987834,
+        "cv": 0.9873793615441723,
+        "holdout": 0.9688888888888889,
+        "cv_calls": 71,
+        "params": {
+          "svc__C": 57.69006705371892,
+          "svc__gamma": 0.0072944967836268935
+        }
+      },
+      {
+        "dataset": "digits",
+        "seed": 1013,
+        "variant": "baseline",
+        "seconds": 29.367049799999222,
+        "cv": 0.9851521900519673,
+        "holdout": 0.9622222222222222,
+        "cv_calls": 71,
+        "params": {
+          "svc__C": 25.698629385549406,
+          "svc__gamma": 0.0010642713740162955
+        }
+      },
+      {
+        "dataset": "digits",
+        "seed": 1013,
+        "variant": "forced",
+        "seconds": 24.72133559998474,
+        "cv": 0.9851521900519673,
+        "holdout": 0.9622222222222222,
+        "cv_calls": 65,
+        "params": {
+          "svc__C": 25.698629385549406,
+          "svc__gamma": 0.0010642713740162955
+        }
+      },
+      {
+        "dataset": "digits",
+        "seed": 1014,
+        "variant": "forced",
+        "seconds": 26.994265599991195,
+        "cv": 0.9784706755753527,
+        "holdout": 0.9733333333333334,
+        "cv_calls": 70,
+        "params": {
+          "svc__C": 13.70287573523739,
+          "svc__gamma": 0.009000123659912533
+        }
+      },
+      {
+        "dataset": "digits",
+        "seed": 1014,
+        "variant": "baseline",
+        "seconds": 27.535781200014753,
+        "cv": 0.9784706755753527,
+        "holdout": 0.9711111111111111,
+        "cv_calls": 72,
+        "params": {
+          "svc__C": 35.976457436337675,
+          "svc__gamma": 0.0086338162661574
+        }
+      },
+      {
+        "dataset": "digits",
+        "seed": 1015,
+        "variant": "baseline",
+        "seconds": 26.804602699994575,
+        "cv": 0.9784706755753526,
+        "holdout": 0.9911111111111112,
+        "cv_calls": 70,
+        "params": {
+          "svc__C": 4.719759418330665,
+          "svc__gamma": 0.004123449688946752
+        }
+      },
+      {
+        "dataset": "digits",
+        "seed": 1015,
+        "variant": "forced",
+        "seconds": 26.51486379999551,
+        "cv": 0.9792130660727544,
+        "holdout": 0.9933333333333333,
+        "cv_calls": 69,
+        "params": {
+          "svc__C": 4.293624149254465,
+          "svc__gamma": 0.00465286090953409
+        }
+      },
+      {
+        "dataset": "digits",
+        "seed": 1016,
+        "variant": "forced",
+        "seconds": 29.72527659998741,
+        "cv": 0.9806978470675576,
+        "holdout": 0.9888888888888889,
+        "cv_calls": 71,
+        "params": {
+          "svc__C": 2.8117803384296427,
+          "svc__gamma": 0.008885934293164033
+        }
+      },
+      {
+        "dataset": "digits",
+        "seed": 1016,
+        "variant": "baseline",
+        "seconds": 31.89060439998866,
+        "cv": 0.9806978470675576,
+        "holdout": 0.9888888888888889,
+        "cv_calls": 71,
+        "params": {
+          "svc__C": 2.8117803384296427,
+          "svc__gamma": 0.008885934293164033
+        }
+      },
+      {
+        "dataset": "synthetic",
+        "seed": 1012,
+        "variant": "forced",
+        "seconds": 6.414758800005075,
+        "cv": 0.8683333333333333,
+        "holdout": 0.885,
+        "cv_calls": 70,
+        "params": {
+          "svc__C": 2.119299462415007,
+          "svc__gamma": 0.042507783018530136
+        }
+      },
+      {
+        "dataset": "synthetic",
+        "seed": 1012,
+        "variant": "baseline",
+        "seconds": 4.895664499985287,
+        "cv": 0.8733333333333334,
+        "holdout": 0.86,
+        "cv_calls": 71,
+        "params": {
+          "svc__C": 0.979620486923218,
+          "svc__gamma": 0.028916071082032438
+        }
+      },
+      {
+        "dataset": "synthetic",
+        "seed": 1013,
+        "variant": "baseline",
+        "seconds": 5.1567171000060625,
+        "cv": 0.8616666666666667,
+        "holdout": 0.885,
+        "cv_calls": 70,
+        "params": {
+          "svc__C": 1.3786272951524274,
+          "svc__gamma": 0.04356133535792153
+        }
+      },
+      {
+        "dataset": "synthetic",
+        "seed": 1013,
+        "variant": "forced",
+        "seconds": 4.678420999989612,
+        "cv": 0.8616666666666667,
+        "holdout": 0.885,
+        "cv_calls": 68,
+        "params": {
+          "svc__C": 1.3786272951524274,
+          "svc__gamma": 0.04356133535792153
+        }
+      },
+      {
+        "dataset": "synthetic",
+        "seed": 1014,
+        "variant": "forced",
+        "seconds": 4.730102700006682,
+        "cv": 0.86,
+        "holdout": 0.895,
+        "cv_calls": 70,
+        "params": {
+          "svc__C": 1.3964030283987507,
+          "svc__gamma": 0.09379706409394914
+        }
+      },
+      {
+        "dataset": "synthetic",
+        "seed": 1014,
+        "variant": "baseline",
+        "seconds": 4.959841300005792,
+        "cv": 0.8566666666666666,
+        "holdout": 0.89,
+        "cv_calls": 72,
+        "params": {
+          "svc__C": 1.9680420792798021,
+          "svc__gamma": 0.04282033273831845
+        }
+      },
+      {
+        "dataset": "synthetic",
+        "seed": 1015,
+        "variant": "baseline",
+        "seconds": 5.016248600004474,
+        "cv": 0.875,
+        "holdout": 0.855,
+        "cv_calls": 71,
+        "params": {
+          "svc__C": 46.6845985642939,
+          "svc__gamma": 0.11134121447442624
+        }
+      },
+      {
+        "dataset": "synthetic",
+        "seed": 1015,
+        "variant": "forced",
+        "seconds": 5.027297299995553,
+        "cv": 0.8783333333333333,
+        "holdout": 0.87,
+        "cv_calls": 72,
+        "params": {
+          "svc__C": 1.1973498885043805,
+          "svc__gamma": 0.07571501900998767
+        }
+      },
+      {
+        "dataset": "synthetic",
+        "seed": 1016,
+        "variant": "forced",
+        "seconds": 5.0376534999813884,
+        "cv": 0.8816666666666667,
+        "holdout": 0.84,
+        "cv_calls": 68,
+        "params": {
+          "svc__C": 77.26570590270303,
+          "svc__gamma": 0.12259543809800869
+        }
+      },
+      {
+        "dataset": "synthetic",
+        "seed": 1016,
+        "variant": "baseline",
+        "seconds": 5.203884500020649,
+        "cv": 0.8866666666666667,
+        "holdout": 0.84,
+        "cv_calls": 71,
+        "params": {
+          "svc__C": 8.50773823782579,
+          "svc__gamma": 0.10312039720900822
+        }
+      }
+    ],
+    "transfer": [
+      {
+        "task": "wine-tree",
+        "seed": 1021,
+        "variant": "baseline",
+        "seconds": 0.28375580001738854,
+        "cv": 0.8947811447811448,
+        "holdout": 0.8666666666666667,
+        "cv_calls": 28,
+        "params": {
+          "max_depth": 2.0,
+          "criterion": "gini"
+        }
+      },
+      {
+        "task": "wine-tree",
+        "seed": 1021,
+        "variant": "forced",
+        "seconds": 0.26474829998915084,
+        "cv": 0.8947811447811448,
+        "holdout": 0.8666666666666667,
+        "cv_calls": 26,
+        "params": {
+          "max_depth": 2.0,
+          "criterion": "gini"
+        }
+      },
+      {
+        "task": "wine-tree",
+        "seed": 1022,
+        "variant": "forced",
+        "seconds": 0.26971469999989495,
+        "cv": 0.8792929292929293,
+        "holdout": 0.9111111111111111,
+        "cv_calls": 28,
+        "params": {
+          "max_depth": 3.0,
+          "criterion": "gini"
+        }
+      },
+      {
+        "task": "wine-tree",
+        "seed": 1022,
+        "variant": "baseline",
+        "seconds": 0.28588690000469796,
+        "cv": 0.8792929292929293,
+        "holdout": 0.9111111111111111,
+        "cv_calls": 28,
+        "params": {
+          "max_depth": 3.0,
+          "criterion": "gini"
+        }
+      },
+      {
+        "task": "wine-tree",
+        "seed": 1023,
+        "variant": "baseline",
+        "seconds": 0.25109480001265183,
+        "cv": 0.9095959595959596,
+        "holdout": 0.8666666666666667,
+        "cv_calls": 25,
+        "params": {
+          "max_depth": 11.0,
+          "criterion": "entropy"
+        }
+      },
+      {
+        "task": "wine-tree",
+        "seed": 1023,
+        "variant": "forced",
+        "seconds": 0.25304149999283254,
+        "cv": 0.9095959595959596,
+        "holdout": 0.8666666666666667,
+        "cv_calls": 26,
+        "params": {
+          "max_depth": 11.0,
+          "criterion": "entropy"
+        }
+      },
+      {
+        "task": "wine-tree",
+        "seed": 1024,
+        "variant": "forced",
+        "seconds": 0.24685550000867806,
+        "cv": 0.8865319865319865,
+        "holdout": 0.9333333333333333,
+        "cv_calls": 26,
+        "params": {
+          "max_depth": 12.0,
+          "criterion": "gini"
+        }
+      },
+      {
+        "task": "wine-tree",
+        "seed": 1024,
+        "variant": "baseline",
+        "seconds": 0.25824660001671873,
+        "cv": 0.8865319865319865,
+        "holdout": 0.9333333333333333,
+        "cv_calls": 27,
+        "params": {
+          "max_depth": 12.0,
+          "criterion": "gini"
+        }
+      },
+      {
+        "task": "wine-tree",
+        "seed": 1025,
+        "variant": "baseline",
+        "seconds": 0.2773116000171285,
+        "cv": 0.9021885521885521,
+        "holdout": 0.8888888888888888,
+        "cv_calls": 27,
+        "params": {
+          "max_depth": 4.0,
+          "criterion": "entropy"
+        }
+      },
+      {
+        "task": "wine-tree",
+        "seed": 1025,
+        "variant": "forced",
+        "seconds": 0.26128850001259707,
+        "cv": 0.9021885521885521,
+        "holdout": 0.8888888888888888,
+        "cv_calls": 27,
+        "params": {
+          "max_depth": 4.0,
+          "criterion": "entropy"
+        }
+      },
+      {
+        "task": "digits-knn",
+        "seed": 1021,
+        "variant": "baseline",
+        "seconds": 1.840588499995647,
+        "cv": 0.9725315515961396,
+        "holdout": 0.9733333333333334,
+        "cv_calls": 41,
+        "params": {
+          "kneighborsclassifier__n_neighbors": 1.0,
+          "kneighborsclassifier__weights": "distance"
+        }
+      },
+      {
+        "task": "digits-knn",
+        "seed": 1021,
+        "variant": "forced",
+        "seconds": 2.0051469999889378,
+        "cv": 0.9725315515961396,
+        "holdout": 0.9733333333333334,
+        "cv_calls": 44,
+        "params": {
+          "kneighborsclassifier__n_neighbors": 2.0,
+          "kneighborsclassifier__weights": "distance"
+        }
+      },
+      {
+        "task": "digits-knn",
+        "seed": 1022,
+        "variant": "forced",
+        "seconds": 1.7279997000005096,
+        "cv": 0.9725315515961396,
+        "holdout": 0.9711111111111111,
+        "cv_calls": 39,
+        "params": {
+          "kneighborsclassifier__n_neighbors": 4.0,
+          "kneighborsclassifier__weights": "distance"
+        }
+      },
+      {
+        "task": "digits-knn",
+        "seed": 1022,
+        "variant": "baseline",
+        "seconds": 1.7509028000058606,
+        "cv": 0.9725315515961396,
+        "holdout": 0.9711111111111111,
+        "cv_calls": 39,
+        "params": {
+          "kneighborsclassifier__n_neighbors": 4.0,
+          "kneighborsclassifier__weights": "distance"
+        }
+      },
+      {
+        "task": "digits-knn",
+        "seed": 1023,
+        "variant": "baseline",
+        "seconds": 1.7975826999754645,
+        "cv": 0.9688195991091314,
+        "holdout": 0.9688888888888889,
+        "cv_calls": 41,
+        "params": {
+          "kneighborsclassifier__n_neighbors": 4.0,
+          "kneighborsclassifier__weights": "uniform"
+        }
+      },
+      {
+        "task": "digits-knn",
+        "seed": 1023,
+        "variant": "forced",
+        "seconds": 1.7135106999776326,
+        "cv": 0.9688195991091314,
+        "holdout": 0.9711111111111111,
+        "cv_calls": 39,
+        "params": {
+          "kneighborsclassifier__n_neighbors": 4.0,
+          "kneighborsclassifier__weights": "distance"
+        }
+      },
+      {
+        "task": "digits-knn",
+        "seed": 1024,
+        "variant": "forced",
+        "seconds": 1.7883599999768194,
+        "cv": 0.9747587230883444,
+        "holdout": 0.9711111111111111,
+        "cv_calls": 38,
+        "params": {
+          "kneighborsclassifier__n_neighbors": 4.0,
+          "kneighborsclassifier__weights": "distance"
+        }
+      },
+      {
+        "task": "digits-knn",
+        "seed": 1024,
+        "variant": "baseline",
+        "seconds": 1.7015065000159666,
+        "cv": 0.9747587230883444,
+        "holdout": 0.9711111111111111,
+        "cv_calls": 37,
+        "params": {
+          "kneighborsclassifier__n_neighbors": 4.0,
+          "kneighborsclassifier__weights": "distance"
+        }
+      },
+      {
+        "task": "digits-knn",
+        "seed": 1025,
+        "variant": "baseline",
+        "seconds": 1.7530996999994386,
+        "cv": 0.9732739420935412,
+        "holdout": 0.9688888888888889,
+        "cv_calls": 39,
+        "params": {
+          "kneighborsclassifier__n_neighbors": 4.0,
+          "kneighborsclassifier__weights": "distance"
+        }
+      },
+      {
+        "task": "digits-knn",
+        "seed": 1025,
+        "variant": "forced",
+        "seconds": 1.8545805000176188,
+        "cv": 0.9732739420935412,
+        "holdout": 0.9688888888888889,
+        "cv_calls": 42,
+        "params": {
+          "kneighborsclassifier__n_neighbors": 3.0,
+          "kneighborsclassifier__weights": "uniform"
+        }
+      },
+      {
+        "task": "diabetes-elasticnet",
+        "seed": 1021,
+        "variant": "baseline",
+        "seconds": 0.8027624000096694,
+        "cv": -3266.185681674482,
+        "holdout": -2505.695498729279,
+        "cv_calls": 71,
+        "params": {
+          "elasticnet__alpha": 0.2301386730512649,
+          "elasticnet__l1_ratio": 0.37914303267907534
+        }
+      },
+      {
+        "task": "diabetes-elasticnet",
+        "seed": 1021,
+        "variant": "forced",
+        "seconds": 0.7821227999811526,
+        "cv": -3265.597764253363,
+        "holdout": -2505.2446725379946,
+        "cv_calls": 69,
+        "params": {
+          "elasticnet__alpha": 0.2067922457049436,
+          "elasticnet__l1_ratio": 0.31033191230168583
+        }
+      },
+      {
+        "task": "diabetes-elasticnet",
+        "seed": 1022,
+        "variant": "forced",
+        "seconds": 0.78052430000389,
+        "cv": -3108.978388496711,
+        "holdout": -2941.033585338904,
+        "cv_calls": 70,
+        "params": {
+          "elasticnet__alpha": 0.20117435249158452,
+          "elasticnet__l1_ratio": 0.08582424258148912
+        }
+      },
+      {
+        "task": "diabetes-elasticnet",
+        "seed": 1022,
+        "variant": "baseline",
+        "seconds": 0.7977112999942619,
+        "cv": -3109.768204360474,
+        "holdout": -2951.6022562885946,
+        "cv_calls": 71,
+        "params": {
+          "elasticnet__alpha": 0.48542979501159594,
+          "elasticnet__l1_ratio": 0.6768259963768578
+        }
+      },
+      {
+        "task": "diabetes-elasticnet",
+        "seed": 1023,
+        "variant": "baseline",
+        "seconds": 0.8019649000198115,
+        "cv": -3290.9159717938273,
+        "holdout": -2779.1683743608546,
+        "cv_calls": 71,
+        "params": {
+          "elasticnet__alpha": 0.29831893962255424,
+          "elasticnet__l1_ratio": 0.3600821067839811
+        }
+      },
+      {
+        "task": "diabetes-elasticnet",
+        "seed": 1023,
+        "variant": "forced",
+        "seconds": 0.8104721000127029,
+        "cv": -3290.877783038657,
+        "holdout": -2783.8016304742437,
+        "cv_calls": 72,
+        "params": {
+          "elasticnet__alpha": 0.3927313855449369,
+          "elasticnet__l1_ratio": 0.4871302889829758
+        }
+      },
+      {
+        "task": "diabetes-elasticnet",
+        "seed": 1024,
+        "variant": "forced",
+        "seconds": 0.79001190001145,
+        "cv": -3061.1727611697947,
+        "holdout": -2778.2001754612184,
+        "cv_calls": 71,
+        "params": {
+          "elasticnet__alpha": 0.20014497050041866,
+          "elasticnet__l1_ratio": 0.5
+        }
+      },
+      {
+        "task": "diabetes-elasticnet",
+        "seed": 1024,
+        "variant": "baseline",
+        "seconds": 0.7502677000011317,
+        "cv": -3061.1727611697947,
+        "holdout": -2778.2001754612184,
+        "cv_calls": 68,
+        "params": {
+          "elasticnet__alpha": 0.20014497050041866,
+          "elasticnet__l1_ratio": 0.5
+        }
+      },
+      {
+        "task": "diabetes-elasticnet",
+        "seed": 1025,
+        "variant": "baseline",
+        "seconds": 0.8145261999743525,
+        "cv": -2983.5625361112284,
+        "holdout": -2978.6665376643855,
+        "cv_calls": 72,
+        "params": {
+          "elasticnet__alpha": 0.19966111042771154,
+          "elasticnet__l1_ratio": 0.755179979094659
+        }
+      },
+      {
+        "task": "diabetes-elasticnet",
+        "seed": 1025,
+        "variant": "forced",
+        "seconds": 0.7399136000021826,
+        "cv": -2985.628844224288,
+        "holdout": -2987.10789055103,
+        "cv_calls": 68,
+        "params": {
+          "elasticnet__alpha": 0.16299993316155245,
+          "elasticnet__l1_ratio": 0.48881753726944727
+        }
+      },
+      {
+        "task": "synthetic-forest",
+        "seed": 1021,
+        "variant": "baseline",
+        "seconds": 10.18602419999661,
+        "cv": 0.8577777777777778,
+        "holdout": 0.8733333333333333,
+        "cv_calls": 64,
+        "params": {
+          "n_estimators": 59.0,
+          "max_depth": 10.0
+        }
+      },
+      {
+        "task": "synthetic-forest",
+        "seed": 1021,
+        "variant": "forced",
+        "seconds": 10.27171579998685,
+        "cv": 0.8577777777777779,
+        "holdout": 0.88,
+        "cv_calls": 64,
+        "params": {
+          "n_estimators": 53.0,
+          "max_depth": 12.0
+        }
+      },
+      {
+        "task": "synthetic-forest",
+        "seed": 1022,
+        "variant": "forced",
+        "seconds": 12.02747550001368,
+        "cv": 0.8577777777777778,
+        "holdout": 0.9133333333333333,
+        "cv_calls": 62,
+        "params": {
+          "n_estimators": 50.0,
+          "max_depth": 12.0
+        }
+      },
+      {
+        "task": "synthetic-forest",
+        "seed": 1022,
+        "variant": "baseline",
+        "seconds": 13.797099999996135,
+        "cv": 0.8577777777777778,
+        "holdout": 0.9133333333333333,
+        "cv_calls": 65,
+        "params": {
+          "n_estimators": 50.0,
+          "max_depth": 12.0
+        }
+      },
+      {
+        "task": "synthetic-forest",
+        "seed": 1023,
+        "variant": "baseline",
+        "seconds": 12.280080200027442,
+        "cv": 0.8555555555555555,
+        "holdout": 0.86,
+        "cv_calls": 67,
+        "params": {
+          "n_estimators": 60.0,
+          "max_depth": 11.0
+        }
+      },
+      {
+        "task": "synthetic-forest",
+        "seed": 1023,
+        "variant": "forced",
+        "seconds": 12.425116200000048,
+        "cv": 0.8555555555555555,
+        "holdout": 0.86,
+        "cv_calls": 67,
+        "params": {
+          "n_estimators": 60.0,
+          "max_depth": 11.0
+        }
+      },
+      {
+        "task": "synthetic-forest",
+        "seed": 1024,
+        "variant": "forced",
+        "seconds": 11.869600300007733,
+        "cv": 0.8444444444444444,
+        "holdout": 0.8866666666666667,
+        "cv_calls": 66,
+        "params": {
+          "n_estimators": 54.0,
+          "max_depth": 6.0
+        }
+      },
+      {
+        "task": "synthetic-forest",
+        "seed": 1024,
+        "variant": "baseline",
+        "seconds": 11.90544050000608,
+        "cv": 0.8444444444444444,
+        "holdout": 0.8866666666666667,
+        "cv_calls": 66,
+        "params": {
+          "n_estimators": 54.0,
+          "max_depth": 6.0
+        }
+      },
+      {
+        "task": "synthetic-forest",
+        "seed": 1025,
+        "variant": "baseline",
+        "seconds": 11.346546599990688,
+        "cv": 0.84,
+        "holdout": 0.8866666666666667,
+        "cv_calls": 68,
+        "params": {
+          "n_estimators": 53.0,
+          "max_depth": 7.0
+        }
+      },
+      {
+        "task": "synthetic-forest",
+        "seed": 1025,
+        "variant": "forced",
+        "seconds": 10.36924440000439,
+        "cv": 0.84,
+        "holdout": 0.8866666666666667,
+        "cv_calls": 62,
+        "params": {
+          "n_estimators": 53.0,
+          "max_depth": 7.0
+        }
+      }
+    ]
+  },
+  "svc_reproduction_script": "\"\"\"Pilot a guaranteed one-coordinate HPO crossover on fresh splits.\"\"\"\n\nimport argparse\nimport json\nimport random\nimport time\nfrom pathlib import Path\n\nimport numpy as np\nfrom sklearn.datasets import load_breast_cancer, load_digits, make_classification\nfrom sklearn.metrics import accuracy_score\nfrom sklearn.model_selection import StratifiedKFold, train_test_split\nfrom sklearn.pipeline import make_pipeline\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.svm import SVC\nfrom threadpoolctl import threadpool_limits\n\nfrom sklearn_genetic import GASearchCV\nfrom sklearn_genetic.space import Continuous\n\n\nclass ForcedCrossoverGASearchCV(GASearchCV):\n    def mate(self, individual_1, individual_2):\n        index = random.randrange(len(individual_1))\n        individual_1[index], individual_2[index] = individual_2[index], individual_1[index]\n        self._repair_individual(individual_1)\n        self._repair_individual(individual_2)\n        return individual_1, individual_2\n\n\nparser = argparse.ArgumentParser()\nparser.add_argument(\"--seed-start\", type=int, default=1009)\nparser.add_argument(\"--seeds\", type=int, default=3)\nparser.add_argument(\"--output\", default=\".agent-runs/performance-v2/hpo-forced-crossover-pilot.jsonl\")\nargs = parser.parse_args()\ndatasets = {\n    \"breast\": load_breast_cancer(return_X_y=True),\n    \"digits\": load_digits(return_X_y=True),\n    \"synthetic\": make_classification(\n        n_samples=800, n_features=20, n_informative=8, n_redundant=4, random_state=19\n    ),\n}\nwith threadpool_limits(limits=1), Path(args.output).open(\"w\", encoding=\"utf-8\") as stream:\n    for dataset, (X, y) in datasets.items():\n        for seed in range(args.seed_start, args.seed_start + args.seeds):\n            train, test = train_test_split(\n                np.arange(len(y)), test_size=0.25, stratify=y, random_state=seed\n            )\n            Xtr, Xte, ytr, yte = X[train], X[test], y[train], y[test]\n            folds = list(StratifiedKFold(3, shuffle=True, random_state=seed).split(Xtr, ytr))\n            for label, search_cls in (\n                ((\"baseline\", GASearchCV), (\"forced\", ForcedCrossoverGASearchCV))\n                if seed % 2 else ((\"forced\", ForcedCrossoverGASearchCV), (\"baseline\", GASearchCV))\n            ):\n                search = search_cls(\n                    make_pipeline(StandardScaler(), SVC(kernel=\"rbf\")),\n                    param_grid={\n                        \"svc__C\": Continuous(0.01, 100, distribution=\"log-uniform\"),\n                        \"svc__gamma\": Continuous(1e-4, 1, distribution=\"log-uniform\"),\n                    },\n                    cv=folds,\n                    scoring=\"accuracy\",\n                    population_size=8,\n                    generations=4,\n                    random_state=seed,\n                    n_jobs=1,\n                    verbose=False,\n                    error_score=\"raise\",\n                )\n                started = time.perf_counter()\n                search.fit(Xtr, ytr)\n                row = dict(\n                    dataset=dataset,\n                    seed=seed,\n                    variant=label,\n                    seconds=time.perf_counter() - started,\n                    cv=float(search.best_score_),\n                    holdout=float(accuracy_score(yte, search.best_estimator_.predict(Xte))),\n                    cv_calls=search.fit_stats_[\"cross_validate_calls\"],\n                    params={key: float(value) for key, value in search.best_params_.items()},\n                )\n                stream.write(json.dumps(row) + \"\\n\")\n                stream.flush()\n                print(json.dumps(row), flush=True)\n",
+  "transfer_reproduction_script": "\"\"\"Check whether forced one-gene HPO crossover transfers beyond RBF SVC.\"\"\"\n\nimport json\nimport random\nimport time\nfrom pathlib import Path\n\nimport numpy as np\nfrom sklearn.datasets import load_diabetes, load_digits, load_wine, make_classification\nfrom sklearn.ensemble import RandomForestClassifier\nfrom sklearn.linear_model import ElasticNet\nfrom sklearn.metrics import accuracy_score, mean_squared_error\nfrom sklearn.model_selection import KFold, StratifiedKFold, train_test_split\nfrom sklearn.neighbors import KNeighborsClassifier\nfrom sklearn.pipeline import make_pipeline\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.tree import DecisionTreeClassifier\nfrom threadpoolctl import threadpool_limits\n\nfrom sklearn_genetic import GASearchCV\nfrom sklearn_genetic.space import Categorical, Continuous, Integer\n\n\nclass ForcedCrossoverGASearchCV(GASearchCV):\n    def mate(self, individual_1, individual_2):\n        index = random.randrange(len(individual_1))\n        individual_1[index], individual_2[index] = individual_2[index], individual_1[index]\n        self._repair_individual(individual_1)\n        self._repair_individual(individual_2)\n        return individual_1, individual_2\n\n\ntasks = {\n    \"wine-tree\": dict(\n        data=load_wine(return_X_y=True),\n        model=DecisionTreeClassifier(random_state=0),\n        space={\"max_depth\": Integer(2, 15), \"criterion\": Categorical([\"gini\", \"entropy\"])},\n        regression=False,\n    ),\n    \"digits-knn\": dict(\n        data=load_digits(return_X_y=True),\n        model=make_pipeline(StandardScaler(), KNeighborsClassifier(n_jobs=1)),\n        space={\"kneighborsclassifier__n_neighbors\": Integer(1, 25), \"kneighborsclassifier__weights\": Categorical([\"uniform\", \"distance\"])},\n        regression=False,\n    ),\n    \"diabetes-elasticnet\": dict(\n        data=load_diabetes(return_X_y=True),\n        model=make_pipeline(StandardScaler(), ElasticNet(max_iter=2000, random_state=0)),\n        space={\"elasticnet__alpha\": Continuous(0.001, 10, distribution=\"log-uniform\"), \"elasticnet__l1_ratio\": Continuous(0.01, 0.99)},\n        regression=True,\n    ),\n    \"synthetic-forest\": dict(\n        data=make_classification(n_samples=600, n_features=20, n_informative=8, n_redundant=4, random_state=29),\n        model=RandomForestClassifier(random_state=0, n_jobs=1),\n        space={\"n_estimators\": Integer(20, 60), \"max_depth\": Integer(2, 12)},\n        regression=False,\n    ),\n}\n\noutput = Path(\".agent-runs/performance-v2/hpo-crossover-transfer.jsonl\")\nwith threadpool_limits(limits=1), output.open(\"w\", encoding=\"utf-8\") as stream:\n    for task_name, task in tasks.items():\n        X, y = task[\"data\"]\n        for seed in range(1021, 1026):\n            train, test = train_test_split(\n                np.arange(len(y)), test_size=0.25, stratify=None if task[\"regression\"] else y,\n                random_state=seed,\n            )\n            Xtr, Xte, ytr, yte = X[train], X[test], y[train], y[test]\n            splitter = KFold(3, shuffle=True, random_state=seed) if task[\"regression\"] else StratifiedKFold(3, shuffle=True, random_state=seed)\n            folds = list(splitter.split(Xtr, ytr))\n            variants = ((\"baseline\", GASearchCV), (\"forced\", ForcedCrossoverGASearchCV))\n            if seed % 2 == 0:\n                variants = variants[::-1]\n            for label, search_cls in variants:\n                search = search_cls(\n                    task[\"model\"], param_grid=task[\"space\"], cv=folds,\n                    scoring=\"neg_mean_squared_error\" if task[\"regression\"] else \"accuracy\",\n                    population_size=8, generations=4, random_state=seed,\n                    n_jobs=1, verbose=False, error_score=\"raise\",\n                )\n                started = time.perf_counter()\n                search.fit(Xtr, ytr)\n                predictions = search.best_estimator_.predict(Xte)\n                holdout = -mean_squared_error(yte, predictions) if task[\"regression\"] else accuracy_score(yte, predictions)\n                row = dict(\n                    task=task_name, seed=seed, variant=label,\n                    seconds=time.perf_counter() - started,\n                    cv=float(search.best_score_), holdout=float(holdout),\n                    cv_calls=search.fit_stats_[\"cross_validate_calls\"],\n                    params={key: float(value) if isinstance(value, (int, float, np.integer, np.floating)) else value for key, value in search.best_params_.items()},\n                )\n                stream.write(json.dumps(row) + \"\\n\")\n                stream.flush()\n                print(json.dumps(row), flush=True)\n",
+  "summary_script": "\"\"\"Freeze two-stage SVC pilot and heterogeneous transfer checks for crossover.\"\"\"\n\nimport hashlib\nimport importlib.metadata\nimport json\nimport math\nimport platform\nimport statistics\nimport subprocess\nfrom pathlib import Path\n\nimport numpy as np\nfrom sklearn.datasets import load_diabetes, load_digits, load_wine, load_breast_cancer, make_classification\nfrom sklearn.model_selection import KFold, StratifiedKFold, train_test_split\n\n\nwork = Path(\".agent-runs/performance-v2\")\nfiles = {\n    \"svc_pilot\": \"hpo-forced-crossover-pilot.jsonl\",\n    \"svc_validation\": \"hpo-forced-crossover-validation.jsonl\",\n    \"transfer\": \"hpo-crossover-transfer.jsonl\",\n}\nraw = {name: [json.loads(line) for line in (work / filename).read_text(encoding=\"utf-8\").splitlines()] for name, filename in files.items()}\nexpected = {\n    \"svc_pilot\": {(dataset, seed, variant) for dataset in (\"breast\", \"digits\", \"synthetic\") for seed in range(1009, 1012) for variant in (\"baseline\", \"forced\")},\n    \"svc_validation\": {(dataset, seed, variant) for dataset in (\"breast\", \"digits\", \"synthetic\") for seed in range(1012, 1017) for variant in (\"baseline\", \"forced\")},\n    \"transfer\": {(task, seed, variant) for task in (\"wine-tree\", \"digits-knn\", \"diabetes-elasticnet\", \"synthetic-forest\") for seed in range(1021, 1026) for variant in (\"baseline\", \"forced\")},\n}\nfor cohort, rows in raw.items():\n    key = \"task\" if cohort == \"transfer\" else \"dataset\"\n    actual = {(row[key], row[\"seed\"], row[\"variant\"]) for row in rows}\n    assert len(rows) == len(actual) == len(expected[cohort]) and actual == expected[cohort]\n    for row in rows:\n        assert math.isfinite(row[\"cv\"]) and math.isfinite(row[\"holdout\"])\n        assert 0 < row[\"cv_calls\"] <= 72\n        assert math.isfinite(row[\"seconds\"]) and row[\"seconds\"] > 0\n\nsummary = {}\nfor cohort, rows in raw.items():\n    key = \"task\" if cohort == \"transfer\" else \"dataset\"\n    summaries = []\n    for name in sorted({row[key] for row in rows}):\n        indexed = {(row[\"seed\"], row[\"variant\"]): row for row in rows if row[key] == name}\n        seeds = sorted({seed for seed, _ in indexed})\n        paired = [(indexed[(seed, \"baseline\")], indexed[(seed, \"forced\")]) for seed in seeds]\n        deltas = [forced[\"holdout\"] - baseline[\"holdout\"] for baseline, forced in paired]\n        summaries.append(dict(\n            name=name, seeds=seeds,\n            baseline_cv_mean=statistics.mean(a[\"cv\"] for a, _ in paired),\n            forced_cv_mean=statistics.mean(b[\"cv\"] for _, b in paired),\n            baseline_holdout_mean=statistics.mean(a[\"holdout\"] for a, _ in paired),\n            forced_holdout_mean=statistics.mean(b[\"holdout\"] for _, b in paired),\n            holdout_delta_mean=statistics.mean(deltas),\n            worst_holdout_delta=min(deltas),\n            forced_wins=sum(delta > 0 for delta in deltas),\n            ties=sum(delta == 0 for delta in deltas),\n            forced_losses=sum(delta < 0 for delta in deltas),\n            baseline_seconds_mean=statistics.mean(a[\"seconds\"] for a, _ in paired),\n            forced_seconds_mean=statistics.mean(b[\"seconds\"] for _, b in paired),\n            baseline_cv_calls_mean=statistics.mean(a[\"cv_calls\"] for a, _ in paired),\n            forced_cv_calls_mean=statistics.mean(b[\"cv_calls\"] for _, b in paired),\n        ))\n    summary[cohort] = summaries\n\nsvc_data = {\n    \"breast\": load_breast_cancer(return_X_y=True),\n    \"digits\": load_digits(return_X_y=True),\n    \"synthetic\": make_classification(n_samples=800, n_features=20, n_informative=8, n_redundant=4, random_state=19),\n}\ntransfer_data = {\n    \"wine-tree\": (load_wine(return_X_y=True), False),\n    \"digits-knn\": (load_digits(return_X_y=True), False),\n    \"diabetes-elasticnet\": (load_diabetes(return_X_y=True), True),\n    \"synthetic-forest\": (make_classification(n_samples=600, n_features=20, n_informative=8, n_redundant=4, random_state=29), False),\n}\nsplit_sha256 = {}\nfor dataset, (_, y) in svc_data.items():\n    for seed in range(1009, 1017):\n        train, test = train_test_split(np.arange(len(y)), test_size=0.25, stratify=y, random_state=seed)\n        folds = list(StratifiedKFold(3, shuffle=True, random_state=seed).split(train, y[train]))\n        arrays = [train, test] + [array for fold in folds for array in fold]\n        split_sha256[f\"svc/{dataset}/{seed}\"] = hashlib.sha256(b\"\".join(np.asarray(a, dtype=\"<i8\").tobytes() for a in arrays)).hexdigest()\nfor task, ((_, y), regression) in transfer_data.items():\n    for seed in range(1021, 1026):\n        train, test = train_test_split(np.arange(len(y)), test_size=0.25, stratify=None if regression else y, random_state=seed)\n        splitter = KFold(3, shuffle=True, random_state=seed) if regression else StratifiedKFold(3, shuffle=True, random_state=seed)\n        folds = list(splitter.split(train, y[train]))\n        arrays = [train, test] + [array for fold in folds for array in fold]\n        split_sha256[f\"transfer/{task}/{seed}\"] = hashlib.sha256(b\"\".join(np.asarray(a, dtype=\"<i8\").tobytes() for a in arrays)).hexdigest()\n\nsource_paths = [Path(\"sklearn_genetic/genetic_search.py\"), Path(\"sklearn_genetic/algorithms.py\"), Path(\"sklearn_genetic/population.py\")]\npayload = dict(\n    question=\"Does forced one-coordinate crossover generalize beyond SVC?\",\n    source_commit=subprocess.check_output([\"git\", \"rev-parse\", \"HEAD\"], text=True).strip(),\n    settings=dict(population_size=8, generations=4, proposal_budget=72, cv_folds=3, holdout_fraction=0.25, cpu_threads=1, order=\"Alternated by seed\", svc_pilot_seeds=list(range(1009, 1012)), svc_validation_seeds=list(range(1012, 1017)), transfer_seeds=list(range(1021, 1026))),\n    environment={\"python\": platform.python_version(), **{name: importlib.metadata.version(name) for name in (\"numpy\", \"scikit-learn\", \"scipy\", \"deap\")}},\n    source_sha256={str(path).replace(\"\\\\\", \"/\"): hashlib.sha256(path.read_bytes()).hexdigest() for path in source_paths},\n    split_sha256=split_sha256,\n    raw_sha256={name: hashlib.sha256(json.dumps(rows, sort_keys=True).encode()).hexdigest() for name, rows in raw.items()},\n    summary=summary, raw=raw,\n    svc_reproduction_script=(work / \"hpo-forced-crossover-pilot.py\").read_text(encoding=\"utf-8\"),\n    transfer_reproduction_script=(work / \"hpo-crossover-transfer.py\").read_text(encoding=\"utf-8\"),\n    summary_script=Path(__file__).read_text(encoding=\"utf-8\"),\n)\ndestination = Path(\"benchmarks/results/performance-v2/hpo-crossover-transfer.json\")\ndestination.write_text(json.dumps(payload, indent=2), encoding=\"utf-8\")\nprint(json.dumps(summary, indent=2))\n"
+}

@@ -858,3 +858,35 @@ New-Item -ItemType Directory -Force -Path .agent-runs/performance-v2 | Out-Null
 .\.venv\Scripts\python.exe .agent-runs/performance-v2/hpo-random-control.py
 .\.venv\Scripts\python.exe .agent-runs/performance-v2/summarize-hpo-random-control.py
 ```
+
+## Does a forced one-coordinate crossover transfer to other models?
+
+The random-search control exposed a weak HPO quality/time tradeoff on the RBF SVC tasks. A narrowly scoped crossover pilot replaced the ordinary uniform crossover with a forced swap of exactly one parameter between parents, leaving candidate budgets, initialization, selection, mutation, CV, caching and final refit unchanged. This is an experiment implemented through a `GASearchCV` subclass in the recorded script; **the library default has not changed**. Each paired fit used population eight, four generations, at most 72 proposed candidates, three CV folds, a stratified 25% classification holdout, one CPU thread and alternating run order by seed.
+
+On fresh SVC seeds 1009–1011, the pilot gained .00233 mean held-out accuracy on Breast Cancer, tied on Digits and gained .01333 on synthetic data, but one synthetic split lost .015. The frozen variant was then evaluated on five further SVC seeds 1012–1016:
+
+| SVC dataset | Baseline → forced mean held-out accuracy | Forced wins/ties/losses | Baseline → forced mean seconds |
+|---|---:|---:|---:|
+| Breast Cancer | .96224 → .96643 | 2/3/0 | 2.484 → 2.407 |
+| Digits | .97644 → .97733 | 2/3/0 | 28.446 → 27.498 |
+| Synthetic | .86600 → .87500 | 3/2/0 | 5.046 → 5.178 |
+
+To check transfer beyond the motivating SVC tasks, the same frozen variant was compared on new seeds 1021–1025 across decision-tree classification on Wine (integer/categorical space), KNN classification on Digits (integer/categorical), ElasticNet regression on Diabetes (two continuous parameters, negative MSE) and random-forest classification on separate synthetic data (two integers). Each task used its own untouched 25% outer holdout, three folds, one CPU and the same 72-proposal maximum. Repeated candidates reduced actual CV calls in the finite classifier spaces; the counts do not imply complete space coverage.
+
+| Transfer task | Baseline → forced mean held-out score | Forced wins/ties/losses | Baseline → forced mean seconds |
+|---|---:|---:|---:|
+| Wine decision tree (accuracy) | .89333 → .89333 | 0/5/0 | .271 → .259 |
+| Digits KNN (accuracy) | .97067 → .97111 | 1/4/0 | 1.769 → 1.818 |
+| Diabetes ElasticNet (negative MSE) | −2798.67 → −2799.08 | 2/1/2 | .793 → .781 |
+| Synthetic random forest (accuracy) | .88400 → .88533 | 1/4/0 | 11.903 → 11.393 |
+
+The validation is directionally positive for SVC classification, but most transfer splits tie, ElasticNet loses up to 8.44 negative-MSE points on one split, and time differences are small and mixed. This does not justify a global crossover change or a general SOTA/4× claim. The [88-fit artifact](results/performance-v2/hpo-crossover-transfer.json) retains raw pairs, pilot and validation summaries, source and split hashes, versions, and exact scripts. To reproduce from the repository root in PowerShell after installing benchmark dependencies in `.venv`:
+
+```powershell
+New-Item -ItemType Directory -Force -Path .agent-runs/performance-v2 | Out-Null
+.\.venv\Scripts\python.exe -c "import json,pathlib; a=json.loads(pathlib.Path('benchmarks/results/performance-v2/hpo-crossover-transfer.json').read_text(encoding='utf-8')); w=pathlib.Path('.agent-runs/performance-v2'); (w/'hpo-forced-crossover-pilot.py').write_text(a['svc_reproduction_script'], encoding='utf-8'); (w/'hpo-crossover-transfer.py').write_text(a['transfer_reproduction_script'], encoding='utf-8'); (w/'summarize-hpo-crossover-transfer.py').write_text(a['summary_script'], encoding='utf-8')"
+.\.venv\Scripts\python.exe .agent-runs/performance-v2/hpo-forced-crossover-pilot.py
+.\.venv\Scripts\python.exe .agent-runs/performance-v2/hpo-forced-crossover-pilot.py --seed-start 1012 --seeds 5 --output .agent-runs/performance-v2/hpo-forced-crossover-validation.jsonl
+.\.venv\Scripts\python.exe .agent-runs/performance-v2/hpo-crossover-transfer.py
+.\.venv\Scripts\python.exe .agent-runs/performance-v2/summarize-hpo-crossover-transfer.py
+```
