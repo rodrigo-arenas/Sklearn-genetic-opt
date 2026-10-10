@@ -120,7 +120,7 @@ callback = TimerStopping(total_seconds=300)  # stop after 5 minutes
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `total_seconds` | float | Maximum elapsed seconds. Checked after each generation, so the current generation completes before stopping |
+| `total_seconds` | float | Maximum elapsed seconds before starting another candidate batch; an in-flight batch can finish after the limit |
 
 Pass it to `fit` to cap a long search by wall-clock time — handy for notebook and local experiments where the search space may be larger than expected:
 
@@ -132,7 +132,8 @@ callbacks = [TimerStopping(total_seconds=60)]
 search.fit(X_train, y_train, callbacks=callbacks)
 ```
 
-The optimization stops after the time budget is reached, once the current generation finishes.
+The search checks the budget between candidate batches, including batches
+within a generation. Final selection and refit can extend the total fit time.
 
 ---
 
@@ -259,7 +260,7 @@ print("Accuracy:", accuracy_score(y_test, y_predict_ga))
 
 - Callbacks see the same metric names that appear in the generation log: `fitness`, `fitness_std`, `fitness_best`, `fitness_max`, `fitness_min`.
 - `ConsecutiveStopping` watches `fitness` by default (mean population fitness). Use `metric="fitness_best"` if you want to stop when the overall best score stops improving.
-- `TimerStopping` stops after the **next** generation completes once the time limit is exceeded — it won't interrupt a running generation.
+- `TimerStopping` stops scheduling new batches after the limit; an in-flight CV batch and final selection/refit can still complete.
 - When multiple callbacks are combined, **any single one** returning `True` stops the search.
 
 ## See Also

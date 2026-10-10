@@ -94,7 +94,9 @@ DeltaThreshold(threshold, generations=2, metric="fitness")
 
 ## TimerStopping
 
-Stops after a wall-clock time limit. The current generation finishes before stopping.
+Stops starting new candidate batches after the wall-clock limit. An in-flight
+cross-validation batch, final selection and refit can finish after the limit.
+At least one initial batch completes so the search can return a fitted model.
 
 ```python
 TimerStopping(total_seconds)

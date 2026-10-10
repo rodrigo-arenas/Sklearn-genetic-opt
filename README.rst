@@ -308,7 +308,7 @@ Recommended citation:
 
    Arenas, R. (2026). sklearn-genetic-opt: Hyperparameter tuning and feature
    selection using genetic algorithms, built on top of scikit-learn (Version
-   0.13.3) [Computer software].
+   0.14.0) [Computer software].
    https://github.com/rodrigo-arenas/Sklearn-genetic-opt
 
 BibTeX:
@@ -320,7 +320,7 @@ BibTeX:
      title = {{sklearn-genetic-opt}: Hyperparameter tuning and feature selection
        using genetic algorithms, built on top of scikit-learn},
      year = {2026},
-     version = {0.13.3},
+     version = {0.14.0},
      url = {https://github.com/rodrigo-arenas/Sklearn-genetic-opt}
    }
 

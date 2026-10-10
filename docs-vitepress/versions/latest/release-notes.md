@@ -9,7 +9,38 @@ You are reading the **latest (dev)** docs. For the stable version, see [stable](
 
 # Release Notes
 
-## Unreleased
+## 0.14.0 (upcoming)
+
+This release improves both `GASearchCV` and `GAFeatureSelectionCV` under short
+training budgets. Evolution can use smaller training folds with
+[`subsample_cv`](./guide/advanced-optimizer-control) and select finalists on the
+original folds. Feature selection starts timed smart searches with its largest
+candidate mask, avoiding a weak one-feature result when little time remains.
+Finite cached spaces stop after full coverage, and `TimerStopping` checks the
+deadline between candidate batches. These are workload-dependent gains: reduced
+training can change candidate rankings, and final validation and refitting add
+time beyond the requested search budget.
+
+The optional `eaDifferentialEvolution` algorithm and chained local refinement
+offer additional evolutionary strategies. Regression forest `fast` presets now
+use only `squared_error`; choose `balanced` or `wide` if the more robust
+`absolute_error` criterion matters. Feature masks are repaired to respect
+`max_features` and include at least one column. See the
+[configuration](./api/config), [algorithms](./api/algorithms), and
+[presets](./api/presets) references for their use and limits.
+
+Benchmarks include Optuna, FLAML and AutoGluon, with reproducible settings in
+[`benchmarks/PERFORMANCE_V2.md`](https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/benchmarks/PERFORMANCE_V2.md).
+Several workloads improve by more than four times, while others regress in
+quality or time; these results do not establish a general 4× gain or superiority
+over every AutoML system.
+
+The repository [changelog](https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/CHANGELOG.md)
+lists the remaining changes in this upcoming release.
+
+---
+
+## 0.13.4
 
 ### Bug Fixes and Error Messages
 

@@ -2,7 +2,7 @@
 
 Full release notes with code examples are in the [documentation](https://sklearngeneticopt.rodrigo-arenas.com/).
 
-## Unreleased
+## 0.14.0 (upcoming)
 
 ### New Features
 
@@ -13,6 +13,10 @@ Full release notes with code examples are in the [documentation](https://sklearn
 - Added `subsample_cv` to reduce training rows while retaining full validation folds. Both searches can re-evaluate finalists on full-training CV; `GAFeatureSelectionCV` now shares `final_selection`, `final_selection_top_k`, and `final_selection_cv` with `GASearchCV`. The default full-data search is unchanged.
 
 - Local refinement in both searches now chains accepted elite improvements across `local_search_steps`, retaining per-step population batching and the configured candidate count.
+
+- Added optional `algorithm="eaDifferentialEvolution"` for both searches, with domain-aware numeric mutation and bounded categorical and feature-mask handling. Benchmarks show mixed outcomes, so the default algorithm is unchanged.
+
+- Cached finite search spaces stop after all unique configurations have been evaluated. This avoids redundant generations in small hyperparameter and feature spaces without changing their winners.
 
 - Fitness sharing uses vectorized distances with bounded auxiliary memory for feature masks and mixed hyperparameter spaces. The isolated sharing benchmark is 7.9–14.8× faster; complete-fit timings remain dominated by model evaluation.
 
