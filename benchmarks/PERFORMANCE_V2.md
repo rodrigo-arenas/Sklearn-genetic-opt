@@ -93,3 +93,24 @@ Reproduce in PowerShell:
 Verification: 136 focused algorithm/helper tests and eight public search/validation tests pass. Separate real fits verify identical serial/two-worker solutions, six local refinement candidates, checkpoint cache reuse, and fitted save/load for both search classes. Missing algorithm behavior was recorded red before implementation; NaN callback recovery was recorded red before repair. Independent review rejected tie/category/NaN mutants and closed all material findings. `test_guard` and Black on tracked Python plus the new benchmark pass. Repository-root Black also scans ignored experiment scripts and reports formatting there; no tracked source failed. Full suite not run.
 
 [HPO data](results/performance-v2/differential-hpo.json), [feature data](results/performance-v2/differential-features.json), [verification](results/performance-v2/differential-verification.txt).
+
+## Complete finite-space coverage
+
+Baseline: `f49c19ad1118bc415aade86dc6ff9eccb5128f03`. Cached search now stops after all possible configurations have been observed in the current run and preserved through the best-solution archive. This applies to both search classes and every evolutionary algorithm. Unknown/custom or non-fixed continuous dimensions, uncached runs, and runs without an archive keep the generation budget. Old cache contents alone never prove current coverage. Feature counts include every nonempty mask up to `max_features`.
+
+Paired benchmark: 18 baseline/current pairs, three seeds per workload, 20 individuals, at most 40 generations, identical three-fold splits, one worker/native thread, final refit included. All pairs have exactly equal CV score, held-out score, predictions, selected configuration/mask, and CV evaluation counts.
+
+| Workload | Baseline seconds (mean) | Current seconds (mean) | Paired speedup range | Current history records |
+|---|---:|---:|---:|---|
+| hpo-small | 0.636 | 0.076 | 7.82–9.01× | 1, 1, 1 |
+| hpo-medium | 1.057 | 0.456 | 2.17–2.40× | 5, 4, 6 |
+| hpo-continuous | 13.954 | 13.303 | 1.03–1.06× | 41, 41, 41 |
+| features-small | 0.375 | 0.064 | 5.82–5.94× | 1, 1, 1 |
+| features-medium | 0.870 | 0.652 | 1.23–1.43× | 11, 21, 11 |
+| features-wide | 10.491 | 10.109 | 1.01–1.08× | 41, 41, 41 |
+
+Baseline history has 41 records for every run (generation zero included). Small HPO and feature spaces exceed 4× with identical solutions; medium spaces improve less. Continuous and large-feature controls do not exhaust, so their small timing changes should be treated as noise. Runs use a fixed baseline-then-current order on a shared machine; these are workload-specific measurements, not a general 4× or SOTA claim.
+
+Reproduce with `benchmarks/benchmark_exhaustion.py --output current.json`; export the baseline package with `git archive` and add `--source-root <export-directory>` for the baseline run.
+
+[Baseline data](results/performance-v2/exhaustion-baseline.json), [current data](results/performance-v2/exhaustion-current.json), [verification](results/performance-v2/exhaustion-verification.txt).

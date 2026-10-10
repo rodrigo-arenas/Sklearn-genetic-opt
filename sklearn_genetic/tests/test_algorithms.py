@@ -197,6 +197,75 @@ def test_differential_evolution_uses_deferred_distinct_donors(
     )
 
 
+@pytest.mark.parametrize(
+    "algorithm", [eaSimple, eaMuPlusLambda, eaMuCommaLambda, eaDifferentialEvolution]
+)
+@pytest.mark.parametrize(
+    "case",
+    [
+        "covered",
+        "incomplete",
+        "continuous",
+        "uncached",
+        "no_archive",
+        "feature_pairs",
+        "feature_unbounded",
+    ],
+)
+def test_space_exhaustion_counts_current_run_proposals(
+    simple_toolbox, monkeypatch, algorithm, case
+):
+    feature_case = case.startswith("feature_")
+    initial = [[1, 0, 0], [0, 1, 0], [0, 0, 1], [1, 0, 0]] if feature_case else [[0]] * 4
+    proposed = (
+        [[1, 1, 0], [1, 0, 1], [0, 1, 1], [1, 1, 0]]
+        if feature_case
+        else [[v] for v in (1, 2, 3, 4)]
+    )
+    population = [creator.IndividualAlgorithmTest(values) for values in initial]
+
+    def trials(*args):
+        return [creator.IndividualAlgorithmTest(values) for values in proposed]
+
+    monkeypatch.setattr("sklearn_genetic.algorithms.varAnd", trials)
+    monkeypatch.setattr("sklearn_genetic.algorithms.varOr", trials)
+    monkeypatch.setattr("sklearn_genetic.algorithms.differential_offspring", trials)
+    dimension = (
+        Continuous(0, 4) if case == "continuous" else Integer(0, 5 if case == "incomplete" else 4)
+    )
+    estimator = SimpleNamespace(
+        space=Space({"x": dimension}),
+        elitism=False,
+        use_cache=case != "uncached",
+        _individual_key=tuple,
+        # Restored cache entries do not prove the current run observed them.
+        fitness_cache={(value,): (float(value),) for value in range(10)},
+    )
+    if feature_case:
+        del estimator.space
+        estimator.n_features = 3
+        estimator.max_features = 2 if case == "feature_pairs" else None
+    stats = tools.Statistics(lambda ind: ind.fitness.values[0])
+    stats.register("fitness_max", np.max)
+    _, log, _ = algorithm(
+        population,
+        simple_toolbox,
+        cxpb=ConstantAdapter(0.5, 0.5, 0),
+        mutpb=ConstantAdapter(0.5, 0.5, 0),
+        ngen=3,
+        halloffame=None if case == "no_archive" else tools.HallOfFame(1),
+        stats=stats,
+        callbacks=[],
+        verbose=False,
+        estimator=estimator,
+        **({"mu": 4, "lambda_": 4} if algorithm in (eaMuPlusLambda, eaMuCommaLambda) else {}),
+    )
+    covered = case in ("covered", "feature_pairs")
+    assert len(log) == (2 if covered else 4)
+    assert estimator.search_space_exhausted_ is covered
+    assert log[-1]["fitness_best"] == (2 if feature_case else 4)
+
+
 def test_verbose_output_uses_compact_generation_summary(simple_toolbox, capsys):
     population = simple_toolbox.population(n=4)
     stats = tools.Statistics(lambda individual: individual.fitness.values)

@@ -231,7 +231,9 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         ``None`` keeps the default non-deterministic behaviour.
 
     generations : int, default=40
-        Number of generations or iterations to run the evolutionary algorithm.
+        Maximum number of generations. With caching enabled, evolution can
+        stop earlier once every configuration in a finite space has been
+        observed by the current run.
 
     crossover_probability : float or a Scheduler, default=0.8
         Probability of crossover operation between two individuals.
@@ -426,6 +428,10 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
 
     Attributes
     ----------
+    search_space_exhausted_ : bool
+        Whether evolution stopped after observing every configuration in a
+        finite search space. Requires use_cache=True; restored cache entries
+        alone do not count as coverage by the current run.
 
     logbook : :class:`DEAP.tools.Logbook`
         Contains the logs of every set of hyperparameters fitted with its average scoring metric.
@@ -1456,7 +1462,9 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         with distance inside ``sharing_radius``.
 
     generations : int, default=40
-        Number of generations or iterations to run the evolutionary algorithm.
+        Maximum number of generations. With caching enabled, evolution can
+        stop earlier once every configuration in a finite space has been
+        observed by the current run.
 
     crossover_probability : float or a Scheduler, default=0.2
         Probability of crossover operation between two individuals.
@@ -1570,6 +1578,10 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
 
     Attributes
     ----------
+    search_space_exhausted_ : bool
+        Whether evolution stopped after observing every configuration in a
+        finite search space. Requires use_cache=True; restored cache entries
+        alone do not count as coverage by the current run.
 
     logbook : :class:`DEAP.tools.Logbook`
         Contains the logs of every set of hyperparameters fitted with its average scoring metric.

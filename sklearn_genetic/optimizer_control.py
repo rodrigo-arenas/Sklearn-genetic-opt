@@ -1,5 +1,6 @@
 import random
 from contextlib import contextmanager
+from math import comb
 
 import numpy as np
 
@@ -183,6 +184,39 @@ def replace_duplicate_candidates(population, toolbox, estimator, reference_popul
 
 def local_search_enabled(estimator):
     return getattr(estimator, "local_search", False)
+
+
+def finite_search_space_size(estimator, limit):
+    """Count reachable cached configurations only when coverage is possible."""
+    if not getattr(estimator, "use_cache", False):
+        return None
+    if hasattr(estimator, "space"):
+        size = 1
+        for dimension in estimator.space.param_grid.values():
+            if isinstance(dimension, Integer):
+                size *= dimension.upper - dimension.lower + 1
+            elif isinstance(dimension, Categorical):
+                choices = set(dimension.choices)
+                if any(value != value for value in choices):
+                    return None
+                size *= len(choices)
+            elif isinstance(dimension, Continuous):
+                if dimension.lower != dimension.upper:
+                    return None
+            else:
+                return None
+            if size > limit:
+                return None
+        return size
+    if hasattr(estimator, "n_features"):
+        maximum = estimator.max_features or estimator.n_features
+        size = 0
+        for selected in range(1, maximum + 1):
+            size += comb(estimator.n_features, selected)
+            if size > limit:
+                return None
+        return size
+    return None
 
 
 def differential_offspring(population, toolbox, estimator, crossover, mutation):

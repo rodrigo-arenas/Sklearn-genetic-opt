@@ -140,6 +140,72 @@ def test_differential_evolution_rejects_small_population_before_evaluation(kind)
         search.fit(X_train[:40], y_train[:40])
 
 
+@pytest.mark.parametrize("kind", ["parameters", "features"])
+@pytest.mark.parametrize(
+    "algorithm", ["eaSimple", "eaMuPlusLambda", "eaMuCommaLambda", "eaDifferentialEvolution"]
+)
+@pytest.mark.parametrize("use_cache", [True, False])
+def test_search_stops_after_evaluating_entire_finite_space(kind, algorithm, use_cache):
+    from ..callbacks.base import BaseCallback
+
+    class Lifecycle(BaseCallback):
+        def __init__(self):
+            self.events = []
+
+        def on_start(self, estimator=None):
+            self.events.append("start")
+
+        def on_end(self, logbook=None, estimator=None):
+            self.events.append("end")
+
+    def score(model, X, y):
+        return (
+            model.max_depth + (model.criterion == "entropy")
+            if kind == "parameters"
+            else float(X[0].sum())
+        )
+
+    common = dict(
+        population_size=12,
+        use_cache=use_cache,
+        generations=4,
+        algorithm=algorithm,
+        random_state=17,
+        scoring=score,
+        cv=2,
+        n_jobs=1,
+        verbose=False,
+    )
+    model = DecisionTreeClassifier(random_state=17)
+    search = (
+        GASearchCV(
+            model,
+            param_grid={
+                "max_depth": Integer(1, 2),
+                "criterion": Categorical(["gini", "entropy", "entropy"]),
+                "ccp_alpha": Continuous(0, 0),
+            },
+            **common,
+        )
+        if kind == "parameters"
+        else genetic_search.GAFeatureSelectionCV(model, max_features=1, **common)
+    )
+    X_small = np.tile([1.0, 2.0], (40, 1))
+    y_small = np.tile([0, 1], 20)
+    callback = Lifecycle()
+    search.fit(X_small, y_small, callbacks=[callback])
+    assert len(search.history["gen"]) == (1 if use_cache else 5)
+    assert search.search_space_exhausted_ is use_cache
+    space_size = 4 if kind == "parameters" else 2
+    if use_cache:
+        assert search.fit_stats_["cross_validate_calls"] == space_size
+    else:
+        assert search.fit_stats_["cross_validate_calls"] > space_size
+    assert search.history["fitness_best"][-1] == (3 if kind == "parameters" else 2)
+    assert callback.events == ["start", "end"]
+    assert search.predict(X_small).shape == y_small.shape
+
+
 def test_gasearch_accepts_grouped_config_objects():
     evolution_config = EvolutionConfig(
         population_size=4,
@@ -577,7 +643,7 @@ def test_optimizer_telemetry_is_recorded_for_each_generation(algorithm):
         population_size=4,
         generations=generations,
         param_grid={
-            "max_depth": Integer(1, 3),
+            "max_depth": Integer(1, 30),  # Larger than the budget: exercise every generation.
             "criterion": Categorical(["gini", "entropy"]),
         },
         algorithm=algorithm,
@@ -623,7 +689,7 @@ def test_schedulers_reset_on_fresh_fit():
         population_size=4,
         generations=generations,
         param_grid={
-            "max_depth": Integer(1, 3),
+            "max_depth": Integer(1, 30),  # Larger than the budget: exercise every generation.
             "criterion": Categorical(["gini", "entropy"]),
         },
         mutation_probability=mutation_scheduler,
@@ -1873,3 +1939,27 @@ def test_gasearch_pipeline_routed_fit_param_is_not_falsely_rejected():
     # Should run cleanly: clf__sample_weight is a valid routed metadata key.
     evolved_estimator.fit(X_train, y_train, clf__sample_weight=np.ones(X_train.shape[0]))
     assert hasattr(evolved_estimator, "best_estimator_")
+
+
+def test_custom_dimension_does_not_trigger_finite_exhaustion():
+    from ..space.base import BaseDimension
+
+    class CustomDepth(BaseDimension):
+        def sample(self):
+            return 2
+
+    search = GASearchCV(
+        DecisionTreeClassifier(random_state=0),
+        param_grid={"max_depth": CustomDepth()},
+        cv=2,
+        n_jobs=1,
+        population_size=4,
+        generations=1,
+        crossover_probability=0.0,
+        mutation_probability=0.0,
+        verbose=False,
+        random_state=0,
+    ).fit(np.arange(48).reshape(24, 2), np.tile([0, 1], 12))
+    assert search.best_params_ == {"max_depth": 2}
+    assert len(search.history["gen"]) == 2
+    assert not search.search_space_exhausted_

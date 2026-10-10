@@ -7,6 +7,7 @@ from deap.algorithms import varAnd, varOr
 from .callbacks.validations import eval_callbacks
 from .optimizer_control import (
     differential_offspring,
+    finite_search_space_size,
     inject_random_immigrants,
     local_neighbor,
     local_search_enabled,
@@ -397,6 +398,17 @@ def _control_record(
     }
 
 
+def _update_search_coverage(estimator, candidates, size, seen):
+    # Only proposals observed by this run count. A restored cache can include
+    # configurations that the current hall of fame has never encountered.
+    if size is not None:
+        seen.update(estimator._individual_key(individual) for individual in candidates)
+    exhausted = size is not None and len(seen) == size
+    if estimator is not None:
+        estimator.search_space_exhausted_ = exhausted
+    return exhausted
+
+
 def eaSimple(
     population,
     toolbox,
@@ -460,6 +472,12 @@ def eaSimple(
         Number of generations used.
 
     """
+    space_size = (
+        finite_search_space_size(estimator, len(population) * (ngen + 1))
+        if halloffame is not None
+        else None
+    )
+    seen_candidates = set()
     stored_exception = None
     callbacks_start_args = {
         "callbacks": callbacks,
@@ -481,8 +499,11 @@ def eaSimple(
 
     if halloffame is not None:
         halloffame.update(population)
-    hof_size = len(halloffame.items) if (halloffame.items and estimator.elitism) else 0
+    hof_size = (
+        len(halloffame) if halloffame is not None and getattr(estimator, "elitism", False) else 0
+    )
 
+    exhausted = _update_search_coverage(estimator, population, space_size, seen_candidates)
     n_gen = gen = 0
     record = _compile_generation_record(
         stats, population, telemetry_state, gen, halloffame=halloffame
@@ -502,7 +523,7 @@ def eaSimple(
         "method": "on_step",
     }
 
-    if eval_callbacks(**callbacks_step_args):
+    if eval_callbacks(**callbacks_step_args) or exhausted:
         callbacks_end_args = {
             "callbacks": callbacks,
             "record": None,
@@ -513,7 +534,8 @@ def eaSimple(
 
         # Call ending callback
         eval_callbacks(**callbacks_end_args)
-        print("INFO: Stopping the algorithm")
+        if not exhausted or verbose:
+            print("INFO: Stopping the algorithm")
         return population, logbook, n_gen + gen_offset
 
     for gen in range(1, ngen + 1):
@@ -543,7 +565,7 @@ def eaSimple(
             for ind, fit in zip(invalid_ind, fitnesses):
                 ind.fitness.values = fit
 
-            if estimator.elitism:
+            if halloffame is not None and getattr(estimator, "elitism", False):
                 offspring.extend(halloffame.items)
 
             # Update the hall of fame with the generated individuals
@@ -551,6 +573,7 @@ def eaSimple(
                 halloffame.update(offspring)
 
             # Replace the current population by the offspring
+            exhausted = _update_search_coverage(estimator, offspring, space_size, seen_candidates)
             population[:] = offspring
 
             # Append the current generation statistics to the logbook
@@ -583,12 +606,13 @@ def eaSimple(
             }
 
             # Check if any of the callbacks conditions are True to stop the iteration
-            if eval_callbacks(**callbacks_step_args) or stored_exception:
+            if eval_callbacks(**callbacks_step_args) or exhausted or stored_exception:
                 if stored_exception:
                     print(
                         f"{stored_exception}\nsklearn-genetic-opt closed prematurely. Will use the current best model."
                     )
-                print("INFO: Stopping the algorithm")
+                if not exhausted or verbose:
+                    print("INFO: Stopping the algorithm")
                 break
         except (KeyboardInterrupt, SystemExit, StopIteration) as e:
             stored_exception = e
@@ -685,6 +709,12 @@ def eaMuPlusLambda(
     differential = kwargs.get("_differential_evolution", False)
     if differential and (estimator is None or len(population) < 4):
         raise ValueError("Differential evolution requires an estimator and population_size >= 4")
+    space_size = (
+        finite_search_space_size(estimator, len(population) + ngen * lambda_)
+        if halloffame is not None
+        else None
+    )
+    seen_candidates = set()
     stored_exception = None
     callbacks_start_args = {
         "callbacks": callbacks,
@@ -711,6 +741,7 @@ def eaMuPlusLambda(
             else population
         )
 
+    exhausted = _update_search_coverage(estimator, population, space_size, seen_candidates)
     n_gen = gen = 0
     record = _compile_generation_record(
         stats, population, telemetry_state, gen, halloffame=halloffame
@@ -729,7 +760,7 @@ def eaMuPlusLambda(
         "method": "on_step",
     }
 
-    if eval_callbacks(**callbacks_step_args):
+    if eval_callbacks(**callbacks_step_args) or exhausted:
         # Call ending callback
         callbacks_end_args = {
             "callbacks": callbacks,
@@ -740,7 +771,8 @@ def eaMuPlusLambda(
         }
 
         eval_callbacks(**callbacks_end_args)
-        print("INFO: Stopping the algorithm")
+        if not exhausted or verbose:
+            print("INFO: Stopping the algorithm")
         return population, logbook, n_gen + gen_offset
 
     for gen in range(1, ngen + 1):
@@ -775,6 +807,8 @@ def eaMuPlusLambda(
                     if differential
                     else offspring
                 )
+
+            exhausted = _update_search_coverage(estimator, offspring, space_size, seen_candidates)
 
             # Select the next generation population
             if estimator is not None:
@@ -825,12 +859,13 @@ def eaMuPlusLambda(
                 "method": "on_step",
             }
 
-            if eval_callbacks(**callbacks_step_args) or stored_exception:
+            if eval_callbacks(**callbacks_step_args) or exhausted or stored_exception:
                 if stored_exception:
                     print(
                         f"{stored_exception}\nsklearn-genetic-opt closed prematurely. Will use the current best model."
                     )
-                print("INFO: Stopping the algorithm")
+                if not exhausted or verbose:
+                    print("INFO: Stopping the algorithm")
                 break
 
         except (KeyboardInterrupt, SystemExit, StopIteration) as e:
@@ -927,6 +962,12 @@ def eaMuCommaLambda(
     """
     assert lambda_ >= mu, "lambda must be greater or equal to mu."
 
+    space_size = (
+        finite_search_space_size(estimator, len(population) + ngen * lambda_)
+        if halloffame is not None
+        else None
+    )
+    seen_candidates = set()
     stored_exception = None
     callbacks_start_args = {
         "callbacks": callbacks,
@@ -950,6 +991,7 @@ def eaMuCommaLambda(
     telemetry_state = _new_telemetry_state()
     logbook, gen_offset = _seed_logbook(resume_log, stats)
 
+    exhausted = _update_search_coverage(estimator, population, space_size, seen_candidates)
     n_gen = gen = 0
     record = _compile_generation_record(
         stats, population, telemetry_state, gen, halloffame=halloffame
@@ -968,7 +1010,7 @@ def eaMuCommaLambda(
     }
 
     # Check if any of the callbacks conditions are True to stop the iteration
-    if eval_callbacks(**callbacks_step_args):
+    if eval_callbacks(**callbacks_step_args) or exhausted:
         callbacks_end_args = {
             "callbacks": callbacks,
             "record": None,
@@ -978,7 +1020,8 @@ def eaMuCommaLambda(
         }
 
         eval_callbacks(**callbacks_end_args)
-        print("INFO: Stopping the algorithm")
+        if not exhausted or verbose:
+            print("INFO: Stopping the algorithm")
         return population, logbook, n_gen + gen_offset
 
     for gen in range(1, ngen + 1):
@@ -1005,6 +1048,8 @@ def eaMuCommaLambda(
             # Update the hall of fame with the generated individuals
             if halloffame is not None:
                 halloffame.update(offspring)
+
+            exhausted = _update_search_coverage(estimator, offspring, space_size, seen_candidates)
 
             # Select the next generation population
             if estimator is not None:
@@ -1044,12 +1089,13 @@ def eaMuCommaLambda(
             }
 
             # Check if any of the callbacks conditions are True to stop the iteration
-            if eval_callbacks(**callbacks_step_args) or stored_exception:
+            if eval_callbacks(**callbacks_step_args) or exhausted or stored_exception:
                 if stored_exception:
                     print(
                         f"{stored_exception}\nsklearn-genetic-opt closed prematurely. Will use the current best model."
                     )
-                print("INFO: Stopping the algorithm")
+                if not exhausted or verbose:
+                    print("INFO: Stopping the algorithm")
                 break
 
         except (KeyboardInterrupt, SystemExit, StopIteration) as e:
