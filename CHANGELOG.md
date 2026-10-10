@@ -6,6 +6,8 @@ Full release notes with code examples are in the [documentation](https://sklearn
 
 ### New Features
 
+- Local refinement in both searches now chains accepted elite improvements across `local_search_steps`, retaining per-step population batching and the configured candidate count.
+
 - Fitness sharing uses vectorized distances with bounded auxiliary memory for feature masks and mixed hyperparameter spaces. The isolated sharing benchmark is 7.9–14.8× faster; complete-fit timings remain dominated by model evaluation.
 
 - Added a paired holdout benchmark against Optuna TPE, RandomizedSearchCV and optional FLAML-CFO, with per-run CV budgets, dependency versions and before/after evidence in `benchmarks/PERFORMANCE.md`.

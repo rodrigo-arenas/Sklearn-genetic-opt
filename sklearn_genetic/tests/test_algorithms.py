@@ -219,6 +219,69 @@ def test_local_search_refines_hall_of_fame_candidates(simple_toolbox):
     assert estimator.fit_stats_["local_refinement_candidates"] == 2
 
 
+@pytest.mark.parametrize("algorithm", [eaSimple, eaMuPlusLambda, eaMuCommaLambda])
+@pytest.mark.parametrize("sign", [1.0, -1.0])
+@pytest.mark.parametrize("kind", ["numeric", "features"])
+@pytest.mark.parametrize("top_k", [1, 2])
+def test_local_refinement_follows_improving_candidates(algorithm, sign, kind, top_k):
+    fitness_type = type("RefinementFitness", (base.Fitness,), {"weights": (sign,)})
+
+    class Individual(list):
+        def __init__(self, values):
+            super().__init__(values)
+            self.fitness = fitness_type()
+
+    toolbox = base.Toolbox()
+    toolbox.register("evaluate", lambda individual: (sign * sum(individual),))
+    batches = []
+
+    def evaluate_batch(individuals):
+        batches.append(len(individuals))
+        return [toolbox.evaluate(individual) for individual in individuals]
+
+    toolbox.register("evaluate_population", evaluate_batch)
+    population = [
+        Individual([i] if kind == "numeric" else [int(j == i) for j in range(8)])
+        for i in range(top_k)
+    ]
+    estimator = SimpleNamespace(
+        elitism=False,
+        local_search=True,
+        local_search_top_k=top_k,
+        local_search_steps=6,
+        local_search_radius=0.125,
+        max_features=None,
+        fit_stats_=create_fit_stats(),
+    )
+    if kind == "numeric":
+        estimator.space = Space({"x": Integer(0, 8)})
+    hof = tools.HallOfFame(top_k)
+    state = random.getstate()
+    random.seed(0)
+    try:
+        result, log, _ = algorithm(
+            population,
+            toolbox,
+            cxpb=ConstantAdapter(0, 0, 0),
+            mutpb=ConstantAdapter(0, 0, 0),
+            ngen=0,
+            halloffame=hof,
+            callbacks=[],
+            verbose=False,
+            estimator=estimator,
+            **({} if algorithm is eaSimple else {"mu": top_k, "lambda_": 2 * top_k}),
+        )
+    finally:
+        random.setstate(state)
+    # One-shot neighbors of these initial parents cannot reach 3.
+    # Chained accepted improvements must move further.
+    assert sum(hof[0]) >= 3
+    assert len(result) == top_k
+    assert estimator.fit_stats_["local_refinement_candidates"] == 6 * top_k
+    assert batches == [top_k] * 7  # Initial population, then six refinement steps.
+    assert log[-1]["fitness_best"] == sign * sum(hof[0])
+
+
 def test_shared_fitness_temporarily_penalizes_crowded_niches(simple_toolbox):
     crowded_a = creator.IndividualAlgorithmTest([1, 1, 1, 1])
     crowded_b = creator.IndividualAlgorithmTest([1, 1, 1, 1])

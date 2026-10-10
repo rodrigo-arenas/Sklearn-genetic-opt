@@ -1,0 +1,350 @@
+refinement-red.txt
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 60 items / 36 deselected / 24 selected
+
+sklearn_genetic\tests\test_algorithms.py [31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31m        [100%][0m
+
+================================== FAILURES ===================================
+[31m[1m_ test_local_refinement_follows_improving_candidates[1-numeric-1.0-eaSimple] __[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:269: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m [96msum[39;49;00m(hof[[94m0[39;49;00m]) >= [94m3[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[1-numeric-1.0-eaMuPlusLambda] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:269: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m [96msum[39;49;00m(hof[[94m0[39;49;00m]) >= [94m3[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[1-numeric-1.0-eaMuCommaLambda] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:269: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m [96msum[39;49;00m(hof[[94m0[39;49;00m]) >= [94m3[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[1-numeric--1.0-eaSimple] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:269: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m [96msum[39;49;00m(hof[[94m0[39;49;00m]) >= [94m3[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[1-numeric--1.0-eaMuPlusLambda] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:269: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m [96msum[39;49;00m(hof[[94m0[39;49;00m]) >= [94m3[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[1-numeric--1.0-eaMuCommaLambda] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:269: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m [96msum[39;49;00m(hof[[94m0[39;49;00m]) >= [94m3[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[1-features-1.0-eaSimple] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:269: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m [96msum[39;49;00m(hof[[94m0[39;49;00m]) >= [94m3[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[1-features-1.0-eaMuPlusLambda] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:269: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m [96msum[39;49;00m(hof[[94m0[39;49;00m]) >= [94m3[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[1-features-1.0-eaMuCommaLambda] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:269: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m [96msum[39;49;00m(hof[[94m0[39;49;00m]) >= [94m3[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[1-features--1.0-eaSimple] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:269: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m [96msum[39;49;00m(hof[[94m0[39;49;00m]) >= [94m3[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[1-features--1.0-eaMuPlusLambda] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:269: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m [96msum[39;49;00m(hof[[94m0[39;49;00m]) >= [94m3[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[1-features--1.0-eaMuCommaLambda] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:269: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m [96msum[39;49;00m(hof[[94m0[39;49;00m]) >= [94m3[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[2-numeric-1.0-eaSimple] __[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:269: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m [96msum[39;49;00m(hof[[94m0[39;49;00m]) >= [94m3[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[2-numeric-1.0-eaMuPlusLambda] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:269: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m [96msum[39;49;00m(hof[[94m0[39;49;00m]) >= [94m3[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[2-numeric-1.0-eaMuCommaLambda] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:269: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m [96msum[39;49;00m(hof[[94m0[39;49;00m]) >= [94m3[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[2-numeric--1.0-eaSimple] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:269: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m [96msum[39;49;00m(hof[[94m0[39;49;00m]) >= [94m3[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[2-numeric--1.0-eaMuPlusLambda] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:269: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m [96msum[39;49;00m(hof[[94m0[39;49;00m]) >= [94m3[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[2-numeric--1.0-eaMuCommaLambda] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:269: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m [96msum[39;49;00m(hof[[94m0[39;49;00m]) >= [94m3[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[2-features-1.0-eaSimple] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:269: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m [96msum[39;49;00m(hof[[94m0[39;49;00m]) >= [94m3[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[2-features-1.0-eaMuPlusLambda] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:269: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m [96msum[39;49;00m(hof[[94m0[39;49;00m]) >= [94m3[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[2-features-1.0-eaMuCommaLambda] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:269: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m [96msum[39;49;00m(hof[[94m0[39;49;00m]) >= [94m3[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[2-features--1.0-eaSimple] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:269: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m [96msum[39;49;00m(hof[[94m0[39;49;00m]) >= [94m3[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[2-features--1.0-eaMuPlusLambda] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:269: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m [96msum[39;49;00m(hof[[94m0[39;49;00m]) >= [94m3[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[2-features--1.0-eaMuCommaLambda] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:269: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m [96msum[39;49;00m(hof[[94m0[39;49;00m]) >= [94m3[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[36m[1m=========================== short test summary info ===========================[0m
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[1-numeric-1.0-eaSimple][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[1-numeric-1.0-eaMuPlusLambda][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[1-numeric-1.0-eaMuCommaLambda][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[1-numeric--1.0-eaSimple][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[1-numeric--1.0-eaMuPlusLambda][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[1-numeric--1.0-eaMuCommaLambda][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[1-features-1.0-eaSimple][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[1-features-1.0-eaMuPlusLambda][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[1-features-1.0-eaMuCommaLambda][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[1-features--1.0-eaSimple][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[1-features--1.0-eaMuPlusLambda][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[1-features--1.0-eaMuCommaLambda][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[2-numeric-1.0-eaSimple][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[2-numeric-1.0-eaMuPlusLambda][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[2-numeric-1.0-eaMuCommaLambda][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[2-numeric--1.0-eaSimple][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[2-numeric--1.0-eaMuPlusLambda][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[2-numeric--1.0-eaMuCommaLambda][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[2-features-1.0-eaSimple][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[2-features-1.0-eaMuPlusLambda][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[2-features-1.0-eaMuCommaLambda][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[2-features--1.0-eaSimple][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[2-features--1.0-eaMuPlusLambda][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[2-features--1.0-eaMuCommaLambda][0m - AssertionError
+[31m====================== [31m[1m24 failed[0m, [33m36 deselected[0m[31m in 0.93s[0m[31m ======================[0m
+refinement-batch-mutant-red.txt
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 60 items / 36 deselected / 24 selected
+
+sklearn_genetic\tests\test_algorithms.py [31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31m        [100%][0m
+
+================================== FAILURES ===================================
+[31m[1m_ test_local_refinement_follows_improving_candidates[1-numeric-1.0-eaSimple] __[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:281: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m batches == [top_k] * [94m7[39;49;00m  [90m# Initial population, then six refinement steps.[39;49;00m[90m[39;49;00m
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[1-numeric-1.0-eaMuPlusLambda] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:281: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m batches == [top_k] * [94m7[39;49;00m  [90m# Initial population, then six refinement steps.[39;49;00m[90m[39;49;00m
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[1-numeric-1.0-eaMuCommaLambda] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:281: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m batches == [top_k] * [94m7[39;49;00m  [90m# Initial population, then six refinement steps.[39;49;00m[90m[39;49;00m
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[1-numeric--1.0-eaSimple] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:281: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m batches == [top_k] * [94m7[39;49;00m  [90m# Initial population, then six refinement steps.[39;49;00m[90m[39;49;00m
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[1-numeric--1.0-eaMuPlusLambda] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:281: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m batches == [top_k] * [94m7[39;49;00m  [90m# Initial population, then six refinement steps.[39;49;00m[90m[39;49;00m
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[1-numeric--1.0-eaMuCommaLambda] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:281: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m batches == [top_k] * [94m7[39;49;00m  [90m# Initial population, then six refinement steps.[39;49;00m[90m[39;49;00m
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[1-features-1.0-eaSimple] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:281: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m batches == [top_k] * [94m7[39;49;00m  [90m# Initial population, then six refinement steps.[39;49;00m[90m[39;49;00m
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[1-features-1.0-eaMuPlusLambda] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:281: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m batches == [top_k] * [94m7[39;49;00m  [90m# Initial population, then six refinement steps.[39;49;00m[90m[39;49;00m
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[1-features-1.0-eaMuCommaLambda] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:281: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m batches == [top_k] * [94m7[39;49;00m  [90m# Initial population, then six refinement steps.[39;49;00m[90m[39;49;00m
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[1-features--1.0-eaSimple] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:281: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m batches == [top_k] * [94m7[39;49;00m  [90m# Initial population, then six refinement steps.[39;49;00m[90m[39;49;00m
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[1-features--1.0-eaMuPlusLambda] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:281: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m batches == [top_k] * [94m7[39;49;00m  [90m# Initial population, then six refinement steps.[39;49;00m[90m[39;49;00m
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[1-features--1.0-eaMuCommaLambda] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:281: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m batches == [top_k] * [94m7[39;49;00m  [90m# Initial population, then six refinement steps.[39;49;00m[90m[39;49;00m
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[2-numeric-1.0-eaSimple] __[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:281: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m batches == [top_k] * [94m7[39;49;00m  [90m# Initial population, then six refinement steps.[39;49;00m[90m[39;49;00m
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[2-numeric-1.0-eaMuPlusLambda] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:281: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m batches == [top_k] * [94m7[39;49;00m  [90m# Initial population, then six refinement steps.[39;49;00m[90m[39;49;00m
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[2-numeric-1.0-eaMuCommaLambda] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:281: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m batches == [top_k] * [94m7[39;49;00m  [90m# Initial population, then six refinement steps.[39;49;00m[90m[39;49;00m
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[2-numeric--1.0-eaSimple] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:281: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m batches == [top_k] * [94m7[39;49;00m  [90m# Initial population, then six refinement steps.[39;49;00m[90m[39;49;00m
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[2-numeric--1.0-eaMuPlusLambda] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:281: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m batches == [top_k] * [94m7[39;49;00m  [90m# Initial population, then six refinement steps.[39;49;00m[90m[39;49;00m
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[2-numeric--1.0-eaMuCommaLambda] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:281: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m batches == [top_k] * [94m7[39;49;00m  [90m# Initial population, then six refinement steps.[39;49;00m[90m[39;49;00m
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[2-features-1.0-eaSimple] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:281: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m batches == [top_k] * [94m7[39;49;00m  [90m# Initial population, then six refinement steps.[39;49;00m[90m[39;49;00m
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[2-features-1.0-eaMuPlusLambda] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:281: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m batches == [top_k] * [94m7[39;49;00m  [90m# Initial population, then six refinement steps.[39;49;00m[90m[39;49;00m
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[2-features-1.0-eaMuCommaLambda] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:281: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m batches == [top_k] * [94m7[39;49;00m  [90m# Initial population, then six refinement steps.[39;49;00m[90m[39;49;00m
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[2-features--1.0-eaSimple] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:281: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m batches == [top_k] * [94m7[39;49;00m  [90m# Initial population, then six refinement steps.[39;49;00m[90m[39;49;00m
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[2-features--1.0-eaMuPlusLambda] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:281: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m batches == [top_k] * [94m7[39;49;00m  [90m# Initial population, then six refinement steps.[39;49;00m[90m[39;49;00m
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_local_refinement_follows_improving_candidates[2-features--1.0-eaMuCommaLambda] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:281: in test_local_refinement_follows_improving_candidates
+    [0m[94massert[39;49;00m batches == [top_k] * [94m7[39;49;00m  [90m# Initial population, then six refinement steps.[39;49;00m[90m[39;49;00m
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[36m[1m=========================== short test summary info ===========================[0m
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[1-numeric-1.0-eaSimple][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[1-numeric-1.0-eaMuPlusLambda][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[1-numeric-1.0-eaMuCommaLambda][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[1-numeric--1.0-eaSimple][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[1-numeric--1.0-eaMuPlusLambda][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[1-numeric--1.0-eaMuCommaLambda][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[1-features-1.0-eaSimple][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[1-features-1.0-eaMuPlusLambda][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[1-features-1.0-eaMuCommaLambda][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[1-features--1.0-eaSimple][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[1-features--1.0-eaMuPlusLambda][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[1-features--1.0-eaMuCommaLambda][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[2-numeric-1.0-eaSimple][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[2-numeric-1.0-eaMuPlusLambda][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[2-numeric-1.0-eaMuCommaLambda][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[2-numeric--1.0-eaSimple][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[2-numeric--1.0-eaMuPlusLambda][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[2-numeric--1.0-eaMuCommaLambda][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[2-features-1.0-eaSimple][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[2-features-1.0-eaMuPlusLambda][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[2-features-1.0-eaMuCommaLambda][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[2-features--1.0-eaSimple][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[2-features--1.0-eaMuPlusLambda][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_local_refinement_follows_improving_candidates[2-features--1.0-eaMuCommaLambda][0m - AssertionError
+[31m====================== [31m[1m24 failed[0m, [33m36 deselected[0m[31m in 0.89s[0m[31m ======================[0m
+refinement-green.txt
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 126 items
+
+sklearn_genetic\tests\test_algorithms.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m [ 24%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m                                            [ 47%][0m
+sklearn_genetic\tests\test_internal_helpers.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m [ 67%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m                                [100%][0m
+
+[32m============================= [32m[1m126 passed[0m[32m in 3.02s[0m[32m =============================[0m
+refinement-integration.txt
+{"kind": "hpo", "n_jobs": 1, "cv_score": 0.8430320150659133, "fit_stats": {"evaluated_candidates": 18, "unique_candidates": 17, "cross_validate_calls": 17, "cache_hits": 1, "duplicate_candidates": 0, "skipped_invalid_candidates": 0, "population_parallel_batches": 0, "population_serial_batches": 5, "random_immigrants": 0, "local_refinement_candidates": 6}, "selected": {"max_depth": 4, "ccp_alpha": 0.0}}
+{"kind": "hpo", "n_jobs": 2, "cv_score": 0.8430320150659133, "fit_stats": {"evaluated_candidates": 18, "unique_candidates": 17, "cross_validate_calls": 17, "cache_hits": 1, "duplicate_candidates": 0, "skipped_invalid_candidates": 0, "population_parallel_batches": 4, "population_serial_batches": 1, "random_immigrants": 0, "local_refinement_candidates": 6}, "selected": {"max_depth": 4, "ccp_alpha": 0.0}}
+{"kind": "features", "n_jobs": 1, "cv_score": 0.9155367231638417, "fit_stats": {"evaluated_candidates": 18, "unique_candidates": 17, "cross_validate_calls": 17, "cache_hits": 1, "duplicate_candidates": 0, "skipped_invalid_candidates": 0, "population_parallel_batches": 0, "population_serial_batches": 5, "random_immigrants": 0, "local_refinement_candidates": 6}, "selected": [true, false, false, false, false, false, true, true, true, true, false, false, true]}
+{"kind": "features", "n_jobs": 2, "cv_score": 0.9155367231638417, "fit_stats": {"evaluated_candidates": 18, "unique_candidates": 17, "cross_validate_calls": 17, "cache_hits": 1, "duplicate_candidates": 0, "skipped_invalid_candidates": 0, "population_parallel_batches": 4, "population_serial_batches": 1, "random_immigrants": 0, "local_refinement_candidates": 6}, "selected": [true, false, false, false, false, false, true, true, true, true, false, false, true]}
+refinement_integration.py
+import json
+import numpy as np
+from sklearn.datasets import load_wine
+from sklearn.tree import DecisionTreeClassifier
+from threadpoolctl import threadpool_limits
+from sklearn_genetic import GASearchCV, GAFeatureSelectionCV
+from sklearn_genetic.space import Integer, Continuous
+
+X,y=load_wine(return_X_y=True)
+with threadpool_limits(limits=1):
+    for kind in ('hpo','features'):
+        results=[]
+        for n_jobs in (1,2):
+            kwargs=dict(population_size=4,generations=1,keep_top_k=2,local_search=True,
+                local_search_top_k=2,local_search_steps=3,n_jobs=n_jobs,
+                parallel_backend='population',random_state=15,verbose=False,cv=3)
+            model=DecisionTreeClassifier(random_state=15,max_depth=4)
+            search=(GASearchCV(model,param_grid={'max_depth':Integer(1,8),'ccp_alpha':Continuous(0.,.01)},**kwargs)
+                    if kind=='hpo' else GAFeatureSelectionCV(model,max_features=8,**kwargs))
+            search.fit(X,y)
+            score=float(max(search.cv_results_['mean_test_score']))
+            assert search.fit_stats_['local_refinement_candidates']==6
+            assert search.fit_stats_['cross_validate_calls']<=18
+            assert search.history['fitness_best'][-1]==score
+            assert search.predict(X).shape==y.shape
+            if kind=='features':
+                assert 1<=search.support_.sum()<=8
+            result={'kind':kind,'n_jobs':n_jobs,'cv_score':score,'fit_stats':search.fit_stats_,
+                    'selected':search.best_params_ if kind=='hpo' else search.support_.tolist()}
+            results.append(result)
+            print(json.dumps(result),flush=True)
+        assert results[0]['cv_score']==results[1]['cv_score']
+        assert results[0]['selected']==results[1]['selected']
+refinement-review-negative.txt
+eaSimple archive growth keeps initial budget; batches [2, 1, 1, 1]
+eaMuPlusLambda archive growth keeps initial budget; batches [2, 1, 1, 1]
+eaMuCommaLambda archive growth keeps initial budget; batches [2, 1, 1, 1]
+refinement-guard.txt
+test_guard: clean against e57467d
+Independent review: all material findings closed; batching mutant fails24cases and growing archive preserves original actual top-k budget.

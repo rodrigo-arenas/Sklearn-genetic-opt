@@ -336,24 +336,24 @@ def _run_local_refinement(population, toolbox, halloffame, estimator):
         return 0
 
     top_k = min(estimator.local_search_top_k, len(halloffame.items))
-    neighbors = []
-
-    for parent in halloffame.items[:top_k]:
-        for _ in range(estimator.local_search_steps):
-            neighbor = local_neighbor(estimator, parent, parent.__class__)
-            neighbors.append(neighbor)
-
-    fitnesses = _evaluate_invalid_individuals(toolbox, neighbors)
-    for neighbor, fitness in zip(neighbors, fitnesses):
-        neighbor.fitness.values = fitness
-
-    if neighbors:
+    count = 0
+    for _ in range(estimator.local_search_steps):
+        # Each step starts from the current elites so accepted improvements
+        # guide the next neighborhood. Evaluate independent elites as a batch.
+        neighbors = [
+            local_neighbor(estimator, parent, parent.__class__)
+            for parent in halloffame.items[:top_k]
+        ]
+        fitnesses = _evaluate_invalid_individuals(toolbox, neighbors)
+        for neighbor, fitness in zip(neighbors, fitnesses):
+            neighbor.fitness.values = fitness
         halloffame.update(neighbors)
         population.extend(neighbors)
         population[:] = tools.selBest(population, len(population) - len(neighbors))
+        count += len(neighbors)
 
-    _record_optimizer_control_stats(estimator, local_refinements=len(neighbors))
-    return len(neighbors)
+    _record_optimizer_control_stats(estimator, local_refinements=count)
+    return count
 
 
 def _select_survivors(candidates, toolbox, size, halloffame, estimator):

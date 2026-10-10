@@ -282,7 +282,9 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         Number of hall-of-fame individuals used as local-search seeds.
 
     local_search_steps : int, default=1
-        Number of neighbor candidates generated per local-search seed.
+        Number of sequential refinement steps. Each step evaluates one
+        neighbor per current elite and uses accepted improvements in the next
+        step. Independent elites can be evaluated in parallel within a step.
 
     local_search_radius : float, default=0.1
         Fraction of the search range used to sample local numeric neighbors.
@@ -1388,7 +1390,9 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         Number of hall-of-fame feature masks used as local-search seeds.
 
     local_search_steps : int, default=1
-        Number of neighbor feature masks generated per local-search seed.
+        Number of sequential refinement steps. Each step evaluates one
+        neighbor per current elite mask and uses accepted improvements in the
+        next step. Independent masks can be evaluated in parallel within a step.
 
     local_search_radius : float, default=0.1
         Fraction of features to flip when sampling a local neighbor.
