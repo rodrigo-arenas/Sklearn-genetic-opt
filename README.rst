@@ -41,12 +41,11 @@ Hyperparameter tuning and feature selection for scikit-learn models using geneti
 
 
 ``sklearn-genetic-opt`` is a scikit-learn-compatible optimization toolkit for users
-who want a smarter alternative to ``GridSearchCV`` and ``RandomizedSearchCV``.
-Its genetic algorithm evaluates complete parameter configurations — finding
-regions where ``learning_rate × n_estimators`` or ``C × gamma`` are jointly optimal,
-something one-parameter-at-a-time approaches miss. It also provides
-``GAFeatureSelectionCV``, a wrapper-based selector that searches the full space
-of feature subsets simultaneously instead of eliminating features one at a time.
+who want an evolutionary alternative to ``GridSearchCV`` and ``RandomizedSearchCV``.
+Its genetic algorithm evaluates complete parameter configurations and uses
+promising candidates to guide later generations. It also provides
+``GAFeatureSelectionCV``, a wrapper-based selector that evaluates feature
+subsets with cross-validation.
 
 If ``sklearn-genetic-opt`` saves you time, consider starring the
 `GitHub repository <https://github.com/rodrigo-arenas/Sklearn-genetic-opt>`_.
@@ -56,27 +55,27 @@ It helps more practitioners discover the project.
 Why use sklearn-genetic-opt?
 #############################
 
-* **Drop-in scikit-learn API** — ``GASearchCV`` has the same ``fit`` / ``predict`` / ``best_params_`` interface as ``GridSearchCV``; replace it in one line.
-* **Handles interacting parameters** — genetic algorithms evaluate complete configurations, naturally finding cross-parameter sweet spots that random or grid search miss.
+* **Familiar scikit-learn API** — ``GASearchCV`` supports ``fit`` / ``predict`` / ``best_params_`` and works with sklearn estimators and scoring.
+* **Adaptive search** — genetic operators recombine complete configurations using feedback from earlier evaluations.
 * **Joint feature selection and tuning** — run ``GAFeatureSelectionCV`` and ``GASearchCV`` in a two-stage workflow; no separate feature-selection library needed.
 * **Mixed search spaces** — ``Integer``, ``Continuous`` (uniform or log-uniform), and ``Categorical`` types in the same search.
-* **Smart initialization** — Latin hypercube seeding, estimator defaults, warm-start configs, and duplicate avoidance give the first generation a head start over random initialization.
+* **Smart initialization** — Latin hypercube seeding, estimator defaults, warm-start configs, and duplicate avoidance diversify the first generation.
 * **Early stopping callbacks** — ``ConsecutiveStopping``, ``DeltaThreshold``, and ``TimerStopping`` end the search automatically when it converges or runs out of time.
 * **Adaptive schedules** — crossover and mutation rates anneal over generations, shifting from exploration to exploitation.
 * **Optimization history and plots** — per-generation fitness, diversity, and telemetry stored in ``history``; built-in plots visualize the full search.
-* **MLflow integration** — every evaluated candidate is automatically logged as a child run for experiment comparison.
+* **MLflow integration** — optionally log evaluated candidates as child runs for experiment comparison.
 * **Parallel execution** — ``n_jobs=-1`` parallelizes candidate or fold evaluation.
 
 
 When should you use it?
 ########################
 
-* Your model is expensive to train and you can only afford 50–200 total evaluations.
-* Your search space has 5+ hyperparameters that interact (gradient boosting, SVM, regularized regression).
-* You want feature selection and hyperparameter tuning in a single reproducible workflow.
+* You can budget several generations of cross-validated evaluations.
+* Your search space contains mixed parameter types or suspected interactions.
+* You want feature selection and hyperparameter tuning in a reproducible workflow.
 * You want optimization history, convergence plots, callbacks, or MLflow tracking built in.
 * You have known-good configurations to warm-start from (prior runs, published defaults).
-* ``GridSearchCV`` is too slow and ``RandomizedSearchCV`` keeps returning similar bad results.
+* You want an adaptive search to compare with a fixed-budget random-search baseline.
 
 
 When should you NOT use it?
@@ -84,9 +83,8 @@ When should you NOT use it?
 
 * **You need a fast baseline** — start with a fixed configuration or ``RandomizedSearchCV(n_iter=20)``; it's faster and good enough to validate your pipeline.
 * **Your grid is tiny** (fewer than 50 combinations) — ``GridSearchCV`` covers it exhaustively and is simpler to reason about.
-* **Your model and dataset are fast** (< 1 s per fit) — the overhead of managing a population adds up relative to just running all combinations.
-* **You need distributed optimization** across a cluster — use Optuna with its distributed backends.
-* **You need strict Bayesian guarantees** on the exploration-exploitation trade-off — use Optuna (TPE) or scikit-optimize.
+* **Your fits are very cheap** — population management may cost more than it saves compared with a simple baseline.
+* **You need conditional or distributed optimization** — consider Optuna's define-by-run search and distributed storage.
 
 
 How it compares
@@ -107,21 +105,21 @@ How it compares
    * - ``RandomizedSearchCV``
      - Larger budgets; simple independent parameter spaces
      - No learning from past evaluations; treats each parameter independently
-     - Exploits cross-parameter interactions; adaptive schedules; early stopping
+     - Recombines promising configurations; adaptive schedules; early stopping
    * - Optuna
      - Sequential Bayesian (TPE) search; distributed optimization; neural architecture search
-     - No native sklearn cross-validation; no built-in wrapper feature selection
-     - Drop-in sklearn API; built-in ``GAFeatureSelectionCV``
+     - Usually needs an objective function or an integration wrapper for sklearn CV
+     - Familiar sklearn search API; built-in ``GAFeatureSelectionCV``
    * - RFE
      - Greedy feature elimination for models with ``coef_`` or ``feature_importances_``
      - Greedy and sequential; can miss non-greedy optimal subsets
-     - Evaluates all subsets simultaneously; works with any estimator
+     - Searches candidate subsets; works with sklearn-compatible estimators
    * - ``SelectFromModel``
      - Fast embedded selection via a threshold on feature importance
      - Tied to model-specific importances; no cross-estimator comparison
      - Estimator-agnostic wrapper; combinable with hyperparameter tuning in one workflow
    * - **sklearn-genetic-opt**
-     - Large or mixed spaces; joint feature + parameter search; history, plots, callbacks
+     - Mixed spaces; two-stage feature selection and tuning; history, plots, callbacks
      - Slower than Bayesian methods on small smooth spaces; population size needs tuning
      - —
 

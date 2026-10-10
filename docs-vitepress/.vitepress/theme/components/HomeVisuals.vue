@@ -24,7 +24,7 @@
       </div>
 
       <div class="visuals-cta">
-        <a href="/versions/latest/examples/plotting-gallery" class="visuals-link">
+        <a href="/versions/0.13/examples/plotting-gallery" class="visuals-link">
           View the full plotting gallery →
         </a>
       </div>

@@ -228,6 +228,10 @@ export default defineConfig({
 
   sitemap: {
     hostname: 'https://sklearngeneticopt.rodrigo-arenas.com',
+    transformItems: (items) => items.filter((item) => {
+      const path = new URL(item.url, 'https://sklearngeneticopt.rodrigo-arenas.com/').pathname
+      return path !== '/stable/' && !path.startsWith('/versions/latest/')
+    }),
   },
 
   srcExclude: ['**/CLAUDE.md', '**/README.md'],
@@ -245,9 +249,15 @@ export default defineConfig({
       .replace(/\\/g, '/')
       .replace(/index\.md$/, '')
       .replace(/\.md$/, '')
-    const pageUrl = `${base}/${cleanPath}`
+    const pageUrl = pageData.relativePath === 'stable/index.md' && releaseVersions.length
+      ? `${base}/versions/${releaseVersions[0]}/`
+      : `${base}/${cleanPath}`
 
     pageData.frontmatter.head ??= []
+    if (pageData.relativePath === 'stable/index.md' ||
+        pageData.relativePath.startsWith('versions/latest/')) {
+      pageData.frontmatter.head.push(['meta', { name: 'robots', content: 'noindex,follow' }])
+    }
     pageData.frontmatter.head.push(
       ['link', { rel: 'canonical',           href: pageUrl }],
       ['meta', { property: 'og:type',        content: 'website' }],

@@ -2,7 +2,9 @@
 
 Full release notes with code examples are in the [documentation](https://sklearngeneticopt.rodrigo-arenas.com/).
 
-## 0.14.0 (upcoming)
+## 0.14.0
+
+- Documentation now separates released pages from development pages in the sitemap, publishes `robots.txt`, and points the homepage at the current stable version. The release freeze updates homepage and component links for each new minor version. The homepage drops redundant sections, fixes broken routes, and describes trade-offs without claiming a universal speed or accuracy advantage.
 
 ### New Features
 

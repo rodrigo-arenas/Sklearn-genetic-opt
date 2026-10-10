@@ -9,7 +9,9 @@ You are reading the **latest (dev)** docs. For the stable version, see [stable](
 
 # Release Notes
 
-## 0.14.0 (upcoming)
+## 0.14.0
+
+The documentation sitemap lists released pages, `robots.txt` advertises it, and the homepage links to the current stable version. The homepage removes redundant sections and broken routes; the method guide states search trade-offs without universal performance claims.
 
 This release improves both `GASearchCV` and `GAFeatureSelectionCV` under short
 training budgets. Evolution can use smaller training folds with

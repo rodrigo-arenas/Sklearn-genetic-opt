@@ -3,7 +3,7 @@
     <div class="home-container">
       <h2 class="section-title">How It Works</h2>
       <p class="section-subtitle">
-        Genetic algorithms mimic natural selection to explore hyperparameter space more efficiently than grid or random search.
+        Candidate configurations are scored with cross-validation, then selected and recombined across generations.
       </p>
 
       <div class="steps-grid">
@@ -31,12 +31,12 @@ const steps = [
   {
     number: '01',
     title: 'Initialize Population',
-    desc: 'Latin hypercube sampling generates a diverse initial population covering the search space more evenly than random starts.',
+    desc: 'Choose a diverse initial population, optionally including known-good parameter configurations.',
   },
   {
     number: '02',
     title: 'Evaluate Fitness',
-    desc: 'Each candidate configuration is cross-validated in parallel. Duplicates are cached — identical configs are never re-evaluated.',
+    desc: 'Cross-validation scores each candidate. Optional caching avoids repeated evaluation of identical configurations.',
   },
   {
     number: '03',
@@ -46,7 +46,7 @@ const steps = [
   {
     number: '04',
     title: 'Converge or Continue',
-    desc: 'Diversity control and fitness sharing prevent premature convergence. Callbacks stop the search when it plateaus or hits a budget.',
+    desc: 'Diversity controls and early-stopping callbacks are available when the search needs them.',
   },
 ]
 
