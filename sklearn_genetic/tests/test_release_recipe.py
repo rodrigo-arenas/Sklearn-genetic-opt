@@ -1,7 +1,10 @@
 """Exercise the conda recipe updater used by tagged releases."""
 
+import hashlib
+import os
 import subprocess
 import sys
+import textwrap
 import tomllib
 from pathlib import Path
 
@@ -80,3 +83,50 @@ def test_conda_runtime_dependencies_match_project_metadata():
     }
 
     assert conda - {"python"} == core
+
+
+def test_release_workflow_uses_checksum_from_published_sdist(tmp_path):
+    root = Path(__file__).resolve().parents[2]
+    workflow = (root / ".github" / "workflows" / "ci-tests.yml").read_text(encoding="utf-8")
+    publish = workflow.split("\n  publish:\n", 1)[1].split("\n  sync-conda-recipe:\n", 1)[0]
+    sync = workflow.split("\n  sync-conda-recipe:\n", 1)[1]
+
+    assert "sdist_sha256: ${{ steps.sdist_digest.outputs.sha256 }}" in publish
+    assert "id: sdist_digest" in publish
+    assert publish.index("id: sdist_digest") < publish.index("- name: Publish to PyPI")
+    assert "SDIST_SHA256: ${{ needs.publish.outputs.sdist_sha256 }}" in sync
+    assert 'echo "SHA256=$SDIST_SHA256" >> "$GITHUB_ENV"' in sync
+    assert "python -m build" not in sync
+
+    code = textwrap.dedent(publish.split("python - <<'PY'\n", 1)[1].split("\n          PY", 1)[0])
+    dist = tmp_path / "dist"
+    dist.mkdir()
+    output = tmp_path / "github-output.txt"
+    environment = {**os.environ, "GITHUB_OUTPUT": str(output)}
+
+    def run_digest():
+        return subprocess.run(
+            [sys.executable, "-c", code],
+            cwd=tmp_path,
+            env=environment,
+            capture_output=True,
+            text=True,
+        )
+
+    empty_result = run_digest()
+    assert empty_result.returncode != 0
+    assert "Expected exactly one sdist, found 0" in empty_result.stderr
+    assert not output.exists()
+
+    sdist = dist / "sklearn_genetic_opt-0.14.0.tar.gz"
+    sdist.write_bytes(b"published sdist bytes")
+    result = run_digest()
+    assert result.returncode == 0, result.stderr
+    assert output.read_text().strip() == f"sha256={hashlib.sha256(sdist.read_bytes()).hexdigest()}"
+
+    output.unlink()
+    (dist / "another-sdist.tar.gz").write_bytes(b"wrong archive")
+    multiple_result = run_digest()
+    assert multiple_result.returncode != 0
+    assert "Expected exactly one sdist, found 2" in multiple_result.stderr
+    assert not output.exists()
