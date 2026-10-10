@@ -1196,6 +1196,9 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
         self.y_ = y
         self.groups_ = groups
         self._fit_params = fit_params
+        self._warm_start_configs = _resolve_config_value(
+            self.population_config, "warm_start_configs", self.warm_start_configs
+        )
         _check_fit_params_supported(self.estimator, fit_params)
         self._n_iterations = self.generations + 1
         self.refit_metric = "score"

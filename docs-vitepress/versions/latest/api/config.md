@@ -59,7 +59,13 @@ PopulationConfig(
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `initializer` | `"smart"` or `"random"` | `"smart"` | Population initialization strategy. `"smart"` uses Latin hypercube sampling, estimator defaults, stratified categoricals, and duplicate avoidance |
-| `warm_start_configs` | list of dicts | `None` | Configurations supplied at construction to seed the initial population. Keys and values must lie within `param_grid`; invalid entries raise `ValueError` at fit time |
+| `warm_start_configs` | list of dicts | `None` | Configurations to seed the initial population. Keys and values must lie within `param_grid`; invalid entries raise `ValueError` at fit time |
+
+For a reused `GASearchCV`, `set_params(warm_start_configs=[...])` replaces the
+direct seeds for the next `fit`, and `set_params(warm_start_configs=None)`
+removes them. When `population_config` is supplied, its warm starts take
+precedence; replace that configuration with `set_params(population_config=...)`
+to change its seeds.
 
 ## RuntimeConfig
 

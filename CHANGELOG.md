@@ -27,6 +27,8 @@ Full release notes with code examples are in the [documentation](https://sklearn
 
 ### Bug Fixes
 
+- `GASearchCV.fit` now honors warm starts changed with `set_params(warm_start_configs=...)` or a replacement `PopulationConfig`, including removal of old seeds. Previously it kept using the configuration captured at construction, which could silently ignore new seeds or validate an obsolete one.
+
 - Random Forest and Extra Trees regression presets omit the redundant `friedman_mse` criterion, which fails CV cloning after parameter assignment on scikit-learn 1.9. The default `balanced` and the `wide` profiles retain `squared_error` and `absolute_error`.
 
 - Feature finalist selection preserves sparse and dense masks when preliminary scores tie at the cutoff, instead of spending every tied finalist slot on small masks. Better preliminary scores and the configured CV budget retain priority; final-score ties still favor fewer features.

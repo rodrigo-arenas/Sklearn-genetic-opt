@@ -282,6 +282,89 @@ def test_gasearch_grouped_config_is_sklearn_clone_compatible():
     assert "evolution_config" in cloned.get_params()
 
 
+def _warm_start_search(initializer, **options):
+    return GASearchCV(
+        DecisionTreeClassifier(random_state=42),
+        param_grid={"max_depth": Integer(1, 8)},
+        population_initializer=initializer,
+        population_size=4,
+        generations=0,
+        cv=2,
+        random_state=42,
+        verbose=False,
+        **options,
+    )
+
+
+@pytest.mark.parametrize("initializer", ["smart", "random"])
+@pytest.mark.parametrize("setting", ["warm_start_configs", "population_config"])
+def test_set_params_updates_warm_start_for_next_fit(initializer, setting):
+    first = {"max_depth": 1}
+    replacement = {"max_depth": 7}
+    options = (
+        {"warm_start_configs": [first]}
+        if setting == "warm_start_configs"
+        else {"population_config": PopulationConfig(initializer, [first])}
+    )
+    search = _warm_start_search(initializer, **options)
+    search.fit(X_train[:100], y_train[:100])
+    assert search.cv_results_["params"][0] == first
+
+    update = (
+        {"warm_start_configs": [replacement]}
+        if setting == "warm_start_configs"
+        else {"population_config": PopulationConfig(initializer, [replacement])}
+    )
+    search.set_params(**update).fit(X_train[:100], y_train[:100])
+
+    assert search.cv_results_["params"][0] == replacement
+
+
+@pytest.mark.parametrize("initializer", ["smart", "random"])
+def test_set_params_validates_replaced_warm_start(initializer):
+    search = _warm_start_search(initializer, warm_start_configs=[{"max_depth": 1}])
+    search.set_params(warm_start_configs=[{"max_depth": 99}])
+
+    with pytest.raises(ValueError, match="99.*outside"):
+        search.fit(X_train[:100], y_train[:100])
+
+
+@pytest.mark.parametrize("initializer", ["smart", "random"])
+def test_set_params_can_remove_warm_start_before_fit(initializer):
+    search = _warm_start_search(initializer, warm_start_configs=[{"max_depth": 99}])
+    search.set_params(warm_start_configs=None).fit(X_train[:100], y_train[:100])
+
+    assert len(search.cv_results_["params"]) == 4
+
+
+@pytest.mark.parametrize("initializer", ["smart", "random"])
+def test_set_params_can_remove_grouped_warm_start_without_reviving_direct_seed(initializer):
+    invalid = {"max_depth": 99}
+    search = _warm_start_search(
+        initializer,
+        warm_start_configs=[invalid],
+        population_config=PopulationConfig(initializer, [invalid]),
+    )
+    search.set_params(population_config=PopulationConfig(initializer, [])).fit(
+        X_train[:100], y_train[:100]
+    )
+
+    assert len(search.cv_results_["params"]) == 4
+
+
+@pytest.mark.parametrize("initializer", ["smart", "random"])
+def test_set_params_validates_replaced_grouped_warm_start(initializer):
+    search = _warm_start_search(
+        initializer,
+        warm_start_configs=[{"max_depth": 2}],
+        population_config=PopulationConfig(initializer, [{"max_depth": 1}]),
+    )
+    search.set_params(population_config=PopulationConfig(initializer, [{"max_depth": 99}]))
+
+    with pytest.raises(ValueError, match="99.*outside"):
+        search.fit(X_train[:100], y_train[:100])
+
+
 def test_wrong_parallel_backend():
     with pytest.raises(ValueError) as excinfo:
         GASearchCV(
