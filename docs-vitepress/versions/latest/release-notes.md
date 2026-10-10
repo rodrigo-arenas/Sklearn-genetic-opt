@@ -51,6 +51,10 @@ In a separate equal-budget, eight-split feature-mask control, the GA exceeded
 random mask sampling by 0.0052, 0.0044 and 0.0263 mean held-out accuracy on
 breast cancer, digits and synthetic data, respectively, at similar fitting time.
 The five reserved validation splits showed a smaller 0.00044 gain on digits.
+Another 24-fit trajectory check found that feature evolution improved its best
+CV score in 23 runs; mean held-out accuracy rose by 0.0153 on digits and 0.0750
+on synthetic data, but fell by 0.00175 on breast cancer. Search progress on CV
+does not guarantee better unseen-data accuracy.
 
 The repository [changelog](https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/CHANGELOG.md)
 lists the remaining changes in this upcoming release.

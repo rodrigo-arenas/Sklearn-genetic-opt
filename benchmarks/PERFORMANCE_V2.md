@@ -795,3 +795,24 @@ New-Item -ItemType Directory -Force -Path .agent-runs/performance-v2 | Out-Null
 .\.venv\Scripts\python.exe .agent-runs/performance-v2/diverse-finalists-pilot.py --seed-start 977 --seeds 5 --pool 64 --diversity-weight 2 --output .agent-runs/performance-v2/diverse-finalists-validation.jsonl
 .\.venv\Scripts\python.exe .agent-runs/performance-v2/summarize-diverse-finalists.py
 ```
+
+## Does feature evolution improve after initialization?
+
+The [random-mask control above](#evolutionary-feature-masks-versus-random-search) compares final solutions. A separate 24-fit experiment measures progress *within* the default evolutionary search: Breast Cancer, Digits and the same 800-row synthetic problem use eight fresh seeds 991–998, a stratified 25% outer holdout, three CV folds, one CPU, the same scaled RBF SVC with C=10, and a cap of half the columns. Every `GAFeatureSelectionCV` fit proposes 72 masks through population eight and four generations. The initial comparator is the best of the eight generation-zero masks by CV score (fewer columns break ties); it is separately refit on all outer-training rows. The final winner comes from the ordinary fitted search. The holdout is scored only after those choices.
+
+| Dataset | Initial → final mean CV accuracy | Initial → final mean held-out accuracy | Held-out wins/ties/losses |
+|---|---:|---:|---:|
+| Breast Cancer | .97154 → .97975 | .96678 → .96503 | 1/4/3 |
+| Digits | .95147 → .97253 | .95917 → .97444 | 7/0/1 |
+| Synthetic | .82646 → .89958 | .83000 → .90500 | 8/0/0 |
+
+The best-so-far CV score improves in 23 of 24 runs. On synthetic data, mean best CV accuracy progresses `.82646 → .85479 → .86875 → .88125 → .89958` from generation zero through four, and held-out accuracy gains .07500 on average. Digits gains .01528 held-out accuracy; Breast Cancer instead loses .00175 on average despite its CV gain. The evolutionary process is measurably improving its training objective on these workloads, and often improves external quality, but additional search can also overfit CV. This is not a fourfold quality gain or a guarantee on unseen datasets. The initial-model refit used for this comparison is outside the reported search fitting time.
+
+The [24-fit artifact](results/performance-v2/feature-progress.json) contains every per-generation best score, initial and final external score, fit count and time, split and source hashes, dependency versions, and reproduction scripts. To rerun it from the repository root in PowerShell after installing benchmark dependencies in `.venv`:
+
+```powershell
+New-Item -ItemType Directory -Force -Path .agent-runs/performance-v2 | Out-Null
+.\.venv\Scripts\python.exe -c "import json,pathlib; a=json.loads(pathlib.Path('benchmarks/results/performance-v2/feature-progress.json').read_text(encoding='utf-8')); w=pathlib.Path('.agent-runs/performance-v2'); (w/'feature-progress.py').write_text(a['reproduction_script'], encoding='utf-8'); (w/'summarize-feature-progress.py').write_text(a['summary_script'], encoding='utf-8')"
+.\.venv\Scripts\python.exe .agent-runs/performance-v2/feature-progress.py
+.\.venv\Scripts\python.exe .agent-runs/performance-v2/summarize-feature-progress.py
+```
