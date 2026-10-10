@@ -32,12 +32,17 @@ use only `squared_error`; choose `balanced` or `wide` if the more robust
 On a reused `GASearchCV`, changes to `param_grid` and warm starts through
 `set_params` now apply to the next fit instead of leaving the original search
 space or seed configuration active.
+`GAFeatureSelectionCV.score()` now reports the configured scoring metric on
+selected features, including the chosen `refit` metric in multi-metric searches.
 
 Benchmarks include Optuna, FLAML and AutoGluon, with reproducible settings in
 [`benchmarks/PERFORMANCE_V2.md`](https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/benchmarks/PERFORMANCE_V2.md).
 Several workloads improve by more than four times, while others regress in
 quality or time; these results do not establish a general 4× gain or superiority
 over every AutoML system.
+In a five-fold SVC comparison, one-fold evolution with eight full-CV finalists
+made `GASearchCV` 4.13–4.68× faster than its full-fold search, but accuracy fell
+on two of three datasets. Optuna TPE remained faster under matching fold policies.
 
 The repository [changelog](https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/CHANGELOG.md)
 lists the remaining changes in this upcoming release.

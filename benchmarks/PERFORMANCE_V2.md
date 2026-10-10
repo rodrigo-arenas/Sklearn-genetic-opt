@@ -682,3 +682,27 @@ Validation means across three new seeds, shown as held-out accuracy / total fitt
 One fold plus eight finalists is **2.10–2.74× faster** across these six validation groups, with mean accuracy changes from zero to −.01833. The four-finalist pilot yielded 2.35–2.97× speedups, but its mean feature-selection accuracy fell on digits and synthetic data. Adding finalists helped some validation groups, yet the synthetic SVC search still lost 1.83 percentage points. Two preliminary folds cut the speedup to 1.36–1.48× and did not eliminate synthetic losses. Selected feature counts stay near baseline on average; this workflow is a speed/quality tradeoff, not a dimensionality-reduction improvement.
 
 The [raw artifact](results/performance-v2/fold-promotion-svm.json) contains all per-seed scores, times, candidate CV counts, finalist counts, selected feature counts, source hashes, dependency versions and reproduction scripts. At most 72 candidate CV calls were made in every fit (some cached duplicates made fewer); finalist calls are recorded separately. The groups share data and outer splits within each seed. Three overlapping validation seeds are descriptive rather than proof of equivalent accuracy. The [guide](../docs-vitepress/versions/latest/guide/advanced-optimizer-control.md) shows the opt-in API pattern; full three-fold search remains the default.
+
+## Five-fold, larger-budget promotion versus Optuna TPE
+
+A further 72 fits on the same three datasets test whether the earlier speed gain persists with five original folds and ten evolutionary generations. Seeds 907–909 were not used in the three-fold experiment. Every run has a stratified 25% outer holdout, the same training folds within each seed, one CPU and a StandardScaler/RBF-SVC pipeline. The GA runs use population eight and ten generations; all methods have up to 168 proposed candidates. `GASearchCV` and Optuna TPE search the same log-uniform C/gamma space; feature selection fixes C=10 and selects at most half the columns. The reduced workflow searches on the first fold, then scores its eight best distinct finalists on all five folds before full-training refit. Full workflows search on all five folds and refit the winner. All reported times include promotion and refit. Variant execution order alternates by seed.
+
+Mean held-out accuracy / total fitting seconds over three seeds:
+
+| Dataset | GA HPO, five folds | GA HPO, one fold + eight | Optuna, five folds | Optuna, one fold + eight |
+|---|---:|---:|---:|---:|
+| breast | .97902 / 9.878 | .97669 / 2.391 | .98135 / 4.593 | .97436 / 1.492 |
+| digits | .97704 / 124.401 | .98000 / 26.585 | .97778 / 40.746 | .98222 / 9.793 |
+| synthetic | .88833 / 21.433 | .87333 / 4.832 | .89333 / 11.166 | .87833 / 2.888 |
+
+| Dataset | Feature selection, five folds | Feature selection, one fold + eight | Speed ratio | Mean accuracy change |
+|---|---:|---:|---:|---:|
+| breast | .97203 / 3.813 | .96037 / 1.052 | 3.63× | −.01166 |
+| digits | .97556 / 34.544 | .97259 / 8.737 | 3.95× | −.00296 |
+| synthetic | .92833 / 8.530 | .90833 / 2.190 | 3.90× | −.02000 |
+
+For HPO, one fold plus eight finalists is **4.13–4.68× faster** than the full GA workflow; a four-finalist variant reaches 4.33–4.80×. The reduced GA gains .00296 accuracy on digits but loses .00233 on breast and .01500 on synthetic. Feature selection remains slightly below 4× with eight finalists and loses held-out accuracy on all three datasets; the worst individual loss is .035 on synthetic. The 4× time objective is thus met for this HPO configuration, not for a general speed-and-quality improvement.
+
+Optuna is **1.60–3.05× faster** than GA under the matching HPO fold policy in these measurements and has higher mean held-out accuracy in five of the six dataset/policy comparisons. Both methods' reduced workflow loses .01500 accuracy on synthetic. This is evidence that lowering CV fidelity cannot simply be made the new default, and that GA candidate generation remains an important speed target. Optuna made 168 CV candidate calls per fit; `GASearchCV` made 158–167 after cache reuse. The three outer splits overlap, so small accuracy differences are descriptive. These fixed-model results do not compare full AutoML pipelines.
+
+The [raw 72-fit artifact](results/performance-v2/five-fold-promotion-svm.json) retains each paired score, time, candidate/finalist count, selected feature count, source hash, dependency version and exact reproduction scripts. The one-fold pattern is documented in the [advanced optimizer guide](../docs-vitepress/versions/latest/guide/advanced-optimizer-control.md); evaluating candidates on all configured CV folds remains the default.
