@@ -617,7 +617,7 @@ def test_wrong_algorithm():
         evolved_estimator.fit(X_train, y_train)
     assert (
         str(excinfo.value)
-        == "The algorithm genetic is not supported, please select one from ['eaSimple', 'eaMuPlusLambda', 'eaMuCommaLambda']"
+        == "The algorithm genetic is not supported, please select one from ['eaSimple', 'eaMuPlusLambda', 'eaMuCommaLambda', 'eaDifferentialEvolution']"
     )
 
 

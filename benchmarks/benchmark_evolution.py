@@ -57,7 +57,7 @@ def run(args):
         X, y = dataset.loader()
         for model_name in args.models:
             task = build_task(dataset, MODELS[model_name])
-            for seed in range(args.seeds):
+            for seed in range(args.seed_start, args.seed_start + args.seeds):
                 Xtr, Xte, ytr, yte = train_test_split(
                     X,
                     y,
@@ -72,14 +72,16 @@ def run(args):
                     model, prefix = make_pipeline(task, seed)
                     specs = task_space(task)
                     started = time.perf_counter()
-                    if method == "gasearch":
+                    if method in ("gasearch", "differential"):
+                        de = method == "differential"
                         search = GASearchCV(
                             model,
                             param_grid=to_sklearn_genetic_space(specs, prefix),
                             cv=cv,
                             scoring=task.scoring,
                             population_size=population,
-                            generations=generations,
+                            generations=(args.budget // population - 1) if de else generations,
+                            algorithm="eaDifferentialEvolution" if de else "eaMuPlusLambda",
                             n_jobs=1,
                             verbose=False,
                             random_state=seed,
@@ -200,7 +202,7 @@ def run(args):
         X, y = make_classification(
             n_samples=240, n_features=20, n_informative=5, n_redundant=5, random_state=42
         )
-        for seed in range(args.seeds):
+        for seed in range(args.seed_start, args.seed_start + args.seeds):
             Xtr, Xte, ytr, yte = train_test_split(
                 X, y, test_size=0.25, stratify=y, random_state=seed
             )
@@ -245,6 +247,7 @@ def run(args):
         label=args.label,
         budget=args.budget,
         seeds=args.seeds,
+        seed_start=args.seed_start,
         feature_evaluation_budget=208 if args.features else None,
         python=platform.python_version(),
         platform=platform.platform(),
@@ -269,18 +272,21 @@ def main():
     parser.add_argument("--label", default="current")
     parser.add_argument("--budget", type=int, default=40)
     parser.add_argument("--seeds", type=int, default=3)
+    parser.add_argument("--seed-start", type=int, default=0)
     parser.add_argument("--datasets", nargs="+", default=["wine", "breast"])
     parser.add_argument("--models", nargs="+", default=["svm", "dt"])
     parser.add_argument(
         "--methods",
         nargs="+",
-        choices=["gasearch", "optuna", "randomized", "flaml"],
+        choices=["gasearch", "differential", "optuna", "randomized", "flaml"],
         default=["gasearch", "optuna", "randomized"],
     )
     parser.add_argument("--features", action="store_true")
     args = parser.parse_args()
     if args.budget < 2 or args.seeds < 1:
         parser.error("budget must be >=2 and seeds >=1")
+    if "differential" in args.methods and args.budget < 4:
+        parser.error("differential evolution requires budget >=4")
     with threadpool_limits(limits=1):
         run(args)
 

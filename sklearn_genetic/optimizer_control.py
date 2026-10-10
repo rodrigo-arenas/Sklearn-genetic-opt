@@ -185,6 +185,54 @@ def local_search_enabled(estimator):
     return getattr(estimator, "local_search", False)
 
 
+def differential_offspring(population, toolbox, estimator, crossover, mutation):
+    """Deferred rand/1/bin trials, with mixed-domain and binary decoding."""
+    offspring = []
+    for index, target in enumerate(population):
+        donors = random.sample(range(len(population) - 1), 3)
+        a, b, c = [population[j + (j >= index)] for j in donors]
+        trial = toolbox.clone(target)
+        forced = random.randrange(len(target))
+        for gene in range(len(target)):
+            if gene != forced and random.random() >= crossover:
+                continue
+            dimension = (
+                estimator.space[estimator.space.parameters[gene]]
+                if hasattr(estimator, "space")
+                else None
+            )
+            if dimension is None:
+                trial[gene] = int(a[gene] + 0.8 * (b[gene] - c[gene]) >= 0.5)
+            elif isinstance(dimension, Categorical):
+                trial[gene] = a[gene]
+            elif dimension.lower == dimension.upper:
+                trial[gene] = dimension.lower
+            else:
+                log_scale = (
+                    isinstance(dimension, Continuous) and dimension.distribution == "log-uniform"
+                )
+                lower = np.log(dimension.lower) if log_scale else dimension.lower
+                upper = np.log(dimension.upper) if log_scale else dimension.upper
+                values = [
+                    np.log(parent[gene]) if log_scale else parent[gene] for parent in (a, b, c)
+                ]
+                units = [(value - lower) / (upper - lower) for value in values]
+                unit = float(np.clip(units[0] + 0.8 * (units[1] - units[2]), 0.0, 1.0))
+                if isinstance(dimension, Integer):
+                    trial[gene] = dimension.lower + int(
+                        round(unit * (dimension.upper - dimension.lower))
+                    )
+                else:
+                    value = lower + unit * (upper - lower)
+                    trial[gene] = float(np.exp(value) if log_scale else value)
+        if random.random() < mutation:
+            (trial,) = toolbox.mutate(trial)
+        estimator._repair_individual(trial)
+        del trial.fitness.values
+        offspring.append(trial)
+    return offspring
+
+
 def _bounded_integer_neighbor(dimension, value, radius):
     value = int(round(float(value)))
     value = int(np.clip(value, dimension.lower, dimension.upper))

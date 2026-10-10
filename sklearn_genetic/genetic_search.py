@@ -362,9 +362,18 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
     criteria : {'max', 'min'} , default='max'
         ``max`` if a higher scoring metric is better, ``min`` otherwise.
 
-    algorithm : {'eaMuPlusLambda', 'eaMuCommaLambda', 'eaSimple'}, default='eaMuPlusLambda'
-        Evolutionary algorithm to use.
-        See more details in the deap algorithms documentation.
+    algorithm : str, default='eaMuPlusLambda'
+        One of ``eaMuPlusLambda``, ``eaMuCommaLambda``, ``eaSimple``, or
+        ``eaDifferentialEvolution``. Differential evolution uses deferred
+        rand/1/bin trials with scale 0.8 and requires population_size >= 4.
+        Each generation proposes one trial per parent and retains the better
+        weighted fitness (the parent on ties). Numeric differences respect
+        logarithmic spaces; categorical values come from donors, and feature
+        masks use binary decoding followed by feature-count repair.
+        crossover_probability controls trial coordinates; mutation_probability
+        adds the existing mutation operator. Tournament selection, elitism,
+        adaptive_selection and fitness_sharing apply only to the other three
+        algorithms. Local refinement and diversity recovery remain available.
 
     refit : bool, str, or callable, default=True
         Refit an estimator using the best found parameters on the whole
@@ -1497,9 +1506,18 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
     criteria : {'max', 'min'} , default='max'
         ``max`` if a higher scoring metric is better, ``min`` otherwise.
 
-    algorithm : {'eaMuPlusLambda', 'eaMuCommaLambda', 'eaSimple'}, default='eaMuPlusLambda'
-        Evolutionary algorithm to use.
-        See more details in the deap algorithms documentation.
+    algorithm : str, default='eaMuPlusLambda'
+        One of ``eaMuPlusLambda``, ``eaMuCommaLambda``, ``eaSimple``, or
+        ``eaDifferentialEvolution``. Differential evolution uses deferred
+        rand/1/bin trials with scale 0.8 and requires population_size >= 4.
+        Each generation proposes one trial per parent and retains the better
+        weighted fitness (the parent on ties). Numeric differences respect
+        logarithmic spaces; categorical values come from donors, and feature
+        masks use binary decoding followed by feature-count repair.
+        crossover_probability controls trial coordinates; mutation_probability
+        adds the existing mutation operator. Tournament selection, elitism,
+        adaptive_selection and fitness_sharing apply only to the other three
+        algorithms. Local refinement and diversity recovery remain available.
 
     refit : bool, str, or callable, default=True
         Refit an estimator using the best found parameters on the whole

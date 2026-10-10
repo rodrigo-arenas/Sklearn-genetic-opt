@@ -6,6 +6,7 @@ from deap.algorithms import varAnd, varOr
 
 from .callbacks.validations import eval_callbacks
 from .optimizer_control import (
+    differential_offspring,
     inject_random_immigrants,
     local_neighbor,
     local_search_enabled,
@@ -150,7 +151,13 @@ def _primary_fitness_weight(population):
 
 
 def _is_fitness_improvement(candidate, best, primary_weight):
+    # Keep initial unavailable scores numeric for stopping callbacks, while
+    # allowing a later valid generation to recover from that NaN sentinel.
     if best is None:
+        return True
+    if np.isnan(candidate):
+        return False
+    if np.isnan(best):
         return True
 
     if primary_weight >= 0:
@@ -675,6 +682,9 @@ def eaMuPlusLambda(
         Number of generations used.
 
     """
+    differential = kwargs.get("_differential_evolution", False)
+    if differential and (estimator is None or len(population) < 4):
+        raise ValueError("Differential evolution requires an estimator and population_size >= 4")
     stored_exception = None
     callbacks_start_args = {
         "callbacks": callbacks,
@@ -695,7 +705,11 @@ def eaMuPlusLambda(
         ind.fitness.values = fit
 
     if halloffame is not None:
-        halloffame.update(population)
+        halloffame.update(
+            [ind for ind in population if not np.isnan(ind.fitness.values[0])]
+            if differential
+            else population
+        )
 
     n_gen = gen = 0
     record = _compile_generation_record(
@@ -734,13 +748,17 @@ def eaMuPlusLambda(
             mutation_prob, diversity_triggered = mutation_probability(mutpb, estimator, record)
 
             crossover_prob = cxpb.step()
-            mutation_prob = min(mutation_prob, max(0.0, 1.0 - crossover_prob))
-
-            # Vary the population
-            offspring = varOr(population, toolbox, lambda_, crossover_prob, mutation_prob)
-            duplicate_replacements = replace_duplicate_candidates(
-                offspring, toolbox, estimator, reference_population=population
-            )
+            if differential:
+                offspring = differential_offspring(
+                    population, toolbox, estimator, crossover_prob, mutation_prob
+                )
+                duplicate_replacements = 0
+            else:
+                mutation_prob = min(mutation_prob, max(0.0, 1.0 - crossover_prob))
+                offspring = varOr(population, toolbox, lambda_, crossover_prob, mutation_prob)
+                duplicate_replacements = replace_duplicate_candidates(
+                    offspring, toolbox, estimator, reference_population=population
+                )
             random_immigrants = inject_random_immigrants(offspring, toolbox, estimator, record)
             _record_optimizer_control_stats(estimator, random_immigrants=random_immigrants)
 
@@ -752,16 +770,31 @@ def eaMuPlusLambda(
 
             # Update the hall of fame with the generated individuals
             if halloffame is not None:
-                halloffame.update(offspring)
+                halloffame.update(
+                    [ind for ind in offspring if not np.isnan(ind.fitness.values[0])]
+                    if differential
+                    else offspring
+                )
 
             # Select the next generation population
-            selection_pool = population + offspring
             if estimator is not None:
                 estimator._last_generation_record = record
-            population[:], sharing_record = _select_survivors(
-                selection_pool, toolbox, mu, halloffame, estimator
-            )
-            selection_pressure = getattr(estimator, "_selection_pressure_", None)
+            if differential:
+                population[:] = [
+                    (
+                        trial
+                        if not np.isnan(trial.fitness.values[0])
+                        and (np.isnan(target.fitness.values[0]) or trial.fitness > target.fitness)
+                        else target
+                    )
+                    for target, trial in zip(population, offspring)
+                ]
+                sharing_record, selection_pressure = {}, None
+            else:
+                population[:], sharing_record = _select_survivors(
+                    population + offspring, toolbox, mu, halloffame, estimator
+                )
+                selection_pressure = getattr(estimator, "_selection_pressure_", None)
 
             # Update the statistics with the new population
             record = _compile_generation_record(
@@ -1041,8 +1074,23 @@ def eaMuCommaLambda(
     return population, logbook, n_gen
 
 
+def eaDifferentialEvolution(population, toolbox, **kwargs):
+    """Mixed-domain rand/1/bin with F=0.8 and deferred greedy replacement.
+
+    One trial per target is evaluated per generation. Crossover uses ``cxpb``;
+    ``mutpb`` controls additional standard mutation. Numeric coordinates use
+    their linear or logarithmic domain, categories inherit a donor value, and
+    feature coordinates are decoded as binary masks. Tournament selection and
+    fitness sharing do not apply to pairwise replacement. Other lifecycle,
+    evaluation, callback and local-refinement behavior uses the shared engine.
+    """
+    kwargs.update(mu=len(population), lambda_=len(population), _differential_evolution=True)
+    return eaMuPlusLambda(population, toolbox, **kwargs)
+
+
 algorithms_factory = {
     "eaSimple": eaSimple,
     "eaMuPlusLambda": eaMuPlusLambda,
     "eaMuCommaLambda": eaMuCommaLambda,
+    "eaDifferentialEvolution": eaDifferentialEvolution,
 }

@@ -5,7 +5,8 @@ import numpy as np
 import pytest
 from deap import base, creator, tools
 
-from ..algorithms import eaMuCommaLambda, eaMuPlusLambda, eaSimple
+from ..algorithms import eaDifferentialEvolution, eaMuCommaLambda, eaMuPlusLambda, eaSimple
+from ..callbacks import ConsecutiveStopping, DeltaThreshold
 from ..callbacks.base import BaseCallback
 from ..evaluation import create_fit_stats
 from ..optimizer_control import shared_fitness
@@ -59,6 +60,7 @@ def simple_toolbox():
         (eaSimple, {}),
         (eaMuPlusLambda, {"mu": 4, "lambda_": 4}),
         (eaMuCommaLambda, {"mu": 4, "lambda_": 4}),
+        (eaDifferentialEvolution, {}),
     ],
 )
 def test_algorithm_stops_when_callback_requests_stop(simple_toolbox, algorithm, kwargs):
@@ -94,6 +96,105 @@ def test_algorithm_stops_when_callback_requests_stop(simple_toolbox, algorithm, 
     assert callback.ended
     assert n_gen == 0
     assert len(logbook) == 1
+
+
+@pytest.mark.parametrize("weight", [1.0, -1.0])
+@pytest.mark.parametrize("all_invalid", [False, True])
+def test_differential_evolution_replaces_only_improved_targets(
+    simple_toolbox, monkeypatch, weight, all_invalid
+):
+    # Trials are prescribed to isolate the public algorithm's survival contract:
+    # improvement, deterioration, NaN target, NaN trial, and exact tie respectively.
+    class Fitness(base.Fitness):
+        weights = (weight,)
+
+    class Individual(list):
+        def __init__(self, value):
+            super().__init__([value])
+            self.fitness = Fitness()
+
+    parents = [Individual(value) for value in [1, 2, 3, 4, 5]]
+    trials = [Individual(value) for value in [6, 7, 8, 9, 10]]
+    scores = [1, 4, np.nan, 2, 3, 3, 2, 1, np.nan, 3]
+    if all_invalid:
+        scores[:5] = [np.nan] * 5
+    simple_toolbox.register("evaluate", lambda ind: (weight * scores[ind[0] - 1],))
+    monkeypatch.setattr("sklearn_genetic.algorithms.differential_offspring", lambda *args: trials)
+    hall = tools.HallOfFame(1)
+    stats = tools.Statistics(lambda ind: ind.fitness.values[0])
+    stats.register("fitness_max" if weight > 0 else "fitness_min", np.max)
+    result, log, _ = eaDifferentialEvolution(
+        parents,
+        simple_toolbox,
+        cxpb=ConstantAdapter(0.5, 0.5, 0),
+        mutpb=ConstantAdapter(0, 0, 0),
+        ngen=1,
+        halloffame=hall,
+        stats=stats,
+        callbacks=[
+            DeltaThreshold(threshold=0.001, generations=2, metric="fitness_best"),
+            ConsecutiveStopping(generations=1, metric="fitness_best"),
+        ],
+        verbose=False,
+        estimator=SimpleNamespace(elitism=False),
+    )
+    assert [ind[0] for ind in result] == ([6, 7, 8, 4, 10] if all_invalid else [6, 2, 8, 4, 5])
+    assert hall[0][0] == (6 if all_invalid else 2)
+    if all_invalid:
+        assert np.isnan(log[0]["fitness_best"])
+        assert log[1]["fitness_best"] == weight * 3
+    else:
+        assert log.select("fitness_best") == [weight * 4] * 2
+
+
+@pytest.mark.parametrize(
+    "dimension, parents, trials",
+    [
+        (Continuous(0, 1), [0.2, 0.4, 0.6, 0.8], [0.24, 0.04, 0, 0.04]),
+        (
+            Continuous(1, 1e10, distribution="log-uniform"),
+            [1e2, 1e4, 1e6, 1e8],
+            [10**2.4, 10**0.4, 1, 10**0.4],
+        ),
+        (Integer(1, 11), [3, 5, 7, 9], [3, 1, 1, 1]),
+        (Integer(5, 5), [5, 5, 5, 5], [5, 5, 5, 5]),
+        (Categorical([0.2, 0.4, 0.6, 0.8]), [0.2, 0.4, 0.6, 0.8], [0.4, 0.2, 0.2, 0.2]),
+    ],
+)
+def test_differential_evolution_uses_deferred_distinct_donors(
+    simple_toolbox, monkeypatch, dimension, parents, trials
+):
+    # For a one-dimensional space, CR=0 must still force the donor coordinate.
+    # Excluding the target maps samples [0, 1, 2] to the three other parents.
+    population = [creator.IndividualAlgorithmTest([x]) for x in parents]
+    evaluated = []
+
+    def evaluate(individual):
+        evaluated.append(individual[0])
+        return (individual[0],)
+
+    simple_toolbox.register("evaluate", evaluate)
+    monkeypatch.setattr(random, "sample", lambda values, k: list(values)[:k])
+    estimator = SimpleNamespace(
+        space=Space({"x": dimension}),
+        _repair_individual=lambda individual: individual,
+        elitism=False,
+    )
+    result, _, _ = eaDifferentialEvolution(
+        population,
+        simple_toolbox,
+        cxpb=ConstantAdapter(0, 0, 0),
+        mutpb=ConstantAdapter(0, 0, 0),
+        ngen=1,
+        halloffame=tools.HallOfFame(1),
+        callbacks=[],
+        verbose=False,
+        estimator=estimator,
+    )
+    assert evaluated == pytest.approx(parents + trials)
+    assert [ind[0] for ind in result] == pytest.approx(
+        [max(parent, trial) for parent, trial in zip(parents, trials)]
+    )
 
 
 def test_verbose_output_uses_compact_generation_summary(simple_toolbox, capsys):

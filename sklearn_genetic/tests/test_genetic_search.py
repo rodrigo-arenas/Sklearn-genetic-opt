@@ -64,6 +64,82 @@ def test_default_n_jobs_is_none():
     assert estimator.get_params()["population_initializer"] == "smart"
 
 
+@pytest.mark.parametrize("kind", ["parameters", "features"])
+@pytest.mark.parametrize("criteria", ["max", "min"])
+def test_differential_evolution_search_improves_with_bounded_evaluations(kind, criteria):
+    sign = 1 if criteria == "max" else -1
+    X_small = np.tile(np.arange(1, 9, dtype=float), (40, 1))
+    y_small = np.tile([0, 1], 20)
+
+    def score(model, X, y):
+        if kind == "features":
+            return sign * float(X[0].sum())
+        loss = (np.log10(model.ccp_alpha) + 2.3) ** 2 + (model.max_depth - 6) ** 2
+        return -sign * loss
+
+    common = dict(
+        algorithm="eaDifferentialEvolution",
+        population_size=8,
+        generations=8,
+        random_state=12,
+        verbose=False,
+        cv=2,
+        scoring=score,
+        criteria=criteria,
+        n_jobs=1,
+        diversity_control=False,
+    )
+    if kind == "parameters":
+        search = GASearchCV(
+            DecisionTreeClassifier(random_state=12),
+            param_grid={
+                "ccp_alpha": Continuous(1e-4, 1e-1, distribution="log-uniform"),
+                "max_depth": Integer(1, 10),
+                "criterion": Categorical(["gini", "entropy"]),
+            },
+            **common,
+        )
+    else:
+        search = genetic_search.GAFeatureSelectionCV(
+            DecisionTreeClassifier(random_state=12), max_features=4, **common
+        )
+    search.fit(X_small, y_small)
+    best = np.array(search.history["fitness_best"]) * sign
+    assert best[-1] > best[0]
+    assert np.all(np.diff(best) >= 0)
+    assert search.fit_stats_["cross_validate_calls"] <= 8 * 9
+    assert search.fit_stats_["evaluated_candidates"] == 8 * 9
+    assert search.predict(X_small).shape == y_small.shape
+    if kind == "features":
+        assert 1 <= search.support_.sum() <= 4
+    else:
+        assert 1 <= search.best_params_["max_depth"] <= 10
+        assert 1e-4 <= search.best_params_["ccp_alpha"] <= 1e-1
+
+
+@pytest.mark.parametrize("kind", ["parameters", "features"])
+def test_differential_evolution_rejects_small_population_before_evaluation(kind):
+    def unexpected_score(*args):
+        pytest.fail("Invalid population must be rejected before model evaluation")
+
+    common = dict(
+        population_size=3,
+        generations=1,
+        algorithm="eaDifferentialEvolution",
+        scoring=unexpected_score,
+        verbose=False,
+        cv=2,
+    )
+    model = DecisionTreeClassifier()
+    search = (
+        GASearchCV(model, param_grid={"max_depth": Integer(1, 4)}, **common)
+        if kind == "parameters"
+        else genetic_search.GAFeatureSelectionCV(model, **common)
+    )
+    with pytest.raises(ValueError, match="population_size >= 4"):
+        search.fit(X_train[:40], y_train[:40])
+
+
 def test_gasearch_accepts_grouped_config_objects():
     evolution_config = EvolutionConfig(
         population_size=4,
@@ -1147,7 +1223,7 @@ def test_wrong_algorithm():
         evolved_estimator.fit(X_train, y_train)
     assert (
         str(excinfo.value)
-        == "The algorithm genetic is not supported, please select one from ['eaSimple', 'eaMuPlusLambda', 'eaMuCommaLambda']"
+        == "The algorithm genetic is not supported, please select one from ['eaSimple', 'eaMuPlusLambda', 'eaMuCommaLambda', 'eaDifferentialEvolution']"
     )
 
 

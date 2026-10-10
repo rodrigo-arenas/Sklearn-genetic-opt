@@ -11,6 +11,7 @@ class Algorithms(ExtendedEnum):
     eaSimple = "eaSimple"
     eaMuPlusLambda = "eaMuPlusLambda"
     eaMuCommaLambda = "eaMuCommaLambda"
+    eaDifferentialEvolution = "eaDifferentialEvolution"
 
 
 class Criteria(ExtendedEnum):
