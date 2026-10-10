@@ -202,7 +202,7 @@ class _FinalSelectionMixin:
     def _score_final_candidate(self, params, cv_splits):
         local_estimator = clone(self.estimator)
         if hasattr(self, "space"):
-            local_estimator.set_params(**params)
+            local_estimator.set_params(**clone(params, safe=False))
             X = self.X_
         else:
             X = self.X_[:, np.asarray(params["features"], dtype=bool)]
@@ -925,7 +925,7 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
         self.toolbox.register("evaluate_population", self.evaluate_population)
 
         self._pop = self._initialize_population()
-        self._hof = tools.HallOfFame(self.keep_top_k)
+        self._hof = tools.HallOfFame(self.keep_top_k, similar=self._same_individual)
 
         self._stats = tools.Statistics(lambda ind: ind.fitness.values)
         self._stats.register("fitness", np.mean, axis=0)
@@ -969,7 +969,8 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
             return float(np.clip(repaired, dimension.lower, dimension.upper))
 
         if isinstance(dimension, Categorical):
-            return value if value in dimension.choices else dimension.sample()
+            index = dimension._choice_index(value)
+            return dimension.choices[index] if index is not None else dimension.sample()
 
         return value
 
@@ -1013,10 +1014,19 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
 
         return [individual]
 
+    def _same_individual(self, left, right):
+        return self._individual_key(left) == self._individual_key(right)
+
     def _individual_key(self, individual):
-        current_generation_params = {
-            key: individual[n] for n, key in enumerate(self.space.parameters)
-        }
+        current_generation_params = {}
+        for index, name in enumerate(self.space.parameters):
+            value = individual[index]
+            dimension = self.space[name]
+            if isinstance(dimension, Categorical):
+                choice_index = dimension._choice_index(value)
+                if choice_index is not None:
+                    value = dimension.choices[choice_index]
+            current_generation_params[name] = value
         return tuple(sorted(current_generation_params.items()))
 
     def evaluate_population(self, individuals):
@@ -1032,7 +1042,7 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
         }
 
         local_estimator = clone(self.estimator)
-        local_estimator.set_params(**current_generation_params)
+        local_estimator.set_params(**clone(current_generation_params, safe=False))
 
         # standard cross_validate for all estimator types is used
         cv_results = cross_validate(
@@ -1357,16 +1367,18 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
 
             self.estimator_ = self.best_estimator_
 
-            # hof keeps the best params according to the fitness value
-            # To be consistent with self.best_estimator_, if more than 1 model gets the
-            # same score, it could lead to differences between hof and self.best_estimator_
-            self._hof.remove(0)
-            self._hof.items.insert(0, list(self.best_params_.values()))
-            self._hof.keys.insert(0, self.best_score_)
-
+        hof_candidates = list(self._hof)
+        if self.refit:
+            # Put the selected winner first without duplicating an existing elite.
+            best = [self.best_params_[name] for name in self.space.parameters]
+            hof_candidates = [best] + [
+                candidate
+                for candidate in hof_candidates
+                if not self._same_individual(best, candidate)
+            ]
         self.hof = {
-            k: {key: self._hof[k][n] for n, key in enumerate(self.space.parameters)}
-            for k in range(len(self._hof))
+            k: dict(zip(self.space.parameters, candidate))
+            for k, candidate in enumerate(hof_candidates[: self.keep_top_k])
         }
 
         del creator.FitnessMax

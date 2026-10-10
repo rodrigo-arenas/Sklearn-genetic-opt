@@ -2199,23 +2199,122 @@ def test_refit_preserves_constructor_estimator_and_postfit_clone(kind, tmp_path)
     np.testing.assert_array_equal(restored.predict(data), search.predict(data))
 
 
-def test_refit_clones_estimator_valued_hyperparameters():
+@pytest.mark.parametrize("final_selection", [False, True])
+def test_refit_clones_estimator_valued_hyperparameters(final_selection):
     from sklearn.pipeline import Pipeline
     from sklearn.exceptions import NotFittedError
 
-    candidate = DecisionTreeClassifier(max_depth=2, random_state=0)
+    choices = [DecisionTreeClassifier(max_depth=depth, random_state=0) for depth in (2, 3)]
+
+    def depth_score(estimator, X, y):
+        # The explicit finalist folds reverse the ranking, exercising winner insertion.
+        return estimator["model"].max_depth * (1 if len(X) == 10 else -1)
+
     search = GASearchCV(
         Pipeline([("model", DecisionTreeClassifier(random_state=1))]),
-        param_grid={"model": Categorical([candidate])},
-        population_size=2,
+        param_grid={
+            "model": Categorical(choices),
+            "model__min_samples_split": Integer(3, 4),
+        },
+        warm_start_configs=[
+            {"model": choice, "model__min_samples_split": value}
+            for choice in choices
+            for value in (3, 4)
+        ],
+        final_selection=final_selection,
+        final_selection_top_k=4,
+        final_selection_cv=4,
+        keep_top_k=4,
+        population_size=4,
         generations=0,
         cv=2,
+        scoring=depth_score,
         n_jobs=1,
         verbose=False,
         random_state=17,
     ).fit(X_train[:40], y_train[:40])
-    assert search.best_params_["model"] is candidate
-    with pytest.raises(NotFittedError):
-        check_is_fitted(candidate)
-    assert search.best_estimator_["model"] is not candidate
+    assert search.best_params_["model"] is choices[int(final_selection)]
+    for candidate in choices:
+        assert candidate.min_samples_split == 2
+        with pytest.raises(NotFittedError):
+            check_is_fitted(candidate)
+    assert (
+        search.best_estimator_["model"].min_samples_split
+        == search.best_params_["model__min_samples_split"]
+    )
+    assert all(search.best_estimator_["model"] is not choice for choice in choices)
+    archive = [
+        (params["model"].max_depth, params["model__min_samples_split"])
+        for params in search.hof.values()
+    ]
+    assert set(archive) == {(2, 3), (2, 4), (3, 3), (3, 4)}
+    assert len(archive) == 4
+    assert archive[0] == (
+        search.best_params_["model"].max_depth,
+        search.best_params_["model__min_samples_split"],
+    )
+    if final_selection:
+        assert search.final_selection_results_["changed"]
     assert search.predict(X_train[:40]).shape == (40,)
+
+
+@pytest.mark.parametrize(
+    "algorithm", ["eaSimple", "eaMuPlusLambda", "eaMuCommaLambda", "eaDifferentialEvolution"]
+)
+@pytest.mark.parametrize("cloned", [False, True])
+def test_estimator_categories_preserve_parent_inheritance(algorithm, cloned, monkeypatch):
+    from sklearn.datasets import load_iris
+    from sklearn.pipeline import Pipeline
+
+    data, target = load_iris(return_X_y=True)
+    cv_calls = []
+    original_cross_validate = genetic_search.cross_validate
+
+    def tracked_cross_validate(*args, **kwargs):
+        cv_calls.append(args[0].get_params())
+        return original_cross_validate(*args, **kwargs)
+
+    monkeypatch.setattr(genetic_search, "cross_validate", tracked_cross_validate)
+
+    class LocalTree(DecisionTreeClassifier):
+        pass
+
+    tree_class = LocalTree if cloned else DecisionTreeClassifier
+    parent = tree_class(max_depth=1, random_state=0)
+    other = tree_class(max_depth=3, random_state=0)
+    search = GASearchCV(
+        Pipeline([("model", DecisionTreeClassifier(random_state=0))]),
+        param_grid={
+            "model": Categorical([parent, other]),
+            "model__min_samples_split": Integer(2, 100),
+        },
+        warm_start_configs=[
+            {"model": parent, "model__min_samples_split": value} for value in range(2, 6)
+        ],
+        population_size=4,
+        keep_top_k=4,
+        generations=2,
+        cv=2,
+        n_jobs=1,
+        verbose=False,
+        random_state=0,
+        algorithm=algorithm,
+        diversity_control=False,
+        crossover_probability=1,
+        mutation_probability=0,
+    )
+    if cloned:
+        search = clone(search)
+    search.fit(data, target)
+    assert {params["model"].max_depth for params in search.cv_results_["params"]} == {1}
+    assert all(choice.min_samples_split == 2 for choice in search.param_grid["model"].choices)
+    # Crossover alone cannot invent a new numeric allele; cached parents suffice.
+    if algorithm != "eaDifferentialEvolution":
+        assert len(cv_calls) == 4
+        assert search.fit_stats_["cross_validate_calls"] == 4
+    retained = [
+        (params["model"].max_depth, params["model__min_samples_split"])
+        for params in search.hof.values()
+    ]
+    assert len(set(retained)) == len(retained)
+    assert search.predict(data).shape == target.shape

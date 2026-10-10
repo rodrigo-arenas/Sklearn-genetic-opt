@@ -19,6 +19,8 @@ Full release notes with code examples are in the [documentation](https://sklearn
 
 ### Bug Fixes
 
+- Estimator-valued categorical choices preserve their configuration through crossover and cloned warm starts, reuse cached evaluations, and occupy distinct hall-of-fame slots. Applying nested parameters during search or finalist evaluation no longer modifies the caller's model choices.
+
 - Finalist selection excludes NaN scores, raises when every finalist score is NaN, and validates an integer evaluation budget. Checkpoints retain finalist settings. An explicit non-None `final_selection_cv` takes precedence over its grouped configuration value, preserving sklearn cloning when that value contains explicit fold arrays.
 
 - Both searches clone the winning estimator for final refit instead of fitting or changing the caller's estimator. Use `best_estimator_` (or prediction methods on the search) for the fitted model; `estimator` remains the constructor template. Numeric dimension sampling also retains global-seed reproducibility after cloning a search.

@@ -2,6 +2,7 @@ import random
 from typing import Any, List, Optional, Union
 
 import numpy as np
+from sklearn.base import BaseEstimator
 from scipy import stats
 from sklearn.utils import check_random_state
 
@@ -11,6 +12,41 @@ from .space_parameters import (
     CategoricalDistributions,
 )
 from .base import BaseDimension
+
+
+def _same_config(left, right):
+    """Compare estimator constructor trees without requiring picklable classes."""
+    if left is right:
+        return True
+    if isinstance(left, BaseEstimator):
+        return type(left) is type(right) and _same_config(
+            left.get_params(deep=False), right.get_params(deep=False)
+        )
+    if isinstance(left, dict):
+        return (
+            isinstance(right, dict)
+            and left.keys() == right.keys()
+            and all(_same_config(value, right[key]) for key, value in left.items())
+        )
+    if isinstance(left, (list, tuple)):
+        return (
+            type(left) is type(right)
+            and len(left) == len(right)
+            and all(_same_config(a, b) for a, b in zip(left, right))
+        )
+    if isinstance(left, np.ndarray):
+        return isinstance(right, np.ndarray) and np.array_equal(
+            left, right, equal_nan=left.dtype.kind in "fc" and right.dtype.kind in "fc"
+        )
+    if isinstance(left, np.random.RandomState):
+        return isinstance(right, np.random.RandomState) and _same_config(
+            left.get_state(), right.get_state()
+        )
+    if isinstance(left, np.random.Generator):
+        return isinstance(right, np.random.Generator) and _same_config(
+            left.bit_generator.state, right.bit_generator.state
+        )
+    return left == right
 
 
 class Integer(BaseDimension):
@@ -213,6 +249,22 @@ class Categorical(BaseDimension):
 
         return f"{self.__class__.__name__}(choices={self.choices!r}, priors={self.priors!r})"
 
+    def _choice_index(self, value):
+        """Resolve cloned estimator configurations to their original category."""
+        for index, choice in enumerate(self.choices):
+            if choice is value:
+                return index
+        if isinstance(value, BaseEstimator):
+            # Learned attributes are not part of a hyperparameter choice.
+            for index, choice in enumerate(self.choices):
+                if _same_config(value, choice):
+                    return index
+        else:
+            for index, choice in enumerate(self.choices):
+                if choice == value:
+                    return index
+        return None
+
     def sample(self) -> Any:
         """Sample a random value from the assigned distribution"""
 
@@ -357,7 +409,7 @@ class Space(object):
                 and dimension.lower <= value <= dimension.upper
             )
         if isinstance(dimension, Categorical):
-            return value in dimension.choices
+            return dimension._choice_index(value) is not None
         return False
 
     @property

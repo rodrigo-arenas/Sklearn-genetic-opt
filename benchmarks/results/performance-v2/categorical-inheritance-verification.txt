@@ -1,0 +1,707 @@
+Base: 21a4207505ef4d9638a8bf00e5883a24618e477f
+Original public probe:
+Model depths evaluated with only depth1 warm starts, crossover1, mutation0, diversityFalse: [1, 3]
+Caller choices min_samples_split after fit (expected original2,2): 5 3
+Best cv score: 0.9533333333333334 number CV calls: 7
+
+
+categorical-inheritance-red-final.txt
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 186 items / 170 deselected / 16 selected
+
+sklearn_genetic\tests\test_genetic_search.py FFFFFFFFFF                  [ 62%]
+sklearn_genetic\space\tests\test_space.py FFFFFF                         [100%]
+
+================================== FAILURES ===================================
+__________ test_refit_clones_estimator_valued_hyperparameters[False] __________
+sklearn_genetic\tests\test_genetic_search.py:2238: in test_refit_clones_estimator_valued_hyperparameters
+    assert candidate.min_samples_split == 2
+E   AssertionError
+__________ test_refit_clones_estimator_valued_hyperparameters[True] ___________
+sklearn_genetic\tests\test_genetic_search.py:2238: in test_refit_clones_estimator_valued_hyperparameters
+    assert candidate.min_samples_split == 2
+E   AssertionError
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\.venv\Lib\site-packages\sklearn\model_selection\_split.py:812: UserWarning: The least populated class in y has only 3 members, which is less than n_splits=4.
+  warnings.warn(
+____ test_estimator_categories_preserve_parent_inheritance[False-eaSimple] ____
+sklearn_genetic\tests\test_genetic_search.py:2310: in test_estimator_categories_preserve_parent_inheritance
+    assert all(choice.min_samples_split == 2 for choice in search.param_grid["model"].choices)
+E   AssertionError
+_ test_estimator_categories_preserve_parent_inheritance[False-eaMuPlusLambda] _
+sklearn_genetic\tests\test_genetic_search.py:2309: in test_estimator_categories_preserve_parent_inheritance
+    assert {params["model"].max_depth for params in search.cv_results_["params"]} == {1}
+E   AssertionError
+_ test_estimator_categories_preserve_parent_inheritance[False-eaMuCommaLambda] _
+sklearn_genetic\tests\test_genetic_search.py:2309: in test_estimator_categories_preserve_parent_inheritance
+    assert {params["model"].max_depth for params in search.cv_results_["params"]} == {1}
+E   AssertionError
+_ test_estimator_categories_preserve_parent_inheritance[False-eaDifferentialEvolution] _
+sklearn_genetic\tests\test_genetic_search.py:2310: in test_estimator_categories_preserve_parent_inheritance
+    assert all(choice.min_samples_split == 2 for choice in search.param_grid["model"].choices)
+E   AssertionError
+____ test_estimator_categories_preserve_parent_inheritance[True-eaSimple] _____
+sklearn_genetic\tests\test_genetic_search.py:2308: in test_estimator_categories_preserve_parent_inheritance
+    search.fit(data, target)
+sklearn_genetic\genetic_search.py:1292: in fit
+    self._register()
+sklearn_genetic\genetic_search.py:927: in _register
+    self._pop = self._initialize_population()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\genetic_search.py:942: in _initialize_population
+    population = initialize_search_population(self, self.toolbox, creator.Individual)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\population.py:215: in initialize_search_population
+    return smart_search_population(estimator, toolbox, individual_cls)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\population.py:115: in smart_search_population
+    individual_values = estimator.space.sample_warm_start(config)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\space\space.py:304: in sample_warm_start
+    self._validate_warm_start_config(warm_start_values)
+sklearn_genetic\space\space.py:337: in _validate_warm_start_config
+    raise ValueError(
+E   ValueError: warm_start_configs value LocalTree(max_depth=1, random_state=0) for 'model' is outside its search space Categorical(choices=[LocalTree(max_depth=1, random_state=0), LocalTree(max_depth=3, random_state=0)]).
+_ test_estimator_categories_preserve_parent_inheritance[True-eaMuPlusLambda] __
+sklearn_genetic\tests\test_genetic_search.py:2308: in test_estimator_categories_preserve_parent_inheritance
+    search.fit(data, target)
+sklearn_genetic\genetic_search.py:1292: in fit
+    self._register()
+sklearn_genetic\genetic_search.py:927: in _register
+    self._pop = self._initialize_population()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\genetic_search.py:942: in _initialize_population
+    population = initialize_search_population(self, self.toolbox, creator.Individual)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\population.py:215: in initialize_search_population
+    return smart_search_population(estimator, toolbox, individual_cls)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\population.py:115: in smart_search_population
+    individual_values = estimator.space.sample_warm_start(config)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\space\space.py:304: in sample_warm_start
+    self._validate_warm_start_config(warm_start_values)
+sklearn_genetic\space\space.py:337: in _validate_warm_start_config
+    raise ValueError(
+E   ValueError: warm_start_configs value LocalTree(max_depth=1, random_state=0) for 'model' is outside its search space Categorical(choices=[LocalTree(max_depth=1, random_state=0), LocalTree(max_depth=3, random_state=0)]).
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\.venv\Lib\site-packages\deap\creator.py:185: RuntimeWarning: A class named 'FitnessMax' has already been created and it will be overwritten. Consider deleting previous creation of that class or rename it.
+  warnings.warn("A class named '{0}' has already been created and it "
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\.venv\Lib\site-packages\deap\creator.py:185: RuntimeWarning: A class named 'Individual' has already been created and it will be overwritten. Consider deleting previous creation of that class or rename it.
+  warnings.warn("A class named '{0}' has already been created and it "
+_ test_estimator_categories_preserve_parent_inheritance[True-eaMuCommaLambda] _
+sklearn_genetic\tests\test_genetic_search.py:2308: in test_estimator_categories_preserve_parent_inheritance
+    search.fit(data, target)
+sklearn_genetic\genetic_search.py:1292: in fit
+    self._register()
+sklearn_genetic\genetic_search.py:927: in _register
+    self._pop = self._initialize_population()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\genetic_search.py:942: in _initialize_population
+    population = initialize_search_population(self, self.toolbox, creator.Individual)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\population.py:215: in initialize_search_population
+    return smart_search_population(estimator, toolbox, individual_cls)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\population.py:115: in smart_search_population
+    individual_values = estimator.space.sample_warm_start(config)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\space\space.py:304: in sample_warm_start
+    self._validate_warm_start_config(warm_start_values)
+sklearn_genetic\space\space.py:337: in _validate_warm_start_config
+    raise ValueError(
+E   ValueError: warm_start_configs value LocalTree(max_depth=1, random_state=0) for 'model' is outside its search space Categorical(choices=[LocalTree(max_depth=1, random_state=0), LocalTree(max_depth=3, random_state=0)]).
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\.venv\Lib\site-packages\deap\creator.py:185: RuntimeWarning: A class named 'FitnessMax' has already been created and it will be overwritten. Consider deleting previous creation of that class or rename it.
+  warnings.warn("A class named '{0}' has already been created and it "
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\.venv\Lib\site-packages\deap\creator.py:185: RuntimeWarning: A class named 'Individual' has already been created and it will be overwritten. Consider deleting previous creation of that class or rename it.
+  warnings.warn("A class named '{0}' has already been created and it "
+_ test_estimator_categories_preserve_parent_inheritance[True-eaDifferentialEvolution] _
+sklearn_genetic\tests\test_genetic_search.py:2308: in test_estimator_categories_preserve_parent_inheritance
+    search.fit(data, target)
+sklearn_genetic\genetic_search.py:1292: in fit
+    self._register()
+sklearn_genetic\genetic_search.py:927: in _register
+    self._pop = self._initialize_population()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\genetic_search.py:942: in _initialize_population
+    population = initialize_search_population(self, self.toolbox, creator.Individual)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\population.py:215: in initialize_search_population
+    return smart_search_population(estimator, toolbox, individual_cls)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\population.py:115: in smart_search_population
+    individual_values = estimator.space.sample_warm_start(config)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\space\space.py:304: in sample_warm_start
+    self._validate_warm_start_config(warm_start_values)
+sklearn_genetic\space\space.py:337: in _validate_warm_start_config
+    raise ValueError(
+E   ValueError: warm_start_configs value LocalTree(max_depth=1, random_state=0) for 'model' is outside its search space Categorical(choices=[LocalTree(max_depth=1, random_state=0), LocalTree(max_depth=3, random_state=0)]).
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\.venv\Lib\site-packages\deap\creator.py:185: RuntimeWarning: A class named 'FitnessMax' has already been created and it will be overwritten. Consider deleting previous creation of that class or rename it.
+  warnings.warn("A class named '{0}' has already been created and it "
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\.venv\Lib\site-packages\deap\creator.py:185: RuntimeWarning: A class named 'Individual' has already been created and it will be overwritten. Consider deleting previous creation of that class or rename it.
+  warnings.warn("A class named '{0}' has already been created and it "
+__ test_warm_start_accepts_cloned_nested_estimator_configuration[0-weights0] __
+sklearn_genetic\space\tests\test_space.py:518: in test_warm_start_accepts_cloned_nested_estimator_configuration
+    assert space.sample_warm_start({"model": copied})["model"] is copied
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\space\space.py:304: in sample_warm_start
+    self._validate_warm_start_config(warm_start_values)
+sklearn_genetic\space\space.py:337: in _validate_warm_start_config
+    raise ValueError(
+E   ValueError: warm_start_configs value Pipeline(steps=[('transform',
+E                    LocalTransformer(kw_args={'random_state': 0,
+E                                              'weights': array([1., 2.])}))]) for 'model' is outside its search space Categorical(choices=[Pipeline(steps=[('transform',
+E                    LocalTransformer(kw_args={'random_state': 0,
+E                                              'weights': array([1., 2.])}))]), 'passthrough']).
+__ test_warm_start_accepts_cloned_nested_estimator_configuration[0-weights1] __
+sklearn_genetic\space\tests\test_space.py:518: in test_warm_start_accepts_cloned_nested_estimator_configuration
+    assert space.sample_warm_start({"model": copied})["model"] is copied
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\space\space.py:304: in sample_warm_start
+    self._validate_warm_start_config(warm_start_values)
+sklearn_genetic\space\space.py:337: in _validate_warm_start_config
+    raise ValueError(
+E   ValueError: warm_start_configs value Pipeline(steps=[('transform',
+E                    LocalTransformer(kw_args={'random_state': 0,
+E                                              'weights': array([ 1., nan])}))]) for 'model' is outside its search space Categorical(choices=[Pipeline(steps=[('transform',
+E                    LocalTransformer(kw_args={'random_state': 0,
+E                                              'weights': array([ 1., nan])}))]), 'passthrough']).
+_ test_warm_start_accepts_cloned_nested_estimator_configuration[random_state1-weights0] _
+sklearn_genetic\space\tests\test_space.py:518: in test_warm_start_accepts_cloned_nested_estimator_configuration
+    assert space.sample_warm_start({"model": copied})["model"] is copied
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\space\space.py:304: in sample_warm_start
+    self._validate_warm_start_config(warm_start_values)
+sklearn_genetic\space\space.py:337: in _validate_warm_start_config
+    raise ValueError(
+E   ValueError: warm_start_configs value Pipeline(steps=[('transform',
+E                    LocalTransformer(kw_args={'random_state': RandomState(MT19937) at 0x141B2F5FE40,
+E                                              'weights': array([1., 2.])}))]) for 'model' is outside its search space Categorical(choices=[Pipeline(steps=[('transform',
+E                    LocalTransformer(kw_args={'random_state': RandomState(MT19937) at 0x141B2F5C540,
+E                                              'weights': array([1., 2.])}))]), 'passthrough']).
+_ test_warm_start_accepts_cloned_nested_estimator_configuration[random_state1-weights1] _
+sklearn_genetic\space\tests\test_space.py:518: in test_warm_start_accepts_cloned_nested_estimator_configuration
+    assert space.sample_warm_start({"model": copied})["model"] is copied
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\space\space.py:304: in sample_warm_start
+    self._validate_warm_start_config(warm_start_values)
+sklearn_genetic\space\space.py:337: in _validate_warm_start_config
+    raise ValueError(
+E   ValueError: warm_start_configs value Pipeline(steps=[('transform',
+E                    LocalTransformer(kw_args={'random_state': RandomState(MT19937) at 0x141804D5D40,
+E                                              'weights': array([ 1., nan])}))]) for 'model' is outside its search space Categorical(choices=[Pipeline(steps=[('transform',
+E                    LocalTransformer(kw_args={'random_state': RandomState(MT19937) at 0x141B2F5C540,
+E                                              'weights': array([ 1., nan])}))]), 'passthrough']).
+_ test_warm_start_accepts_cloned_nested_estimator_configuration[random_state2-weights0] _
+sklearn_genetic\space\tests\test_space.py:518: in test_warm_start_accepts_cloned_nested_estimator_configuration
+    assert space.sample_warm_start({"model": copied})["model"] is copied
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\space\space.py:304: in sample_warm_start
+    self._validate_warm_start_config(warm_start_values)
+sklearn_genetic\space\space.py:337: in _validate_warm_start_config
+    raise ValueError(
+E   ValueError: warm_start_configs value Pipeline(steps=[('transform',
+E                    LocalTransformer(kw_args={'random_state': Generator(PCG64) at 0x141804B3300,
+E                                              'weights': array([1., 2.])}))]) for 'model' is outside its search space Categorical(choices=[Pipeline(steps=[('transform',
+E                    LocalTransformer(kw_args={'random_state': Generator(PCG64) at 0x141B2F898C0,
+E                                              'weights': array([1., 2.])}))]), 'passthrough']).
+_ test_warm_start_accepts_cloned_nested_estimator_configuration[random_state2-weights1] _
+sklearn_genetic\space\tests\test_space.py:518: in test_warm_start_accepts_cloned_nested_estimator_configuration
+    assert space.sample_warm_start({"model": copied})["model"] is copied
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\space\space.py:304: in sample_warm_start
+    self._validate_warm_start_config(warm_start_values)
+sklearn_genetic\space\space.py:337: in _validate_warm_start_config
+    raise ValueError(
+E   ValueError: warm_start_configs value Pipeline(steps=[('transform',
+E                    LocalTransformer(kw_args={'random_state': Generator(PCG64) at 0x141804B2960,
+E                                              'weights': array([ 1., nan])}))]) for 'model' is outside its search space Categorical(choices=[Pipeline(steps=[('transform',
+E                    LocalTransformer(kw_args={'random_state': Generator(PCG64) at 0x141B2F898C0,
+E                                              'weights': array([ 1., nan])}))]), 'passthrough']).
+=========================== short test summary info ===========================
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_refit_clones_estimator_valued_hyperparameters[False] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_refit_clones_estimator_valued_hyperparameters[True] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_estimator_categories_preserve_parent_inheritance[False-eaSimple] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_estimator_categories_preserve_parent_inheritance[False-eaMuPlusLambda] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_estimator_categories_preserve_parent_inheritance[False-eaMuCommaLambda] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_estimator_categories_preserve_parent_inheritance[False-eaDifferentialEvolution] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_estimator_categories_preserve_parent_inheritance[True-eaSimple] - ValueError: warm_start_configs value LocalTree(max_depth=1, random_state=0)...
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_estimator_categories_preserve_parent_inheritance[True-eaMuPlusLambda] - ValueError: warm_start_configs value LocalTree(max_depth=1, random_state=0)...
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_estimator_categories_preserve_parent_inheritance[True-eaMuCommaLambda] - ValueError: warm_start_configs value LocalTree(max_depth=1, random_state=0)...
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_estimator_categories_preserve_parent_inheritance[True-eaDifferentialEvolution] - ValueError: warm_start_configs value LocalTree(max_depth=1, random_state=0)...
+FAILED sklearn_genetic/space/tests/test_space.py::test_warm_start_accepts_cloned_nested_estimator_configuration[0-weights0] - ValueError: warm_start_configs value Pipeline(steps=[('transform',
+FAILED sklearn_genetic/space/tests/test_space.py::test_warm_start_accepts_cloned_nested_estimator_configuration[0-weights1] - ValueError: warm_start_configs value Pipeline(steps=[('transform',
+FAILED sklearn_genetic/space/tests/test_space.py::test_warm_start_accepts_cloned_nested_estimator_configuration[random_state1-weights0] - ValueError: warm_start_configs value Pipeline(steps=[('transform',
+FAILED sklearn_genetic/space/tests/test_space.py::test_warm_start_accepts_cloned_nested_estimator_configuration[random_state1-weights1] - ValueError: warm_start_configs value Pipeline(steps=[('transform',
+FAILED sklearn_genetic/space/tests/test_space.py::test_warm_start_accepts_cloned_nested_estimator_configuration[random_state2-weights0] - ValueError: warm_start_configs value Pipeline(steps=[('transform',
+FAILED sklearn_genetic/space/tests/test_space.py::test_warm_start_accepts_cloned_nested_estimator_configuration[random_state2-weights1] - ValueError: warm_start_configs value Pipeline(steps=[('transform',
+===================== 16 failed, 170 deselected in 3.52s ======================
+
+
+categorical-local-class-red.txt
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 125 items / 117 deselected / 8 selected
+
+sklearn_genetic\tests\test_genetic_search.py ....FFFF                    [100%]
+
+================================== FAILURES ===================================
+____ test_estimator_categories_preserve_parent_inheritance[True-eaSimple] _____
+sklearn_genetic\tests\test_genetic_search.py:2280: in test_estimator_categories_preserve_parent_inheritance
+    search.fit(data, target)
+sklearn_genetic\genetic_search.py:1299: in fit
+    self._register()
+sklearn_genetic\genetic_search.py:927: in _register
+    self._pop = self._initialize_population()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\genetic_search.py:942: in _initialize_population
+    population = initialize_search_population(self, self.toolbox, creator.Individual)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\population.py:215: in initialize_search_population
+    return smart_search_population(estimator, toolbox, individual_cls)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\population.py:115: in smart_search_population
+    individual_values = estimator.space.sample_warm_start(config)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\space\space.py:324: in sample_warm_start
+    self._validate_warm_start_config(warm_start_values)
+sklearn_genetic\space\space.py:356: in _validate_warm_start_config
+    if not self.value_in_dimension(dimension, value):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\space\space.py:380: in value_in_dimension
+    return dimension._choice_index(value) is not None
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\space\space.py:226: in _choice_index
+    signature = joblib_hash(clone(value))
+                ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\joblib\hashing.py:270: in hash
+    return hasher.hash(obj)
+           ^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\joblib\hashing.py:64: in hash
+    self.dump(obj)
+..\..\AppData\Local\Programs\Python\Python312\Lib\pickle.py:481: in dump
+    self.save(obj)
+.venv\Lib\site-packages\joblib\hashing.py:244: in save
+    Hasher.save(self, obj)
+.venv\Lib\site-packages\joblib\hashing.py:90: in save
+    Pickler.save(self, obj)
+..\..\AppData\Local\Programs\Python\Python312\Lib\pickle.py:597: in save
+    self.save_reduce(obj=obj, *rv)
+..\..\AppData\Local\Programs\Python\Python312\Lib\pickle.py:681: in save_reduce
+    save(cls)
+.venv\Lib\site-packages\joblib\hashing.py:244: in save
+    Hasher.save(self, obj)
+.venv\Lib\site-packages\joblib\hashing.py:90: in save
+    Pickler.save(self, obj)
+..\..\AppData\Local\Programs\Python\Python312\Lib\pickle.py:566: in save
+    self.save_global(obj)
+.venv\Lib\site-packages\joblib\hashing.py:112: in save_global
+    Pickler.save_global(self, obj, **kwargs)
+..\..\AppData\Local\Programs\Python\Python312\Lib\pickle.py:1063: in save_global
+    raise PicklingError(
+E   _pickle.PicklingError: ("Can't pickle <class 'sklearn_genetic.tests.test_genetic_search.test_estimator_categories_preserve_parent_inheritance.<locals>.LocalTree'>: it's not found as sklearn_genetic.tests.test_genetic_search.test_estimator_categories_preserve_parent_inheritance.<locals>.LocalTree", 'PicklingError while hashing LocalTree(max_depth=1, random_state=0): PicklingError("Can\'t pickle <class \'sklearn_genetic.tests.test_genetic_search.test_estimator_categories_preserve_parent_inheritance.<locals>.LocalTree\'>: it\'s not found as sklearn_genetic.tests.test_genetic_search.test_estimator_categories_preserve_parent_inheritance.<locals>.LocalTree")')
+_ test_estimator_categories_preserve_parent_inheritance[True-eaMuPlusLambda] __
+sklearn_genetic\tests\test_genetic_search.py:2280: in test_estimator_categories_preserve_parent_inheritance
+    search.fit(data, target)
+sklearn_genetic\genetic_search.py:1299: in fit
+    self._register()
+sklearn_genetic\genetic_search.py:927: in _register
+    self._pop = self._initialize_population()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\genetic_search.py:942: in _initialize_population
+    population = initialize_search_population(self, self.toolbox, creator.Individual)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\population.py:215: in initialize_search_population
+    return smart_search_population(estimator, toolbox, individual_cls)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\population.py:115: in smart_search_population
+    individual_values = estimator.space.sample_warm_start(config)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\space\space.py:324: in sample_warm_start
+    self._validate_warm_start_config(warm_start_values)
+sklearn_genetic\space\space.py:356: in _validate_warm_start_config
+    if not self.value_in_dimension(dimension, value):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\space\space.py:380: in value_in_dimension
+    return dimension._choice_index(value) is not None
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\space\space.py:226: in _choice_index
+    signature = joblib_hash(clone(value))
+                ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\joblib\hashing.py:270: in hash
+    return hasher.hash(obj)
+           ^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\joblib\hashing.py:64: in hash
+    self.dump(obj)
+..\..\AppData\Local\Programs\Python\Python312\Lib\pickle.py:481: in dump
+    self.save(obj)
+.venv\Lib\site-packages\joblib\hashing.py:244: in save
+    Hasher.save(self, obj)
+.venv\Lib\site-packages\joblib\hashing.py:90: in save
+    Pickler.save(self, obj)
+..\..\AppData\Local\Programs\Python\Python312\Lib\pickle.py:597: in save
+    self.save_reduce(obj=obj, *rv)
+..\..\AppData\Local\Programs\Python\Python312\Lib\pickle.py:681: in save_reduce
+    save(cls)
+.venv\Lib\site-packages\joblib\hashing.py:244: in save
+    Hasher.save(self, obj)
+.venv\Lib\site-packages\joblib\hashing.py:90: in save
+    Pickler.save(self, obj)
+..\..\AppData\Local\Programs\Python\Python312\Lib\pickle.py:566: in save
+    self.save_global(obj)
+.venv\Lib\site-packages\joblib\hashing.py:112: in save_global
+    Pickler.save_global(self, obj, **kwargs)
+..\..\AppData\Local\Programs\Python\Python312\Lib\pickle.py:1063: in save_global
+    raise PicklingError(
+E   _pickle.PicklingError: ("Can't pickle <class 'sklearn_genetic.tests.test_genetic_search.test_estimator_categories_preserve_parent_inheritance.<locals>.LocalTree'>: it's not found as sklearn_genetic.tests.test_genetic_search.test_estimator_categories_preserve_parent_inheritance.<locals>.LocalTree", 'PicklingError while hashing LocalTree(max_depth=1, random_state=0): PicklingError("Can\'t pickle <class \'sklearn_genetic.tests.test_genetic_search.test_estimator_categories_preserve_parent_inheritance.<locals>.LocalTree\'>: it\'s not found as sklearn_genetic.tests.test_genetic_search.test_estimator_categories_preserve_parent_inheritance.<locals>.LocalTree")')
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\.venv\Lib\site-packages\deap\creator.py:185: RuntimeWarning: A class named 'FitnessMax' has already been created and it will be overwritten. Consider deleting previous creation of that class or rename it.
+  warnings.warn("A class named '{0}' has already been created and it "
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\.venv\Lib\site-packages\deap\creator.py:185: RuntimeWarning: A class named 'Individual' has already been created and it will be overwritten. Consider deleting previous creation of that class or rename it.
+  warnings.warn("A class named '{0}' has already been created and it "
+_ test_estimator_categories_preserve_parent_inheritance[True-eaMuCommaLambda] _
+sklearn_genetic\tests\test_genetic_search.py:2280: in test_estimator_categories_preserve_parent_inheritance
+    search.fit(data, target)
+sklearn_genetic\genetic_search.py:1299: in fit
+    self._register()
+sklearn_genetic\genetic_search.py:927: in _register
+    self._pop = self._initialize_population()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\genetic_search.py:942: in _initialize_population
+    population = initialize_search_population(self, self.toolbox, creator.Individual)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\population.py:215: in initialize_search_population
+    return smart_search_population(estimator, toolbox, individual_cls)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\population.py:115: in smart_search_population
+    individual_values = estimator.space.sample_warm_start(config)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\space\space.py:324: in sample_warm_start
+    self._validate_warm_start_config(warm_start_values)
+sklearn_genetic\space\space.py:356: in _validate_warm_start_config
+    if not self.value_in_dimension(dimension, value):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\space\space.py:380: in value_in_dimension
+    return dimension._choice_index(value) is not None
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\space\space.py:226: in _choice_index
+    signature = joblib_hash(clone(value))
+                ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\joblib\hashing.py:270: in hash
+    return hasher.hash(obj)
+           ^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\joblib\hashing.py:64: in hash
+    self.dump(obj)
+..\..\AppData\Local\Programs\Python\Python312\Lib\pickle.py:481: in dump
+    self.save(obj)
+.venv\Lib\site-packages\joblib\hashing.py:244: in save
+    Hasher.save(self, obj)
+.venv\Lib\site-packages\joblib\hashing.py:90: in save
+    Pickler.save(self, obj)
+..\..\AppData\Local\Programs\Python\Python312\Lib\pickle.py:597: in save
+    self.save_reduce(obj=obj, *rv)
+..\..\AppData\Local\Programs\Python\Python312\Lib\pickle.py:681: in save_reduce
+    save(cls)
+.venv\Lib\site-packages\joblib\hashing.py:244: in save
+    Hasher.save(self, obj)
+.venv\Lib\site-packages\joblib\hashing.py:90: in save
+    Pickler.save(self, obj)
+..\..\AppData\Local\Programs\Python\Python312\Lib\pickle.py:566: in save
+    self.save_global(obj)
+.venv\Lib\site-packages\joblib\hashing.py:112: in save_global
+    Pickler.save_global(self, obj, **kwargs)
+..\..\AppData\Local\Programs\Python\Python312\Lib\pickle.py:1063: in save_global
+    raise PicklingError(
+E   _pickle.PicklingError: ("Can't pickle <class 'sklearn_genetic.tests.test_genetic_search.test_estimator_categories_preserve_parent_inheritance.<locals>.LocalTree'>: it's not found as sklearn_genetic.tests.test_genetic_search.test_estimator_categories_preserve_parent_inheritance.<locals>.LocalTree", 'PicklingError while hashing LocalTree(max_depth=1, random_state=0): PicklingError("Can\'t pickle <class \'sklearn_genetic.tests.test_genetic_search.test_estimator_categories_preserve_parent_inheritance.<locals>.LocalTree\'>: it\'s not found as sklearn_genetic.tests.test_genetic_search.test_estimator_categories_preserve_parent_inheritance.<locals>.LocalTree")')
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\.venv\Lib\site-packages\deap\creator.py:185: RuntimeWarning: A class named 'FitnessMax' has already been created and it will be overwritten. Consider deleting previous creation of that class or rename it.
+  warnings.warn("A class named '{0}' has already been created and it "
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\.venv\Lib\site-packages\deap\creator.py:185: RuntimeWarning: A class named 'Individual' has already been created and it will be overwritten. Consider deleting previous creation of that class or rename it.
+  warnings.warn("A class named '{0}' has already been created and it "
+_ test_estimator_categories_preserve_parent_inheritance[True-eaDifferentialEvolution] _
+sklearn_genetic\tests\test_genetic_search.py:2280: in test_estimator_categories_preserve_parent_inheritance
+    search.fit(data, target)
+sklearn_genetic\genetic_search.py:1299: in fit
+    self._register()
+sklearn_genetic\genetic_search.py:927: in _register
+    self._pop = self._initialize_population()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\genetic_search.py:942: in _initialize_population
+    population = initialize_search_population(self, self.toolbox, creator.Individual)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\population.py:215: in initialize_search_population
+    return smart_search_population(estimator, toolbox, individual_cls)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\population.py:115: in smart_search_population
+    individual_values = estimator.space.sample_warm_start(config)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\space\space.py:324: in sample_warm_start
+    self._validate_warm_start_config(warm_start_values)
+sklearn_genetic\space\space.py:356: in _validate_warm_start_config
+    if not self.value_in_dimension(dimension, value):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\space\space.py:380: in value_in_dimension
+    return dimension._choice_index(value) is not None
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\space\space.py:226: in _choice_index
+    signature = joblib_hash(clone(value))
+                ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\joblib\hashing.py:270: in hash
+    return hasher.hash(obj)
+           ^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\joblib\hashing.py:64: in hash
+    self.dump(obj)
+..\..\AppData\Local\Programs\Python\Python312\Lib\pickle.py:481: in dump
+    self.save(obj)
+.venv\Lib\site-packages\joblib\hashing.py:244: in save
+    Hasher.save(self, obj)
+.venv\Lib\site-packages\joblib\hashing.py:90: in save
+    Pickler.save(self, obj)
+..\..\AppData\Local\Programs\Python\Python312\Lib\pickle.py:597: in save
+    self.save_reduce(obj=obj, *rv)
+..\..\AppData\Local\Programs\Python\Python312\Lib\pickle.py:681: in save_reduce
+    save(cls)
+.venv\Lib\site-packages\joblib\hashing.py:244: in save
+    Hasher.save(self, obj)
+.venv\Lib\site-packages\joblib\hashing.py:90: in save
+    Pickler.save(self, obj)
+..\..\AppData\Local\Programs\Python\Python312\Lib\pickle.py:566: in save
+    self.save_global(obj)
+.venv\Lib\site-packages\joblib\hashing.py:112: in save_global
+    Pickler.save_global(self, obj, **kwargs)
+..\..\AppData\Local\Programs\Python\Python312\Lib\pickle.py:1063: in save_global
+    raise PicklingError(
+E   _pickle.PicklingError: ("Can't pickle <class 'sklearn_genetic.tests.test_genetic_search.test_estimator_categories_preserve_parent_inheritance.<locals>.LocalTree'>: it's not found as sklearn_genetic.tests.test_genetic_search.test_estimator_categories_preserve_parent_inheritance.<locals>.LocalTree", 'PicklingError while hashing LocalTree(max_depth=1, random_state=0): PicklingError("Can\'t pickle <class \'sklearn_genetic.tests.test_genetic_search.test_estimator_categories_preserve_parent_inheritance.<locals>.LocalTree\'>: it\'s not found as sklearn_genetic.tests.test_genetic_search.test_estimator_categories_preserve_parent_inheritance.<locals>.LocalTree")')
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\.venv\Lib\site-packages\deap\creator.py:185: RuntimeWarning: A class named 'FitnessMax' has already been created and it will be overwritten. Consider deleting previous creation of that class or rename it.
+  warnings.warn("A class named '{0}' has already been created and it "
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\.venv\Lib\site-packages\deap\creator.py:185: RuntimeWarning: A class named 'Individual' has already been created and it will be overwritten. Consider deleting previous creation of that class or rename it.
+  warnings.warn("A class named '{0}' has already been created and it "
+=========================== short test summary info ===========================
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_estimator_categories_preserve_parent_inheritance[True-eaSimple] - _pickle.PicklingError: ("Can't pickle <class 'sklearn_genetic.tests.test_ge...
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_estimator_categories_preserve_parent_inheritance[True-eaMuPlusLambda] - _pickle.PicklingError: ("Can't pickle <class 'sklearn_genetic.tests.test_ge...
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_estimator_categories_preserve_parent_inheritance[True-eaMuCommaLambda] - _pickle.PicklingError: ("Can't pickle <class 'sklearn_genetic.tests.test_ge...
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_estimator_categories_preserve_parent_inheritance[True-eaDifferentialEvolution] - _pickle.PicklingError: ("Can't pickle <class 'sklearn_genetic.tests.test_ge...
+================= 4 failed, 4 passed, 117 deselected in 3.46s =================
+
+
+categorical-hof-red.txt
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 125 items / 117 deselected / 8 selected
+
+sklearn_genetic\tests\test_genetic_search.py FFFFFFFF                    [100%]
+
+================================== FAILURES ===================================
+____ test_estimator_categories_preserve_parent_inheritance[False-eaSimple] ____
+sklearn_genetic\tests\test_genetic_search.py:2293: in test_estimator_categories_preserve_parent_inheritance
+    assert len(set(retained)) == len(retained)
+E   AssertionError
+_ test_estimator_categories_preserve_parent_inheritance[False-eaMuPlusLambda] _
+sklearn_genetic\tests\test_genetic_search.py:2293: in test_estimator_categories_preserve_parent_inheritance
+    assert len(set(retained)) == len(retained)
+E   AssertionError
+_ test_estimator_categories_preserve_parent_inheritance[False-eaMuCommaLambda] _
+sklearn_genetic\tests\test_genetic_search.py:2293: in test_estimator_categories_preserve_parent_inheritance
+    assert len(set(retained)) == len(retained)
+E   AssertionError
+_ test_estimator_categories_preserve_parent_inheritance[False-eaDifferentialEvolution] _
+sklearn_genetic\tests\test_genetic_search.py:2293: in test_estimator_categories_preserve_parent_inheritance
+    assert len(set(retained)) == len(retained)
+E   AssertionError
+____ test_estimator_categories_preserve_parent_inheritance[True-eaSimple] _____
+sklearn_genetic\tests\test_genetic_search.py:2293: in test_estimator_categories_preserve_parent_inheritance
+    assert len(set(retained)) == len(retained)
+E   AssertionError
+_ test_estimator_categories_preserve_parent_inheritance[True-eaMuPlusLambda] __
+sklearn_genetic\tests\test_genetic_search.py:2293: in test_estimator_categories_preserve_parent_inheritance
+    assert len(set(retained)) == len(retained)
+E   AssertionError
+_ test_estimator_categories_preserve_parent_inheritance[True-eaMuCommaLambda] _
+sklearn_genetic\tests\test_genetic_search.py:2293: in test_estimator_categories_preserve_parent_inheritance
+    assert len(set(retained)) == len(retained)
+E   AssertionError
+_ test_estimator_categories_preserve_parent_inheritance[True-eaDifferentialEvolution] _
+sklearn_genetic\tests\test_genetic_search.py:2293: in test_estimator_categories_preserve_parent_inheritance
+    assert len(set(retained)) == len(retained)
+E   AssertionError
+=========================== short test summary info ===========================
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_estimator_categories_preserve_parent_inheritance[False-eaSimple] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_estimator_categories_preserve_parent_inheritance[False-eaMuPlusLambda] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_estimator_categories_preserve_parent_inheritance[False-eaMuCommaLambda] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_estimator_categories_preserve_parent_inheritance[False-eaDifferentialEvolution] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_estimator_categories_preserve_parent_inheritance[True-eaSimple] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_estimator_categories_preserve_parent_inheritance[True-eaMuPlusLambda] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_estimator_categories_preserve_parent_inheritance[True-eaMuCommaLambda] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_estimator_categories_preserve_parent_inheritance[True-eaDifferentialEvolution] - AssertionError
+====================== 8 failed, 117 deselected in 3.14s ======================
+
+
+categorical-inheritance-review.txt
+Independent review: Sol/high. No production source edits. In-process runtime mutants only.
+NEGATIVE CONFIG DISCRIMINATOR: estimator constructor ndarray contains NaN
+FAIL: unchanged cloned constructor tree rejected: warm_start_configs value FunctionTransformer(kw_args={'weights': array([ 1., nan])}) for 'model' is outside its search space Categorical(choices=[FunctionTransformer(kw_args={'weights': array([ 1., nan])})]).
+HOF DISCRIMINATOR: four distinct model/numeric configurations; finalist changes winner
+final_selection= False archive= [(3, 2), (3, 3), (1, 3), (1, 2)] winner= (3, 2)
+final_selection= True archive= [(1, 2), (3, 3), (3, 2), (1, 3)] winner= (1, 2)
+MUTANT: HOF equality ignores the categorical model dimension; provided inheritance regressions:
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 125 items / 117 deselected / 8 selected
+
+sklearn_genetic\tests\test_genetic_search.py ........                    [100%]
+
+====================== 8 passed, 117 deselected in 0.41s ======================
+MUTANT provided regression exit code: 0
+final_selection= False archive= [(3, 2), (1, 3)] winner= (3, 2)
+MUTANT KILLED by added discriminator: missing distinct model configuration HOF slots
+Mutation restored in process; production source untouched.
+
+
+categorical-nan-red.txt
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 61 items / 55 deselected / 6 selected
+
+sklearn_genetic\space\tests\test_space.py .F.F.F                         [100%]
+
+================================== FAILURES ===================================
+__ test_warm_start_accepts_cloned_nested_estimator_configuration[0-weights1] __
+sklearn_genetic\space\tests\test_space.py:520: in test_warm_start_accepts_cloned_nested_estimator_configuration
+    assert space.sample_warm_start({"model": copied})["model"] is copied
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\space\space.py:354: in sample_warm_start
+    self._validate_warm_start_config(warm_start_values)
+sklearn_genetic\space\space.py:387: in _validate_warm_start_config
+    raise ValueError(
+E   ValueError: warm_start_configs value Pipeline(steps=[('transform',
+E                    LocalTransformer(kw_args={'random_state': 0,
+E                                              'weights': array([ 1., nan])}))]) for 'model' is outside its search space Categorical(choices=[Pipeline(steps=[('transform',
+E                    LocalTransformer(kw_args={'random_state': 0,
+E                                              'weights': array([ 1., nan])}))]), 'passthrough']).
+_ test_warm_start_accepts_cloned_nested_estimator_configuration[random_state1-weights1] _
+sklearn_genetic\space\tests\test_space.py:520: in test_warm_start_accepts_cloned_nested_estimator_configuration
+    assert space.sample_warm_start({"model": copied})["model"] is copied
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\space\space.py:354: in sample_warm_start
+    self._validate_warm_start_config(warm_start_values)
+sklearn_genetic\space\space.py:387: in _validate_warm_start_config
+    raise ValueError(
+E   ValueError: warm_start_configs value Pipeline(steps=[('transform',
+E                    LocalTransformer(kw_args={'random_state': RandomState(MT19937) at 0x1BB0A264540,
+E                                              'weights': array([ 1., nan])}))]) for 'model' is outside its search space Categorical(choices=[Pipeline(steps=[('transform',
+E                    LocalTransformer(kw_args={'random_state': RandomState(MT19937) at 0x1BB09FC5640,
+E                                              'weights': array([ 1., nan])}))]), 'passthrough']).
+_ test_warm_start_accepts_cloned_nested_estimator_configuration[random_state2-weights1] _
+sklearn_genetic\space\tests\test_space.py:520: in test_warm_start_accepts_cloned_nested_estimator_configuration
+    assert space.sample_warm_start({"model": copied})["model"] is copied
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\space\space.py:354: in sample_warm_start
+    self._validate_warm_start_config(warm_start_values)
+sklearn_genetic\space\space.py:387: in _validate_warm_start_config
+    raise ValueError(
+E   ValueError: warm_start_configs value Pipeline(steps=[('transform',
+E                    LocalTransformer(kw_args={'random_state': Generator(PCG64) at 0x1BB0A044AC0,
+E                                              'weights': array([ 1., nan])}))]) for 'model' is outside its search space Categorical(choices=[Pipeline(steps=[('transform',
+E                    LocalTransformer(kw_args={'random_state': Generator(PCG64) at 0x1BB09FEE500,
+E                                              'weights': array([ 1., nan])}))]), 'passthrough']).
+=========================== short test summary info ===========================
+FAILED sklearn_genetic/space/tests/test_space.py::test_warm_start_accepts_cloned_nested_estimator_configuration[0-weights1] - ValueError: warm_start_configs value Pipeline(steps=[('transform',
+FAILED sklearn_genetic/space/tests/test_space.py::test_warm_start_accepts_cloned_nested_estimator_configuration[random_state1-weights1] - ValueError: warm_start_configs value Pipeline(steps=[('transform',
+FAILED sklearn_genetic/space/tests/test_space.py::test_warm_start_accepts_cloned_nested_estimator_configuration[random_state2-weights1] - ValueError: warm_start_configs value Pipeline(steps=[('transform',
+================= 3 failed, 3 passed, 55 deselected in 2.64s ==================
+
+
+categorical-hof-mutant.txt
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 125 items / 123 deselected / 2 selected
+
+sklearn_genetic\tests\test_genetic_search.py FF                          [100%]
+
+================================== FAILURES ===================================
+__________ test_refit_clones_estimator_valued_hyperparameters[False] __________
+sklearn_genetic\tests\test_genetic_search.py:2250: in test_refit_clones_estimator_valued_hyperparameters
+    assert set(archive) == {(2, 3), (2, 4), (3, 3), (3, 4)}
+E   AssertionError
+__________ test_refit_clones_estimator_valued_hyperparameters[True] ___________
+sklearn_genetic\tests\test_genetic_search.py:2250: in test_refit_clones_estimator_valued_hyperparameters
+    assert set(archive) == {(2, 3), (2, 4), (3, 3), (3, 4)}
+E   AssertionError
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\.venv\Lib\site-packages\sklearn\model_selection\_split.py:812: UserWarning: The least populated class in y has only 3 members, which is less than n_splits=4.
+  warnings.warn(
+=========================== short test summary info ===========================
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_refit_clones_estimator_valued_hyperparameters[False] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_refit_clones_estimator_valued_hyperparameters[True] - AssertionError
+====================== 2 failed, 123 deselected in 0.83s ======================
+mutant exit 1
+
+
+categorical-inheritance-green.txt
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 186 items / 170 deselected / 16 selected
+
+sklearn_genetic\tests\test_genetic_search.py ..........                  [ 62%]
+sklearn_genetic\space\tests\test_space.py ......                         [100%]
+
+===================== 16 passed, 170 deselected in 2.55s ======================
+
+
+categorical-inheritance-adjacent.txt
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 186 items / 127 deselected / 59 selected
+
+sklearn_genetic\space\tests\test_space.py .............................. [ 50%]
+..                                                                       [ 54%]
+sklearn_genetic\tests\test_genetic_search.py ........................... [100%]
+
+===================== 59 passed, 127 deselected in 33.32s =====================
+
+
+categorical-inheritance-guard.txt
+test_guard: clean against 21a4207505ef4d9638a8bf00e5883a24618e477f
+
+Independent closure
+Independent repair closure: Sol/high review role, source read-only.
+VER-CI-001: NaN numeric arrays resolve equivalent clones; changed finite value remains invalid.
+PASS equivalent accepted / different rejected dtype float64
+PASS equivalent accepted / different rejected dtype <U5
+PASS equivalent accepted / different rejected dtype int64
+PASS equivalent accepted / different rejected dtype bool
+RNG negative discriminator: different RandomState / Generator state must not match.
+PASS state-distinct RandomState
+PASS state-distinct Generator
+VER-CI-002 source/evidence review: repaired real-CV test enumerates 2 model choices x 2 numeric values, exact four-slot set, cardinality and winner first. Explicit 4-fold finalist scorer reverses 2-fold search ranking; changed flag asserted.
+Recorded ignore-model HOF mutant now fails both repaired archive test cases (exit1); original unchanged-array comparison fails three NaN cases.
+Reviewed original-head red16, green16, adjacent59 (includes focused), clean test guard, report scope. No broad suite rerun needed; no new material findings in the reviewed scope.
