@@ -218,8 +218,9 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
     population_initializer : {'smart', 'random'}, default='smart'
         Strategy used to generate the initial population. ``'smart'`` combines
         valid warm-start configurations, valid estimator defaults, Latin
-        hypercube sampling for numeric dimensions, stratified categorical
-        values, and duplicate avoidance. ``'random'`` uses the previous random
+        hypercube sampling for numeric dimensions, independently shuffled
+        categorical strata across the full domain, and duplicate avoidance.
+        ``'random'`` uses the previous random
         sampling behavior.
 
     random_state : int, RandomState instance or None, default=None

@@ -1963,3 +1963,75 @@ def test_custom_dimension_does_not_trigger_finite_exhaustion():
     assert search.best_params_ == {"max_depth": 2}
     assert len(search.history["gen"]) == 2
     assert not search.search_space_exhausted_
+
+
+@pytest.mark.parametrize("weighted", [False, True])
+def test_smart_initialization_explores_independent_categories(weighted):
+    def interaction_score(model, X, y):
+        return float(model.criterion == "gini" and model.splitter == "random")
+
+    search = GASearchCV(
+        DecisionTreeClassifier(random_state=0),
+        param_grid={
+            "criterion": (
+                Categorical(["gini", "entropy", "log_loss"], priors=[0.75, 0.25, 0])
+                if weighted
+                else Categorical(["gini", "entropy"])
+            ),
+            "splitter": Categorical(["best", "random"], priors=[0.25, 0.75] if weighted else None),
+            "ccp_alpha": Continuous(0.001, 0.01),
+        },
+        scoring=interaction_score,
+        cv=2,
+        population_size=24,
+        generations=0,
+        random_state=42,
+        n_jobs=1,
+        verbose=False,
+    )
+    repeated = clone(search)
+    search.fit(X_train[:40], y_train[:40])
+    params = search.cv_results_["params"]
+    assert search.best_score_ == 1
+    assert {(p["criterion"], p["splitter"]) for p in params} == {
+        (criterion, splitter)
+        for criterion in ("gini", "entropy")
+        for splitter in ("best", "random")
+    }
+    assert sum(p["criterion"] == "gini" for p in params) == (18 if weighted else 12)
+    assert sum(p["splitter"] == "random" for p in params) == (18 if weighted else 12)
+    repeated.fit(X_train[:40], y_train[:40])
+    assert repeated.cv_results_["params"] == params
+
+
+@pytest.mark.parametrize("weighted", [False, True])
+def test_smart_initialization_samples_beyond_category_prefix(weighted):
+    template = GASearchCV(
+        DecisionTreeClassifier(random_state=0),
+        param_grid={
+            "max_features": Categorical(
+                list(range(1, 21)), priors=([0] * 16 + [0.25] * 4) if weighted else None
+            ),
+            "ccp_alpha": Continuous(0.001, 0.01),
+        },
+        scoring=lambda model, X, y: float(model.max_features),
+        cv=2,
+        population_size=4,
+        generations=0,
+        random_state=42,
+        n_jobs=1,
+        verbose=False,
+    )
+    from collections import Counter
+
+    counts = Counter()
+    for seed in ([42] if weighted else range(20)):
+        search = clone(template).set_params(random_state=seed).fit(X_train[:40], y_train[:40])
+        selected = [p["max_features"] for p in search.cv_results_["params"]]
+        assert search.best_score_ > 4
+        assert len(set(selected)) == 4
+        counts.update(selected)
+    if weighted:
+        assert set(counts) == {17, 18, 19, 20}
+    else:
+        assert set(counts) == set(range(1, 21))

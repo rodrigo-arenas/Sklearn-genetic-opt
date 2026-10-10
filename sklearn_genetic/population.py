@@ -132,6 +132,21 @@ def smart_search_population(estimator, toolbox, individual_cls):
         )
 
     remaining = estimator.population_size - len(population)
+    categorical_indices = {}
+    for parameter, dimension in estimator.space.param_grid.items():
+        if isinstance(dimension, Categorical):
+            indices = list(range(remaining))
+            if dimension.priors is None and remaining:
+                # Sample from the entire domain even when the population is
+                # smaller than it; retain balanced counts for larger batches.
+                choices = random.sample(
+                    range(len(dimension.choices)), k=min(remaining, len(dimension.choices))
+                )
+                indices = [choices[index % len(choices)] for index in indices]
+            # Independent strata prevent unrelated categorical genes from
+            # being locked into the same repeating combinations.
+            random.shuffle(indices)
+            categorical_indices[parameter] = indices
     numeric_parameters = [
         parameter
         for parameter, dimension in estimator.space.param_grid.items()
@@ -164,7 +179,9 @@ def smart_search_population(estimator, toolbox, individual_cls):
                 )
                 numeric_index += 1
             elif isinstance(dimension, Categorical):
-                value = _stratified_categorical_value(dimension, sample_index, remaining)
+                value = _stratified_categorical_value(
+                    dimension, categorical_indices[parameter][sample_index], remaining
+                )
             else:  # pragma: no cover
                 value = dimension.sample()
 

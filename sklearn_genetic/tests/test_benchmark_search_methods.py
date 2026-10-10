@@ -172,3 +172,164 @@ def test_feature_optimizer_cli_requires_unconstrained_domain(monkeypatch, capsys
         benchmark_features.main()
     assert error.value.code == 2
     assert "HPO mask comparisons require --unconstrained" in capsys.readouterr().err
+
+
+def test_categorical_benchmark_runs_models_without_optional_optimizers(monkeypatch, tmp_path):
+    import json
+    from benchmarks import benchmark_evolution
+
+    from sklearn_genetic import genetic_search
+
+    candidates = []
+    original_cv = genetic_search.cross_validate
+
+    def record_candidate(model, *args, **kwargs):
+        candidates.append(model.get_params(deep=True))
+        return original_cv(model, *args, **kwargs)
+
+    monkeypatch.setattr(genetic_search, "cross_validate", record_candidate)
+    output = tmp_path / "categorical.json"
+    monkeypatch.setitem(sys.modules, "optuna", None)
+    monkeypatch.setitem(sys.modules, "flaml", None)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "benchmark_evolution",
+            "--output",
+            str(output),
+            "--datasets",
+            "iris",
+            "--models",
+            "dt",
+            "svm",
+            "knn",
+            "--methods",
+            "gasearch",
+            "--budget",
+            "8",
+            "--seeds",
+            "1",
+            "--categorical",
+        ],
+    )
+    benchmark_evolution.main()
+    result = json.loads(output.read_text(encoding="utf-8"))
+    assert result["space_profile"] == "categorical"
+    assert {row["model"] for row in result["results"]} == {"dt", "svm", "knn"}
+    for row in result["results"]:
+        assert 0 < row["evaluations"] <= row["evaluation_budget"] == 8
+        assert 0 <= row["cv_score"] <= 1
+        assert 0 <= row["holdout_score"] <= 1
+    assert "optuna" not in result["versions"]
+    assert "flaml" not in result["versions"]
+    expected = {
+        "criterion": {"gini", "entropy"},
+        "splitter": {"best", "random"},
+        "model__kernel": {"rbf", "poly", "sigmoid"},
+        "model__shrinking": {True, False},
+        "model__weights": {"uniform", "distance"},
+        "model__metric": {"euclidean", "manhattan"},
+    }
+    for name, choices in expected.items():
+        assert {params[name] for params in candidates if name in params} == choices
+
+
+@pytest.mark.parametrize("dataset,model", [("diabetes", "dt"), ("iris", "rf")])
+def test_categorical_benchmark_rejects_incompatible_workload(monkeypatch, capsys, dataset, model):
+    from benchmarks import benchmark_evolution
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "benchmark_evolution",
+            "--output",
+            "unused.json",
+            "--datasets",
+            dataset,
+            "--models",
+            model,
+            "--categorical",
+        ],
+    )
+    with pytest.raises(SystemExit) as error:
+        benchmark_evolution.main()
+    assert error.value.code == 2
+    assert (
+        "categorical profile supports dt/svm/knn classification workloads"
+        in capsys.readouterr().err
+    )
+
+
+def test_categorical_flaml_benchmark_normalizes_numpy_choices(monkeypatch, tmp_path):
+    import json
+    import numpy as np
+    from types import SimpleNamespace
+    from benchmarks import benchmark_evolution
+
+    def tune_run(objective, config, num_samples, **kwargs):
+        assert config["model__metric"] == ["euclidean", "manhattan"]
+        assert config["model__weights"] == ["uniform", "distance"]
+        results = []
+        for index in range(num_samples):
+            params = {
+                key: (
+                    np.str_(value[(index + (key == "model__metric")) % len(value)])
+                    if isinstance(value, list)
+                    else value
+                )
+                for key, value in config.items()
+            }
+            results.append((objective(params), params))
+        result, params = max(results, key=lambda entry: entry[0]["score"])
+        return SimpleNamespace(
+            best_result=result, best_config=params, trials=list(range(num_samples))
+        )
+
+    monkeypatch.setitem(
+        sys.modules,
+        "flaml",
+        SimpleNamespace(
+            CFO=lambda **kwargs: None,
+            tune=SimpleNamespace(
+                choice=list,
+                randint=lambda low, high: low,
+                loguniform=lambda low, high: low,
+                uniform=lambda low, high: low,
+                run=tune_run,
+            ),
+        ),
+    )
+    original_version = benchmark_evolution.importlib.metadata.version
+    monkeypatch.setattr(
+        benchmark_evolution.importlib.metadata,
+        "version",
+        lambda name: "test" if name == "flaml" else original_version(name),
+    )
+    output = tmp_path / "flaml.json"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "benchmark_evolution",
+            "--output",
+            str(output),
+            "--datasets",
+            "digits",
+            "--models",
+            "knn",
+            "--methods",
+            "flaml",
+            "--budget",
+            "8",
+            "--seeds",
+            "1",
+            "--categorical",
+        ],
+    )
+    benchmark_evolution.main()
+    result = json.loads(output.read_text(encoding="utf-8"))["results"][0]
+    assert result["evaluations"] == 8
+    assert 0 <= result["cv_score"] <= 1
+    assert 0 <= result["holdout_score"] <= 1

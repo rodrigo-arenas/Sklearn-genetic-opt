@@ -1,0 +1,152 @@
+Categorical coverage verification; base 8171f981dfa233df67f2d6577919c7bc8a5bc310
+
+--- categories-red.txt ---
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 101 items / 98 deselected / 3 selected
+
+sklearn_genetic\tests\test_genetic_search.py FF.                         [100%]
+
+================================== FAILURES ===================================
+__________ test_smart_initialization_explores_independent_categories __________
+sklearn_genetic\tests\test_genetic_search.py:1983: in test_smart_initialization_explores_independent_categories
+    assert search.best_score_ == 1
+E   AssertionError
+_______ test_smart_initialization_samples_beyond_category_prefix[False] _______
+sklearn_genetic\tests\test_genetic_search.py:2003: in test_smart_initialization_samples_beyond_category_prefix
+    assert search.best_score_ > 4
+E   AssertionError
+=========================== short test summary info ===========================
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_smart_initialization_explores_independent_categories
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_smart_initialization_samples_beyond_category_prefix[False]
+================= 2 failed, 1 passed, 98 deselected in 3.93s ==================
+
+--- categories-numpy-targeted-red.txt ---
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 20 items / 19 deselected / 1 selected
+
+sklearn_genetic\tests\test_benchmark_search_methods.py F                 [100%]
+
+================================== FAILURES ===================================
+__________ test_categorical_flaml_benchmark_normalizes_numpy_choices __________
+sklearn_genetic\tests\test_benchmark_search_methods.py:327: in test_categorical_flaml_benchmark_normalizes_numpy_choices
+    benchmark_evolution.main()
+benchmarks\benchmark_evolution.py:336: in main
+    run(args)
+benchmarks\benchmark_evolution.py:205: in run
+    analysis = tune.run(
+sklearn_genetic\tests\test_benchmark_search_methods.py:280: in tune_run
+    results.append((objective(params), params))
+                    ^^^^^^^^^^^^^^^^^
+benchmarks\benchmark_evolution.py:192: in objective
+    cross_val_score(
+.venv\Lib\site-packages\sklearn\utils\_param_validation.py:218: in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\sklearn\model_selection\_validation.py:654: in cross_val_score
+    cv_results = cross_validate(
+.venv\Lib\site-packages\sklearn\utils\_param_validation.py:218: in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\sklearn\model_selection\_validation.py:376: in cross_validate
+    results = parallel(
+.venv\Lib\site-packages\sklearn\utils\parallel.py:91: in __call__
+    return super().__call__(iterable_with_config_and_warning_filters)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\joblib\parallel.py:2012: in __call__
+    return output if self.return_generator else list(output)
+                                                ^^^^^^^^^^^^
+.venv\Lib\site-packages\joblib\parallel.py:1940: in _get_sequential_output
+    res = func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\sklearn\utils\parallel.py:184: in __call__
+    return self.function(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\sklearn\model_selection\_validation.py:882: in _fit_and_score
+    test_scores = _score(
+.venv\Lib\site-packages\sklearn\model_selection\_validation.py:949: in _score
+    scores = scorer(estimator, X_test, y_test, **score_params)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\sklearn\metrics\_scorer.py:182: in __call__
+    raise e
+.venv\Lib\site-packages\sklearn\metrics\_scorer.py:174: in __call__
+    score = scorer._score(
+.venv\Lib\site-packages\sklearn\metrics\_scorer.py:461: in _score
+    y_pred = method_caller(
+.venv\Lib\site-packages\sklearn\metrics\_scorer.py:97: in _cached_call
+    result, _ = _get_response_values(
+.venv\Lib\site-packages\sklearn\utils\_response.py:215: in _get_response_values
+    y_pred = prediction_method(X)
+             ^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\sklearn\pipeline.py:795: in predict
+    return self.steps[-1][1].predict(Xt, **params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\sklearn\neighbors\_classification.py:266: in predict
+    probabilities = self.predict_proba(X)
+                    ^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\sklearn\neighbors\_classification.py:352: in predict_proba
+    probabilities = ArgKminClassMode.compute(
+.venv\Lib\site-packages\sklearn\metrics\_pairwise_distances_reduction\_dispatcher.py:583: in compute
+    return ArgKminClassMode64.compute(
+E   TypeError: Argument 'metric' has incorrect type (expected str, got numpy.str_)
+=========================== short test summary info ===========================
+FAILED sklearn_genetic/tests/test_benchmark_search_methods.py::test_categorical_flaml_benchmark_normalizes_numpy_choices
+====================== 1 failed, 19 deselected in 1.10s =======================
+
+--- categories-repair-green.txt ---
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 102 items / 98 deselected / 4 selected
+
+sklearn_genetic\tests\test_genetic_search.py ....                        [100%]
+
+====================== 4 passed, 98 deselected in 2.74s =======================
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 20 items
+
+sklearn_genetic\tests\test_benchmark_search_methods.py ................. [ 85%]
+...                                                                      [100%]
+
+============================= 20 passed in 3.20s ==============================
+
+--- categories-benchmark-final-green.txt ---
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 20 items
+
+sklearn_genetic\tests\test_benchmark_search_methods.py ................. [ 85%]
+...                                                                      [100%]
+
+============================= 20 passed in 3.55s ==============================
+
+--- categories-final-green.txt ---
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 102 items / 98 deselected / 4 selected
+
+sklearn_genetic\tests\test_genetic_search.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m                        [100%][0m
+
+[32m====================== [32m[1m4 passed[0m, [33m98 deselected[0m[32m in 2.70s[0m[32m =======================[0m
+
+Final guard: clean against baseline. Black: 5 changed Python files unchanged. git diff --check: clean.
+Benchmark: 36 baseline and 108 current/comparator rows; unique complete factorial, evaluations <=40, CV and holdout bounded [0,1].

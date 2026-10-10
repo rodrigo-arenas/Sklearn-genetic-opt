@@ -28,6 +28,37 @@ from sklearn.model_selection import (
 from sklearn.tree import DecisionTreeClassifier
 from threadpoolctl import threadpool_limits
 
+CATEGORICAL_SPACES = {
+    "dt": [
+        ("criterion", "cat", "linear", ("gini", "entropy")),
+        ("splitter", "cat", "linear", ("best", "random")),
+        ("max_depth", "int", "linear", (1, 15)),
+        ("min_samples_leaf", "int", "linear", (1, 10)),
+        ("ccp_alpha", "real", "log", (1e-5, 0.1)),
+    ],
+    "svm": [
+        ("kernel", "cat", "linear", ("rbf", "poly", "sigmoid")),
+        ("shrinking", "cat", "linear", (True, False)),
+        ("C", "real", "log", (0.01, 100)),
+        ("gamma", "real", "log", (1e-4, 1)),
+    ],
+    "knn": [
+        ("weights", "cat", "linear", ("uniform", "distance")),
+        ("metric", "cat", "linear", ("euclidean", "manhattan")),
+        ("n_neighbors", "int", "linear", (1, 30)),
+        ("leaf_size", "int", "linear", (10, 50)),
+    ],
+}
+
+
+def native_params(params):
+    # Some tuners return NumPy scalar categories. Estimators with Cython
+    # parameter dispatch (e.g. KNN metrics) require the original Python types.
+    return {
+        name: value.item() if isinstance(value, np.generic) else value
+        for name, value in params.items()
+    }
+
 
 def run(args):
     if args.source_root:
@@ -44,12 +75,15 @@ def run(args):
         to_scipy_distributions,
         suggest_with_optuna,
     )
-    import optuna
+
+    if "optuna" in args.methods:
+        import optuna
+
+        optuna.logging.set_verbosity(optuna.logging.WARNING)
 
     if "flaml" in args.methods:
         from flaml import CFO, tune
 
-    optuna.logging.set_verbosity(optuna.logging.WARNING)
     rows = []
     population, generations = ga_budget(args.budget)
     for dataset_name in args.datasets:
@@ -70,7 +104,7 @@ def run(args):
                 cv = list(make_cv(task, seed, 3).split(Xtr, ytr))
                 for method in args.methods:
                     model, prefix = make_pipeline(task, seed)
-                    specs = task_space(task)
+                    specs = CATEGORICAL_SPACES[model_name] if args.categorical else task_space(task)
                     started = time.perf_counter()
                     if method in ("gasearch", "differential"):
                         de = method == "differential"
@@ -156,7 +190,7 @@ def run(args):
                                 "score": float(
                                     np.mean(
                                         cross_val_score(
-                                            clone(model).set_params(**config),
+                                            clone(model).set_params(**native_params(config)),
                                             Xtr,
                                             ytr,
                                             cv=cv,
@@ -179,7 +213,7 @@ def run(args):
                             verbose=0,
                         )
                         score = analysis.best_result["score"]
-                        best = model.set_params(**analysis.best_config).fit(Xtr, ytr)
+                        best = model.set_params(**native_params(analysis.best_config)).fit(Xtr, ytr)
                         evaluations, extra = len(analysis.trials), {}
                     seconds = time.perf_counter() - started
                     if evaluations > args.budget:
@@ -248,6 +282,7 @@ def run(args):
         budget=args.budget,
         seeds=args.seeds,
         seed_start=args.seed_start,
+        space_profile="categorical" if args.categorical else "bayesmark",
         feature_evaluation_budget=208 if args.features else None,
         python=platform.python_version(),
         platform=platform.platform(),
@@ -255,14 +290,15 @@ def run(args):
         versions={
             name: importlib.metadata.version(name)
             for name in (
-                ["numpy", "scipy", "scikit-learn", "deap", "optuna"]
+                ["numpy", "scipy", "scikit-learn", "deap"]
+                + (["optuna"] if "optuna" in args.methods else [])
                 + (["flaml"] if "flaml" in args.methods else [])
             )
         },
         results=rows,
     )
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(payload, indent=2))
+    args.output.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
 
 def main():
@@ -282,11 +318,20 @@ def main():
         default=["gasearch", "optuna", "randomized"],
     )
     parser.add_argument("--features", action="store_true")
+    parser.add_argument(
+        "--categorical",
+        action="store_true",
+        help="Use mixed spaces with multiple categorical dimensions (classification only)",
+    )
     args = parser.parse_args()
     if args.budget < 2 or args.seeds < 1:
         parser.error("budget must be >=2 and seeds >=1")
     if "differential" in args.methods and args.budget < 4:
         parser.error("differential evolution requires budget >=4")
+    if args.categorical and (
+        not set(args.models) <= CATEGORICAL_SPACES.keys() or "diabetes" in args.datasets
+    ):
+        parser.error("categorical profile supports dt/svm/knn classification workloads")
     with threadpool_limits(limits=1):
         run(args)
 
