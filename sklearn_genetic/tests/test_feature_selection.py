@@ -1,10 +1,11 @@
 import pytest
 from deap import tools
 import pandas as pd
-from sklearn.base import clone
+from sklearn.base import BaseEstimator, OutlierMixin, clone
 from sklearn.datasets import load_iris, load_diabetes
 from sklearn.exceptions import NotFittedError
 from sklearn.linear_model import SGDClassifier
+from sklearn.ensemble import IsolationForest
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.utils.validation import check_is_fitted
@@ -97,6 +98,65 @@ def test_get_feature_names_out_preserves_dataframe_feature_names():
     mismatched[0] = "different"
     with pytest.raises(ValueError, match="input_features is not equal to feature_names_in_"):
         selector.get_feature_names_out(mismatched)
+
+
+@pytest.mark.parametrize("as_dataframe", [False, True])
+def test_outlier_selection_accepts_array_like_without_target(as_dataframe):
+    frame = pd.DataFrame(
+        np.random.default_rng(0).normal(size=(30, 4)),
+        columns=["first", "second", "third", "fourth"],
+    )
+    selector = GAFeatureSelectionCV(
+        IsolationForest(n_estimators=5, random_state=0, n_jobs=1),
+        cv=2,
+        population_size=2,
+        generations=0,
+        verbose=False,
+        n_jobs=1,
+        random_state=0,
+    )
+
+    X_input = frame if as_dataframe else frame.to_numpy().tolist()
+    selector.fit(X_input)
+
+    assert 1 <= selector.get_support().sum() <= frame.shape[1]
+    assert selector.transform(X_input).shape == (len(frame), selector.get_support().sum())
+    if as_dataframe:
+        np.testing.assert_array_equal(selector.feature_names_in_, frame.columns.to_numpy())
+        np.testing.assert_array_equal(
+            selector.get_feature_names_out(), frame.columns.to_numpy()[selector.get_support()]
+        )
+
+
+def test_outlier_selection_preserves_detector_nan_policy():
+    class NaNTolerantOutlier(OutlierMixin, BaseEstimator):
+        def fit(self, X, y=None):
+            self.n_features_in_ = X.shape[1]
+            self.saw_nan_ = bool(np.isnan(X).any())
+            return self
+
+        def score_samples(self, X):
+            return np.nan_to_num(X, nan=0).mean(axis=1)
+
+    frame = pd.DataFrame(
+        [[np.nan, 1.0], [2.0, np.nan], [4.0, 5.0], [6.0, 7.0]],
+        columns=["first", "second"],
+    )
+    selector = GAFeatureSelectionCV(
+        NaNTolerantOutlier(),
+        cv=2,
+        population_size=2,
+        generations=0,
+        verbose=False,
+        n_jobs=1,
+        random_state=0,
+        error_score="raise",
+    )
+
+    selector.fit(frame)
+
+    assert selector.get_support().any()
+    assert selector.best_estimator_.saw_nan_
 
 
 def test_default_n_jobs_is_none():

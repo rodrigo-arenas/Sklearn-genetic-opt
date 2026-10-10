@@ -8,6 +8,7 @@ Baseline: `d6b2f3aab9cee50322934ec8c00c585e2fcbac2f`. This is an ongoing investi
 - **Short-deadline feature searches have a genuine quality repair.** Starting smart-initialized timed searches with the largest legal mask lowers mean classification error 5.45× on Dry Bean SVM at a one-second request, while total fitting time falls 3.40×. On Digits LightGBM, error falls 11.56× but total time rises 12.4%. The gain comes from evaluating a viable dense baseline before the deadline; it does not imply more compact selections or universal improvement.
 - **Evolution is useful for some feature tasks, but not every task.** Against equal-budget random masks, default feature search improves mean held-out accuracy on Breast Cancer, Digits and synthetic SVC classification. A separate tree/KNN/forest control also favors it on three classifier tasks, whereas Diabetes/Ridge regression loses 59.31 negative-MSE points on average.
 - **Do not prefer smaller masks merely because their CV scores are close.** A separate 20-fit transfer pilot selected the smallest mask within one standard error of the CV winner. It lost held-out score on all five Diabetes/Ridge splits and two Wine splits, so this rule was rejected rather than tuned into the default.
+- **A more local feature mutation is not a general default improvement either.** In 60 new searches across the same four model families, flipping exactly one bit at either a 0.1 or 0.8 individual mutation rate produced mixed classification results and worse mean Ridge regression holdout than the current method. It was not promoted.
 - **HPO quality remains an open gap.** Default `GASearchCV` improves its best CV score after initialization in 23 of 24 runs, yet a same-budget random SVC search matches or exceeds its mean held-out accuracy on all three datasets and completes the sequentially timed cohorts faster. CV progress alone is not evidence of improved generalization.
 - **Native AutoML parity is workload-specific.** On three Dry Bean splits, reduced-training SVM HPO averages .930649 accuracy in 12.096 seconds versus AutoGluon .928886 in 13.168 seconds and FLAML .926437 in 15.524 seconds under the recorded CPU configuration. On other tasks, AutoGluon or Optuna remains faster or more accurate. TPOT and H2O have not been measured here.
 
@@ -941,4 +942,23 @@ The proposed rule substantially worsens Ridge and does not transfer across class
 New-Item -ItemType Directory -Force -Path .agent-runs/performance-v2 | Out-Null
 .\.venv\Scripts\python.exe -c "import json,pathlib; a=json.loads(pathlib.Path('benchmarks/results/performance-v2/feature-one-se-pilot.json').read_text(encoding='utf-8')); pathlib.Path('.agent-runs/performance-v2/feature-one-se-pilot.py').write_text(a['reproduction_script'], encoding='utf-8')"
 .\.venv\Scripts\python.exe .agent-runs/performance-v2/feature-one-se-pilot.py
+```
+
+## Local feature mutation across model families
+
+The default feature operator flips each bit with probability 0.1 when an individual is selected for mutation, itself with probability 0.1. This makes mutation infrequent for short masks and potentially disruptive for wide masks. A pilot replaced the inner operation with exactly one randomly chosen bit flip, then applied the existing mask repair. It tested both the unchanged 0.1 individual mutation probability and a higher 0.8 probability. The library behavior was not changed. The 60 searches covered Wine/decision tree, Digits/KNN, Diabetes/Ridge and synthetic/random forest, with new outer-split seeds 1061–1065, the same three folds, at most 72 proposals per fit, a 25% untouched holdout and one CPU thread. Method order rotated across seeds.
+
+| Model/dataset | One-bit 0.1: mean holdout change (W/T/L) | One-bit 0.8: mean holdout change (W/T/L) |
+|---|---:|---:|
+| Wine decision tree | −.03111 accuracy (0/1/4) | +.00889 accuracy (1/3/1) |
+| Digits KNN | −.00044 accuracy (3/0/2) | +.00044 accuracy (3/1/1) |
+| Diabetes Ridge | −36.10 negative-MSE points (2/0/3) | −8.85 negative-MSE points (1/2/2) |
+| Synthetic random forest | −.01200 accuracy (1/0/4) | +.00267 accuracy (1/2/2) |
+
+The high-frequency local variant is directionally better for these classifiers but does not repair Ridge and has no material time advantage; the low-frequency variant loses on all four task means. No default mutation change is justified by these small overlapping split cohorts. The [60-fit artifact](results/performance-v2/feature-local-mutation-pilot.json) records per-split CV/holdout scores, masks, times, source hash and the script. To rerun from the repository root in PowerShell:
+
+```powershell
+New-Item -ItemType Directory -Force -Path .agent-runs/performance-v2 | Out-Null
+.\.venv\Scripts\python.exe -c "import json,pathlib; a=json.loads(pathlib.Path('benchmarks/results/performance-v2/feature-local-mutation-pilot.json').read_text(encoding='utf-8')); pathlib.Path('.agent-runs/performance-v2/feature-local-mutation-pilot.py').write_text(a['reproduction_script'], encoding='utf-8')"
+.\.venv\Scripts\python.exe .agent-runs/performance-v2/feature-local-mutation-pilot.py
 ```

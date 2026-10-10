@@ -46,7 +46,7 @@ def _is_outlier_detector(estimator):
 
 
 from sklearn.feature_selection import SelectorMixin
-from sklearn.utils import check_X_y, check_random_state
+from sklearn.utils import check_array, check_X_y, check_random_state
 from sklearn.utils.metaestimators import available_if
 from sklearn.feature_selection._from_model import _estimator_has
 from sklearn.metrics import check_scoring
@@ -2244,10 +2244,16 @@ class GAFeatureSelectionCV(
 
         # Handle outlier detection case if y is none
         if _is_outlier_detector(self.estimator) and y is None:
-            self.X_ = X
-            self.y_ = np.zeros(X.shape[0])
+            # Let the wrapped detector decide whether non-finite values are valid.
+            finite_arg = (
+                "ensure_all_finite"
+                if "ensure_all_finite" in inspect.signature(check_array).parameters
+                else "force_all_finite"
+            )
+            self.X_ = check_array(X, accept_sparse=True, **{finite_arg: False})
+            self.y_ = np.zeros(self.X_.shape[0])
 
-        self.n_features = X.shape[1]
+        self.n_features = self.X_.shape[1]
         self._n_iterations = self.generations + 1
         self.refit_metric = "score"
         self.multimetric_ = False
