@@ -6,7 +6,8 @@ package:
   version: {{ version }}
 
 source:
-  path: ..
+  url: https://pypi.io/packages/source/s/sklearn-genetic-opt/sklearn_genetic_opt-0.14.0.tar.gz
+  sha256: cd0ac5648e0b0b0ea883752d8fbd17469459762e48d0db6fd154d879b013ba23
 
 build:
   noarch: python
