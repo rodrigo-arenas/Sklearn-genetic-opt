@@ -104,7 +104,9 @@ def random_forest_regressor_space(profile="balanced", prefix=""):
             "min_samples_split": Integer(2, max(8, leaf_high * 2)),
             "min_samples_leaf": Integer(leaf_low, leaf_high),
             "max_features": Categorical(["sqrt", "log2", None]),
-            "criterion": Categorical(["squared_error", "absolute_error", "friedman_mse"]),
+            "criterion": Categorical(
+                ["squared_error"] if profile == "fast" else ["squared_error", "absolute_error"]
+            ),
         },
         prefix,
     )
@@ -151,7 +153,9 @@ def extra_trees_regressor_space(profile="balanced", prefix=""):
             "min_samples_split": Integer(2, max(8, leaf_high * 2)),
             "min_samples_leaf": Integer(leaf_low, leaf_high),
             "max_features": Categorical(["sqrt", "log2", None]),
-            "criterion": Categorical(["squared_error", "absolute_error", "friedman_mse"]),
+            "criterion": Categorical(
+                ["squared_error"] if profile == "fast" else ["squared_error", "absolute_error"]
+            ),
         },
         prefix,
     )

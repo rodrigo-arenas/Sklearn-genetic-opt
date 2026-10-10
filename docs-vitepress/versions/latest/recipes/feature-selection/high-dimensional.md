@@ -58,10 +58,9 @@ selector.fit(X_train, y_train)
 selected = selector.support_
 print(f"Features selected: {selected.sum()} / {len(selected)}")
 print(f"Selected indices:  {np.where(selected)[0].tolist()}")
-print(f"Best CV ROC AUC:   {selector.best_score_:.4f}")
+print(f"Best search CV ROC AUC: {np.nanmax(selector.cv_results_['mean_test_score']):.4f}")
 
-# Apply selection to test set
-X_test_selected = X_test[:, selected]
+# The selector applies its mask to the full held-out matrix.
 test_score = selector.score(X_test, y_test)
 print(f"Test ROC AUC:      {test_score:.4f}")
 ```

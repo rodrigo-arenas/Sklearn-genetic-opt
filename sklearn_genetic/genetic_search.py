@@ -1,4 +1,5 @@
 import inspect
+from numbers import Integral
 import random
 import time
 import warnings
@@ -45,7 +46,7 @@ def _is_outlier_detector(estimator):
 
 
 from sklearn.feature_selection import SelectorMixin
-from sklearn.utils import check_X_y, check_random_state
+from sklearn.utils import check_array, check_X_y, check_random_state
 from sklearn.utils.metaestimators import available_if
 from sklearn.feature_selection._from_model import _estimator_has
 from sklearn.metrics import check_scoring
@@ -85,6 +86,7 @@ from .optimizer_control import (
 
 import os
 from .callbacks.model_checkpoint import ModelCheckpoint
+from .callbacks.early_stoppers import TimerStopping
 from .config import EvolutionConfig, OptimizationConfig, PopulationConfig, RuntimeConfig
 
 
@@ -154,7 +156,170 @@ def _check_fit_params_supported(estimator, fit_params):
         )
 
 
-class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
+class _FinalSelectionMixin:
+    """Shared finalist ranking, validation and selection for both search types."""
+
+    def _validate_final_selection_top_k(self):
+        if isinstance(self.final_selection_top_k, (bool, np.bool_)) or not isinstance(
+            self.final_selection_top_k, Integral
+        ):
+            raise ValueError("final_selection_top_k must be a positive integer")
+        if self.final_selection_top_k < 1:
+            raise ValueError("final_selection_top_k must be greater than or equal to 1")
+
+    def _candidate_params_from_index(self, index):
+        if hasattr(self, "space"):
+            return self.cv_results_["params"][index]
+        return {"features": tuple(bool(value) for value in self.cv_results_["features"][index])}
+
+    def _top_candidate_indices(self):
+        ranks = np.asarray(self.cv_results_[f"rank_test_{self.refit_metric}"])
+        indices = []
+        seen = set()
+        order = (
+            np.lexsort((self.cv_results_["n_features"], ranks))
+            if "n_features" in self.cv_results_
+            else np.argsort(ranks, kind="stable")
+        )
+        for index in order:
+            key = tuple(sorted(self._candidate_params_from_index(index).items()))
+            if key not in seen:
+                seen.add(key)
+                indices.append(index)
+                if len(indices) == self.final_selection_top_k:
+                    break
+        if (
+            "n_features" in self.cv_results_
+            and len(indices) > 1
+            and ranks[indices[-2]] == ranks[indices[-1]]
+        ):
+            # A flat proxy must not reserve every tied slot for sparse masks.
+            # Keep the smallest finalist and include a denser mask at the same
+            # cutoff rank, without displacing a better score or adding CV calls.
+            counts = self.cv_results_["n_features"]
+            cutoff = indices[-1]
+            for index in reversed(order):
+                if ranks[index] != ranks[cutoff] or counts[index] <= counts[cutoff]:
+                    continue
+                key = tuple(sorted(self._candidate_params_from_index(index).items()))
+                if key not in seen:
+                    indices[-1] = index
+                    break
+        return indices
+
+    def _final_selection_splits(self):
+        if self.final_selection_cv is None:
+            return self._cv_splits
+
+        cv = check_cv(self.final_selection_cv, self.y_, classifier=_is_classifier(self.estimator))
+        groups = getattr(self, "groups_", None)
+        if groups is None:
+            return list(cv.split(self.X_, self.y_))
+        return list(cv.split(self.X_, self.y_, groups=groups))
+
+    def _score_final_candidate(self, params, cv_splits):
+        local_estimator = clone(self.estimator)
+        if hasattr(self, "space"):
+            local_estimator.set_params(**clone(params, safe=False))
+            X = self.X_
+        else:
+            X = self.X_[:, np.asarray(params["features"], dtype=bool)]
+
+        cv_results = cross_validate(
+            local_estimator,
+            X,
+            self.y_,
+            cv=cv_splits,
+            scoring=self.scorer_,
+            n_jobs=self.n_jobs,
+            pre_dispatch=self.pre_dispatch,
+            error_score=self.error_score,
+            return_train_score=False,
+            params=getattr(self, "_fit_params", None) or None,
+        )
+        cv_scores = cv_results[f"test_{self.refit_metric}"]
+        return float(np.mean(cv_scores)), cv_scores
+
+    def _select_final_candidate(self):
+        indices = self._top_candidate_indices() if self.final_selection else None
+        original_best_index = int(
+            indices[0]
+            if indices is not None
+            else np.asarray(self.cv_results_[f"rank_test_{self.refit_metric}"]).argmin()
+        )
+        original_best_score = float(
+            self.cv_results_[f"mean_test_{self.refit_metric}"][original_best_index]
+        )
+        original_best_params = self._candidate_params_from_index(original_best_index)
+
+        self.final_selection_results_ = {
+            "enabled": bool(self.final_selection),
+            "top_k": 1,
+            "cv": self.final_selection_cv,
+            "original_best_index": original_best_index,
+            "original_best_score": original_best_score,
+            "original_best_params": original_best_params,
+            "selected_index": original_best_index,
+            "selected_score": original_best_score,
+            "selected_params": original_best_params,
+            "changed": False,
+            "candidates": [],
+            "time_seconds": 0.0,
+        }
+
+        if not self.final_selection:
+            return original_best_index, original_best_score, original_best_params
+
+        started_at = time.time()
+        cv_splits = self._final_selection_splits()
+        candidate_results = []
+
+        for index in indices:
+            params = self._candidate_params_from_index(index)
+            score, cv_scores = self._score_final_candidate(params, cv_splits)
+            candidate_results.append(
+                {
+                    "index": int(index),
+                    "original_score": float(
+                        self.cv_results_[f"mean_test_{self.refit_metric}"][index]
+                    ),
+                    "score": score,
+                    "cv_scores": cv_scores.tolist(),
+                    "params": params,
+                }
+            )
+
+        valid_results = [item for item in candidate_results if not np.isnan(item["score"])]
+        if not valid_results:
+            raise ValueError("All final-selection candidates produced NaN scores")
+        direction = -1 if self.criteria == "min" else 1
+        selected = max(
+            valid_results,
+            key=lambda item: (
+                direction * item["score"],
+                -sum(item["params"]["features"]) if not hasattr(self, "space") else 0,
+            ),
+        )
+        selected_index = selected["index"]
+        selected_score = selected["score"]
+        selected_params = selected["params"]
+
+        self.final_selection_results_.update(
+            {
+                "top_k": self.final_selection_top_k,
+                "selected_index": selected_index,
+                "selected_score": selected_score,
+                "selected_params": selected_params,
+                "changed": selected_index != original_best_index,
+                "candidates": candidate_results,
+                "time_seconds": time.time() - started_at,
+            }
+        )
+
+        return selected_index, selected_score, selected_params
+
+
+class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
     """
     Evolutionary optimization over hyperparameters.
 
@@ -169,7 +334,8 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
     ----------
     estimator : estimator object, default=None
         estimator object implementing 'fit'
-        The object to use to fit the data.
+        Template to clone for candidate evaluation and final refit. The supplied
+        object is not fitted or modified; the fitted winner is ``best_estimator_``.
 
     cv : int, cross-validation generator or an iterable, default=None
         Determines the cross-validation splitting strategy.
@@ -217,8 +383,9 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
     population_initializer : {'smart', 'random'}, default='smart'
         Strategy used to generate the initial population. ``'smart'`` combines
         valid warm-start configurations, valid estimator defaults, Latin
-        hypercube sampling for numeric dimensions, stratified categorical
-        values, and duplicate avoidance. ``'random'`` uses the previous random
+        hypercube sampling for numeric dimensions, independently shuffled
+        categorical strata across the full domain, and duplicate avoidance.
+        ``'random'`` uses the previous random
         sampling behavior.
 
     random_state : int, RandomState instance or None, default=None
@@ -230,7 +397,9 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         ``None`` keeps the default non-deterministic behaviour.
 
     generations : int, default=40
-        Number of generations or iterations to run the evolutionary algorithm.
+        Maximum number of generations. With caching enabled, evolution can
+        stop earlier once every configuration in a finite space has been
+        observed by the current run.
 
     crossover_probability : float or a Scheduler, default=0.8
         Probability of crossover operation between two individuals.
@@ -281,7 +450,9 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         Number of hall-of-fame individuals used as local-search seeds.
 
     local_search_steps : int, default=1
-        Number of neighbor candidates generated per local-search seed.
+        Number of sequential refinement steps. Each step evaluates one
+        neighbor per current elite and uses accepted improvements in the next
+        step. Independent elites can be evaluated in parallel within a step.
 
     local_search_radius : float, default=0.1
         Fraction of the search range used to sample local numeric neighbors.
@@ -347,7 +518,8 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
 
     final_selection_cv : int, cross-validation splitter or iterable, default=None
         Cross-validation strategy used for final selection. If ``None``, the
-        same CV splits used during the GA are reused.
+        same CV splits used during the GA are reused. An explicit non-None
+        value takes precedence over ``optimization_config.final_selection_cv``.
 
     verbose : bool, default=True
         If ``True``, shows the metrics on the optimization routine.
@@ -359,9 +531,18 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
     criteria : {'max', 'min'} , default='max'
         ``max`` if a higher scoring metric is better, ``min`` otherwise.
 
-    algorithm : {'eaMuPlusLambda', 'eaMuCommaLambda', 'eaSimple'}, default='eaMuPlusLambda'
-        Evolutionary algorithm to use.
-        See more details in the deap algorithms documentation.
+    algorithm : str, default='eaMuPlusLambda'
+        One of ``eaMuPlusLambda``, ``eaMuCommaLambda``, ``eaSimple``, or
+        ``eaDifferentialEvolution``. Differential evolution uses deferred
+        rand/1/bin trials with scale 0.8 and requires population_size >= 4.
+        Each generation proposes one trial per parent and retains the better
+        weighted fitness (the parent on ties). Numeric differences respect
+        logarithmic spaces; categorical values come from donors, and feature
+        masks use binary decoding followed by feature-count repair.
+        crossover_probability controls trial coordinates; mutation_probability
+        adds the existing mutation operator. Tournament selection, elitism,
+        adaptive_selection and fitness_sharing apply only to the other three
+        algorithms. Local refinement and diversity recovery remain available.
 
     refit : bool, str, or callable, default=True
         Refit an estimator using the best found parameters on the whole
@@ -414,6 +595,10 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
 
     Attributes
     ----------
+    search_space_exhausted_ : bool
+        Whether evolution stopped after observing every configuration in a
+        finite search space. Requires use_cache=True; restored cache entries
+        alone do not count as coverage by the current run.
 
     logbook : :class:`DEAP.tools.Logbook`
         Contains the logs of every set of hyperparameters fitted with its average scoring metric.
@@ -595,9 +780,10 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         final_selection_top_k = _resolve_config_value(
             optimization_config, "final_selection_top_k", final_selection_top_k
         )
-        final_selection_cv = _resolve_config_value(
-            optimization_config, "final_selection_cv", final_selection_cv
-        )
+        if final_selection_cv is None:
+            final_selection_cv = _resolve_config_value(
+                optimization_config, "final_selection_cv", final_selection_cv
+            )
 
         self.evolution_config = evolution_config
         self.population_config = population_config
@@ -656,8 +842,7 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         _validate_parallel_backend(self.parallel_backend)
         _validate_error_score(self.error_score)
         _validate_population_initializer(self.population_initializer)
-        if self.final_selection_top_k < 1:
-            raise ValueError("final_selection_top_k must be greater than or equal to 1")
+        self._validate_final_selection_top_k()
         _validate_optimizer_control(
             self.local_search_top_k,
             self.local_search_steps,
@@ -709,6 +894,7 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
             verbose=verbose,
             pre_dispatch=pre_dispatch,
             error_score=error_score,
+            return_train_score=return_train_score,
         )
 
     def _register(self):
@@ -758,7 +944,7 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         self.toolbox.register("evaluate_population", self.evaluate_population)
 
         self._pop = self._initialize_population()
-        self._hof = tools.HallOfFame(self.keep_top_k)
+        self._hof = tools.HallOfFame(self.keep_top_k, similar=self._same_individual)
 
         self._stats = tools.Statistics(lambda ind: ind.fitness.values)
         self._stats.register("fitness", np.mean, axis=0)
@@ -778,10 +964,6 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         return population
 
     def select(self, population, k):
-        if not self.elitism:
-            self._selection_pressure_ = None
-            return tools.selRoulette(population, k)
-
         tournament_size = adaptive_tournament_size(
             self,
             getattr(self, "_last_generation_record", None),
@@ -806,7 +988,8 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
             return float(np.clip(repaired, dimension.lower, dimension.upper))
 
         if isinstance(dimension, Categorical):
-            return value if value in dimension.choices else dimension.sample()
+            index = dimension._choice_index(value)
+            return dimension.choices[index] if index is not None else dimension.sample()
 
         return value
 
@@ -850,10 +1033,19 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
 
         return [individual]
 
+    def _same_individual(self, left, right):
+        return self._individual_key(left) == self._individual_key(right)
+
     def _individual_key(self, individual):
-        current_generation_params = {
-            key: individual[n] for n, key in enumerate(self.space.parameters)
-        }
+        current_generation_params = {}
+        for index, name in enumerate(self.space.parameters):
+            value = individual[index]
+            dimension = self.space[name]
+            if isinstance(dimension, Categorical):
+                choice_index = dimension._choice_index(value)
+                if choice_index is not None:
+                    value = dimension.choices[choice_index]
+            current_generation_params[name] = value
         return tuple(sorted(current_generation_params.items()))
 
     def evaluate_population(self, individuals):
@@ -869,7 +1061,7 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         }
 
         local_estimator = clone(self.estimator)
-        local_estimator.set_params(**current_generation_params)
+        local_estimator.set_params(**clone(current_generation_params, safe=False))
 
         # standard cross_validate for all estimator types is used
         cv_results = cross_validate(
@@ -971,119 +1163,6 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
 
         return fitness_result
 
-    def _candidate_params_from_index(self, index):
-        return self.cv_results_["params"][index]
-
-    def _top_candidate_indices(self):
-        ranks = np.asarray(self.cv_results_[f"rank_test_{self.refit_metric}"])
-        return list(np.argsort(ranks)[: self.final_selection_top_k])
-
-    def _final_selection_splits(self):
-        if self.final_selection_cv is None:
-            return self._cv_splits
-
-        cv = check_cv(self.final_selection_cv, self.y_, classifier=_is_classifier(self.estimator))
-        groups = getattr(self, "groups_", None)
-        if groups is None:
-            return list(cv.split(self.X_, self.y_))
-        return list(cv.split(self.X_, self.y_, groups=groups))
-
-    def _score_final_candidate(self, params, cv_splits):
-        local_estimator = clone(self.estimator)
-        local_estimator.set_params(**params)
-
-        cv_results = cross_validate(
-            local_estimator,
-            self.X_,
-            self.y_,
-            cv=cv_splits,
-            scoring=self.scorer_,
-            n_jobs=self.n_jobs,
-            pre_dispatch=self.pre_dispatch,
-            error_score=self.error_score,
-            return_train_score=False,
-            params=getattr(self, "_fit_params", None) or None,
-        )
-        cv_scores = cv_results[f"test_{self.refit_metric}"]
-        return float(np.mean(cv_scores)), cv_scores
-
-    def _select_final_candidate(self):
-        original_best_index = int(self.cv_results_[f"rank_test_{self.refit_metric}"].argmin())
-        original_best_score = float(
-            self.cv_results_[f"mean_test_{self.refit_metric}"][original_best_index]
-        )
-        original_best_params = self._candidate_params_from_index(original_best_index)
-
-        self.final_selection_results_ = {
-            "enabled": bool(self.final_selection),
-            "top_k": 1,
-            "cv": self.final_selection_cv,
-            "original_best_index": original_best_index,
-            "original_best_score": original_best_score,
-            "original_best_params": original_best_params,
-            "selected_index": original_best_index,
-            "selected_score": original_best_score,
-            "selected_params": original_best_params,
-            "changed": False,
-            "candidates": [],
-            "time_seconds": 0.0,
-        }
-
-        if not self.final_selection:
-            return original_best_index, original_best_score, original_best_params
-
-        started_at = time.time()
-        cv_splits = self._final_selection_splits()
-        candidate_results = []
-        seen_params = set()
-
-        for index in self._top_candidate_indices():
-            params = self._candidate_params_from_index(index)
-            params_key = tuple(sorted(params.items()))
-            if params_key in seen_params:
-                continue
-            seen_params.add(params_key)
-
-            score, cv_scores = self._score_final_candidate(params, cv_splits)
-            candidate_results.append(
-                {
-                    "index": int(index),
-                    "original_score": float(
-                        self.cv_results_[f"mean_test_{self.refit_metric}"][index]
-                    ),
-                    "score": score,
-                    "cv_scores": cv_scores.tolist(),
-                    "params": params,
-                }
-            )
-
-        if candidate_results:
-            if self.criteria == "min":
-                selected = min(candidate_results, key=lambda item: item["score"])
-            else:
-                selected = max(candidate_results, key=lambda item: item["score"])
-            selected_index = selected["index"]
-            selected_score = selected["score"]
-            selected_params = selected["params"]
-        else:  # pragma: no cover
-            selected_index = original_best_index
-            selected_score = original_best_score
-            selected_params = original_best_params
-
-        self.final_selection_results_.update(
-            {
-                "top_k": self.final_selection_top_k,
-                "selected_index": selected_index,
-                "selected_score": selected_score,
-                "selected_params": selected_params,
-                "changed": selected_index != original_best_index,
-                "candidates": candidate_results,
-                "time_seconds": time.time() - started_at,
-            }
-        )
-
-        return selected_index, selected_score, selected_params
-
     def fit(self, X, y=None, callbacks=None, groups=None, **fit_params):
         """
         Main method of GASearchCV, starts the optimization
@@ -1118,6 +1197,9 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         self.y_ = y
         self.groups_ = groups
         self._fit_params = fit_params
+        self._warm_start_configs = _resolve_config_value(
+            self.population_config, "warm_start_configs", self.warm_start_configs
+        )
         _check_fit_params_supported(self.estimator, fit_params)
         self._n_iterations = self.generations + 1
         self.refit_metric = "score"
@@ -1126,7 +1208,7 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         # added a handle outlier detection jussst in case where y might be None
         if _is_outlier_detector(self.estimator) and y is None:
             # and for unsupervised outlier detection, it will create dummy y for cv compatibility :)
-            self.y_ = np.zeros(X.shape[0])
+            self.y_ = np.zeros(X.shape[0] if hasattr(X, "shape") else len(X))
 
         # Make sure the callbacks are valid
         self.callbacks = check_callback(callbacks)
@@ -1171,6 +1253,11 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
                         checkpoint_loaded = True
                     break
 
+        # ``set_params(param_grid=...)`` updates the public parameter but not
+        # the Space built at construction. Rebuild after any checkpoint load,
+        # which may restore its own param_grid for a resumed search.
+        self.space = Space(self.param_grid)
+
         # Seed after the checkpoint (if any) is loaded: ``self.__dict__.update()``
         # above may have just replaced ``self.random_state`` with the value from
         # a resumed run's checkpoint, and seeding before that point would use the
@@ -1184,6 +1271,7 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
             self.crossover_adapter.load_state_dict(restored_adapter_state["crossover"])
             self.mutation_adapter.load_state_dict(restored_adapter_state["mutation"])
         elif not checkpoint_loaded:
+            self.fitness_cache = {}
             _reset_adapters(self)
 
         # Preserve cumulative counters across a resume instead of zeroing them,
@@ -1258,6 +1346,7 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
             space=self.space,
             return_train_score=self.return_train_score,
             metrics=self.metrics_list,
+            greater_is_better=self.criteria == "max",
         )
 
         self.history = {
@@ -1290,10 +1379,12 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         if self.refit:
             self.best_index_, self.best_score_, self.best_params_ = self._select_final_candidate()
 
-            self.estimator.set_params(**self.best_params_)
+            self.best_estimator_ = clone(self.estimator).set_params(
+                **clone(self.best_params_, safe=False)
+            )
 
             refit_start_time = time.time()
-            self.estimator.fit(
+            self.best_estimator_.fit(
                 self.X_,
                 self.y_,
                 **getattr(self, "_fit_params", {}),
@@ -1301,19 +1392,20 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
             refit_end_time = time.time()
             self.refit_time_ = refit_end_time - refit_start_time
 
-            self.best_estimator_ = self.estimator
             self.estimator_ = self.best_estimator_
 
-            # hof keeps the best params according to the fitness value
-            # To be consistent with self.best_estimator_, if more than 1 model gets the
-            # same score, it could lead to differences between hof and self.best_estimator_
-            self._hof.remove(0)
-            self._hof.items.insert(0, list(self.best_params_.values()))
-            self._hof.keys.insert(0, self.best_score_)
-
+        hof_candidates = list(self._hof)
+        if self.refit:
+            # Put the selected winner first without duplicating an existing elite.
+            best = [self.best_params_[name] for name in self.space.parameters]
+            hof_candidates = [best] + [
+                candidate
+                for candidate in hof_candidates
+                if not self._same_individual(best, candidate)
+            ]
         self.hof = {
-            k: {key: self._hof[k][n] for n, key in enumerate(self.space.parameters)}
-            for k in range(len(self._hof))
+            k: dict(zip(self.space.parameters, candidate))
+            for k, candidate in enumerate(hof_candidates[: self.keep_top_k])
         }
 
         del creator.FitnessMax
@@ -1322,7 +1414,9 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         return self
 
 
-class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMixin, BaseEstimator):
+class GAFeatureSelectionCV(
+    _FinalSelectionMixin, GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMixin, BaseEstimator
+):
     """
     Evolutionary optimization for feature selection.
 
@@ -1337,7 +1431,8 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
     ----------
     estimator : estimator object, default=None
         estimator object implementing 'fit'
-        The object to use to fit the data.
+        Template to clone for candidate evaluation and final refit. The supplied
+        object is not fitted or modified; the fitted winner is ``best_estimator_``.
 
     cv : int, cross-validation generator or an iterable, default=None
         Determines the cross-validation splitting strategy.
@@ -1386,7 +1481,9 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         Number of hall-of-fame feature masks used as local-search seeds.
 
     local_search_steps : int, default=1
-        Number of neighbor feature masks generated per local-search seed.
+        Number of sequential refinement steps. Each step evaluates one
+        neighbor per current elite mask and uses accepted improvements in the
+        next step. Independent masks can be evaluated in parallel within a step.
 
     local_search_radius : float, default=0.1
         Fraction of features to flip when sampling a local neighbor.
@@ -1441,12 +1538,14 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         with distance inside ``sharing_radius``.
 
     generations : int, default=40
-        Number of generations or iterations to run the evolutionary algorithm.
+        Maximum number of generations. With caching enabled, evolution can
+        stop earlier once every configuration in a finite space has been
+        observed by the current run.
 
-    crossover_probability : float or a Scheduler, default=0.2
+    crossover_probability : float or a Scheduler, default=0.8
         Probability of crossover operation between two individuals.
 
-    mutation_probability : float or a Scheduler, default=0.8
+    mutation_probability : float or a Scheduler, default=0.1
         Probability of child mutation.
 
     tournament_size : int, default=3
@@ -1455,8 +1554,29 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
     elitism : bool, default=True
         If True takes the *tournament_size* best solution to the next generation.
 
+    final_selection : bool, default=False
+        With ``refit=True``, re-evaluate the best distinct feature masks after
+        evolution and choose the refitted winner using these final scores.
+        Equal final scores prefer fewer features. Search scores in
+        ``cv_results_`` and ``history`` remain unchanged; final scores are
+        available in ``final_selection_results_`` and ``best_score_``.
+
+    final_selection_top_k : int, default=3
+        Positive number of distinct masks to re-evaluate. This bounds extra
+        cross-validation calls independently of ``keep_top_k``. If multiple
+        finalist slots share the cutoff search score, include both a sparse
+        and a dense mask from that tie. Better search scores retain priority;
+        equal final scores still prefer fewer features.
+
+    final_selection_cv : int, cross-validation splitter or iterable, default=None
+        Validation used to choose among finalists. None reuses the search
+        folds. Supply the original full-training folds when searching with
+        :func:`subsample_cv`. An explicit non-None value takes precedence
+        over ``optimization_config.final_selection_cv``.
+
     max_features : int, default=None
-        The upper bound number of features to be selected.
+        The upper bound number of features to be selected. Must be None or an
+        integer between 1 and the number of input features (validated at fit).
 
     scoring : str, callable, list, tuple or dict, default=None
         Strategy to evaluate the performance of the cross-validated model on
@@ -1490,9 +1610,18 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
     criteria : {'max', 'min'} , default='max'
         ``max`` if a higher scoring metric is better, ``min`` otherwise.
 
-    algorithm : {'eaMuPlusLambda', 'eaMuCommaLambda', 'eaSimple'}, default='eaMuPlusLambda'
-        Evolutionary algorithm to use.
-        See more details in the deap algorithms documentation.
+    algorithm : str, default='eaMuPlusLambda'
+        One of ``eaMuPlusLambda``, ``eaMuCommaLambda``, ``eaSimple``, or
+        ``eaDifferentialEvolution``. Differential evolution uses deferred
+        rand/1/bin trials with scale 0.8 and requires population_size >= 4.
+        Each generation proposes one trial per parent and retains the better
+        weighted fitness (the parent on ties). Numeric differences respect
+        logarithmic spaces; categorical values come from donors, and feature
+        masks use binary decoding followed by feature-count repair.
+        crossover_probability controls trial coordinates; mutation_probability
+        adds the existing mutation operator. Tournament selection, elitism,
+        adaptive_selection and fitness_sharing apply only to the other three
+        algorithms. Local refinement and diversity recovery remain available.
 
     refit : bool, str, or callable, default=True
         Refit an estimator using the best found parameters on the whole
@@ -1545,6 +1674,10 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
 
     Attributes
     ----------
+    search_space_exhausted_ : bool
+        Whether evolution stopped after observing every configuration in a
+        finite search space. Requires use_cache=True; restored cache entries
+        alone do not count as coverage by the current run.
 
     logbook : :class:`DEAP.tools.Logbook`
         Contains the logs of every set of hyperparameters fitted with its average scoring metric.
@@ -1566,6 +1699,14 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         1 means the feature was selected, 0 means the features was discarded.
     support_ : list
         The mask of selected features.
+    best_score_ : float
+        Winning final-validation score when ``final_selection=True`` and
+        ``refit=True``. This can differ from the search scores in ``cv_results_``.
+    best_index_ : int
+        Search-result row corresponding to that final-validation winner.
+    final_selection_results_ : dict
+        Candidate masks, original scores, final fold scores, selected winner
+        and elapsed validation time. Present when final selection runs.
     scorer_ : function or a dict
         Scorer function used on the held out data to choose the best
         parameters for the model.
@@ -1629,6 +1770,9 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         fitness_sharing=False,
         sharing_radius=0.2,
         sharing_alpha=1.0,
+        final_selection=False,
+        final_selection_top_k=3,
+        final_selection_cv=None,
     ):
         population_size = _resolve_config_value(
             evolution_config, "population_size", population_size
@@ -1710,6 +1854,16 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
             optimization_config, "sharing_radius", sharing_radius
         )
         sharing_alpha = _resolve_config_value(optimization_config, "sharing_alpha", sharing_alpha)
+        final_selection = _resolve_config_value(
+            optimization_config, "final_selection", final_selection
+        )
+        final_selection_top_k = _resolve_config_value(
+            optimization_config, "final_selection_top_k", final_selection_top_k
+        )
+        if final_selection_cv is None:
+            final_selection_cv = _resolve_config_value(
+                optimization_config, "final_selection_cv", final_selection_cv
+            )
 
         self.evolution_config = evolution_config
         self.population_config = population_config
@@ -1759,6 +1913,10 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         self.fitness_sharing = fitness_sharing
         self.sharing_radius = sharing_radius
         self.sharing_alpha = sharing_alpha
+        self.final_selection = final_selection
+        self.final_selection_top_k = final_selection_top_k
+        self.final_selection_cv = final_selection_cv
+        self._validate_final_selection_top_k()
 
         _validate_parallel_backend(self.parallel_backend)
         _validate_error_score(self.error_score)
@@ -1852,10 +2010,6 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         return population
 
     def select(self, population, k):
-        if not self.elitism:
-            self._selection_pressure_ = None
-            return tools.selRoulette(population, k)
-
         tournament_size = adaptive_tournament_size(
             self,
             getattr(self, "_last_generation_record", None),
@@ -2080,6 +2234,9 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
             aligned to samples and are sliced per CV fold by scikit-learn.
         """
 
+        for attribute in ("best_index_", "best_score_", "final_selection_results_"):
+            self.__dict__.pop(attribute, None)
+
         _check_feature_names(self, X, reset=True)
         self.X_, self.y_ = check_X_y(X, y, accept_sparse=True) if y is not None else (X, None)
         self.groups_ = groups
@@ -2088,18 +2245,19 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
 
         # Handle outlier detection case if y is none
         if _is_outlier_detector(self.estimator) and y is None:
-            self.X_ = X
-            self.y_ = np.zeros(X.shape[0])
+            # Let the wrapped detector decide whether non-finite values are valid.
+            finite_arg = (
+                "ensure_all_finite"
+                if "ensure_all_finite" in inspect.signature(check_array).parameters
+                else "force_all_finite"
+            )
+            self.X_ = check_array(X, accept_sparse=True, **{finite_arg: False})
+            self.y_ = np.zeros(self.X_.shape[0])
 
-        self.n_features = X.shape[1]
+        self.n_features = self.X_.shape[1]
         self._n_iterations = self.generations + 1
         self.refit_metric = "score"
         self.multimetric_ = False
-
-        self.features_proportion = None
-        max_features = getattr(self, "max_features", None)
-        if max_features:
-            self.features_proportion = max_features / self.n_features
 
         # Make sure the callbacks are valid
         self.callbacks = check_callback(callbacks)
@@ -2144,6 +2302,17 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
                         checkpoint_loaded = True
                     break
 
+        self.features_proportion = None
+        max_features = getattr(self, "max_features", None)
+        if max_features is not None:
+            if (
+                isinstance(max_features, (bool, np.bool_))
+                or not isinstance(max_features, Integral)
+                or not 1 <= max_features <= self.n_features
+            ):
+                raise ValueError("max_features must be an integer between 1 and n_features or None")
+            self.features_proportion = max_features / self.n_features
+
         # Seed after the checkpoint (if any) is loaded: ``self.__dict__.update()``
         # above may have just replaced ``self.random_state`` with the value from
         # a resumed run's checkpoint, and seeding before that point would use the
@@ -2157,6 +2326,7 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
             self.crossover_adapter.load_state_dict(restored_adapter_state["crossover"])
             self.mutation_adapter.load_state_dict(restored_adapter_state["mutation"])
         elif not checkpoint_loaded:
+            self.fitness_cache = {}
             _reset_adapters(self)
 
         # Preserve cumulative counters across a resume instead of zeroing them,
@@ -2219,6 +2389,16 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         if restored_logbook is not None:
             self.logbook = restored_logbook
 
+        if (
+            not checkpoint_loaded
+            and self.population_initializer == "smart"
+            and any(isinstance(callback, TimerStopping) for callback in self.callbacks)
+        ):
+            # Evaluate a dense baseline before a deadline can truncate the
+            # ascending-size smart population. Keep every original candidate.
+            densest = max(range(len(self._pop)), key=lambda index: sum(self._pop[index]))
+            self._pop.insert(0, self._pop.pop(densest))
+
         # Optimization routine from the selected evolutionary algorithm
         pop, log, n_gen = self._select_algorithm(pop=self._pop, stats=self._stats, hof=self._hof)
 
@@ -2232,6 +2412,7 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
             logbook=self.logbook,
             return_train_score=self.return_train_score,
             metrics=self.metrics_list,
+            greater_is_better=self.criteria == "max",
         )
 
         self.history = {
@@ -2261,10 +2442,15 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         }
 
         if self.refit:
+            if self.final_selection:
+                self.best_index_, self.best_score_, selected = self._select_final_candidate()
+                self.best_features_ = np.asarray(selected["features"], dtype=bool)
+                self.support_ = self.best_features_
             bool_individual = np.array(self.best_features_, dtype=bool)
+            self.best_estimator_ = clone(self.estimator)
 
             refit_start_time = time.time()
-            self.estimator.fit(
+            self.best_estimator_.fit(
                 self.X_[:, bool_individual],
                 self.y_,
                 **getattr(self, "_fit_params", {}),
@@ -2272,7 +2458,6 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
             refit_end_time = time.time()
             self.refit_time_ = refit_end_time - refit_start_time
 
-            self.best_estimator_ = self.estimator
             self.estimator_ = self.best_estimator_
 
         self.hof = self._hof
@@ -2338,7 +2523,8 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
            Result of the decision function for `X` based on the estimator with
            the best found parameters.
        """
-        return self.estimator.decision_function(self.transform(X))
+        X = self.transform(X)
+        return self.best_estimator_.decision_function(X)
 
     @available_if(_estimator_has("predict"))
     def predict(self, X):
@@ -2358,7 +2544,8 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
             The predicted labels or values for `X` based on the estimator with
             the best found parameters.
         """
-        return self.estimator.predict(self.transform(X))
+        X = self.transform(X)
+        return self.best_estimator_.predict(X)
 
     @available_if(_estimator_has("predict_log_proba"))
     def predict_log_proba(self, X):
@@ -2379,7 +2566,8 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
             with the best found parameters. The order of the classes
             corresponds to that in the fitted attribute :term:`classes_`.
         """
-        return self.estimator.predict_log_proba(self.transform(X))
+        X = self.transform(X)
+        return self.best_estimator_.predict_log_proba(X)
 
     @available_if(_estimator_has("predict_proba"))
     def predict_proba(self, X):
@@ -2400,7 +2588,8 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
             the best found parameters. The order of the classes corresponds
             to that in the fitted attribute :term:`classes_`.
         """
-        return self.estimator.predict_proba(self.transform(X))
+        X = self.transform(X)
+        return self.best_estimator_.predict_proba(X)
 
     @available_if(_estimator_has("score"))
     def score(self, X, y):
@@ -2424,7 +2613,9 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
             The score defined by ``scoring`` if provided, and the
             ``best_estimator_.score`` method otherwise.
         """
-        return self.estimator.score(self.transform(X), y)
+        X = self.transform(X)
+        scorer = self.scorer_[self.refit_metric] if isinstance(self.scorer_, dict) else self.scorer_
+        return scorer(self.best_estimator_, X, y)
 
 
 # helpers

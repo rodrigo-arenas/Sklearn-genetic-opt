@@ -9,7 +9,100 @@ You are reading the **latest (dev)** docs. For the stable version, see [stable](
 
 # Release Notes
 
-## Unreleased
+## 0.14.0
+
+The documentation sitemap lists released pages, `robots.txt` advertises it, and the homepage links to the current stable version. The homepage removes redundant sections and broken routes; the method guide states search trade-offs without universal performance claims.
+
+This release improves both `GASearchCV` and `GAFeatureSelectionCV` under short
+training budgets. Evolution can use smaller training folds with
+[`subsample_cv`](./guide/advanced-optimizer-control) and select finalists on the
+original folds. Feature selection starts timed smart searches with its largest
+candidate mask, avoiding a weak one-feature result when little time remains.
+Finite cached spaces stop after full coverage, and `TimerStopping` checks the
+deadline between candidate batches. These are workload-dependent gains: reduced
+training can change candidate rankings, and final validation and refitting add
+time beyond the requested search budget.
+`GASearchCV` also now honors its documented `return_train_score=False` default:
+it skips train-fold scoring unless explicitly requested. A paired four-family
+benchmark found identical CV winners; cheap tree, KNN and ElasticNet searches
+finished 1.23–1.84× sooner, while random-forest timing did not improve.
+
+The optional `eaDifferentialEvolution` algorithm and chained local refinement
+offer additional evolutionary strategies. Regression forest `fast` presets now
+use only `squared_error`; choose `balanced` or `wide` if the more robust
+`absolute_error` criterion matters. Feature masks are repaired to respect
+`max_features` and include at least one column. See the
+[configuration](./api/config), [algorithms](./api/algorithms), and
+[presets](./api/presets) references for their use and limits.
+
+On a reused `GASearchCV`, changes to `param_grid` and warm starts through
+`set_params` now apply to the next fit instead of leaving the original search
+space or seed configuration active.
+`GAFeatureSelectionCV.score()` now reports the configured scoring metric on
+selected features, including the chosen `refit` metric in multi-metric searches.
+Unsupervised feature selection with an outlier detector now accepts a pandas
+DataFrame without a target, preserving its column names in
+`get_feature_names_out()`. Unsupervised `GASearchCV` also accepts list input.
+
+Benchmarks include Optuna, FLAML and AutoGluon, with reproducible settings in
+[`benchmarks/PERFORMANCE_V2.md`](https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/benchmarks/PERFORMANCE_V2.md).
+Several workloads improve by more than four times, while others regress in
+quality or time; these results do not establish a general 4× gain or superiority
+over every AutoML system.
+The HPO timing comparisons in that report preceding the train-fold scoring fix
+were measured with its former effective setting. They should not be read as
+timings of the corrected default; the paired correction benchmark appears there.
+Across six held-out splits per dataset in a five-fold SVC comparison, one-fold
+evolution with eight full-CV finalists made `GASearchCV` 4.09–4.81× faster than
+its full-fold search. Mean accuracy increased slightly on breast cancer and
+digits, but fell by 0.00583 on synthetic data. Feature selection was 3.48–3.92×
+faster and lost mean accuracy on all three datasets. Validating 24 finalists
+instead of eight did not consistently recover accuracy. Optuna TPE remained
+faster under matching fold policies in the earlier three-split comparison.
+In a separate equal-budget, eight-split feature-mask control, the GA exceeded
+random mask sampling by 0.0052, 0.0044 and 0.0263 mean held-out accuracy on
+breast cancer, digits and synthetic data, respectively, at similar fitting time.
+The five reserved validation splits showed a smaller 0.00044 gain on digits.
+Another 24-fit trajectory check found that feature evolution improved its best
+CV score in 23 runs; mean held-out accuracy rose by 0.0153 on digits and 0.0750
+on synthetic data, but fell by 0.00175 on breast cancer. Search progress on CV
+does not guarantee better unseen-data accuracy.
+A separate 24-fit `GASearchCV` trajectory check found CV improvement in 23 runs,
+with mean held-out gains of 0.00175 on breast cancer and 0.00194 on digits,
+but a loss of 0.00125 on synthetic data. Evolutionary progress therefore
+remains workload-dependent for both public search methods.
+At the same 72-proposal budget, an additional 24-pair SVC control found that
+`RandomizedSearchCV` matched or exceeded `GASearchCV` mean held-out accuracy on
+all three datasets. The GA's mean deficit was 0.00175 on breast cancer,
+0.00056 on digits and 0.00750 on synthetic data. This remains an open HPO
+quality target for future work; the feature-mask random control above gave the
+opposite result for feature selection.
+A broader equal-budget feature-mask control also favored the GA on three
+classifier/model families, but random masks did better on Diabetes/Ridge
+regression despite the GA's higher mean CV score. These results reinforce the
+need to validate both methods on the user's own model and data.
+On four additional imbalanced, sparse, linear-regression and nonlinear-regression
+tasks, the GA won two mean held-out scores and lost two against equal-budget
+random masks. The defaults were not retuned to the earlier datasets.
+An additional four-family HPO transfer check against `RandomizedSearchCV`
+found three GA mean held-out wins and one loss. After the train-fold scoring
+fix, the GA/random time ratio was .81× for Digits/KNN, .93× for synthetic forest,
+1.05× for Diabetes/ElasticNet and 1.44× for Wine/tree. All 40 per-run quality
+results and chosen parameters matched the pre-fix benchmark exactly.
+These controls are documented with per-split results and reproduction scripts
+in the benchmark report.
+A further corrected-default comparison with Optuna TPE on three new splits of
+each family tied all Wine/tree and Digits/KNN holdouts, lost the mean
+Diabetes/ElasticNet negative MSE by 3.05 points, and gained .00667 mean
+synthetic-forest accuracy. GA/Optuna time ratios ranged from .68× to 1.13×;
+the small sample does not establish a universal winner.
+
+The repository [changelog](https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/CHANGELOG.md)
+lists the remaining changes in this upcoming release.
+
+---
+
+## 0.13.4
 
 ### Bug Fixes and Error Messages
 

@@ -1,0 +1,139 @@
+Saturation verification; base 7c072d2331f54246e4cdd8e1dd3d52b44c42cf88
+
+--- saturation-red.txt ---
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 106 items / 102 deselected / 4 selected
+
+sklearn_genetic\tests\test_genetic_search.py [31mF[0m[31mF[0m[31mF[0m[31mF[0m[31m                        [100%][0m
+
+================================== FAILURES ===================================
+[31m[1m_ test_saturated_initial_population_avoids_impossible_unique_sampling[1-parameters] _[0m
+[1m[31msklearn_genetic\tests\test_genetic_search.py[0m:2066: in test_saturated_initial_population_avoids_impossible_unique_sampling
+    [0m[94massert[39;49;00m calls <= [94m12[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:717: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+[31m[1m_ test_saturated_initial_population_avoids_impossible_unique_sampling[1-features] _[0m
+[1m[31msklearn_genetic\tests\test_genetic_search.py[0m:2066: in test_saturated_initial_population_avoids_impossible_unique_sampling
+    [0m[94massert[39;49;00m calls <= [94m12[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_saturated_initial_population_avoids_impossible_unique_sampling[2-parameters] _[0m
+[1m[31msklearn_genetic\tests\test_genetic_search.py[0m:2066: in test_saturated_initial_population_avoids_impossible_unique_sampling
+    [0m[94massert[39;49;00m calls <= [94m12[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:717: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+[31m[1m_ test_saturated_initial_population_avoids_impossible_unique_sampling[2-features] _[0m
+[1m[31msklearn_genetic\tests\test_genetic_search.py[0m:2066: in test_saturated_initial_population_avoids_impossible_unique_sampling
+    [0m[94massert[39;49;00m calls <= [94m12[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[36m[1m=========================== short test summary info ===========================[0m
+[31mFAILED[0m sklearn_genetic/tests/test_genetic_search.py::[1mtest_saturated_initial_population_avoids_impossible_unique_sampling[1-parameters][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_genetic_search.py::[1mtest_saturated_initial_population_avoids_impossible_unique_sampling[1-features][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_genetic_search.py::[1mtest_saturated_initial_population_avoids_impossible_unique_sampling[2-parameters][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_genetic_search.py::[1mtest_saturated_initial_population_avoids_impossible_unique_sampling[2-features][0m - AssertionError
+[31m====================== [31m[1m4 failed[0m, [33m102 deselected[0m[31m in 2.84s[0m[31m ======================[0m
+
+--- saturation-final-green.txt ---
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 221 items / 173 deselected / 48 selected
+
+sklearn_genetic\tests\test_genetic_search.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m [ 56%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m                                                                 [ 72%][0m
+sklearn_genetic\tests\test_feature_selection.py [32m.[0m[32m                        [ 75%][0m
+sklearn_genetic\tests\test_internal_helpers.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m              [100%][0m
+
+[32m===================== [32m[1m48 passed[0m, [33m173 deselected[0m[32m in 5.00s[0m[32m ======================[0m
+
+--- saturation-coverage-mutant.txt ---
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 108 items / 106 deselected / 2 selected
+
+sklearn_genetic\tests\test_genetic_search.py [31mF[0m[31mF[0m[31m                          [100%][0m
+
+================================== FAILURES ===================================
+[31m[1m_ test_initial_population_keeps_sampling_until_finite_coverage[parameters-1] __[0m
+[1m[31msklearn_genetic\tests\test_genetic_search.py[0m:2092: in test_initial_population_keeps_sampling_until_finite_coverage
+    [0m[94massert[39;49;00m search.fit_stats_[[33m"[39;49;00m[33mcross_validate_calls[39;49;00m[33m"[39;49;00m] == [94m6[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m__ test_initial_population_keeps_sampling_until_finite_coverage[features-3] ___[0m
+[1m[31msklearn_genetic\tests\test_genetic_search.py[0m:2092: in test_initial_population_keeps_sampling_until_finite_coverage
+    [0m[94massert[39;49;00m search.fit_stats_[[33m"[39;49;00m[33mcross_validate_calls[39;49;00m[33m"[39;49;00m] == [94m6[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[36m[1m=========================== short test summary info ===========================[0m
+[31mFAILED[0m sklearn_genetic/tests/test_genetic_search.py::[1mtest_initial_population_keeps_sampling_until_finite_coverage[parameters-1][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_genetic_search.py::[1mtest_initial_population_keeps_sampling_until_finite_coverage[features-3][0m - AssertionError
+[31m====================== [31m[1m2 failed[0m, [33m106 deselected[0m[31m in 0.83s[0m[31m ======================[0m
+
+Test guard clean against base; Black formatted changed files. All18paired benchmark records exact equality for scores/predictions/selection/evaluations/generations.
+
+--- saturation-unknown-green.txt ---
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 112 items / 108 deselected / 4 selected
+
+sklearn_genetic\tests\test_genetic_search.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m                        [100%][0m
+
+[32m====================== [32m[1m4 passed[0m, [33m108 deselected[0m[32m in 2.32s[0m[32m ======================[0m
+
+--- saturation-unknown-mutant.txt ---
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 112 items / 108 deselected / 4 selected
+
+sklearn_genetic\tests\test_genetic_search.py [31mF[0m[31mF[0m[31mF[0m[31mF[0m[31m                        [100%][0m
+
+================================== FAILURES ===================================
+[31m[1m_ test_initial_population_retains_retries_without_proven_capacity[parameters] _[0m
+[1m[31msklearn_genetic\tests\test_genetic_search.py[0m:2137: in test_initial_population_retains_retries_without_proven_capacity
+    [0m[94massert[39;49;00m calls >= [94m240[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:717: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+[31m[1m__ test_initial_population_retains_retries_without_proven_capacity[features] __[0m
+[1m[31msklearn_genetic\tests\test_genetic_search.py[0m:2137: in test_initial_population_retains_retries_without_proven_capacity
+    [0m[94massert[39;49;00m calls >= [94m240[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m___ test_initial_population_retains_retries_without_proven_capacity[custom] ___[0m
+[1m[31msklearn_genetic\tests\test_genetic_search.py[0m:2137: in test_initial_population_retains_retries_without_proven_capacity
+    [0m[94massert[39;49;00m calls >= [94m240[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:717: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+[31m[1m_ test_initial_population_retains_retries_without_proven_capacity[continuous] _[0m
+[1m[31msklearn_genetic\tests\test_genetic_search.py[0m:2137: in test_initial_population_retains_retries_without_proven_capacity
+    [0m[94massert[39;49;00m calls >= [94m240[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:717: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+[36m[1m=========================== short test summary info ===========================[0m
+[31mFAILED[0m sklearn_genetic/tests/test_genetic_search.py::[1mtest_initial_population_retains_retries_without_proven_capacity[parameters][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_genetic_search.py::[1mtest_initial_population_retains_retries_without_proven_capacity[features][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_genetic_search.py::[1mtest_initial_population_retains_retries_without_proven_capacity[custom][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_genetic_search.py::[1mtest_initial_population_retains_retries_without_proven_capacity[continuous][0m - AssertionError
+[31m====================== [31m[1m4 failed[0m, [33m108 deselected[0m[31m in 0.96s[0m[31m ======================[0m
+
+Final guard clean after four new public-fit unknown/uncached regression cases.

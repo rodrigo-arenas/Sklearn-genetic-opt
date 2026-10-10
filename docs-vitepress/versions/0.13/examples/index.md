@@ -7,7 +7,7 @@ description: End-to-end examples for sklearn-genetic-opt — hyperparameter sear
 Short, focused recipes — each example is self-contained and demonstrates a single feature you can copy directly into a script or notebook.
 
 ::: tip Examples vs Tutorials
-**Examples** are focused recipes that each show one capability (a scorer, a plot, checkpointing, …). **[Tutorials](/versions/latest/tutorials/)** are longer, end-to-end walkthroughs of a complete real-world task — from raw data to a tuned, evaluated model — usually integrating a specific library (XGBoost, LightGBM, CatBoost, …).
+**Examples** are focused recipes that each show one capability (a scorer, a plot, checkpointing, …). **[Tutorials](/versions/0.13/tutorials/)** are longer, end-to-end walkthroughs of a complete real-world task — from raw data to a tuned, evaluated model — usually integrating a specific library (XGBoost, LightGBM, CatBoost, …).
 :::
 
 ## Hyperparameter Search

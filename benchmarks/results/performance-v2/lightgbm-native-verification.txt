@@ -1,0 +1,49 @@
+PASS96 complete Cartesian rows; finite scores/times; folds, promotions, masks, seeds, configuration and source hashes verified.
+Total measured fit seconds: 971.159
+| Dataset | Workflow | Mean seconds | Mean holdout | Holdout SD | Mean evaluations | Mean features |
+|---|---|---:|---:|---:|---:|---:|
+| breast | full/gasearch | 6.123 | 0.960373 | 0.010682 | 71.7 | 30.0 |
+| breast | full/features | 5.855 | 0.953380 | 0.008075 | 72.0 | 16.0 |
+| breast | quarter/gasearch | 2.727 | 0.962704 | 0.017599 | 70.3 | 30.0 |
+| breast | quarter/features | 2.236 | 0.958042 | 0.013986 | 72.0 | 15.3 |
+| breast | eighth/gasearch | 2.458 | 0.955711 | 0.022479 | 72.0 | 30.0 |
+| breast | eighth/features | 1.154 | 0.857809 | 0.045499 | 72.0 | 2.7 |
+| breast | native/flaml | 15.005 | 0.974359 | 0.014557 | - | 30.0 |
+| breast | native/autogluon | 2.309 | 0.948718 | 0.008075 | - | 30.0 |
+| digits | full/gasearch | 16.065 | 0.977778 | 0.009686 | 15.7 | 64.0 |
+| digits | full/features | 16.159 | 0.983704 | 0.005592 | 13.3 | 64.0 |
+| digits | quarter/gasearch | 19.401 | 0.977778 | 0.009686 | 37.7 | 64.0 |
+| digits | quarter/features | 21.310 | 0.982222 | 0.008012 | 32.3 | 62.7 |
+| digits | eighth/gasearch | 19.048 | 0.977778 | 0.005879 | 54.3 | 64.0 |
+| digits | eighth/features | 20.967 | 0.976296 | 0.004626 | 58.7 | 57.3 |
+| digits | native/flaml | 15.008 | 0.974815 | 0.004626 | - | 64.0 |
+| digits | native/autogluon | 6.588 | 0.983704 | 0.005132 | - | 64.0 |
+| diabetes | full/gasearch | 3.644 | -3325.752590 | 312.124692 | 71.7 | 10.0 |
+| diabetes | full/features | 2.340 | -3532.410250 | 413.092517 | 67.7 | 6.0 |
+| diabetes | quarter/gasearch | 1.909 | -3306.574983 | 261.908808 | 71.3 | 10.0 |
+| diabetes | quarter/features | 1.462 | -3964.213137 | 265.973629 | 70.0 | 5.7 |
+| diabetes | eighth/gasearch | 1.629 | -3535.455478 | 286.458543 | 71.3 | 10.0 |
+| diabetes | eighth/features | 0.825 | -5593.701806 | 255.215006 | 68.7 | 1.0 |
+| diabetes | native/flaml | 15.001 | -3278.483080 | 66.241711 | - | 10.0 |
+| diabetes | native/autogluon | 1.643 | -3130.257844 | 305.688062 | - | 10.0 |
+| synthetic | full/gasearch | 17.313 | 0.890000 | 0.017088 | 12.7 | 80.0 |
+| synthetic | full/features | 15.841 | 0.902000 | 0.005292 | 21.0 | 69.0 |
+| synthetic | quarter/gasearch | 24.680 | 0.904667 | 0.004163 | 58.3 | 80.0 |
+| synthetic | quarter/features | 14.860 | 0.906000 | 0.002000 | 72.0 | 68.7 |
+| synthetic | eighth/gasearch | 16.652 | 0.894667 | 0.007024 | 70.7 | 80.0 |
+| synthetic | eighth/features | 9.279 | 0.902000 | 0.006928 | 72.0 | 64.7 |
+| synthetic | native/flaml | 15.463 | 0.898000 | 0.000000 | - | 80.0 |
+| synthetic | native/autogluon | 8.764 | 0.898000 | 0.004000 | - | 80.0 |
+
+| Dataset | Search | Quarter speedup | Quarter holdout delta | Eighth speedup | Eighth holdout delta |
+|---|---|---:|---:|---:|---:|
+| breast | gasearch | 2.245x | +0.002331 | 2.491x | -0.004662 |
+| breast | features | 2.618x | +0.004662 | 5.074x | -0.095571 |
+| digits | gasearch | 0.828x | +0.000000 | 0.843x | +0.000000 |
+| digits | features | 0.758x | -0.001481 | 0.771x | -0.007407 |
+| diabetes | gasearch | 1.909x | +19.177607 | 2.238x | -209.702888 |
+| diabetes | features | 1.601x | -431.802887 | 2.836x | -2061.291556 |
+| synthetic | gasearch | 0.701x | +0.014667 | 1.040x | +0.004667 |
+| synthetic | features | 1.066x | +0.004000 | 1.707x | +0.000000 |
+
+Validation script: complete Cartesian matrix, finite results, exact fold sizes, promotions, valid masks, parameter bounds and measured source SHA256. All 12 subprocesses exited 0. No production or harness changes in this slice. Existing native benchmark runtime coverage is recorded in accelerated-native-verification.txt.

@@ -1,5 +1,69 @@
 import numpy as np
+from numbers import Real
 from scipy.stats import rankdata
+from sklearn.utils import check_random_state, resample
+
+
+def subsample_cv(cv_splits, train_size, *, stratify=None, random_state=None):
+    """Reduce training rows in explicit CV splits, retaining every validation row.
+
+    Parameters
+    ----------
+    cv_splits : iterable of (train_indices, validation_indices)
+        Materialized splits from a scikit-learn cross-validation splitter.
+        Training indices must be one-dimensional integer arrays.
+    train_size : float
+        Fraction of each training fold to retain, in (0, 1]. A value of 1
+        preserves the original splits without sampling.
+    stratify : array-like of shape (n_samples,), default=None
+        Full target labels for stratified training subsampling. Use this for
+        classification; leave it as None for regression. Sampling that drops
+        a class raises ValueError; increase the fraction in that case.
+    random_state : int, RandomState instance or None, default=None
+        Controls training subsampling. An integer reproduces the same splits.
+
+    Returns
+    -------
+    list of tuple
+        Reduced training indices paired with the original validation indices.
+        Pass the original splits as ``final_selection_cv`` to re-evaluate
+        finalists with full training folds before choosing the fitted winner.
+        Search scores and finalist scores describe different training sizes.
+    """
+    if (
+        isinstance(train_size, (bool, np.bool_))
+        or not isinstance(train_size, Real)
+        or not 0 < train_size <= 1
+    ):
+        raise ValueError("train_size must be a fraction in (0, 1]")
+    rng = check_random_state(random_state)
+    labels = None if stratify is None else np.asarray(stratify)
+    if labels is not None and labels.ndim != 1:
+        raise ValueError("stratify must contain one-dimensional class labels")
+    result = []
+    for train, validation in cv_splits:
+        train = np.asarray(train)
+        if train.ndim != 1 or not np.issubdtype(train.dtype, np.integer):
+            raise ValueError("cv_splits must contain one-dimensional integer training indices")
+        if train_size < 1:
+            original_classes = None if labels is None else np.unique(labels[train])
+            train = resample(
+                train,
+                replace=False,
+                n_samples=int(len(train) * train_size),
+                stratify=None if labels is None else labels[train],
+                random_state=rng,
+            )
+            if labels is not None and not np.array_equal(
+                np.unique(labels[train]), original_classes
+            ):
+                raise ValueError(
+                    "train_size must retain every class; increase the training fraction"
+                )
+        result.append((train, validation))
+    if not result:
+        raise ValueError("cv_splits must contain at least one split")
+    return result
 
 
 def select_dict_keys(dictionary, keys):
@@ -46,7 +110,9 @@ def _rank_scores(scores, greater_is_better=True):
     return ranks
 
 
-def create_gasearch_cv_results_(logbook, space, return_train_score, metrics):
+def create_gasearch_cv_results_(
+    logbook, space, return_train_score, metrics, greater_is_better=True
+):
     cv_results = {}
     n_splits = len(logbook.chapters["parameters"].select("cv_scores")[0])
 
@@ -70,7 +136,9 @@ def create_gasearch_cv_results_(logbook, space, return_train_score, metrics):
             for cv_scores in logbook.chapters["parameters"].select(f"test_{metric}")
         ]
 
-        cv_results[f"rank_test_{metric}"] = _rank_scores(cv_results[f"mean_test_{metric}"])
+        cv_results[f"rank_test_{metric}"] = _rank_scores(
+            cv_results[f"mean_test_{metric}"], greater_is_better
+        )
 
         if return_train_score:
             for split in range(n_splits):
@@ -89,7 +157,9 @@ def create_gasearch_cv_results_(logbook, space, return_train_score, metrics):
                 for cv_scores in logbook.chapters["parameters"].select(f"train_{metric}")
             ]
 
-            cv_results[f"rank_train_{metric}"] = _rank_scores(cv_results[f"mean_train_{metric}"])
+            cv_results[f"rank_train_{metric}"] = _rank_scores(
+                cv_results[f"mean_train_{metric}"], greater_is_better
+            )
 
     # These values are only one even with multi-metric
     cv_results["mean_fit_time"] = [
@@ -114,7 +184,9 @@ def create_gasearch_cv_results_(logbook, space, return_train_score, metrics):
     return cv_results
 
 
-def create_feature_selection_cv_results_(logbook, return_train_score, metrics):
+def create_feature_selection_cv_results_(
+    logbook, return_train_score, metrics, greater_is_better=True
+):
     cv_results = {}
     n_splits = len(logbook.chapters["parameters"].select("cv_scores")[0])
 
@@ -135,7 +207,9 @@ def create_feature_selection_cv_results_(logbook, return_train_score, metrics):
             for cv_scores in logbook.chapters["parameters"].select(f"test_{metric}")
         ]
 
-        cv_results[f"rank_test_{metric}"] = _rank_scores(cv_results[f"mean_test_{metric}"])
+        cv_results[f"rank_test_{metric}"] = _rank_scores(
+            cv_results[f"mean_test_{metric}"], greater_is_better
+        )
 
         if return_train_score:
             for split in range(n_splits):
@@ -154,7 +228,9 @@ def create_feature_selection_cv_results_(logbook, return_train_score, metrics):
                 for cv_scores in logbook.chapters["parameters"].select(f"train_{metric}")
             ]
 
-            cv_results[f"rank_train_{metric}"] = _rank_scores(cv_results[f"mean_train_{metric}"])
+            cv_results[f"rank_train_{metric}"] = _rank_scores(
+                cv_results[f"mean_train_{metric}"], greater_is_better
+            )
 
     # These values are only one even with multi-metric
     cv_results["mean_fit_time"] = [

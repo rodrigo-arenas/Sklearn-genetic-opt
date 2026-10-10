@@ -41,7 +41,7 @@ EvolutionConfig(
 | `elitism` | bool | `True` | Carry the best individual unchanged to the next generation |
 | `keep_top_k` | int | `1` | Size of the hall of fame — best `k` individuals are preserved across generations |
 | `criteria` | `"max"` or `"min"` | `"max"` | Whether to maximize or minimize the scoring metric |
-| `algorithm` | str | `"eaMuPlusLambda"` | DEAP algorithm: `"eaMuPlusLambda"`, `"eaMuCommaLambda"`, or `"eaSimple"` |
+| `algorithm` | str | `"eaMuPlusLambda"` | Evolutionary algorithm: `"eaMuPlusLambda"`, `"eaMuCommaLambda"`, `"eaSimple"`, or `"eaDifferentialEvolution"` (requires at least four individuals) |
 
 ## PopulationConfig
 
@@ -59,7 +59,13 @@ PopulationConfig(
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `initializer` | `"smart"` or `"random"` | `"smart"` | Population initialization strategy. `"smart"` uses Latin hypercube sampling, estimator defaults, stratified categoricals, and duplicate avoidance |
-| `warm_start_configs` | list of dicts | `None` | Specific parameter configurations to include in the initial population. Each dict must have keys matching `param_grid`. Invalid configs are silently skipped |
+| `warm_start_configs` | list of dicts | `None` | Configurations to seed the initial population. Keys and values must lie within `param_grid`; invalid entries raise `ValueError` at fit time |
+
+For a reused `GASearchCV`, `set_params(warm_start_configs=[...])` replaces the
+direct seeds for the next `fit`, and `set_params(warm_start_configs=None)`
+removes them. When `population_config` is supplied, its warm starts take
+precedence; replace that configuration with `set_params(population_config=...)`
+to change its seeds.
 
 ## RuntimeConfig
 
@@ -165,7 +171,7 @@ OptimizationConfig(
 |-----------|------|---------|-------------|
 | `local_search` | bool | `False` | After the genetic search, evaluate neighbors of the top `local_search_top_k` hall-of-fame individuals |
 | `local_search_top_k` | int | `1` | Number of hall-of-fame individuals to refine |
-| `local_search_steps` | int | `1` | Number of neighbor evaluations per hall-of-fame individual. Each step adds cross-validation calls |
+| `local_search_steps` | int | `1` | Number of refinement steps per hall-of-fame individual. An accepted improvement becomes the starting point for the next step; each step adds cross-validation calls |
 | `local_search_radius` | float | `0.1` | Step size as a fraction of the parameter range. Values 0.05–0.15 keep refinement local |
 
 ### Final Selection

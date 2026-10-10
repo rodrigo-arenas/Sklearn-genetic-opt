@@ -1,0 +1,5 @@
+Baseline source78d8472a74b0ff90ceb68861ce9897666fd65b47:12public preset/CV cases fail RuntimeError: constructor modifies criterion after clone of set_params friedman_mse on sklearn1.9.1.
+Current focused76pass2.80s(sklearn1.9.1), compatibility76pass15.05s(sklearn1.5.0). Black2filesclean. No fullsuite.
+ASSERTIONS_REMOVED sklearn_genetic/tests/test_presets.py: net -2
+Guard disposition: two duplicated factory-only tests (4assertions) replaced by12real-fit parameterized cases (2assertions each), preserving regression-only criteria and absenceofclass_weight. Exact allowed criteria intentionally lose deprecated redundant alias. No skips/configchanges.
+Independent review: PF1-PF3 pass, no material findings. All 36 public-fit mutant cases reject removed absolute_error or restored friedman_mse (original or first position). Dimensions and unrelated settings unchanged across all 12 combinations. Full suite not run.

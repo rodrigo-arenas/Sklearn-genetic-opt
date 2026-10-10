@@ -1,5 +1,6 @@
 import random
 from contextlib import contextmanager
+from math import comb
 
 import numpy as np
 
@@ -185,18 +186,98 @@ def local_search_enabled(estimator):
     return getattr(estimator, "local_search", False)
 
 
+def finite_search_space_size(estimator, limit):
+    """Count reachable cached configurations only when coverage is possible."""
+    if not getattr(estimator, "use_cache", False):
+        return None
+    if hasattr(estimator, "space"):
+        size = 1
+        for dimension in estimator.space.param_grid.values():
+            if isinstance(dimension, Integer):
+                size *= dimension.upper - dimension.lower + 1
+            elif isinstance(dimension, Categorical):
+                choices = set(dimension.choices)
+                if any(value != value for value in choices):
+                    return None
+                size *= len(choices)
+            elif isinstance(dimension, Continuous):
+                if dimension.lower != dimension.upper:
+                    return None
+            else:
+                return None
+            if size > limit:
+                return None
+        return size
+    if hasattr(estimator, "n_features"):
+        maximum = estimator.max_features or estimator.n_features
+        size = 0
+        for selected in range(1, maximum + 1):
+            size += comb(estimator.n_features, selected)
+            if size > limit:
+                return None
+        return size
+    return None
+
+
+def differential_offspring(population, toolbox, estimator, crossover, mutation):
+    """Deferred rand/1/bin trials, with mixed-domain and binary decoding."""
+    offspring = []
+    for index, target in enumerate(population):
+        donors = random.sample(range(len(population) - 1), 3)
+        a, b, c = [population[j + (j >= index)] for j in donors]
+        trial = toolbox.clone(target)
+        forced = random.randrange(len(target))
+        for gene in range(len(target)):
+            if gene != forced and random.random() >= crossover:
+                continue
+            dimension = (
+                estimator.space[estimator.space.parameters[gene]]
+                if hasattr(estimator, "space")
+                else None
+            )
+            if dimension is None:
+                trial[gene] = int(a[gene] + 0.8 * (b[gene] - c[gene]) >= 0.5)
+            elif isinstance(dimension, Categorical):
+                trial[gene] = a[gene]
+            elif dimension.lower == dimension.upper:
+                trial[gene] = dimension.lower
+            else:
+                log_scale = (
+                    isinstance(dimension, Continuous) and dimension.distribution == "log-uniform"
+                )
+                lower = np.log(dimension.lower) if log_scale else dimension.lower
+                upper = np.log(dimension.upper) if log_scale else dimension.upper
+                values = [
+                    np.log(parent[gene]) if log_scale else parent[gene] for parent in (a, b, c)
+                ]
+                units = [(value - lower) / (upper - lower) for value in values]
+                unit = float(np.clip(units[0] + 0.8 * (units[1] - units[2]), 0.0, 1.0))
+                if isinstance(dimension, Integer):
+                    trial[gene] = dimension.lower + int(
+                        round(unit * (dimension.upper - dimension.lower))
+                    )
+                else:
+                    value = lower + unit * (upper - lower)
+                    trial[gene] = float(np.exp(value) if log_scale else value)
+        if random.random() < mutation:
+            (trial,) = toolbox.mutate(trial)
+        estimator._repair_individual(trial)
+        del trial.fitness.values
+        offspring.append(trial)
+    return offspring
+
+
 def _bounded_integer_neighbor(dimension, value, radius):
     value = int(round(float(value)))
     value = int(np.clip(value, dimension.lower, dimension.upper))
     step = max(1, int(np.ceil((dimension.upper - dimension.lower) * radius)))
-    candidates = [
-        candidate
-        for candidate in range(
-            max(dimension.lower, value - step), min(dimension.upper, value + step) + 1
-        )
-        if candidate != value
-    ]
-    return random.choice(candidates) if candidates else value
+    lower = max(dimension.lower, value - step)
+    upper = min(dimension.upper, value + step)
+    if lower == upper:
+        return value
+    # Draw uniformly from all neighbors without allocating the integer interval.
+    sampled = random.randint(lower, upper - 1)
+    return sampled + (sampled >= value)
 
 
 def _bounded_continuous_neighbor(dimension, value, radius):
@@ -311,14 +392,56 @@ def sharing_value(distance, radius, alpha):
 def niche_counts(population, estimator):
     radius = estimator.sharing_radius
     alpha = estimator.sharing_alpha
-    counts = []
+    size = len(population)
+    if size == 0:
+        return []
 
-    for individual in population:
-        count = 0.0
-        for other in population:
-            distance = individual_distance(estimator, individual, other)
-            count += sharing_value(distance, radius, alpha)
-        counts.append(max(count, 1.0))
+    # Convert columns once and vectorize distances one row at a time. Keep
+    # contribution accumulation ordered: reassociation can break selection ties.
+    feature_values = np.asarray(population) if not hasattr(estimator, "space") else None
+    columns = []
+    for index, values in enumerate(zip(*population)) if feature_values is None else []:
+        dimension = estimator.space[estimator.space.parameters[index]]
+        if isinstance(dimension, (Continuous, Integer)):
+            # Preserve subtraction precision for Python integers, including
+            # integer values supplied in a Continuous dimension.
+            columns.append((np.asarray(values, dtype=object), dimension.upper - dimension.lower))
+        else:
+            columns.append((np.fromiter(values, dtype=object, count=size), None))
+
+    counts = []
+    for index in range(size):
+        distances = np.zeros(size)
+        if feature_values is not None:
+            if feature_values.shape[1]:
+                distances = (
+                    np.count_nonzero(feature_values != feature_values[index], axis=1)
+                    / feature_values.shape[1]
+                )
+        else:
+            components = np.zeros((size, len(columns)))
+            for column, (values, span) in enumerate(columns):
+                if span is None:
+                    components[:, column] = np.fromiter(
+                        (0.0 if values[index] == value else 1.0 for value in values),
+                        dtype=float,
+                    )
+                elif span:
+                    components[:, column] = np.asarray(
+                        np.abs(values[index] - values) / span, dtype=float
+                    )
+            if columns:
+                distances = components.mean(axis=1)
+        contributions = np.fromiter(
+            # Python floats preserve the scalar sharing formula's rounding;
+            # inlining avoids a function call for every population pair.
+            (
+                0.0 if distance >= radius else 1.0 - (distance / radius) ** alpha
+                for distance in distances.tolist()
+            ),
+            dtype=float,
+        )
+        counts.append(max(float(np.cumsum(contributions)[-1]), 1.0))
 
     return counts
 

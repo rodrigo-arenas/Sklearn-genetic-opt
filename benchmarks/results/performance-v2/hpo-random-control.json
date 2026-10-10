@@ -1,0 +1,414 @@
+{
+  "question": "Does default GASearchCV beat a same-budget random hyperparameter search?",
+  "source_commit": "7a2f586ec185668b67e345079839e3c386aa4157",
+  "ga_artifact": "benchmarks/results/performance-v2/hpo-progress.json",
+  "ga_raw_sha256": "e37509c0c33fcb45357a7ec5e066f7ae67b347e51eb85629e6f3093be68308ce",
+  "settings": {
+    "datasets": [
+      "breast",
+      "digits",
+      "synthetic"
+    ],
+    "seeds": [
+      1001,
+      1002,
+      1003,
+      1004,
+      1005,
+      1006,
+      1007,
+      1008
+    ],
+    "holdout_fraction": 0.25,
+    "cv_folds": 3,
+    "candidate_budget": 72,
+    "cpu_threads": 1,
+    "parameter_space": {
+      "svc__C": "log-uniform[0.01, 100]",
+      "svc__gamma": "log-uniform[1e-4, 1]"
+    },
+    "model": "StandardScaler plus SVC(kernel=rbf)",
+    "order": "All GA searches were timed before all random searches; compare quality on paired splits, treat timing as descriptive."
+  },
+  "environment": {
+    "python": "3.12.0",
+    "numpy": "2.5.3",
+    "scikit-learn": "1.9.1",
+    "scipy": "1.18.1",
+    "deap": "1.4.4"
+  },
+  "source_sha256": {
+    "sklearn_genetic/genetic_search.py": "c7d49583e0250cd2208c2e9b6321b44ea8f850cb07816ef244adb72527a13600",
+    "sklearn_genetic/algorithms.py": "2f1b607b8c671923d4ea604f8ed81b8b502e609b4ebb5c49e904612c0b7affd7",
+    "sklearn_genetic/population.py": "84f210e606355a687cc91d220fe318ac4ea9e17a85a4acc62f53643a1b4928bf"
+  },
+  "split_sha256": {
+    "breast/1001": "eec0faabb90b22a5fe6640c3c19224f62952b8fd5c3c0a4ec1f8466666be4764",
+    "breast/1002": "bd11265a0d8d6a6e5ef6fc8f103821722ea073f305499b1584bca902580bac39",
+    "breast/1003": "5feb33b0f02b3f3577e09df700bd1ad35773b77860f3a52b4c39a9e127b8ac1d",
+    "breast/1004": "a6f454aa837c50665c42fe6579ea97c3b5c72ee0cbeff09cc7803b3b02adadb0",
+    "breast/1005": "f42ed0932a8789aab4ddfa0b188c54e0272fd9c898840e8c94a70d8fa37f8c8c",
+    "breast/1006": "4f93eeb57c260acf8ceec1215ebc7edc1633804bf928cf3b276e69fa7a417f43",
+    "breast/1007": "8c194663e094a458278294868efc71c68594e32495bb9c89b40582e4d06d9352",
+    "breast/1008": "9f7cfab791f0becb69a9f25a82359d1d9bfa7285f4e067b76e4cafa004a83f71",
+    "digits/1001": "f432773cf4d0b4f99711b0ec56a690a5973cfca991b101081e0691315d0b4d5a",
+    "digits/1002": "b353f15d377868ae2908f611e370f991e734a343d3fab97da3f5ef14fb88e2fb",
+    "digits/1003": "1bc668252c9cbbf1de3e2fba284a4ff0b37866360d9e96114fa7ed51a7f4b302",
+    "digits/1004": "4a2749572db577dc36ab213a008f139be10d7825af50a505c18fc09d36a9a319",
+    "digits/1005": "ae966c76360976def860cc5dcdf1a7fecb76805103bff0bf5fa8de6cad08ca44",
+    "digits/1006": "9a5ab0416c81b3719ca3d54cf31e52bb706f4d4dbf02d90b417e98e4fa00c799",
+    "digits/1007": "8770a29ec35120ae3e69ae28c729bf2fcdefb043f1c1786c3f4d1decef00f290",
+    "digits/1008": "215543a26ebb33a58d40c9b0ca009028265054607fca9251fa004a3e8fb12d16",
+    "synthetic/1001": "c4e0fc8ce6329bd8347fd2696a973f5213bda8adcefd2e996a297c2892aaae2e",
+    "synthetic/1002": "37c2a3c65509be895cddf63fe038acae4d37bd99dcfafca89441f07f5fe4d447",
+    "synthetic/1003": "670438e87df2790458d21c38c694a37f430c0ae3631dc7b1b4da52eb4603434b",
+    "synthetic/1004": "45ebc16cf28be51c9d74b28607456cedfb77cad2b0f5b3d8dd34e6512c614212",
+    "synthetic/1005": "debd6c9d509ec63416140a4adc03c861f946c365d41ac82c0377531f2b524164",
+    "synthetic/1006": "21783c2ffd60bfe7cdfd09421c7f6ac604f2cfc4ce951b7bcb2c4db79fea3836",
+    "synthetic/1007": "41f850472b5346f3d8cadd1bebc0564d35a7039a0d122c0d25a250a322d19bec",
+    "synthetic/1008": "a6adbe720357cbbd839ec052473a761475bbec714f86001a31498864c9afe749"
+  },
+  "random_raw_sha256": "9903ef0190492495126d2cca26d9f9277d29ede6e71bd42b33ee6545e9fd8211",
+  "summary": [
+    {
+      "dataset": "breast",
+      "ga_cv_mean": 0.977406103286385,
+      "random_cv_mean": 0.977699530516432,
+      "ga_holdout_mean": 0.9746503496503497,
+      "random_holdout_mean": 0.9763986013986014,
+      "heldout_delta_mean": -0.0017482517482517446,
+      "worst_ga_holdout_delta": -0.013986013986013957,
+      "ga_wins": 1,
+      "ties": 5,
+      "ga_losses": 2,
+      "ga_seconds_mean": 2.3846898750016408,
+      "random_seconds_mean": 1.5192948000039905,
+      "mean_time_ratio": 1.5696031310022105,
+      "ga_cv_calls_mean": 70.875
+    },
+    {
+      "dataset": "digits",
+      "ga_cv_mean": 0.9803266518188567,
+      "random_cv_mean": 0.9803266518188567,
+      "ga_holdout_mean": 0.9836111111111111,
+      "random_holdout_mean": 0.9841666666666666,
+      "heldout_delta_mean": -0.0005555555555555591,
+      "worst_ga_holdout_delta": -0.00666666666666671,
+      "ga_wins": 3,
+      "ties": 2,
+      "ga_losses": 3,
+      "ga_seconds_mean": 28.08282838749801,
+      "random_seconds_mean": 16.725337425006728,
+      "mean_time_ratio": 1.6790590033484312,
+      "ga_cv_calls_mean": 71.25
+    },
+    {
+      "dataset": "synthetic",
+      "ga_cv_mean": 0.87375,
+      "random_cv_mean": 0.8714583333333333,
+      "ga_holdout_mean": 0.8568749999999999,
+      "random_holdout_mean": 0.864375,
+      "heldout_delta_mean": -0.007500000000000007,
+      "worst_ga_holdout_delta": -0.030000000000000027,
+      "ga_wins": 1,
+      "ties": 3,
+      "ga_losses": 4,
+      "ga_seconds_mean": 4.680787874996895,
+      "random_seconds_mean": 2.8003624374978244,
+      "mean_time_ratio": 1.6714935939432416,
+      "ga_cv_calls_mean": 71.125
+    }
+  ],
+  "random_raw": [
+    {
+      "dataset": "breast",
+      "seed": 1001,
+      "seconds": 1.5200489000126254,
+      "candidate_cv_calls": 72,
+      "cv": 0.9765258215962441,
+      "holdout": 0.986013986013986,
+      "params": {
+        "svc__C": 18.795255167512575,
+        "svc__gamma": 0.004687980611012925
+      }
+    },
+    {
+      "dataset": "breast",
+      "seed": 1002,
+      "seconds": 1.531411499978276,
+      "candidate_cv_calls": 72,
+      "cv": 0.9812206572769954,
+      "holdout": 0.972027972027972,
+      "params": {
+        "svc__C": 93.33167676566973,
+        "svc__gamma": 0.0015420050891982735
+      }
+    },
+    {
+      "dataset": "breast",
+      "seed": 1003,
+      "seconds": 1.6117913000052795,
+      "candidate_cv_calls": 72,
+      "cv": 0.9765258215962441,
+      "holdout": 0.951048951048951,
+      "params": {
+        "svc__C": 25.705412992461962,
+        "svc__gamma": 0.0018226651541500194
+      }
+    },
+    {
+      "dataset": "breast",
+      "seed": 1004,
+      "seconds": 1.5186334000027273,
+      "candidate_cv_calls": 72,
+      "cv": 0.9765258215962441,
+      "holdout": 0.986013986013986,
+      "params": {
+        "svc__C": 1.8108614003014762,
+        "svc__gamma": 0.022918559092867306
+      }
+    },
+    {
+      "dataset": "breast",
+      "seed": 1005,
+      "seconds": 1.4949787000077777,
+      "candidate_cv_calls": 72,
+      "cv": 0.9765258215962441,
+      "holdout": 0.986013986013986,
+      "params": {
+        "svc__C": 17.134400874292407,
+        "svc__gamma": 0.0040396489318984515
+      }
+    },
+    {
+      "dataset": "breast",
+      "seed": 1006,
+      "seconds": 1.4784308000234887,
+      "candidate_cv_calls": 72,
+      "cv": 0.9788732394366196,
+      "holdout": 0.965034965034965,
+      "params": {
+        "svc__C": 7.363678501119303,
+        "svc__gamma": 0.025103669795461567
+      }
+    },
+    {
+      "dataset": "breast",
+      "seed": 1007,
+      "seconds": 1.4448168999806512,
+      "candidate_cv_calls": 72,
+      "cv": 0.971830985915493,
+      "holdout": 0.993006993006993,
+      "params": {
+        "svc__C": 6.66224471288478,
+        "svc__gamma": 0.012763327089192901
+      }
+    },
+    {
+      "dataset": "breast",
+      "seed": 1008,
+      "seconds": 1.5542469000210986,
+      "candidate_cv_calls": 72,
+      "cv": 0.983568075117371,
+      "holdout": 0.972027972027972,
+      "params": {
+        "svc__C": 60.15514552261989,
+        "svc__gamma": 0.00552342613510429
+      }
+    },
+    {
+      "dataset": "digits",
+      "seed": 1001,
+      "seconds": 17.535956500010798,
+      "candidate_cv_calls": 72,
+      "cv": 0.9821826280623608,
+      "holdout": 0.9888888888888889,
+      "params": {
+        "svc__C": 12.266275607230597,
+        "svc__gamma": 0.01020360202482767
+      }
+    },
+    {
+      "dataset": "digits",
+      "seed": 1002,
+      "seconds": 15.86931999999797,
+      "candidate_cv_calls": 72,
+      "cv": 0.9792130660727542,
+      "holdout": 0.98,
+      "params": {
+        "svc__C": 17.468741919301433,
+        "svc__gamma": 0.0009792676916747741
+      }
+    },
+    {
+      "dataset": "digits",
+      "seed": 1003,
+      "seconds": 16.275795500027016,
+      "candidate_cv_calls": 72,
+      "cv": 0.9784706755753527,
+      "holdout": 0.9911111111111112,
+      "params": {
+        "svc__C": 8.257703462704285,
+        "svc__gamma": 0.003880707031114406
+      }
+    },
+    {
+      "dataset": "digits",
+      "seed": 1004,
+      "seconds": 16.968599900021218,
+      "candidate_cv_calls": 72,
+      "cv": 0.9806978470675576,
+      "holdout": 0.9822222222222222,
+      "params": {
+        "svc__C": 4.222166863499073,
+        "svc__gamma": 0.003108877800006609
+      }
+    },
+    {
+      "dataset": "digits",
+      "seed": 1005,
+      "seconds": 16.701684400002705,
+      "candidate_cv_calls": 72,
+      "cv": 0.9821826280623608,
+      "holdout": 0.9777777777777777,
+      "params": {
+        "svc__C": 2.3973196329895865,
+        "svc__gamma": 0.005576891239737736
+      }
+    },
+    {
+      "dataset": "digits",
+      "seed": 1006,
+      "seconds": 17.21958859998267,
+      "candidate_cv_calls": 72,
+      "cv": 0.9806978470675576,
+      "holdout": 0.9866666666666667,
+      "params": {
+        "svc__C": 12.973206980776524,
+        "svc__gamma": 0.002574797820725579
+      }
+    },
+    {
+      "dataset": "digits",
+      "seed": 1007,
+      "seconds": 15.708480000001146,
+      "candidate_cv_calls": 72,
+      "cv": 0.9799554565701559,
+      "holdout": 0.9844444444444445,
+      "params": {
+        "svc__C": 6.66224471288478,
+        "svc__gamma": 0.012763327089192901
+      }
+    },
+    {
+      "dataset": "digits",
+      "seed": 1008,
+      "seconds": 17.523274500010302,
+      "candidate_cv_calls": 72,
+      "cv": 0.9792130660727544,
+      "holdout": 0.9822222222222222,
+      "params": {
+        "svc__C": 35.82844588632269,
+        "svc__gamma": 0.00622871631668329
+      }
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 1001,
+      "seconds": 2.8506267000047956,
+      "candidate_cv_calls": 72,
+      "cv": 0.8683333333333333,
+      "holdout": 0.87,
+      "params": {
+        "svc__C": 23.540957417624593,
+        "svc__gamma": 0.003040329997290405
+      }
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 1002,
+      "seconds": 2.876060399983544,
+      "candidate_cv_calls": 72,
+      "cv": 0.8666666666666667,
+      "holdout": 0.9,
+      "params": {
+        "svc__C": 1.232935658964085,
+        "svc__gamma": 0.0626114657151504
+      }
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 1003,
+      "seconds": 2.967734300007578,
+      "candidate_cv_calls": 72,
+      "cv": 0.8766666666666666,
+      "holdout": 0.835,
+      "params": {
+        "svc__C": 43.65118801229475,
+        "svc__gamma": 0.003228219691696583
+      }
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 1004,
+      "seconds": 2.897905699996045,
+      "candidate_cv_calls": 72,
+      "cv": 0.8616666666666667,
+      "holdout": 0.88,
+      "params": {
+        "svc__C": 2.607203584109073,
+        "svc__gamma": 0.14604779937694976
+      }
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 1005,
+      "seconds": 2.789414900005795,
+      "candidate_cv_calls": 72,
+      "cv": 0.8866666666666667,
+      "holdout": 0.83,
+      "params": {
+        "svc__C": 11.880410136694746,
+        "svc__gamma": 0.182540081401395
+      }
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 1006,
+      "seconds": 2.718473899993114,
+      "candidate_cv_calls": 72,
+      "cv": 0.8666666666666667,
+      "holdout": 0.875,
+      "params": {
+        "svc__C": 1.2529315906421807,
+        "svc__gamma": 0.03915153560945948
+      }
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 1007,
+      "seconds": 2.6280563000182156,
+      "candidate_cv_calls": 72,
+      "cv": 0.875,
+      "holdout": 0.86,
+      "params": {
+        "svc__C": 1.5595510700837383,
+        "svc__gamma": 0.15448459769011796
+      }
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 1008,
+      "seconds": 2.6746272999735083,
+      "candidate_cv_calls": 72,
+      "cv": 0.87,
+      "holdout": 0.865,
+      "params": {
+        "svc__C": 15.364972459114181,
+        "svc__gamma": 0.13320744101158602
+      }
+    }
+  ],
+  "reproduction_script": "\"\"\"Compare default HPO evolution with equal-budget random search on fixed splits.\"\"\"\n\nimport json\nimport time\nfrom pathlib import Path\n\nimport numpy as np\nfrom scipy.stats import loguniform\nfrom sklearn.datasets import load_breast_cancer, load_digits, make_classification\nfrom sklearn.metrics import accuracy_score\nfrom sklearn.model_selection import RandomizedSearchCV, StratifiedKFold, train_test_split\nfrom sklearn.pipeline import make_pipeline\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.svm import SVC\nfrom threadpoolctl import threadpool_limits\n\n\nwork = Path(\".agent-runs/performance-v2\")\ndatasets = {\n    \"breast\": load_breast_cancer(return_X_y=True),\n    \"digits\": load_digits(return_X_y=True),\n    \"synthetic\": make_classification(\n        n_samples=800, n_features=20, n_informative=8, n_redundant=4, random_state=19\n    ),\n}\nspace = {\"svc__C\": loguniform(0.01, 100), \"svc__gamma\": loguniform(1e-4, 1)}\nwith threadpool_limits(limits=1), (work / \"hpo-random-control.jsonl\").open(\"w\", encoding=\"utf-8\") as stream:\n    for dataset, (X, y) in datasets.items():\n        for seed in range(1001, 1009):\n            train, test = train_test_split(\n                np.arange(len(y)), test_size=0.25, stratify=y, random_state=seed\n            )\n            Xtr, Xte, ytr, yte = X[train], X[test], y[train], y[test]\n            folds = list(StratifiedKFold(3, shuffle=True, random_state=seed).split(Xtr, ytr))\n            started = time.perf_counter()\n            search = RandomizedSearchCV(\n                make_pipeline(StandardScaler(), SVC(kernel=\"rbf\")),\n                param_distributions=space,\n                n_iter=72,\n                cv=folds,\n                scoring=\"accuracy\",\n                random_state=seed,\n                n_jobs=1,\n                error_score=\"raise\",\n            ).fit(Xtr, ytr)\n            seconds = time.perf_counter() - started\n            row = dict(\n                dataset=dataset,\n                seed=seed,\n                seconds=seconds,\n                candidate_cv_calls=len(search.cv_results_[\"mean_test_score\"]),\n                cv=float(search.best_score_),\n                holdout=float(accuracy_score(yte, search.best_estimator_.predict(Xte))),\n                params={key: float(value) for key, value in search.best_params_.items()},\n            )\n            stream.write(json.dumps(row) + \"\\n\")\n            stream.flush()\n            print(json.dumps(row), flush=True)\n",
+  "summary_script": "\"\"\"Freeze the paired, equal-budget HPO random-search control.\"\"\"\n\nimport hashlib\nimport importlib.metadata\nimport json\nimport math\nimport platform\nimport statistics\nimport subprocess\nfrom pathlib import Path\n\n\nwork = Path(\".agent-runs/performance-v2\")\nga_artifact = json.loads(Path(\"benchmarks/results/performance-v2/hpo-progress.json\").read_text(encoding=\"utf-8\"))\nga = {(row[\"dataset\"], row[\"seed\"]): row for row in ga_artifact[\"raw\"]}\nrandom = [json.loads(line) for line in (work / \"hpo-random-control.jsonl\").read_text(encoding=\"utf-8\").splitlines()]\nby_key = {(row[\"dataset\"], row[\"seed\"]): row for row in random}\nexpected = {(dataset, seed) for dataset in (\"breast\", \"digits\", \"synthetic\") for seed in range(1001, 1009)}\nassert len(random) == len(by_key) == len(expected) == len(ga) == 24\nassert set(by_key) == set(ga) == expected\nfor row in random:\n    assert row[\"candidate_cv_calls\"] == 72\n    assert math.isfinite(row[\"seconds\"]) and row[\"seconds\"] > 0\n    assert 0 <= row[\"cv\"] <= 1 and 0 <= row[\"holdout\"] <= 1\n    assert 0.01 <= row[\"params\"][\"svc__C\"] <= 100\n    assert 1e-4 <= row[\"params\"][\"svc__gamma\"] <= 1\n\nsummary = []\nfor dataset in (\"breast\", \"digits\", \"synthetic\"):\n    paired = [(ga[(dataset, seed)], by_key[(dataset, seed)]) for seed in range(1001, 1009)]\n    deltas = [ga_row[\"final_holdout\"] - random_row[\"holdout\"] for ga_row, random_row in paired]\n    summary.append(dict(\n        dataset=dataset,\n        ga_cv_mean=statistics.mean(a[\"final_cv\"] for a, _ in paired),\n        random_cv_mean=statistics.mean(b[\"cv\"] for _, b in paired),\n        ga_holdout_mean=statistics.mean(a[\"final_holdout\"] for a, _ in paired),\n        random_holdout_mean=statistics.mean(b[\"holdout\"] for _, b in paired),\n        heldout_delta_mean=statistics.mean(deltas),\n        worst_ga_holdout_delta=min(deltas),\n        ga_wins=sum(delta > 0 for delta in deltas),\n        ties=sum(delta == 0 for delta in deltas),\n        ga_losses=sum(delta < 0 for delta in deltas),\n        ga_seconds_mean=statistics.mean(a[\"seconds\"] for a, _ in paired),\n        random_seconds_mean=statistics.mean(b[\"seconds\"] for _, b in paired),\n        mean_time_ratio=statistics.mean(a[\"seconds\"] for a, _ in paired) / statistics.mean(b[\"seconds\"] for _, b in paired),\n        ga_cv_calls_mean=statistics.mean(a[\"candidate_cv_calls\"] for a, _ in paired),\n    ))\n\npayload = dict(\n    question=\"Does default GASearchCV beat a same-budget random hyperparameter search?\",\n    source_commit=subprocess.check_output([\"git\", \"rev-parse\", \"HEAD\"], text=True).strip(),\n    ga_artifact=\"benchmarks/results/performance-v2/hpo-progress.json\",\n    ga_raw_sha256=ga_artifact[\"raw_sha256\"],\n    settings=dict(\n        datasets=[\"breast\", \"digits\", \"synthetic\"], seeds=list(range(1001, 1009)),\n        holdout_fraction=0.25, cv_folds=3, candidate_budget=72, cpu_threads=1,\n        parameter_space=ga_artifact[\"settings\"][\"parameter_space\"],\n        model=ga_artifact[\"settings\"][\"model\"],\n        order=\"All GA searches were timed before all random searches; compare quality on paired splits, treat timing as descriptive.\",\n    ),\n    environment={\"python\": platform.python_version(), **{name: importlib.metadata.version(name) for name in (\"numpy\", \"scikit-learn\", \"scipy\", \"deap\")}},\n    source_sha256=ga_artifact[\"source_sha256\"],\n    split_sha256=ga_artifact[\"split_sha256\"],\n    random_raw_sha256=hashlib.sha256(json.dumps(random, sort_keys=True).encode()).hexdigest(),\n    summary=summary,\n    random_raw=random,\n    reproduction_script=(work / \"hpo-random-control.py\").read_text(encoding=\"utf-8\"),\n    summary_script=Path(__file__).read_text(encoding=\"utf-8\"),\n)\ndestination = Path(\"benchmarks/results/performance-v2/hpo-random-control.json\")\ndestination.write_text(json.dumps(payload, indent=2), encoding=\"utf-8\")\nprint(json.dumps(summary, indent=2))\n"
+}

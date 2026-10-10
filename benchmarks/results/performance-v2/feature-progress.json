@@ -1,0 +1,632 @@
+{
+  "question": "Does default feature evolution improve solutions beyond the initial population?",
+  "source_commit": "b3a1320d1035b4acc296cc60fe63cf8b005e7299",
+  "settings": {
+    "datasets": [
+      "breast",
+      "digits",
+      "synthetic"
+    ],
+    "seeds": [
+      991,
+      992,
+      993,
+      994,
+      995,
+      996,
+      997,
+      998
+    ],
+    "holdout_fraction": 0.25,
+    "cv_folds": 3,
+    "population_size": 8,
+    "generations": 4,
+    "proposal_budget": 72,
+    "max_features": "half",
+    "model": "StandardScaler plus SVC(kernel=rbf, C=10)",
+    "cpu_threads": 1
+  },
+  "environment": {
+    "python": "3.12.0",
+    "numpy": "2.5.3",
+    "scikit-learn": "1.9.1",
+    "scipy": "1.18.1",
+    "deap": "1.4.4"
+  },
+  "source_sha256": {
+    "sklearn_genetic/genetic_search.py": "c7d49583e0250cd2208c2e9b6321b44ea8f850cb07816ef244adb72527a13600",
+    "sklearn_genetic/algorithms.py": "2f1b607b8c671923d4ea604f8ed81b8b502e609b4ebb5c49e904612c0b7affd7",
+    "sklearn_genetic/population.py": "84f210e606355a687cc91d220fe318ac4ea9e17a85a4acc62f53643a1b4928bf"
+  },
+  "split_sha256": {
+    "breast/991": "9caa3a134776adfef2ff4f846412f16ace8e47593013ec336124066eacf98bb9",
+    "breast/992": "1bb3b1e60a62a3dbfac4eb003d5b3e32182067ec467ae19d7571d287b3f586d0",
+    "breast/993": "7bb09b3a9caf6014a33726694fc71c0fd34d3c4da8e2c4e9ca4a88058da6c5ff",
+    "breast/994": "ad185e7ade2945de38401c38a1527b5b8105cd4168e0912de467dae773afc0fa",
+    "breast/995": "b7f9476122c0d9946705a476b5257417d82d71686f0b61cd4871505e82fb8ff4",
+    "breast/996": "9e923c2a850a322c10aa6638ac8e901bdbcadfa15872fe955f5ee0718210f5ca",
+    "breast/997": "e69b22aba1a94469e2f674c719bcd5755afef3da8fc6b4573498f2b96ac5758b",
+    "breast/998": "22260fbf75ed01cc6929e954a1d635f4753036c25b667e3806ece6ba771916ab",
+    "digits/991": "08d1622c4a66f0f44f94076ded68d968dfc6358d99b88b3ec3fd0df60734f7c5",
+    "digits/992": "80f649a199493dad2c1dbaa90d9e75d6658772e96e675208c838302569949932",
+    "digits/993": "ab736bf9151219dd1e9a7b9a8b293ec71b3e462767fd4baae22f620fb81c2844",
+    "digits/994": "b9dadc1fccf31a35f8ea53bed5c3bf8573102b392c93fb179ebcd23cbd67feab",
+    "digits/995": "f0a4ffe1902d7d268bcb9088bf993281c9bb2dc3b98d6d41af77650bffea6edb",
+    "digits/996": "003cfd72d06686d7e06e38fb4a303d1905e0c35e7ba24adf438cdbd6afd80abc",
+    "digits/997": "3d4963b4ed02c8f3eaea6f54420667afc805fc52026b0e7357cccc66a5ed2207",
+    "digits/998": "008384920405c14118ae44006a42f93466b71c22c234131442ce871715e9f7bc",
+    "synthetic/991": "9354b953251181eecf76e1fd2619705f8e9d10b13e2924f558937ae44cf4fb5a",
+    "synthetic/992": "f8e1d6f653e5569fd942f77dec14bfc0669f1b9b65c849c5f65b92c3416e4679",
+    "synthetic/993": "4cc38364fa77ea3c1138942c3dec7d867dcaffeba50517b1a8acc06de76a1131",
+    "synthetic/994": "f86e32c00b51f770751b12775592ad8c91ccf15a275c63b73c95ac1a2bc8ee38",
+    "synthetic/995": "2cf1322d6b53845b8e6010934f1348fbaa8c2453c7eb446b90a81da9dbf8fda0",
+    "synthetic/996": "90a3a01311a17aaffec82d73644b3a4ebcd83b115182faf831a4adec58eed83c",
+    "synthetic/997": "7ff7f29e8aaa01127e3dd703c5077308ad1640a909b5492f27f9ee33f7d6a587",
+    "synthetic/998": "597caf2b29ae7d1df5cf3ed583972b3d4a40a115465c1e0d4bd3286cb7def114"
+  },
+  "raw_sha256": "012b9958b81032323f3ec44be9977031dde0bc5c7af3028241f54a3338a72c70",
+  "summary": [
+    {
+      "dataset": "breast",
+      "seeds": [
+        991,
+        992,
+        993,
+        994,
+        995,
+        996,
+        997,
+        998
+      ],
+      "initial_cv_mean": 0.971537558685446,
+      "final_cv_mean": 0.9797535211267606,
+      "cv_delta_mean": 0.008215962441314534,
+      "initial_holdout_mean": 0.9667832167832168,
+      "final_holdout_mean": 0.965034965034965,
+      "heldout_delta_mean": -0.0017482517482517307,
+      "worst_heldout_delta": -0.020979020979020935,
+      "heldout_wins": 1,
+      "heldout_ties": 4,
+      "heldout_losses": 3,
+      "cv_improved": 7,
+      "generation_best_mean": [
+        0.971537558685446,
+        0.9747652582159625,
+        0.977699530516432,
+        0.9788732394366197,
+        0.9797535211267606
+      ],
+      "initial_features_mean": 12,
+      "final_features_mean": 12.375,
+      "seconds_mean": 1.047274849996029
+    },
+    {
+      "dataset": "digits",
+      "seeds": [
+        991,
+        992,
+        993,
+        994,
+        995,
+        996,
+        997,
+        998
+      ],
+      "initial_cv_mean": 0.9514662212323682,
+      "final_cv_mean": 0.9725315515961396,
+      "cv_delta_mean": 0.021065330363771298,
+      "initial_holdout_mean": 0.9591666666666666,
+      "final_holdout_mean": 0.9744444444444444,
+      "heldout_delta_mean": 0.015277777777777779,
+      "worst_heldout_delta": -0.008888888888888946,
+      "heldout_wins": 7,
+      "heldout_ties": 0,
+      "heldout_losses": 1,
+      "cv_improved": 8,
+      "generation_best_mean": [
+        0.9514662212323682,
+        0.9580549368968078,
+        0.9690051967334818,
+        0.9714179658500371,
+        0.9725315515961396
+      ],
+      "initial_features_mean": 30.375,
+      "final_features_mean": 31.25,
+      "seconds_mean": 9.341791262504557
+    },
+    {
+      "dataset": "synthetic",
+      "seeds": [
+        991,
+        992,
+        993,
+        994,
+        995,
+        996,
+        997,
+        998
+      ],
+      "initial_cv_mean": 0.8264583333333333,
+      "final_cv_mean": 0.8995833333333334,
+      "cv_delta_mean": 0.07312500000000002,
+      "initial_holdout_mean": 0.83,
+      "final_holdout_mean": 0.905,
+      "heldout_delta_mean": 0.07500000000000004,
+      "worst_heldout_delta": 0.010000000000000009,
+      "heldout_wins": 8,
+      "heldout_ties": 0,
+      "heldout_losses": 0,
+      "cv_improved": 8,
+      "generation_best_mean": [
+        0.8264583333333333,
+        0.8547916666666666,
+        0.86875,
+        0.8812500000000001,
+        0.8995833333333334
+      ],
+      "initial_features_mean": 7.5,
+      "final_features_mean": 9.25,
+      "seconds_mean": 2.2290645749963005
+    }
+  ],
+  "raw": [
+    {
+      "dataset": "breast",
+      "seed": 991,
+      "seconds": 1.0936489000159781,
+      "candidate_cv_calls": 72,
+      "initial_cv": 0.9765258215962441,
+      "final_cv": 0.9788732394366196,
+      "initial_holdout": 0.9790209790209791,
+      "final_holdout": 0.9790209790209791,
+      "initial_features": 13,
+      "final_features": 14,
+      "history_best": [
+        0.9765258215962441,
+        0.9765258215962441,
+        0.9765258215962441,
+        0.9788732394366196,
+        0.9788732394366196
+      ]
+    },
+    {
+      "dataset": "breast",
+      "seed": 992,
+      "seconds": 1.0610256000072695,
+      "candidate_cv_calls": 72,
+      "initial_cv": 0.983568075117371,
+      "final_cv": 0.983568075117371,
+      "initial_holdout": 0.958041958041958,
+      "final_holdout": 0.958041958041958,
+      "initial_features": 15,
+      "final_features": 13,
+      "history_best": [
+        0.983568075117371,
+        0.983568075117371,
+        0.983568075117371,
+        0.983568075117371,
+        0.983568075117371
+      ]
+    },
+    {
+      "dataset": "breast",
+      "seed": 993,
+      "seconds": 1.0670965999888722,
+      "candidate_cv_calls": 72,
+      "initial_cv": 0.960093896713615,
+      "final_cv": 0.976525821596244,
+      "initial_holdout": 0.972027972027972,
+      "final_holdout": 0.965034965034965,
+      "initial_features": 13,
+      "final_features": 12,
+      "history_best": [
+        0.960093896713615,
+        0.9671361502347419,
+        0.9741784037558686,
+        0.976525821596244,
+        0.976525821596244
+      ]
+    },
+    {
+      "dataset": "breast",
+      "seed": 994,
+      "seconds": 1.0432442000019364,
+      "candidate_cv_calls": 72,
+      "initial_cv": 0.9647887323943664,
+      "final_cv": 0.9741784037558686,
+      "initial_holdout": 0.972027972027972,
+      "final_holdout": 0.972027972027972,
+      "initial_features": 15,
+      "final_features": 12,
+      "history_best": [
+        0.9647887323943664,
+        0.9671361502347419,
+        0.9741784037558686,
+        0.9741784037558686,
+        0.9741784037558686
+      ]
+    },
+    {
+      "dataset": "breast",
+      "seed": 995,
+      "seconds": 1.0492916999792214,
+      "candidate_cv_calls": 72,
+      "initial_cv": 0.971830985915493,
+      "final_cv": 0.9788732394366196,
+      "initial_holdout": 0.972027972027972,
+      "final_holdout": 0.972027972027972,
+      "initial_features": 13,
+      "final_features": 11,
+      "history_best": [
+        0.971830985915493,
+        0.9765258215962441,
+        0.9788732394366196,
+        0.9788732394366196,
+        0.9788732394366196
+      ]
+    },
+    {
+      "dataset": "breast",
+      "seed": 996,
+      "seconds": 1.0148246999888215,
+      "candidate_cv_calls": 72,
+      "initial_cv": 0.9671361502347419,
+      "final_cv": 0.9812206572769954,
+      "initial_holdout": 0.951048951048951,
+      "final_holdout": 0.9790209790209791,
+      "initial_features": 7,
+      "final_features": 12,
+      "history_best": [
+        0.9671361502347419,
+        0.971830985915493,
+        0.9741784037558686,
+        0.9765258215962441,
+        0.9812206572769954
+      ]
+    },
+    {
+      "dataset": "breast",
+      "seed": 997,
+      "seconds": 1.0733404000056908,
+      "candidate_cv_calls": 72,
+      "initial_cv": 0.9694835680751174,
+      "final_cv": 0.9812206572769954,
+      "initial_holdout": 0.958041958041958,
+      "final_holdout": 0.9440559440559441,
+      "initial_features": 9,
+      "final_features": 14,
+      "history_best": [
+        0.9694835680751174,
+        0.9765258215962441,
+        0.9765258215962441,
+        0.9788732394366196,
+        0.9812206572769954
+      ]
+    },
+    {
+      "dataset": "breast",
+      "seed": 998,
+      "seconds": 0.9757266999804415,
+      "candidate_cv_calls": 72,
+      "initial_cv": 0.9788732394366196,
+      "final_cv": 0.983568075117371,
+      "initial_holdout": 0.972027972027972,
+      "final_holdout": 0.951048951048951,
+      "initial_features": 11,
+      "final_features": 11,
+      "history_best": [
+        0.9788732394366196,
+        0.9788732394366196,
+        0.983568075117371,
+        0.983568075117371,
+        0.983568075117371
+      ]
+    },
+    {
+      "dataset": "digits",
+      "seed": 991,
+      "seconds": 9.562181599991163,
+      "candidate_cv_calls": 72,
+      "initial_cv": 0.9502598366740905,
+      "final_cv": 0.9806978470675575,
+      "initial_holdout": 0.9644444444444444,
+      "final_holdout": 0.9777777777777777,
+      "initial_features": 32,
+      "final_features": 32,
+      "history_best": [
+        0.9502598366740905,
+        0.9584261321455085,
+        0.9732739420935412,
+        0.9806978470675575,
+        0.9806978470675575
+      ]
+    },
+    {
+      "dataset": "digits",
+      "seed": 992,
+      "seconds": 9.178007799986517,
+      "candidate_cv_calls": 72,
+      "initial_cv": 0.955456570155902,
+      "final_cv": 0.9725315515961396,
+      "initial_holdout": 0.9733333333333334,
+      "final_holdout": 0.9644444444444444,
+      "initial_features": 23,
+      "final_features": 31,
+      "history_best": [
+        0.955456570155902,
+        0.9561989606533037,
+        0.9643652561247217,
+        0.9725315515961396,
+        0.9725315515961396
+      ]
+    },
+    {
+      "dataset": "digits",
+      "seed": 993,
+      "seconds": 9.127734600013355,
+      "candidate_cv_calls": 72,
+      "initial_cv": 0.9472902746844841,
+      "final_cv": 0.9688195991091314,
+      "initial_holdout": 0.96,
+      "final_holdout": 0.9844444444444445,
+      "initial_features": 32,
+      "final_features": 32,
+      "history_best": [
+        0.9472902746844841,
+        0.959910913140312,
+        0.9658500371195249,
+        0.9673348181143281,
+        0.9688195991091314
+      ]
+    },
+    {
+      "dataset": "digits",
+      "seed": 994,
+      "seconds": 8.963280800002394,
+      "candidate_cv_calls": 72,
+      "initial_cv": 0.9487750556792873,
+      "final_cv": 0.9673348181143281,
+      "initial_holdout": 0.9577777777777777,
+      "final_holdout": 0.9644444444444444,
+      "initial_features": 32,
+      "final_features": 32,
+      "history_best": [
+        0.9487750556792873,
+        0.9621380846325168,
+        0.9658500371195249,
+        0.9658500371195249,
+        0.9673348181143281
+      ]
+    },
+    {
+      "dataset": "digits",
+      "seed": 995,
+      "seconds": 9.494787200004794,
+      "candidate_cv_calls": 72,
+      "initial_cv": 0.949517446176689,
+      "final_cv": 0.9688195991091314,
+      "initial_holdout": 0.9622222222222222,
+      "final_holdout": 0.9755555555555555,
+      "initial_features": 32,
+      "final_features": 31,
+      "history_best": [
+        0.949517446176689,
+        0.9524870081662954,
+        0.9643652561247217,
+        0.9658500371195249,
+        0.9688195991091314
+      ]
+    },
+    {
+      "dataset": "digits",
+      "seed": 996,
+      "seconds": 9.76289490002091,
+      "candidate_cv_calls": 72,
+      "initial_cv": 0.9561989606533037,
+      "final_cv": 0.9755011135857461,
+      "initial_holdout": 0.9511111111111111,
+      "final_holdout": 0.9688888888888889,
+      "initial_features": 32,
+      "final_features": 31,
+      "history_best": [
+        0.9561989606533037,
+        0.9561989606533037,
+        0.9725315515961395,
+        0.9732739420935412,
+        0.9755011135857461
+      ]
+    },
+    {
+      "dataset": "digits",
+      "seed": 997,
+      "seconds": 9.304288699990138,
+      "candidate_cv_calls": 72,
+      "initial_cv": 0.9628804751299184,
+      "final_cv": 0.9710467706013363,
+      "initial_holdout": 0.9644444444444444,
+      "final_holdout": 0.9755555555555555,
+      "initial_features": 32,
+      "final_features": 29,
+      "history_best": [
+        0.9628804751299184,
+        0.9628804751299184,
+        0.9703043801039347,
+        0.9703043801039347,
+        0.9710467706013363
+      ]
+    },
+    {
+      "dataset": "digits",
+      "seed": 998,
+      "seconds": 9.341154500027187,
+      "candidate_cv_calls": 72,
+      "initial_cv": 0.941351150705271,
+      "final_cv": 0.9755011135857461,
+      "initial_holdout": 0.94,
+      "final_holdout": 0.9844444444444445,
+      "initial_features": 28,
+      "final_features": 32,
+      "history_best": [
+        0.941351150705271,
+        0.9561989606533037,
+        0.9755011135857461,
+        0.9755011135857461,
+        0.9755011135857461
+      ]
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 991,
+      "seconds": 2.0540131000161637,
+      "candidate_cv_calls": 71,
+      "initial_cv": 0.8283333333333333,
+      "final_cv": 0.9183333333333333,
+      "initial_holdout": 0.855,
+      "final_holdout": 0.905,
+      "initial_features": 9,
+      "final_features": 10,
+      "history_best": [
+        0.8283333333333333,
+        0.8783333333333333,
+        0.8783333333333333,
+        0.8783333333333333,
+        0.9183333333333333
+      ]
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 992,
+      "seconds": 2.1681319999916013,
+      "candidate_cv_calls": 71,
+      "initial_cv": 0.8266666666666667,
+      "final_cv": 0.9100000000000001,
+      "initial_holdout": 0.87,
+      "final_holdout": 0.925,
+      "initial_features": 7,
+      "final_features": 9,
+      "history_best": [
+        0.8266666666666667,
+        0.8266666666666667,
+        0.8333333333333334,
+        0.8733333333333334,
+        0.9100000000000001
+      ]
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 993,
+      "seconds": 2.1430797000066377,
+      "candidate_cv_calls": 72,
+      "initial_cv": 0.8316666666666667,
+      "final_cv": 0.8833333333333333,
+      "initial_holdout": 0.825,
+      "final_holdout": 0.925,
+      "initial_features": 5,
+      "final_features": 10,
+      "history_best": [
+        0.8316666666666667,
+        0.8316666666666667,
+        0.8449999999999999,
+        0.855,
+        0.8833333333333333
+      ]
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 994,
+      "seconds": 2.1870220999990124,
+      "candidate_cv_calls": 72,
+      "initial_cv": 0.7983333333333335,
+      "final_cv": 0.9116666666666666,
+      "initial_holdout": 0.765,
+      "final_holdout": 0.92,
+      "initial_features": 9,
+      "final_features": 9,
+      "history_best": [
+        0.7983333333333335,
+        0.8483333333333333,
+        0.8866666666666667,
+        0.9,
+        0.9116666666666666
+      ]
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 995,
+      "seconds": 2.6360242000082508,
+      "candidate_cv_calls": 72,
+      "initial_cv": 0.835,
+      "final_cv": 0.8933333333333334,
+      "initial_holdout": 0.83,
+      "final_holdout": 0.885,
+      "initial_features": 7,
+      "final_features": 10,
+      "history_best": [
+        0.835,
+        0.84,
+        0.8683333333333333,
+        0.8816666666666667,
+        0.8933333333333334
+      ]
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 996,
+      "seconds": 2.1082068999821786,
+      "candidate_cv_calls": 71,
+      "initial_cv": 0.8616666666666667,
+      "final_cv": 0.8933333333333334,
+      "initial_holdout": 0.86,
+      "final_holdout": 0.87,
+      "initial_features": 9,
+      "final_features": 7,
+      "history_best": [
+        0.8616666666666667,
+        0.8783333333333333,
+        0.8933333333333334,
+        0.8933333333333334,
+        0.8933333333333334
+      ]
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 997,
+      "seconds": 2.2036545999872033,
+      "candidate_cv_calls": 71,
+      "initial_cv": 0.805,
+      "final_cv": 0.9066666666666667,
+      "initial_holdout": 0.775,
+      "final_holdout": 0.9,
+      "initial_features": 5,
+      "final_features": 9,
+      "history_best": [
+        0.805,
+        0.8733333333333334,
+        0.8833333333333333,
+        0.9066666666666667,
+        0.9066666666666667
+      ]
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 998,
+      "seconds": 2.3323839999793563,
+      "candidate_cv_calls": 71,
+      "initial_cv": 0.8250000000000001,
+      "final_cv": 0.88,
+      "initial_holdout": 0.86,
+      "final_holdout": 0.91,
+      "initial_features": 9,
+      "final_features": 10,
+      "history_best": [
+        0.8250000000000001,
+        0.8616666666666667,
+        0.8616666666666667,
+        0.8616666666666667,
+        0.88
+      ]
+    }
+  ],
+  "reproduction_script": "\"\"\"Measure whether feature-search generations improve on the initial population.\"\"\"\n\nimport json\nimport time\nfrom pathlib import Path\n\nimport numpy as np\nfrom sklearn.base import clone\nfrom sklearn.datasets import load_breast_cancer, load_digits, make_classification\nfrom sklearn.metrics import accuracy_score\nfrom sklearn.model_selection import StratifiedKFold, train_test_split\nfrom sklearn.pipeline import make_pipeline\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.svm import SVC\nfrom threadpoolctl import threadpool_limits\n\nfrom sklearn_genetic import GAFeatureSelectionCV\n\n\nwork = Path(\".agent-runs/performance-v2\")\ndatasets = {\n    \"breast\": load_breast_cancer(return_X_y=True),\n    \"digits\": load_digits(return_X_y=True),\n    \"synthetic\": make_classification(\n        n_samples=800, n_features=20, n_informative=8, n_redundant=4, random_state=19\n    ),\n}\nwith threadpool_limits(limits=1), (work / \"feature-progress.jsonl\").open(\"w\", encoding=\"utf-8\") as stream:\n    for dataset, (X, y) in datasets.items():\n        for seed in range(991, 999):\n            train, test = train_test_split(\n                np.arange(len(y)), test_size=0.25, stratify=y, random_state=seed\n            )\n            Xtr, Xte, ytr, yte = X[train], X[test], y[train], y[test]\n            folds = list(StratifiedKFold(3, shuffle=True, random_state=seed).split(Xtr, ytr))\n            model = make_pipeline(StandardScaler(), SVC(kernel=\"rbf\", C=10))\n            started = time.perf_counter()\n            search = GAFeatureSelectionCV(\n                clone(model),\n                cv=folds,\n                scoring=\"accuracy\",\n                max_features=X.shape[1] // 2,\n                population_size=8,\n                generations=4,\n                random_state=seed,\n                n_jobs=1,\n                verbose=False,\n                error_score=\"raise\",\n            ).fit(Xtr, ytr)\n            seconds = time.perf_counter() - started\n            scores = np.asarray(search.cv_results_[\"mean_test_score\"], dtype=float)\n            masks = [np.asarray(mask, dtype=bool) for mask in search.cv_results_[\"features\"]]\n            assert len(scores) == len(masks) == 72\n            initial_index = max(range(8), key=lambda index: (scores[index], -masks[index].sum()))\n            initial_mask = masks[initial_index]\n            initial_model = clone(model).fit(Xtr[:, initial_mask], ytr)\n            final_mask = search.support_\n            row = dict(\n                dataset=dataset,\n                seed=seed,\n                seconds=seconds,\n                candidate_cv_calls=search.fit_stats_[\"cross_validate_calls\"],\n                initial_cv=float(scores[initial_index]),\n                final_cv=float(np.nanmax(scores)),\n                initial_holdout=float(\n                    accuracy_score(yte, initial_model.predict(Xte[:, initial_mask]))\n                ),\n                final_holdout=float(\n                    accuracy_score(yte, search.best_estimator_.predict(Xte[:, final_mask]))\n                ),\n                initial_features=int(initial_mask.sum()),\n                final_features=int(final_mask.sum()),\n                history_best=[float(np.ravel(value)[0]) for value in search.history[\"fitness_best\"]],\n            )\n            stream.write(json.dumps(row) + \"\\n\")\n            stream.flush()\n            print(json.dumps(row), flush=True)\n",
+  "summary_script": "\"\"\"Freeze feature-selection quality gains from generation zero to generation four.\"\"\"\n\nimport hashlib\nimport importlib.metadata\nimport json\nimport math\nimport platform\nimport statistics\nimport subprocess\nfrom pathlib import Path\n\nimport numpy as np\nfrom sklearn.datasets import load_breast_cancer, load_digits, make_classification\nfrom sklearn.model_selection import StratifiedKFold, train_test_split\n\n\nwork = Path(\".agent-runs/performance-v2\")\nrows = [\n    json.loads(line)\n    for line in (work / \"feature-progress.jsonl\").read_text(encoding=\"utf-8\").splitlines()\n]\nexpected = {\n    (dataset, seed)\n    for dataset in (\"breast\", \"digits\", \"synthetic\")\n    for seed in range(991, 999)\n}\nby_key = {(row[\"dataset\"], row[\"seed\"]): row for row in rows}\nassert len(rows) == len(by_key) == len(expected) == 24 and set(by_key) == expected\nfor row in rows:\n    assert 0 < row[\"candidate_cv_calls\"] <= 72\n    assert len(row[\"history_best\"]) == 5\n    assert math.isclose(row[\"initial_cv\"], row[\"history_best\"][0], abs_tol=1e-12)\n    assert math.isclose(row[\"final_cv\"], row[\"history_best\"][-1], abs_tol=1e-12)\n    assert all(left <= right + 1e-12 for left, right in zip(row[\"history_best\"], row[\"history_best\"][1:]))\n    assert 1 <= row[\"initial_features\"] <= {\"breast\": 15, \"digits\": 32, \"synthetic\": 10}[row[\"dataset\"]]\n    assert 1 <= row[\"final_features\"] <= {\"breast\": 15, \"digits\": 32, \"synthetic\": 10}[row[\"dataset\"]]\n    assert 0 <= row[\"initial_holdout\"] <= 1 and 0 <= row[\"final_holdout\"] <= 1\n\nsummary = []\nfor dataset in (\"breast\", \"digits\", \"synthetic\"):\n    subset = [by_key[(dataset, seed)] for seed in range(991, 999)]\n    heldout_deltas = [row[\"final_holdout\"] - row[\"initial_holdout\"] for row in subset]\n    summary.append(\n        dict(\n            dataset=dataset,\n            seeds=list(range(991, 999)),\n            initial_cv_mean=statistics.mean(row[\"initial_cv\"] for row in subset),\n            final_cv_mean=statistics.mean(row[\"final_cv\"] for row in subset),\n            cv_delta_mean=statistics.mean(row[\"final_cv\"] - row[\"initial_cv\"] for row in subset),\n            initial_holdout_mean=statistics.mean(row[\"initial_holdout\"] for row in subset),\n            final_holdout_mean=statistics.mean(row[\"final_holdout\"] for row in subset),\n            heldout_delta_mean=statistics.mean(heldout_deltas),\n            worst_heldout_delta=min(heldout_deltas),\n            heldout_wins=sum(delta > 0 for delta in heldout_deltas),\n            heldout_ties=sum(delta == 0 for delta in heldout_deltas),\n            heldout_losses=sum(delta < 0 for delta in heldout_deltas),\n            cv_improved=sum(row[\"final_cv\"] > row[\"initial_cv\"] for row in subset),\n            generation_best_mean=[\n                statistics.mean(row[\"history_best\"][generation] for row in subset)\n                for generation in range(5)\n            ],\n            initial_features_mean=statistics.mean(row[\"initial_features\"] for row in subset),\n            final_features_mean=statistics.mean(row[\"final_features\"] for row in subset),\n            seconds_mean=statistics.mean(row[\"seconds\"] for row in subset),\n        )\n    )\n\ndatasets = {\n    \"breast\": load_breast_cancer(return_X_y=True),\n    \"digits\": load_digits(return_X_y=True),\n    \"synthetic\": make_classification(\n        n_samples=800, n_features=20, n_informative=8, n_redundant=4, random_state=19\n    ),\n}\nsplit_sha256 = {}\nfor dataset, (_, y) in datasets.items():\n    for seed in range(991, 999):\n        train, test = train_test_split(\n            np.arange(len(y)), test_size=0.25, stratify=y, random_state=seed\n        )\n        folds = list(StratifiedKFold(3, shuffle=True, random_state=seed).split(train, y[train]))\n        arrays = [train, test] + [array for fold in folds for array in fold]\n        split_sha256[f\"{dataset}/{seed}\"] = hashlib.sha256(\n            b\"\".join(np.asarray(array, dtype=\"<i8\").tobytes() for array in arrays)\n        ).hexdigest()\n\nsource_paths = [\n    Path(\"sklearn_genetic/genetic_search.py\"),\n    Path(\"sklearn_genetic/algorithms.py\"),\n    Path(\"sklearn_genetic/population.py\"),\n]\npayload = dict(\n    question=\"Does default feature evolution improve solutions beyond the initial population?\",\n    source_commit=subprocess.check_output([\"git\", \"rev-parse\", \"HEAD\"], text=True).strip(),\n    settings=dict(\n        datasets=list(datasets),\n        seeds=list(range(991, 999)),\n        holdout_fraction=0.25,\n        cv_folds=3,\n        population_size=8,\n        generations=4,\n        proposal_budget=72,\n        max_features=\"half\",\n        model=\"StandardScaler plus SVC(kernel=rbf, C=10)\",\n        cpu_threads=1,\n    ),\n    environment={\n        \"python\": platform.python_version(),\n        **{\n            name: importlib.metadata.version(name)\n            for name in (\"numpy\", \"scikit-learn\", \"scipy\", \"deap\")\n        },\n    },\n    source_sha256={str(path).replace(\"\\\\\", \"/\"): hashlib.sha256(path.read_bytes()).hexdigest() for path in source_paths},\n    split_sha256=split_sha256,\n    raw_sha256=hashlib.sha256(json.dumps(rows, sort_keys=True).encode()).hexdigest(),\n    summary=summary,\n    raw=rows,\n    reproduction_script=(work / \"feature-progress.py\").read_text(encoding=\"utf-8\"),\n    summary_script=Path(__file__).read_text(encoding=\"utf-8\"),\n)\ndestination = Path(\"benchmarks/results/performance-v2/feature-progress.json\")\ndestination.write_text(json.dumps(payload, indent=2), encoding=\"utf-8\")\nprint(json.dumps(summary, indent=2))\n"
+}

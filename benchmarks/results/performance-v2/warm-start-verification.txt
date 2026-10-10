@@ -1,0 +1,7 @@
+Baseline c568d31b730a988a0919a452d043696a33f93180: eight new public warm-start cases failed before the fit-time synchronization (replacement, invalid replacement, removal; smart and random initialization).
+Four added grouped-configuration cases failed when the three-line synchronization was temporarily removed, then the source was restored byte-for-byte (SHA256 91218b6cd6fdae3f79e4dd5c2b4d0821ba75997d2b59b3d45ade6af4b59ec172).
+After the change: all 12 public set_params regression cases pass. The final adjacent run passes 41 cases across search, preset, space, and checkpoint-resume tests in 24.08 seconds; 286 cases were deselected.
+A concrete falsey-fallback mutant (`resolved_group or direct_seed`) fails both grouped-removal cases, so an empty PopulationConfig cannot revive stale direct seeds.
+Black checks both changed Python files; test_guard is clean against the base commit. Documentation links resolve and VitePress builds successfully in 33.52 seconds. git diff --check is clean.
+Independent review closed VER-001 after the grouped-removal and grouped-invalid regression cases were added. No unresolved material findings.
+No full Python test suite, package build, push, or deployment was run. This fix restores requested warm-start behavior; it does not claim a standalone training-speed gain.

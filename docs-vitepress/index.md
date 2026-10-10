@@ -1,46 +1,45 @@
 ---
 layout: home
-title: sklearn-genetic-opt — Evolutionary Hyperparameter Tuning for scikit-learn
-description: "Genetic algorithm hyperparameter search and feature selection for scikit-learn. Tune Random Forest, XGBoost, LightGBM, SVM and any sklearn estimator with GASearchCV — the drop-in GridSearchCV replacement powered by evolutionary algorithms."
-titleTemplate: Evolutionary hyperparameter tuning for scikit-learn
+title: Evolutionary Hyperparameter Tuning and Feature Selection
+description: "Tune scikit-learn hyperparameters and select feature subsets with evolutionary algorithms. Learn when to use GASearchCV and GAFeatureSelectionCV, with runnable examples and API reference."
 
 hero:
   name: sklearn-genetic-opt
   text: Hyperparameter Tuning for scikit-learn
-  tagline: Find better parameters faster. Evolutionary search handles cross-parameter interactions that GridSearchCV and RandomizedSearchCV miss — with feature selection, callbacks, and MLflow built in.
+  tagline: Search hyperparameters and feature subsets with evolutionary algorithms. Use familiar scikit-learn estimators, cross-validation, and scoring APIs.
   image:
     src: /brand/icon.svg
     alt: sklearn-genetic-opt logo
   actions:
     - theme: brand
       text: Get Started →
-      link: /stable/
+      link: /versions/0.13/
     - theme: alt
       text: Browse Recipes
-      link: /versions/latest/recipes/
+      link: /versions/0.13/recipes/
     - theme: alt
       text: View on GitHub
       link: https://github.com/rodrigo-arenas/Sklearn-genetic-opt
 
 features:
   - icon: 🔁
-    title: Drop-in sklearn Replacement
-    details: GASearchCV follows the same fit / predict / best_params_ API as GridSearchCV. Replace it in one line and keep your entire pipeline unchanged.
-    link: /versions/latest/guide/basic-usage
+    title: Familiar sklearn API
+    details: GASearchCV supports fit, predict, and best_params_ in the scikit-learn search workflow. Define parameter ranges and a validation budget to get started.
+    link: /versions/0.13/guide/basic-usage
     linkText: Quick Start
   - icon: 🧬
     title: Evolves Whole Configurations
-    details: Genetic operators evaluate complete hyperparameter sets — naturally discovering learning_rate × n_estimators interactions that one-at-a-time search misses.
-    link: /versions/latest/guide/how-hyperparameter-optimization-works
+    details: Genetic operators recombine promising parameter configurations and retain strong candidates across generations. Compare against a random-search baseline on your data.
+    link: /versions/0.13/guide/how-hyperparameter-optimization-works
     linkText: How It Works
   - icon: 🎯
     title: Wrapper Feature Selection
-    details: GAFeatureSelectionCV finds the compact feature subset that maximises CV score — outperforms filter methods when features interact.
-    link: /versions/latest/tutorials/feature-selection
+    details: GAFeatureSelectionCV evaluates feature subsets through cross-validation. Control subset size and check the result on untouched data.
+    link: /versions/0.13/tutorials/feature-selection
     linkText: Feature Selection Tutorial
   - icon: 📊
     title: Built-in Monitoring
-    details: Callbacks for early stopping, MLflow child-run logging, TensorBoard, and per-generation telemetry — out of the box.
-    link: /versions/latest/guide/callbacks
+    details: Use callbacks for early stopping and inspect each generation. Optional integrations include MLflow and TensorBoard.
+    link: /versions/0.13/guide/callbacks
     linkText: Callbacks Guide
 ---

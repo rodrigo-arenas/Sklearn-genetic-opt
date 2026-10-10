@@ -1,0 +1,112 @@
+Base e2d5b819d845abb56019c339c202a68c7b609c38; native benchmark script + CLI tests.
+No product-library changes in this slice.
+
+=== native-budget-red.txt ===
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 25 items / 20 deselected / 5 selected
+
+sklearn_genetic\tests\test_benchmark_search_methods.py [31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31m             [100%][0m
+
+================================== FAILURES ===================================
+[31m[1m______ test_native_automl_benchmark_rejects_invalid_budget[--seconds-0] _______[0m
+[1m[31msklearn_genetic\tests\test_benchmark_search_methods.py[0m:347: in test_native_automl_benchmark_rejects_invalid_budget
+    [0m[94mwith[39;49;00m pytest.raises([96mSystemExit[39;49;00m) [94mas[39;49;00m error:[90m[39;49;00m
+[1m[31mE   Failed: DID NOT RAISE SystemExit[0m
+[31m[1m______ test_native_automl_benchmark_rejects_invalid_budget[--seconds--1] ______[0m
+[1m[31msklearn_genetic\tests\test_benchmark_search_methods.py[0m:347: in test_native_automl_benchmark_rejects_invalid_budget
+    [0m[94mwith[39;49;00m pytest.raises([96mSystemExit[39;49;00m) [94mas[39;49;00m error:[90m[39;49;00m
+[1m[31mE   Failed: DID NOT RAISE SystemExit[0m
+[31m[1m_____ test_native_automl_benchmark_rejects_invalid_budget[--seconds-nan] ______[0m
+[1m[31msklearn_genetic\tests\test_benchmark_search_methods.py[0m:347: in test_native_automl_benchmark_rejects_invalid_budget
+    [0m[94mwith[39;49;00m pytest.raises([96mSystemExit[39;49;00m) [94mas[39;49;00m error:[90m[39;49;00m
+[1m[31mE   Failed: DID NOT RAISE SystemExit[0m
+[31m[1m_____ test_native_automl_benchmark_rejects_invalid_budget[--seconds-inf] ______[0m
+[1m[31msklearn_genetic\tests\test_benchmark_search_methods.py[0m:347: in test_native_automl_benchmark_rejects_invalid_budget
+    [0m[94mwith[39;49;00m pytest.raises([96mSystemExit[39;49;00m) [94mas[39;49;00m error:[90m[39;49;00m
+[1m[31mE   Failed: DID NOT RAISE SystemExit[0m
+[31m[1m_______ test_native_automl_benchmark_rejects_invalid_budget[--seeds-0] ________[0m
+[1m[31msklearn_genetic\tests\test_benchmark_search_methods.py[0m:347: in test_native_automl_benchmark_rejects_invalid_budget
+    [0m[94mwith[39;49;00m pytest.raises([96mSystemExit[39;49;00m) [94mas[39;49;00m error:[90m[39;49;00m
+[1m[31mE   Failed: DID NOT RAISE SystemExit[0m
+[36m[1m=========================== short test summary info ===========================[0m
+[31mFAILED[0m sklearn_genetic/tests/test_benchmark_search_methods.py::[1mtest_native_automl_benchmark_rejects_invalid_budget[--seconds-0][0m - Failed: DID NOT RAISE SystemExit
+[31mFAILED[0m sklearn_genetic/tests/test_benchmark_search_methods.py::[1mtest_native_automl_benchmark_rejects_invalid_budget[--seconds--1][0m - Failed: DID NOT RAISE SystemExit
+[31mFAILED[0m sklearn_genetic/tests/test_benchmark_search_methods.py::[1mtest_native_automl_benchmark_rejects_invalid_budget[--seconds-nan][0m - Failed: DID NOT RAISE SystemExit
+[31mFAILED[0m sklearn_genetic/tests/test_benchmark_search_methods.py::[1mtest_native_automl_benchmark_rejects_invalid_budget[--seconds-inf][0m - Failed: DID NOT RAISE SystemExit
+[31mFAILED[0m sklearn_genetic/tests/test_benchmark_search_methods.py::[1mtest_native_automl_benchmark_rejects_invalid_budget[--seeds-0][0m - Failed: DID NOT RAISE SystemExit
+[31m====================== [31m[1m5 failed[0m, [33m20 deselected[0m[31m in 0.94s[0m[31m =======================[0m
+
+=== native-budget-green.txt ===
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 25 items
+
+sklearn_genetic\tests\test_benchmark_search_methods.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m [ 68%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m                                                                 [100%][0m
+
+[32m============================= [32m[1m25 passed[0m[32m in 3.62s[0m[32m ==============================[0m
+
+=== native-boundary-red.txt ===
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 26 items / 20 deselected / 6 selected
+
+sklearn_genetic\tests\test_benchmark_search_methods.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[31mF[0m[31m            [100%][0m
+
+================================== FAILURES ===================================
+[31m[1m___________ test_native_automl_benchmark_accepts_minimum_seed_count ___________[0m
+[1m[31msklearn_genetic\tests\test_benchmark_search_methods.py[0m:391: in test_native_automl_benchmark_accepts_minimum_seed_count
+    [0mbenchmark_native_automl.main()[90m[39;49;00m
+[1m[31m<string>[0m:23: in main
+    [0m[04m[91m?[39;49;00m[04m[91m?[39;49;00m[04m[91m?[39;49;00m[90m[39;49;00m
+[1m[31m..\..\AppData\Local\Programs\Python\Python312\Lib\argparse.py[0m:2655: in error
+    [0m[96mself[39;49;00m.exit([94m2[39;49;00m, _([33m'[39;49;00m[33m%(prog)s[39;49;00m[33m: error: [39;49;00m[33m%(message)s[39;49;00m[33m\n[39;49;00m[33m'[39;49;00m) % args)[90m[39;49;00m
+[1m[31m..\..\AppData\Local\Programs\Python\Python312\Lib\argparse.py[0m:2642: in exit
+    [0m_sys.exit(status)[90m[39;49;00m
+[1m[31mE   SystemExit: 2[0m
+---------------------------- Captured stderr call -----------------------------
+usage: benchmark_native_automl [-h] --output OUTPUT --model-dir MODEL_DIR
+                               [--label LABEL]
+                               [--datasets {iris,breast,digits,diabetes,synthetic} [{iris,breast,digits,diabetes,synthetic} ...]]
+                               [--methods {gasearch,features,flaml,autogluon} [{gasearch,features,flaml,autogluon} ...]]
+                               [--seconds SECONDS] [--seeds SEEDS]
+                               [--seed-start SEED_START]
+benchmark_native_automl: error: seconds must be finite and positive, and seeds must be >=1
+[36m[1m=========================== short test summary info ===========================[0m
+[31mFAILED[0m sklearn_genetic/tests/test_benchmark_search_methods.py::[1mtest_native_automl_benchmark_accepts_minimum_seed_count[0m - SystemExit: 2
+[31m================= [31m[1m1 failed[0m, [32m5 passed[0m, [33m20 deselected[0m[31m in 1.06s[0m[31m ==================[0m
+
+=== native-boundary-green.txt ===
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 26 items / 20 deselected / 6 selected
+
+sklearn_genetic\tests\test_benchmark_search_methods.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m            [100%][0m
+
+[32m====================== [32m[1m6 passed[0m, [33m20 deselected[0m[32m in 0.30s[0m[32m =======================[0m
+
+COMMAND ['.venv\\Scripts\\python.exe', 'C:/Users/dsdotpy/.agents/skills/verification-loop/scripts/test_guard.py', '--repo', '.', '--base', 'e2d5b819d845abb56019c339c202a68c7b609c38']
+EXIT 0
+test_guard: clean against e2d5b819d845abb56019c339c202a68c7b609c38
+
+COMMAND ['git', 'diff', '--check']
+EXIT 0
+warning: in the working copy of 'benchmarks/PERFORMANCE_V2.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'sklearn_genetic/tests/test_benchmark_search_methods.py', LF will be replaced by CRLF the next time Git touches it
+
+Scoped Black: both changed Python files unchanged, exit0.
+Independent reviewer review_native_automl: VER-AM-001 legal lower-boundary mutant gap repaired and closed; no remaining material finding.
+Runtime: smoke4 + pilot16 + main48 exit0. Matrix exact dataset/seed/method Cartesian product; all48 finite scores/positive finite times, requested_seconds15. Sum fitting seconds718.2635644, max31.5250335. Full suite not run.

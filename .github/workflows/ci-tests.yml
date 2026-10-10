@@ -116,7 +116,7 @@ jobs:
       - name: Check internal documentation links
         run: |
           python -m pip install --upgrade pip pytest
-          python -m pytest docs-vitepress/scripts/test_check_links.py -q
+          python -m pytest docs-vitepress/scripts/test_check_links.py docs-vitepress/scripts/test_site_contract.py -q
           python docs-vitepress/scripts/check_links.py
 
   package:
@@ -146,6 +146,8 @@ jobs:
     needs: [lint, tests, coverage, package]
     runs-on: ubuntu-latest
     environment: pypi
+    outputs:
+      sdist_sha256: ${{ steps.sdist_digest.outputs.sha256 }}
     permissions:
       contents: read   # for checkout
       id-token: write  # for OIDC trusted publishing to PyPI
@@ -163,6 +165,22 @@ jobs:
           python -m pip install build
       - name: Build package
         run: python -m build
+      - name: Record sdist checksum
+        id: sdist_digest
+        run: |
+          python - <<'PY'
+          import hashlib
+          import os
+          from pathlib import Path
+
+          sdists = list(Path("dist").glob("*.tar.gz"))
+          if len(sdists) != 1:
+              raise RuntimeError(f"Expected exactly one sdist, found {len(sdists)}")
+          with sdists[0].open("rb") as source:
+              digest = hashlib.file_digest(source, "sha256").hexdigest()
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              output.write(f"sha256={digest}\n")
+          PY
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
 
@@ -184,36 +202,18 @@ jobs:
         with:
           python-version: "3.13"
 
-      - name: Build sdist and compute SHA256
+      - name: Read published sdist checksum
+        env:
+          TAG_NAME: ${{ github.ref_name }}
+          SDIST_SHA256: ${{ needs.publish.outputs.sdist_sha256 }}
         run: |
-          pip install build
-          python -m build --sdist
-          SHA256=$(python -c "import hashlib,glob; f=glob.glob('dist/*.tar.gz')[0]; print(hashlib.sha256(open(f,'rb').read()).hexdigest())")
-          TAG="${{ github.ref_name }}"
-          VERSION=$(echo "${TAG}" | sed 's/^v//')
-          echo "SHA256=${SHA256}" >> $GITHUB_ENV
-          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+          test -n "$SDIST_SHA256"
+          echo "SHA256=$SDIST_SHA256" >> "$GITHUB_ENV"
+          echo "VERSION=${TAG_NAME#v}" >> "$GITHUB_ENV"
 
       - name: Update conda recipe source
         run: |
-          python - <<'EOF'
-          import re, pathlib, os
-          version = os.environ["VERSION"]
-          sha256 = os.environ["SHA256"]
-          sdist_url = (
-              f"https://pypi.io/packages/source/s/sklearn-genetic-opt/"
-              f"sklearn_genetic_opt-{version}.tar.gz"
-          )
-          recipe = pathlib.Path("conda.recipe/meta.yaml").read_text()
-          new_source = f"source:\n  url: {sdist_url}\n  sha256: {sha256}"
-          recipe = re.sub(
-              r"source:\n(?:  #[^\n]*\n)*  path: \.\.",
-              new_source,
-              recipe,
-          )
-          pathlib.Path("conda.recipe/meta.yaml").write_text(recipe)
-          print(f"Updated conda recipe for {version}")
-          EOF
+          python conda.recipe/update_source.py "$VERSION" "$SHA256"
 
       - name: Commit and push updated recipe
         run: |

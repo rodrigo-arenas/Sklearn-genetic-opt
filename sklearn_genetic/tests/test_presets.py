@@ -39,13 +39,6 @@ def test_random_forest_classifier_preset_returns_native_space_dimensions():
     assert space["class_weight"].choices == [None, "balanced", "balanced_subsample"]
 
 
-def test_random_forest_regressor_preset_uses_regression_criteria():
-    space = random_forest_regressor_space()
-
-    assert space["criterion"].choices == ["squared_error", "absolute_error", "friedman_mse"]
-    assert "class_weight" not in space
-
-
 def test_hist_gradient_boosting_preset_uses_log_uniform_learning_rate():
     space = hist_gradient_boosting_classifier_space(profile="wide")
 
@@ -193,16 +186,54 @@ def test_extra_trees_classifier_preset_returns_native_dimensions():
     assert space["class_weight"].choices == [None, "balanced", "balanced_subsample"]
 
 
-def test_extra_trees_regressor_preset_uses_regression_criteria():
-    space = extra_trees_regressor_space()
-
-    assert space["criterion"].choices == ["squared_error", "absolute_error", "friedman_mse"]
-    assert "class_weight" not in space
-
-
 def test_extra_trees_presets_are_discoverable():
     from sklearn_genetic import list_preset_spaces
 
     names = list_preset_spaces()
     assert "extra_trees_classifier_space" in names
     assert "extra_trees_regressor_space" in names
+
+
+@pytest.mark.parametrize(
+    "preset,model_name",
+    [
+        (random_forest_regressor_space, "RandomForestRegressor"),
+        (extra_trees_regressor_space, "ExtraTreesRegressor"),
+    ],
+)
+@pytest.mark.parametrize("profile", ["fast", "balanced", "wide"])
+@pytest.mark.parametrize("prefix", ["", "model__"])
+def test_regressor_preset_search_respects_profile_criteria(preset, model_name, profile, prefix):
+    from sklearn import ensemble
+    from sklearn.datasets import make_friedman1
+    from sklearn.pipeline import Pipeline
+    from sklearn_genetic import GASearchCV
+
+    X, y = make_friedman1(n_samples=80, n_features=6, random_state=17)
+    model = getattr(ensemble, model_name)(n_jobs=1, random_state=17)
+    if prefix:
+        model = Pipeline([("model", model)])
+    space = preset(profile=profile, prefix=prefix)
+    # Exercise the actual preset through CV without building hundreds of trees.
+    space[prefix + "n_estimators"] = Integer(2, 2)
+    search = GASearchCV(
+        model,
+        param_grid=space,
+        population_size=6,
+        generations=0,
+        cv=2,
+        n_jobs=1,
+        random_state=17,
+        verbose=False,
+        error_score="raise",
+    ).fit(X, y)
+    criteria = {params[prefix + "criterion"] for params in search.cv_results_["params"]}
+    expected = {"squared_error"} if profile == "fast" else {"squared_error", "absolute_error"}
+    assert criteria == expected
+    assert prefix + "class_weight" not in space
+
+    if profile == "fast":
+        settings = search.get_params(deep=False)
+        settings["warm_start_configs"] = [{prefix + "criterion": "absolute_error"}]
+        with pytest.raises(ValueError, match="absolute_error.*outside"):
+            GASearchCV(**settings).fit(X, y)

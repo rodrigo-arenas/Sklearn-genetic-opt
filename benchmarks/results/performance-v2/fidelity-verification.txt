@@ -1,0 +1,621 @@
+Base: e031e478c230e153a0cef7f7e33e311665cb680e
+Scope: shared final selection, subsample_cv, checkpoint/cloning compatibility, public benchmark.
+Full suite not run. Local implementation review by independent native reviewer: VER-001 and VER-002 closed after reproduced red boundary tests and retained-class repair; no unresolved material findings. Public final benchmark replay completed: 120 SVM + 36 RF fits.
+
+=== finalist-red.txt ===
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 69 items / 57 deselected / 12 selected
+
+sklearn_genetic\tests\test_feature_selection.py FFFFFFFFFFFF             [100%]
+
+================================== FAILURES ===================================
+___ test_feature_final_selection_rechecks_masks_and_refits_full_winner[max] ___
+sklearn_genetic\tests\test_feature_selection.py:1022: in test_feature_final_selection_rechecks_masks_and_refits_full_winner
+    search = GAFeatureSelectionCV(
+E   TypeError: GAFeatureSelectionCV.__init__() got an unexpected keyword argument 'final_selection'
+___ test_feature_final_selection_rechecks_masks_and_refits_full_winner[min] ___
+sklearn_genetic\tests\test_feature_selection.py:1022: in test_feature_final_selection_rechecks_masks_and_refits_full_winner
+    search = GAFeatureSelectionCV(
+E   TypeError: GAFeatureSelectionCV.__init__() got an unexpected keyword argument 'final_selection'
+_____________ test_final_selection_excludes_nan_scores[False-hpo] _____________
+sklearn_genetic\tests\test_feature_selection.py:1073: in test_final_selection_excludes_nan_scores
+    assert search.best_score_ == 1.0
+E   AssertionError
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:718: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+__________ test_final_selection_excludes_nan_scores[False-features] ___________
+sklearn_genetic\tests\test_feature_selection.py:1067: in test_final_selection_excludes_nan_scores
+    if kind == "hpo" else GAFeatureSelectionCV(model, **common))
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: GAFeatureSelectionCV.__init__() got an unexpected keyword argument 'final_selection'
+_____________ test_final_selection_excludes_nan_scores[True-hpo] ______________
+sklearn_genetic\tests\test_feature_selection.py:1069: in test_final_selection_excludes_nan_scores
+    with pytest.raises(ValueError, match="All final-selection candidates"):
+E   Failed: DID NOT RAISE ValueError
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:718: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+___________ test_final_selection_excludes_nan_scores[True-features] ___________
+sklearn_genetic\tests\test_feature_selection.py:1067: in test_final_selection_excludes_nan_scores
+    if kind == "hpo" else GAFeatureSelectionCV(model, **common))
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: GAFeatureSelectionCV.__init__() got an unexpected keyword argument 'final_selection'
+______ test_final_selection_requires_a_positive_integer_budget[True-hpo] ______
+sklearn_genetic\tests\test_feature_selection.py:1088: in test_final_selection_requires_a_positive_integer_budget
+    with pytest.raises(ValueError, match="final_selection_top_k must be"):
+E   Failed: DID NOT RAISE ValueError
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:718: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+___ test_final_selection_requires_a_positive_integer_budget[True-features] ____
+sklearn_genetic\tests\test_feature_selection.py:1089: in test_final_selection_requires_a_positive_integer_budget
+    cls(DecisionTreeClassifier(), final_selection_top_k=top_k, **extra)
+E   TypeError: GAFeatureSelectionCV.__init__() got an unexpected keyword argument 'final_selection_top_k'
+______ test_final_selection_requires_a_positive_integer_budget[1.5-hpo] _______
+sklearn_genetic\tests\test_feature_selection.py:1088: in test_final_selection_requires_a_positive_integer_budget
+    with pytest.raises(ValueError, match="final_selection_top_k must be"):
+E   Failed: DID NOT RAISE ValueError
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:718: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+____ test_final_selection_requires_a_positive_integer_budget[1.5-features] ____
+sklearn_genetic\tests\test_feature_selection.py:1089: in test_final_selection_requires_a_positive_integer_budget
+    cls(DecisionTreeClassifier(), final_selection_top_k=top_k, **extra)
+E   TypeError: GAFeatureSelectionCV.__init__() got an unexpected keyword argument 'final_selection_top_k'
+______ test_final_selection_requires_a_positive_integer_budget[nan-hpo] _______
+sklearn_genetic\tests\test_feature_selection.py:1088: in test_final_selection_requires_a_positive_integer_budget
+    with pytest.raises(ValueError, match="final_selection_top_k must be"):
+E   Failed: DID NOT RAISE ValueError
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:718: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+____ test_final_selection_requires_a_positive_integer_budget[nan-features] ____
+sklearn_genetic\tests\test_feature_selection.py:1089: in test_final_selection_requires_a_positive_integer_budget
+    cls(DecisionTreeClassifier(), final_selection_top_k=top_k, **extra)
+E   TypeError: GAFeatureSelectionCV.__init__() got an unexpected keyword argument 'final_selection_top_k'
+=========================== short test summary info ===========================
+FAILED sklearn_genetic/tests/test_feature_selection.py::test_feature_final_selection_rechecks_masks_and_refits_full_winner[max]
+FAILED sklearn_genetic/tests/test_feature_selection.py::test_feature_final_selection_rechecks_masks_and_refits_full_winner[min]
+FAILED sklearn_genetic/tests/test_feature_selection.py::test_final_selection_excludes_nan_scores[False-hpo]
+FAILED sklearn_genetic/tests/test_feature_selection.py::test_final_selection_excludes_nan_scores[False-features]
+FAILED sklearn_genetic/tests/test_feature_selection.py::test_final_selection_excludes_nan_scores[True-hpo]
+FAILED sklearn_genetic/tests/test_feature_selection.py::test_final_selection_excludes_nan_scores[True-features]
+FAILED sklearn_genetic/tests/test_feature_selection.py::test_final_selection_requires_a_positive_integer_budget[True-hpo]
+FAILED sklearn_genetic/tests/test_feature_selection.py::test_final_selection_requires_a_positive_integer_budget[True-features]
+FAILED sklearn_genetic/tests/test_feature_selection.py::test_final_selection_requires_a_positive_integer_budget[1.5-hpo]
+FAILED sklearn_genetic/tests/test_feature_selection.py::test_final_selection_requires_a_positive_integer_budget[1.5-features]
+FAILED sklearn_genetic/tests/test_feature_selection.py::test_final_selection_requires_a_positive_integer_budget[nan-hpo]
+FAILED sklearn_genetic/tests/test_feature_selection.py::test_final_selection_requires_a_positive_integer_budget[nan-features]
+====================== 12 failed, 57 deselected in 2.80s ======================
+
+=== subsample-red.txt ===
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 76 items / 69 deselected / 7 selected
+
+sklearn_genetic\tests\test_feature_selection.py FFFFFFF                  [100%]
+
+================================== FAILURES ===================================
+___ test_subsample_cv_preserves_validation_and_reproducible_training[0.25] ____
+sklearn_genetic\tests\test_feature_selection.py:1094: in test_subsample_cv_preserves_validation_and_reproducible_training
+    from sklearn_genetic import subsample_cv
+E   ImportError: cannot import name 'subsample_cv' from 'sklearn_genetic' (C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\__init__.py)
+____ test_subsample_cv_preserves_validation_and_reproducible_training[1.0] ____
+sklearn_genetic\tests\test_feature_selection.py:1094: in test_subsample_cv_preserves_validation_and_reproducible_training
+    from sklearn_genetic import subsample_cv
+E   ImportError: cannot import name 'subsample_cv' from 'sklearn_genetic' (C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\__init__.py)
+___________ test_subsample_cv_rejects_invalid_training_fraction[0] ____________
+sklearn_genetic\tests\test_feature_selection.py:1115: in test_subsample_cv_rejects_invalid_training_fraction
+    from sklearn_genetic import subsample_cv
+E   ImportError: cannot import name 'subsample_cv' from 'sklearn_genetic' (C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\__init__.py)
+__________ test_subsample_cv_rejects_invalid_training_fraction[1.1] ___________
+sklearn_genetic\tests\test_feature_selection.py:1115: in test_subsample_cv_rejects_invalid_training_fraction
+    from sklearn_genetic import subsample_cv
+E   ImportError: cannot import name 'subsample_cv' from 'sklearn_genetic' (C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\__init__.py)
+__________ test_subsample_cv_rejects_invalid_training_fraction[nan] ___________
+sklearn_genetic\tests\test_feature_selection.py:1115: in test_subsample_cv_rejects_invalid_training_fraction
+    from sklearn_genetic import subsample_cv
+E   ImportError: cannot import name 'subsample_cv' from 'sklearn_genetic' (C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\__init__.py)
+__________ test_subsample_cv_rejects_invalid_training_fraction[True] __________
+sklearn_genetic\tests\test_feature_selection.py:1115: in test_subsample_cv_rejects_invalid_training_fraction
+    from sklearn_genetic import subsample_cv
+E   ImportError: cannot import name 'subsample_cv' from 'sklearn_genetic' (C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\__init__.py)
+______________ test_subsample_cv_rejects_boolean_training_masks _______________
+sklearn_genetic\tests\test_feature_selection.py:1122: in test_subsample_cv_rejects_boolean_training_masks
+    from sklearn_genetic import subsample_cv
+E   ImportError: cannot import name 'subsample_cv' from 'sklearn_genetic' (C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\__init__.py)
+=========================== short test summary info ===========================
+FAILED sklearn_genetic/tests/test_feature_selection.py::test_subsample_cv_preserves_validation_and_reproducible_training[0.25]
+FAILED sklearn_genetic/tests/test_feature_selection.py::test_subsample_cv_preserves_validation_and_reproducible_training[1.0]
+FAILED sklearn_genetic/tests/test_feature_selection.py::test_subsample_cv_rejects_invalid_training_fraction[0]
+FAILED sklearn_genetic/tests/test_feature_selection.py::test_subsample_cv_rejects_invalid_training_fraction[1.1]
+FAILED sklearn_genetic/tests/test_feature_selection.py::test_subsample_cv_rejects_invalid_training_fraction[nan]
+FAILED sklearn_genetic/tests/test_feature_selection.py::test_subsample_cv_rejects_invalid_training_fraction[True]
+FAILED sklearn_genetic/tests/test_feature_selection.py::test_subsample_cv_rejects_boolean_training_masks
+====================== 7 failed, 69 deselected in 2.84s =======================
+
+=== finalist-config-clone-red.txt ===
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 77 items / 73 deselected / 4 selected
+
+sklearn_genetic\tests\test_feature_selection.py FFFF                     [100%]
+
+================================== FAILURES ===================================
+_____________ test_final_selection_excludes_nan_scores[False-hpo] _____________
+sklearn_genetic\tests\test_feature_selection.py:1071: in test_final_selection_excludes_nan_scores
+    search = clone(search)
+             ^^^^^^^^^^^^^
+.venv\Lib\site-packages\sklearn\base.py:96: in clone
+    return estimator.__sklearn_clone__()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\sklearn\base.py:445: in __sklearn_clone__
+    return _clone_parametrized(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\sklearn\base.py:151: in _clone_parametrized
+    raise RuntimeError(
+E   RuntimeError: Cannot clone object GASearchCV(cv=[(array([0, 1, 2, 3]),
+E                   array([20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36,
+E          37, 38, 39]))],
+E              estimator=RowCountTree(max_depth=1, random_state=0),
+E              final_selection=True,
+E              final_selection_cv=[(array([ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16,
+E          17, 18, 19]),
+E                                   array([20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36,
+E          37, 38, 39]))],
+E              generations=0, n_jobs=1,...
+E                                                     final_selection_cv=[(array([ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16,
+E          17, 18, 19]),
+E                                                                          array([20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36,
+E          37, 38, 39]))]),
+E              param_grid={'max_depth': Integer(lower=1, upper=2, distribution='uniform')},
+E              population_size=4, random_state=0, return_train_score=True,
+E              scoring=<function test_final_selection_excludes_nan_scores.<locals>.learning_curve at 0x00000209FF927A60>,
+E              verbose=False), as the constructor either does not set or modifies parameter final_selection_cv
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:862: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+__________ test_final_selection_excludes_nan_scores[False-features] ___________
+sklearn_genetic\tests\test_feature_selection.py:1071: in test_final_selection_excludes_nan_scores
+    search = clone(search)
+             ^^^^^^^^^^^^^
+.venv\Lib\site-packages\sklearn\base.py:96: in clone
+    return estimator.__sklearn_clone__()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\sklearn\base.py:445: in __sklearn_clone__
+    return _clone_parametrized(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\sklearn\base.py:151: in _clone_parametrized
+    raise RuntimeError(
+E   RuntimeError: Cannot clone object GAFeatureSelectionCV(cv=[(array([0, 1, 2, 3]),
+E                             array([20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36,
+E          37, 38, 39]))],
+E                        estimator=RowCountTree(max_depth=1, random_state=0),
+E                        final_selection=True,
+E                        final_selection_cv=[(array([ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16,
+E          17, 18, 19]),
+E                                             array([20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36,
+E          37, 38, 39]))],
+E                        generations=0...
+E                                                               sharing_alpha=1.0,
+E                                                               final_selection=True,
+E                                                               final_selection_top_k=3,
+E                                                               final_selection_cv=[(array([ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16,
+E          17, 18, 19]),
+E                                                                                    array([20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36,
+E          37, 38, 39]))]),
+E                        population_size=4, random_state=0,
+E                        scoring=<function test_final_selection_excludes_nan_scores.<locals>.learning_curve at 0x00000209FF927880>,
+E                        verbose=False), as the constructor either does not set or modifies parameter final_selection_cv
+_____________ test_final_selection_excludes_nan_scores[True-hpo] ______________
+sklearn_genetic\tests\test_feature_selection.py:1071: in test_final_selection_excludes_nan_scores
+    search = clone(search)
+             ^^^^^^^^^^^^^
+.venv\Lib\site-packages\sklearn\base.py:96: in clone
+    return estimator.__sklearn_clone__()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\sklearn\base.py:445: in __sklearn_clone__
+    return _clone_parametrized(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\sklearn\base.py:151: in _clone_parametrized
+    raise RuntimeError(
+E   RuntimeError: Cannot clone object GASearchCV(cv=[(array([0, 1, 2, 3]),
+E                   array([20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36,
+E          37, 38, 39]))],
+E              estimator=RowCountTree(max_depth=1, random_state=0),
+E              final_selection=True,
+E              final_selection_cv=[(array([ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16,
+E          17, 18, 19]),
+E                                   array([20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36,
+E          37, 38, 39]))],
+E              generations=0, n_jobs=1,...
+E                                                     final_selection_cv=[(array([ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16,
+E          17, 18, 19]),
+E                                                                          array([20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36,
+E          37, 38, 39]))]),
+E              param_grid={'max_depth': Integer(lower=1, upper=2, distribution='uniform')},
+E              population_size=4, random_state=0, return_train_score=True,
+E              scoring=<function test_final_selection_excludes_nan_scores.<locals>.learning_curve at 0x00000209FF948B80>,
+E              verbose=False), as the constructor either does not set or modifies parameter final_selection_cv
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:862: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+___________ test_final_selection_excludes_nan_scores[True-features] ___________
+sklearn_genetic\tests\test_feature_selection.py:1071: in test_final_selection_excludes_nan_scores
+    search = clone(search)
+             ^^^^^^^^^^^^^
+.venv\Lib\site-packages\sklearn\base.py:96: in clone
+    return estimator.__sklearn_clone__()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\sklearn\base.py:445: in __sklearn_clone__
+    return _clone_parametrized(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\sklearn\base.py:151: in _clone_parametrized
+    raise RuntimeError(
+E   RuntimeError: Cannot clone object GAFeatureSelectionCV(cv=[(array([0, 1, 2, 3]),
+E                             array([20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36,
+E          37, 38, 39]))],
+E                        estimator=RowCountTree(max_depth=1, random_state=0),
+E                        final_selection=True,
+E                        final_selection_cv=[(array([ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16,
+E          17, 18, 19]),
+E                                             array([20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36,
+E          37, 38, 39]))],
+E                        generations=0...
+E                                                               sharing_alpha=1.0,
+E                                                               final_selection=True,
+E                                                               final_selection_top_k=3,
+E                                                               final_selection_cv=[(array([ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16,
+E          17, 18, 19]),
+E                                                                                    array([20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36,
+E          37, 38, 39]))]),
+E                        population_size=4, random_state=0,
+E                        scoring=<function test_final_selection_excludes_nan_scores.<locals>.learning_curve at 0x00000209FFA2D1C0>,
+E                        verbose=False), as the constructor either does not set or modifies parameter final_selection_cv
+=========================== short test summary info ===========================
+FAILED sklearn_genetic/tests/test_feature_selection.py::test_final_selection_excludes_nan_scores[False-hpo]
+FAILED sklearn_genetic/tests/test_feature_selection.py::test_final_selection_excludes_nan_scores[False-features]
+FAILED sklearn_genetic/tests/test_feature_selection.py::test_final_selection_excludes_nan_scores[True-hpo]
+FAILED sklearn_genetic/tests/test_feature_selection.py::test_final_selection_excludes_nan_scores[True-features]
+====================== 4 failed, 73 deselected in 2.81s =======================
+
+=== finalist-checkpoint-red.txt ===
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 36 items / 34 deselected / 2 selected
+
+sklearn_genetic\tests\test_persistence_and_helpers.py FF                 [100%]
+
+================================== FAILURES ===================================
+__ test_checkpoint_reconstruction_preserves_finalist_validation[GASearchCV] ___
+sklearn_genetic\tests\test_persistence_and_helpers.py:848: in test_checkpoint_reconstruction_preserves_finalist_validation
+    assert results["enabled"] is True
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+ gen evals           avg          best     div  unique  stag     mut   sel             events
+---- ----- ------------- ------------- ------- ------- ----- ------- ----- ------------------
+   0     4       0.86750       0.95000   1.000   1.000     0       -     - -
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:863: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:863: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+_ test_checkpoint_reconstruction_preserves_finalist_validation[GAFeatureSelectionCV] _
+sklearn_genetic\tests\test_persistence_and_helpers.py:847: in test_checkpoint_reconstruction_preserves_finalist_validation
+    results = reconstructed.final_selection_results_
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'GAFeatureSelectionCV' object has no attribute 'final_selection_results_'. Did you mean: '_final_selection_splits'?
+---------------------------- Captured stdout call -----------------------------
+ gen evals           avg          best     div  unique  stag     mut   sel             events
+---- ----- ------------- ------------- ------- ------- ----- ------- ----- ------------------
+   0     4       0.86000       0.95000   0.500   1.000     0       -     - -
+=========================== short test summary info ===========================
+FAILED sklearn_genetic/tests/test_persistence_and_helpers.py::test_checkpoint_reconstruction_preserves_finalist_validation[GASearchCV]
+FAILED sklearn_genetic/tests/test_persistence_and_helpers.py::test_checkpoint_reconstruction_preserves_finalist_validation[GAFeatureSelectionCV]
+====================== 2 failed, 34 deselected in 2.96s =======================
+
+=== fidelity-cli-red.txt ===
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 31 items / 26 deselected / 5 selected
+
+sklearn_genetic\tests\test_benchmark_search_methods.py FFFF.             [100%]
+
+================================== FAILURES ===================================
+_________ test_fidelity_benchmark_rejects_invalid_workload[--seeds-0] _________
+sklearn_genetic\tests\test_benchmark_search_methods.py:406: in test_fidelity_benchmark_rejects_invalid_workload
+    with pytest.raises(SystemExit) as error:
+E   Failed: DID NOT RAISE SystemExit
+_____ test_fidelity_benchmark_rejects_invalid_workload[--generations--1] ______
+sklearn_genetic\tests\test_benchmark_search_methods.py:406: in test_fidelity_benchmark_rejects_invalid_workload
+    with pytest.raises(SystemExit) as error:
+E   Failed: DID NOT RAISE SystemExit
+_______ test_fidelity_benchmark_rejects_invalid_workload[--finalists-0] _______
+sklearn_genetic\tests\test_benchmark_search_methods.py:406: in test_fidelity_benchmark_rejects_invalid_workload
+    with pytest.raises(SystemExit) as error:
+E   Failed: DID NOT RAISE SystemExit
+______ test_fidelity_benchmark_rejects_invalid_workload[--fractions-nan] ______
+sklearn_genetic\tests\test_benchmark_search_methods.py:406: in test_fidelity_benchmark_rejects_invalid_workload
+    with pytest.raises(SystemExit) as error:
+E   Failed: DID NOT RAISE SystemExit
+=========================== short test summary info ===========================
+FAILED sklearn_genetic/tests/test_benchmark_search_methods.py::test_fidelity_benchmark_rejects_invalid_workload[--seeds-0]
+FAILED sklearn_genetic/tests/test_benchmark_search_methods.py::test_fidelity_benchmark_rejects_invalid_workload[--generations--1]
+FAILED sklearn_genetic/tests/test_benchmark_search_methods.py::test_fidelity_benchmark_rejects_invalid_workload[--finalists-0]
+FAILED sklearn_genetic/tests/test_benchmark_search_methods.py::test_fidelity_benchmark_rejects_invalid_workload[--fractions-nan]
+================= 4 failed, 1 passed, 26 deselected in 0.78s ==================
+
+=== fidelity-cli-green.txt ===
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 31 items / 26 deselected / 5 selected
+
+sklearn_genetic\tests\test_benchmark_search_methods.py .....             [100%]
+
+====================== 5 passed, 26 deselected in 0.06s =======================
+
+=== finalist-integrated-green.txt ===
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 146 items / 117 deselected / 29 selected
+
+sklearn_genetic\tests\test_feature_selection.py ......................   [ 75%]
+sklearn_genetic\tests\test_persistence_and_helpers.py ..                 [ 82%]
+sklearn_genetic\tests\test_benchmark_search_methods.py .....             [100%]
+
+===================== 29 passed, 117 deselected in 2.63s ======================
+
+=== finalist-adjacent-green.txt ===
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 297 items / 240 deselected / 57 selected
+
+sklearn_genetic\tests\test_genetic_search.py ..............              [ 24%]
+sklearn_genetic\tests\test_feature_selection.py ..................       [ 56%]
+sklearn_genetic\tests\test_persistence_and_helpers.py .................. [ 87%]
+..                                                                       [ 91%]
+sklearn_genetic\tests\test_internal_helpers.py .....                     [100%]
+
+===================== 57 passed, 240 deselected in 35.58s =====================
+
+=== finalist-sampling-boundaries-red.txt ===
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 81 items / 77 deselected / 4 selected
+
+sklearn_genetic\tests\test_feature_selection.py .F.F                     [100%]
+
+================================== FAILURES ===================================
+___ test_subsample_cv_preserves_validation_and_reproducible_training[0.99] ____
+sklearn_genetic\tests\test_feature_selection.py:1125: in test_subsample_cv_preserves_validation_and_reproducible_training
+    sampled = subsample_cv(splits, fraction, stratify=labels, random_state=4)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\utils\cv_scores.py:48: in subsample_cv
+    train, _ = train_test_split(
+.venv\Lib\site-packages\sklearn\utils\_param_validation.py:218: in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\sklearn\model_selection\_split.py:2968: in train_test_split
+    train, test = next(cv.split(X=arrays[0], y=stratify))
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\sklearn\model_selection\_split.py:1935: in split
+    for train, test in self._iter_indices(X, y, groups):
+.venv\Lib\site-packages\sklearn\model_selection\_split.py:2367: in _iter_indices
+    raise ValueError(
+E   ValueError: The test_size = 1 should be greater or equal to the number of classes = 3
+________________ test_subsample_cv_rejects_loss_of_rare_class _________________
+sklearn_genetic\tests\test_feature_selection.py:1161: in test_subsample_cv_rejects_loss_of_rare_class
+    with pytest.raises(ValueError, match="retain every class"):
+E   Failed: DID NOT RAISE ValueError
+=========================== short test summary info ===========================
+FAILED sklearn_genetic/tests/test_feature_selection.py::test_subsample_cv_preserves_validation_and_reproducible_training[0.99] - ValueError: The test_size = 1 should be greater or equal to the number of c...
+FAILED sklearn_genetic/tests/test_feature_selection.py::test_subsample_cv_rejects_loss_of_rare_class - Failed: DID NOT RAISE ValueError
+================= 2 failed, 2 passed, 77 deselected in 2.87s ==================
+
+=== finalist-label-shape-red.txt ===
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 82 items / 81 deselected / 1 selected
+
+sklearn_genetic\tests\test_feature_selection.py F                        [100%]
+
+================================== FAILURES ===================================
+______________ test_subsample_cv_rejects_multidimensional_labels ______________
+sklearn_genetic\tests\test_feature_selection.py:1169: in test_subsample_cv_rejects_multidimensional_labels
+    with pytest.raises(ValueError, match="one-dimensional class labels"):
+E   Failed: DID NOT RAISE ValueError
+=========================== short test summary info ===========================
+FAILED sklearn_genetic/tests/test_feature_selection.py::test_subsample_cv_rejects_multidimensional_labels - Failed: DID NOT RAISE ValueError
+====================== 1 failed, 81 deselected in 0.76s =======================
+
+=== finalist-sampling-repaired-green.txt ===
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 149 items / 117 deselected / 32 selected
+
+sklearn_genetic\tests\test_feature_selection.py ........................ [ 75%]
+.                                                                        [ 78%]
+sklearn_genetic\tests\test_persistence_and_helpers.py ..                 [ 84%]
+sklearn_genetic\tests\test_benchmark_search_methods.py .....             [100%]
+
+===================== 32 passed, 117 deselected in 2.57s ======================
+
+=== finalist-review-sampling-recheck.txt ===
+PASS later-fold string-label class disappearance rejected
+PASS near-full imbalanced string-label sample preserves both classes without duplicates
+
+=== finalist-test-guard.txt ===
+test_guard: clean against e031e478c230e153a0cef7f7e33e311665cb680e
+
+=== Documented runtime example ===
+0.9741784037558686 0.986013986013986
+0.9671361502347419 0.958041958041958 11
+Documented public workflows passed
+
+=== finalist-replacement-red.txt ===
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 82 items / 79 deselected / 3 selected
+
+sklearn_genetic\tests\test_feature_selection.py FF.                      [100%]
+
+================================== FAILURES ===================================
+___ test_subsample_cv_preserves_validation_and_reproducible_training[0.25] ____
+sklearn_genetic\tests\test_feature_selection.py:1132: in test_subsample_cv_preserves_validation_and_reproducible_training
+    assert len(np.unique(small)) == len(small)
+E   AssertionError
+___ test_subsample_cv_preserves_validation_and_reproducible_training[0.99] ____
+sklearn_genetic\tests\test_feature_selection.py:1132: in test_subsample_cv_preserves_validation_and_reproducible_training
+    assert len(np.unique(small)) == len(small)
+E   AssertionError
+=========================== short test summary info ===========================
+FAILED sklearn_genetic/tests/test_feature_selection.py::test_subsample_cv_preserves_validation_and_reproducible_training[0.25] - AssertionError
+FAILED sklearn_genetic/tests/test_feature_selection.py::test_subsample_cv_preserves_validation_and_reproducible_training[0.99] - AssertionError
+================= 2 failed, 1 passed, 79 deselected in 0.78s ==================
+
+=== finalist-sampling-final-green.txt ===
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 149 items / 117 deselected / 32 selected
+
+sklearn_genetic\tests\test_feature_selection.py ........................ [ 75%]
+.                                                                        [ 78%]
+sklearn_genetic\tests\test_persistence_and_helpers.py ..                 [ 84%]
+sklearn_genetic\tests\test_benchmark_search_methods.py .....             [100%]
+
+===================== 32 passed, 117 deselected in 2.56s ======================
+
+=== finalist-repeated-fit-red.txt ===
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 84 items / 82 deselected / 2 selected
+
+sklearn_genetic\tests\test_feature_selection.py FF                       [100%]
+
+================================== FAILURES ===================================
+____ test_feature_refit_clears_inactive_finalist_results[final_selection] _____
+sklearn_genetic\tests\test_feature_selection.py:1186: in test_feature_refit_clears_inactive_finalist_results
+    assert not hasattr(search, attribute)
+E   AssertionError
+_________ test_feature_refit_clears_inactive_finalist_results[refit] __________
+sklearn_genetic\tests\test_feature_selection.py:1186: in test_feature_refit_clears_inactive_finalist_results
+    assert not hasattr(search, attribute)
+E   AssertionError
+=========================== short test summary info ===========================
+FAILED sklearn_genetic/tests/test_feature_selection.py::test_feature_refit_clears_inactive_finalist_results[final_selection] - AssertionError
+FAILED sklearn_genetic/tests/test_feature_selection.py::test_feature_refit_clears_inactive_finalist_results[refit] - AssertionError
+====================== 2 failed, 82 deselected in 2.88s =======================
+
+=== finalist-lifecycle-green.txt ===
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 151 items / 117 deselected / 34 selected
+
+sklearn_genetic\tests\test_feature_selection.py ........................ [ 70%]
+...                                                                      [ 79%]
+sklearn_genetic\tests\test_persistence_and_helpers.py ..                 [ 85%]
+sklearn_genetic\tests\test_benchmark_search_methods.py .....             [100%]
+
+===================== 34 passed, 117 deselected in 2.77s ======================
+
+=== finalist-review-repeat-fit.txt ===
+PASS second fit clears finalist attributes: {'final_selection': False}
+PASS second fit clears finalist attributes: {'refit': False}
+
+Independent review closed all three material findings, including repeated-fit cleanup. RF timing provenance differs only by cleanup of absent attributes on fresh instances; no RF replay required for that no-op path. SVM replay completed: 120 fits, exit0.
+
+=== RF result validation ===
+.agent-runs\performance-v2\fidelity-public-rf.json 36 validated
+synthetic rf hpo 1 time 102.0369 speed 1.0 CV 0.913556 test 0.898 features 40
+synthetic rf hpo 0.25 time 33.547 speed 3.042 CV 0.911556 test 0.909333 features 40
+synthetic rf hpo 0.125 time 28.2682 speed 3.61 CV 0.909556 test 0.906667 features 40
+synthetic rf features 1 time 44.1229 speed 1.0 CV 0.914 test 0.914 features 35.33
+synthetic rf features 0.25 time 25.3426 speed 1.741 CV 0.909778 test 0.902 features 33.33
+synthetic rf features 0.125 time 22.7856 speed 1.936 CV 0.908444 test 0.900667 features 32.33
+diabetes rf hpo 1 time 16.4777 speed 1.0 CV -3252.429326 test -3008.379514 features 10
+diabetes rf hpo 0.25 time 15.4365 speed 1.067 CV -3288.382485 test -3051.399335 features 10
+diabetes rf hpo 0.125 time 15.4595 speed 1.066 CV -3338.064196 test -3186.977291 features 10
+diabetes rf features 1 time 18.086 speed 1.0 CV -3360.655865 test -3204.830704 features 7.33
+diabetes rf features 0.25 time 14.9111 speed 1.213 CV -3391.648624 test -3343.807774 features 7.33
+diabetes rf features 0.125 time 14.2224 speed 1.272 CV -3438.122396 test -3311.788567 features 8
+
+=== Final SVM result validation ===
+.agent-runs\performance-v2\fidelity-public-svm-final.json 120 validated
+synthetic svm hpo 1 time 26.1529 speed 1.0 CV 0.92 test 0.9252 features 40
+synthetic svm hpo 0.25 time 4.6947 speed 5.571 CV 0.9192 test 0.9236 features 40
+synthetic svm hpo 0.125 time 2.8552 speed 9.16 CV 0.9192 test 0.9248 features 40
+synthetic svm features 1 time 9.9278 speed 1.0 CV 0.924933 test 0.9204 features 29.6
+synthetic svm features 0.25 time 3.2198 speed 3.083 CV 0.921467 test 0.922 features 32
+synthetic svm features 0.125 time 2.2195 speed 4.473 CV 0.920533 test 0.9192 features 25.6
+breast svm hpo 1 time 2.2858 speed 1.0 CV 0.979812 test 0.970629 features 30
+breast svm hpo 0.25 time 1.2083 speed 1.892 CV 0.978404 test 0.969231 features 30
+breast svm hpo 0.125 time 1.0922 speed 2.093 CV 0.976056 test 0.969231 features 30
+breast svm features 1 time 1.0903 speed 1.0 CV 0.981221 test 0.967832 features 19.6
+breast svm features 0.25 time 0.8638 speed 1.262 CV 0.976526 test 0.974825 features 16
+breast svm features 0.125 time 0.8178 speed 1.333 CV 0.974178 test 0.960839 features 14.4
+digits svm hpo 1 time 26.2297 speed 1.0 CV 0.98337 test 0.981333 features 64
+digits svm hpo 0.25 time 4.7623 speed 5.508 CV 0.982034 test 0.980444 features 64
+digits svm hpo 0.125 time 2.8057 speed 9.349 CV 0.980549 test 0.980444 features 64
+digits svm features 1 time 10.2271 speed 1.0 CV 0.980104 test 0.978667 features 50
+digits svm features 0.25 time 3.844 speed 2.661 CV 0.978174 test 0.983111 features 51
+digits svm features 0.125 time 2.6088 speed 3.92 CV 0.978768 test 0.982667 features 54.2
+diabetes svm hpo 1 time 2.1737 speed 1.0 CV -3078.919196 test -2809.242434 features 10
+diabetes svm hpo 0.25 time 0.9393 speed 2.314 CV -3104.772551 test -2783.423002 features 10
+diabetes svm hpo 0.125 time 0.8457 speed 2.57 CV -3102.503652 test -2834.504264 features 10
+diabetes svm features 1 time 1.3296 speed 1.0 CV -3336.553896 test -3369.60862 features 6.8
+diabetes svm features 0.25 time 0.7261 speed 1.831 CV -3459.193576 test -3409.49632 features 6.6
+diabetes svm features 0.125 time 0.6517 speed 2.04 CV -3456.982388 test -3324.931565 features 6.6
+
+=== Independent final benchmark closure ===
+PASS svm 120 complete Cartesian rows; finite metrics; fold/promotion/mask/parameter contracts
+PASS rf 36 complete Cartesian rows; finite metrics; fold/promotion/mask/parameter contracts
+PASS RF prior source reconstructed by removing only three-attribute cleanup; final production source matches SVM
+
+Final independent review: all implementation findings closed, all156rows and reported arithmetic verified; source hashes reconstructed for RF cleanup and unused benchmark import. Scoped Black/test guard/staged diff checks passed. Captured logs normalize ANSI colors and trailing whitespace only.

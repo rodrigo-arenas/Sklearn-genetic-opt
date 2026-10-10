@@ -1,0 +1,81 @@
+Numeric QMC compatibility; baseline be9433faf68d8df92e7d9dceadefc675e3cf8193.
+Existing public reproducibility regression fails before fix on SciPy1.11.4, sklearn1.5.0, NumPy1.26.4.
+Same29focused cases pass older/currentstacks. No tests added or weakened. Full suite not run.
+
+
+=== compat-red.txt ===
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 178 items / 177 deselected / 1 selected
+
+sklearn_genetic\tests\test_genetic_search.py F                           [100%]
+
+================================== FAILURES ===================================
+________________ test_random_state_makes_gasearch_reproducible ________________
+sklearn_genetic\tests\test_genetic_search.py:1722: in test_random_state_makes_gasearch_reproducible
+    first_score, first_params = run()
+                                ^^^^^
+sklearn_genetic\tests\test_genetic_search.py:1719: in run
+    search.fit(X[:300], y[:300])
+sklearn_genetic\genetic_search.py:1302: in fit
+    self._register()
+sklearn_genetic\genetic_search.py:927: in _register
+    self._pop = self._initialize_population()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\genetic_search.py:942: in _initialize_population
+    population = initialize_search_population(self, self.toolbox, creator.Individual)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\population.py:215: in initialize_search_population
+    return smart_search_population(estimator, toolbox, individual_cls)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\population.py:170: in smart_search_population
+    sampler = qmc.LatinHypercube(d=len(numeric_parameters), rng=lhs_seed)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: LatinHypercube.__init__() got an unexpected keyword argument 'rng'
+=========================== short test summary info ===========================
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_random_state_makes_gasearch_reproducible - TypeError: LatinHypercube.__init__() got an unexpected keyword argument 'rng'
+====================== 1 failed, 177 deselected in 5.74s ======================
+
+
+=== compat-old-green.txt ===
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 244 items / 215 deselected / 29 selected
+
+sklearn_genetic\tests\test_genetic_search.py ........................    [ 82%]
+sklearn_genetic\tests\test_internal_helpers.py .....                     [100%]
+
+===================== 29 passed, 215 deselected in 3.16s ======================
+
+
+=== compat-current-green.txt ===
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 244 items / 215 deselected / 29 selected
+
+sklearn_genetic\tests\test_genetic_search.py ........................    [ 82%]
+sklearn_genetic\tests\test_internal_helpers.py .....                     [100%]
+
+===================== 29 passed, 215 deselected in 4.37s ======================
+
+
+=== compat-test-guard.txt ===
+test_guard: clean against be9433faf68d8df92e7d9dceadefc675e3cf8193
+
+
+BOTH API current before/after candidates, CV scores, predictions and counters exactly equal.
+{
+  "compat-current-before.json": "ed9f231ceb08dfd4a6939f77a20053003e2568d84674784c1eaf0764d477b206",
+  "compat-current-after.json": "ed9f231ceb08dfd4a6939f77a20053003e2568d84674784c1eaf0764d477b206"
+}
+
+Independent review_qmc_compat: closed, no material findings. Confirmed real dependency signatures and exact BOTH API before/after equality. Public-fit negative probe propagates sentinel sampler TypeError unchanged; no error masking. Always-seed mutation changes current samples and is distinguished by exact-sequence evidence.

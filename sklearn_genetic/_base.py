@@ -5,6 +5,7 @@ from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import check_is_fitted
 
 from .algorithms import algorithms_factory
+from .callbacks.early_stoppers import TimerStopping
 from .parameters import Algorithms
 
 logger = logging.getLogger(__name__)
@@ -62,6 +63,9 @@ class GeneticEstimatorMixin:
         "fitness_sharing": False,
         "sharing_radius": 0.2,
         "sharing_alpha": 1.0,
+        "final_selection": False,
+        "final_selection_top_k": 3,
+        "final_selection_cv": None,
     }
 
     def __getstate__(self):
@@ -162,21 +166,31 @@ class GeneticEstimatorMixin:
     def _select_algorithm(self, pop, stats, hof):
         selected_algorithm = algorithms_factory.get(self.algorithm, None)
         if selected_algorithm:
-            pop, log, gen = selected_algorithm(
-                pop,
-                self.toolbox,
-                mu=self.population_size,
-                lambda_=2 * self.population_size,
-                cxpb=self.crossover_adapter,
-                stats=stats,
-                mutpb=self.mutation_adapter,
-                ngen=self.generations,
-                halloffame=hof,
-                callbacks=self.callbacks,
-                verbose=self.verbose,
-                estimator=self,
-                resume_log=getattr(self, "_resume_generation_log", None),
-            )
+            self._evaluation_timers = [
+                callback for callback in self.callbacks if isinstance(callback, TimerStopping)
+            ]
+            self._evaluation_started = False
+            self._evaluation_budget_exhausted = False
+            try:
+                pop, log, gen = selected_algorithm(
+                    pop,
+                    self.toolbox,
+                    mu=self.population_size,
+                    lambda_=2 * self.population_size,
+                    cxpb=self.crossover_adapter,
+                    stats=stats,
+                    mutpb=self.mutation_adapter,
+                    ngen=self.generations,
+                    halloffame=hof,
+                    callbacks=self.callbacks,
+                    verbose=self.verbose,
+                    estimator=self,
+                    resume_log=getattr(self, "_resume_generation_log", None),
+                )
+            finally:
+                del self._evaluation_timers
+                del self._evaluation_started
+                del self._evaluation_budget_exhausted
         else:
             raise ValueError(
                 f"The algorithm {self.algorithm} is not supported, "
@@ -190,10 +204,12 @@ class GeneticEstimatorMixin:
 
     @property
     def _fitted(self):
+        if not hasattr(self, "best_estimator_"):
+            return False
         try:
-            check_is_fitted(self.estimator)
+            check_is_fitted(self.best_estimator_)
             is_fitted = True
-        except Exception:
+        except NotFittedError:
             is_fitted = False
 
         has_history = hasattr(self, "history") and bool(self.history)

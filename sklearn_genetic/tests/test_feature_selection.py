@@ -1,15 +1,17 @@
 import pytest
 from deap import tools
 import pandas as pd
-from sklearn.base import clone
+from sklearn.base import BaseEstimator, OutlierMixin, clone
 from sklearn.datasets import load_iris, load_diabetes
 from sklearn.exceptions import NotFittedError
 from sklearn.linear_model import SGDClassifier
+from sklearn.ensemble import IsolationForest
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.utils.validation import check_is_fitted
 from sklearn.cluster import KMeans
-from sklearn.metrics import accuracy_score, balanced_accuracy_score
+from sklearn.dummy import DummyClassifier
+from sklearn.metrics import accuracy_score, balanced_accuracy_score, f1_score
 from sklearn.metrics import make_scorer
 import numpy as np
 
@@ -96,6 +98,65 @@ def test_get_feature_names_out_preserves_dataframe_feature_names():
     mismatched[0] = "different"
     with pytest.raises(ValueError, match="input_features is not equal to feature_names_in_"):
         selector.get_feature_names_out(mismatched)
+
+
+@pytest.mark.parametrize("as_dataframe", [False, True])
+def test_outlier_selection_accepts_array_like_without_target(as_dataframe):
+    frame = pd.DataFrame(
+        np.random.default_rng(0).normal(size=(30, 4)),
+        columns=["first", "second", "third", "fourth"],
+    )
+    selector = GAFeatureSelectionCV(
+        IsolationForest(n_estimators=5, random_state=0, n_jobs=1),
+        cv=2,
+        population_size=2,
+        generations=0,
+        verbose=False,
+        n_jobs=1,
+        random_state=0,
+    )
+
+    X_input = frame if as_dataframe else frame.to_numpy().tolist()
+    selector.fit(X_input)
+
+    assert 1 <= selector.get_support().sum() <= frame.shape[1]
+    assert selector.transform(X_input).shape == (len(frame), selector.get_support().sum())
+    if as_dataframe:
+        np.testing.assert_array_equal(selector.feature_names_in_, frame.columns.to_numpy())
+        np.testing.assert_array_equal(
+            selector.get_feature_names_out(), frame.columns.to_numpy()[selector.get_support()]
+        )
+
+
+def test_outlier_selection_preserves_detector_nan_policy():
+    class NaNTolerantOutlier(OutlierMixin, BaseEstimator):
+        def fit(self, X, y=None):
+            self.n_features_in_ = X.shape[1]
+            self.saw_nan_ = bool(np.isnan(X).any())
+            return self
+
+        def score_samples(self, X):
+            return np.nan_to_num(X, nan=0).mean(axis=1)
+
+    frame = pd.DataFrame(
+        [[np.nan, 1.0], [2.0, np.nan], [4.0, 5.0], [6.0, 7.0]],
+        columns=["first", "second"],
+    )
+    selector = GAFeatureSelectionCV(
+        NaNTolerantOutlier(),
+        cv=2,
+        population_size=2,
+        generations=0,
+        verbose=False,
+        n_jobs=1,
+        random_state=0,
+        error_score="raise",
+    )
+
+    selector.fit(frame)
+
+    assert selector.get_support().any()
+    assert selector.best_estimator_.saw_nan_
 
 
 def test_default_n_jobs_is_none():
@@ -617,7 +678,7 @@ def test_wrong_algorithm():
         evolved_estimator.fit(X_train, y_train)
     assert (
         str(excinfo.value)
-        == "The algorithm genetic is not supported, please select one from ['eaSimple', 'eaMuPlusLambda', 'eaMuCommaLambda']"
+        == "The algorithm genetic is not supported, please select one from ['eaSimple', 'eaMuPlusLambda', 'eaMuCommaLambda', 'eaDifferentialEvolution']"
     )
 
 
@@ -754,6 +815,32 @@ def test_expected_ga_multimetric():
         assert f"mean_train_{metric}" in cv_result_keys
         assert f"std_train_{metric}" in cv_result_keys
         assert f"rank_train_{metric}" in cv_result_keys
+
+
+@pytest.mark.parametrize(
+    ("scoring", "refit"),
+    [
+        ("f1", True),
+        (make_scorer(f1_score), True),
+        ({"accuracy": "accuracy", "f1": "f1"}, "f1"),
+    ],
+)
+def test_feature_selection_score_uses_configured_scorer(scoring, refit):
+    X = np.arange(20).reshape(-1, 1)
+    y = np.array([0] * 16 + [1] * 4)
+    selector = GAFeatureSelectionCV(
+        DummyClassifier(strategy="most_frequent"),
+        cv=2,
+        scoring=scoring,
+        refit=refit,
+        population_size=4,
+        generations=1,
+        n_jobs=1,
+        random_state=42,
+    ).fit(X, y)
+
+    assert selector.score(X, y) == 0.0
+    assert selector.best_estimator_.score(selector.transform(X), y) == 0.8
 
 
 def test_expected_ga_callable_score():
@@ -969,3 +1056,390 @@ def test_feature_selection_unsupported_fit_param_raises_clearly():
     message = str(excinfo.value)
     assert "not_a_real_fit_param" in message
     assert "DecisionTreeClassifier" in message
+
+
+@pytest.mark.parametrize(
+    "method", ["predict", "predict_proba", "predict_log_proba", "decision_function", "score"]
+)
+@pytest.mark.parametrize("fitted_without_refit", [False, True])
+def test_prediction_methods_require_refitted_winner(method, fitted_without_refit):
+    from sklearn.linear_model import LogisticRegression
+
+    selector = GAFeatureSelectionCV(
+        LogisticRegression(),
+        population_size=2,
+        generations=0,
+        cv=2,
+        n_jobs=1,
+        verbose=False,
+        refit=not fitted_without_refit,
+        random_state=0,
+    )
+    if fitted_without_refit:
+        selector.fit(X_train[:40, :2], y_train[:40])
+    args = (X_test[:, :2], y_test) if method == "score" else (X_test[:, :2],)
+    with pytest.raises(NotFittedError, match="GAFeatureSelectionCV instance is not fitted"):
+        getattr(selector, method)(*args)
+
+
+@pytest.mark.parametrize("criteria", ["max", "min"])
+@pytest.mark.parametrize(
+    "proxy_scores,final_scores,top_k,expected_counts,max_features",
+    [
+        pytest.param([2, 1], [1, 2], 3, [1, 1, 2], None, id="rank-reversal"),
+        pytest.param([1, 2], [1, 1], 3, [2, 1, 1], None, id="final-tie"),
+        pytest.param([1] * 5, [1, 2, 3, 4, 5], 2, [1, 5], None, id="proxy-tie"),
+        pytest.param([1] * 5, [1, 2, 3, 4, 5], 1, [1], None, id="one-finalist"),
+        pytest.param([2, 1, 1, 1, 1], [1, 2, 3, 4, 5], 3, [1, 2, 5], None, id="cutoff-tie"),
+        pytest.param([2, 1, 1, 1, 1], [1, 2, 3, 4, 5], 2, [1, 2], None, id="single-cutoff"),
+        pytest.param([2, 2, 2, 2, 1], [1, 2, 3, 4, 5], 2, [1, 4], None, id="rank-priority"),
+        pytest.param([1] * 5, [1] * 5, 2, [1, 5], None, id="both-tied"),
+        pytest.param([1] * 5, [1, 2, 3, 4, 5], 2, [1, 3], 3, id="bounded-mask"),
+    ],
+)
+def test_feature_final_selection_rechecks_masks_and_refits_full_winner(
+    criteria, proxy_scores, final_scores, top_k, expected_counts, max_features
+):
+    from sklearn.model_selection import KFold
+
+    fits = []
+
+    class RecordedTree(DecisionTreeClassifier):
+        def fit(self, X, y, sample_weight=None):
+            self.training_rows_ = len(X)
+            np.testing.assert_array_equal(sample_weight, X[:, 0] % 100 + 1)
+            fits.append((len(X), X.shape[1]))
+            return super().fit(X, y, sample_weight=sample_weight)
+
+    rows = np.arange(40)
+    values = np.column_stack([rows + 100 * i for i in range(len(proxy_scores))])
+    labels = rows % 2
+    full_cv = list(KFold(2, shuffle=True, random_state=2).split(values))
+    from sklearn_genetic import subsample_cv
+
+    reduced_cv = subsample_cv(full_cv, 0.2, stratify=labels, random_state=2)
+    sign = 1 if criteria == "max" else -1
+
+    def learning_curve(model, X, y):
+        count = model.n_features_in_
+        scores = final_scores if model.training_rows_ >= 20 else proxy_scores
+        return sign * scores[count - 1]
+
+    search = GAFeatureSelectionCV(
+        RecordedTree(random_state=0),
+        cv=reduced_cv,
+        scoring=learning_curve,
+        population_size=4,
+        generations=0,
+        random_state=0,
+        n_jobs=1,
+        verbose=False,
+        criteria=criteria,
+        max_features=max_features,
+        final_selection=True,
+        final_selection_top_k=top_k,
+        final_selection_cv=full_cv,
+    ).fit(values, labels, sample_weight=rows + 1)
+    expected_features = max(expected_counts, key=lambda count: (final_scores[count - 1], -count))
+    assert search.support_.sum() == expected_features
+    assert search.best_score_ == sign * final_scores[expected_features - 1]
+    assert search.final_selection_results_["changed"] == (expected_features != expected_counts[0])
+    candidates = search.final_selection_results_["candidates"]
+    assert [sum(item["params"]["features"]) for item in candidates] == expected_counts
+    assert len({tuple(item["params"]["features"]) for item in candidates}) == len(expected_counts)
+    assert sum(rows == 20 for rows, _ in fits) == 2 * len(expected_counts)
+    assert fits[-1] == (40, expected_features)
+    assert search.predict(values).shape == labels.shape
+
+
+@pytest.mark.parametrize("criteria", ["max", "min"])
+def test_feature_finalists_remain_distinct_with_uncached_score_ties(criteria):
+    full_mask_scores = 0
+    sign = 1 if criteria == "max" else -1
+
+    def changing_score(model, X, y):
+        nonlocal full_mask_scores
+        if model.n_features_in_ == 2:
+            full_mask_scores += 1
+            return sign * (3 if full_mask_scores <= 2 else 2)
+        return sign * 2
+
+    search = GAFeatureSelectionCV(
+        DecisionTreeClassifier(random_state=0),
+        cv=2,
+        scoring=changing_score,
+        criteria=criteria,
+        population_size=8,
+        generations=0,
+        use_cache=False,
+        random_state=0,
+        n_jobs=1,
+        verbose=False,
+        final_selection=True,
+        final_selection_top_k=3,
+    ).fit(X_train[:40, :2], y_train[:40])
+    full_proxy_scores = {
+        score
+        for mask, score in zip(
+            search.cv_results_["features"], search.cv_results_["mean_test_score"]
+        )
+        if sum(mask) == 2
+    }
+    assert full_proxy_scores == {sign * 2, sign * 3}
+    candidates = search.final_selection_results_["candidates"]
+    assert len(candidates) == 3
+    assert len({tuple(item["params"]["features"]) for item in candidates}) == 3
+    assert search.support_.sum() == 1
+
+
+@pytest.mark.parametrize("kind", ["hpo", "features"])
+@pytest.mark.parametrize("all_failed", [False, True])
+def test_final_selection_excludes_nan_scores(kind, all_failed):
+    from sklearn_genetic import GASearchCV
+    from sklearn_genetic.space import Integer
+
+    class RowCountTree(DecisionTreeClassifier):
+        def fit(self, X, y, sample_weight=None):
+            self.training_rows_ = len(X)
+            return super().fit(X, y, sample_weight=sample_weight)
+
+    values = np.arange(80).reshape(40, 2)
+    labels = np.arange(40) % 2
+    reduced_cv = [(np.arange(4), np.arange(20, 40))]
+    full_cv = [(np.arange(20), np.arange(20, 40))]
+
+    def learning_curve(model, X, y):
+        size = model.max_depth if kind == "hpo" else model.n_features_in_
+        if model.training_rows_ == 20:
+            return np.nan if all_failed or size == 1 else 1.0
+        return 3 - size
+
+    common = dict(
+        cv=reduced_cv,
+        scoring=learning_curve,
+        population_size=4,
+        generations=0,
+        random_state=0,
+        n_jobs=1,
+        verbose=False,
+        optimization_config=OptimizationConfig(
+            final_selection=True, final_selection_top_k=3, final_selection_cv=full_cv
+        ),
+    )
+    model = RowCountTree(max_depth=1, random_state=0)
+    search = (
+        GASearchCV(model, param_grid={"max_depth": Integer(1, 2)}, **common)
+        if kind == "hpo"
+        else GAFeatureSelectionCV(model, **common)
+    )
+    search = clone(search)
+    if all_failed:
+        with pytest.raises(ValueError, match="All final-selection candidates"):
+            search.fit(values, labels)
+    else:
+        search.fit(values, labels)
+        assert search.best_score_ == 1.0
+        if kind == "hpo":
+            assert search.best_params_["max_depth"] == 2
+        else:
+            assert search.support_.tolist() == [True, True]
+
+
+@pytest.mark.parametrize("kind", ["hpo", "features"])
+@pytest.mark.parametrize("top_k", [True, 1.5, np.nan])
+def test_final_selection_requires_a_positive_integer_budget(kind, top_k):
+    from sklearn_genetic import GASearchCV
+    from sklearn_genetic.space import Integer
+
+    cls = GASearchCV if kind == "hpo" else GAFeatureSelectionCV
+    extra = {"param_grid": {"max_depth": Integer(1, 2)}} if kind == "hpo" else {}
+    with pytest.raises(ValueError, match="final_selection_top_k must be"):
+        cls(DecisionTreeClassifier(), final_selection_top_k=top_k, **extra)
+
+
+@pytest.mark.parametrize("fraction", [0.25, 0.99, 1.0])
+def test_subsample_cv_preserves_validation_and_reproducible_training(fraction):
+    from sklearn_genetic import subsample_cv
+    from sklearn.model_selection import StratifiedKFold
+
+    labels = np.tile([0, 1, 2], 40)
+    splits = list(StratifiedKFold(3).split(np.zeros((120, 1)), labels))
+    sampled = subsample_cv(splits, fraction, stratify=labels, random_state=4)
+    repeated = subsample_cv(splits, fraction, stratify=labels, random_state=4)
+    assert len(sampled) == len(splits)
+    for (train, test), (small, validation), (again, _) in zip(splits, sampled, repeated):
+        np.testing.assert_array_equal(validation, test)
+        np.testing.assert_array_equal(small, again)
+        assert len(small) == int(len(train) * fraction)
+        assert len(np.unique(small)) == len(small)
+        assert set(small).issubset(train)
+        assert not set(small).intersection(test)
+        counts = np.bincount(labels[small], minlength=3)
+        assert counts.min() >= len(small) // 3
+        assert counts.max() <= (len(small) + 2) // 3
+        if fraction == 1:
+            np.testing.assert_array_equal(small, train)
+
+
+@pytest.mark.parametrize("fraction", [0, 1.1, np.nan, True])
+def test_subsample_cv_rejects_invalid_training_fraction(fraction):
+    from sklearn_genetic import subsample_cv
+
+    with pytest.raises(ValueError, match="train_size must be"):
+        subsample_cv([(np.arange(10), np.arange(10, 15))], fraction)
+
+
+@pytest.mark.parametrize("splits", [[(np.array([True, False, True]), [1])], []])
+def test_subsample_cv_rejects_invalid_splits(splits):
+    from sklearn_genetic import subsample_cv
+
+    with pytest.raises(ValueError, match="cv_splits must contain"):
+        subsample_cv(splits, 0.5)
+
+
+def test_subsample_cv_rejects_loss_of_rare_class():
+    from sklearn_genetic import subsample_cv
+
+    labels = np.array([0] * 80 + [1] * 2)
+    with pytest.raises(ValueError, match="retain every class"):
+        subsample_cv([(np.arange(82), np.arange(82, 90))], 0.1, stratify=labels, random_state=4)
+
+
+def test_subsample_cv_rejects_multidimensional_labels():
+    from sklearn_genetic import subsample_cv
+
+    with pytest.raises(ValueError, match="one-dimensional class labels"):
+        subsample_cv(
+            [(np.arange(10), np.arange(10, 15))], 0.5, stratify=np.zeros((15, 2)), random_state=4
+        )
+
+
+@pytest.mark.parametrize("disabled_option", ["final_selection", "refit"])
+def test_feature_refit_clears_inactive_finalist_results(disabled_option):
+    search = GAFeatureSelectionCV(
+        DecisionTreeClassifier(random_state=2),
+        cv=2,
+        scoring="accuracy",
+        population_size=4,
+        generations=0,
+        random_state=2,
+        n_jobs=1,
+        verbose=False,
+        final_selection=True,
+        final_selection_top_k=2,
+    ).fit(X_train, y_train)
+    assert search.final_selection_results_["enabled"]
+    search.set_params(**{disabled_option: False})
+    search.fit(X_train, y_train)
+    for attribute in ("best_index_", "best_score_", "final_selection_results_"):
+        assert not hasattr(search, attribute)
+
+
+@pytest.mark.parametrize(
+    "algorithm,maximum,initializer,population_size",
+    [
+        (algorithm, maximum, "smart", 4)
+        for algorithm in (
+            "eaSimple",
+            "eaMuPlusLambda",
+            "eaMuCommaLambda",
+            "eaDifferentialEvolution",
+        )
+        for maximum in (None, 2)
+    ]
+    + [("eaMuPlusLambda", maximum, "random", 4) for maximum in (None, 2)]
+    + [("eaMuPlusLambda", None, "smart", 8)],
+)
+def test_timed_feature_search_evaluates_dense_initial_anchor(
+    algorithm, maximum, initializer, population_size, monkeypatch
+):
+    from datetime import datetime, timedelta
+    from ..callbacks import early_stoppers
+
+    ticks = [0]
+
+    class ControlledClock:
+        @staticmethod
+        def utcnow():
+            return datetime(2026, 1, 1) + timedelta(seconds=ticks[0])
+
+    original_cv = genetic_search.cross_validate
+
+    def timed_cv(*args, **kwargs):
+        result = original_cv(*args, **kwargs)
+        ticks[0] += 6
+        return result
+
+    monkeypatch.setattr(early_stoppers, "datetime", ControlledClock)
+    monkeypatch.setattr(genetic_search, "cross_validate", timed_cv)
+    values, labels = load_iris(return_X_y=True)
+    settings = dict(
+        population_size=population_size,
+        generations=0,
+        population_initializer=initializer,
+        algorithm=algorithm,
+        max_features=maximum,
+        cv=2,
+        n_jobs=1,
+        random_state=31,
+        verbose=False,
+        error_score="raise",
+    )
+    reference = GAFeatureSelectionCV(DecisionTreeClassifier(random_state=0), **settings)
+    reference.fit(values, labels)
+    masks = reference.cv_results_["features"]
+    expected = max(masks, key=np.sum) if initializer == "smart" else masks[0]
+    if initializer == "smart":
+        assert np.sum(masks[0]) == 1
+        assert np.sum(expected) == (maximum or values.shape[1])
+
+    timed = GAFeatureSelectionCV(DecisionTreeClassifier(random_state=0), **settings)
+    timed.fit(values, labels, callbacks=TimerStopping(5))
+    assert timed.fit_stats_["cross_validate_calls"] == 1
+    assert len(timed.cv_results_["features"]) == 1
+    np.testing.assert_array_equal(timed.support_, expected)
+    assert timed.support_.any()
+    assert timed.predict(values).shape == labels.shape
+
+    # With enough time, the same candidate masks and scores are still evaluated.
+    timed.fit(values, labels, callbacks=TimerStopping(1000))
+    results = lambda search: sorted(
+        (tuple(mask), score)
+        for mask, score in zip(
+            search.cv_results_["features"], search.cv_results_["mean_test_score"]
+        )
+    )
+    assert results(timed) == results(reference)
+    np.testing.assert_array_equal(timed.cv_results_["features"][0], expected)
+
+
+def test_timed_feature_resume_preserves_initial_candidate_order(tmp_path):
+    from pathlib import Path
+    from ..callbacks import ModelCheckpoint
+
+    values, labels = load_iris(return_X_y=True)
+    path = str(tmp_path / "feature_order.pkl")
+    settings = dict(
+        population_size=4,
+        generations=0,
+        cv=2,
+        n_jobs=1,
+        random_state=31,
+        use_cache=False,
+        verbose=False,
+        error_score="raise",
+    )
+    original = GAFeatureSelectionCV(DecisionTreeClassifier(random_state=0), **settings)
+    original.fit(values, labels, callbacks=ModelCheckpoint(path))
+    assert Path(path).is_file()
+    masks = original.cv_results_["features"]
+    assert np.sum(masks[0]) == 1
+
+    resumed = GAFeatureSelectionCV(DecisionTreeClassifier(random_state=0), **settings)
+    resumed.fit(values, labels, callbacks=[ModelCheckpoint(path), TimerStopping(60)])
+    assert len(resumed.cv_results_["features"]) == 2 * len(masks)
+    np.testing.assert_array_equal(resumed.cv_results_["features"][len(masks) :], masks)
+    np.testing.assert_array_equal(
+        resumed.cv_results_["mean_test_score"][len(masks) :],
+        original.cv_results_["mean_test_score"],
+    )

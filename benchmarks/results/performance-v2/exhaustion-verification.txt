@@ -1,0 +1,52 @@
+Paired benchmark: 18/18 exact agreement for CV score, holdout score, predictions, selected configuration and CV calls.
+
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\.venv\Scripts\python.exe -m pytest sklearn_genetic/tests/test_algorithms.py sklearn_genetic/tests/test_optimizer_control.py -q
+ERROR: file or directory not found: sklearn_genetic/tests/test_optimizer_control.py
+
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 0 items
+
+[33m============================ [33mno tests ran[0m[33m in 0.01s[0m[33m ============================[0m
+Exit code: 4
+
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\.venv\Scripts\python.exe C:/Users/dsdotpy/.agents/skills/verification-loop/scripts/test_guard.py --repo . --base f49c19ad1118bc415aade86dc6ff9eccb5128f03
+test_guard: clean against f49c19ad1118bc415aade86dc6ff9eccb5128f03
+Exit code: 0
+
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\.venv\Scripts\python.exe -m black --check sklearn_genetic/algorithms.py sklearn_genetic/optimizer_control.py sklearn_genetic/genetic_search.py sklearn_genetic/tests/test_algorithms.py sklearn_genetic/tests/test_genetic_search.py benchmarks/benchmark_exhaustion.py
+All done! \u2728 \U0001f370 \u2728
+6 files would be left unchanged.
+Exit code: 0
+
+Corrected nonexistent test path to existing test_internal_helpers.py.
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 164 items
+
+sklearn_genetic\tests\test_algorithms.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m [ 18%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m      [ 59%][0m
+sklearn_genetic\tests\test_internal_helpers.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m [ 75%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m                                [100%][0m
+
+[32m============================= [32m[1m164 passed[0m[32m in 2.66s[0m[32m =============================[0m
+Exit code: 0
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 196 items / 151 deselected / 45 selected
+
+sklearn_genetic\tests\test_algorithms.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m    [ 62%][0m
+sklearn_genetic\tests\test_genetic_search.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m           [100%][0m
+
+[32m===================== [32m[1m45 passed[0m, [33m151 deselected[0m[32m in 4.18s[0m[32m ======================[0m
+
+Independent review: EX-001 and EX-002 closed; singleton-count mutant rejected in all eight multi-mask cases. Full suite not run. Public suite before fixture repairs:141 passed/3 failed; all3 failures repaired by enlarging telemetry/scheduler finite fixtures, targeted20 then45 tests passed.

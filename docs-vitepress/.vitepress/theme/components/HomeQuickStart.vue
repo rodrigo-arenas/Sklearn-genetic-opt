@@ -3,10 +3,10 @@
     <div class="home-container">
       <div class="qs-layout">
         <div class="qs-left">
-          <h2 class="section-title left-align">Up and Running in 30 Seconds</h2>
+          <h2 class="section-title left-align">Run Your First Search</h2>
           <p class="section-subtitle left-align">
             Install the package, define a search space, call <code>fit</code>.
-            The GA finds better hyperparameters than a grid search in the same budget.
+            Set a cross-validation budget, then compare the result with a simple baseline.
           </p>
 
           <div class="qs-steps">
@@ -25,8 +25,8 @@
           </div>
 
           <div class="qs-ctas">
-            <a href="/stable/" class="qs-btn primary">Full Installation Guide</a>
-            <a href="/versions/latest/tutorials/" class="qs-btn secondary">All Tutorials</a>
+            <a href="/versions/0.13/guide/installation" class="qs-btn primary">Installation Guide</a>
+            <a href="/versions/0.13/tutorials/" class="qs-btn secondary">All Tutorials</a>
           </div>
         </div>
 

@@ -12,6 +12,7 @@
  *   4. Updates /stable/index.md to redirect to the new stable version
  *   5. Updates "see [0.X]" references inside latest/ dev banners to point to
  *      the new stable version
+ *   6. Points homepage documentation links at the new stable version
  */
 
 import { cpSync, rmSync, readFileSync, writeFileSync, readdirSync, statSync, existsSync } from 'fs'
@@ -88,6 +89,19 @@ walkMd(latestDir, (filePath) => {
   if (updated !== content) writeFileSync(filePath, updated, 'utf8')
 })
 console.log(`Updated latest/ dev banners to reference version ${version}`)
+
+// ── 6. Point homepage links at the newly frozen docs ────────────────────────
+const homePage = join(docsRoot, 'index.md')
+const homeContent = readFileSync(homePage, 'utf8')
+const updatedHome = homeContent.replace(/\/versions\/\d+\.\d+\//g, `/versions/${version}/`)
+if (updatedHome !== homeContent) writeFileSync(homePage, updatedHome, 'utf8')
+const homeComponents = join(docsRoot, '.vitepress', 'theme', 'components')
+for (const name of readdirSync(homeComponents).filter((entry) => /^Home.*\.vue$/.test(entry))) {
+  const filePath = join(homeComponents, name)
+  const content = readFileSync(filePath, 'utf8')
+  const updated = content.replace(/\/versions\/\d+\.\d+\//g, `/versions/${version}/`)
+  if (updated !== content) writeFileSync(filePath, updated, 'utf8')
+}
 
 console.log(`\nDone — version ${version} is now frozen as stable.`)
 

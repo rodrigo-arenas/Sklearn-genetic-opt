@@ -1,0 +1,130 @@
+Feature finalist plateau verification; base29f8beb78f1b025db3f7f04543d81b1743b62db4.
+AC-PT1 flat proxy preserves sparse+dense cutoff representatives at fixed K; PT2 distinct masks/uncached duplicates/K1/max_features/rank priority; PT3 final parsimony and HPO unchanged; PT4 paired fresh-seed evidence.
+
+plateau-final-red.txt
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 100 items / 80 deselected / 20 selected
+
+sklearn_genetic\tests\test_feature_selection.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[31mF[0m[31mF[0m[32m.[0m[32m.[0m[31mF[0m[31mF[0m[32m.[0m[32m.[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[32m.[0m[32m.[0m[31m     [100%][0m
+
+================================== FAILURES ===================================
+[31m[1m_ test_feature_final_selection_rechecks_masks_and_refits_full_winner[proxy-tie-max] _[0m
+[1m[31msklearn_genetic\tests\test_feature_selection.py[0m:1057: in test_feature_final_selection_rechecks_masks_and_refits_full_winner
+    [0m[94massert[39;49;00m search.support_.sum() == expected_features[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_feature_final_selection_rechecks_masks_and_refits_full_winner[proxy-tie-min] _[0m
+[1m[31msklearn_genetic\tests\test_feature_selection.py[0m:1057: in test_feature_final_selection_rechecks_masks_and_refits_full_winner
+    [0m[94massert[39;49;00m search.support_.sum() == expected_features[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_feature_final_selection_rechecks_masks_and_refits_full_winner[cutoff-tie-max] _[0m
+[1m[31msklearn_genetic\tests\test_feature_selection.py[0m:1057: in test_feature_final_selection_rechecks_masks_and_refits_full_winner
+    [0m[94massert[39;49;00m search.support_.sum() == expected_features[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_feature_final_selection_rechecks_masks_and_refits_full_winner[cutoff-tie-min] _[0m
+[1m[31msklearn_genetic\tests\test_feature_selection.py[0m:1057: in test_feature_final_selection_rechecks_masks_and_refits_full_winner
+    [0m[94massert[39;49;00m search.support_.sum() == expected_features[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_feature_final_selection_rechecks_masks_and_refits_full_winner[rank-priority-max] _[0m
+[1m[31msklearn_genetic\tests\test_feature_selection.py[0m:1057: in test_feature_final_selection_rechecks_masks_and_refits_full_winner
+    [0m[94massert[39;49;00m search.support_.sum() == expected_features[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_feature_final_selection_rechecks_masks_and_refits_full_winner[rank-priority-min] _[0m
+[1m[31msklearn_genetic\tests\test_feature_selection.py[0m:1057: in test_feature_final_selection_rechecks_masks_and_refits_full_winner
+    [0m[94massert[39;49;00m search.support_.sum() == expected_features[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_feature_final_selection_rechecks_masks_and_refits_full_winner[both-tied-max] _[0m
+[1m[31msklearn_genetic\tests\test_feature_selection.py[0m:1061: in test_feature_final_selection_rechecks_masks_and_refits_full_winner
+    [0m[94massert[39;49;00m [[96msum[39;49;00m(item[[33m"[39;49;00m[33mparams[39;49;00m[33m"[39;49;00m][[33m"[39;49;00m[33mfeatures[39;49;00m[33m"[39;49;00m]) [94mfor[39;49;00m item [95min[39;49;00m candidates] == expected_counts[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_feature_final_selection_rechecks_masks_and_refits_full_winner[both-tied-min] _[0m
+[1m[31msklearn_genetic\tests\test_feature_selection.py[0m:1061: in test_feature_final_selection_rechecks_masks_and_refits_full_winner
+    [0m[94massert[39;49;00m [[96msum[39;49;00m(item[[33m"[39;49;00m[33mparams[39;49;00m[33m"[39;49;00m][[33m"[39;49;00m[33mfeatures[39;49;00m[33m"[39;49;00m]) [94mfor[39;49;00m item [95min[39;49;00m candidates] == expected_counts[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_feature_final_selection_rechecks_masks_and_refits_full_winner[bounded-mask-max] _[0m
+[1m[31msklearn_genetic\tests\test_feature_selection.py[0m:1057: in test_feature_final_selection_rechecks_masks_and_refits_full_winner
+    [0m[94massert[39;49;00m search.support_.sum() == expected_features[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_feature_final_selection_rechecks_masks_and_refits_full_winner[bounded-mask-min] _[0m
+[1m[31msklearn_genetic\tests\test_feature_selection.py[0m:1057: in test_feature_final_selection_rechecks_masks_and_refits_full_winner
+    [0m[94massert[39;49;00m search.support_.sum() == expected_features[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[36m[1m=========================== short test summary info ===========================[0m
+[31mFAILED[0m sklearn_genetic/tests/test_feature_selection.py::[1mtest_feature_final_selection_rechecks_masks_and_refits_full_winner[proxy-tie-max][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_feature_selection.py::[1mtest_feature_final_selection_rechecks_masks_and_refits_full_winner[proxy-tie-min][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_feature_selection.py::[1mtest_feature_final_selection_rechecks_masks_and_refits_full_winner[cutoff-tie-max][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_feature_selection.py::[1mtest_feature_final_selection_rechecks_masks_and_refits_full_winner[cutoff-tie-min][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_feature_selection.py::[1mtest_feature_final_selection_rechecks_masks_and_refits_full_winner[rank-priority-max][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_feature_selection.py::[1mtest_feature_final_selection_rechecks_masks_and_refits_full_winner[rank-priority-min][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_feature_selection.py::[1mtest_feature_final_selection_rechecks_masks_and_refits_full_winner[both-tied-max][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_feature_selection.py::[1mtest_feature_final_selection_rechecks_masks_and_refits_full_winner[both-tied-min][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_feature_selection.py::[1mtest_feature_final_selection_rechecks_masks_and_refits_full_winner[bounded-mask-max][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_feature_selection.py::[1mtest_feature_final_selection_rechecks_masks_and_refits_full_winner[bounded-mask-min][0m - AssertionError
+[31m================ [31m[1m10 failed[0m, [32m10 passed[0m, [33m80 deselected[0m[31m in 3.98s[0m[31m =================[0m
+
+plateau-dedup-mutant.txt
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 100 items / 98 deselected / 2 selected
+
+sklearn_genetic\tests\test_feature_selection.py [31mF[0m[31mF[0m[31m                       [100%][0m
+
+================================== FAILURES ===================================
+[31m[1m____ test_feature_finalists_remain_distinct_with_uncached_score_ties[max] _____[0m
+[1m[31msklearn_genetic\tests\test_feature_selection.py[0m:1104: in test_feature_finalists_remain_distinct_with_uncached_score_ties
+    [0m[94massert[39;49;00m [96mlen[39;49;00m({[96mtuple[39;49;00m(item[[33m"[39;49;00m[33mparams[39;49;00m[33m"[39;49;00m][[33m"[39;49;00m[33mfeatures[39;49;00m[33m"[39;49;00m]) [94mfor[39;49;00m item [95min[39;49;00m candidates}) == [94m3[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m____ test_feature_finalists_remain_distinct_with_uncached_score_ties[min] _____[0m
+[1m[31msklearn_genetic\tests\test_feature_selection.py[0m:1104: in test_feature_finalists_remain_distinct_with_uncached_score_ties
+    [0m[94massert[39;49;00m [96mlen[39;49;00m({[96mtuple[39;49;00m(item[[33m"[39;49;00m[33mparams[39;49;00m[33m"[39;49;00m][[33m"[39;49;00m[33mfeatures[39;49;00m[33m"[39;49;00m]) [94mfor[39;49;00m item [95min[39;49;00m candidates}) == [94m3[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[36m[1m=========================== short test summary info ===========================[0m
+[31mFAILED[0m sklearn_genetic/tests/test_feature_selection.py::[1mtest_feature_finalists_remain_distinct_with_uncached_score_ties[max][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_feature_selection.py::[1mtest_feature_finalists_remain_distinct_with_uncached_score_ties[min][0m - AssertionError
+[31m====================== [31m[1m2 failed[0m, [33m98 deselected[0m[31m in 2.65s[0m[31m =======================[0m
+
+plateau-final-green.txt
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 278 items / 229 deselected / 49 selected
+
+sklearn_genetic\tests\test_feature_selection.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m [ 48%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m                                                       [ 85%][0m
+sklearn_genetic\tests\test_genetic_search.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m                     [100%][0m
+
+[32m===================== [32m[1m49 passed[0m, [33m229 deselected[0m[32m in 3.32s[0m[32m ======================[0m
+
+plateau-summary.txt
+PASS88 complete paired fits; identical search candidate/score hashes and CV counts in all44pairs; 12 finalist lists changed. HPO controls unchanged.
+Total measured fit seconds: 1055.993
+| Dataset | Fraction | Baseline score / seconds / features | Current score / seconds / features | Score difference | Error ratio |
+|---|---:|---:|---:|---:|---:|
+| breast | 0.25 | 0.967832 / 2.353 / 14.4 | 0.967832 / 2.278 / 14.4 | +0.000000 | 1.000x |
+Score SD: baseline 0.016841, current 0.016841; unique proxy scores [20, 23, 24, 28].
+| breast | 0.125 | 0.897902 / 1.183 / 2.0 | 0.969231 / 1.296 / 30.0 | +0.071329 | 3.318x |
+Score SD: baseline 0.033023, current 0.020147; unique proxy scores [1].
+| digits | 0.25 | 0.973778 / 41.646 / 51.8 | 0.973778 / 41.505 / 51.8 | +0.000000 | 1.000x |
+Score SD: baseline 0.003975, current 0.003975; unique proxy scores [50, 51, 56, 57].
+| digits | 0.125 | 0.976889 / 24.715 / 55.6 | 0.976889 / 24.599 / 55.6 | +0.000000 | 1.000x |
+Score SD: baseline 0.007950, current 0.007950; unique proxy scores [53, 54, 57, 59].
+| diabetes | 0.25 | -3732.947663 / 1.455 / 5.6 | -3732.947663 / 1.376 / 5.6 | +0.000000 | 1.000x |
+Score SD: baseline 613.238113, current 613.238113; unique proxy scores [69, 70, 71].
+| diabetes | 0.125 | -4581.016918 / 0.830 / 1.8 | -3544.736997 / 0.814 / 10.0 | +1036.279921 | 1.292x |
+Score SD: baseline 367.608542, current 553.465532; unique proxy scores [1].
+| synthetic | 0.25 | 0.892800 / 14.384 / 58.4 | 0.892800 / 14.068 / 58.4 | +0.000000 | 1.000x |
+Score SD: baseline 0.014940, current 0.014940; unique proxy scores [50, 54, 55, 60, 61].
+| synthetic | 0.125 | 0.886800 / 8.870 / 58.0 | 0.886800 / 8.756 / 58.0 | +0.000000 | 1.000x |
+Score SD: baseline 0.011541, current 0.011541; unique proxy scores [45, 51, 53, 56, 60].
+
+Black:2 files unchanged. test_guard clean against base. git diff --check clean. Baseline53 source files match f010530 after CRLF normalization; initial raw-byte assertion found CRLF only, then normalized comparison passed. Current snapshot behavior AST equals final checkout (docstring-only difference). Both immutable snapshots SHA256 verified after88fits. Full suite not run.
+
+Independent review closed with no material findings. Reviewer checked2000 tied/noisy candidate arrangements, recomputed all88paired artifacts and published numbers, and verified baseline/source hashes. In-memory mutant removing same-rank restriction failed both public rank-priority cases (2failed98deselected). No shared production edits or long benchmark reruns.

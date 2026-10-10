@@ -36,7 +36,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import math
 import os
 import statistics
 import tempfile
@@ -68,7 +67,7 @@ from sklearn_genetic import (
 )
 
 # Reuse the spec -> optimizer-space converters from the bayesmark benchmark.
-from benchmark_bayesmark import to_scipy_distributions, to_sklearn_genetic_space
+from benchmark_bayesmark import ga_budget, to_scipy_distributions, to_sklearn_genetic_space
 
 try:  # Optuna is an optional benchmarking dependency.
     import optuna
@@ -266,7 +265,7 @@ def run_randomized(X, y, seed: int, budget: int, cv_splits: int) -> RunResult:
         scoring="accuracy",
         cv=make_cv(seed, cv_splits),
         random_state=seed,
-        n_jobs=-1,
+        n_jobs=1,
         refit=False,
         error_score=np.nan,
     )
@@ -302,19 +301,13 @@ def run_optuna(X, y, seed: int, budget: int, cv_splits: int) -> RunResult:
         clf = CASHClassifier(random_state=seed, **params)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            scores = cross_val_score(clf, X, y, scoring="accuracy", cv=cv, n_jobs=-1)
+            scores = cross_val_score(clf, X, y, scoring="accuracy", cv=cv, n_jobs=1)
         return float(np.mean(scores))
 
     study = optuna.create_study(direction="maximize", sampler=optuna.samplers.TPESampler(seed=seed))
     started = time.perf_counter()
     study.optimize(objective, n_trials=budget, show_progress_bar=False)
     return RunResult("optuna", float(study.best_value), budget, time.perf_counter() - started)
-
-
-def ga_budget(budget: int) -> tuple[int, int]:
-    population_size = max(10, int(round(math.sqrt(budget * 2))))
-    generations = max(2, round(budget / population_size) - 1)
-    return population_size, generations
 
 
 def run_gasearch(X, y, seed: int, budget: int, cv_splits: int) -> RunResult:
@@ -331,14 +324,14 @@ def run_gasearch(X, y, seed: int, budget: int, cv_splits: int) -> RunResult:
             elitism=True,
             keep_top_k=3,
         ),
+        random_state=seed,
+        refit=False,
         population_config=PopulationConfig(initializer="smart"),
         runtime_config=RuntimeConfig(
-            n_jobs=-1, parallel_backend="auto", use_cache=True, verbose=False, error_score=np.nan
+            n_jobs=1, parallel_backend="auto", use_cache=True, verbose=False, error_score=np.nan
         ),
         optimization_config=OptimizationConfig(
-            local_search=True,
-            local_search_top_k=2,
-            local_search_steps=1,
+            local_search=False,
             diversity_control=True,
             random_immigrants_fraction=0.15,
             fitness_sharing=True,
@@ -349,10 +342,10 @@ def run_gasearch(X, y, seed: int, budget: int, cv_splits: int) -> RunResult:
         warnings.simplefilter("ignore")
         search.fit(X, y)
     elapsed = time.perf_counter() - started
-    evaluations = int(
-        search.fit_stats_.get("evaluated_candidates", population_size * (generations + 1))
+    evaluations = search.fit_stats_["cross_validate_calls"]
+    return RunResult(
+        "gasearch", float(max(search.cv_results_["mean_test_score"])), evaluations, elapsed
     )
-    return RunResult("gasearch", float(search.best_score_), evaluations, elapsed)
 
 
 OPTIMIZERS: dict[str, Callable[..., RunResult]] = {

@@ -1,0 +1,236 @@
+=== de-red.txt ===
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 79 items / 75 deselected / 4 selected
+
+sklearn_genetic\tests\test_genetic_search.py [31mF[0m[31mF[0m[31mF[0m[31mF[0m[31m                        [100%][0m
+
+================================== FAILURES ===================================
+[31m[1m_ test_differential_evolution_search_improves_with_bounded_evaluations[max-parameters] _[0m
+[1m[31msklearn_genetic\tests\test_genetic_search.py[0m:91: in test_differential_evolution_search_improves_with_bounded_evaluations
+    [0msearch.fit(X_small, y_small)[90m[39;49;00m
+[1m[31msklearn_genetic\genetic_search.py[0m:1254: in fit
+    [0mpop, log, n_gen = [96mself[39;49;00m._select_algorithm(pop=[96mself[39;49;00m._pop, stats=[96mself[39;49;00m._stats, hof=[96mself[39;49;00m._hof)[90m[39;49;00m
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msklearn_genetic\_base.py[0m:181: in _select_algorithm
+    [0m[94mraise[39;49;00m [96mValueError[39;49;00m([90m[39;49;00m
+[1m[31mE   ValueError: The algorithm eaDifferentialEvolution is not supported, please select one from ['eaSimple', 'eaMuPlusLambda', 'eaMuCommaLambda'][0m
+[31m[1m_ test_differential_evolution_search_improves_with_bounded_evaluations[max-features] _[0m
+[1m[31msklearn_genetic\tests\test_genetic_search.py[0m:91: in test_differential_evolution_search_improves_with_bounded_evaluations
+    [0msearch.fit(X_small, y_small)[90m[39;49;00m
+[1m[31msklearn_genetic\genetic_search.py[0m:2233: in fit
+    [0mpop, log, n_gen = [96mself[39;49;00m._select_algorithm(pop=[96mself[39;49;00m._pop, stats=[96mself[39;49;00m._stats, hof=[96mself[39;49;00m._hof)[90m[39;49;00m
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msklearn_genetic\_base.py[0m:181: in _select_algorithm
+    [0m[94mraise[39;49;00m [96mValueError[39;49;00m([90m[39;49;00m
+[1m[31mE   ValueError: The algorithm eaDifferentialEvolution is not supported, please select one from ['eaSimple', 'eaMuPlusLambda', 'eaMuCommaLambda'][0m
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\.venv\Lib\site-packages\deap\creator.py:185: RuntimeWarning: A class named 'FitnessMax' has already been created and it will be overwritten. Consider deleting previous creation of that class or rename it.
+  warnings.warn("A class named '{0}' has already been created and it "
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\.venv\Lib\site-packages\deap\creator.py:185: RuntimeWarning: A class named 'Individual' has already been created and it will be overwritten. Consider deleting previous creation of that class or rename it.
+  warnings.warn("A class named '{0}' has already been created and it "
+[31m[1m_ test_differential_evolution_search_improves_with_bounded_evaluations[min-parameters] _[0m
+[1m[31msklearn_genetic\tests\test_genetic_search.py[0m:91: in test_differential_evolution_search_improves_with_bounded_evaluations
+    [0msearch.fit(X_small, y_small)[90m[39;49;00m
+[1m[31msklearn_genetic\genetic_search.py[0m:1254: in fit
+    [0mpop, log, n_gen = [96mself[39;49;00m._select_algorithm(pop=[96mself[39;49;00m._pop, stats=[96mself[39;49;00m._stats, hof=[96mself[39;49;00m._hof)[90m[39;49;00m
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msklearn_genetic\_base.py[0m:181: in _select_algorithm
+    [0m[94mraise[39;49;00m [96mValueError[39;49;00m([90m[39;49;00m
+[1m[31mE   ValueError: The algorithm eaDifferentialEvolution is not supported, please select one from ['eaSimple', 'eaMuPlusLambda', 'eaMuCommaLambda'][0m
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\.venv\Lib\site-packages\deap\creator.py:185: RuntimeWarning: A class named 'FitnessMax' has already been created and it will be overwritten. Consider deleting previous creation of that class or rename it.
+  warnings.warn("A class named '{0}' has already been created and it "
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\.venv\Lib\site-packages\deap\creator.py:185: RuntimeWarning: A class named 'Individual' has already been created and it will be overwritten. Consider deleting previous creation of that class or rename it.
+  warnings.warn("A class named '{0}' has already been created and it "
+[31m[1m_ test_differential_evolution_search_improves_with_bounded_evaluations[min-features] _[0m
+[1m[31msklearn_genetic\tests\test_genetic_search.py[0m:91: in test_differential_evolution_search_improves_with_bounded_evaluations
+    [0msearch.fit(X_small, y_small)[90m[39;49;00m
+[1m[31msklearn_genetic\genetic_search.py[0m:2233: in fit
+    [0mpop, log, n_gen = [96mself[39;49;00m._select_algorithm(pop=[96mself[39;49;00m._pop, stats=[96mself[39;49;00m._stats, hof=[96mself[39;49;00m._hof)[90m[39;49;00m
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msklearn_genetic\_base.py[0m:181: in _select_algorithm
+    [0m[94mraise[39;49;00m [96mValueError[39;49;00m([90m[39;49;00m
+[1m[31mE   ValueError: The algorithm eaDifferentialEvolution is not supported, please select one from ['eaSimple', 'eaMuPlusLambda', 'eaMuCommaLambda'][0m
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\.venv\Lib\site-packages\deap\creator.py:185: RuntimeWarning: A class named 'FitnessMax' has already been created and it will be overwritten. Consider deleting previous creation of that class or rename it.
+  warnings.warn("A class named '{0}' has already been created and it "
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\.venv\Lib\site-packages\deap\creator.py:185: RuntimeWarning: A class named 'Individual' has already been created and it will be overwritten. Consider deleting previous creation of that class or rename it.
+  warnings.warn("A class named '{0}' has already been created and it "
+[36m[1m=========================== short test summary info ===========================[0m
+[31mFAILED[0m sklearn_genetic/tests/test_genetic_search.py::[1mtest_differential_evolution_search_improves_with_bounded_evaluations[max-parameters][0m - ValueError: The algorithm eaDifferentialEvolution is not supported, please ...
+[31mFAILED[0m sklearn_genetic/tests/test_genetic_search.py::[1mtest_differential_evolution_search_improves_with_bounded_evaluations[max-features][0m - ValueError: The algorithm eaDifferentialEvolution is not supported, please ...
+[31mFAILED[0m sklearn_genetic/tests/test_genetic_search.py::[1mtest_differential_evolution_search_improves_with_bounded_evaluations[min-parameters][0m - ValueError: The algorithm eaDifferentialEvolution is not supported, please ...
+[31mFAILED[0m sklearn_genetic/tests/test_genetic_search.py::[1mtest_differential_evolution_search_improves_with_bounded_evaluations[min-features][0m - ValueError: The algorithm eaDifferentialEvolution is not supported, please ...
+[31m====================== [31m[1m4 failed[0m, [33m75 deselected[0m[31m in 5.85s[0m[31m =======================[0m
+
+
+=== de-callback-red.txt ===
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 70 items / 66 deselected / 4 selected
+
+sklearn_genetic\tests\test_algorithms.py [32m.[0m[32m.[0m[31mF[0m[31mF[0m[31m                            [100%][0m
+
+================================== FAILURES ===================================
+[31m[1m____ test_differential_evolution_replaces_only_improved_targets[True-1.0] _____[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:126: in test_differential_evolution_replaces_only_improved_targets
+    [0mresult, log, _ = eaDifferentialEvolution([90m[39;49;00m
+[1m[31msklearn_genetic\algorithms.py[0m:1084: in eaDifferentialEvolution
+    [0m[94mreturn[39;49;00m eaMuPlusLambda(population, toolbox, **kwargs)[90m[39;49;00m
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msklearn_genetic\algorithms.py[0m:824: in eaMuPlusLambda
+    [0m[94mif[39;49;00m eval_callbacks(**callbacks_step_args) [95mor[39;49;00m stored_exception:[90m[39;49;00m
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msklearn_genetic\callbacks\validations.py[0m:66: in eval_callbacks
+    [0mdecision = callback_method(record, logbook, estimator)[90m[39;49;00m
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msklearn_genetic\callbacks\early_stoppers.py[0m:145: in on_step
+    [0mdiff = [96mabs[39;49;00m([96mmax[39;49;00m(stats) - [96mmin[39;49;00m(stats))[90m[39;49;00m
+               ^^^^^^^^^^[90m[39;49;00m
+[1m[31mE   TypeError: '>' not supported between instances of 'float' and 'NoneType'[0m
+[31m[1m____ test_differential_evolution_replaces_only_improved_targets[True--1.0] ____[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:126: in test_differential_evolution_replaces_only_improved_targets
+    [0mresult, log, _ = eaDifferentialEvolution([90m[39;49;00m
+[1m[31msklearn_genetic\algorithms.py[0m:1084: in eaDifferentialEvolution
+    [0m[94mreturn[39;49;00m eaMuPlusLambda(population, toolbox, **kwargs)[90m[39;49;00m
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msklearn_genetic\algorithms.py[0m:824: in eaMuPlusLambda
+    [0m[94mif[39;49;00m eval_callbacks(**callbacks_step_args) [95mor[39;49;00m stored_exception:[90m[39;49;00m
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msklearn_genetic\callbacks\validations.py[0m:66: in eval_callbacks
+    [0mdecision = callback_method(record, logbook, estimator)[90m[39;49;00m
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msklearn_genetic\callbacks\early_stoppers.py[0m:145: in on_step
+    [0mdiff = [96mabs[39;49;00m([96mmax[39;49;00m(stats) - [96mmin[39;49;00m(stats))[90m[39;49;00m
+               ^^^^^^^^^^[90m[39;49;00m
+[1m[31mE   TypeError: '>' not supported between instances of 'float' and 'NoneType'[0m
+[36m[1m=========================== short test summary info ===========================[0m
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_differential_evolution_replaces_only_improved_targets[True-1.0][0m - TypeError: '>' not supported between instances of 'float' and 'NoneType'
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_differential_evolution_replaces_only_improved_targets[True--1.0][0m - TypeError: '>' not supported between instances of 'float' and 'NoneType'
+[31m================= [31m[1m2 failed[0m, [32m2 passed[0m, [33m66 deselected[0m[31m in 2.76s[0m[31m ==================[0m
+
+
+=== de-final-check.txt ===
+would reformat sklearn_genetic\tests\test_algorithms.py
+
+Oh no! \U0001f4a5 \U0001f494 \U0001f4a5
+1 file would be reformatted, 8 files would be left unchanged.
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 136 items
+
+sklearn_genetic\tests\test_algorithms.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m [ 22%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m                                  [ 51%][0m
+sklearn_genetic\tests\test_internal_helpers.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m [ 69%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m                                [100%][0m
+
+[32m============================= [32m[1m136 passed[0m[32m in 2.73s[0m[32m =============================[0m
+
+
+=== de-public-final.txt ===
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 128 items / 120 deselected / 8 selected
+
+sklearn_genetic\tests\test_genetic_search.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m                     [ 87%][0m
+sklearn_genetic\tests\test_feature_selection.py [32m.[0m[32m                        [100%][0m
+
+[32m====================== [32m[1m8 passed[0m, [33m120 deselected[0m[32m in 2.74s[0m[32m ======================[0m
+{"kind": "hpo", "n_jobs": 1, "cv_score": 0.8430320150659133, "fit_stats": {"evaluated_candidates": 22, "unique_candidates": 18, "cross_validate_calls": 18, "cache_hits": 3, "duplicate_candidates": 1, "skipped_invalid_candidates": 0, "population_parallel_batches": 0, "population_serial_batches": 7, "random_immigrants": 0, "local_refinement_candidates": 6}, "selected": {"max_depth": 4, "ccp_alpha": 0.0}}
+{"kind": "hpo", "n_jobs": 2, "cv_score": 0.8430320150659133, "fit_stats": {"evaluated_candidates": 22, "unique_candidates": 18, "cross_validate_calls": 18, "cache_hits": 3, "duplicate_candidates": 1, "skipped_invalid_candidates": 0, "population_parallel_batches": 6, "population_serial_batches": 1, "random_immigrants": 0, "local_refinement_candidates": 6}, "selected": {"max_depth": 4, "ccp_alpha": 0.0}}
+{"kind": "features", "n_jobs": 1, "cv_score": 0.9044256120527306, "fit_stats": {"evaluated_candidates": 22, "unique_candidates": 21, "cross_validate_calls": 21, "cache_hits": 1, "duplicate_candidates": 0, "skipped_invalid_candidates": 0, "population_parallel_batches": 0, "population_serial_batches": 7, "random_immigrants": 0, "local_refinement_candidates": 6}, "selected": [true, false, false, true, false, false, true, true, true, false, false, false, true]}
+{"kind": "features", "n_jobs": 2, "cv_score": 0.9044256120527306, "fit_stats": {"evaluated_candidates": 22, "unique_candidates": 21, "cross_validate_calls": 21, "cache_hits": 1, "duplicate_candidates": 0, "skipped_invalid_candidates": 0, "population_parallel_batches": 7, "population_serial_batches": 0, "random_immigrants": 0, "local_refinement_candidates": 6}, "selected": [true, false, false, true, false, false, true, true, true, false, false, false, true]}
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:710: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:710: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:710: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+GASearchCV checkpoint cache and fitted save/load PASS
+GAFeatureSelectionCV checkpoint cache and fitted save/load PASS
+
+
+=== de-review-repaired.txt ===
+INFO: DeltaThreshold callback met its criteria
+INFO: ConsecutiveStopping callback met its criteria
+INFO: Stopping the algorithm
+INFO: DeltaThreshold callback met its criteria
+INFO: ConsecutiveStopping callback met its criteria
+INFO: Stopping the algorithm
+strict-tie repaired regressions reject >= mutant: 2 of 4
+categorical repaired regression rejects target instead of donor mutant: PASS
+NAN CALLBACK no error eaDifferentialEvolution DeltaThreshold
+NAN CALLBACK no error eaDifferentialEvolution ConsecutiveStopping
+NAN CALLBACK no error eaMuPlusLambda DeltaThreshold
+NAN CALLBACK no error eaMuPlusLambda ConsecutiveStopping
+prechange telemetry eaMuPlusLambda DeltaThreshold no TypeError
+prechange telemetry eaMuPlusLambda ConsecutiveStopping no TypeError
+
+
+=== de-review-nan-mutant.txt ===
+INFO: DeltaThreshold callback met its criteria
+INFO: ConsecutiveStopping callback met its criteria
+INFO: Stopping the algorithm
+INFO: DeltaThreshold callback met its criteria
+INFO: ConsecutiveStopping callback met its criteria
+INFO: Stopping the algorithm
+final regressions reject missing NaN-recovery mutant: 2 of 4
+INFO: DeltaThreshold callback met its criteria
+INFO: ConsecutiveStopping callback met its criteria
+INFO: Stopping the algorithm
+INFO: DeltaThreshold callback met its criteria
+INFO: ConsecutiveStopping callback met its criteria
+INFO: Stopping the algorithm
+final real survival/callback regressions PASS all 4
+
+
+=== de-test-guard.txt ===
+test_guard: clean against 8968cb58a64787b4af01f23d901650dfa9c78e12
+
+
+=== de-lint-tracked.txt ===
+All done! \u2728 \U0001f370 \u2728
+78 files would be left unchanged.
+
+
+=== de-review-aggregation.txt ===
+Replacement characters: 0
+differential-hpo count 240 methods {'gasearch': 60, 'differential': 60, 'optuna': 60, 'flaml': 60} seeds [301, 302, 303, 304, 305] maxevaluations 40
+| iris/dt | 0.9180 | 0.9319 | 0.9368 | 0.8947 | 1.03
+| iris/svm | 0.9696 | 0.9697 | 0.9684 | 0.9579 | 1.07
+| iris/knn | 0.9661 | 0.9643 | 0.9421 | 0.9368 | 1.18
+| wine/dt | 0.8121 | 0.8180 | 0.7822 | 0.8133 | 1.01
+| wine/svm | 0.9851 | 0.9851 | 0.9778 | 0.9778 | 1.05
+| wine/knn | 0.9745 | 0.9760 | 0.9422 | 0.9333 | 1.36
+| breast/dt | 0.9085 | 0.9075 | 0.9063 | 0.9035 | 1.03
+| breast/svm | 0.9746 | 0.9742 | 0.9748 | 0.9734 | 1.06
+| breast/knn | 0.9653 | 0.9667 | 0.9650 | 0.9650 | 1.15
+| diabetes/dt | -4047.6632 | -4051.8790 | -4065.6570 | -4041.7889 | 1.00
+| diabetes/svm | -3099.1697 | -3101.1773 | -3077.7374 | -3070.4122 | 0.99
+| diabetes/knn | -3365.9392 | -3339.7368 | -3294.2080 | -3338.2356 | 1.12
+| differential | 0.9437 | 0.9284 | 0.925
+| flaml | 0.9274 | 0.9216 | 0.639
+| gasearch | 0.9415 | 0.9329 | 1.041
+| optuna | 0.9510 | 0.9402 | 0.654
+differential-features count 60 methods {'genetic': 30, 'differential': 30} seeds [301, 302, 303, 304, 305] maxevaluations 72
+| 20/dt | 0.8400 | 0.8320 | 0.8220 | 0.8220 | 1.04
+| 20/logistic | 0.8500 | 0.8493 | 0.8340 | 0.8420 | 1.03
+| 60/dt | 0.8220 | 0.8187 | 0.7780 | 0.7620 | 1.00
+| 60/logistic | 0.8573 | 0.8460 | 0.8160 | 0.7740 | 0.96
+| 120/dt | 0.7927 | 0.7813 | 0.7780 | 0.7760 | 0.99
+| 120/logistic | 0.7960 | 0.7960 | 0.8140 | 0.8440 | 0.95
+All report table aggregations reproduce
+Strict UTF8, equal HPO proposals/initial fitness, CV budgets, feature bounds PASS

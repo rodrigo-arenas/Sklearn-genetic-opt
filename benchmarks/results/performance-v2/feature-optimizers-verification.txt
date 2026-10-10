@@ -1,0 +1,54 @@
+72 comparison runs: all proposal/evaluation/mask constraints passed. Twelve bounded seed301 rows exactly match committed differential-features.json on scores/evaluations/feature counts.
+
+feature-benchmark-red.txt
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 16 items / 12 deselected / 4 selected
+
+sklearn_genetic\tests\test_benchmark_search_methods.py FFFF              [100%]
+
+================================== FAILURES ===================================
+_ test_feature_optimizer_rejects_empty_caches_duplicates_and_refits_best[optuna] _
+sklearn_genetic\tests\test_benchmark_search_methods.py:138: in test_feature_optimizer_rejects_empty_caches_duplicates_and_refits_best
+    original_cv = benchmark_features.cross_val_score
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'benchmarks.benchmark_features' has no attribute 'cross_val_score'
+_ test_feature_optimizer_rejects_empty_caches_duplicates_and_refits_best[flaml] _
+sklearn_genetic\tests\test_benchmark_search_methods.py:138: in test_feature_optimizer_rejects_empty_caches_duplicates_and_refits_best
+    original_cv = benchmark_features.cross_val_score
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'benchmarks.benchmark_features' has no attribute 'cross_val_score'
+______ test_feature_optimizer_cli_requires_unconstrained_domain[optuna] _______
+sklearn_genetic\tests\test_benchmark_search_methods.py:164: in test_feature_optimizer_cli_requires_unconstrained_domain
+    assert "HPO mask comparisons require --unconstrained" in capsys.readouterr().err
+E   AssertionError
+_______ test_feature_optimizer_cli_requires_unconstrained_domain[flaml] _______
+sklearn_genetic\tests\test_benchmark_search_methods.py:164: in test_feature_optimizer_cli_requires_unconstrained_domain
+    assert "HPO mask comparisons require --unconstrained" in capsys.readouterr().err
+E   AssertionError
+=========================== short test summary info ===========================
+FAILED sklearn_genetic/tests/test_benchmark_search_methods.py::test_feature_optimizer_rejects_empty_caches_duplicates_and_refits_best[optuna]
+FAILED sklearn_genetic/tests/test_benchmark_search_methods.py::test_feature_optimizer_rejects_empty_caches_duplicates_and_refits_best[flaml]
+FAILED sklearn_genetic/tests/test_benchmark_search_methods.py::test_feature_optimizer_cli_requires_unconstrained_domain[optuna]
+FAILED sklearn_genetic/tests/test_benchmark_search_methods.py::test_feature_optimizer_cli_requires_unconstrained_domain[flaml]
+====================== 4 failed, 12 deselected in 2.64s =======================
+
+feature-benchmark-green.txt
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 16 items
+
+sklearn_genetic\tests\test_benchmark_search_methods.py ................  [100%]
+
+============================= 16 passed in 2.70s ==============================
+test_guard: clean against 57af1f7b613d22b8740c9b86780607b8d8866214
+Exit code:0
+All done! \u2728 \U0001f370 \u2728
+2 files would be left unchanged.
+Exit code:0

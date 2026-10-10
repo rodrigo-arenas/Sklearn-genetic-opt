@@ -1,0 +1,24 @@
+{
+  "rf": {
+    "benchmarks/benchmark_fidelity.py": "6d3ad71c8d35c3c6bbfa046b5b549304b65cecf31173f23527a69b8c58288848",
+    "sklearn_genetic/genetic_search.py": "036e8fad9b75b924b0c2ed806ea1509a9c0d1e4f7a2864fb0a327ff3e265e97f",
+    "sklearn_genetic/utils/cv_scores.py": "6ae9dc592fc8f05a76951bc63583eac2582b29d78399e2331b1b195902b05464",
+    "sklearn_genetic/_base.py": "6b249d989e44ebe9dfaa5401138dcf2c6c9e0c394a467b6f83ddbfa19ea5d49a",
+    "sklearn_genetic/__init__.py": "a9d80b888a1014db5b0c139b023d006d5d21df1131616aa01b3d5c0c963c9c44"
+  },
+  "svm": {
+    "benchmarks/benchmark_fidelity.py": "6d3ad71c8d35c3c6bbfa046b5b549304b65cecf31173f23527a69b8c58288848",
+    "sklearn_genetic/genetic_search.py": "3020cc46a3115359a01de434c27f840b4d773f82d897506b2c40363673b1ed38",
+    "sklearn_genetic/utils/cv_scores.py": "6ae9dc592fc8f05a76951bc63583eac2582b29d78399e2331b1b195902b05464",
+    "sklearn_genetic/_base.py": "6b249d989e44ebe9dfaa5401138dcf2c6c9e0c394a467b6f83ddbfa19ea5d49a",
+    "sklearn_genetic/__init__.py": "a9d80b888a1014db5b0c139b023d006d5d21df1131616aa01b3d5c0c963c9c44"
+  },
+  "difference": "RF started before three feature finalist-result attributes were cleared at fit entry. All timed instances are fresh, so those attributes were absent; independent review confirmed that path does not change their results. SVM replay uses the final implementation. Final cleanup removed one unused NumPy import from the benchmark; imports are outside every measured interval.",
+  "final": {
+    "benchmarks/benchmark_fidelity.py": "07142298976bd32a3a9c30681717ebc625edd67b83c045643110f71b2519f40d",
+    "sklearn_genetic/genetic_search.py": "3020cc46a3115359a01de434c27f840b4d773f82d897506b2c40363673b1ed38",
+    "sklearn_genetic/utils/cv_scores.py": "6ae9dc592fc8f05a76951bc63583eac2582b29d78399e2331b1b195902b05464",
+    "sklearn_genetic/_base.py": "6b249d989e44ebe9dfaa5401138dcf2c6c9e0c394a467b6f83ddbfa19ea5d49a",
+    "sklearn_genetic/__init__.py": "a9d80b888a1014db5b0c139b023d006d5d21df1131616aa01b3d5c0c963c9c44"
+  }
+}

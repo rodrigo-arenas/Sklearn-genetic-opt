@@ -22,20 +22,20 @@ This page helps you decide whether a genetic search is the right tool for your t
 
 ## Choosing a Search Method
 
-| Method | Best for | Weakness | Typical space size |
-|--------|----------|----------|--------------------|
-| `GridSearchCV` | Small, fully discrete grids | Candidate count multiplies with each dimension | ≤ 3 parameters |
-| `RandomizedSearchCV` | Continuous spaces, large grids | Treats every parameter independently — misses interactions | 3–6 parameters |
-| `GASearchCV` | Mixed or large spaces with parameter interactions | Adds overhead on trivially small spaces | 5+ parameters |
+| Method | Best for | Trade-off |
+|--------|----------|-----------|
+| `GridSearchCV` | Small, fully discrete grids | Candidate count multiplies with each dimension. |
+| `RandomizedSearchCV` | A simple, strong baseline for larger spaces | Samples full configurations but does not use previous scores to guide later samples. |
+| `GASearchCV` | Comparing evolutionary search on mixed spaces | Population overhead and stochastic results; measure quality and wall time against a baseline. |
 
-The key limitation of random search is **independence**: it samples each parameter as if the others do not exist. A genetic algorithm recombines *complete configurations* that performed well, so it naturally gravitates toward combinations that work together.
+Random search evaluates complete configurations, so it can discover parameter interactions. Genetic search also evaluates complete configurations, then recombines promising ones across generations. Neither method guarantees a better answer for every dataset or budget.
 
 ## Signs That GA Will Help
 
-- **Five or more hyperparameters.** The search space grows exponentially.
+- **Enough evaluations for several generations.** A tiny budget may end before selection can guide the population.
 - **Known or suspected parameter interactions.** `learning_rate` × number of estimators, regularization strength × solver.
 - **Mixed parameter types.** Integers, floats, and categoricals in one search.
-- **Expensive evaluations.** GA caches every evaluated candidate.
+- **Repeated candidates.** Caching can avoid scoring the same configuration twice.
 - **You want to narrow the space iteratively.** `plot_search_space` shows where the algorithm sampled.
 
 ## Signs That GA Will Not Help
@@ -43,6 +43,7 @@ The key limitation of random search is **independence**: it samples each paramet
 - One or two continuous parameters.
 - Very fast evaluations with a large budget.
 - A fully discrete grid with few values.
+- A search budget too small to support multiple generations.
 
 ## Example: Gradient Boosting With Seven Parameters
 

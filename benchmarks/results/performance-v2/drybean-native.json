@@ -1,0 +1,3320 @@
+{
+  "base_commit": "78a9f2d46cf20c11f47194fd1bc13ce0fcfb7329",
+  "source_sha256": {
+    "benchmarks/benchmark_native_automl.py": "630c6b3b8a1bbbf3eee0ed32531c8899a3ca7c7fec47ac19368e4319b6a1f22a",
+    "sklearn_genetic/__init__.py": "a9d80b888a1014db5b0c139b023d006d5d21df1131616aa01b3d5c0c963c9c44",
+    "sklearn_genetic/_base.py": "a454d056b662d6367e0094f39d5cbf685a17311db87fc07ebc45793ab1839ccd",
+    "sklearn_genetic/_version.py": "5217574fe6977b13e4ae85abdf004ca4f0bf605c09cc9825f4ea06e6b0df65ec",
+    "sklearn_genetic/algorithms.py": "2f1b607b8c671923d4ea604f8ed81b8b502e609b4ebb5c49e904612c0b7affd7",
+    "sklearn_genetic/callbacks/__init__.py": "d29e3b6843a8a46bd9dc0be6fa0befb4aa889f7fe9d9cb3b346ed0e45b4a5956",
+    "sklearn_genetic/callbacks/base.py": "4a8ea6179e40c127fb7d62a7bcc78254a6a10f147f3ef42253331a93f19861dc",
+    "sklearn_genetic/callbacks/early_stoppers.py": "3ffe25529058a490eda9e78b91b3a49e9face04b748491c32e2bd9411b5ac4e9",
+    "sklearn_genetic/callbacks/loggers.py": "43d7ee167b0be0c614bab9465a1c637953b2a49518e0687e5b8e4c03a3422b34",
+    "sklearn_genetic/callbacks/model_checkpoint.py": "ec0a89f9aead391669309e1215030cc18a49561cf5bfe84d97889804451c2a23",
+    "sklearn_genetic/callbacks/tests/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sklearn_genetic/callbacks/tests/test_callbacks.py": "b517d6b48f4c31dd03fc0fe75aac01606902d051cd126a0d9413e69a7e268a56",
+    "sklearn_genetic/callbacks/validations.py": "ebba2780248dc1f93c72e768b3322339844c8e8d4be578794b82a529fd3bc2b6",
+    "sklearn_genetic/config.py": "bebe834820ce5f2c7d485a784e32e38e0e156b1997139a18a29a37a823da9bee",
+    "sklearn_genetic/evaluation.py": "ef5edfc4688c64aad6851fb0adc49f3bcb3bb7cc4adc9ae05a2e135da26b8845",
+    "sklearn_genetic/genetic_search.py": "a6ef838555e34d45ff8f578cd319bdc79e39cd0619469b7463cdba76edbed1cb",
+    "sklearn_genetic/mlflow_log.py": "dc4c406c2f69a340175ac4750ae78aa72c2b2b35b09eb8b9f291aa46c2b38311",
+    "sklearn_genetic/optimizer_control.py": "04a4c0809884f9c6e87668b68924c565818dcfd38b7c0131e4037f95e937fca5",
+    "sklearn_genetic/parameters.py": "fdad97b2415223f79b8d99380d9885e631e423b93b724ad376cbca32ca876025",
+    "sklearn_genetic/plots.py": "b646aa2897a16a05b163428b843370a3657382d46ab8a131473efebab8a8010c",
+    "sklearn_genetic/population.py": "84f210e606355a687cc91d220fe318ac4ea9e17a85a4acc62f53643a1b4928bf",
+    "sklearn_genetic/presets.py": "73f3124f707c540adcb0ed511639bb510994b63aa28667d6845408057a1d377c",
+    "sklearn_genetic/schedules/__init__.py": "77728518dd5b7ac522450cee648f3b4afc4ae9ddc5d2263a40b1c9ade8b4fb20",
+    "sklearn_genetic/schedules/base.py": "5262038816660ee11e5d141a087ff247a8d9946c76a3d190aedcd8c2d1b4f9ab",
+    "sklearn_genetic/schedules/schedulers.py": "08a5ee305c178eeb736402ee4696426114637606f95dabd4a102a4af44ddc825",
+    "sklearn_genetic/schedules/tests/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sklearn_genetic/schedules/tests/test_schedules.py": "dacd6722d7e1ed752863e8856dd7ea768d8bbef56b3d5c09ec7da1f07e438abb",
+    "sklearn_genetic/schedules/validations.py": "22b78d7b965956b458dce17c8f1c25f2eeb7966d7a3477841e43b0111b60032d",
+    "sklearn_genetic/space/__init__.py": "54d0eadff77a16ee5b5ea676bfff91e143317a8ada7327f4d72f4cdd754412f8",
+    "sklearn_genetic/space/base.py": "69951fee9e3e8eb8c8cefa226bafd8d6ee78b99b37841b8b50bc303e96e06998",
+    "sklearn_genetic/space/converters.py": "b838a4de61465f44eda6d78d05b4d80a5674722577e98c79883a3a673f5ccd6e",
+    "sklearn_genetic/space/space.py": "9f1b315ac8baa0fca6464a6c29c5908c7ecb7251e6e11044edefdaf11c9fb575",
+    "sklearn_genetic/space/space_parameters.py": "729749a5c07f32900b345737776fceac6ac418358b18762a7071018c9380613c",
+    "sklearn_genetic/space/tests/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sklearn_genetic/space/tests/test_space.py": "fc69f1633d10aeab76eaffbac1736516c1cf821fc185898d7166b6f9f7e4fb70",
+    "sklearn_genetic/tests/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sklearn_genetic/tests/test_algorithms.py": "9403f7830fb8cae5ac3b5a690d65900da1685cbe05369728121e6e8f1799f45d",
+    "sklearn_genetic/tests/test_benchmark_fit.py": "c94321ca0183c23e4f3452158bd9c392150947f9ce2c81163e9e6cb7a1e9f220",
+    "sklearn_genetic/tests/test_benchmark_search_methods.py": "6302ac61411b88ddf94ce94311014d248c9587d092b7c2c6434b66304c005323",
+    "sklearn_genetic/tests/test_feature_selection.py": "a62a44322d7446d52094fec1de4957dd7a16164c11a1dbeaa0d412c396d09162",
+    "sklearn_genetic/tests/test_genetic_search.py": "0025903cf45d83d5cf7d407e31766f545f4bf043cfa9e693165baef84aef564b",
+    "sklearn_genetic/tests/test_internal_helpers.py": "be164f6ac7e1fa43784ac7acb453e414c220bd726afdcfcda72fd89880de24d6",
+    "sklearn_genetic/tests/test_mlflow.py": "589f227750911089d9889bacd505b765ce867a9b8409b87f90ec2ec795d224dd",
+    "sklearn_genetic/tests/test_outlier_detection.py": "2f7c3a5b79e5b558d4eb1eb370e4d441ee7a678f8150db3b7ebbb15699a19497",
+    "sklearn_genetic/tests/test_persistence_and_helpers.py": "6905b130ced9652931eeeb1042fd996e8136e451e7cf3dcb8bf9dc0fbf92de48",
+    "sklearn_genetic/tests/test_plots.py": "63963f544d728c48d7e90833b8cbc5810ac716ce5f8f672fc6ddb4d82f85b0b4",
+    "sklearn_genetic/tests/test_presets.py": "af3b203495610558766f9b57e32b55894ee563f873cc821ba6ad0f58bda7edf3",
+    "sklearn_genetic/tests/test_serialization.py": "36069d1f7c9b12e87a2500e2242cef03fd64ca602a96100749becc451fc57554",
+    "sklearn_genetic/tests/test_utils.py": "6f55b1aa4b3d81b2fbd50f5a0c165d3e34d1e126cafce29a64d2f3b94f94d704",
+    "sklearn_genetic/utils/__init__.py": "46d8611dedf91c09db0d47302bf8f2674033ab9f6213a96c71353e3f1d4242c5",
+    "sklearn_genetic/utils/cv_scores.py": "6ae9dc592fc8f05a76951bc63583eac2582b29d78399e2331b1b195902b05464",
+    "sklearn_genetic/utils/logbook.py": "62da9021fa7f5f1e7a4dd1210179f452fd6598ee6bc90dfdc7657840d5396c6e",
+    "sklearn_genetic/utils/random.py": "711ad9d796929374bb8c2e1cc1ba77a1c95f67e17dab7f6c32ade72a87e58dc3",
+    "sklearn_genetic/utils/tools.py": "045bf88b70699f997d90335649712858c90767654e75a587cad24899c7deaf87"
+  },
+  "provenance": {
+    "name": "Dry Bean",
+    "source": "https://archive.ics.uci.edu/static/public/602/dry%2Bbean%2Bdataset.zip",
+    "doi": "https://doi.org/10.24432/C50S4B",
+    "license": "CC BY 4.0",
+    "shape": [
+      13611,
+      16
+    ],
+    "feature_names": [
+      "Area",
+      "Perimeter",
+      "MajorAxisLength",
+      "MinorAxisLength",
+      "AspectRation",
+      "Eccentricity",
+      "ConvexArea",
+      "EquivDiameter",
+      "Extent",
+      "Solidity",
+      "roundness",
+      "Compactness",
+      "ShapeFactor1",
+      "ShapeFactor2",
+      "ShapeFactor3",
+      "ShapeFactor4"
+    ],
+    "classes": {
+      "BARBUNYA": 1322,
+      "BOMBAY": 522,
+      "CALI": 1630,
+      "DERMASON": 3546,
+      "HOROZ": 1928,
+      "SEKER": 2027,
+      "SIRA": 2636
+    },
+    "zip_sha256": "0a64eff5be87f48c3dbbfc0a12a56c5d5b5167ef8e61cd45d69b3e7c7130c06f",
+    "arff_sha256": "b2a4a76a2aedfb8ed415adfc1bfc70b5f202cb00cb72e500766e364c14834014",
+    "npz_sha256": "9af9ba904831e8e615aba1255c37dbdbdec73307439873118bed55fd628869d6"
+  },
+  "profiles": {
+    "drybean-native-svm-full-2401": {
+      "label": "drybean-native-svm-full-2401",
+      "requested_seconds": 15.0,
+      "seed_start": 2401,
+      "seeds": 1,
+      "python": "3.12.0",
+      "platform": "Windows-11-10.0.26300-SP0",
+      "versions": {
+        "numpy": "2.5.3",
+        "scipy": "1.18.1",
+        "scikit-learn": "1.9.1",
+        "deap": "1.4.4"
+      },
+      "settings": {
+        "native_families": [
+          "lightgbm",
+          "random_forest",
+          "extra_trees"
+        ],
+        "evolutionary_model": "svm",
+        "train_fraction": 1.0,
+        "max_generations": 1000,
+        "finalists": 4,
+        "cv_folds": 3,
+        "population": 8,
+        "native_threads": 1,
+        "autogluon_bag_folds": 3,
+        "autogluon_stack_levels": 0
+      },
+      "drybean_provenance": {
+        "name": "Dry Bean",
+        "source": "https://archive.ics.uci.edu/static/public/602/dry%2Bbean%2Bdataset.zip",
+        "doi": "https://doi.org/10.24432/C50S4B",
+        "license": "CC BY 4.0",
+        "shape": [
+          13611,
+          16
+        ],
+        "feature_names": [
+          "Area",
+          "Perimeter",
+          "MajorAxisLength",
+          "MinorAxisLength",
+          "AspectRation",
+          "Eccentricity",
+          "ConvexArea",
+          "EquivDiameter",
+          "Extent",
+          "Solidity",
+          "roundness",
+          "Compactness",
+          "ShapeFactor1",
+          "ShapeFactor2",
+          "ShapeFactor3",
+          "ShapeFactor4"
+        ],
+        "classes": {
+          "BARBUNYA": 1322,
+          "BOMBAY": 522,
+          "CALI": 1630,
+          "DERMASON": 3546,
+          "HOROZ": 1928,
+          "SEKER": 2027,
+          "SIRA": 2636
+        },
+        "zip_sha256": "0a64eff5be87f48c3dbbfc0a12a56c5d5b5167ef8e61cd45d69b3e7c7130c06f",
+        "arff_sha256": "b2a4a76a2aedfb8ed415adfc1bfc70b5f202cb00cb72e500766e364c14834014",
+        "npz_sha256": "9af9ba904831e8e615aba1255c37dbdbdec73307439873118bed55fd628869d6"
+      },
+      "profile": "full"
+    },
+    "drybean-native-svm-quarter-2401": {
+      "label": "drybean-native-svm-quarter-2401",
+      "requested_seconds": 3.75,
+      "seed_start": 2401,
+      "seeds": 1,
+      "python": "3.12.0",
+      "platform": "Windows-11-10.0.26300-SP0",
+      "versions": {
+        "numpy": "2.5.3",
+        "scipy": "1.18.1",
+        "scikit-learn": "1.9.1",
+        "deap": "1.4.4"
+      },
+      "settings": {
+        "native_families": [
+          "lightgbm",
+          "random_forest",
+          "extra_trees"
+        ],
+        "evolutionary_model": "svm",
+        "train_fraction": 0.25,
+        "max_generations": 1000,
+        "finalists": 4,
+        "cv_folds": 3,
+        "population": 8,
+        "native_threads": 1,
+        "autogluon_bag_folds": 3,
+        "autogluon_stack_levels": 0
+      },
+      "drybean_provenance": {
+        "name": "Dry Bean",
+        "source": "https://archive.ics.uci.edu/static/public/602/dry%2Bbean%2Bdataset.zip",
+        "doi": "https://doi.org/10.24432/C50S4B",
+        "license": "CC BY 4.0",
+        "shape": [
+          13611,
+          16
+        ],
+        "feature_names": [
+          "Area",
+          "Perimeter",
+          "MajorAxisLength",
+          "MinorAxisLength",
+          "AspectRation",
+          "Eccentricity",
+          "ConvexArea",
+          "EquivDiameter",
+          "Extent",
+          "Solidity",
+          "roundness",
+          "Compactness",
+          "ShapeFactor1",
+          "ShapeFactor2",
+          "ShapeFactor3",
+          "ShapeFactor4"
+        ],
+        "classes": {
+          "BARBUNYA": 1322,
+          "BOMBAY": 522,
+          "CALI": 1630,
+          "DERMASON": 3546,
+          "HOROZ": 1928,
+          "SEKER": 2027,
+          "SIRA": 2636
+        },
+        "zip_sha256": "0a64eff5be87f48c3dbbfc0a12a56c5d5b5167ef8e61cd45d69b3e7c7130c06f",
+        "arff_sha256": "b2a4a76a2aedfb8ed415adfc1bfc70b5f202cb00cb72e500766e364c14834014",
+        "npz_sha256": "9af9ba904831e8e615aba1255c37dbdbdec73307439873118bed55fd628869d6"
+      },
+      "profile": "quarter"
+    },
+    "drybean-native-svm-eighth-2401": {
+      "label": "drybean-native-svm-eighth-2401",
+      "requested_seconds": 3.75,
+      "seed_start": 2401,
+      "seeds": 1,
+      "python": "3.12.0",
+      "platform": "Windows-11-10.0.26300-SP0",
+      "versions": {
+        "numpy": "2.5.3",
+        "scipy": "1.18.1",
+        "scikit-learn": "1.9.1",
+        "deap": "1.4.4"
+      },
+      "settings": {
+        "native_families": [
+          "lightgbm",
+          "random_forest",
+          "extra_trees"
+        ],
+        "evolutionary_model": "svm",
+        "train_fraction": 0.125,
+        "max_generations": 1000,
+        "finalists": 4,
+        "cv_folds": 3,
+        "population": 8,
+        "native_threads": 1,
+        "autogluon_bag_folds": 3,
+        "autogluon_stack_levels": 0
+      },
+      "drybean_provenance": {
+        "name": "Dry Bean",
+        "source": "https://archive.ics.uci.edu/static/public/602/dry%2Bbean%2Bdataset.zip",
+        "doi": "https://doi.org/10.24432/C50S4B",
+        "license": "CC BY 4.0",
+        "shape": [
+          13611,
+          16
+        ],
+        "feature_names": [
+          "Area",
+          "Perimeter",
+          "MajorAxisLength",
+          "MinorAxisLength",
+          "AspectRation",
+          "Eccentricity",
+          "ConvexArea",
+          "EquivDiameter",
+          "Extent",
+          "Solidity",
+          "roundness",
+          "Compactness",
+          "ShapeFactor1",
+          "ShapeFactor2",
+          "ShapeFactor3",
+          "ShapeFactor4"
+        ],
+        "classes": {
+          "BARBUNYA": 1322,
+          "BOMBAY": 522,
+          "CALI": 1630,
+          "DERMASON": 3546,
+          "HOROZ": 1928,
+          "SEKER": 2027,
+          "SIRA": 2636
+        },
+        "zip_sha256": "0a64eff5be87f48c3dbbfc0a12a56c5d5b5167ef8e61cd45d69b3e7c7130c06f",
+        "arff_sha256": "b2a4a76a2aedfb8ed415adfc1bfc70b5f202cb00cb72e500766e364c14834014",
+        "npz_sha256": "9af9ba904831e8e615aba1255c37dbdbdec73307439873118bed55fd628869d6"
+      },
+      "profile": "eighth"
+    },
+    "drybean-native-lightgbm-full-2401": {
+      "label": "drybean-native-lightgbm-full-2401",
+      "requested_seconds": 15.0,
+      "seed_start": 2401,
+      "seeds": 1,
+      "python": "3.12.0",
+      "platform": "Windows-11-10.0.26300-SP0",
+      "versions": {
+        "numpy": "2.5.3",
+        "scipy": "1.18.1",
+        "scikit-learn": "1.9.1",
+        "deap": "1.4.4",
+        "lightgbm": "4.7.0"
+      },
+      "settings": {
+        "native_families": [
+          "lightgbm",
+          "random_forest",
+          "extra_trees"
+        ],
+        "evolutionary_model": "lightgbm",
+        "train_fraction": 1.0,
+        "max_generations": 1000,
+        "finalists": 4,
+        "cv_folds": 3,
+        "population": 8,
+        "native_threads": 1,
+        "autogluon_bag_folds": 3,
+        "autogluon_stack_levels": 0
+      },
+      "drybean_provenance": {
+        "name": "Dry Bean",
+        "source": "https://archive.ics.uci.edu/static/public/602/dry%2Bbean%2Bdataset.zip",
+        "doi": "https://doi.org/10.24432/C50S4B",
+        "license": "CC BY 4.0",
+        "shape": [
+          13611,
+          16
+        ],
+        "feature_names": [
+          "Area",
+          "Perimeter",
+          "MajorAxisLength",
+          "MinorAxisLength",
+          "AspectRation",
+          "Eccentricity",
+          "ConvexArea",
+          "EquivDiameter",
+          "Extent",
+          "Solidity",
+          "roundness",
+          "Compactness",
+          "ShapeFactor1",
+          "ShapeFactor2",
+          "ShapeFactor3",
+          "ShapeFactor4"
+        ],
+        "classes": {
+          "BARBUNYA": 1322,
+          "BOMBAY": 522,
+          "CALI": 1630,
+          "DERMASON": 3546,
+          "HOROZ": 1928,
+          "SEKER": 2027,
+          "SIRA": 2636
+        },
+        "zip_sha256": "0a64eff5be87f48c3dbbfc0a12a56c5d5b5167ef8e61cd45d69b3e7c7130c06f",
+        "arff_sha256": "b2a4a76a2aedfb8ed415adfc1bfc70b5f202cb00cb72e500766e364c14834014",
+        "npz_sha256": "9af9ba904831e8e615aba1255c37dbdbdec73307439873118bed55fd628869d6"
+      },
+      "profile": "full"
+    },
+    "drybean-native-lightgbm-quarter-2401": {
+      "label": "drybean-native-lightgbm-quarter-2401",
+      "requested_seconds": 3.75,
+      "seed_start": 2401,
+      "seeds": 1,
+      "python": "3.12.0",
+      "platform": "Windows-11-10.0.26300-SP0",
+      "versions": {
+        "numpy": "2.5.3",
+        "scipy": "1.18.1",
+        "scikit-learn": "1.9.1",
+        "deap": "1.4.4",
+        "lightgbm": "4.7.0"
+      },
+      "settings": {
+        "native_families": [
+          "lightgbm",
+          "random_forest",
+          "extra_trees"
+        ],
+        "evolutionary_model": "lightgbm",
+        "train_fraction": 0.25,
+        "max_generations": 1000,
+        "finalists": 4,
+        "cv_folds": 3,
+        "population": 8,
+        "native_threads": 1,
+        "autogluon_bag_folds": 3,
+        "autogluon_stack_levels": 0
+      },
+      "drybean_provenance": {
+        "name": "Dry Bean",
+        "source": "https://archive.ics.uci.edu/static/public/602/dry%2Bbean%2Bdataset.zip",
+        "doi": "https://doi.org/10.24432/C50S4B",
+        "license": "CC BY 4.0",
+        "shape": [
+          13611,
+          16
+        ],
+        "feature_names": [
+          "Area",
+          "Perimeter",
+          "MajorAxisLength",
+          "MinorAxisLength",
+          "AspectRation",
+          "Eccentricity",
+          "ConvexArea",
+          "EquivDiameter",
+          "Extent",
+          "Solidity",
+          "roundness",
+          "Compactness",
+          "ShapeFactor1",
+          "ShapeFactor2",
+          "ShapeFactor3",
+          "ShapeFactor4"
+        ],
+        "classes": {
+          "BARBUNYA": 1322,
+          "BOMBAY": 522,
+          "CALI": 1630,
+          "DERMASON": 3546,
+          "HOROZ": 1928,
+          "SEKER": 2027,
+          "SIRA": 2636
+        },
+        "zip_sha256": "0a64eff5be87f48c3dbbfc0a12a56c5d5b5167ef8e61cd45d69b3e7c7130c06f",
+        "arff_sha256": "b2a4a76a2aedfb8ed415adfc1bfc70b5f202cb00cb72e500766e364c14834014",
+        "npz_sha256": "9af9ba904831e8e615aba1255c37dbdbdec73307439873118bed55fd628869d6"
+      },
+      "profile": "quarter"
+    },
+    "drybean-native-lightgbm-eighth-2401": {
+      "label": "drybean-native-lightgbm-eighth-2401",
+      "requested_seconds": 3.75,
+      "seed_start": 2401,
+      "seeds": 1,
+      "python": "3.12.0",
+      "platform": "Windows-11-10.0.26300-SP0",
+      "versions": {
+        "numpy": "2.5.3",
+        "scipy": "1.18.1",
+        "scikit-learn": "1.9.1",
+        "deap": "1.4.4",
+        "lightgbm": "4.7.0"
+      },
+      "settings": {
+        "native_families": [
+          "lightgbm",
+          "random_forest",
+          "extra_trees"
+        ],
+        "evolutionary_model": "lightgbm",
+        "train_fraction": 0.125,
+        "max_generations": 1000,
+        "finalists": 4,
+        "cv_folds": 3,
+        "population": 8,
+        "native_threads": 1,
+        "autogluon_bag_folds": 3,
+        "autogluon_stack_levels": 0
+      },
+      "drybean_provenance": {
+        "name": "Dry Bean",
+        "source": "https://archive.ics.uci.edu/static/public/602/dry%2Bbean%2Bdataset.zip",
+        "doi": "https://doi.org/10.24432/C50S4B",
+        "license": "CC BY 4.0",
+        "shape": [
+          13611,
+          16
+        ],
+        "feature_names": [
+          "Area",
+          "Perimeter",
+          "MajorAxisLength",
+          "MinorAxisLength",
+          "AspectRation",
+          "Eccentricity",
+          "ConvexArea",
+          "EquivDiameter",
+          "Extent",
+          "Solidity",
+          "roundness",
+          "Compactness",
+          "ShapeFactor1",
+          "ShapeFactor2",
+          "ShapeFactor3",
+          "ShapeFactor4"
+        ],
+        "classes": {
+          "BARBUNYA": 1322,
+          "BOMBAY": 522,
+          "CALI": 1630,
+          "DERMASON": 3546,
+          "HOROZ": 1928,
+          "SEKER": 2027,
+          "SIRA": 2636
+        },
+        "zip_sha256": "0a64eff5be87f48c3dbbfc0a12a56c5d5b5167ef8e61cd45d69b3e7c7130c06f",
+        "arff_sha256": "b2a4a76a2aedfb8ed415adfc1bfc70b5f202cb00cb72e500766e364c14834014",
+        "npz_sha256": "9af9ba904831e8e615aba1255c37dbdbdec73307439873118bed55fd628869d6"
+      },
+      "profile": "eighth"
+    },
+    "drybean-native-lightgbm-native-2401": {
+      "label": "drybean-native-lightgbm-native-2401",
+      "requested_seconds": 15.0,
+      "seed_start": 2401,
+      "seeds": 1,
+      "python": "3.12.0",
+      "platform": "Windows-11-10.0.26300-SP0",
+      "versions": {
+        "numpy": "2.5.3",
+        "scipy": "1.18.1",
+        "scikit-learn": "1.9.1",
+        "deap": "1.4.4",
+        "lightgbm": "4.7.0",
+        "autogluon.tabular": "1.6.3",
+        "flaml": "2.7.0"
+      },
+      "settings": {
+        "native_families": [
+          "lightgbm",
+          "random_forest",
+          "extra_trees"
+        ],
+        "evolutionary_model": "lightgbm",
+        "train_fraction": 1.0,
+        "max_generations": 1000,
+        "finalists": 4,
+        "cv_folds": 3,
+        "population": 8,
+        "native_threads": 1,
+        "autogluon_bag_folds": 3,
+        "autogluon_stack_levels": 0
+      },
+      "drybean_provenance": {
+        "name": "Dry Bean",
+        "source": "https://archive.ics.uci.edu/static/public/602/dry%2Bbean%2Bdataset.zip",
+        "doi": "https://doi.org/10.24432/C50S4B",
+        "license": "CC BY 4.0",
+        "shape": [
+          13611,
+          16
+        ],
+        "feature_names": [
+          "Area",
+          "Perimeter",
+          "MajorAxisLength",
+          "MinorAxisLength",
+          "AspectRation",
+          "Eccentricity",
+          "ConvexArea",
+          "EquivDiameter",
+          "Extent",
+          "Solidity",
+          "roundness",
+          "Compactness",
+          "ShapeFactor1",
+          "ShapeFactor2",
+          "ShapeFactor3",
+          "ShapeFactor4"
+        ],
+        "classes": {
+          "BARBUNYA": 1322,
+          "BOMBAY": 522,
+          "CALI": 1630,
+          "DERMASON": 3546,
+          "HOROZ": 1928,
+          "SEKER": 2027,
+          "SIRA": 2636
+        },
+        "zip_sha256": "0a64eff5be87f48c3dbbfc0a12a56c5d5b5167ef8e61cd45d69b3e7c7130c06f",
+        "arff_sha256": "b2a4a76a2aedfb8ed415adfc1bfc70b5f202cb00cb72e500766e364c14834014",
+        "npz_sha256": "9af9ba904831e8e615aba1255c37dbdbdec73307439873118bed55fd628869d6"
+      },
+      "profile": "native"
+    },
+    "drybean-native-svm-full-2402": {
+      "label": "drybean-native-svm-full-2402",
+      "requested_seconds": 15.0,
+      "seed_start": 2402,
+      "seeds": 1,
+      "python": "3.12.0",
+      "platform": "Windows-11-10.0.26300-SP0",
+      "versions": {
+        "numpy": "2.5.3",
+        "scipy": "1.18.1",
+        "scikit-learn": "1.9.1",
+        "deap": "1.4.4"
+      },
+      "settings": {
+        "native_families": [
+          "lightgbm",
+          "random_forest",
+          "extra_trees"
+        ],
+        "evolutionary_model": "svm",
+        "train_fraction": 1.0,
+        "max_generations": 1000,
+        "finalists": 4,
+        "cv_folds": 3,
+        "population": 8,
+        "native_threads": 1,
+        "autogluon_bag_folds": 3,
+        "autogluon_stack_levels": 0
+      },
+      "drybean_provenance": {
+        "name": "Dry Bean",
+        "source": "https://archive.ics.uci.edu/static/public/602/dry%2Bbean%2Bdataset.zip",
+        "doi": "https://doi.org/10.24432/C50S4B",
+        "license": "CC BY 4.0",
+        "shape": [
+          13611,
+          16
+        ],
+        "feature_names": [
+          "Area",
+          "Perimeter",
+          "MajorAxisLength",
+          "MinorAxisLength",
+          "AspectRation",
+          "Eccentricity",
+          "ConvexArea",
+          "EquivDiameter",
+          "Extent",
+          "Solidity",
+          "roundness",
+          "Compactness",
+          "ShapeFactor1",
+          "ShapeFactor2",
+          "ShapeFactor3",
+          "ShapeFactor4"
+        ],
+        "classes": {
+          "BARBUNYA": 1322,
+          "BOMBAY": 522,
+          "CALI": 1630,
+          "DERMASON": 3546,
+          "HOROZ": 1928,
+          "SEKER": 2027,
+          "SIRA": 2636
+        },
+        "zip_sha256": "0a64eff5be87f48c3dbbfc0a12a56c5d5b5167ef8e61cd45d69b3e7c7130c06f",
+        "arff_sha256": "b2a4a76a2aedfb8ed415adfc1bfc70b5f202cb00cb72e500766e364c14834014",
+        "npz_sha256": "9af9ba904831e8e615aba1255c37dbdbdec73307439873118bed55fd628869d6"
+      },
+      "profile": "full"
+    },
+    "drybean-native-svm-quarter-2402": {
+      "label": "drybean-native-svm-quarter-2402",
+      "requested_seconds": 3.75,
+      "seed_start": 2402,
+      "seeds": 1,
+      "python": "3.12.0",
+      "platform": "Windows-11-10.0.26300-SP0",
+      "versions": {
+        "numpy": "2.5.3",
+        "scipy": "1.18.1",
+        "scikit-learn": "1.9.1",
+        "deap": "1.4.4"
+      },
+      "settings": {
+        "native_families": [
+          "lightgbm",
+          "random_forest",
+          "extra_trees"
+        ],
+        "evolutionary_model": "svm",
+        "train_fraction": 0.25,
+        "max_generations": 1000,
+        "finalists": 4,
+        "cv_folds": 3,
+        "population": 8,
+        "native_threads": 1,
+        "autogluon_bag_folds": 3,
+        "autogluon_stack_levels": 0
+      },
+      "drybean_provenance": {
+        "name": "Dry Bean",
+        "source": "https://archive.ics.uci.edu/static/public/602/dry%2Bbean%2Bdataset.zip",
+        "doi": "https://doi.org/10.24432/C50S4B",
+        "license": "CC BY 4.0",
+        "shape": [
+          13611,
+          16
+        ],
+        "feature_names": [
+          "Area",
+          "Perimeter",
+          "MajorAxisLength",
+          "MinorAxisLength",
+          "AspectRation",
+          "Eccentricity",
+          "ConvexArea",
+          "EquivDiameter",
+          "Extent",
+          "Solidity",
+          "roundness",
+          "Compactness",
+          "ShapeFactor1",
+          "ShapeFactor2",
+          "ShapeFactor3",
+          "ShapeFactor4"
+        ],
+        "classes": {
+          "BARBUNYA": 1322,
+          "BOMBAY": 522,
+          "CALI": 1630,
+          "DERMASON": 3546,
+          "HOROZ": 1928,
+          "SEKER": 2027,
+          "SIRA": 2636
+        },
+        "zip_sha256": "0a64eff5be87f48c3dbbfc0a12a56c5d5b5167ef8e61cd45d69b3e7c7130c06f",
+        "arff_sha256": "b2a4a76a2aedfb8ed415adfc1bfc70b5f202cb00cb72e500766e364c14834014",
+        "npz_sha256": "9af9ba904831e8e615aba1255c37dbdbdec73307439873118bed55fd628869d6"
+      },
+      "profile": "quarter"
+    },
+    "drybean-native-svm-eighth-2402": {
+      "label": "drybean-native-svm-eighth-2402",
+      "requested_seconds": 3.75,
+      "seed_start": 2402,
+      "seeds": 1,
+      "python": "3.12.0",
+      "platform": "Windows-11-10.0.26300-SP0",
+      "versions": {
+        "numpy": "2.5.3",
+        "scipy": "1.18.1",
+        "scikit-learn": "1.9.1",
+        "deap": "1.4.4"
+      },
+      "settings": {
+        "native_families": [
+          "lightgbm",
+          "random_forest",
+          "extra_trees"
+        ],
+        "evolutionary_model": "svm",
+        "train_fraction": 0.125,
+        "max_generations": 1000,
+        "finalists": 4,
+        "cv_folds": 3,
+        "population": 8,
+        "native_threads": 1,
+        "autogluon_bag_folds": 3,
+        "autogluon_stack_levels": 0
+      },
+      "drybean_provenance": {
+        "name": "Dry Bean",
+        "source": "https://archive.ics.uci.edu/static/public/602/dry%2Bbean%2Bdataset.zip",
+        "doi": "https://doi.org/10.24432/C50S4B",
+        "license": "CC BY 4.0",
+        "shape": [
+          13611,
+          16
+        ],
+        "feature_names": [
+          "Area",
+          "Perimeter",
+          "MajorAxisLength",
+          "MinorAxisLength",
+          "AspectRation",
+          "Eccentricity",
+          "ConvexArea",
+          "EquivDiameter",
+          "Extent",
+          "Solidity",
+          "roundness",
+          "Compactness",
+          "ShapeFactor1",
+          "ShapeFactor2",
+          "ShapeFactor3",
+          "ShapeFactor4"
+        ],
+        "classes": {
+          "BARBUNYA": 1322,
+          "BOMBAY": 522,
+          "CALI": 1630,
+          "DERMASON": 3546,
+          "HOROZ": 1928,
+          "SEKER": 2027,
+          "SIRA": 2636
+        },
+        "zip_sha256": "0a64eff5be87f48c3dbbfc0a12a56c5d5b5167ef8e61cd45d69b3e7c7130c06f",
+        "arff_sha256": "b2a4a76a2aedfb8ed415adfc1bfc70b5f202cb00cb72e500766e364c14834014",
+        "npz_sha256": "9af9ba904831e8e615aba1255c37dbdbdec73307439873118bed55fd628869d6"
+      },
+      "profile": "eighth"
+    },
+    "drybean-native-lightgbm-full-2402": {
+      "label": "drybean-native-lightgbm-full-2402",
+      "requested_seconds": 15.0,
+      "seed_start": 2402,
+      "seeds": 1,
+      "python": "3.12.0",
+      "platform": "Windows-11-10.0.26300-SP0",
+      "versions": {
+        "numpy": "2.5.3",
+        "scipy": "1.18.1",
+        "scikit-learn": "1.9.1",
+        "deap": "1.4.4",
+        "lightgbm": "4.7.0"
+      },
+      "settings": {
+        "native_families": [
+          "lightgbm",
+          "random_forest",
+          "extra_trees"
+        ],
+        "evolutionary_model": "lightgbm",
+        "train_fraction": 1.0,
+        "max_generations": 1000,
+        "finalists": 4,
+        "cv_folds": 3,
+        "population": 8,
+        "native_threads": 1,
+        "autogluon_bag_folds": 3,
+        "autogluon_stack_levels": 0
+      },
+      "drybean_provenance": {
+        "name": "Dry Bean",
+        "source": "https://archive.ics.uci.edu/static/public/602/dry%2Bbean%2Bdataset.zip",
+        "doi": "https://doi.org/10.24432/C50S4B",
+        "license": "CC BY 4.0",
+        "shape": [
+          13611,
+          16
+        ],
+        "feature_names": [
+          "Area",
+          "Perimeter",
+          "MajorAxisLength",
+          "MinorAxisLength",
+          "AspectRation",
+          "Eccentricity",
+          "ConvexArea",
+          "EquivDiameter",
+          "Extent",
+          "Solidity",
+          "roundness",
+          "Compactness",
+          "ShapeFactor1",
+          "ShapeFactor2",
+          "ShapeFactor3",
+          "ShapeFactor4"
+        ],
+        "classes": {
+          "BARBUNYA": 1322,
+          "BOMBAY": 522,
+          "CALI": 1630,
+          "DERMASON": 3546,
+          "HOROZ": 1928,
+          "SEKER": 2027,
+          "SIRA": 2636
+        },
+        "zip_sha256": "0a64eff5be87f48c3dbbfc0a12a56c5d5b5167ef8e61cd45d69b3e7c7130c06f",
+        "arff_sha256": "b2a4a76a2aedfb8ed415adfc1bfc70b5f202cb00cb72e500766e364c14834014",
+        "npz_sha256": "9af9ba904831e8e615aba1255c37dbdbdec73307439873118bed55fd628869d6"
+      },
+      "profile": "full"
+    },
+    "drybean-native-lightgbm-quarter-2402": {
+      "label": "drybean-native-lightgbm-quarter-2402",
+      "requested_seconds": 3.75,
+      "seed_start": 2402,
+      "seeds": 1,
+      "python": "3.12.0",
+      "platform": "Windows-11-10.0.26300-SP0",
+      "versions": {
+        "numpy": "2.5.3",
+        "scipy": "1.18.1",
+        "scikit-learn": "1.9.1",
+        "deap": "1.4.4",
+        "lightgbm": "4.7.0"
+      },
+      "settings": {
+        "native_families": [
+          "lightgbm",
+          "random_forest",
+          "extra_trees"
+        ],
+        "evolutionary_model": "lightgbm",
+        "train_fraction": 0.25,
+        "max_generations": 1000,
+        "finalists": 4,
+        "cv_folds": 3,
+        "population": 8,
+        "native_threads": 1,
+        "autogluon_bag_folds": 3,
+        "autogluon_stack_levels": 0
+      },
+      "drybean_provenance": {
+        "name": "Dry Bean",
+        "source": "https://archive.ics.uci.edu/static/public/602/dry%2Bbean%2Bdataset.zip",
+        "doi": "https://doi.org/10.24432/C50S4B",
+        "license": "CC BY 4.0",
+        "shape": [
+          13611,
+          16
+        ],
+        "feature_names": [
+          "Area",
+          "Perimeter",
+          "MajorAxisLength",
+          "MinorAxisLength",
+          "AspectRation",
+          "Eccentricity",
+          "ConvexArea",
+          "EquivDiameter",
+          "Extent",
+          "Solidity",
+          "roundness",
+          "Compactness",
+          "ShapeFactor1",
+          "ShapeFactor2",
+          "ShapeFactor3",
+          "ShapeFactor4"
+        ],
+        "classes": {
+          "BARBUNYA": 1322,
+          "BOMBAY": 522,
+          "CALI": 1630,
+          "DERMASON": 3546,
+          "HOROZ": 1928,
+          "SEKER": 2027,
+          "SIRA": 2636
+        },
+        "zip_sha256": "0a64eff5be87f48c3dbbfc0a12a56c5d5b5167ef8e61cd45d69b3e7c7130c06f",
+        "arff_sha256": "b2a4a76a2aedfb8ed415adfc1bfc70b5f202cb00cb72e500766e364c14834014",
+        "npz_sha256": "9af9ba904831e8e615aba1255c37dbdbdec73307439873118bed55fd628869d6"
+      },
+      "profile": "quarter"
+    },
+    "drybean-native-lightgbm-eighth-2402": {
+      "label": "drybean-native-lightgbm-eighth-2402",
+      "requested_seconds": 3.75,
+      "seed_start": 2402,
+      "seeds": 1,
+      "python": "3.12.0",
+      "platform": "Windows-11-10.0.26300-SP0",
+      "versions": {
+        "numpy": "2.5.3",
+        "scipy": "1.18.1",
+        "scikit-learn": "1.9.1",
+        "deap": "1.4.4",
+        "lightgbm": "4.7.0"
+      },
+      "settings": {
+        "native_families": [
+          "lightgbm",
+          "random_forest",
+          "extra_trees"
+        ],
+        "evolutionary_model": "lightgbm",
+        "train_fraction": 0.125,
+        "max_generations": 1000,
+        "finalists": 4,
+        "cv_folds": 3,
+        "population": 8,
+        "native_threads": 1,
+        "autogluon_bag_folds": 3,
+        "autogluon_stack_levels": 0
+      },
+      "drybean_provenance": {
+        "name": "Dry Bean",
+        "source": "https://archive.ics.uci.edu/static/public/602/dry%2Bbean%2Bdataset.zip",
+        "doi": "https://doi.org/10.24432/C50S4B",
+        "license": "CC BY 4.0",
+        "shape": [
+          13611,
+          16
+        ],
+        "feature_names": [
+          "Area",
+          "Perimeter",
+          "MajorAxisLength",
+          "MinorAxisLength",
+          "AspectRation",
+          "Eccentricity",
+          "ConvexArea",
+          "EquivDiameter",
+          "Extent",
+          "Solidity",
+          "roundness",
+          "Compactness",
+          "ShapeFactor1",
+          "ShapeFactor2",
+          "ShapeFactor3",
+          "ShapeFactor4"
+        ],
+        "classes": {
+          "BARBUNYA": 1322,
+          "BOMBAY": 522,
+          "CALI": 1630,
+          "DERMASON": 3546,
+          "HOROZ": 1928,
+          "SEKER": 2027,
+          "SIRA": 2636
+        },
+        "zip_sha256": "0a64eff5be87f48c3dbbfc0a12a56c5d5b5167ef8e61cd45d69b3e7c7130c06f",
+        "arff_sha256": "b2a4a76a2aedfb8ed415adfc1bfc70b5f202cb00cb72e500766e364c14834014",
+        "npz_sha256": "9af9ba904831e8e615aba1255c37dbdbdec73307439873118bed55fd628869d6"
+      },
+      "profile": "eighth"
+    },
+    "drybean-native-lightgbm-native-2402": {
+      "label": "drybean-native-lightgbm-native-2402",
+      "requested_seconds": 15.0,
+      "seed_start": 2402,
+      "seeds": 1,
+      "python": "3.12.0",
+      "platform": "Windows-11-10.0.26300-SP0",
+      "versions": {
+        "numpy": "2.5.3",
+        "scipy": "1.18.1",
+        "scikit-learn": "1.9.1",
+        "deap": "1.4.4",
+        "lightgbm": "4.7.0",
+        "autogluon.tabular": "1.6.3",
+        "flaml": "2.7.0"
+      },
+      "settings": {
+        "native_families": [
+          "lightgbm",
+          "random_forest",
+          "extra_trees"
+        ],
+        "evolutionary_model": "lightgbm",
+        "train_fraction": 1.0,
+        "max_generations": 1000,
+        "finalists": 4,
+        "cv_folds": 3,
+        "population": 8,
+        "native_threads": 1,
+        "autogluon_bag_folds": 3,
+        "autogluon_stack_levels": 0
+      },
+      "drybean_provenance": {
+        "name": "Dry Bean",
+        "source": "https://archive.ics.uci.edu/static/public/602/dry%2Bbean%2Bdataset.zip",
+        "doi": "https://doi.org/10.24432/C50S4B",
+        "license": "CC BY 4.0",
+        "shape": [
+          13611,
+          16
+        ],
+        "feature_names": [
+          "Area",
+          "Perimeter",
+          "MajorAxisLength",
+          "MinorAxisLength",
+          "AspectRation",
+          "Eccentricity",
+          "ConvexArea",
+          "EquivDiameter",
+          "Extent",
+          "Solidity",
+          "roundness",
+          "Compactness",
+          "ShapeFactor1",
+          "ShapeFactor2",
+          "ShapeFactor3",
+          "ShapeFactor4"
+        ],
+        "classes": {
+          "BARBUNYA": 1322,
+          "BOMBAY": 522,
+          "CALI": 1630,
+          "DERMASON": 3546,
+          "HOROZ": 1928,
+          "SEKER": 2027,
+          "SIRA": 2636
+        },
+        "zip_sha256": "0a64eff5be87f48c3dbbfc0a12a56c5d5b5167ef8e61cd45d69b3e7c7130c06f",
+        "arff_sha256": "b2a4a76a2aedfb8ed415adfc1bfc70b5f202cb00cb72e500766e364c14834014",
+        "npz_sha256": "9af9ba904831e8e615aba1255c37dbdbdec73307439873118bed55fd628869d6"
+      },
+      "profile": "native"
+    },
+    "drybean-native-svm-full-2403": {
+      "label": "drybean-native-svm-full-2403",
+      "requested_seconds": 15.0,
+      "seed_start": 2403,
+      "seeds": 1,
+      "python": "3.12.0",
+      "platform": "Windows-11-10.0.26300-SP0",
+      "versions": {
+        "numpy": "2.5.3",
+        "scipy": "1.18.1",
+        "scikit-learn": "1.9.1",
+        "deap": "1.4.4"
+      },
+      "settings": {
+        "native_families": [
+          "lightgbm",
+          "random_forest",
+          "extra_trees"
+        ],
+        "evolutionary_model": "svm",
+        "train_fraction": 1.0,
+        "max_generations": 1000,
+        "finalists": 4,
+        "cv_folds": 3,
+        "population": 8,
+        "native_threads": 1,
+        "autogluon_bag_folds": 3,
+        "autogluon_stack_levels": 0
+      },
+      "drybean_provenance": {
+        "name": "Dry Bean",
+        "source": "https://archive.ics.uci.edu/static/public/602/dry%2Bbean%2Bdataset.zip",
+        "doi": "https://doi.org/10.24432/C50S4B",
+        "license": "CC BY 4.0",
+        "shape": [
+          13611,
+          16
+        ],
+        "feature_names": [
+          "Area",
+          "Perimeter",
+          "MajorAxisLength",
+          "MinorAxisLength",
+          "AspectRation",
+          "Eccentricity",
+          "ConvexArea",
+          "EquivDiameter",
+          "Extent",
+          "Solidity",
+          "roundness",
+          "Compactness",
+          "ShapeFactor1",
+          "ShapeFactor2",
+          "ShapeFactor3",
+          "ShapeFactor4"
+        ],
+        "classes": {
+          "BARBUNYA": 1322,
+          "BOMBAY": 522,
+          "CALI": 1630,
+          "DERMASON": 3546,
+          "HOROZ": 1928,
+          "SEKER": 2027,
+          "SIRA": 2636
+        },
+        "zip_sha256": "0a64eff5be87f48c3dbbfc0a12a56c5d5b5167ef8e61cd45d69b3e7c7130c06f",
+        "arff_sha256": "b2a4a76a2aedfb8ed415adfc1bfc70b5f202cb00cb72e500766e364c14834014",
+        "npz_sha256": "9af9ba904831e8e615aba1255c37dbdbdec73307439873118bed55fd628869d6"
+      },
+      "profile": "full"
+    },
+    "drybean-native-svm-quarter-2403": {
+      "label": "drybean-native-svm-quarter-2403",
+      "requested_seconds": 3.75,
+      "seed_start": 2403,
+      "seeds": 1,
+      "python": "3.12.0",
+      "platform": "Windows-11-10.0.26300-SP0",
+      "versions": {
+        "numpy": "2.5.3",
+        "scipy": "1.18.1",
+        "scikit-learn": "1.9.1",
+        "deap": "1.4.4"
+      },
+      "settings": {
+        "native_families": [
+          "lightgbm",
+          "random_forest",
+          "extra_trees"
+        ],
+        "evolutionary_model": "svm",
+        "train_fraction": 0.25,
+        "max_generations": 1000,
+        "finalists": 4,
+        "cv_folds": 3,
+        "population": 8,
+        "native_threads": 1,
+        "autogluon_bag_folds": 3,
+        "autogluon_stack_levels": 0
+      },
+      "drybean_provenance": {
+        "name": "Dry Bean",
+        "source": "https://archive.ics.uci.edu/static/public/602/dry%2Bbean%2Bdataset.zip",
+        "doi": "https://doi.org/10.24432/C50S4B",
+        "license": "CC BY 4.0",
+        "shape": [
+          13611,
+          16
+        ],
+        "feature_names": [
+          "Area",
+          "Perimeter",
+          "MajorAxisLength",
+          "MinorAxisLength",
+          "AspectRation",
+          "Eccentricity",
+          "ConvexArea",
+          "EquivDiameter",
+          "Extent",
+          "Solidity",
+          "roundness",
+          "Compactness",
+          "ShapeFactor1",
+          "ShapeFactor2",
+          "ShapeFactor3",
+          "ShapeFactor4"
+        ],
+        "classes": {
+          "BARBUNYA": 1322,
+          "BOMBAY": 522,
+          "CALI": 1630,
+          "DERMASON": 3546,
+          "HOROZ": 1928,
+          "SEKER": 2027,
+          "SIRA": 2636
+        },
+        "zip_sha256": "0a64eff5be87f48c3dbbfc0a12a56c5d5b5167ef8e61cd45d69b3e7c7130c06f",
+        "arff_sha256": "b2a4a76a2aedfb8ed415adfc1bfc70b5f202cb00cb72e500766e364c14834014",
+        "npz_sha256": "9af9ba904831e8e615aba1255c37dbdbdec73307439873118bed55fd628869d6"
+      },
+      "profile": "quarter"
+    },
+    "drybean-native-svm-eighth-2403": {
+      "label": "drybean-native-svm-eighth-2403",
+      "requested_seconds": 3.75,
+      "seed_start": 2403,
+      "seeds": 1,
+      "python": "3.12.0",
+      "platform": "Windows-11-10.0.26300-SP0",
+      "versions": {
+        "numpy": "2.5.3",
+        "scipy": "1.18.1",
+        "scikit-learn": "1.9.1",
+        "deap": "1.4.4"
+      },
+      "settings": {
+        "native_families": [
+          "lightgbm",
+          "random_forest",
+          "extra_trees"
+        ],
+        "evolutionary_model": "svm",
+        "train_fraction": 0.125,
+        "max_generations": 1000,
+        "finalists": 4,
+        "cv_folds": 3,
+        "population": 8,
+        "native_threads": 1,
+        "autogluon_bag_folds": 3,
+        "autogluon_stack_levels": 0
+      },
+      "drybean_provenance": {
+        "name": "Dry Bean",
+        "source": "https://archive.ics.uci.edu/static/public/602/dry%2Bbean%2Bdataset.zip",
+        "doi": "https://doi.org/10.24432/C50S4B",
+        "license": "CC BY 4.0",
+        "shape": [
+          13611,
+          16
+        ],
+        "feature_names": [
+          "Area",
+          "Perimeter",
+          "MajorAxisLength",
+          "MinorAxisLength",
+          "AspectRation",
+          "Eccentricity",
+          "ConvexArea",
+          "EquivDiameter",
+          "Extent",
+          "Solidity",
+          "roundness",
+          "Compactness",
+          "ShapeFactor1",
+          "ShapeFactor2",
+          "ShapeFactor3",
+          "ShapeFactor4"
+        ],
+        "classes": {
+          "BARBUNYA": 1322,
+          "BOMBAY": 522,
+          "CALI": 1630,
+          "DERMASON": 3546,
+          "HOROZ": 1928,
+          "SEKER": 2027,
+          "SIRA": 2636
+        },
+        "zip_sha256": "0a64eff5be87f48c3dbbfc0a12a56c5d5b5167ef8e61cd45d69b3e7c7130c06f",
+        "arff_sha256": "b2a4a76a2aedfb8ed415adfc1bfc70b5f202cb00cb72e500766e364c14834014",
+        "npz_sha256": "9af9ba904831e8e615aba1255c37dbdbdec73307439873118bed55fd628869d6"
+      },
+      "profile": "eighth"
+    },
+    "drybean-native-lightgbm-full-2403": {
+      "label": "drybean-native-lightgbm-full-2403",
+      "requested_seconds": 15.0,
+      "seed_start": 2403,
+      "seeds": 1,
+      "python": "3.12.0",
+      "platform": "Windows-11-10.0.26300-SP0",
+      "versions": {
+        "numpy": "2.5.3",
+        "scipy": "1.18.1",
+        "scikit-learn": "1.9.1",
+        "deap": "1.4.4",
+        "lightgbm": "4.7.0"
+      },
+      "settings": {
+        "native_families": [
+          "lightgbm",
+          "random_forest",
+          "extra_trees"
+        ],
+        "evolutionary_model": "lightgbm",
+        "train_fraction": 1.0,
+        "max_generations": 1000,
+        "finalists": 4,
+        "cv_folds": 3,
+        "population": 8,
+        "native_threads": 1,
+        "autogluon_bag_folds": 3,
+        "autogluon_stack_levels": 0
+      },
+      "drybean_provenance": {
+        "name": "Dry Bean",
+        "source": "https://archive.ics.uci.edu/static/public/602/dry%2Bbean%2Bdataset.zip",
+        "doi": "https://doi.org/10.24432/C50S4B",
+        "license": "CC BY 4.0",
+        "shape": [
+          13611,
+          16
+        ],
+        "feature_names": [
+          "Area",
+          "Perimeter",
+          "MajorAxisLength",
+          "MinorAxisLength",
+          "AspectRation",
+          "Eccentricity",
+          "ConvexArea",
+          "EquivDiameter",
+          "Extent",
+          "Solidity",
+          "roundness",
+          "Compactness",
+          "ShapeFactor1",
+          "ShapeFactor2",
+          "ShapeFactor3",
+          "ShapeFactor4"
+        ],
+        "classes": {
+          "BARBUNYA": 1322,
+          "BOMBAY": 522,
+          "CALI": 1630,
+          "DERMASON": 3546,
+          "HOROZ": 1928,
+          "SEKER": 2027,
+          "SIRA": 2636
+        },
+        "zip_sha256": "0a64eff5be87f48c3dbbfc0a12a56c5d5b5167ef8e61cd45d69b3e7c7130c06f",
+        "arff_sha256": "b2a4a76a2aedfb8ed415adfc1bfc70b5f202cb00cb72e500766e364c14834014",
+        "npz_sha256": "9af9ba904831e8e615aba1255c37dbdbdec73307439873118bed55fd628869d6"
+      },
+      "profile": "full"
+    },
+    "drybean-native-lightgbm-quarter-2403": {
+      "label": "drybean-native-lightgbm-quarter-2403",
+      "requested_seconds": 3.75,
+      "seed_start": 2403,
+      "seeds": 1,
+      "python": "3.12.0",
+      "platform": "Windows-11-10.0.26300-SP0",
+      "versions": {
+        "numpy": "2.5.3",
+        "scipy": "1.18.1",
+        "scikit-learn": "1.9.1",
+        "deap": "1.4.4",
+        "lightgbm": "4.7.0"
+      },
+      "settings": {
+        "native_families": [
+          "lightgbm",
+          "random_forest",
+          "extra_trees"
+        ],
+        "evolutionary_model": "lightgbm",
+        "train_fraction": 0.25,
+        "max_generations": 1000,
+        "finalists": 4,
+        "cv_folds": 3,
+        "population": 8,
+        "native_threads": 1,
+        "autogluon_bag_folds": 3,
+        "autogluon_stack_levels": 0
+      },
+      "drybean_provenance": {
+        "name": "Dry Bean",
+        "source": "https://archive.ics.uci.edu/static/public/602/dry%2Bbean%2Bdataset.zip",
+        "doi": "https://doi.org/10.24432/C50S4B",
+        "license": "CC BY 4.0",
+        "shape": [
+          13611,
+          16
+        ],
+        "feature_names": [
+          "Area",
+          "Perimeter",
+          "MajorAxisLength",
+          "MinorAxisLength",
+          "AspectRation",
+          "Eccentricity",
+          "ConvexArea",
+          "EquivDiameter",
+          "Extent",
+          "Solidity",
+          "roundness",
+          "Compactness",
+          "ShapeFactor1",
+          "ShapeFactor2",
+          "ShapeFactor3",
+          "ShapeFactor4"
+        ],
+        "classes": {
+          "BARBUNYA": 1322,
+          "BOMBAY": 522,
+          "CALI": 1630,
+          "DERMASON": 3546,
+          "HOROZ": 1928,
+          "SEKER": 2027,
+          "SIRA": 2636
+        },
+        "zip_sha256": "0a64eff5be87f48c3dbbfc0a12a56c5d5b5167ef8e61cd45d69b3e7c7130c06f",
+        "arff_sha256": "b2a4a76a2aedfb8ed415adfc1bfc70b5f202cb00cb72e500766e364c14834014",
+        "npz_sha256": "9af9ba904831e8e615aba1255c37dbdbdec73307439873118bed55fd628869d6"
+      },
+      "profile": "quarter"
+    },
+    "drybean-native-lightgbm-eighth-2403": {
+      "label": "drybean-native-lightgbm-eighth-2403",
+      "requested_seconds": 3.75,
+      "seed_start": 2403,
+      "seeds": 1,
+      "python": "3.12.0",
+      "platform": "Windows-11-10.0.26300-SP0",
+      "versions": {
+        "numpy": "2.5.3",
+        "scipy": "1.18.1",
+        "scikit-learn": "1.9.1",
+        "deap": "1.4.4",
+        "lightgbm": "4.7.0"
+      },
+      "settings": {
+        "native_families": [
+          "lightgbm",
+          "random_forest",
+          "extra_trees"
+        ],
+        "evolutionary_model": "lightgbm",
+        "train_fraction": 0.125,
+        "max_generations": 1000,
+        "finalists": 4,
+        "cv_folds": 3,
+        "population": 8,
+        "native_threads": 1,
+        "autogluon_bag_folds": 3,
+        "autogluon_stack_levels": 0
+      },
+      "drybean_provenance": {
+        "name": "Dry Bean",
+        "source": "https://archive.ics.uci.edu/static/public/602/dry%2Bbean%2Bdataset.zip",
+        "doi": "https://doi.org/10.24432/C50S4B",
+        "license": "CC BY 4.0",
+        "shape": [
+          13611,
+          16
+        ],
+        "feature_names": [
+          "Area",
+          "Perimeter",
+          "MajorAxisLength",
+          "MinorAxisLength",
+          "AspectRation",
+          "Eccentricity",
+          "ConvexArea",
+          "EquivDiameter",
+          "Extent",
+          "Solidity",
+          "roundness",
+          "Compactness",
+          "ShapeFactor1",
+          "ShapeFactor2",
+          "ShapeFactor3",
+          "ShapeFactor4"
+        ],
+        "classes": {
+          "BARBUNYA": 1322,
+          "BOMBAY": 522,
+          "CALI": 1630,
+          "DERMASON": 3546,
+          "HOROZ": 1928,
+          "SEKER": 2027,
+          "SIRA": 2636
+        },
+        "zip_sha256": "0a64eff5be87f48c3dbbfc0a12a56c5d5b5167ef8e61cd45d69b3e7c7130c06f",
+        "arff_sha256": "b2a4a76a2aedfb8ed415adfc1bfc70b5f202cb00cb72e500766e364c14834014",
+        "npz_sha256": "9af9ba904831e8e615aba1255c37dbdbdec73307439873118bed55fd628869d6"
+      },
+      "profile": "eighth"
+    },
+    "drybean-native-lightgbm-native-2403": {
+      "label": "drybean-native-lightgbm-native-2403",
+      "requested_seconds": 15.0,
+      "seed_start": 2403,
+      "seeds": 1,
+      "python": "3.12.0",
+      "platform": "Windows-11-10.0.26300-SP0",
+      "versions": {
+        "numpy": "2.5.3",
+        "scipy": "1.18.1",
+        "scikit-learn": "1.9.1",
+        "deap": "1.4.4",
+        "lightgbm": "4.7.0",
+        "autogluon.tabular": "1.6.3",
+        "flaml": "2.7.0"
+      },
+      "settings": {
+        "native_families": [
+          "lightgbm",
+          "random_forest",
+          "extra_trees"
+        ],
+        "evolutionary_model": "lightgbm",
+        "train_fraction": 1.0,
+        "max_generations": 1000,
+        "finalists": 4,
+        "cv_folds": 3,
+        "population": 8,
+        "native_threads": 1,
+        "autogluon_bag_folds": 3,
+        "autogluon_stack_levels": 0
+      },
+      "drybean_provenance": {
+        "name": "Dry Bean",
+        "source": "https://archive.ics.uci.edu/static/public/602/dry%2Bbean%2Bdataset.zip",
+        "doi": "https://doi.org/10.24432/C50S4B",
+        "license": "CC BY 4.0",
+        "shape": [
+          13611,
+          16
+        ],
+        "feature_names": [
+          "Area",
+          "Perimeter",
+          "MajorAxisLength",
+          "MinorAxisLength",
+          "AspectRation",
+          "Eccentricity",
+          "ConvexArea",
+          "EquivDiameter",
+          "Extent",
+          "Solidity",
+          "roundness",
+          "Compactness",
+          "ShapeFactor1",
+          "ShapeFactor2",
+          "ShapeFactor3",
+          "ShapeFactor4"
+        ],
+        "classes": {
+          "BARBUNYA": 1322,
+          "BOMBAY": 522,
+          "CALI": 1630,
+          "DERMASON": 3546,
+          "HOROZ": 1928,
+          "SEKER": 2027,
+          "SIRA": 2636
+        },
+        "zip_sha256": "0a64eff5be87f48c3dbbfc0a12a56c5d5b5167ef8e61cd45d69b3e7c7130c06f",
+        "arff_sha256": "b2a4a76a2aedfb8ed415adfc1bfc70b5f202cb00cb72e500766e364c14834014",
+        "npz_sha256": "9af9ba904831e8e615aba1255c37dbdbdec73307439873118bed55fd628869d6"
+      },
+      "profile": "native"
+    }
+  },
+  "results": [
+    {
+      "model": "svm",
+      "profile": "full",
+      "dataset": "drybean",
+      "seed": 2401,
+      "method": "gasearch",
+      "metric": "accuracy",
+      "holdout_score": 0.933588010578901,
+      "seconds": 17.647239000012632,
+      "requested_seconds": 15.0,
+      "train_samples": 10208,
+      "test_samples": 3403,
+      "cv_score": 0.9274095564950041,
+      "evaluations": 3,
+      "promotion_cv_calls": 0,
+      "train_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "full_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "selected_params": {
+        "svc__C": 63.034454300751726,
+        "svc__gamma": 0.007803149992779002
+      },
+      "selected_mask": null,
+      "generations": 1,
+      "selected_features": 16
+    },
+    {
+      "model": "svm",
+      "profile": "full",
+      "dataset": "drybean",
+      "seed": 2401,
+      "method": "features",
+      "metric": "accuracy",
+      "holdout_score": 0.934469585659712,
+      "seconds": 16.96588140001404,
+      "requested_seconds": 15.0,
+      "train_samples": 10208,
+      "test_samples": 3403,
+      "cv_score": 0.926331931877148,
+      "evaluations": 5,
+      "promotion_cv_calls": 0,
+      "train_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "full_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "selected_params": null,
+      "selected_mask": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "generations": 1,
+      "selected_features": 16
+    },
+    {
+      "model": "svm",
+      "profile": "quarter",
+      "dataset": "drybean",
+      "seed": 2401,
+      "method": "gasearch",
+      "metric": "accuracy",
+      "holdout_score": 0.933588010578901,
+      "seconds": 17.558030500018504,
+      "requested_seconds": 3.75,
+      "train_samples": 10208,
+      "test_samples": 3403,
+      "cv_score": 0.9274095564950041,
+      "evaluations": 4,
+      "promotion_cv_calls": 4,
+      "train_fold_sizes": [
+        1701,
+        1701,
+        1701
+      ],
+      "full_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "selected_params": {
+        "svc__C": 63.034454300751726,
+        "svc__gamma": 0.007803149992779002
+      },
+      "selected_mask": null,
+      "generations": 1,
+      "selected_features": 16
+    },
+    {
+      "model": "svm",
+      "profile": "quarter",
+      "dataset": "drybean",
+      "seed": 2401,
+      "method": "features",
+      "metric": "accuracy",
+      "holdout_score": 0.934469585659712,
+      "seconds": 11.688075799989747,
+      "requested_seconds": 3.75,
+      "train_samples": 10208,
+      "test_samples": 3403,
+      "cv_score": 0.926331931877148,
+      "evaluations": 6,
+      "promotion_cv_calls": 4,
+      "train_fold_sizes": [
+        1701,
+        1701,
+        1701
+      ],
+      "full_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "selected_params": null,
+      "selected_mask": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "generations": 1,
+      "selected_features": 16
+    },
+    {
+      "model": "svm",
+      "profile": "eighth",
+      "dataset": "drybean",
+      "seed": 2401,
+      "method": "gasearch",
+      "metric": "accuracy",
+      "holdout_score": 0.9312371436967382,
+      "seconds": 11.330042200017488,
+      "requested_seconds": 3.75,
+      "train_samples": 10208,
+      "test_samples": 3403,
+      "cv_score": 0.9286832018571985,
+      "evaluations": 8,
+      "promotion_cv_calls": 4,
+      "train_fold_sizes": [
+        850,
+        850,
+        850
+      ],
+      "full_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "selected_params": {
+        "svc__C": 2.957891350430033,
+        "svc__gamma": 0.24601507026642766
+      },
+      "selected_mask": null,
+      "generations": 1,
+      "selected_features": 16
+    },
+    {
+      "model": "svm",
+      "profile": "eighth",
+      "dataset": "drybean",
+      "seed": 2401,
+      "method": "features",
+      "metric": "accuracy",
+      "holdout_score": 0.9347634440199823,
+      "seconds": 11.660913800005801,
+      "requested_seconds": 3.75,
+      "train_samples": 10208,
+      "test_samples": 3403,
+      "cv_score": 0.9275077108307047,
+      "evaluations": 12,
+      "promotion_cv_calls": 4,
+      "train_fold_sizes": [
+        850,
+        850,
+        850
+      ],
+      "full_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "selected_params": null,
+      "selected_mask": [
+        false,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        true,
+        true,
+        true
+      ],
+      "generations": 2,
+      "selected_features": 10
+    },
+    {
+      "model": "lightgbm",
+      "profile": "full",
+      "dataset": "drybean",
+      "seed": 2401,
+      "method": "gasearch",
+      "metric": "accuracy",
+      "holdout_score": 0.9332941522186307,
+      "seconds": 19.178578299994115,
+      "requested_seconds": 15.0,
+      "train_samples": 10208,
+      "test_samples": 3403,
+      "cv_score": 0.9253523464241676,
+      "evaluations": 6,
+      "promotion_cv_calls": 0,
+      "train_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "full_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "selected_params": {
+        "n_estimators": 154,
+        "num_leaves": 12,
+        "learning_rate": 0.021048611944926063,
+        "min_child_samples": 34,
+        "reg_lambda": 0.04099605355682527
+      },
+      "selected_mask": null,
+      "generations": 1,
+      "selected_features": 16
+    },
+    {
+      "model": "lightgbm",
+      "profile": "full",
+      "dataset": "drybean",
+      "seed": 2401,
+      "method": "features",
+      "metric": "accuracy",
+      "holdout_score": 0.9291801351748458,
+      "seconds": 16.853702799999155,
+      "requested_seconds": 15.0,
+      "train_samples": 10208,
+      "test_samples": 3403,
+      "cv_score": 0.9240793057088047,
+      "evaluations": 7,
+      "promotion_cv_calls": 0,
+      "train_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "full_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "selected_params": null,
+      "selected_mask": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "generations": 1,
+      "selected_features": 16
+    },
+    {
+      "model": "lightgbm",
+      "profile": "quarter",
+      "dataset": "drybean",
+      "seed": 2401,
+      "method": "gasearch",
+      "metric": "accuracy",
+      "holdout_score": 0.9294739935351161,
+      "seconds": 15.091640999977244,
+      "requested_seconds": 3.75,
+      "train_samples": 10208,
+      "test_samples": 3403,
+      "cv_score": 0.9243730776909563,
+      "evaluations": 3,
+      "promotion_cv_calls": 3,
+      "train_fold_sizes": [
+        1701,
+        1701,
+        1701
+      ],
+      "full_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "selected_params": {
+        "n_estimators": 200,
+        "num_leaves": 23,
+        "learning_rate": 0.06391358025777712,
+        "min_child_samples": 49,
+        "reg_lambda": 0.00048165179042735013
+      },
+      "selected_mask": null,
+      "generations": 1,
+      "selected_features": 16
+    },
+    {
+      "model": "lightgbm",
+      "profile": "quarter",
+      "dataset": "drybean",
+      "seed": 2401,
+      "method": "features",
+      "metric": "accuracy",
+      "holdout_score": 0.9291801351748458,
+      "seconds": 12.080518499977188,
+      "requested_seconds": 3.75,
+      "train_samples": 10208,
+      "test_samples": 3403,
+      "cv_score": 0.9240793057088047,
+      "evaluations": 3,
+      "promotion_cv_calls": 3,
+      "train_fold_sizes": [
+        1701,
+        1701,
+        1701
+      ],
+      "full_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "selected_params": null,
+      "selected_mask": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "generations": 1,
+      "selected_features": 16
+    },
+    {
+      "model": "lightgbm",
+      "profile": "eighth",
+      "dataset": "drybean",
+      "seed": 2401,
+      "method": "gasearch",
+      "metric": "accuracy",
+      "holdout_score": 0.9294739935351161,
+      "seconds": 16.49626790001639,
+      "requested_seconds": 3.75,
+      "train_samples": 10208,
+      "test_samples": 3403,
+      "cv_score": 0.9243730776909563,
+      "evaluations": 5,
+      "promotion_cv_calls": 4,
+      "train_fold_sizes": [
+        850,
+        850,
+        850
+      ],
+      "full_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "selected_params": {
+        "n_estimators": 200,
+        "num_leaves": 23,
+        "learning_rate": 0.06391358025777712,
+        "min_child_samples": 49,
+        "reg_lambda": 0.00048165179042735013
+      },
+      "selected_mask": null,
+      "generations": 1,
+      "selected_features": 16
+    },
+    {
+      "model": "lightgbm",
+      "profile": "eighth",
+      "dataset": "drybean",
+      "seed": 2401,
+      "method": "features",
+      "metric": "accuracy",
+      "holdout_score": 0.9291801351748458,
+      "seconds": 11.672004299995024,
+      "requested_seconds": 3.75,
+      "train_samples": 10208,
+      "test_samples": 3403,
+      "cv_score": 0.9240793057088047,
+      "evaluations": 3,
+      "promotion_cv_calls": 3,
+      "train_fold_sizes": [
+        850,
+        850,
+        850
+      ],
+      "full_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "selected_params": null,
+      "selected_mask": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "generations": 1,
+      "selected_features": 16
+    },
+    {
+      "model": "lightgbm",
+      "profile": "native",
+      "dataset": "drybean",
+      "seed": 2401,
+      "method": "flaml",
+      "metric": "accuracy",
+      "holdout_score": 0.9280047017337644,
+      "seconds": 14.968676399992546,
+      "requested_seconds": 15.0,
+      "train_samples": 10208,
+      "test_samples": 3403,
+      "best_family": "lgbm",
+      "selected_features": 16
+    },
+    {
+      "model": "lightgbm",
+      "profile": "native",
+      "dataset": "drybean",
+      "seed": 2401,
+      "method": "autogluon",
+      "metric": "accuracy",
+      "holdout_score": 0.934469585659712,
+      "seconds": 15.897152199991979,
+      "requested_seconds": 15.0,
+      "train_samples": 10208,
+      "test_samples": 3403,
+      "best_family": "WeightedEnsemble_L2",
+      "model_count": 4,
+      "selected_features": 16
+    },
+    {
+      "model": "svm",
+      "profile": "full",
+      "dataset": "drybean",
+      "seed": 2402,
+      "method": "gasearch",
+      "metric": "accuracy",
+      "holdout_score": 0.9297678518953865,
+      "seconds": 18.71542550000595,
+      "requested_seconds": 15.0,
+      "train_samples": 10208,
+      "test_samples": 3403,
+      "cv_score": 0.9302506192015448,
+      "evaluations": 3,
+      "promotion_cv_calls": 0,
+      "train_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "full_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "selected_params": {
+        "svc__C": 930.2131328777592,
+        "svc__gamma": 0.008521518339000875
+      },
+      "selected_mask": null,
+      "generations": 1,
+      "selected_features": 16
+    },
+    {
+      "model": "svm",
+      "profile": "full",
+      "dataset": "drybean",
+      "seed": 2402,
+      "method": "features",
+      "metric": "accuracy",
+      "holdout_score": 0.9271231266529533,
+      "seconds": 17.32821779997903,
+      "requested_seconds": 15.0,
+      "train_samples": 10208,
+      "test_samples": 3403,
+      "cv_score": 0.9278015403982688,
+      "evaluations": 5,
+      "promotion_cv_calls": 0,
+      "train_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "full_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "selected_params": null,
+      "selected_mask": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "generations": 1,
+      "selected_features": 16
+    },
+    {
+      "model": "svm",
+      "profile": "quarter",
+      "dataset": "drybean",
+      "seed": 2402,
+      "method": "gasearch",
+      "metric": "accuracy",
+      "holdout_score": 0.9297678518953865,
+      "seconds": 15.702700499998173,
+      "requested_seconds": 3.75,
+      "train_samples": 10208,
+      "test_samples": 3403,
+      "cv_score": 0.9302506192015448,
+      "evaluations": 5,
+      "promotion_cv_calls": 4,
+      "train_fold_sizes": [
+        1701,
+        1701,
+        1701
+      ],
+      "full_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "selected_params": {
+        "svc__C": 930.2131328777592,
+        "svc__gamma": 0.008521518339000875
+      },
+      "selected_mask": null,
+      "generations": 1,
+      "selected_features": 16
+    },
+    {
+      "model": "svm",
+      "profile": "quarter",
+      "dataset": "drybean",
+      "seed": 2402,
+      "method": "features",
+      "metric": "accuracy",
+      "holdout_score": 0.9271231266529533,
+      "seconds": 11.665212099993369,
+      "requested_seconds": 3.75,
+      "train_samples": 10208,
+      "test_samples": 3403,
+      "cv_score": 0.9278015403982688,
+      "evaluations": 7,
+      "promotion_cv_calls": 4,
+      "train_fold_sizes": [
+        1701,
+        1701,
+        1701
+      ],
+      "full_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "selected_params": null,
+      "selected_mask": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "generations": 1,
+      "selected_features": 16
+    },
+    {
+      "model": "svm",
+      "profile": "eighth",
+      "dataset": "drybean",
+      "seed": 2402,
+      "method": "gasearch",
+      "metric": "accuracy",
+      "holdout_score": 0.9297678518953865,
+      "seconds": 12.644463800010271,
+      "requested_seconds": 3.75,
+      "train_samples": 10208,
+      "test_samples": 3403,
+      "cv_score": 0.9302506192015448,
+      "evaluations": 8,
+      "promotion_cv_calls": 4,
+      "train_fold_sizes": [
+        850,
+        850,
+        850
+      ],
+      "full_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "selected_params": {
+        "svc__C": 930.2131328777592,
+        "svc__gamma": 0.008521518339000875
+      },
+      "selected_mask": null,
+      "generations": 1,
+      "selected_features": 16
+    },
+    {
+      "model": "svm",
+      "profile": "eighth",
+      "dataset": "drybean",
+      "seed": 2402,
+      "method": "features",
+      "metric": "accuracy",
+      "holdout_score": 0.9271231266529533,
+      "seconds": 11.288926799985347,
+      "requested_seconds": 3.75,
+      "train_samples": 10208,
+      "test_samples": 3403,
+      "cv_score": 0.9278015403982688,
+      "evaluations": 13,
+      "promotion_cv_calls": 4,
+      "train_fold_sizes": [
+        850,
+        850,
+        850
+      ],
+      "full_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "selected_params": null,
+      "selected_mask": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "generations": 2,
+      "selected_features": 16
+    },
+    {
+      "model": "lightgbm",
+      "profile": "full",
+      "dataset": "drybean",
+      "seed": 2402,
+      "method": "gasearch",
+      "metric": "accuracy",
+      "holdout_score": 0.9262415515721423,
+      "seconds": 17.1034229999932,
+      "requested_seconds": 15.0,
+      "train_samples": 10208,
+      "test_samples": 3403,
+      "cv_score": 0.9286830866863736,
+      "evaluations": 5,
+      "promotion_cv_calls": 0,
+      "train_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "full_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "selected_params": {
+        "n_estimators": 197,
+        "num_leaves": 18,
+        "learning_rate": 0.01885202412737727,
+        "min_child_samples": 9,
+        "reg_lambda": 7.761463911399947
+      },
+      "selected_mask": null,
+      "generations": 1,
+      "selected_features": 16
+    },
+    {
+      "model": "lightgbm",
+      "profile": "full",
+      "dataset": "drybean",
+      "seed": 2402,
+      "method": "features",
+      "metric": "accuracy",
+      "holdout_score": 0.9235968263297091,
+      "seconds": 16.459708899987163,
+      "requested_seconds": 15.0,
+      "train_samples": 10208,
+      "test_samples": 3403,
+      "cv_score": 0.9244709153068879,
+      "evaluations": 7,
+      "promotion_cv_calls": 0,
+      "train_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "full_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "selected_params": null,
+      "selected_mask": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "generations": 1,
+      "selected_features": 16
+    },
+    {
+      "model": "lightgbm",
+      "profile": "quarter",
+      "dataset": "drybean",
+      "seed": 2402,
+      "method": "gasearch",
+      "metric": "accuracy",
+      "holdout_score": 0.9262415515721423,
+      "seconds": 15.083633899979759,
+      "requested_seconds": 3.75,
+      "train_samples": 10208,
+      "test_samples": 3403,
+      "cv_score": 0.9286830866863736,
+      "evaluations": 3,
+      "promotion_cv_calls": 3,
+      "train_fold_sizes": [
+        1701,
+        1701,
+        1701
+      ],
+      "full_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "selected_params": {
+        "n_estimators": 197,
+        "num_leaves": 18,
+        "learning_rate": 0.01885202412737727,
+        "min_child_samples": 9,
+        "reg_lambda": 7.761463911399947
+      },
+      "selected_mask": null,
+      "generations": 1,
+      "selected_features": 16
+    },
+    {
+      "model": "lightgbm",
+      "profile": "quarter",
+      "dataset": "drybean",
+      "seed": 2402,
+      "method": "features",
+      "metric": "accuracy",
+      "holdout_score": 0.9235968263297091,
+      "seconds": 12.279077000013785,
+      "requested_seconds": 3.75,
+      "train_samples": 10208,
+      "test_samples": 3403,
+      "cv_score": 0.9244709153068879,
+      "evaluations": 3,
+      "promotion_cv_calls": 3,
+      "train_fold_sizes": [
+        1701,
+        1701,
+        1701
+      ],
+      "full_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "selected_params": null,
+      "selected_mask": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "generations": 1,
+      "selected_features": 16
+    },
+    {
+      "model": "lightgbm",
+      "profile": "eighth",
+      "dataset": "drybean",
+      "seed": 2402,
+      "method": "gasearch",
+      "metric": "accuracy",
+      "holdout_score": 0.9262415515721423,
+      "seconds": 16.748720900010085,
+      "requested_seconds": 3.75,
+      "train_samples": 10208,
+      "test_samples": 3403,
+      "cv_score": 0.9286830866863736,
+      "evaluations": 5,
+      "promotion_cv_calls": 4,
+      "train_fold_sizes": [
+        850,
+        850,
+        850
+      ],
+      "full_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "selected_params": {
+        "n_estimators": 197,
+        "num_leaves": 18,
+        "learning_rate": 0.01885202412737727,
+        "min_child_samples": 9,
+        "reg_lambda": 7.761463911399947
+      },
+      "selected_mask": null,
+      "generations": 1,
+      "selected_features": 16
+    },
+    {
+      "model": "lightgbm",
+      "profile": "eighth",
+      "dataset": "drybean",
+      "seed": 2402,
+      "method": "features",
+      "metric": "accuracy",
+      "holdout_score": 0.9235968263297091,
+      "seconds": 12.437464299990097,
+      "requested_seconds": 3.75,
+      "train_samples": 10208,
+      "test_samples": 3403,
+      "cv_score": 0.9244709153068879,
+      "evaluations": 3,
+      "promotion_cv_calls": 3,
+      "train_fold_sizes": [
+        850,
+        850,
+        850
+      ],
+      "full_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "selected_params": null,
+      "selected_mask": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "generations": 1,
+      "selected_features": 16
+    },
+    {
+      "model": "lightgbm",
+      "profile": "native",
+      "dataset": "drybean",
+      "seed": 2402,
+      "method": "flaml",
+      "metric": "accuracy",
+      "holdout_score": 0.9259476932118719,
+      "seconds": 15.196371500001987,
+      "requested_seconds": 15.0,
+      "train_samples": 10208,
+      "test_samples": 3403,
+      "best_family": "lgbm",
+      "selected_features": 16
+    },
+    {
+      "model": "lightgbm",
+      "profile": "native",
+      "dataset": "drybean",
+      "seed": 2402,
+      "method": "autogluon",
+      "metric": "accuracy",
+      "holdout_score": 0.9259476932118719,
+      "seconds": 9.230231099994853,
+      "requested_seconds": 15.0,
+      "train_samples": 10208,
+      "test_samples": 3403,
+      "best_family": "WeightedEnsemble_L2",
+      "model_count": 3,
+      "selected_features": 16
+    },
+    {
+      "model": "svm",
+      "profile": "full",
+      "dataset": "drybean",
+      "seed": 2403,
+      "method": "gasearch",
+      "metric": "accuracy",
+      "holdout_score": 0.9291801351748458,
+      "seconds": 16.68587319998187,
+      "requested_seconds": 15.0,
+      "train_samples": 10208,
+      "test_samples": 3403,
+      "cv_score": 0.929271408053746,
+      "evaluations": 3,
+      "promotion_cv_calls": 0,
+      "train_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "full_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "selected_params": {
+        "svc__C": 14.571234329969327,
+        "svc__gamma": 0.12241335661145529
+      },
+      "selected_mask": null,
+      "generations": 1,
+      "selected_features": 16
+    },
+    {
+      "model": "svm",
+      "profile": "full",
+      "dataset": "drybean",
+      "seed": 2403,
+      "method": "features",
+      "metric": "accuracy",
+      "holdout_score": 0.9265354099324126,
+      "seconds": 16.35963880000054,
+      "requested_seconds": 15.0,
+      "train_samples": 10208,
+      "test_samples": 3403,
+      "cv_score": 0.9279980218259078,
+      "evaluations": 7,
+      "promotion_cv_calls": 0,
+      "train_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "full_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "selected_params": null,
+      "selected_mask": [
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        true
+      ],
+      "generations": 1,
+      "selected_features": 7
+    },
+    {
+      "model": "svm",
+      "profile": "quarter",
+      "dataset": "drybean",
+      "seed": 2403,
+      "method": "gasearch",
+      "metric": "accuracy",
+      "holdout_score": 0.9309432853364679,
+      "seconds": 15.149950199993327,
+      "requested_seconds": 3.75,
+      "train_samples": 10208,
+      "test_samples": 3403,
+      "cv_score": 0.9307409877821606,
+      "evaluations": 5,
+      "promotion_cv_calls": 4,
+      "train_fold_sizes": [
+        1701,
+        1701,
+        1701
+      ],
+      "full_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "selected_params": {
+        "svc__C": 567.2437208592855,
+        "svc__gamma": 0.00399427382988731
+      },
+      "selected_mask": null,
+      "generations": 1,
+      "selected_features": 16
+    },
+    {
+      "model": "svm",
+      "profile": "quarter",
+      "dataset": "drybean",
+      "seed": 2403,
+      "method": "features",
+      "metric": "accuracy",
+      "holdout_score": 0.9265354099324126,
+      "seconds": 11.445556099992245,
+      "requested_seconds": 3.75,
+      "train_samples": 10208,
+      "test_samples": 3403,
+      "cv_score": 0.9279980218259078,
+      "evaluations": 8,
+      "promotion_cv_calls": 4,
+      "train_fold_sizes": [
+        1701,
+        1701,
+        1701
+      ],
+      "full_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "selected_params": null,
+      "selected_mask": [
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        true
+      ],
+      "generations": 1,
+      "selected_features": 7
+    },
+    {
+      "model": "svm",
+      "profile": "eighth",
+      "dataset": "drybean",
+      "seed": 2403,
+      "method": "gasearch",
+      "metric": "accuracy",
+      "holdout_score": 0.9309432853364679,
+      "seconds": 12.314880499994615,
+      "requested_seconds": 3.75,
+      "train_samples": 10208,
+      "test_samples": 3403,
+      "cv_score": 0.9307409877821606,
+      "evaluations": 8,
+      "promotion_cv_calls": 4,
+      "train_fold_sizes": [
+        850,
+        850,
+        850
+      ],
+      "full_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "selected_params": {
+        "svc__C": 567.2437208592855,
+        "svc__gamma": 0.00399427382988731
+      },
+      "selected_mask": null,
+      "generations": 1,
+      "selected_features": 16
+    },
+    {
+      "model": "svm",
+      "profile": "eighth",
+      "dataset": "drybean",
+      "seed": 2403,
+      "method": "features",
+      "metric": "accuracy",
+      "holdout_score": 0.9250661181310609,
+      "seconds": 11.114437100011855,
+      "requested_seconds": 3.75,
+      "train_samples": 10208,
+      "test_samples": 3403,
+      "cv_score": 0.9279000402464449,
+      "evaluations": 13,
+      "promotion_cv_calls": 4,
+      "train_fold_sizes": [
+        850,
+        850,
+        850
+      ],
+      "full_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "selected_params": null,
+      "selected_mask": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true,
+        false,
+        false,
+        false,
+        true
+      ],
+      "generations": 2,
+      "selected_features": 11
+    },
+    {
+      "model": "lightgbm",
+      "profile": "full",
+      "dataset": "drybean",
+      "seed": 2403,
+      "method": "gasearch",
+      "metric": "accuracy",
+      "holdout_score": 0.9253599764913312,
+      "seconds": 17.434574600018095,
+      "requested_seconds": 15.0,
+      "train_samples": 10208,
+      "test_samples": 3403,
+      "cv_score": 0.9284879009305169,
+      "evaluations": 5,
+      "promotion_cv_calls": 0,
+      "train_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "full_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "selected_params": {
+        "n_estimators": 79,
+        "num_leaves": 25,
+        "learning_rate": 0.07016768748948002,
+        "min_child_samples": 44,
+        "reg_lambda": 0.0028371968082035125
+      },
+      "selected_mask": null,
+      "generations": 1,
+      "selected_features": 16
+    },
+    {
+      "model": "lightgbm",
+      "profile": "full",
+      "dataset": "drybean",
+      "seed": 2403,
+      "method": "features",
+      "metric": "accuracy",
+      "holdout_score": 0.9247722597707905,
+      "seconds": 16.45539839999401,
+      "requested_seconds": 15.0,
+      "train_samples": 10208,
+      "test_samples": 3403,
+      "cv_score": 0.9269205699642895,
+      "evaluations": 7,
+      "promotion_cv_calls": 0,
+      "train_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "full_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "selected_params": null,
+      "selected_mask": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "generations": 1,
+      "selected_features": 16
+    },
+    {
+      "model": "lightgbm",
+      "profile": "quarter",
+      "dataset": "drybean",
+      "seed": 2403,
+      "method": "gasearch",
+      "metric": "accuracy",
+      "holdout_score": 0.9253599764913312,
+      "seconds": 18.735207899997476,
+      "requested_seconds": 3.75,
+      "train_samples": 10208,
+      "test_samples": 3403,
+      "cv_score": 0.9284879009305169,
+      "evaluations": 4,
+      "promotion_cv_calls": 4,
+      "train_fold_sizes": [
+        1701,
+        1701,
+        1701
+      ],
+      "full_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "selected_params": {
+        "n_estimators": 79,
+        "num_leaves": 25,
+        "learning_rate": 0.07016768748948002,
+        "min_child_samples": 44,
+        "reg_lambda": 0.0028371968082035125
+      },
+      "selected_mask": null,
+      "generations": 1,
+      "selected_features": 16
+    },
+    {
+      "model": "lightgbm",
+      "profile": "quarter",
+      "dataset": "drybean",
+      "seed": 2403,
+      "method": "features",
+      "metric": "accuracy",
+      "holdout_score": 0.9247722597707905,
+      "seconds": 12.33181699999841,
+      "requested_seconds": 3.75,
+      "train_samples": 10208,
+      "test_samples": 3403,
+      "cv_score": 0.9269205699642895,
+      "evaluations": 3,
+      "promotion_cv_calls": 3,
+      "train_fold_sizes": [
+        1701,
+        1701,
+        1701
+      ],
+      "full_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "selected_params": null,
+      "selected_mask": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "generations": 1,
+      "selected_features": 16
+    },
+    {
+      "model": "lightgbm",
+      "profile": "eighth",
+      "dataset": "drybean",
+      "seed": 2403,
+      "method": "gasearch",
+      "metric": "accuracy",
+      "holdout_score": 0.9253599764913312,
+      "seconds": 16.709466500004055,
+      "requested_seconds": 3.75,
+      "train_samples": 10208,
+      "test_samples": 3403,
+      "cv_score": 0.9284879009305169,
+      "evaluations": 4,
+      "promotion_cv_calls": 4,
+      "train_fold_sizes": [
+        850,
+        850,
+        850
+      ],
+      "full_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "selected_params": {
+        "n_estimators": 79,
+        "num_leaves": 25,
+        "learning_rate": 0.07016768748948002,
+        "min_child_samples": 44,
+        "reg_lambda": 0.0028371968082035125
+      },
+      "selected_mask": null,
+      "generations": 1,
+      "selected_features": 16
+    },
+    {
+      "model": "lightgbm",
+      "profile": "eighth",
+      "dataset": "drybean",
+      "seed": 2403,
+      "method": "features",
+      "metric": "accuracy",
+      "holdout_score": 0.9247722597707905,
+      "seconds": 11.589939800003776,
+      "requested_seconds": 3.75,
+      "train_samples": 10208,
+      "test_samples": 3403,
+      "cv_score": 0.9269205699642895,
+      "evaluations": 3,
+      "promotion_cv_calls": 3,
+      "train_fold_sizes": [
+        850,
+        850,
+        850
+      ],
+      "full_fold_sizes": [
+        6805,
+        6805,
+        6806
+      ],
+      "selected_params": null,
+      "selected_mask": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "generations": 1,
+      "selected_features": 16
+    },
+    {
+      "model": "lightgbm",
+      "profile": "native",
+      "dataset": "drybean",
+      "seed": 2403,
+      "method": "flaml",
+      "metric": "accuracy",
+      "holdout_score": 0.9253599764913312,
+      "seconds": 16.40593569999328,
+      "requested_seconds": 15.0,
+      "train_samples": 10208,
+      "test_samples": 3403,
+      "best_family": "lgbm",
+      "selected_features": 16
+    },
+    {
+      "model": "lightgbm",
+      "profile": "native",
+      "dataset": "drybean",
+      "seed": 2403,
+      "method": "autogluon",
+      "metric": "accuracy",
+      "holdout_score": 0.9262415515721423,
+      "seconds": 14.375864399975399,
+      "requested_seconds": 15.0,
+      "train_samples": 10208,
+      "test_samples": 3403,
+      "best_family": "WeightedEnsemble_L2",
+      "model_count": 4,
+      "selected_features": 16
+    }
+  ],
+  "summary": [
+    {
+      "model": "lightgbm",
+      "method": "autogluon",
+      "profile": "native",
+      "score": 0.9288862768145754,
+      "score_sd": 0.0048375191399219405,
+      "seconds": 13.167749233320743,
+      "seconds_sd": 3.493796778623862,
+      "features": 16
+    },
+    {
+      "model": "lightgbm",
+      "method": "features",
+      "profile": "eighth",
+      "score": 0.9258497404251151,
+      "score_sd": 0.002943477167463387,
+      "seconds": 11.8998027999963,
+      "seconds_sd": 0.46743294917173844,
+      "features": 16
+    },
+    {
+      "model": "lightgbm",
+      "method": "features",
+      "profile": "full",
+      "score": 0.9258497404251151,
+      "score_sd": 0.002943477167463387,
+      "seconds": 16.58960336666011,
+      "seconds_sd": 0.2287269728738863,
+      "features": 16
+    },
+    {
+      "model": "lightgbm",
+      "method": "features",
+      "profile": "quarter",
+      "score": 0.9258497404251151,
+      "score_sd": 0.002943477167463387,
+      "seconds": 12.230470833329795,
+      "seconds_sd": 0.13251284318137946,
+      "features": 16
+    },
+    {
+      "model": "lightgbm",
+      "method": "flaml",
+      "profile": "native",
+      "score": 0.9264374571456558,
+      "score_sd": 0.0013887204308706167,
+      "seconds": 15.523661199995937,
+      "seconds_sd": 0.7725072715847058,
+      "features": 16
+    },
+    {
+      "model": "lightgbm",
+      "method": "gasearch",
+      "profile": "eighth",
+      "score": 0.9270251738661965,
+      "score_sd": 0.00216606370726769,
+      "seconds": 16.651485100010177,
+      "seconds_sd": 0.1358473826041247,
+      "features": 16
+    },
+    {
+      "model": "lightgbm",
+      "method": "gasearch",
+      "profile": "full",
+      "score": 0.9282985600940347,
+      "score_sd": 0.004348706607977897,
+      "seconds": 17.905525300001802,
+      "seconds_sd": 1.1148602159651364,
+      "features": 16
+    },
+    {
+      "model": "lightgbm",
+      "method": "gasearch",
+      "profile": "quarter",
+      "score": 0.9270251738661965,
+      "score_sd": 0.00216606370726769,
+      "seconds": 16.303494266651494,
+      "seconds_sd": 2.10592958675335,
+      "features": 16
+    },
+    {
+      "model": "svm",
+      "method": "features",
+      "profile": "eighth",
+      "score": 0.9289842296013322,
+      "score_sd": 0.0051095313373474005,
+      "seconds": 11.354759233334335,
+      "seconds_sd": 0.2791229619174224,
+      "features": 12.333333333333334
+    },
+    {
+      "model": "svm",
+      "method": "features",
+      "profile": "full",
+      "score": 0.9293760407483593,
+      "score_sd": 0.004420916484042247,
+      "seconds": 16.884579333331203,
+      "seconds_sd": 0.4893810778268899,
+      "features": 13
+    },
+    {
+      "model": "svm",
+      "method": "features",
+      "profile": "quarter",
+      "score": 0.9293760407483593,
+      "score_sd": 0.004420916484042247,
+      "seconds": 11.599614666658454,
+      "seconds_sd": 0.13390750041284463,
+      "features": 13
+    },
+    {
+      "model": "svm",
+      "method": "gasearch",
+      "profile": "eighth",
+      "score": 0.9306494269761975,
+      "score_sd": 0.0007774761419525464,
+      "seconds": 12.096462166674124,
+      "seconds_sd": 0.6838903142169606,
+      "features": 16
+    },
+    {
+      "model": "svm",
+      "method": "gasearch",
+      "profile": "full",
+      "score": 0.930845332549711,
+      "score_sd": 0.002393337588964725,
+      "seconds": 17.68284590000015,
+      "seconds_sd": 1.015244563210411,
+      "features": 16
+    },
+    {
+      "model": "svm",
+      "method": "gasearch",
+      "profile": "quarter",
+      "score": 0.9314330492702517,
+      "score_sd": 0.001956605383038284,
+      "seconds": 16.136893733336667,
+      "seconds_sd": 1.2613903066656404,
+      "features": 16
+    }
+  ],
+  "scripts": {
+    "drybean_native_worker.py": "import sys,json,hashlib,argparse\nfrom pathlib import Path\nroot=Path.cwd();r=root/'.agent-runs/performance-v2';source=r/'drybean-native-source'\nsys.path.insert(0,str(source));sys.path.insert(0,str(source/'benchmarks'))\nimport numpy as np\nimport sklearn_genetic\nimport benchmark_native_automl as b\nassert Path(sklearn_genetic.__file__).resolve().is_relative_to(source.resolve())\nseed=int(sys.argv[1]);model=sys.argv[2];profile=sys.argv[3]\nprovenance=json.loads((r/'datasets/drybean-provenance.json').read_text(encoding='utf-8'))\nassert hashlib.sha256((r/'datasets/drybean.npz').read_bytes()).hexdigest()==provenance['npz_sha256']\ndef dataset(name):\n assert name=='drybean'\n with np.load(r/'datasets/drybean.npz') as d:return d['X'],d['y'],True\nb.dataset=dataset\nfraction={'full':1.,'quarter':.25,'eighth':.125,'native':1.}[profile]\nlabel=f'drybean-native-{model}-{profile}-{seed}'\nargs=argparse.Namespace(evolutionary_model=model,methods=['flaml','autogluon'] if profile=='native' else ['gasearch','features'],label=label,seconds=15. if profile in ['full','native'] else 3.75,seeds=1,seed_start=seed,train_fraction=fraction,generations=1000,finalists=4,output=r/(label+'.json'),model_dir=r/'drybean-native-models',datasets=['drybean'])\nb.run(args)\npayload=json.loads(args.output.read_text(encoding='utf-8'));payload['drybean_provenance']=provenance;payload['profile']=profile\nargs.output.write_text(json.dumps(payload,indent=2)+'\\n',encoding='utf-8')\n",
+    "run_drybean_native.py": "import sys,subprocess,json,hashlib\nfrom pathlib import Path\nr=Path('.agent-runs/performance-v2');python=r/'automl-env/Scripts/python.exe'\nfor seed in range(2401,2404):\n configs=[(model,profile) for model in ['svm','lightgbm'] for profile in ['full','quarter','eighth']]+[('lightgbm','native')]\n if seed%2==0:configs.reverse()\n for model,profile in configs:\n  label=f'drybean-native-{model}-{profile}-{seed}';print('START',label,flush=True)\n  with (r/(label+'.log')).open('w',encoding='utf-8') as out:result=subprocess.run([str(python),str(r/'drybean_native_worker.py'),str(seed),model,profile],stdout=out,stderr=subprocess.STDOUT,timeout=900)\n  print('EXIT',label,result.returncode,flush=True)\n  if result.returncode:sys.exit(result.returncode)\nfor name,sha in json.loads((r/'drybean-native-source-sha256.json').read_text(encoding='utf-8')).items():assert hashlib.sha256((r/'drybean-native-source'/name).read_bytes()).hexdigest()==sha\nprint('Completed42fits; source hashes unchanged',flush=True)\n",
+    "summarize_drybean_native.py": "import json,hashlib,math,statistics as st\nfrom pathlib import Path\nr=Path('.agent-runs/performance-v2');rows=[];profiles={}\nfor seed in range(2401,2404):\n for model,profile in [(m,p) for m in ['svm','lightgbm'] for p in ['full','quarter','eighth']]+[('lightgbm','native')]:\n  key=f'drybean-native-{model}-{profile}-{seed}';d=json.loads((r/(key+'.json')).read_text(encoding='utf-8'));profiles[key]={k:v for k,v in d.items() if k!='results'}\n  assert len(d['results'])==2\n  assert {x['method'] for x in d['results']}==({'flaml','autogluon'} if profile=='native' else {'gasearch','features'})\n  fraction={'full':1.,'quarter':.25,'eighth':.125,'native':1.}[profile]\n  assert d['settings']['train_fraction']==fraction and d['settings']['native_threads']==1\n  for row in d['results']:\n   assert row['dataset']=='drybean' and row['seed']==seed and row['train_samples']==10208 and row['test_samples']==3403\n   assert row['requested_seconds']==(15. if profile in ['full','native'] else 3.75)\n   assert math.isfinite(row['holdout_score']) and 0<=row['holdout_score']<=1 and math.isfinite(row['seconds']) and row['seconds']>0\n   if profile!='native':\n    assert math.isfinite(row['cv_score']) and row['evaluations']>0 and row['full_fold_sizes']==[6805,6805,6806]\n    assert row['train_fold_sizes']==[max(1,int(size*fraction)) for size in row['full_fold_sizes']]\n    assert (row['promotion_cv_calls']==0 if profile=='full' else 1<=row['promotion_cv_calls']<=4)\n    if row['method']=='features':assert len(row['selected_mask'])==16 and sum(row['selected_mask'])==row['selected_features'] and 1<=row['selected_features']<=16\n   rows.append(dict(model=model,profile=profile,**row))\nassert len(rows)==42\nmanifest=json.loads((r/'drybean-native-source-sha256.json').read_text(encoding='utf-8'))\nfor name,sha in manifest.items():assert hashlib.sha256((r/'drybean-native-source'/name).read_bytes()).hexdigest()==sha\nprovenance=json.loads((r/'datasets/drybean-provenance.json').read_text(encoding='utf-8'))\nassert hashlib.sha256((r/'datasets/drybean.npz').read_bytes()).hexdigest()==provenance['npz_sha256']\nsummary=[]\nfor model,method,profile in sorted({(x['model'],x['method'],x['profile']) for x in rows}):\n group=[x for x in rows if (x['model'],x['method'],x['profile'])==(model,method,profile)]\n assert len(group)==3\n summary.append(dict(model=model,method=method,profile=profile,score=st.mean(x['holdout_score'] for x in group),score_sd=st.stdev(x['holdout_score'] for x in group),seconds=st.mean(x['seconds'] for x in group),seconds_sd=st.stdev(x['seconds'] for x in group),features=st.mean(x['selected_features'] for x in group)))\nlines=['PASS42finitefits;1CPU/settings,split sizes,mask bounds,training-fold fractions,promotion counts,source/data hashes.','Total fitting seconds: '+str(sum(x['seconds'] for x in rows))]\nfor g in summary:lines.append(f\"{g['model']} / {g['method']} / {g['profile']}: score {g['score']:.6f} +/- {g['score_sd']:.6f}; seconds {g['seconds']:.3f} +/- {g['seconds_sd']:.3f}; features {g['features']:.2f}\")\nfor model in ['svm','lightgbm']:\n for method in ['gasearch','features']:\n  base=next(g for g in summary if (g['model'],g['method'],g['profile'])==(model,method,'full'))\n  for profile in ['quarter','eighth']:\n   g=next(g for g in summary if (g['model'],g['method'],g['profile'])==(model,method,profile));lines.append(f\"{model}/{method}/{profile}: speedup {base['seconds']/g['seconds']:.3f}, accuracy delta {g['score']-base['score']:+.6f}\")\ntext='\\n'.join(lines)+'\\n';print(text)\n(r/'drybean-native-summary.txt').write_text(text,encoding='utf-8')\npayload=dict(base_commit='78a9f2d46cf20c11f47194fd1bc13ce0fcfb7329',source_sha256=manifest,provenance=provenance,profiles=profiles,results=rows,summary=summary,scripts={name:(r/name).read_text(encoding='utf-8') for name in ['drybean_native_worker.py','run_drybean_native.py','summarize_drybean_native.py','prepare_drybean_data.py']})\n(r/'drybean-native-combined.json').write_text(json.dumps(payload,indent=2)+'\\n',encoding='utf-8')\n",
+    "prepare_drybean_data.py": "import io,zipfile,hashlib,json,urllib.request\nfrom pathlib import Path\nimport numpy as np\nfrom scipy.io import arff\nr=Path('.agent-runs/performance-v2/datasets');r.mkdir(parents=True,exist_ok=True)\nurl='https://archive.ics.uci.edu/static/public/602/dry%2Bbean%2Bdataset.zip'\nwith urllib.request.urlopen(url,timeout=60) as response:blob=response.read()\nassert hashlib.sha256(blob).hexdigest()=='0a64eff5be87f48c3dbbfc0a12a56c5d5b5167ef8e61cd45d69b3e7c7130c06f'\nwith zipfile.ZipFile(io.BytesIO(blob)) as archive:\n names=[name for name in archive.namelist() if name.lower().endswith('.arff')];assert len(names)==1\n data=archive.read(names[0])\nassert hashlib.sha256(data).hexdigest()=='b2a4a76a2aedfb8ed415adfc1bfc70b5f202cb00cb72e500766e364c14834014'\nrecords,metadata=arff.loadarff(io.StringIO(data.decode('utf-8')))\nfeatures=records.dtype.names[:-1];X=np.column_stack([records[name] for name in features]);y=records[records.dtype.names[-1]].astype(str)\nassert X.shape==(13611,16) and y.shape==(13611,) and np.isfinite(X).all()\nout=r/'drybean-rebuilt.npz';np.savez_compressed(out,X=X,y=y)\nsha=hashlib.sha256(out.read_bytes()).hexdigest()\nassert sha=='9af9ba904831e8e615aba1255c37dbdbdec73307439873118bed55fd628869d6',sha\nprint(json.dumps(dict(output=str(out),sha256=sha,shape=X.shape,classes=np.unique(y).tolist())))\n"
+  }
+}

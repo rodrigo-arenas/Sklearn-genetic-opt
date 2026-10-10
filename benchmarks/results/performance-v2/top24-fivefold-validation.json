@@ -1,0 +1,1567 @@
+{
+  "status": "finalist_budget_tradeoff",
+  "source_commit": "c7f8468c54b1159f88878cb168eaa25256634a1d",
+  "question": "Can 24 full five-fold finalists recover held-out quality while keeping GA searches faster than full five-fold GA or Optuna TPE?",
+  "settings": {
+    "datasets": [
+      "breast",
+      "digits",
+      "synthetic"
+    ],
+    "seeds": [
+      943,
+      944,
+      945
+    ],
+    "holdout_fraction": 0.25,
+    "full_cv_folds": 5,
+    "preliminary_folds": 1,
+    "population_size": 8,
+    "generations": 10,
+    "maximum_candidate_proposals": 168,
+    "final_selection_top_k": [
+      8,
+      24
+    ],
+    "cpu_threads": 1
+  },
+  "environment": {
+    "python": "3.12.0",
+    "numpy": "2.5.3",
+    "scikit-learn": "1.9.1",
+    "scipy": "1.18.1",
+    "deap": "1.4.4",
+    "optuna": "5.0.0"
+  },
+  "source_sha256": {
+    "sklearn_genetic/genetic_search.py": "c7d49583e0250cd2208c2e9b6321b44ea8f850cb07816ef244adb72527a13600",
+    "sklearn_genetic/algorithms.py": "2f1b607b8c671923d4ea604f8ed81b8b502e609b4ebb5c49e904612c0b7affd7",
+    "sklearn_genetic/evaluation.py": "ef5edfc4688c64aad6851fb0adc49f3bcb3bb7cc4adc9ae05a2e135da26b8845",
+    "sklearn_genetic/utils/cv_scores.py": "6ae9dc592fc8f05a76951bc63583eac2582b29d78399e2331b1b195902b05464"
+  },
+  "split_sha256": {
+    "breast/943": "3809d6fd38050df0bcb5602d8f4cfd5bd448148ff8ad854995edb31a836f8ce1",
+    "breast/944": "030e15214b8c103529d8bdc4fb2952b81b9972c9683b1519090d252d77802373",
+    "breast/945": "5d9aac52f585d6ab94914f76296e58bc02b9b8d7627d7812608a47453b4095d2",
+    "digits/943": "2b26f8c8ad0e4c803a006a9968f40454addccba2e00725b34807ad793bc5cc80",
+    "digits/944": "d89cb6dbc6f2b689a455f720b783990ac13d0df666c85070785e1ae16846fd2e",
+    "digits/945": "bda2263883f1a9d3e8affae3e9325adf8050b0785b060e3e5769ccb8a54b4da4",
+    "synthetic/943": "7e7233c2ae2b517c930db0a5b478c2c02102bc4263ea013ebf3775a9e284fc4b",
+    "synthetic/944": "b54e481e905c4b02f1d52f560fa3ee68256cfba493ae0b09d669e35455cf38f0",
+    "synthetic/945": "c1c6dedbce43d99c43889cd5d652a0207c4f1c4c171f837daa925e3b744330a1"
+  },
+  "raw_sha256": "99abdc57bc86a3f7ccf8fb2b79596187ba6e71c8065c10929842820f82d8cf0d",
+  "summary": [
+    {
+      "dataset": "breast",
+      "method": "features",
+      "variant": "full",
+      "seeds": [
+        943,
+        944,
+        945
+      ],
+      "seconds_mean": 4.908593933321147,
+      "holdout_mean": 0.9533799533799534,
+      "cv_score_mean": 0.9898221614227086,
+      "candidate_cv_calls_mean": 165.66666666666666,
+      "selected_features_mean": 11
+    },
+    {
+      "dataset": "breast",
+      "method": "features",
+      "variant": "top24",
+      "seeds": [
+        943,
+        944,
+        945
+      ],
+      "seconds_mean": 2.3629456000053324,
+      "holdout_mean": 0.9533799533799534,
+      "cv_score_mean": 0.9851253989968081,
+      "candidate_cv_calls_mean": 165,
+      "selected_features_mean": 11.333333333333334
+    },
+    {
+      "dataset": "breast",
+      "method": "features",
+      "variant": "top8",
+      "seeds": [
+        943,
+        944,
+        945
+      ],
+      "seconds_mean": 1.455891133324864,
+      "holdout_mean": 0.958041958041958,
+      "cv_score_mean": 0.978841769265846,
+      "candidate_cv_calls_mean": 165,
+      "selected_features_mean": 10.666666666666666
+    },
+    {
+      "dataset": "breast",
+      "method": "gasearch",
+      "variant": "full",
+      "seeds": [
+        943,
+        944,
+        945
+      ],
+      "seconds_mean": 11.536740033324653,
+      "holdout_mean": 0.9603729603729604,
+      "cv_score_mean": 0.9851345189238486,
+      "candidate_cv_calls_mean": 162.66666666666666,
+      "selected_features_mean": 30
+    },
+    {
+      "dataset": "breast",
+      "method": "gasearch",
+      "variant": "top24",
+      "seeds": [
+        943,
+        944,
+        945
+      ],
+      "seconds_mean": 3.793445133342175,
+      "holdout_mean": 0.9673659673659674,
+      "cv_score_mean": 0.9851253989968081,
+      "candidate_cv_calls_mean": 164,
+      "selected_features_mean": 30
+    },
+    {
+      "dataset": "breast",
+      "method": "gasearch",
+      "variant": "top8",
+      "seeds": [
+        943,
+        944,
+        945
+      ],
+      "seconds_mean": 2.845272633334389,
+      "holdout_mean": 0.9673659673659674,
+      "cv_score_mean": 0.9851253989968081,
+      "candidate_cv_calls_mean": 164,
+      "selected_features_mean": 30
+    },
+    {
+      "dataset": "breast",
+      "method": "optuna",
+      "variant": "full",
+      "seeds": [
+        943,
+        944,
+        945
+      ],
+      "seconds_mean": 6.541064999997616,
+      "holdout_mean": 0.9627039627039627,
+      "cv_score_mean": 0.9874783401732786,
+      "candidate_cv_calls_mean": 168,
+      "selected_features_mean": 30
+    },
+    {
+      "dataset": "digits",
+      "method": "features",
+      "variant": "full",
+      "seeds": [
+        943,
+        944,
+        945
+      ],
+      "seconds_mean": 37.596810899995035,
+      "holdout_mean": 0.9807407407407407,
+      "cv_score_mean": 0.9849052274083253,
+      "candidate_cv_calls_mean": 167.66666666666666,
+      "selected_features_mean": 30.666666666666668
+    },
+    {
+      "dataset": "digits",
+      "method": "features",
+      "variant": "top24",
+      "seeds": [
+        943,
+        944,
+        945
+      ],
+      "seconds_mean": 13.21243746666975,
+      "holdout_mean": 0.9785185185185186,
+      "cv_score_mean": 0.9769828812703658,
+      "candidate_cv_calls_mean": 167.66666666666666,
+      "selected_features_mean": 30.333333333333332
+    },
+    {
+      "dataset": "digits",
+      "method": "features",
+      "variant": "top8",
+      "seeds": [
+        943,
+        944,
+        945
+      ],
+      "seconds_mean": 9.68292206666471,
+      "holdout_mean": 0.9777777777777777,
+      "cv_score_mean": 0.9752471430538345,
+      "candidate_cv_calls_mean": 167.66666666666666,
+      "selected_features_mean": 30
+    },
+    {
+      "dataset": "digits",
+      "method": "gasearch",
+      "variant": "full",
+      "seeds": [
+        943,
+        944,
+        945
+      ],
+      "seconds_mean": 136.647364266663,
+      "holdout_mean": 0.9822222222222222,
+      "cv_score_mean": 0.9839194088760383,
+      "candidate_cv_calls_mean": 165,
+      "selected_features_mean": 64
+    },
+    {
+      "dataset": "digits",
+      "method": "gasearch",
+      "variant": "top24",
+      "seeds": [
+        943,
+        944,
+        945
+      ],
+      "seconds_mean": 31.617636799996642,
+      "holdout_mean": 0.9837037037037037,
+      "cv_score_mean": 0.9849052274083253,
+      "candidate_cv_calls_mean": 164,
+      "selected_features_mean": 64
+    },
+    {
+      "dataset": "digits",
+      "method": "gasearch",
+      "variant": "top8",
+      "seeds": [
+        943,
+        944,
+        945
+      ],
+      "seconds_mean": 27.646246799995424,
+      "holdout_mean": 0.9851851851851852,
+      "cv_score_mean": 0.98440772867043,
+      "candidate_cv_calls_mean": 164,
+      "selected_features_mean": 64
+    },
+    {
+      "dataset": "digits",
+      "method": "optuna",
+      "variant": "full",
+      "seeds": [
+        943,
+        944,
+        945
+      ],
+      "seconds_mean": 40.877701166667975,
+      "holdout_mean": 0.9814814814814815,
+      "cv_score_mean": 0.9854045619349212,
+      "candidate_cv_calls_mean": 168,
+      "selected_features_mean": 64
+    },
+    {
+      "dataset": "synthetic",
+      "method": "features",
+      "variant": "full",
+      "seeds": [
+        943,
+        944,
+        945
+      ],
+      "seconds_mean": 8.512838400007846,
+      "holdout_mean": 0.92,
+      "cv_score_mean": 0.925,
+      "candidate_cv_calls_mean": 165.33333333333334,
+      "selected_features_mean": 8.333333333333334
+    },
+    {
+      "dataset": "synthetic",
+      "method": "features",
+      "variant": "top24",
+      "seeds": [
+        943,
+        944,
+        945
+      ],
+      "seconds_mean": 2.891343166673323,
+      "holdout_mean": 0.9016666666666667,
+      "cv_score_mean": 0.9022222222222221,
+      "candidate_cv_calls_mean": 166,
+      "selected_features_mean": 8.666666666666666
+    },
+    {
+      "dataset": "synthetic",
+      "method": "features",
+      "variant": "top8",
+      "seeds": [
+        943,
+        944,
+        945
+      ],
+      "seconds_mean": 2.1777226666648253,
+      "holdout_mean": 0.9066666666666666,
+      "cv_score_mean": 0.8983333333333333,
+      "candidate_cv_calls_mean": 166,
+      "selected_features_mean": 9
+    },
+    {
+      "dataset": "synthetic",
+      "method": "gasearch",
+      "variant": "full",
+      "seeds": [
+        943,
+        944,
+        945
+      ],
+      "seconds_mean": 21.2065790000003,
+      "holdout_mean": 0.8633333333333333,
+      "cv_score_mean": 0.8805555555555555,
+      "candidate_cv_calls_mean": 164.66666666666666,
+      "selected_features_mean": 20
+    },
+    {
+      "dataset": "synthetic",
+      "method": "gasearch",
+      "variant": "top24",
+      "seeds": [
+        943,
+        944,
+        945
+      ],
+      "seconds_mean": 5.72182249998635,
+      "holdout_mean": 0.8683333333333333,
+      "cv_score_mean": 0.8761111111111111,
+      "candidate_cv_calls_mean": 166,
+      "selected_features_mean": 20
+    },
+    {
+      "dataset": "synthetic",
+      "method": "gasearch",
+      "variant": "top8",
+      "seeds": [
+        943,
+        944,
+        945
+      ],
+      "seconds_mean": 4.8148488000054686,
+      "holdout_mean": 0.8666666666666667,
+      "cv_score_mean": 0.8755555555555555,
+      "candidate_cv_calls_mean": 166,
+      "selected_features_mean": 20
+    },
+    {
+      "dataset": "synthetic",
+      "method": "optuna",
+      "variant": "full",
+      "seeds": [
+        943,
+        944,
+        945
+      ],
+      "seconds_mean": 10.693292066658614,
+      "holdout_mean": 0.87,
+      "cv_score_mean": 0.8816666666666667,
+      "candidate_cv_calls_mean": 168,
+      "selected_features_mean": 20
+    }
+  ],
+  "comparisons": [
+    {
+      "dataset": "breast",
+      "method": "gasearch",
+      "variant": "top8",
+      "baseline": "full",
+      "speed_ratio": 4.054704599539444,
+      "accuracy_delta_mean": 0.006993006993006978,
+      "worst_accuracy_delta": 0.0,
+      "wins": 1,
+      "ties": 2,
+      "losses": 0
+    },
+    {
+      "dataset": "breast",
+      "method": "gasearch",
+      "variant": "top24",
+      "baseline": "full",
+      "speed_ratio": 3.0412302347339684,
+      "accuracy_delta_mean": 0.006993006993006978,
+      "worst_accuracy_delta": 0.0,
+      "wins": 1,
+      "ties": 2,
+      "losses": 0
+    },
+    {
+      "dataset": "breast",
+      "method": "features",
+      "variant": "top8",
+      "baseline": "full",
+      "speed_ratio": 3.371539135698449,
+      "accuracy_delta_mean": 0.004662004662004689,
+      "worst_accuracy_delta": -0.020979020979021046,
+      "wins": 2,
+      "ties": 0,
+      "losses": 1
+    },
+    {
+      "dataset": "breast",
+      "method": "features",
+      "variant": "top24",
+      "baseline": "full",
+      "speed_ratio": 2.0773199066919146,
+      "accuracy_delta_mean": 0.0,
+      "worst_accuracy_delta": -0.006993006993006978,
+      "wins": 1,
+      "ties": 1,
+      "losses": 1
+    },
+    {
+      "dataset": "digits",
+      "method": "gasearch",
+      "variant": "top8",
+      "baseline": "full",
+      "speed_ratio": 4.942709412066944,
+      "accuracy_delta_mean": 0.002962962962962982,
+      "worst_accuracy_delta": 0.0,
+      "wins": 1,
+      "ties": 2,
+      "losses": 0
+    },
+    {
+      "dataset": "digits",
+      "method": "gasearch",
+      "variant": "top24",
+      "baseline": "full",
+      "speed_ratio": 4.321871527940302,
+      "accuracy_delta_mean": 0.001481481481481491,
+      "worst_accuracy_delta": 0.0,
+      "wins": 1,
+      "ties": 2,
+      "losses": 0
+    },
+    {
+      "dataset": "digits",
+      "method": "features",
+      "variant": "top8",
+      "baseline": "full",
+      "speed_ratio": 3.8827959825711247,
+      "accuracy_delta_mean": -0.002962962962962945,
+      "worst_accuracy_delta": -0.011111111111111072,
+      "wins": 1,
+      "ties": 0,
+      "losses": 2
+    },
+    {
+      "dataset": "digits",
+      "method": "features",
+      "variant": "top24",
+      "baseline": "full",
+      "speed_ratio": 2.8455620694393695,
+      "accuracy_delta_mean": -0.0022222222222221997,
+      "worst_accuracy_delta": -0.011111111111111072,
+      "wins": 1,
+      "ties": 0,
+      "losses": 2
+    },
+    {
+      "dataset": "synthetic",
+      "method": "gasearch",
+      "variant": "top8",
+      "baseline": "full",
+      "speed_ratio": 4.404412242389878,
+      "accuracy_delta_mean": 0.003333333333333336,
+      "worst_accuracy_delta": 0.0,
+      "wins": 1,
+      "ties": 2,
+      "losses": 0
+    },
+    {
+      "dataset": "synthetic",
+      "method": "gasearch",
+      "variant": "top24",
+      "baseline": "full",
+      "speed_ratio": 3.706262995758937,
+      "accuracy_delta_mean": 0.0050000000000000044,
+      "worst_accuracy_delta": 0.0,
+      "wins": 2,
+      "ties": 1,
+      "losses": 0
+    },
+    {
+      "dataset": "synthetic",
+      "method": "features",
+      "variant": "top8",
+      "baseline": "full",
+      "speed_ratio": 3.909055331203045,
+      "accuracy_delta_mean": -0.013333333333333383,
+      "worst_accuracy_delta": -0.040000000000000036,
+      "wins": 1,
+      "ties": 0,
+      "losses": 2
+    },
+    {
+      "dataset": "synthetic",
+      "method": "features",
+      "variant": "top24",
+      "baseline": "full",
+      "speed_ratio": 2.9442504432299597,
+      "accuracy_delta_mean": -0.01833333333333335,
+      "worst_accuracy_delta": -0.03500000000000003,
+      "wins": 1,
+      "ties": 0,
+      "losses": 2
+    }
+  ],
+  "previous_artifact": "benchmarks/results/performance-v2/five-fold-promotion-svm.json",
+  "previous_artifact_sha256": "d793cac13e4c945219cc0338ed7fd0200db6ca3f394afdc592d4d14b1b6f2fe7",
+  "six_seed_summary": [
+    {
+      "dataset": "breast",
+      "method": "gasearch",
+      "variant": "full",
+      "seeds": [
+        907,
+        908,
+        909,
+        943,
+        944,
+        945
+      ],
+      "seconds_mean": 10.70737876665953,
+      "holdout_mean": 0.9696969696969697
+    },
+    {
+      "dataset": "breast",
+      "method": "gasearch",
+      "variant": "top8",
+      "seeds": [
+        907,
+        908,
+        909,
+        943,
+        944,
+        945
+      ],
+      "seconds_mean": 2.618188783332395,
+      "holdout_mean": 0.972027972027972
+    },
+    {
+      "dataset": "breast",
+      "method": "features",
+      "variant": "full",
+      "seeds": [
+        907,
+        908,
+        909,
+        943,
+        944,
+        945
+      ],
+      "seconds_mean": 4.361006949999137,
+      "holdout_mean": 0.9627039627039626
+    },
+    {
+      "dataset": "breast",
+      "method": "features",
+      "variant": "top8",
+      "seeds": [
+        907,
+        908,
+        909,
+        943,
+        944,
+        945
+      ],
+      "seconds_mean": 1.253751366661163,
+      "holdout_mean": 0.9592074592074592
+    },
+    {
+      "dataset": "breast",
+      "method": "optuna",
+      "variant": "full",
+      "seeds": [
+        907,
+        908,
+        909,
+        943,
+        944,
+        945
+      ],
+      "seconds_mean": 5.566896283329697,
+      "holdout_mean": 0.9720279720279721
+    },
+    {
+      "dataset": "digits",
+      "method": "gasearch",
+      "variant": "full",
+      "seeds": [
+        907,
+        908,
+        909,
+        943,
+        944,
+        945
+      ],
+      "seconds_mean": 130.52415016666055,
+      "holdout_mean": 0.9796296296296296
+    },
+    {
+      "dataset": "digits",
+      "method": "gasearch",
+      "variant": "top8",
+      "seeds": [
+        907,
+        908,
+        909,
+        943,
+        944,
+        945
+      ],
+      "seconds_mean": 27.115421050000197,
+      "holdout_mean": 0.9825925925925926
+    },
+    {
+      "dataset": "digits",
+      "method": "features",
+      "variant": "full",
+      "seeds": [
+        907,
+        908,
+        909,
+        943,
+        944,
+        945
+      ],
+      "seconds_mean": 36.07053194999753,
+      "holdout_mean": 0.9781481481481481
+    },
+    {
+      "dataset": "digits",
+      "method": "features",
+      "variant": "top8",
+      "seeds": [
+        907,
+        908,
+        909,
+        943,
+        944,
+        945
+      ],
+      "seconds_mean": 9.20995824999894,
+      "holdout_mean": 0.9751851851851852
+    },
+    {
+      "dataset": "digits",
+      "method": "optuna",
+      "variant": "full",
+      "seeds": [
+        907,
+        908,
+        909,
+        943,
+        944,
+        945
+      ],
+      "seconds_mean": 40.811951366665504,
+      "holdout_mean": 0.9796296296296296
+    },
+    {
+      "dataset": "synthetic",
+      "method": "gasearch",
+      "variant": "full",
+      "seeds": [
+        907,
+        908,
+        909,
+        943,
+        944,
+        945
+      ],
+      "seconds_mean": 21.319715599999956,
+      "holdout_mean": 0.8758333333333334
+    },
+    {
+      "dataset": "synthetic",
+      "method": "gasearch",
+      "variant": "top8",
+      "seeds": [
+        907,
+        908,
+        909,
+        943,
+        944,
+        945
+      ],
+      "seconds_mean": 4.823567600004026,
+      "holdout_mean": 0.87
+    },
+    {
+      "dataset": "synthetic",
+      "method": "features",
+      "variant": "full",
+      "seeds": [
+        907,
+        908,
+        909,
+        943,
+        944,
+        945
+      ],
+      "seconds_mean": 8.52162191666624,
+      "holdout_mean": 0.9241666666666667
+    },
+    {
+      "dataset": "synthetic",
+      "method": "features",
+      "variant": "top8",
+      "seeds": [
+        907,
+        908,
+        909,
+        943,
+        944,
+        945
+      ],
+      "seconds_mean": 2.1836180000003274,
+      "holdout_mean": 0.9075
+    },
+    {
+      "dataset": "synthetic",
+      "method": "optuna",
+      "variant": "full",
+      "seeds": [
+        907,
+        908,
+        909,
+        943,
+        944,
+        945
+      ],
+      "seconds_mean": 10.929497250006534,
+      "holdout_mean": 0.8816666666666667
+    }
+  ],
+  "six_seed_comparisons": [
+    {
+      "dataset": "breast",
+      "method": "gasearch",
+      "speed_ratio": 4.08961295488835,
+      "mean_accuracy_delta": 0.0023310023310023076,
+      "worst_accuracy_delta": -0.006993006993007089,
+      "wins": 1,
+      "ties": 4,
+      "losses": 1
+    },
+    {
+      "dataset": "breast",
+      "method": "features",
+      "speed_ratio": 3.4783666570293246,
+      "mean_accuracy_delta": -0.003496503496503489,
+      "worst_accuracy_delta": -0.027972027972028024,
+      "wins": 3,
+      "ties": 0,
+      "losses": 3
+    },
+    {
+      "dataset": "digits",
+      "method": "gasearch",
+      "speed_ratio": 4.813650133847344,
+      "mean_accuracy_delta": 0.002962962962962982,
+      "worst_accuracy_delta": 0.0,
+      "wins": 3,
+      "ties": 3,
+      "losses": 0
+    },
+    {
+      "dataset": "digits",
+      "method": "features",
+      "speed_ratio": 3.9164707342730556,
+      "mean_accuracy_delta": -0.002962962962962945,
+      "worst_accuracy_delta": -0.011111111111111072,
+      "wins": 1,
+      "ties": 1,
+      "losses": 4
+    },
+    {
+      "dataset": "synthetic",
+      "method": "gasearch",
+      "speed_ratio": 4.419906046301116,
+      "mean_accuracy_delta": -0.005833333333333339,
+      "worst_accuracy_delta": -0.025000000000000022,
+      "wins": 1,
+      "ties": 3,
+      "losses": 2
+    },
+    {
+      "dataset": "synthetic",
+      "method": "features",
+      "speed_ratio": 3.902524121281727,
+      "mean_accuracy_delta": -0.01666666666666672,
+      "worst_accuracy_delta": -0.040000000000000036,
+      "wins": 2,
+      "ties": 0,
+      "losses": 4
+    }
+  ],
+  "raw": [
+    {
+      "dataset": "breast",
+      "seed": 943,
+      "method": "optuna",
+      "variant": "full",
+      "seconds": 4.962095399998361,
+      "holdout": 0.972027972027972,
+      "cv_score": 0.983529411764706,
+      "candidate_cv_calls": 168,
+      "final_candidates": 0,
+      "selected_features": 30
+    },
+    {
+      "dataset": "breast",
+      "seed": 943,
+      "method": "features",
+      "variant": "top24",
+      "seconds": 1.5788821000023745,
+      "holdout": 0.958041958041958,
+      "cv_score": 0.9788508891928865,
+      "candidate_cv_calls": 166,
+      "final_candidates": 24,
+      "selected_features": 8
+    },
+    {
+      "dataset": "breast",
+      "seed": 943,
+      "method": "features",
+      "variant": "top8",
+      "seconds": 1.187021799996728,
+      "holdout": 0.9790209790209791,
+      "cv_score": 0.9694117647058824,
+      "candidate_cv_calls": 166,
+      "final_candidates": 8,
+      "selected_features": 15
+    },
+    {
+      "dataset": "breast",
+      "seed": 943,
+      "method": "features",
+      "variant": "full",
+      "seconds": 4.398330600000918,
+      "holdout": 0.965034965034965,
+      "cv_score": 0.9882352941176471,
+      "candidate_cv_calls": 163,
+      "final_candidates": 0,
+      "selected_features": 11
+    },
+    {
+      "dataset": "breast",
+      "seed": 943,
+      "method": "gasearch",
+      "variant": "top24",
+      "seconds": 2.9993551000079606,
+      "holdout": 0.972027972027972,
+      "cv_score": 0.983529411764706,
+      "candidate_cv_calls": 164,
+      "final_candidates": 24,
+      "selected_features": 30
+    },
+    {
+      "dataset": "breast",
+      "seed": 943,
+      "method": "gasearch",
+      "variant": "top8",
+      "seconds": 2.633055799989961,
+      "holdout": 0.972027972027972,
+      "cv_score": 0.983529411764706,
+      "candidate_cv_calls": 164,
+      "final_candidates": 8,
+      "selected_features": 30
+    },
+    {
+      "dataset": "breast",
+      "seed": 943,
+      "method": "gasearch",
+      "variant": "full",
+      "seconds": 9.899937799986219,
+      "holdout": 0.951048951048951,
+      "cv_score": 0.983529411764706,
+      "candidate_cv_calls": 163,
+      "final_candidates": 0,
+      "selected_features": 30
+    },
+    {
+      "dataset": "breast",
+      "seed": 944,
+      "method": "gasearch",
+      "variant": "full",
+      "seconds": 12.895725699985633,
+      "holdout": 0.958041958041958,
+      "cv_score": 0.9882626538987689,
+      "candidate_cv_calls": 164,
+      "final_candidates": 0,
+      "selected_features": 30
+    },
+    {
+      "dataset": "breast",
+      "seed": 944,
+      "method": "gasearch",
+      "variant": "top8",
+      "seconds": 3.359062700008508,
+      "holdout": 0.958041958041958,
+      "cv_score": 0.9882626538987689,
+      "candidate_cv_calls": 165,
+      "final_candidates": 8,
+      "selected_features": 30
+    },
+    {
+      "dataset": "breast",
+      "seed": 944,
+      "method": "gasearch",
+      "variant": "top24",
+      "seconds": 5.152912799996557,
+      "holdout": 0.958041958041958,
+      "cv_score": 0.9882626538987689,
+      "candidate_cv_calls": 165,
+      "final_candidates": 24,
+      "selected_features": 30
+    },
+    {
+      "dataset": "breast",
+      "seed": 944,
+      "method": "features",
+      "variant": "full",
+      "seconds": 5.543761399982031,
+      "holdout": 0.9370629370629371,
+      "cv_score": 0.9952941176470589,
+      "candidate_cv_calls": 168,
+      "final_candidates": 0,
+      "selected_features": 13
+    },
+    {
+      "dataset": "breast",
+      "seed": 944,
+      "method": "features",
+      "variant": "top8",
+      "seconds": 1.6954517999838572,
+      "holdout": 0.916083916083916,
+      "cv_score": 0.9858823529411765,
+      "candidate_cv_calls": 165,
+      "final_candidates": 8,
+      "selected_features": 8
+    },
+    {
+      "dataset": "breast",
+      "seed": 944,
+      "method": "features",
+      "variant": "top24",
+      "seconds": 2.981138400005875,
+      "holdout": 0.9440559440559441,
+      "cv_score": 0.9905882352941177,
+      "candidate_cv_calls": 165,
+      "final_candidates": 24,
+      "selected_features": 15
+    },
+    {
+      "dataset": "breast",
+      "seed": 944,
+      "method": "optuna",
+      "variant": "full",
+      "seconds": 6.464812499994878,
+      "holdout": 0.9370629370629371,
+      "cv_score": 0.9929411764705882,
+      "candidate_cv_calls": 168,
+      "final_candidates": 0,
+      "selected_features": 30
+    },
+    {
+      "dataset": "breast",
+      "seed": 945,
+      "method": "optuna",
+      "variant": "full",
+      "seconds": 8.196287099999608,
+      "holdout": 0.9790209790209791,
+      "cv_score": 0.9859644322845418,
+      "candidate_cv_calls": 168,
+      "final_candidates": 0,
+      "selected_features": 30
+    },
+    {
+      "dataset": "breast",
+      "seed": 945,
+      "method": "features",
+      "variant": "top24",
+      "seconds": 2.5288163000077475,
+      "holdout": 0.958041958041958,
+      "cv_score": 0.98593707250342,
+      "candidate_cv_calls": 164,
+      "final_candidates": 24,
+      "selected_features": 11
+    },
+    {
+      "dataset": "breast",
+      "seed": 945,
+      "method": "features",
+      "variant": "top8",
+      "seconds": 1.4851997999940068,
+      "holdout": 0.9790209790209791,
+      "cv_score": 0.9812311901504789,
+      "candidate_cv_calls": 164,
+      "final_candidates": 8,
+      "selected_features": 9
+    },
+    {
+      "dataset": "breast",
+      "seed": 945,
+      "method": "features",
+      "variant": "full",
+      "seconds": 4.783689799980493,
+      "holdout": 0.958041958041958,
+      "cv_score": 0.98593707250342,
+      "candidate_cv_calls": 166,
+      "final_candidates": 0,
+      "selected_features": 9
+    },
+    {
+      "dataset": "breast",
+      "seed": 945,
+      "method": "gasearch",
+      "variant": "top24",
+      "seconds": 3.228067500022007,
+      "holdout": 0.972027972027972,
+      "cv_score": 0.9835841313269494,
+      "candidate_cv_calls": 163,
+      "final_candidates": 24,
+      "selected_features": 30
+    },
+    {
+      "dataset": "breast",
+      "seed": 945,
+      "method": "gasearch",
+      "variant": "top8",
+      "seconds": 2.543699400004698,
+      "holdout": 0.972027972027972,
+      "cv_score": 0.9835841313269494,
+      "candidate_cv_calls": 163,
+      "final_candidates": 8,
+      "selected_features": 30
+    },
+    {
+      "dataset": "breast",
+      "seed": 945,
+      "method": "gasearch",
+      "variant": "full",
+      "seconds": 11.814556600002106,
+      "holdout": 0.972027972027972,
+      "cv_score": 0.9836114911080711,
+      "candidate_cv_calls": 161,
+      "final_candidates": 0,
+      "selected_features": 30
+    },
+    {
+      "dataset": "digits",
+      "seed": 943,
+      "method": "optuna",
+      "variant": "full",
+      "seconds": 45.428190000006,
+      "holdout": 0.9888888888888889,
+      "cv_score": 0.9858901280462617,
+      "candidate_cv_calls": 168,
+      "final_candidates": 0,
+      "selected_features": 64
+    },
+    {
+      "dataset": "digits",
+      "seed": 943,
+      "method": "features",
+      "variant": "top24",
+      "seconds": 13.570113699999638,
+      "holdout": 0.9822222222222222,
+      "cv_score": 0.9792069392812888,
+      "candidate_cv_calls": 168,
+      "final_candidates": 24,
+      "selected_features": 32
+    },
+    {
+      "dataset": "digits",
+      "seed": 943,
+      "method": "features",
+      "variant": "top8",
+      "seconds": 9.962419799994677,
+      "holdout": 0.98,
+      "cv_score": 0.9739997246316948,
+      "candidate_cv_calls": 168,
+      "final_candidates": 8,
+      "selected_features": 31
+    },
+    {
+      "dataset": "digits",
+      "seed": 943,
+      "method": "features",
+      "variant": "full",
+      "seconds": 38.56229329999769,
+      "holdout": 0.9711111111111111,
+      "cv_score": 0.9844058928817294,
+      "candidate_cv_calls": 168,
+      "final_candidates": 0,
+      "selected_features": 31
+    },
+    {
+      "dataset": "digits",
+      "seed": 943,
+      "method": "gasearch",
+      "variant": "top24",
+      "seconds": 33.15148319999571,
+      "holdout": 0.9888888888888889,
+      "cv_score": 0.9844031391986782,
+      "candidate_cv_calls": 162,
+      "final_candidates": 24,
+      "selected_features": 64
+    },
+    {
+      "dataset": "digits",
+      "seed": 943,
+      "method": "gasearch",
+      "variant": "top8",
+      "seconds": 28.918042199977208,
+      "holdout": 0.9888888888888889,
+      "cv_score": 0.9836541374087844,
+      "candidate_cv_calls": 162,
+      "final_candidates": 8,
+      "selected_features": 64
+    },
+    {
+      "dataset": "digits",
+      "seed": 943,
+      "method": "gasearch",
+      "variant": "full",
+      "seconds": 150.8261288999929,
+      "holdout": 0.9888888888888889,
+      "cv_score": 0.9836596447748864,
+      "candidate_cv_calls": 167,
+      "final_candidates": 0,
+      "selected_features": 64
+    },
+    {
+      "dataset": "digits",
+      "seed": 944,
+      "method": "gasearch",
+      "variant": "full",
+      "seconds": 134.358928200003,
+      "holdout": 0.9777777777777777,
+      "cv_score": 0.9844224149800358,
+      "candidate_cv_calls": 163,
+      "final_candidates": 0,
+      "selected_features": 64
+    },
+    {
+      "dataset": "digits",
+      "seed": 944,
+      "method": "gasearch",
+      "variant": "top8",
+      "seconds": 27.27466130000539,
+      "holdout": 0.9777777777777777,
+      "cv_score": 0.9866446372022579,
+      "candidate_cv_calls": 164,
+      "final_candidates": 8,
+      "selected_features": 64
+    },
+    {
+      "dataset": "digits",
+      "seed": 944,
+      "method": "gasearch",
+      "variant": "top24",
+      "seconds": 31.589834499987774,
+      "holdout": 0.9777777777777777,
+      "cv_score": 0.9866446372022579,
+      "candidate_cv_calls": 164,
+      "final_candidates": 24,
+      "selected_features": 64
+    },
+    {
+      "dataset": "digits",
+      "seed": 944,
+      "method": "features",
+      "variant": "full",
+      "seconds": 36.16288630000781,
+      "holdout": 0.9777777777777777,
+      "cv_score": 0.9873881316260498,
+      "candidate_cv_calls": 167,
+      "final_candidates": 0,
+      "selected_features": 30
+    },
+    {
+      "dataset": "digits",
+      "seed": 944,
+      "method": "features",
+      "variant": "top8",
+      "seconds": 9.384618800017051,
+      "holdout": 0.9711111111111111,
+      "cv_score": 0.9769847170590665,
+      "candidate_cv_calls": 168,
+      "final_candidates": 8,
+      "selected_features": 32
+    },
+    {
+      "dataset": "digits",
+      "seed": 944,
+      "method": "features",
+      "variant": "top24",
+      "seconds": 13.37799300000188,
+      "holdout": 0.9711111111111111,
+      "cv_score": 0.9769847170590665,
+      "candidate_cv_calls": 168,
+      "final_candidates": 24,
+      "selected_features": 32
+    },
+    {
+      "dataset": "digits",
+      "seed": 944,
+      "method": "optuna",
+      "variant": "full",
+      "seconds": 40.36537529999623,
+      "holdout": 0.9755555555555555,
+      "cv_score": 0.9866473908853092,
+      "candidate_cv_calls": 168,
+      "final_candidates": 0,
+      "selected_features": 64
+    },
+    {
+      "dataset": "digits",
+      "seed": 945,
+      "method": "optuna",
+      "variant": "full",
+      "seconds": 36.8395382000017,
+      "holdout": 0.98,
+      "cv_score": 0.9836761668731928,
+      "candidate_cv_calls": 168,
+      "final_candidates": 0,
+      "selected_features": 64
+    },
+    {
+      "dataset": "digits",
+      "seed": 945,
+      "method": "features",
+      "variant": "top24",
+      "seconds": 12.689205700007733,
+      "holdout": 0.9822222222222222,
+      "cv_score": 0.9747569874707421,
+      "candidate_cv_calls": 167,
+      "final_candidates": 24,
+      "selected_features": 27
+    },
+    {
+      "dataset": "digits",
+      "seed": 945,
+      "method": "features",
+      "variant": "top8",
+      "seconds": 9.701727599982405,
+      "holdout": 0.9822222222222222,
+      "cv_score": 0.9747569874707421,
+      "candidate_cv_calls": 167,
+      "final_candidates": 8,
+      "selected_features": 27
+    },
+    {
+      "dataset": "digits",
+      "seed": 945,
+      "method": "features",
+      "variant": "full",
+      "seconds": 38.0652530999796,
+      "holdout": 0.9933333333333333,
+      "cv_score": 0.9829216577171968,
+      "candidate_cv_calls": 168,
+      "final_candidates": 0,
+      "selected_features": 31
+    },
+    {
+      "dataset": "digits",
+      "seed": 945,
+      "method": "gasearch",
+      "variant": "top24",
+      "seconds": 30.11159270000644,
+      "holdout": 0.9844444444444445,
+      "cv_score": 0.9836679058240397,
+      "candidate_cv_calls": 166,
+      "final_candidates": 24,
+      "selected_features": 64
+    },
+    {
+      "dataset": "digits",
+      "seed": 945,
+      "method": "gasearch",
+      "variant": "top8",
+      "seconds": 26.746036900003674,
+      "holdout": 0.9888888888888889,
+      "cv_score": 0.9829244114002478,
+      "candidate_cv_calls": 166,
+      "final_candidates": 8,
+      "selected_features": 64
+    },
+    {
+      "dataset": "digits",
+      "seed": 945,
+      "method": "gasearch",
+      "variant": "full",
+      "seconds": 124.75703569999314,
+      "holdout": 0.98,
+      "cv_score": 0.9836761668731928,
+      "candidate_cv_calls": 165,
+      "final_candidates": 0,
+      "selected_features": 64
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 943,
+      "method": "optuna",
+      "variant": "full",
+      "seconds": 12.124067600001581,
+      "holdout": 0.88,
+      "cv_score": 0.8866666666666667,
+      "candidate_cv_calls": 168,
+      "final_candidates": 0,
+      "selected_features": 20
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 943,
+      "method": "features",
+      "variant": "top24",
+      "seconds": 2.904036099993391,
+      "holdout": 0.925,
+      "cv_score": 0.9016666666666666,
+      "candidate_cv_calls": 166,
+      "final_candidates": 24,
+      "selected_features": 8
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 943,
+      "method": "features",
+      "variant": "top8",
+      "seconds": 2.187448899989249,
+      "holdout": 0.91,
+      "cv_score": 0.8983333333333334,
+      "candidate_cv_calls": 166,
+      "final_candidates": 8,
+      "selected_features": 9
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 943,
+      "method": "features",
+      "variant": "full",
+      "seconds": 8.40886870000395,
+      "holdout": 0.92,
+      "cv_score": 0.9366666666666665,
+      "candidate_cv_calls": 167,
+      "final_candidates": 0,
+      "selected_features": 8
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 943,
+      "method": "gasearch",
+      "variant": "top24",
+      "seconds": 5.801589299982879,
+      "holdout": 0.885,
+      "cv_score": 0.8833333333333334,
+      "candidate_cv_calls": 165,
+      "final_candidates": 24,
+      "selected_features": 20
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 943,
+      "method": "gasearch",
+      "variant": "top8",
+      "seconds": 4.951967800006969,
+      "holdout": 0.88,
+      "cv_score": 0.8816666666666666,
+      "candidate_cv_calls": 165,
+      "final_candidates": 8,
+      "selected_features": 20
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 943,
+      "method": "gasearch",
+      "variant": "full",
+      "seconds": 21.026301999983843,
+      "holdout": 0.88,
+      "cv_score": 0.8866666666666667,
+      "candidate_cv_calls": 164,
+      "final_candidates": 0,
+      "selected_features": 20
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 944,
+      "method": "gasearch",
+      "variant": "full",
+      "seconds": 20.25683769999887,
+      "holdout": 0.855,
+      "cv_score": 0.8733333333333333,
+      "candidate_cv_calls": 163,
+      "final_candidates": 0,
+      "selected_features": 20
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 944,
+      "method": "gasearch",
+      "variant": "top8",
+      "seconds": 4.48072449999745,
+      "holdout": 0.855,
+      "cv_score": 0.8699999999999999,
+      "candidate_cv_calls": 165,
+      "final_candidates": 8,
+      "selected_features": 20
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 944,
+      "method": "gasearch",
+      "variant": "top24",
+      "seconds": 5.333971899992321,
+      "holdout": 0.855,
+      "cv_score": 0.8699999999999999,
+      "candidate_cv_calls": 165,
+      "final_candidates": 24,
+      "selected_features": 20
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 944,
+      "method": "features",
+      "variant": "full",
+      "seconds": 8.144467800011626,
+      "holdout": 0.93,
+      "cv_score": 0.9233333333333335,
+      "candidate_cv_calls": 161,
+      "final_candidates": 0,
+      "selected_features": 9
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 944,
+      "method": "features",
+      "variant": "top8",
+      "seconds": 2.101610999990953,
+      "holdout": 0.94,
+      "cv_score": 0.9033333333333333,
+      "candidate_cv_calls": 165,
+      "final_candidates": 8,
+      "selected_features": 10
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 944,
+      "method": "features",
+      "variant": "top24",
+      "seconds": 2.756516300025396,
+      "holdout": 0.895,
+      "cv_score": 0.9066666666666666,
+      "candidate_cv_calls": 165,
+      "final_candidates": 24,
+      "selected_features": 9
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 944,
+      "method": "optuna",
+      "variant": "full",
+      "seconds": 8.757549000001745,
+      "holdout": 0.86,
+      "cv_score": 0.875,
+      "candidate_cv_calls": 168,
+      "final_candidates": 0,
+      "selected_features": 20
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 945,
+      "method": "optuna",
+      "variant": "full",
+      "seconds": 11.198259599972516,
+      "holdout": 0.87,
+      "cv_score": 0.8833333333333334,
+      "candidate_cv_calls": 168,
+      "final_candidates": 0,
+      "selected_features": 20
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 945,
+      "method": "features",
+      "variant": "top24",
+      "seconds": 3.0134771000011824,
+      "holdout": 0.885,
+      "cv_score": 0.8983333333333332,
+      "candidate_cv_calls": 167,
+      "final_candidates": 24,
+      "selected_features": 9
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 945,
+      "method": "features",
+      "variant": "top8",
+      "seconds": 2.244108100014273,
+      "holdout": 0.87,
+      "cv_score": 0.8933333333333333,
+      "candidate_cv_calls": 167,
+      "final_candidates": 8,
+      "selected_features": 8
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 945,
+      "method": "features",
+      "variant": "full",
+      "seconds": 8.985178700007964,
+      "holdout": 0.91,
+      "cv_score": 0.915,
+      "candidate_cv_calls": 168,
+      "final_candidates": 0,
+      "selected_features": 8
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 945,
+      "method": "gasearch",
+      "variant": "top24",
+      "seconds": 6.02990629998385,
+      "holdout": 0.865,
+      "cv_score": 0.875,
+      "candidate_cv_calls": 168,
+      "final_candidates": 24,
+      "selected_features": 20
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 945,
+      "method": "gasearch",
+      "variant": "top8",
+      "seconds": 5.011854100011988,
+      "holdout": 0.865,
+      "cv_score": 0.875,
+      "candidate_cv_calls": 168,
+      "final_candidates": 8,
+      "selected_features": 20
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 945,
+      "method": "gasearch",
+      "variant": "full",
+      "seconds": 22.336597300018184,
+      "holdout": 0.855,
+      "cv_score": 0.8816666666666666,
+      "candidate_cv_calls": 167,
+      "final_candidates": 0,
+      "selected_features": 20
+    }
+  ],
+  "reproduction_script": "import json\nimport time\nfrom pathlib import Path\n\nimport numpy as np\nimport optuna\nfrom sklearn.base import clone\nfrom sklearn.datasets import load_breast_cancer, load_digits, make_classification\nfrom sklearn.metrics import accuracy_score\nfrom sklearn.model_selection import StratifiedKFold, cross_val_score, train_test_split\nfrom sklearn.pipeline import make_pipeline\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.svm import SVC\nfrom threadpoolctl import threadpool_limits\n\nfrom sklearn_genetic import GAFeatureSelectionCV, GASearchCV\nfrom sklearn_genetic.space import Continuous\n\n\noptuna.logging.set_verbosity(optuna.logging.WARNING)\nwork = Path(\".agent-runs/performance-v2\")\ndatasets = {\n    \"breast\": load_breast_cancer(return_X_y=True),\n    \"digits\": load_digits(return_X_y=True),\n    \"synthetic\": make_classification(\n        n_samples=800, n_features=20, n_informative=8, n_redundant=4, random_state=19\n    ),\n}\nrows = []\nwith threadpool_limits(limits=1), (work / \"top24-fivefold-validation.jsonl\").open(\n    \"w\", encoding=\"utf-8\"\n) as stream:\n    for dataset, (X, y) in datasets.items():\n        for seed in (943, 944, 945):\n            train, test = train_test_split(\n                np.arange(len(y)), test_size=0.25, stratify=y, random_state=seed\n            )\n            Xtr, Xte, ytr, yte = X[train], X[test], y[train], y[test]\n            folds = list(StratifiedKFold(5, shuffle=True, random_state=seed).split(Xtr, ytr))\n            tasks = [\n                (method, variant)\n                for method in (\"gasearch\", \"features\")\n                for variant in (\"full\", \"top8\", \"top24\")\n            ] + [(\"optuna\", \"full\")]\n            if seed % 2:\n                tasks.reverse()\n            for method, variant in tasks:\n                reduced = variant != \"full\"\n                cv = folds[:1] if reduced else folds\n                if method == \"optuna\":\n                    estimator = make_pipeline(StandardScaler(), SVC(kernel=\"rbf\"))\n                    study = optuna.create_study(\n                        direction=\"maximize\", sampler=optuna.samplers.TPESampler(seed=seed)\n                    )\n\n                    def objective(trial):\n                        params = {\n                            \"svc__C\": trial.suggest_float(\"svc__C\", 0.01, 100, log=True),\n                            \"svc__gamma\": trial.suggest_float(\n                                \"svc__gamma\", 1e-4, 1, log=True\n                            ),\n                        }\n                        return float(\n                            np.mean(\n                                cross_val_score(\n                                    clone(estimator).set_params(**params),\n                                    Xtr,\n                                    ytr,\n                                    cv=folds,\n                                    scoring=\"accuracy\",\n                                    n_jobs=1,\n                                    error_score=\"raise\",\n                                )\n                            )\n                        )\n\n                    started = time.perf_counter()\n                    study.optimize(objective, n_trials=168, n_jobs=1, show_progress_bar=False)\n                    best = clone(estimator).set_params(**study.best_params).fit(Xtr, ytr)\n                    row = dict(\n                        dataset=dataset,\n                        seed=seed,\n                        method=method,\n                        variant=variant,\n                        seconds=time.perf_counter() - started,\n                        holdout=float(accuracy_score(yte, best.predict(Xte))),\n                        cv_score=float(study.best_value),\n                        candidate_cv_calls=len(study.trials),\n                        final_candidates=0,\n                        selected_features=int(X.shape[1]),\n                    )\n                else:\n                    common = dict(\n                        cv=cv,\n                        scoring=\"accuracy\",\n                        population_size=8,\n                        generations=10,\n                        n_jobs=1,\n                        verbose=False,\n                        random_state=seed,\n                        error_score=\"raise\",\n                        final_selection=reduced,\n                        final_selection_top_k=24 if variant == \"top24\" else 8,\n                        final_selection_cv=folds if reduced else None,\n                    )\n                    if method == \"gasearch\":\n                        search = GASearchCV(\n                            make_pipeline(StandardScaler(), SVC(kernel=\"rbf\")),\n                            param_grid={\n                                \"svc__C\": Continuous(0.01, 100, distribution=\"log-uniform\"),\n                                \"svc__gamma\": Continuous(1e-4, 1, distribution=\"log-uniform\"),\n                            },\n                            **common,\n                        )\n                    else:\n                        search = GAFeatureSelectionCV(\n                            make_pipeline(StandardScaler(), SVC(kernel=\"rbf\", C=10)),\n                            max_features=X.shape[1] // 2,\n                            **common,\n                        )\n                    started = time.perf_counter()\n                    search.fit(Xtr, ytr)\n                    row = dict(\n                        dataset=dataset,\n                        seed=seed,\n                        method=method,\n                        variant=variant,\n                        seconds=time.perf_counter() - started,\n                        holdout=float(accuracy_score(yte, search.predict(Xte))),\n                        cv_score=float(\n                            search.best_score_\n                            if reduced\n                            else np.nanmax(search.cv_results_[\"mean_test_score\"])\n                        ),\n                        candidate_cv_calls=search.fit_stats_[\"cross_validate_calls\"],\n                        final_candidates=(\n                            len(search.final_selection_results_[\"candidates\"]) if reduced else 0\n                        ),\n                        selected_features=(\n                            int(search.support_.sum())\n                            if method == \"features\"\n                            else int(X.shape[1])\n                        ),\n                    )\n                rows.append(row)\n                stream.write(json.dumps(row) + \"\\n\")\n                stream.flush()\n                print(json.dumps(row), flush=True)\n(work / \"top24-fivefold-validation.json\").write_text(\n    json.dumps(rows, indent=2), encoding=\"utf-8\"\n)\n"
+}

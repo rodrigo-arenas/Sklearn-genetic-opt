@@ -1,3 +1,4 @@
+import inspect
 import random
 
 import numpy as np
@@ -5,6 +6,7 @@ from scipy.stats import qmc
 from sklearn.utils import check_random_state
 
 from .space import Categorical, Continuous, Integer, Space
+from .optimizer_control import finite_search_space_size
 
 
 def validate_population_initializer(population_initializer):
@@ -132,6 +134,21 @@ def smart_search_population(estimator, toolbox, individual_cls):
         )
 
     remaining = estimator.population_size - len(population)
+    categorical_indices = {}
+    for parameter, dimension in estimator.space.param_grid.items():
+        if isinstance(dimension, Categorical):
+            indices = list(range(remaining))
+            if dimension.priors is None and remaining:
+                # Sample from the entire domain even when the population is
+                # smaller than it; retain balanced counts for larger batches.
+                choices = random.sample(
+                    range(len(dimension.choices)), k=min(remaining, len(dimension.choices))
+                )
+                indices = [choices[index % len(choices)] for index in indices]
+            # Independent strata prevent unrelated categorical genes from
+            # being locked into the same repeating combinations.
+            random.shuffle(indices)
+            categorical_indices[parameter] = indices
     numeric_parameters = [
         parameter
         for parameter, dimension in estimator.space.param_grid.items()
@@ -151,7 +168,12 @@ def smart_search_population(estimator, toolbox, individual_cls):
             lhs_seed = random.randint(0, 2**31 - 1)
         else:
             lhs_seed = int(check_random_state(random_state).randint(0, 2**31 - 1))
-        sampler = qmc.LatinHypercube(d=len(numeric_parameters), rng=lhs_seed)
+        # SciPy < 1.15 calls this argument seed; retain rng on newer releases
+        # because switching keywords can change their seeded sample sequence.
+        seed_keyword = (
+            "rng" if "rng" in inspect.signature(qmc.LatinHypercube).parameters else "seed"
+        )
+        sampler = qmc.LatinHypercube(d=len(numeric_parameters), **{seed_keyword: lhs_seed})
         lhs_samples = sampler.random(n=remaining)
 
     for sample_index in range(remaining):
@@ -164,7 +186,9 @@ def smart_search_population(estimator, toolbox, individual_cls):
                 )
                 numeric_index += 1
             elif isinstance(dimension, Categorical):
-                value = _stratified_categorical_value(dimension, sample_index, remaining)
+                value = _stratified_categorical_value(
+                    dimension, categorical_indices[parameter][sample_index], remaining
+                )
             else:  # pragma: no cover
                 value = dimension.sample()
 
@@ -172,9 +196,14 @@ def smart_search_population(estimator, toolbox, individual_cls):
 
         _append_unique_individual(population, seen_individuals, individual_values, individual_cls)
 
+    space_size = finite_search_space_size(estimator, estimator.population_size)
     attempts = 0
     max_attempts = max(100, estimator.population_size * 20)
-    while len(population) < estimator.population_size and attempts < max_attempts:
+    while (
+        len(population) < estimator.population_size
+        and attempts < max_attempts
+        and (space_size is None or len(seen_individuals) < space_size)
+    ):
         individual = toolbox.individual()
         _append_unique_individual(population, seen_individuals, list(individual), individual_cls)
         attempts += 1
@@ -213,9 +242,14 @@ def smart_feature_population(estimator, toolbox, individual_cls):
 
         _append_unique_individual(population, seen_individuals, values, individual_cls)
 
+    space_size = finite_search_space_size(estimator, estimator.population_size)
     attempts = 0
     max_attempts = max(100, estimator.population_size * 20)
-    while len(population) < estimator.population_size and attempts < max_attempts:
+    while (
+        len(population) < estimator.population_size
+        and attempts < max_attempts
+        and (space_size is None or len(seen_individuals) < space_size)
+    ):
         values = _bounded_feature_mask(estimator.n_features, max_selected)
         _append_unique_individual(population, seen_individuals, values, individual_cls)
         attempts += 1

@@ -722,7 +722,8 @@ def test_checkpoint_resume_restores_adapter_state(tmp_path):
     def build():
         return GASearchCV(
             estimator=DecisionTreeClassifier(random_state=0),
-            param_grid={"max_depth": Integer(1, 3)},
+            # Keep the space larger than the 28-proposal run so schedules advance.
+            param_grid={"max_depth": Integer(1, 50)},
             cv=2,
             scoring="accuracy",
             population_size=4,
@@ -800,3 +801,60 @@ def test_adapter_state_dict_round_trip():
         fresh.load_state_dict(state)
         assert fresh.current_step == adapter.current_step
         assert fresh.current_value == pytest.approx(adapter.current_value)
+
+
+@pytest.mark.parametrize("saved_bound,constructor_bound", [(5, 1), (1, 5)])
+def test_feature_checkpoint_validates_restored_bounds(tmp_path, saved_bound, constructor_bound):
+    X, y = load_iris(return_X_y=True)
+    path = tmp_path / "feature_bound.pkl"
+    with path.open("wb") as stream:
+        pickle.dump({"estimator_state": {"max_features": saved_bound}, "logbook": None}, stream)
+    search = GAFeatureSelectionCV(
+        DecisionTreeClassifier(),
+        max_features=constructor_bound,
+        cv=2,
+        population_size=4,
+        generations=0,
+        verbose=False,
+    )
+    callback = ModelCheckpoint(checkpoint_path=str(path))
+    if saved_bound > X.shape[1]:
+        with pytest.raises(ValueError, match="max_features"):
+            search.fit(X, y, callbacks=callback)
+    else:
+        search.fit(X, y, callbacks=callback)
+        assert search.get_support().sum() == saved_bound
+
+
+@pytest.mark.parametrize("search_class", [GASearchCV, GAFeatureSelectionCV])
+def test_checkpoint_reconstruction_preserves_finalist_validation(tmp_path, search_class):
+    from sklearn.model_selection import StratifiedKFold
+    from sklearn_genetic import subsample_cv
+
+    X, y = load_iris(return_X_y=True)
+    full_cv = list(StratifiedKFold(3).split(X, y))
+    search_cv = subsample_cv(full_cv[:2], 0.5, stratify=y, random_state=2)
+    extra = {"param_grid": {"max_depth": Integer(1, 5)}} if search_class is GASearchCV else {}
+    search = search_class(
+        DecisionTreeClassifier(random_state=2),
+        cv=search_cv,
+        scoring="accuracy",
+        population_size=4,
+        generations=0,
+        random_state=2,
+        n_jobs=1,
+        verbose=False,
+        final_selection=True,
+        final_selection_top_k=2,
+        final_selection_cv=full_cv,
+        **extra,
+    )
+    callback = ModelCheckpoint(str(tmp_path / "finalists.pkl"))
+    search.fit(X, y, callbacks=callback)
+    reconstructed = search_class(**callback.load()["estimator_state"])
+    reconstructed.fit(X, y)
+    results = reconstructed.final_selection_results_
+    assert results["enabled"] is True
+    assert len(results["candidates"]) == 2
+    assert all(len(candidate["cv_scores"]) == 3 for candidate in results["candidates"])
+    assert reconstructed.predict(X).shape == y.shape

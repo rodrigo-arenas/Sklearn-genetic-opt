@@ -382,7 +382,7 @@ elapsed = time.perf_counter() - started
 support = selector.support_
 print(f"Search finished in {elapsed:.0f}s")
 print(f"Selected {support.sum()} of {X.shape[1]} features")
-print(f"Best CV ROC AUC: {selector.best_score_:.4f}")
+print(f"Best search CV ROC AUC: {np.nanmax(selector.cv_results_['mean_test_score']):.4f}")
 ```
 
 ```text
@@ -390,7 +390,7 @@ INFO: ConsecutiveStopping callback met its criteria
 INFO: Stopping the algorithm
 Search finished in 74s
 Selected 12 of 40 features
-Best CV ROC AUC: 0.9487
+Best search CV ROC AUC: 0.9487
 ```
 
 ```python

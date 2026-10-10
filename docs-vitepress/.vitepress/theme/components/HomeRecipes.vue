@@ -3,7 +3,7 @@
     <div class="home-container">
       <h2 class="section-title">Solve Real Problems</h2>
       <p class="section-subtitle">
-        Copy-paste recipes for common tasks. Each one runs as-is and takes 5–10 minutes to read.
+        Focused recipes for common estimators, feature selection, scoring, and pipelines.
       </p>
 
       <div class="recipe-grid">
@@ -29,7 +29,7 @@
       </div>
 
       <div class="recipes-cta">
-        <a href="/versions/latest/recipes/" class="browse-all-btn">Browse all 35 recipes →</a>
+        <a href="/versions/0.13/recipes/" class="browse-all-btn">Browse all recipes →</a>
       </div>
     </div>
   </section>
@@ -44,7 +44,7 @@ const recipes = [
     desc: '7-parameter joint search. Which parameters matter, classification and regression variants.',
     time: '8 min',
     difficulty: 'Beginner',
-    link: '/versions/latest/recipes/classification/random-forest-classifier',
+    link: '/versions/0.13/recipes/classification/random-forest-classifier',
   },
   {
     icon: '⚡',
@@ -53,7 +53,7 @@ const recipes = [
     desc: 'learning_rate × n_estimators interaction, subsample, colsample_bytree — 8-parameter search.',
     time: '10 min',
     difficulty: 'Intermediate',
-    link: '/versions/latest/recipes/classification/xgboost-classifier',
+    link: '/versions/0.13/recipes/classification/xgboost-classifier',
   },
   {
     icon: '🔦',
@@ -62,16 +62,16 @@ const recipes = [
     desc: 'num_leaves vs max_depth, min_child_samples, feature_fraction — LightGBM-specific parameters.',
     time: '10 min',
     difficulty: 'Intermediate',
-    link: '/versions/latest/recipes/classification/lightgbm-classifier',
+    link: '/versions/0.13/recipes/classification/lightgbm-classifier',
   },
   {
     icon: '🎯',
     category: 'Feature Selection',
     title: 'High-Dimensional Feature Selection',
-    desc: 'GAFeatureSelectionCV on datasets with 100+ features. Faster than RFE, respects interactions.',
+    desc: 'Use GAFeatureSelectionCV with a feature-count limit and cross-validation.',
     time: '7 min',
     difficulty: 'Intermediate',
-    link: '/versions/latest/recipes/feature-selection/high-dimensional',
+    link: '/versions/0.13/recipes/feature-selection/high-dimensional',
   },
   {
     icon: '🔗',
@@ -80,7 +80,7 @@ const recipes = [
     desc: 'Tune preprocessing parameters and model hyperparameters jointly in a single Pipeline.',
     time: '8 min',
     difficulty: 'Intermediate',
-    link: '/versions/latest/recipes/pipelines/preprocessing-pipeline',
+    link: '/versions/0.13/recipes/pipelines/preprocessing-pipeline',
   },
   {
     icon: '📋',
@@ -89,7 +89,7 @@ const recipes = [
     desc: 'Set scoring="roc_auc", handle predict_proba requirements, multi-class extension.',
     time: '5 min',
     difficulty: 'Beginner',
-    link: '/versions/latest/recipes/metrics/roc-auc',
+    link: '/versions/0.13/recipes/metrics/roc-auc',
   },
   {
     icon: '🧪',
@@ -98,7 +98,7 @@ const recipes = [
     desc: 'Seed the initial population with hyperparameters from a previous run or domain knowledge.',
     time: '6 min',
     difficulty: 'Advanced',
-    link: '/versions/latest/recipes/advanced/warm-start',
+    link: '/versions/0.13/recipes/advanced/warm-start',
   },
   {
     icon: '🔬',
@@ -107,16 +107,16 @@ const recipes = [
     desc: 'Same parameters as XGBClassifier but optimized for RMSE, MAE, and R² objectives.',
     time: '8 min',
     difficulty: 'Intermediate',
-    link: '/versions/latest/recipes/regression/xgboost-regressor',
+    link: '/versions/0.13/recipes/regression/xgboost-regressor',
   },
   {
     icon: '⚓',
     category: 'Regression',
-    title: 'Tune SGDRegressor',
-    desc: 'Perform genetic feature selection and hyperparameter tuning for SGDRegressor using GASearchCV and GAFeatureSelectionCV.',
+    title: 'Tune ElasticNet',
+    desc: 'Search regularization strength and the L1/L2 ratio in a scaled regression pipeline.',
     time: '5 min',
     difficulty: 'Intermediate',
-    link: '/versions/latest/recipes/regression/sgd-regressor',
+    link: '/versions/0.13/recipes/regression/elasticnet',
   },
 ]
 </script>

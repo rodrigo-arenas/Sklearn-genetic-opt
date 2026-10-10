@@ -1,9 +1,14 @@
+from collections import Counter
+
 import numpy as np
 from deap import tools
 from deap.algorithms import varAnd, varOr
 
 from .callbacks.validations import eval_callbacks
+from .evaluation import _time_budget_exhausted
 from .optimizer_control import (
+    differential_offspring,
+    finite_search_space_size,
     inject_random_immigrants,
     local_neighbor,
     local_search_enabled,
@@ -148,7 +153,13 @@ def _primary_fitness_weight(population):
 
 
 def _is_fitness_improvement(candidate, best, primary_weight):
+    # Keep initial unavailable scores numeric for stopping callbacks, while
+    # allowing a later valid generation to recover from that NaN sentinel.
     if best is None:
+        return True
+    if np.isnan(candidate):
+        return False
+    if np.isnan(best):
         return True
 
     if primary_weight >= 0:
@@ -183,8 +194,12 @@ def _population_diversity(population):
     else:
         gene_diversities = []
         for gene_values in zip(*population):
-            unique_gene_values = len(set(gene_values))
-            gene_diversities.append((unique_gene_values - 1) / (population_size - 1))
+            counts = Counter(gene_values)
+            # Probability that two distinct population members disagree at this
+            # gene. Unlike distinct-allele counts, this stays meaningful for
+            # binary/categorical genes as the population grows.
+            equal_pairs = sum(count * (count - 1) for count in counts.values())
+            gene_diversities.append(1 - equal_pairs / (population_size * (population_size - 1)))
         genotype_diversity = float(np.mean(gene_diversities)) if gene_diversities else 0.0
 
     return {
@@ -195,7 +210,7 @@ def _population_diversity(population):
     }
 
 
-def _compile_generation_record(stats, population, state, gen, control_record=None):
+def _compile_generation_record(stats, population, state, gen, control_record=None, halloffame=None):
     record = stats.compile(population) if stats else {}
     record = _flatten_record(record)
 
@@ -203,7 +218,11 @@ def _compile_generation_record(stats, population, state, gen, control_record=Non
 
     primary_weight = _primary_fitness_weight(population)
     current_best_key = "fitness_max" if primary_weight >= 0 else "fitness_min"
-    current_best = record.get(current_best_key)
+    current_best = (
+        halloffame[0].fitness.values[0]
+        if halloffame is not None and len(halloffame)
+        else record.get(current_best_key)
+    )
     if current_best is None:
         fitness_improvement = 0.0
         fitness_improved = False
@@ -248,7 +267,7 @@ def _compile_generation_record(stats, population, state, gen, control_record=Non
 
 
 def _refresh_last_record_after_local_refinement(
-    logbook, stats, population, state, local_refinements
+    logbook, stats, population, state, local_refinements, halloffame
 ):
     if not local_refinements or len(logbook) == 0:
         return
@@ -275,7 +294,7 @@ def _refresh_last_record_after_local_refinement(
     control_record["local_refinements"] = local_refinements
 
     refreshed_record = _compile_generation_record(
-        stats, population, state.copy(), gen, control_record
+        stats, population, state.copy(), gen, control_record, halloffame=halloffame
     )
     logbook[-1].clear()
     logbook[-1].update(
@@ -326,24 +345,38 @@ def _run_local_refinement(population, toolbox, halloffame, estimator):
         return 0
 
     top_k = min(estimator.local_search_top_k, len(halloffame.items))
-    neighbors = []
-
-    for parent in halloffame.items[:top_k]:
-        for _ in range(estimator.local_search_steps):
-            neighbor = local_neighbor(estimator, parent, parent.__class__)
-            neighbors.append(neighbor)
-
-    fitnesses = _evaluate_invalid_individuals(toolbox, neighbors)
-    for neighbor, fitness in zip(neighbors, fitnesses):
-        neighbor.fitness.values = fitness
-
-    if neighbors:
+    count = 0
+    for _ in range(estimator.local_search_steps):
+        if _time_budget_exhausted(estimator):
+            break
+        # Each step starts from the current elites so accepted improvements
+        # guide the next neighborhood. Evaluate independent elites as a batch.
+        neighbors = [
+            local_neighbor(estimator, parent, parent.__class__)
+            for parent in halloffame.items[:top_k]
+        ]
+        fitnesses = _evaluate_invalid_individuals(toolbox, neighbors)
+        for neighbor, fitness in zip(neighbors, fitnesses):
+            neighbor.fitness.values = fitness
         halloffame.update(neighbors)
         population.extend(neighbors)
         population[:] = tools.selBest(population, len(population) - len(neighbors))
+        count += len(neighbors)
 
-    _record_optimizer_control_stats(estimator, local_refinements=len(neighbors))
-    return len(neighbors)
+    _record_optimizer_control_stats(estimator, local_refinements=count)
+    return count
+
+
+def _select_survivors(candidates, toolbox, size, halloffame, estimator):
+    elites = (
+        halloffame.items[:size]
+        if getattr(estimator, "elitism", False) and halloffame is not None
+        else []
+    )
+    with shared_fitness(candidates, estimator) as sharing_record:
+        survivors = toolbox.select(candidates, size - len(elites))
+    survivors.extend(toolbox.clone(elite) for elite in elites)
+    return survivors, sharing_record
 
 
 def _control_record(
@@ -366,6 +399,17 @@ def _control_record(
         "mean_niche_count": sharing_record.get("mean_niche_count", 0.0),
         "max_niche_count": sharing_record.get("max_niche_count", 0.0),
     }
+
+
+def _update_search_coverage(estimator, candidates, size, seen):
+    # Only proposals observed by this run count. A restored cache can include
+    # configurations that the current hall of fame has never encountered.
+    if size is not None:
+        seen.update(estimator._individual_key(individual) for individual in candidates)
+    exhausted = size is not None and len(seen) == size
+    if estimator is not None:
+        estimator.search_space_exhausted_ = exhausted
+    return exhausted
 
 
 def eaSimple(
@@ -431,6 +475,12 @@ def eaSimple(
         Number of generations used.
 
     """
+    space_size = (
+        finite_search_space_size(estimator, len(population) * (ngen + 1))
+        if halloffame is not None
+        else None
+    )
+    seen_candidates = set()
     stored_exception = None
     callbacks_start_args = {
         "callbacks": callbacks,
@@ -449,13 +499,19 @@ def eaSimple(
     fitnesses = _evaluate_invalid_individuals(toolbox, invalid_ind)
     for ind, fit in zip(invalid_ind, fitnesses):
         ind.fitness.values = fit
+    population[:] = [individual for individual in population if individual.fitness.valid]
 
     if halloffame is not None:
         halloffame.update(population)
-    hof_size = len(halloffame.items) if (halloffame.items and estimator.elitism) else 0
+    hof_size = (
+        len(halloffame) if halloffame is not None and getattr(estimator, "elitism", False) else 0
+    )
 
+    exhausted = _update_search_coverage(estimator, population, space_size, seen_candidates)
     n_gen = gen = 0
-    record = _compile_generation_record(stats, population, telemetry_state, gen)
+    record = _compile_generation_record(
+        stats, population, telemetry_state, gen, halloffame=halloffame
+    )
     logbook.record(gen=n_gen + gen_offset, nevals=len(invalid_ind), **record)
 
     if verbose:
@@ -471,7 +527,7 @@ def eaSimple(
         "method": "on_step",
     }
 
-    if eval_callbacks(**callbacks_step_args):
+    if eval_callbacks(**callbacks_step_args) or exhausted:
         callbacks_end_args = {
             "callbacks": callbacks,
             "record": None,
@@ -482,7 +538,8 @@ def eaSimple(
 
         # Call ending callback
         eval_callbacks(**callbacks_end_args)
-        print("INFO: Stopping the algorithm")
+        if not exhausted or verbose:
+            print("INFO: Stopping the algorithm")
         return population, logbook, n_gen + gen_offset
 
     for gen in range(1, ngen + 1):
@@ -511,8 +568,9 @@ def eaSimple(
             fitnesses = _evaluate_invalid_individuals(toolbox, invalid_ind)
             for ind, fit in zip(invalid_ind, fitnesses):
                 ind.fitness.values = fit
+            offspring[:] = [individual for individual in offspring if individual.fitness.valid]
 
-            if estimator.elitism:
+            if halloffame is not None and getattr(estimator, "elitism", False):
                 offspring.extend(halloffame.items)
 
             # Update the hall of fame with the generated individuals
@@ -520,7 +578,9 @@ def eaSimple(
                 halloffame.update(offspring)
 
             # Replace the current population by the offspring
-            population[:] = offspring
+            exhausted = _update_search_coverage(estimator, offspring, space_size, seen_candidates)
+            if not _time_budget_exhausted(estimator):
+                population[:] = offspring
 
             # Append the current generation statistics to the logbook
             record = _compile_generation_record(
@@ -536,6 +596,7 @@ def eaSimple(
                     duplicate_replacements,
                     sharing_record,
                 ),
+                halloffame=halloffame,
             )
             logbook.record(gen=gen + gen_offset, nevals=len(invalid_ind), **record)
 
@@ -551,12 +612,13 @@ def eaSimple(
             }
 
             # Check if any of the callbacks conditions are True to stop the iteration
-            if eval_callbacks(**callbacks_step_args) or stored_exception:
+            if eval_callbacks(**callbacks_step_args) or exhausted or stored_exception:
                 if stored_exception:
                     print(
                         f"{stored_exception}\nsklearn-genetic-opt closed prematurely. Will use the current best model."
                     )
-                print("INFO: Stopping the algorithm")
+                if not exhausted or verbose:
+                    print("INFO: Stopping the algorithm")
                 break
         except (KeyboardInterrupt, SystemExit, StopIteration) as e:
             stored_exception = e
@@ -564,7 +626,7 @@ def eaSimple(
     n_gen = gen + 1 + gen_offset
     local_refinements = _run_local_refinement(population, toolbox, halloffame, estimator)
     _refresh_last_record_after_local_refinement(
-        logbook, stats, population, telemetry_state, local_refinements
+        logbook, stats, population, telemetry_state, local_refinements, halloffame
     )
 
     callbacks_end_args = {
@@ -650,6 +712,15 @@ def eaMuPlusLambda(
         Number of generations used.
 
     """
+    differential = kwargs.get("_differential_evolution", False)
+    if differential and (estimator is None or len(population) < 4):
+        raise ValueError("Differential evolution requires an estimator and population_size >= 4")
+    space_size = (
+        finite_search_space_size(estimator, len(population) + ngen * lambda_)
+        if halloffame is not None
+        else None
+    )
+    seen_candidates = set()
     stored_exception = None
     callbacks_start_args = {
         "callbacks": callbacks,
@@ -668,12 +739,20 @@ def eaMuPlusLambda(
     fitnesses = _evaluate_invalid_individuals(toolbox, invalid_ind)
     for ind, fit in zip(invalid_ind, fitnesses):
         ind.fitness.values = fit
+    population[:] = [individual for individual in population if individual.fitness.valid]
 
     if halloffame is not None:
-        halloffame.update(population)
+        halloffame.update(
+            [ind for ind in population if not np.isnan(ind.fitness.values[0])]
+            if differential
+            else population
+        )
 
+    exhausted = _update_search_coverage(estimator, population, space_size, seen_candidates)
     n_gen = gen = 0
-    record = _compile_generation_record(stats, population, telemetry_state, gen)
+    record = _compile_generation_record(
+        stats, population, telemetry_state, gen, halloffame=halloffame
+    )
     logbook.record(gen=n_gen + gen_offset, nevals=len(invalid_ind), **record)
 
     if verbose:
@@ -688,7 +767,7 @@ def eaMuPlusLambda(
         "method": "on_step",
     }
 
-    if eval_callbacks(**callbacks_step_args):
+    if eval_callbacks(**callbacks_step_args) or exhausted:
         # Call ending callback
         callbacks_end_args = {
             "callbacks": callbacks,
@@ -699,7 +778,8 @@ def eaMuPlusLambda(
         }
 
         eval_callbacks(**callbacks_end_args)
-        print("INFO: Stopping the algorithm")
+        if not exhausted or verbose:
+            print("INFO: Stopping the algorithm")
         return population, logbook, n_gen + gen_offset
 
     for gen in range(1, ngen + 1):
@@ -707,13 +787,17 @@ def eaMuPlusLambda(
             mutation_prob, diversity_triggered = mutation_probability(mutpb, estimator, record)
 
             crossover_prob = cxpb.step()
-            mutation_prob = min(mutation_prob, max(0.0, 1.0 - crossover_prob))
-
-            # Vary the population
-            offspring = varOr(population, toolbox, lambda_, crossover_prob, mutation_prob)
-            duplicate_replacements = replace_duplicate_candidates(
-                offspring, toolbox, estimator, reference_population=population
-            )
+            if differential:
+                offspring = differential_offspring(
+                    population, toolbox, estimator, crossover_prob, mutation_prob
+                )
+                duplicate_replacements = 0
+            else:
+                mutation_prob = min(mutation_prob, max(0.0, 1.0 - crossover_prob))
+                offspring = varOr(population, toolbox, lambda_, crossover_prob, mutation_prob)
+                duplicate_replacements = replace_duplicate_candidates(
+                    offspring, toolbox, estimator, reference_population=population
+                )
             random_immigrants = inject_random_immigrants(offspring, toolbox, estimator, record)
             _record_optimizer_control_stats(estimator, random_immigrants=random_immigrants)
 
@@ -722,18 +806,39 @@ def eaMuPlusLambda(
             fitnesses = _evaluate_invalid_individuals(toolbox, invalid_ind)
             for ind, fit in zip(invalid_ind, fitnesses):
                 ind.fitness.values = fit
+            offspring[:] = [individual for individual in offspring if individual.fitness.valid]
 
             # Update the hall of fame with the generated individuals
             if halloffame is not None:
-                halloffame.update(offspring)
+                halloffame.update(
+                    [ind for ind in offspring if not np.isnan(ind.fitness.values[0])]
+                    if differential
+                    else offspring
+                )
+
+            exhausted = _update_search_coverage(estimator, offspring, space_size, seen_candidates)
 
             # Select the next generation population
-            selection_pool = population + offspring
             if estimator is not None:
                 estimator._last_generation_record = record
-            with shared_fitness(selection_pool, estimator) as sharing_record:
-                population[:] = toolbox.select(selection_pool, mu)
-            selection_pressure = getattr(estimator, "_selection_pressure_", None)
+            if _time_budget_exhausted(estimator):
+                sharing_record, selection_pressure = {}, None
+            elif differential:
+                population[:] = [
+                    (
+                        trial
+                        if not np.isnan(trial.fitness.values[0])
+                        and (np.isnan(target.fitness.values[0]) or trial.fitness > target.fitness)
+                        else target
+                    )
+                    for target, trial in zip(population, offspring)
+                ]
+                sharing_record, selection_pressure = {}, None
+            else:
+                population[:], sharing_record = _select_survivors(
+                    population + offspring, toolbox, mu, halloffame, estimator
+                )
+                selection_pressure = getattr(estimator, "_selection_pressure_", None)
 
             # Update the statistics with the new population
             record = _compile_generation_record(
@@ -749,6 +854,7 @@ def eaMuPlusLambda(
                     duplicate_replacements,
                     sharing_record,
                 ),
+                halloffame=halloffame,
             )
             logbook.record(gen=gen + gen_offset, nevals=len(invalid_ind), **record)
 
@@ -763,12 +869,13 @@ def eaMuPlusLambda(
                 "method": "on_step",
             }
 
-            if eval_callbacks(**callbacks_step_args) or stored_exception:
+            if eval_callbacks(**callbacks_step_args) or exhausted or stored_exception:
                 if stored_exception:
                     print(
                         f"{stored_exception}\nsklearn-genetic-opt closed prematurely. Will use the current best model."
                     )
-                print("INFO: Stopping the algorithm")
+                if not exhausted or verbose:
+                    print("INFO: Stopping the algorithm")
                 break
 
         except (KeyboardInterrupt, SystemExit, StopIteration) as e:
@@ -777,7 +884,7 @@ def eaMuPlusLambda(
     n_gen = gen + 1 + gen_offset
     local_refinements = _run_local_refinement(population, toolbox, halloffame, estimator)
     _refresh_last_record_after_local_refinement(
-        logbook, stats, population, telemetry_state, local_refinements
+        logbook, stats, population, telemetry_state, local_refinements, halloffame
     )
 
     callbacks_end_args = {
@@ -865,6 +972,12 @@ def eaMuCommaLambda(
     """
     assert lambda_ >= mu, "lambda must be greater or equal to mu."
 
+    space_size = (
+        finite_search_space_size(estimator, len(population) + ngen * lambda_)
+        if halloffame is not None
+        else None
+    )
+    seen_candidates = set()
     stored_exception = None
     callbacks_start_args = {
         "callbacks": callbacks,
@@ -881,6 +994,7 @@ def eaMuCommaLambda(
     fitnesses = _evaluate_invalid_individuals(toolbox, invalid_ind)
     for ind, fit in zip(invalid_ind, fitnesses):
         ind.fitness.values = fit
+    population[:] = [individual for individual in population if individual.fitness.valid]
 
     if halloffame is not None:
         halloffame.update(population)
@@ -888,8 +1002,11 @@ def eaMuCommaLambda(
     telemetry_state = _new_telemetry_state()
     logbook, gen_offset = _seed_logbook(resume_log, stats)
 
+    exhausted = _update_search_coverage(estimator, population, space_size, seen_candidates)
     n_gen = gen = 0
-    record = _compile_generation_record(stats, population, telemetry_state, gen)
+    record = _compile_generation_record(
+        stats, population, telemetry_state, gen, halloffame=halloffame
+    )
     logbook.record(gen=n_gen + gen_offset, nevals=len(invalid_ind), **record)
 
     if verbose:
@@ -904,7 +1021,7 @@ def eaMuCommaLambda(
     }
 
     # Check if any of the callbacks conditions are True to stop the iteration
-    if eval_callbacks(**callbacks_step_args):
+    if eval_callbacks(**callbacks_step_args) or exhausted:
         callbacks_end_args = {
             "callbacks": callbacks,
             "record": None,
@@ -914,7 +1031,8 @@ def eaMuCommaLambda(
         }
 
         eval_callbacks(**callbacks_end_args)
-        print("INFO: Stopping the algorithm")
+        if not exhausted or verbose:
+            print("INFO: Stopping the algorithm")
         return population, logbook, n_gen + gen_offset
 
     for gen in range(1, ngen + 1):
@@ -937,17 +1055,24 @@ def eaMuCommaLambda(
             fitnesses = _evaluate_invalid_individuals(toolbox, invalid_ind)
             for ind, fit in zip(invalid_ind, fitnesses):
                 ind.fitness.values = fit
+            offspring[:] = [individual for individual in offspring if individual.fitness.valid]
 
             # Update the hall of fame with the generated individuals
             if halloffame is not None:
                 halloffame.update(offspring)
 
+            exhausted = _update_search_coverage(estimator, offspring, space_size, seen_candidates)
+
             # Select the next generation population
             if estimator is not None:
                 estimator._last_generation_record = record
-            with shared_fitness(offspring, estimator) as sharing_record:
-                population[:] = toolbox.select(offspring, mu)
-            selection_pressure = getattr(estimator, "_selection_pressure_", None)
+            if _time_budget_exhausted(estimator):
+                sharing_record, selection_pressure = {}, None
+            else:
+                population[:], sharing_record = _select_survivors(
+                    offspring, toolbox, mu, halloffame, estimator
+                )
+                selection_pressure = getattr(estimator, "_selection_pressure_", None)
 
             # Update the statistics with the new population
             record = _compile_generation_record(
@@ -963,6 +1088,7 @@ def eaMuCommaLambda(
                     duplicate_replacements,
                     sharing_record,
                 ),
+                halloffame=halloffame,
             )
             logbook.record(gen=gen + gen_offset, nevals=len(invalid_ind), **record)
 
@@ -978,12 +1104,13 @@ def eaMuCommaLambda(
             }
 
             # Check if any of the callbacks conditions are True to stop the iteration
-            if eval_callbacks(**callbacks_step_args) or stored_exception:
+            if eval_callbacks(**callbacks_step_args) or exhausted or stored_exception:
                 if stored_exception:
                     print(
                         f"{stored_exception}\nsklearn-genetic-opt closed prematurely. Will use the current best model."
                     )
-                print("INFO: Stopping the algorithm")
+                if not exhausted or verbose:
+                    print("INFO: Stopping the algorithm")
                 break
 
         except (KeyboardInterrupt, SystemExit, StopIteration) as e:
@@ -992,7 +1119,7 @@ def eaMuCommaLambda(
     n_gen = gen + 1 + gen_offset
     local_refinements = _run_local_refinement(population, toolbox, halloffame, estimator)
     _refresh_last_record_after_local_refinement(
-        logbook, stats, population, telemetry_state, local_refinements
+        logbook, stats, population, telemetry_state, local_refinements, halloffame
     )
 
     callbacks_end_args = {
@@ -1008,8 +1135,23 @@ def eaMuCommaLambda(
     return population, logbook, n_gen
 
 
+def eaDifferentialEvolution(population, toolbox, **kwargs):
+    """Mixed-domain rand/1/bin with F=0.8 and deferred greedy replacement.
+
+    One trial per target is evaluated per generation. Crossover uses ``cxpb``;
+    ``mutpb`` controls additional standard mutation. Numeric coordinates use
+    their linear or logarithmic domain, categories inherit a donor value, and
+    feature coordinates are decoded as binary masks. Tournament selection and
+    fitness sharing do not apply to pairwise replacement. Other lifecycle,
+    evaluation, callback and local-refinement behavior uses the shared engine.
+    """
+    kwargs.update(mu=len(population), lambda_=len(population), _differential_evolution=True)
+    return eaMuPlusLambda(population, toolbox, **kwargs)
+
+
 algorithms_factory = {
     "eaSimple": eaSimple,
     "eaMuPlusLambda": eaMuPlusLambda,
     "eaMuCommaLambda": eaMuCommaLambda,
+    "eaDifferentialEvolution": eaDifferentialEvolution,
 }

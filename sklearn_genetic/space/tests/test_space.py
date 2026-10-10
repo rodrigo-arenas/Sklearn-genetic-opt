@@ -493,3 +493,31 @@ def test_log_uniform_accepts_positive_lower_bound():
     dimension = Continuous(1e-4, 1.0, distribution="log-uniform", random_state=0)
     for _ in range(20):
         assert 1e-4 <= dimension.sample() <= 1.0
+
+
+@pytest.mark.parametrize("weights", [np.array([1.0, 2.0]), np.array([1.0, np.nan])])
+@pytest.mark.parametrize("random_state", [0, np.random.RandomState(3), np.random.default_rng(3)])
+def test_warm_start_accepts_cloned_nested_estimator_configuration(random_state, weights):
+    from sklearn.base import clone
+    from sklearn.pipeline import Pipeline
+    from sklearn.preprocessing import FunctionTransformer
+
+    class LocalTransformer(FunctionTransformer):
+        pass
+
+    candidate = Pipeline(
+        [
+            (
+                "transform",
+                LocalTransformer(kw_args={"weights": weights, "random_state": random_state}),
+            )
+        ]
+    )
+    space = Space({"model": Categorical([candidate, "passthrough"])})
+    copied = clone(candidate)
+    assert space.sample_warm_start({"model": copied})["model"] is copied
+    copied.set_params(
+        transform__kw_args={"weights": np.array([1.0, 3.0]), "random_state": random_state}
+    )
+    with pytest.raises(ValueError, match="outside"):
+        space.sample_warm_start({"model": copied})

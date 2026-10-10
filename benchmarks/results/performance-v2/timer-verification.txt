@@ -1,0 +1,603 @@
+TimerStopping candidate batches; baseline d821a1edbd367b22850ef513c0a8e7e5cacd55bb.
+AC-TB1..4 passing. Final affected searches:109 pass; algorithm/internal/callback files:200 pass,4 pre-existing TensorFlow-unavailable skips. Full suite not run.
+Independent reviewer review_timer_batches: no source defects; VER-TB1 missing counter discriminator repaired and mutant rejected. No unresolved material findings.
+
+
+=== timer-budget-red.txt ===
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 178 items / 126 deselected / 52 selected
+
+sklearn_genetic\tests\test_genetic_search.py FFFFFFFFFFFFFFFFFFFFFFFFFFF [ 51%]
+FFFFFFFFFFFFFFFFFFFFFFFFF                                                [100%]
+
+================================== FAILURES ===================================
+_ test_timer_stops_candidate_batches_with_valid_results[eaSimple-1-population-initial-False-gasearch] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:865: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+_ test_timer_stops_candidate_batches_with_valid_results[eaSimple-1-population-initial-False-features] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+_ test_timer_stops_candidate_batches_with_valid_results[eaSimple-1-population-initial-True-gasearch] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:865: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+_ test_timer_stops_candidate_batches_with_valid_results[eaSimple-1-population-initial-True-features] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+_ test_timer_stops_candidate_batches_with_valid_results[eaSimple-1-population-later-False-gasearch] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:865: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+_ test_timer_stops_candidate_batches_with_valid_results[eaSimple-1-population-later-False-features] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+_ test_timer_stops_candidate_batches_with_valid_results[eaSimple-1-population-later-True-gasearch] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:865: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+_ test_timer_stops_candidate_batches_with_valid_results[eaSimple-1-population-later-True-features] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+_ test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-1-population-initial-False-gasearch] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:865: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+_ test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-1-population-initial-False-features] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+_ test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-1-population-initial-True-gasearch] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:865: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+_ test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-1-population-initial-True-features] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+_ test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-1-population-later-False-gasearch] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:865: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+_ test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-1-population-later-False-features] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+_ test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-1-population-later-True-gasearch] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:865: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+_ test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-1-population-later-True-features] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+_ test_timer_stops_candidate_batches_with_valid_results[eaMuCommaLambda-1-population-initial-False-gasearch] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:865: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+_ test_timer_stops_candidate_batches_with_valid_results[eaMuCommaLambda-1-population-initial-False-features] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+_ test_timer_stops_candidate_batches_with_valid_results[eaMuCommaLambda-1-population-initial-True-gasearch] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:865: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+_ test_timer_stops_candidate_batches_with_valid_results[eaMuCommaLambda-1-population-initial-True-features] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+_ test_timer_stops_candidate_batches_with_valid_results[eaMuCommaLambda-1-population-later-False-gasearch] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:865: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+_ test_timer_stops_candidate_batches_with_valid_results[eaMuCommaLambda-1-population-later-False-features] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+_ test_timer_stops_candidate_batches_with_valid_results[eaMuCommaLambda-1-population-later-True-gasearch] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:865: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+_ test_timer_stops_candidate_batches_with_valid_results[eaMuCommaLambda-1-population-later-True-features] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+_ test_timer_stops_candidate_batches_with_valid_results[eaDifferentialEvolution-1-population-initial-False-gasearch] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:865: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+_ test_timer_stops_candidate_batches_with_valid_results[eaDifferentialEvolution-1-population-initial-False-features] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+_ test_timer_stops_candidate_batches_with_valid_results[eaDifferentialEvolution-1-population-initial-True-gasearch] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:865: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+_ test_timer_stops_candidate_batches_with_valid_results[eaDifferentialEvolution-1-population-initial-True-features] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+_ test_timer_stops_candidate_batches_with_valid_results[eaDifferentialEvolution-1-population-later-False-gasearch] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:865: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+_ test_timer_stops_candidate_batches_with_valid_results[eaDifferentialEvolution-1-population-later-False-features] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+_ test_timer_stops_candidate_batches_with_valid_results[eaDifferentialEvolution-1-population-later-True-gasearch] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:865: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+_ test_timer_stops_candidate_batches_with_valid_results[eaDifferentialEvolution-1-population-later-True-features] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+_ test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-2-population-initial-False-gasearch] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:865: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+_ test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-2-population-initial-False-features] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+_ test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-2-population-initial-True-gasearch] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:865: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+_ test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-2-population-initial-True-features] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+_ test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-2-population-later-False-gasearch] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:865: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+_ test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-2-population-later-False-features] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+_ test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-2-population-later-True-gasearch] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:865: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+_ test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-2-population-later-True-features] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+_ test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-1-population-refinement-False-gasearch] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:865: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+_ test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-1-population-refinement-False-features] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+_ test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-2-population-refinement-False-gasearch] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:865: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+_ test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-2-population-refinement-False-features] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+_ test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-2-cv-initial-True-gasearch] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:865: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+_ test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-2-cv-initial-True-features] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+_ test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-2-cv-later-True-gasearch] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:865: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+_ test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-2-cv-later-True-features] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+_ test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-1-population-setup-True-gasearch] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: SetupDelayTimer callback met its criteria
+INFO: Stopping the algorithm
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:865: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+_ test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-1-population-setup-True-features] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: SetupDelayTimer callback met its criteria
+INFO: Stopping the algorithm
+_ test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-2-population-setup-True-gasearch] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: SetupDelayTimer callback met its criteria
+INFO: Stopping the algorithm
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:865: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+_ test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-2-population-setup-True-features] _
+sklearn_genetic\tests\test_genetic_search.py:2409: in test_timer_stops_candidate_batches_with_valid_results
+    assert len(observed) == expected
+E   AssertionError
+---------------------------- Captured stdout call -----------------------------
+INFO: SetupDelayTimer callback met its criteria
+INFO: Stopping the algorithm
+=========================== short test summary info ===========================
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaSimple-1-population-initial-False-gasearch] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaSimple-1-population-initial-False-features] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaSimple-1-population-initial-True-gasearch] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaSimple-1-population-initial-True-features] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaSimple-1-population-later-False-gasearch] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaSimple-1-population-later-False-features] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaSimple-1-population-later-True-gasearch] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaSimple-1-population-later-True-features] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-1-population-initial-False-gasearch] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-1-population-initial-False-features] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-1-population-initial-True-gasearch] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-1-population-initial-True-features] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-1-population-later-False-gasearch] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-1-population-later-False-features] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-1-population-later-True-gasearch] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-1-population-later-True-features] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaMuCommaLambda-1-population-initial-False-gasearch] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaMuCommaLambda-1-population-initial-False-features] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaMuCommaLambda-1-population-initial-True-gasearch] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaMuCommaLambda-1-population-initial-True-features] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaMuCommaLambda-1-population-later-False-gasearch] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaMuCommaLambda-1-population-later-False-features] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaMuCommaLambda-1-population-later-True-gasearch] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaMuCommaLambda-1-population-later-True-features] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaDifferentialEvolution-1-population-initial-False-gasearch] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaDifferentialEvolution-1-population-initial-False-features] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaDifferentialEvolution-1-population-initial-True-gasearch] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaDifferentialEvolution-1-population-initial-True-features] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaDifferentialEvolution-1-population-later-False-gasearch] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaDifferentialEvolution-1-population-later-False-features] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaDifferentialEvolution-1-population-later-True-gasearch] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaDifferentialEvolution-1-population-later-True-features] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-2-population-initial-False-gasearch] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-2-population-initial-False-features] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-2-population-initial-True-gasearch] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-2-population-initial-True-features] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-2-population-later-False-gasearch] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-2-population-later-False-features] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-2-population-later-True-gasearch] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-2-population-later-True-features] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-1-population-refinement-False-gasearch] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-1-population-refinement-False-features] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-2-population-refinement-False-gasearch] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-2-population-refinement-False-features] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-2-cv-initial-True-gasearch] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-2-cv-initial-True-features] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-2-cv-later-True-gasearch] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-2-cv-later-True-features] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-1-population-setup-True-gasearch] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-1-population-setup-True-features] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-2-population-setup-True-gasearch] - AssertionError
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_timer_stops_candidate_batches_with_valid_results[eaMuPlusLambda-2-population-setup-True-features] - AssertionError
+===================== 52 failed, 126 deselected in 9.47s ======================
+
+
+=== timer-tuple-red.txt ===
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 174 items / 172 deselected / 2 selected
+
+sklearn_genetic\tests\test_genetic_search.py .F                          [100%]
+
+================================== FAILURES ===================================
+______ test_evaluate_population_reuses_duplicate_individual_cache[tuple] ______
+sklearn_genetic\tests\test_genetic_search.py:748: in test_evaluate_population_reuses_duplicate_individual_cache
+    fitnesses = estimator.evaluate_population(container([[2], [2]]))
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\genetic_search.py:1035: in evaluate_population
+    return _evaluate_population_batch(self, individuals, "current_generation_params")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sklearn_genetic\evaluation.py:190: in evaluate_population
+    del individuals[len(fitnesses) :]
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: 'tuple' object does not support item deletion
+=========================== short test summary info ===========================
+FAILED sklearn_genetic/tests/test_genetic_search.py::test_evaluate_population_reuses_duplicate_individual_cache[tuple] - TypeError: 'tuple' object does not support item deletion
+================= 1 failed, 1 passed, 172 deselected in 2.71s =================
+
+
+=== timer-counter-mutant.txt ===
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:865: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+Traceback (most recent call last):
+INFO: TimerStopping callback met its criteria
+INFO: Stopping the algorithm
+  File "C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\.agent-runs\performance-v2\review_timer_mutant.py", line 12, in <module>
+    test_timer_stops_candidate_batches_with_valid_results(
+  File "C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\tests\test_genetic_search.py", line 2417, in test_timer_stops_candidate_batches_with_valid_results
+    assert search.fit_stats_["unique_candidates"] == expected
+AssertionError
+
+
+=== timer-final-0.txt ===
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 262 items / 153 deselected / 109 selected
+
+sklearn_genetic\tests\test_genetic_search.py ........................... [ 24%]
+.................................................................        [ 84%]
+sklearn_genetic\tests\test_feature_selection.py .................        [100%]
+
+==================== 109 passed, 153 deselected in 31.90s =====================
+
+
+=== timer-final-1.txt ===
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 204 items
+
+sklearn_genetic\tests\test_algorithms.py ............................... [ 15%]
+...................................................................      [ 48%]
+sklearn_genetic\tests\test_internal_helpers.py ......................... [ 60%]
+.........................................                                [ 80%]
+sklearn_genetic\callbacks\tests\test_callbacks.py ...................... [ 91%]
+..............ssss                                                       [100%]
+
+======================= 200 passed, 4 skipped in 6.88s ========================
+
+
+=== timer-test-guard.txt ===
+test_guard: clean against d821a1edbd367b22850ef513c0a8e7e5cacd55bb
+
+
+=== timer-benchmark-summary.txt ===
+48 fits; complete unique paired matrix; finite metrics; valid nonempty masks; unchanged source hashes.
+Dataset / method | baseline score / seconds / CV calls | current score / seconds / CV calls | speedup
+breast / gasearch | 0.974359 / 5.352 / 163.3 | 0.974359 / 5.065 / 155.7 | 1.057x
+breast / features | 0.969697 / 5.222 / 346.3 | 0.967366 / 5.063 / 344.7 | 1.031x
+digits / gasearch | 0.985926 / 9.740 / 24.0 | 0.986667 / 5.372 / 13.7 | 1.813x
+digits / features | 0.982222 / 5.705 / 40.0 | 0.982222 / 5.147 / 35.3 | 1.108x
+diabetes / gasearch | -2724.173133 / 5.074 / 159.7 | -2724.173133 / 5.052 / 169.0 | 1.004x
+diabetes / features | -3144.040226 / 5.205 / 265.0 | -3144.040226 / 5.067 / 255.7 | 1.027x
+synthetic / gasearch | 0.890000 / 11.230 / 24.0 | 0.884667 / 5.436 / 11.7 | 2.066x
+synthetic / features | 0.896000 / 7.309 / 40.0 | 0.894000 / 5.116 / 28.0 | 1.429x
+baseline: max seconds 11.538, mean 6.855
+current: max seconds 5.567, mean 5.165
+
+
+Final source SHA256
+{
+  "sklearn_genetic\\_base.py": "a454d056b662d6367e0094f39d5cbf685a17311db87fc07ebc45793ab1839ccd",
+  "sklearn_genetic\\algorithms.py": "2f1b607b8c671923d4ea604f8ed81b8b502e609b4ebb5c49e904612c0b7affd7",
+  "sklearn_genetic\\evaluation.py": "ef5edfc4688c64aad6851fb0adc49f3bcb3bb7cc4adc9ae05a2e135da26b8845",
+  "sklearn_genetic\\callbacks\\early_stoppers.py": "3ffe25529058a490eda9e78b91b3a49e9face04b748491c32e2bd9411b5ac4e9",
+  "sklearn_genetic\\tests\\test_genetic_search.py": "0025903cf45d83d5cf7d407e31766f545f4bf043cfa9e693165baef84aef564b"
+}

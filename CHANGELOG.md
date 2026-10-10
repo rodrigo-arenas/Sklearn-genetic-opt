@@ -2,14 +2,69 @@
 
 Full release notes with code examples are in the [documentation](https://sklearngeneticopt.rodrigo-arenas.com/).
 
-## Unreleased
+## 0.14.0
+
+- Documentation now separates released pages from development pages in the sitemap, publishes `robots.txt`, and points the homepage at the current stable version. The release freeze updates homepage and component links for each new minor version. The homepage drops redundant sections, fixes broken routes, and describes trade-offs without claiming a universal speed or accuracy advantage.
 
 ### New Features
+
+- Fast Random Forest and Extra Trees regression presets search only `squared_error`; the default `balanced` and the `wide` profiles retain `absolute_error`. A 104-fit comparison measures faster searches with the same candidate budget, with a documented MAE tradeoff on contaminated targets.
+
+- Fresh feature searches with smart initialization and `TimerStopping` evaluate their largest initial feature set first, so a short deadline does not leave only small masks evaluated. The same candidate masks and `max_features` bound are retained; random initialization and checkpoint resumes preserve their ordering.
+
+- Added `subsample_cv` to reduce training rows while retaining full validation folds. Both searches can re-evaluate finalists on full-training CV; `GAFeatureSelectionCV` now shares `final_selection`, `final_selection_top_k`, and `final_selection_cv` with `GASearchCV`. The default full-data search is unchanged.
+
+- Local refinement in both searches now chains accepted elite improvements across `local_search_steps`, retaining per-step population batching and the configured candidate count.
+
+- Added optional `algorithm="eaDifferentialEvolution"` for both searches, with domain-aware numeric mutation and bounded categorical and feature-mask handling. Benchmarks show mixed outcomes, so the default algorithm is unchanged.
+
+- Cached finite search spaces stop after all unique configurations have been evaluated. This avoids redundant generations in small hyperparameter and feature spaces without changing their winners.
+
+- Fitness sharing uses vectorized distances with bounded auxiliary memory for feature masks and mixed hyperparameter spaces. The isolated sharing benchmark is 7.9–14.8× faster; complete-fit timings remain dominated by model evaluation.
+
+- Added a paired holdout benchmark against Optuna TPE, RandomizedSearchCV and optional FLAML-CFO, with per-run CV budgets, dependency versions and before/after evidence in `benchmarks/PERFORMANCE.md`.
+- Extended the 0.14.0 benchmark record with sparse/imbalanced/regression feature-selection transfer tasks and corrected-default HPO comparisons against `RandomizedSearchCV` and Optuna TPE across four model families. The documented wins and losses use held-out data and retain per-run reproduction artifacts; they do not change evolutionary defaults.
 
 - `GASearchCV` and `GAFeatureSelectionCV` now reject unsupported `fit` metadata up front with a clear error naming the parameter and the wrapped estimator, instead of failing deep inside cross-validation. Estimators whose `fit` takes `**kwargs` (e.g. `Pipeline`) are left to validate at fit time, so routed keys like `clf__sample_weight` keep working (#364).
 - Added `GAFeatureSelectionCV.get_feature_names_out()` support for DataFrame column names and generated NumPy feature names.
 
 ### Bug Fixes
+
+- `GASearchCV` now honors its documented `return_train_score=False` default when initializing scikit-learn's search base. Previously scikit-learn reset it to `True`, scoring every training fold and adding unwanted train-score fields to `cv_results_`. Explicit `return_train_score=True` still includes those fields. A paired four-family benchmark measured 1.23–1.84× lower elapsed time for cheap tree, KNN and ElasticNet searches with identical CV winners; random-forest timings showed no benefit.
+
+- Unsupervised `GAFeatureSelectionCV.fit(X)` now accepts pandas DataFrames with outlier detectors. Input validation converts `X` to a sliceable array while retaining the original column names for `get_feature_names_out()`; previously mask evaluation raised `InvalidIndexError`. Unsupervised `GASearchCV.fit(X)` also accepts list input instead of assuming `X.shape` exists.
+
+- `GAFeatureSelectionCV.score(X, y)` now uses the configured scorer on the selected columns, including a callable scorer or the chosen `refit` metric in multi-metric searches. Previously it always returned `best_estimator_.score(X_selected, y)`, which could report a different metric from the one optimized.
+
+- The tagged-release workflow now refreshes the conda recipe from either a local checkout or a previous release archive, and fails clearly if it cannot recognize the complete source mapping. It uses the checksum of the exact sdist uploaded to PyPI instead of independently rebuilding one. The unreleased 0.14.0 recipe builds from the current checkout instead of the stale 0.13.2 archive and declares the missing core `pandas` dependency.
+
+- `GASearchCV.fit` now rebuilds its search space after `set_params(param_grid=...)`, including changed parameter names and bounds. Previously a reused estimator could silently evaluate the old grid or ignore an invalid replacement.
+
+- `GASearchCV.fit` now honors warm starts changed with `set_params(warm_start_configs=...)` or a replacement `PopulationConfig`, including removal of old seeds. Previously it kept using the configuration captured at construction, which could silently ignore new seeds or validate an obsolete one.
+
+- Random Forest and Extra Trees regression presets omit the redundant `friedman_mse` criterion, which fails CV cloning after parameter assignment on scikit-learn 1.9. The default `balanced` and the `wide` profiles retain `squared_error` and `absolute_error`.
+
+- Feature finalist selection preserves sparse and dense masks when preliminary scores tie at the cutoff, instead of spending every tied finalist slot on small masks. Better preliminary scores and the configured CV budget retain priority; final-score ties still favor fewer features.
+
+- Numeric smart initialization works with SciPy versions before 1.15 by using their `seed` argument, while preserving the existing `rng` path and seeded samples on newer versions.
+
+- `TimerStopping` stops new candidate batches within generations in both searches, including local refinement. Completed candidates remain eligible to win; in-flight CV and final selection/refit finish, and at least one initial batch is evaluated.
+
+- Estimator-valued categorical choices preserve their configuration through crossover and cloned warm starts, reuse cached evaluations, and occupy distinct hall-of-fame slots. Applying nested parameters during search or finalist evaluation no longer modifies the caller's model choices.
+
+- Finalist selection excludes NaN scores, raises when every finalist score is NaN, and validates an integer evaluation budget. Checkpoints retain finalist settings. An explicit non-None `final_selection_cv` takes precedence over its grouped configuration value, preserving sklearn cloning when that value contains explicit fold arrays.
+
+- Both searches clone the winning estimator for final refit instead of fitting or changing the caller's estimator. Use `best_estimator_` (or prediction methods on the search) for the fitted model; `estimator` remains the constructor template. Numeric dimension sampling also retains global-seed reproducibility after cloning a search.
+
+- Mu/lambda algorithms now preserve hall-of-fame elites in the next population when `elitism=True`. Best-so-far telemetry includes evaluated candidates even if stochastic survivor selection drops them.
+
+- Diversity telemetry uses pairwise allele disagreement, avoiding permanent diversity recovery for balanced binary feature masks in larger populations.
+- Integer local refinement samples neighbors in constant memory instead of allocating the full integer interval.
+
+- Fresh fits clear cached scores while explicit checkpoint resumes retain their cache.
+- Both searches use fitness-aware tournament selection with `elitism=False`, supporting negative scores and minimization without losing population members.
+- Candidate ranks respect `criteria="min"`; final selection compares the requested number of distinct configurations rather than duplicate log rows.
+- Feature selection rejects non-integer, zero, negative, or oversized `max_features` at fit time.
 
 - `Continuous` now rejects a non-positive `lower` bound when `distribution="log-uniform"` at construction time, instead of failing later during `fit` with an opaque SciPy "Domain error in arguments".
 - `Categorical` now rejects negative `priors`. Previously they passed validation because they summed to one, then either raised a NumPy error (seeded) or silently sampled with distorted weights (unseeded).

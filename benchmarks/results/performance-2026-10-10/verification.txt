@@ -1,0 +1,557 @@
+=== integrity-red.txt ===
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 48 items / 42 deselected / 6 selected
+
+sklearn_genetic\tests\test_internal_helpers.py [31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31m                    [100%][0m
+
+================================== FAILURES ===================================
+[31m[1m___________ test_fresh_fit_recomputes_scores_on_new_targets[False] ____________[0m
+[1m[31msklearn_genetic\tests\test_internal_helpers.py[0m:594: in test_fresh_fit_recomputes_scores_on_new_targets
+    [0m[94massert[39;49;00m search.fit_stats_[[33m"[39;49;00m[33mcross_validate_calls[39;49;00m[33m"[39;49;00m] == [94m1[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:698: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+[31m[1m____________ test_fresh_fit_recomputes_scores_on_new_targets[True] ____________[0m
+[1m[31msklearn_genetic\tests\test_internal_helpers.py[0m:594: in test_fresh_fit_recomputes_scores_on_new_targets
+    [0m[94massert[39;49;00m search.fit_stats_[[33m"[39;49;00m[33mcross_validate_calls[39;49;00m[33m"[39;49;00m] == [94m1[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_non_elitist_selection_respects_fitness_direction[max-scores0-GASearchCV] _[0m
+[1m[31msklearn_genetic\tests\test_internal_helpers.py[0m:612: in test_non_elitist_selection_respects_fitness_direction
+    [0m[94massert[39;49;00m [96mlen[39;49;00m(selected) == [94m300[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:698: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+[31m[1m_ test_non_elitist_selection_respects_fitness_direction[max-scores0-GAFeatureSelectionCV] _[0m
+[1m[31msklearn_genetic\tests\test_internal_helpers.py[0m:612: in test_non_elitist_selection_respects_fitness_direction
+    [0m[94massert[39;49;00m [96mlen[39;49;00m(selected) == [94m300[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_non_elitist_selection_respects_fitness_direction[min-scores1-GASearchCV] _[0m
+[1m[31msklearn_genetic\tests\test_internal_helpers.py[0m:613: in test_non_elitist_selection_respects_fitness_direction
+    [0m[94massert[39;49;00m [96msum[39;49;00m(ind [95mis[39;49;00m population[-[94m1[39;49;00m] [94mfor[39;49;00m ind [95min[39;49;00m selected) > [96msum[39;49;00m(ind [95mis[39;49;00m population[[94m0[39;49;00m] [94mfor[39;49;00m ind [95min[39;49;00m selected)[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:698: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+[31m[1m_ test_non_elitist_selection_respects_fitness_direction[min-scores1-GAFeatureSelectionCV] _[0m
+[1m[31msklearn_genetic\tests\test_internal_helpers.py[0m:613: in test_non_elitist_selection_respects_fitness_direction
+    [0m[94massert[39;49;00m [96msum[39;49;00m(ind [95mis[39;49;00m population[-[94m1[39;49;00m] [94mfor[39;49;00m ind [95min[39;49;00m selected) > [96msum[39;49;00m(ind [95mis[39;49;00m population[[94m0[39;49;00m] [94mfor[39;49;00m ind [95min[39;49;00m selected)[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[36m[1m=========================== short test summary info ===========================[0m
+[31mFAILED[0m sklearn_genetic/tests/test_internal_helpers.py::[1mtest_fresh_fit_recomputes_scores_on_new_targets[False][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_internal_helpers.py::[1mtest_fresh_fit_recomputes_scores_on_new_targets[True][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_internal_helpers.py::[1mtest_non_elitist_selection_respects_fitness_direction[max-scores0-GASearchCV][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_internal_helpers.py::[1mtest_non_elitist_selection_respects_fitness_direction[max-scores0-GAFeatureSelectionCV][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_internal_helpers.py::[1mtest_non_elitist_selection_respects_fitness_direction[min-scores1-GASearchCV][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_internal_helpers.py::[1mtest_non_elitist_selection_respects_fitness_direction[min-scores1-GAFeatureSelectionCV][0m - AssertionError
+[31m====================== [31m[1m6 failed[0m, [33m42 deselected[0m[31m in 2.63s[0m[31m =======================[0m
+
+
+=== features-red.txt ===
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 56 items / 48 deselected / 8 selected
+
+sklearn_genetic\tests\test_internal_helpers.py [31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[32m.[0m[32m.[0m[32m.[0m[31m                  [100%][0m
+
+================================== FAILURES ===================================
+[31m[1m__________ test_feature_selection_rejects_invalid_feature_bounds[0] ___________[0m
+[1m[31msklearn_genetic\tests\test_internal_helpers.py[0m:620: in test_feature_selection_rejects_invalid_feature_bounds
+    [0m[94mwith[39;49;00m pytest.raises([96mValueError[39;49;00m, match=[33m"[39;49;00m[33mmax_features[39;49;00m[33m"[39;49;00m):[90m[39;49;00m
+[1m[31mE   Failed: DID NOT RAISE ValueError[0m
+[31m[1m__________ test_feature_selection_rejects_invalid_feature_bounds[-1] __________[0m
+[1m[31msklearn_genetic\tests\test_internal_helpers.py[0m:620: in test_feature_selection_rejects_invalid_feature_bounds
+    [0m[94mwith[39;49;00m pytest.raises([96mValueError[39;49;00m, match=[33m"[39;49;00m[33mmax_features[39;49;00m[33m"[39;49;00m):[90m[39;49;00m
+[1m[31mE   Failed: DID NOT RAISE ValueError[0m
+[31m[1m_________ test_feature_selection_rejects_invalid_feature_bounds[1.5] __________[0m
+[1m[31msklearn_genetic\tests\test_internal_helpers.py[0m:621: in test_feature_selection_rejects_invalid_feature_bounds
+    [0msearch.fit(np.ones(([94m12[39;49;00m, [94m3[39;49;00m)), np.tile([[94m0[39;49;00m, [94m1[39;49;00m], [94m6[39;49;00m))[90m[39;49;00m
+[1m[31msklearn_genetic\genetic_search.py[0m:2207: in fit
+    [0m[96mself[39;49;00m._register()[90m[39;49;00m
+[1m[31msklearn_genetic\genetic_search.py[0m:1832: in _register
+    [0m[96mself[39;49;00m._pop = [96mself[39;49;00m._initialize_population()[90m[39;49;00m
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msklearn_genetic\genetic_search.py[0m:1846: in _initialize_population
+    [0mpopulation = initialize_feature_population([96mself[39;49;00m, [96mself[39;49;00m.toolbox, creator.Individual)[90m[39;49;00m
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msklearn_genetic\population.py[0m:234: in initialize_feature_population
+    [0m[94mreturn[39;49;00m smart_feature_population(estimator, toolbox, individual_cls)[90m[39;49;00m
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msklearn_genetic\population.py[0m:219: in smart_feature_population
+    [0mvalues = _bounded_feature_mask(estimator.n_features, max_selected)[90m[39;49;00m
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msklearn_genetic\population.py[0m:81: in _bounded_feature_mask
+    [0mn_selected = random.randint([94m1[39;49;00m, max_selected)[90m[39;49;00m
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31m..\..\AppData\Local\Programs\Python\Python312\Lib\random.py[0m:336: in randint
+    [0m[94mreturn[39;49;00m [96mself[39;49;00m.randrange(a, b+[94m1[39;49;00m)[90m[39;49;00m
+           ^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31m..\..\AppData\Local\Programs\Python\Python312\Lib\random.py[0m:312: in randrange
+    [0mistop = _index(stop)[90m[39;49;00m
+            ^^^^^^^^^^^^[90m[39;49;00m
+[1m[31mE   TypeError: 'float' object cannot be interpreted as an integer[0m
+[31m[1m_________ test_feature_selection_rejects_invalid_feature_bounds[True] _________[0m
+[1m[31msklearn_genetic\tests\test_internal_helpers.py[0m:620: in test_feature_selection_rejects_invalid_feature_bounds
+    [0m[94mwith[39;49;00m pytest.raises([96mValueError[39;49;00m, match=[33m"[39;49;00m[33mmax_features[39;49;00m[33m"[39;49;00m):[90m[39;49;00m
+[1m[31mE   Failed: DID NOT RAISE ValueError[0m
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\.venv\Lib\site-packages\deap\creator.py:185: RuntimeWarning: A class named 'FitnessMax' has already been created and it will be overwritten. Consider deleting previous creation of that class or rename it.
+  warnings.warn("A class named '{0}' has already been created and it "
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\.venv\Lib\site-packages\deap\creator.py:185: RuntimeWarning: A class named 'Individual' has already been created and it will be overwritten. Consider deleting previous creation of that class or rename it.
+  warnings.warn("A class named '{0}' has already been created and it "
+[31m[1m__________ test_feature_selection_rejects_invalid_feature_bounds[4] ___________[0m
+[1m[31msklearn_genetic\tests\test_internal_helpers.py[0m:620: in test_feature_selection_rejects_invalid_feature_bounds
+    [0m[94mwith[39;49;00m pytest.raises([96mValueError[39;49;00m, match=[33m"[39;49;00m[33mmax_features[39;49;00m[33m"[39;49;00m):[90m[39;49;00m
+[1m[31mE   Failed: DID NOT RAISE ValueError[0m
+[36m[1m=========================== short test summary info ===========================[0m
+[31mFAILED[0m sklearn_genetic/tests/test_internal_helpers.py::[1mtest_feature_selection_rejects_invalid_feature_bounds[0][0m - Failed: DID NOT RAISE ValueError
+[31mFAILED[0m sklearn_genetic/tests/test_internal_helpers.py::[1mtest_feature_selection_rejects_invalid_feature_bounds[-1][0m - Failed: DID NOT RAISE ValueError
+[31mFAILED[0m sklearn_genetic/tests/test_internal_helpers.py::[1mtest_feature_selection_rejects_invalid_feature_bounds[1.5][0m - TypeError: 'float' object cannot be interpreted as an integer
+[31mFAILED[0m sklearn_genetic/tests/test_internal_helpers.py::[1mtest_feature_selection_rejects_invalid_feature_bounds[True][0m - Failed: DID NOT RAISE ValueError
+[31mFAILED[0m sklearn_genetic/tests/test_internal_helpers.py::[1mtest_feature_selection_rejects_invalid_feature_bounds[4][0m - Failed: DID NOT RAISE ValueError
+[31m================= [31m[1m5 failed[0m, [32m3 passed[0m, [33m48 deselected[0m[31m in 3.73s[0m[31m ==================[0m
+
+
+=== ranking-red.txt ===
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 133 items / 129 deselected / 4 selected
+
+sklearn_genetic\tests\test_internal_helpers.py [31mF[0m[31mF[0m[31m                        [ 50%][0m
+sklearn_genetic\tests\test_genetic_search.py [32m.[0m[31mF[0m[31m                          [100%][0m
+
+================================== FAILURES ===================================
+[31m[1m________ test_fit_minimization_selects_lowest_scoring_candidate[False] ________[0m
+[1m[31msklearn_genetic\tests\test_internal_helpers.py[0m:647: in test_fit_minimization_selects_lowest_scoring_candidate
+    [0m[94massert[39;49;00m search.best_params_[[33m"[39;49;00m[33mmax_depth[39;49;00m[33m"[39;49;00m] == [94m1[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:699: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+[31m[1m________ test_fit_minimization_selects_lowest_scoring_candidate[True] _________[0m
+[1m[31msklearn_genetic\tests\test_internal_helpers.py[0m:647: in test_fit_minimization_selects_lowest_scoring_candidate
+    [0m[94massert[39;49;00m search.best_params_[[33m"[39;49;00m[33mmax_depth[39;49;00m[33m"[39;49;00m] == [94m1[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:699: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+[31m[1m_______ test_final_selection_can_replace_original_best_candidate[True] ________[0m
+[1m[31msklearn_genetic\tests\test_genetic_search.py[0m:262: in test_final_selection_can_replace_original_best_candidate
+    [0m[94massert[39;49;00m best_index == ([94m2[39;49;00m [94mif[39;49;00m duplicates [94melse[39;49;00m [94m1[39;49;00m)[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[36m[1m=========================== short test summary info ===========================[0m
+[31mFAILED[0m sklearn_genetic/tests/test_internal_helpers.py::[1mtest_fit_minimization_selects_lowest_scoring_candidate[False][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_internal_helpers.py::[1mtest_fit_minimization_selects_lowest_scoring_candidate[True][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_genetic_search.py::[1mtest_final_selection_can_replace_original_best_candidate[True][0m - AssertionError
+[31m================= [31m[1m3 failed[0m, [32m1 passed[0m, [33m129 deselected[0m[31m in 4.11s[0m[31m =================[0m
+
+
+=== checkpoint-red.txt ===
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 34 items / 32 deselected / 2 selected
+
+sklearn_genetic\tests\test_persistence_and_helpers.py [31mF[0m[31mF[0m[31m                 [100%][0m
+
+================================== FAILURES ===================================
+[31m[1m___________ test_feature_checkpoint_validates_restored_bounds[5-1] ____________[0m
+[1m[31msklearn_genetic\tests\test_persistence_and_helpers.py[0m:816: in test_feature_checkpoint_validates_restored_bounds
+    [0m[94mwith[39;49;00m pytest.raises([96mValueError[39;49;00m, match=[33m"[39;49;00m[33mmax_features[39;49;00m[33m"[39;49;00m):[90m[39;49;00m
+[1m[31mE   Failed: DID NOT RAISE ValueError[0m
+[31m[1m___________ test_feature_checkpoint_validates_restored_bounds[1-5] ____________[0m
+[1m[31msklearn_genetic\tests\test_persistence_and_helpers.py[0m:819: in test_feature_checkpoint_validates_restored_bounds
+    [0msearch.fit(X, y, callbacks=callback)[90m[39;49;00m
+[1m[31msklearn_genetic\genetic_search.py[0m:2106: in fit
+    [0m[94mraise[39;49;00m [96mValueError[39;49;00m([33m"[39;49;00m[33mmax_features must be an integer between 1 and n_features or None[39;49;00m[33m"[39;49;00m)[90m[39;49;00m
+[1m[31mE   ValueError: max_features must be an integer between 1 and n_features or None[0m
+[36m[1m=========================== short test summary info ===========================[0m
+[31mFAILED[0m sklearn_genetic/tests/test_persistence_and_helpers.py::[1mtest_feature_checkpoint_validates_restored_bounds[5-1][0m - Failed: DID NOT RAISE ValueError
+[31mFAILED[0m sklearn_genetic/tests/test_persistence_and_helpers.py::[1mtest_feature_checkpoint_validates_restored_bounds[1-5][0m - ValueError: max_features must be an integer between 1 and n_features or None
+[31m====================== [31m[1m2 failed[0m, [33m32 deselected[0m[31m in 3.70s[0m[31m =======================[0m
+
+
+=== ranking-expanded-red.txt ===
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 59 items / 54 deselected / 5 selected
+
+sklearn_genetic\tests\test_internal_helpers.py [32m.[0m[32m.[0m[31mF[0m[31mF[0m[31mF[0m[31m                     [100%][0m
+
+================================== FAILURES ===================================
+[31m[1m________ test_fit_minimization_selects_lowest_scoring_candidate[False] ________[0m
+[1m[31msklearn_genetic\tests\test_internal_helpers.py[0m:678: in test_fit_minimization_selects_lowest_scoring_candidate
+    [0m[94massert[39;49;00m search.best_params_[[33m"[39;49;00m[33mmax_depth[39;49;00m[33m"[39;49;00m] == [94m1[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:699: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+[31m[1m________ test_fit_minimization_selects_lowest_scoring_candidate[True] _________[0m
+[1m[31msklearn_genetic\tests\test_internal_helpers.py[0m:678: in test_fit_minimization_selects_lowest_scoring_candidate
+    [0m[94massert[39;49;00m search.best_params_[[33m"[39;49;00m[33mmax_depth[39;49;00m[33m"[39;49;00m] == [94m1[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\genetic_search.py:699: UserWarning: Warning, only one parameter was provided to the param_grid, the optimization routine might not have effect or it could lead to errors, it's advised to use at least 2 parameters
+  warnings.warn(
+[31m[1m____________ test_feature_minimization_ranks_train_and_test_scores ____________[0m
+[1m[31msklearn_genetic\tests\test_internal_helpers.py[0m:694: in test_feature_minimization_ranks_train_and_test_scores
+    [0m[94massert[39;49;00m np.all(ranks[scores == [94m1[39;49;00m] == [94m1[39;49;00m)[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[36m[1m=========================== short test summary info ===========================[0m
+[31mFAILED[0m sklearn_genetic/tests/test_internal_helpers.py::[1mtest_fit_minimization_selects_lowest_scoring_candidate[False][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_internal_helpers.py::[1mtest_fit_minimization_selects_lowest_scoring_candidate[True][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_internal_helpers.py::[1mtest_feature_minimization_ranks_train_and_test_scores[0m - AssertionError
+[31m================= [31m[1m3 failed[0m, [32m2 passed[0m, [33m54 deselected[0m[31m in 2.87s[0m[31m ==================[0m
+
+
+=== integrity-green.txt ===
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 212 items
+
+sklearn_genetic\tests\test_internal_helpers.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m [ 11%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m                                        [ 27%][0m
+sklearn_genetic\tests\test_genetic_search.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m [ 40%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m                         [ 62%][0m
+sklearn_genetic\tests\test_feature_selection.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m [ 74%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m                                                  [ 84%][0m
+sklearn_genetic\tests\test_persistence_and_helpers.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m [ 93%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m                                                           [100%][0m
+
+[32m======================= [32m[1m212 passed[0m[32m in 170.27s (0:02:50)[0m[32m =======================[0m
+
+
+=== repair-green.txt ===
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 168 items / 125 deselected / 43 selected
+
+sklearn_genetic\tests\test_internal_helpers.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m       [ 44%][0m
+sklearn_genetic\tests\test_genetic_search.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m                      [ 58%][0m
+sklearn_genetic\tests\test_persistence_and_helpers.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m [100%][0m
+
+[32m===================== [32m[1m43 passed[0m, [33m125 deselected[0m[32m in 35.12s[0m[32m =====================[0m
+
+
+=== efficiency-red.txt ===
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 74 items / 68 deselected / 6 selected
+
+sklearn_genetic\tests\test_internal_helpers.py [31mF[0m[31mF[0m[31mF[0m[31m                       [ 50%][0m
+sklearn_genetic\tests\test_algorithms.py [31mF[0m[31mF[0m[31mF[0m[31m                             [100%][0m
+
+================================== FAILURES ===================================
+[31m[1m_______________ test_integer_local_search_has_bounded_memory[0] _______________[0m
+[1m[31msklearn_genetic\tests\test_internal_helpers.py[0m:717: in test_integer_local_search_has_bounded_memory
+    [0m[94massert[39;49;00m peak < [94m1000000[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m____________ test_integer_local_search_has_bounded_memory[500000] _____________[0m
+[1m[31msklearn_genetic\tests\test_internal_helpers.py[0m:717: in test_integer_local_search_has_bounded_memory
+    [0m[94massert[39;49;00m peak < [94m1000000[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m____________ test_integer_local_search_has_bounded_memory[1000000] ____________[0m
+[1m[31msklearn_genetic\tests\test_internal_helpers.py[0m:717: in test_integer_local_search_has_bounded_memory
+    [0m[94massert[39;49;00m peak < [94m1000000[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_balanced_binary_population_does_not_trigger_diversity_recovery[eaSimple-kwargs0] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:288: in test_balanced_binary_population_does_not_trigger_diversity_recovery
+    [0m[94massert[39;49;00m logbook[[94m0[39;49;00m][[33m"[39;49;00m[33mgenotype_diversity[39;49;00m[33m"[39;49;00m] == pytest.approx([94m5[39;49;00m/[94m9[39;49;00m)[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_balanced_binary_population_does_not_trigger_diversity_recovery[eaMuPlusLambda-kwargs1] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:288: in test_balanced_binary_population_does_not_trigger_diversity_recovery
+    [0m[94massert[39;49;00m logbook[[94m0[39;49;00m][[33m"[39;49;00m[33mgenotype_diversity[39;49;00m[33m"[39;49;00m] == pytest.approx([94m5[39;49;00m/[94m9[39;49;00m)[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_balanced_binary_population_does_not_trigger_diversity_recovery[eaMuCommaLambda-kwargs2] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:288: in test_balanced_binary_population_does_not_trigger_diversity_recovery
+    [0m[94massert[39;49;00m logbook[[94m0[39;49;00m][[33m"[39;49;00m[33mgenotype_diversity[39;49;00m[33m"[39;49;00m] == pytest.approx([94m5[39;49;00m/[94m9[39;49;00m)[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[36m[1m=========================== short test summary info ===========================[0m
+[31mFAILED[0m sklearn_genetic/tests/test_internal_helpers.py::[1mtest_integer_local_search_has_bounded_memory[0][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_internal_helpers.py::[1mtest_integer_local_search_has_bounded_memory[500000][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_internal_helpers.py::[1mtest_integer_local_search_has_bounded_memory[1000000][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_balanced_binary_population_does_not_trigger_diversity_recovery[eaSimple-kwargs0][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_balanced_binary_population_does_not_trigger_diversity_recovery[eaMuPlusLambda-kwargs1][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_balanced_binary_population_does_not_trigger_diversity_recovery[eaMuCommaLambda-kwargs2][0m - AssertionError
+[31m====================== [31m[1m6 failed[0m, [33m68 deselected[0m[31m in 4.11s[0m[31m =======================[0m
+
+
+=== efficiency-expanded-green.txt ===
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 84 items
+
+sklearn_genetic\tests\test_internal_helpers.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m [ 29%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m                                [ 78%][0m
+sklearn_genetic\tests\test_algorithms.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m              [100%][0m
+
+[32m============================= [32m[1m84 passed[0m[32m in 3.02s[0m[32m ==============================[0m
+
+
+=== elitism-red.txt ===
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 26 items / 18 deselected / 8 selected
+
+sklearn_genetic\tests\test_algorithms.py [31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31m                        [100%][0m
+
+================================== FAILURES ===================================
+[31m[1m_ test_survivors_and_history_keep_best_evaluated_candidate[True-1.0-eaMuPlusLambda] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:355: in test_survivors_and_history_keep_best_evaluated_candidate
+    [0m[94massert[39;49;00m [96many[39;49;00m(ind[[94m0[39;49;00m] == direction * [94m10[39;49;00m [94mfor[39;49;00m ind [95min[39;49;00m population) [95mis[39;49;00m elitism[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_survivors_and_history_keep_best_evaluated_candidate[True-1.0-eaMuCommaLambda] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:355: in test_survivors_and_history_keep_best_evaluated_candidate
+    [0m[94massert[39;49;00m [96many[39;49;00m(ind[[94m0[39;49;00m] == direction * [94m10[39;49;00m [94mfor[39;49;00m ind [95min[39;49;00m population) [95mis[39;49;00m elitism[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_survivors_and_history_keep_best_evaluated_candidate[True--1.0-eaMuPlusLambda] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:355: in test_survivors_and_history_keep_best_evaluated_candidate
+    [0m[94massert[39;49;00m [96many[39;49;00m(ind[[94m0[39;49;00m] == direction * [94m10[39;49;00m [94mfor[39;49;00m ind [95min[39;49;00m population) [95mis[39;49;00m elitism[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_survivors_and_history_keep_best_evaluated_candidate[True--1.0-eaMuCommaLambda] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:355: in test_survivors_and_history_keep_best_evaluated_candidate
+    [0m[94massert[39;49;00m [96many[39;49;00m(ind[[94m0[39;49;00m] == direction * [94m10[39;49;00m [94mfor[39;49;00m ind [95min[39;49;00m population) [95mis[39;49;00m elitism[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_survivors_and_history_keep_best_evaluated_candidate[False-1.0-eaMuPlusLambda] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:356: in test_survivors_and_history_keep_best_evaluated_candidate
+    [0m[94massert[39;49;00m log.select([33m"[39;49;00m[33mfitness_best[39;49;00m[33m"[39;49;00m) == [[94m0[39;49;00m, direction * [94m10[39;49;00m, direction * [94m10[39;49;00m][90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_survivors_and_history_keep_best_evaluated_candidate[False-1.0-eaMuCommaLambda] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:356: in test_survivors_and_history_keep_best_evaluated_candidate
+    [0m[94massert[39;49;00m log.select([33m"[39;49;00m[33mfitness_best[39;49;00m[33m"[39;49;00m) == [[94m0[39;49;00m, direction * [94m10[39;49;00m, direction * [94m10[39;49;00m][90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_survivors_and_history_keep_best_evaluated_candidate[False--1.0-eaMuPlusLambda] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:356: in test_survivors_and_history_keep_best_evaluated_candidate
+    [0m[94massert[39;49;00m log.select([33m"[39;49;00m[33mfitness_best[39;49;00m[33m"[39;49;00m) == [[94m0[39;49;00m, direction * [94m10[39;49;00m, direction * [94m10[39;49;00m][90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_survivors_and_history_keep_best_evaluated_candidate[False--1.0-eaMuCommaLambda] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:356: in test_survivors_and_history_keep_best_evaluated_candidate
+    [0m[94massert[39;49;00m log.select([33m"[39;49;00m[33mfitness_best[39;49;00m[33m"[39;49;00m) == [[94m0[39;49;00m, direction * [94m10[39;49;00m, direction * [94m10[39;49;00m][90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[36m[1m=========================== short test summary info ===========================[0m
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_survivors_and_history_keep_best_evaluated_candidate[True-1.0-eaMuPlusLambda][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_survivors_and_history_keep_best_evaluated_candidate[True-1.0-eaMuCommaLambda][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_survivors_and_history_keep_best_evaluated_candidate[True--1.0-eaMuPlusLambda][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_survivors_and_history_keep_best_evaluated_candidate[True--1.0-eaMuCommaLambda][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_survivors_and_history_keep_best_evaluated_candidate[False-1.0-eaMuPlusLambda][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_survivors_and_history_keep_best_evaluated_candidate[False-1.0-eaMuCommaLambda][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_survivors_and_history_keep_best_evaluated_candidate[False--1.0-eaMuPlusLambda][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_survivors_and_history_keep_best_evaluated_candidate[False--1.0-eaMuCommaLambda][0m - AssertionError
+[31m====================== [31m[1m8 failed[0m, [33m18 deselected[0m[31m in 2.98s[0m[31m =======================[0m
+
+
+=== elite-mutant-red.txt ===
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 26 items / 18 deselected / 8 selected
+
+sklearn_genetic\tests\test_algorithms.py [31mF[0m[31mF[0m[31mF[0m[31mF[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[31m                        [100%][0m
+
+================================== FAILURES ===================================
+[31m[1m_ test_survivors_and_history_keep_best_evaluated_candidate[True-1.0-eaMuPlusLambda] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:372: in test_survivors_and_history_keep_best_evaluated_candidate
+    [0m[94massert[39;49;00m [96mall[39;49;00m([96many[39;49;00m(ind == elite [94mfor[39;49;00m ind [95min[39;49;00m population) [94mfor[39;49;00m elite [95min[39;49;00m hof)[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_survivors_and_history_keep_best_evaluated_candidate[True-1.0-eaMuCommaLambda] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:372: in test_survivors_and_history_keep_best_evaluated_candidate
+    [0m[94massert[39;49;00m [96mall[39;49;00m([96many[39;49;00m(ind == elite [94mfor[39;49;00m ind [95min[39;49;00m population) [94mfor[39;49;00m elite [95min[39;49;00m hof)[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_survivors_and_history_keep_best_evaluated_candidate[True--1.0-eaMuPlusLambda] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:372: in test_survivors_and_history_keep_best_evaluated_candidate
+    [0m[94massert[39;49;00m [96mall[39;49;00m([96many[39;49;00m(ind == elite [94mfor[39;49;00m ind [95min[39;49;00m population) [94mfor[39;49;00m elite [95min[39;49;00m hof)[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_ test_survivors_and_history_keep_best_evaluated_candidate[True--1.0-eaMuCommaLambda] _[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:372: in test_survivors_and_history_keep_best_evaluated_candidate
+    [0m[94massert[39;49;00m [96mall[39;49;00m([96many[39;49;00m(ind == elite [94mfor[39;49;00m ind [95min[39;49;00m population) [94mfor[39;49;00m elite [95min[39;49;00m hof)[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[36m[1m=========================== short test summary info ===========================[0m
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_survivors_and_history_keep_best_evaluated_candidate[True-1.0-eaMuPlusLambda][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_survivors_and_history_keep_best_evaluated_candidate[True-1.0-eaMuCommaLambda][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_survivors_and_history_keep_best_evaluated_candidate[True--1.0-eaMuPlusLambda][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_survivors_and_history_keep_best_evaluated_candidate[True--1.0-eaMuCommaLambda][0m - AssertionError
+[31m================= [31m[1m4 failed[0m, [32m4 passed[0m, [33m18 deselected[0m[31m in 3.15s[0m[31m ==================[0m
+
+
+=== budget-red.txt ===
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 9 items / 4 deselected / 5 selected
+
+sklearn_genetic\tests\test_benchmark_search_methods.py [31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31m             [100%][0m
+
+================================== FAILURES ===================================
+[31m[1m_______________ test_bayesmark_ga_respects_candidate_budget[2] ________________[0m
+[1m[31msklearn_genetic\tests\test_benchmark_search_methods.py[0m:68: in test_bayesmark_ga_respects_candidate_budget
+    [0m[94massert[39;49;00m population * ([94m1[39;49;00m + [94m2[39;49;00m * generations) <= budget[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_______________ test_bayesmark_ga_respects_candidate_budget[8] ________________[0m
+[1m[31msklearn_genetic\tests\test_benchmark_search_methods.py[0m:68: in test_bayesmark_ga_respects_candidate_budget
+    [0m[94massert[39;49;00m population * ([94m1[39;49;00m + [94m2[39;49;00m * generations) <= budget[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_______________ test_bayesmark_ga_respects_candidate_budget[24] _______________[0m
+[1m[31msklearn_genetic\tests\test_benchmark_search_methods.py[0m:68: in test_bayesmark_ga_respects_candidate_budget
+    [0m[94massert[39;49;00m population * ([94m1[39;49;00m + [94m2[39;49;00m * generations) <= budget[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_______________ test_bayesmark_ga_respects_candidate_budget[40] _______________[0m
+[1m[31msklearn_genetic\tests\test_benchmark_search_methods.py[0m:68: in test_bayesmark_ga_respects_candidate_budget
+    [0m[94massert[39;49;00m population * ([94m1[39;49;00m + [94m2[39;49;00m * generations) <= budget[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_______________ test_bayesmark_ga_respects_candidate_budget[80] _______________[0m
+[1m[31msklearn_genetic\tests\test_benchmark_search_methods.py[0m:68: in test_bayesmark_ga_respects_candidate_budget
+    [0m[94massert[39;49;00m population * ([94m1[39;49;00m + [94m2[39;49;00m * generations) <= budget[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[36m[1m=========================== short test summary info ===========================[0m
+[31mFAILED[0m sklearn_genetic/tests/test_benchmark_search_methods.py::[1mtest_bayesmark_ga_respects_candidate_budget[2][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_benchmark_search_methods.py::[1mtest_bayesmark_ga_respects_candidate_budget[8][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_benchmark_search_methods.py::[1mtest_bayesmark_ga_respects_candidate_budget[24][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_benchmark_search_methods.py::[1mtest_bayesmark_ga_respects_candidate_budget[40][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_benchmark_search_methods.py::[1mtest_bayesmark_ga_respects_candidate_budget[80][0m - AssertionError
+[31m======================= [31m[1m5 failed[0m, [33m4 deselected[0m[31m in 3.28s[0m[31m =======================[0m
+
+
+=== budget-mutant-red.txt ===
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 11 items / 9 deselected / 2 selected
+
+sklearn_genetic\tests\test_benchmark_search_methods.py [32m.[0m[31mF[0m[31m                [100%][0m
+
+================================== FAILURES ===================================
+[31m[1m_____ test_bayesmark_runner_reports_reproducible_bounded_evaluations[24] ______[0m
+[1m[31msklearn_genetic\tests\test_benchmark_search_methods.py[0m:93: in test_bayesmark_runner_reports_reproducible_bounded_evaluations
+    [0m[94massert[39;49;00m [94m0[39;49;00m < first.evaluations <= budget[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[36m[1m=========================== short test summary info ===========================[0m
+[31mFAILED[0m sklearn_genetic/tests/test_benchmark_search_methods.py::[1mtest_bayesmark_runner_reports_reproducible_bounded_evaluations[24][0m - AssertionError
+[31m================== [31m[1m1 failed[0m, [32m1 passed[0m, [33m9 deselected[0m[31m in 4.46s[0m[31m ==================[0m
+
+
+=== integrated-green.txt ===
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 198 items
+
+sklearn_genetic\tests\test_algorithms.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m      [ 13%][0m
+sklearn_genetic\tests\test_genetic_search.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m [ 26%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m                         [ 51%][0m
+sklearn_genetic\tests\test_feature_selection.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m [ 63%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m                                                  [ 74%][0m
+sklearn_genetic\tests\test_benchmark_search_methods.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m        [ 79%][0m
+sklearn_genetic\callbacks\tests\test_callbacks.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m [ 90%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[33ms[0m[33ms[0m[33ms[0m[33ms[0m[32m                                                       [100%][0m
+
+[32m================= [32m[1m194 passed[0m, [33m4 skipped[0m[32m in 178.56s (0:02:58)[0m[32m ==================[0m
+
+
+=== final-repair-green.txt ===
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 37 items
+
+sklearn_genetic\tests\test_algorithms.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m      [ 70%][0m
+sklearn_genetic\tests\test_benchmark_search_methods.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m       [100%][0m
+
+[32m============================= [32m[1m37 passed[0m[32m in 3.55s[0m[32m ==============================[0m
+
+
+=== finite-budget-red.txt ===
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 12 items / 11 deselected / 1 selected
+
+sklearn_genetic\tests\test_benchmark_search_methods.py [31mF[0m[31m                 [100%][0m
+
+================================== FAILURES ===================================
+[31m[1m___________ test_randomized_benchmark_counts_exhausted_finite_space ___________[0m
+[1m[31msklearn_genetic\tests\test_benchmark_search_methods.py[0m:106: in test_randomized_benchmark_counts_exhausted_finite_space
+    [0m[94massert[39;49;00m result.evaluations == [94m2[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\.venv\Lib\site-packages\sklearn\model_selection\_search.py:327: UserWarning: The total space of parameters 2 is smaller than n_iter=8. Running 2 iterations. For exhaustive searches, use GridSearchCV.
+  warnings.warn(
+[36m[1m=========================== short test summary info ===========================[0m
+[31mFAILED[0m sklearn_genetic/tests/test_benchmark_search_methods.py::[1mtest_randomized_benchmark_counts_exhausted_finite_space[0m - AssertionError
+[31m====================== [31m[1m1 failed[0m, [33m11 deselected[0m[31m in 2.97s[0m[31m =======================[0m
+
+
+=== benchmark-final-green.txt ===
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 12 items
+
+sklearn_genetic\tests\test_benchmark_search_methods.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m      [100%][0m
+
+[32m============================= [32m[1m12 passed[0m[32m in 3.15s[0m[32m ==============================[0m
+
+
+=== final-guard.txt ===
+test_guard: clean against 0bbff86c5e0130c48c7c6ff476a3ca99907adc10
+
+=== closure-guard ===
+test_guard: clean against 8476a7f0c660017cc55573e88bf911bade9a4d7d
+
+=== Independent review closure ===
+Integrity: restored checkpoint bounds, train/test minimization and ranked distinct shortlist findings repaired; 43 repair checks passed; no material findings.
+Efficiency: binary/continuous/collapsed diversity and uniform neighbor sampling reviewed; biased collision mutant rejected; 84 checks passed; no material findings.
+Elite/benchmark: first-elite-only and extra-generation mutants rejected after strengthened tests. 194 integration checks passed (4 pre-existing TensorFlow skips), 37 repair checks passed; no material findings.
+Report: reviewer recomputed all cells from both 51-row JSON files, verified identical paired keys/dependency versions, no duplicates, all caps respected, and the 2.78pp feature holdout decline. Final benchmark counter checks: 12 passed. No material findings.
+
+=== Focused commands ===
+.venv\Scripts\python.exe -m pytest sklearn_genetic/tests/test_internal_helpers.py -q
+.venv\Scripts\python.exe -m pytest sklearn_genetic/tests/test_internal_helpers.py sklearn_genetic/tests/test_genetic_search.py sklearn_genetic/tests/test_feature_selection.py sklearn_genetic/tests/test_persistence_and_helpers.py -k "not fit_genetic and not fit_feature" -q
+.venv\Scripts\python.exe -m pytest sklearn_genetic/tests/test_algorithms.py sklearn_genetic/tests/test_genetic_search.py sklearn_genetic/tests/test_feature_selection.py sklearn_genetic/tests/test_benchmark_search_methods.py sklearn_genetic/callbacks/tests/test_callbacks.py -q
+.venv\Scripts\python.exe -m pytest sklearn_genetic/tests/test_algorithms.py sklearn_genetic/tests/test_benchmark_search_methods.py -q
+.venv\Scripts\python.exe -m pytest sklearn_genetic/tests/test_benchmark_search_methods.py -q
+All finite runs used subprocess timeouts of 60-240 seconds; no servers started.
