@@ -1,4 +1,5 @@
 import inspect
+from numbers import Integral
 import random
 import time
 import warnings
@@ -778,10 +779,6 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         return population
 
     def select(self, population, k):
-        if not self.elitism:
-            self._selection_pressure_ = None
-            return tools.selRoulette(population, k)
-
         tournament_size = adaptive_tournament_size(
             self,
             getattr(self, "_last_generation_record", None),
@@ -976,7 +973,16 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
 
     def _top_candidate_indices(self):
         ranks = np.asarray(self.cv_results_[f"rank_test_{self.refit_metric}"])
-        return list(np.argsort(ranks)[: self.final_selection_top_k])
+        indices = []
+        seen = set()
+        for index in np.argsort(ranks, kind="stable"):
+            key = tuple(sorted(self._candidate_params_from_index(index).items()))
+            if key not in seen:
+                seen.add(key)
+                indices.append(index)
+                if len(indices) == self.final_selection_top_k:
+                    break
+        return indices
 
     def _final_selection_splits(self):
         if self.final_selection_cv is None:
@@ -1035,15 +1041,9 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         started_at = time.time()
         cv_splits = self._final_selection_splits()
         candidate_results = []
-        seen_params = set()
 
         for index in self._top_candidate_indices():
             params = self._candidate_params_from_index(index)
-            params_key = tuple(sorted(params.items()))
-            if params_key in seen_params:
-                continue
-            seen_params.add(params_key)
-
             score, cv_scores = self._score_final_candidate(params, cv_splits)
             candidate_results.append(
                 {
@@ -1184,6 +1184,7 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
             self.crossover_adapter.load_state_dict(restored_adapter_state["crossover"])
             self.mutation_adapter.load_state_dict(restored_adapter_state["mutation"])
         elif not checkpoint_loaded:
+            self.fitness_cache = {}
             _reset_adapters(self)
 
         # Preserve cumulative counters across a resume instead of zeroing them,
@@ -1258,6 +1259,7 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
             space=self.space,
             return_train_score=self.return_train_score,
             metrics=self.metrics_list,
+            greater_is_better=self.criteria == "max",
         )
 
         self.history = {
@@ -1456,7 +1458,8 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         If True takes the *tournament_size* best solution to the next generation.
 
     max_features : int, default=None
-        The upper bound number of features to be selected.
+        The upper bound number of features to be selected. Must be None or an
+        integer between 1 and the number of input features (validated at fit).
 
     scoring : str, callable, list, tuple or dict, default=None
         Strategy to evaluate the performance of the cross-validated model on
@@ -1852,10 +1855,6 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         return population
 
     def select(self, population, k):
-        if not self.elitism:
-            self._selection_pressure_ = None
-            return tools.selRoulette(population, k)
-
         tournament_size = adaptive_tournament_size(
             self,
             getattr(self, "_last_generation_record", None),
@@ -2096,11 +2095,6 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         self.refit_metric = "score"
         self.multimetric_ = False
 
-        self.features_proportion = None
-        max_features = getattr(self, "max_features", None)
-        if max_features:
-            self.features_proportion = max_features / self.n_features
-
         # Make sure the callbacks are valid
         self.callbacks = check_callback(callbacks)
 
@@ -2144,6 +2138,17 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
                         checkpoint_loaded = True
                     break
 
+        self.features_proportion = None
+        max_features = getattr(self, "max_features", None)
+        if max_features is not None:
+            if (
+                isinstance(max_features, (bool, np.bool_))
+                or not isinstance(max_features, Integral)
+                or not 1 <= max_features <= self.n_features
+            ):
+                raise ValueError("max_features must be an integer between 1 and n_features or None")
+            self.features_proportion = max_features / self.n_features
+
         # Seed after the checkpoint (if any) is loaded: ``self.__dict__.update()``
         # above may have just replaced ``self.random_state`` with the value from
         # a resumed run's checkpoint, and seeding before that point would use the
@@ -2157,6 +2162,7 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
             self.crossover_adapter.load_state_dict(restored_adapter_state["crossover"])
             self.mutation_adapter.load_state_dict(restored_adapter_state["mutation"])
         elif not checkpoint_loaded:
+            self.fitness_cache = {}
             _reset_adapters(self)
 
         # Preserve cumulative counters across a resume instead of zeroing them,
@@ -2232,6 +2238,7 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
             logbook=self.logbook,
             return_train_score=self.return_train_score,
             metrics=self.metrics_list,
+            greater_is_better=self.criteria == "max",
         )
 
         self.history = {

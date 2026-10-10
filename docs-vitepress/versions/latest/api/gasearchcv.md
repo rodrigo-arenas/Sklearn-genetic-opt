@@ -54,6 +54,17 @@ GASearchCV(
 | `runtime_config` | `RuntimeConfig` | `None` | Controls parallelism, caching, verbosity |
 | `optimization_config` | `OptimizationConfig` | `None` | Controls local search, fitness sharing |
 
+## Search correctness
+
+Each fresh `fit` recomputes candidate scores for the supplied data and scoring settings.
+Caching avoids repeated evaluations within that fit; explicit checkpoint resumes retain
+saved evaluations. Both elitist and non-elitist searches use tournament selection, so
+negative scores and `criteria="min"` remain meaningful. Scikit-learn's negative loss
+scorers normally use the default `criteria="max"`.
+
+Final selection's `top_k` counts distinct parameter configurations, even when the
+candidate log contains repeated cache hits.
+
 ## Attributes After `fit`
 
 | Attribute | Description |

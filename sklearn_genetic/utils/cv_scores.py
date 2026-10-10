@@ -46,7 +46,9 @@ def _rank_scores(scores, greater_is_better=True):
     return ranks
 
 
-def create_gasearch_cv_results_(logbook, space, return_train_score, metrics):
+def create_gasearch_cv_results_(
+    logbook, space, return_train_score, metrics, greater_is_better=True
+):
     cv_results = {}
     n_splits = len(logbook.chapters["parameters"].select("cv_scores")[0])
 
@@ -70,7 +72,9 @@ def create_gasearch_cv_results_(logbook, space, return_train_score, metrics):
             for cv_scores in logbook.chapters["parameters"].select(f"test_{metric}")
         ]
 
-        cv_results[f"rank_test_{metric}"] = _rank_scores(cv_results[f"mean_test_{metric}"])
+        cv_results[f"rank_test_{metric}"] = _rank_scores(
+            cv_results[f"mean_test_{metric}"], greater_is_better
+        )
 
         if return_train_score:
             for split in range(n_splits):
@@ -89,7 +93,9 @@ def create_gasearch_cv_results_(logbook, space, return_train_score, metrics):
                 for cv_scores in logbook.chapters["parameters"].select(f"train_{metric}")
             ]
 
-            cv_results[f"rank_train_{metric}"] = _rank_scores(cv_results[f"mean_train_{metric}"])
+            cv_results[f"rank_train_{metric}"] = _rank_scores(
+                cv_results[f"mean_train_{metric}"], greater_is_better
+            )
 
     # These values are only one even with multi-metric
     cv_results["mean_fit_time"] = [
@@ -114,7 +120,9 @@ def create_gasearch_cv_results_(logbook, space, return_train_score, metrics):
     return cv_results
 
 
-def create_feature_selection_cv_results_(logbook, return_train_score, metrics):
+def create_feature_selection_cv_results_(
+    logbook, return_train_score, metrics, greater_is_better=True
+):
     cv_results = {}
     n_splits = len(logbook.chapters["parameters"].select("cv_scores")[0])
 
@@ -135,7 +143,9 @@ def create_feature_selection_cv_results_(logbook, return_train_score, metrics):
             for cv_scores in logbook.chapters["parameters"].select(f"test_{metric}")
         ]
 
-        cv_results[f"rank_test_{metric}"] = _rank_scores(cv_results[f"mean_test_{metric}"])
+        cv_results[f"rank_test_{metric}"] = _rank_scores(
+            cv_results[f"mean_test_{metric}"], greater_is_better
+        )
 
         if return_train_score:
             for split in range(n_splits):
@@ -154,7 +164,9 @@ def create_feature_selection_cv_results_(logbook, return_train_score, metrics):
                 for cv_scores in logbook.chapters["parameters"].select(f"train_{metric}")
             ]
 
-            cv_results[f"rank_train_{metric}"] = _rank_scores(cv_results[f"mean_train_{metric}"])
+            cv_results[f"rank_train_{metric}"] = _rank_scores(
+                cv_results[f"mean_train_{metric}"], greater_is_better
+            )
 
     # These values are only one even with multi-metric
     cv_results["mean_fit_time"] = [

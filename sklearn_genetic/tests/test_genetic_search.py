@@ -227,7 +227,8 @@ def test_wrong_final_selection_top_k():
     assert str(excinfo.value) == "final_selection_top_k must be greater than or equal to 1"
 
 
-def test_final_selection_can_replace_original_best_candidate(monkeypatch):
+@pytest.mark.parametrize("duplicates", [False, True])
+def test_final_selection_can_replace_original_best_candidate(monkeypatch, duplicates):
     estimator = GASearchCV(
         DecisionTreeClassifier(random_state=42),
         param_grid={"max_depth": Integer(1, 3)},
@@ -242,6 +243,16 @@ def test_final_selection_can_replace_original_best_candidate(monkeypatch):
         "params": [{"max_depth": 1}, {"max_depth": 2}, {"max_depth": 3}],
     }
 
+    if duplicates:
+        estimator.cv_results_["rank_test_score"] = np.array([1, 1, 2, 3])
+        estimator.cv_results_["mean_test_score"] = np.array([0.90, 0.90, 0.89, 0.70])
+        estimator.cv_results_["params"].insert(0, {"max_depth": 1})
+        for key, values in estimator.cv_results_.items():
+            estimator.cv_results_[key] = [values[i] for i in [2, 0, 1, 3]]
+        estimator.cv_results_["rank_test_score"] = np.array(
+            estimator.cv_results_["rank_test_score"]
+        )
+
     monkeypatch.setattr(estimator, "_final_selection_splits", lambda: ["split"])
 
     def score_candidate(params, cv_splits):
@@ -253,11 +264,13 @@ def test_final_selection_can_replace_original_best_candidate(monkeypatch):
 
     best_index, best_score, best_params = estimator._select_final_candidate()
 
-    assert best_index == 1
+    assert best_index == (0 if duplicates else 1)
     assert best_score == pytest.approx(0.95)
     assert best_params == {"max_depth": 2}
     assert estimator.final_selection_results_["changed"] is True
-    assert len(estimator.final_selection_results_["candidates"]) == 2
+    assert [
+        item["params"]["max_depth"] for item in estimator.final_selection_results_["candidates"]
+    ] == [1, 2]
 
 
 def test_final_selection_respects_criteria_min(monkeypatch):

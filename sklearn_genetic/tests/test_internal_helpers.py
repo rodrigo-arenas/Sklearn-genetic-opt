@@ -577,3 +577,125 @@ def test_reset_adapters_calls_both_adapter_resets():
     reset_adapters(estimator)
 
     assert calls == ["crossover", "mutation"]
+
+
+@pytest.mark.parametrize("selector", [False, True])
+def test_fresh_fit_recomputes_scores_on_new_targets(selector):
+    from sklearn.dummy import DummyRegressor
+
+    model = DummyRegressor(strategy="constant", constant=0)
+    kwargs = dict(
+        cv=2,
+        population_size=4,
+        generations=0,
+        verbose=False,
+        scoring="neg_mean_absolute_error",
+        random_state=13,
+    )
+    search = (
+        GAFeatureSelectionCV(model, **kwargs)
+        if selector
+        else GASearchCV(model, param_grid={"constant": Categorical([0])}, **kwargs)
+    )
+    X = np.arange(12).reshape(-1, 1)
+    search.fit(X, np.zeros(12))
+    search.fit(X, np.ones(12))
+    assert search.fit_stats_["cross_validate_calls"] == 1
+    assert np.allclose(search.cv_results_["mean_test_score"], -1)
+
+
+@pytest.mark.parametrize("search_class", [GASearchCV, GAFeatureSelectionCV])
+@pytest.mark.parametrize("criteria,scores", [("max", [-3.0, -2.0, -1.0]), ("min", [3.0, 2.0, 1.0])])
+def test_non_elitist_selection_respects_fitness_direction(search_class, criteria, scores):
+    class Fitness(base.Fitness):
+        weights = (1.0 if criteria == "max" else -1.0,)
+
+    population = []
+    for score in scores:
+        individual = SimpleNamespace(fitness=Fitness((score,)))
+        population.append(individual)
+    kwargs = {"param_grid": {"max_depth": Integer(1, 3)}} if search_class is GASearchCV else {}
+    search = search_class(DecisionTreeClassifier(), elitism=False, criteria=criteria, **kwargs)
+    random.seed(41)
+    selected = search.select(population, 300)
+    assert len(selected) == 300
+    assert sum(ind is population[-1] for ind in selected) > sum(
+        ind is population[0] for ind in selected
+    )
+
+
+@pytest.mark.parametrize("max_features", [0, -1, 1.5, True, 4])
+def test_feature_selection_rejects_invalid_feature_bounds(max_features):
+    search = GAFeatureSelectionCV(
+        DecisionTreeClassifier(),
+        max_features=max_features,
+        population_size=4,
+        generations=0,
+        verbose=False,
+    )
+    with pytest.raises(ValueError, match="max_features"):
+        search.fit(np.ones((12, 3)), np.tile([0, 1], 6))
+
+
+@pytest.mark.parametrize("algorithm", ["eaSimple", "eaMuPlusLambda", "eaMuCommaLambda"])
+def test_feature_selection_evolves_only_nonempty_bounded_masks(algorithm):
+    search = GAFeatureSelectionCV(
+        DecisionTreeClassifier(random_state=0),
+        max_features=1,
+        population_size=6,
+        generations=3,
+        verbose=False,
+        algorithm=algorithm,
+        random_state=17,
+        mutation_probability=0.5,
+        crossover_probability=0.5,
+    )
+    search.fit(np.arange(36).reshape(12, 3), np.tile([0, 1], 6))
+    assert search.get_support().sum() == 1
+    assert all(np.sum(mask) == 1 for mask in search.cv_results_["features"])
+
+
+@pytest.mark.parametrize("final_selection", [False, True])
+def test_fit_minimization_selects_lowest_scoring_candidate(final_selection):
+    from sklearn.datasets import load_iris
+
+    X, y = load_iris(return_X_y=True)
+    search = GASearchCV(
+        DecisionTreeClassifier(),
+        param_grid={"max_depth": Integer(1, 3)},
+        warm_start_configs=[{"max_depth": 1}, {"max_depth": 3}],
+        population_size=2,
+        generations=0,
+        criteria="min",
+        scoring=lambda estimator, X, y: estimator.max_depth,
+        final_selection=final_selection,
+        final_selection_top_k=1,
+        return_train_score=True,
+        verbose=False,
+        random_state=0,
+    )
+    search.fit(X, y)
+    assert search.best_params_["max_depth"] == 1
+    assert search.best_score_ == 1
+    assert search.cv_results_["rank_test_score"].tolist() == [1, 2]
+    assert search.cv_results_["rank_train_score"].tolist() == [1, 2]
+
+
+def test_feature_minimization_ranks_train_and_test_scores():
+    search = GAFeatureSelectionCV(
+        DecisionTreeClassifier(),
+        criteria="min",
+        cv=2,
+        population_size=4,
+        generations=0,
+        return_train_score=True,
+        scoring=lambda estimator, X, y: X.shape[1],
+        verbose=False,
+    )
+    search.fit(np.arange(48).reshape(12, 4), np.tile([0, 1], 6))
+    assert search.get_support().sum() == 1
+    for split in ["train", "test"]:
+        scores = np.asarray(search.cv_results_[f"mean_{split}_score"])
+        ranks = search.cv_results_[f"rank_{split}_score"]
+        assert np.all(ranks[scores == 1] == 1)
+        assert np.all(ranks[scores > 1] > 1)

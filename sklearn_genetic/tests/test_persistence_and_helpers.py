@@ -800,3 +800,26 @@ def test_adapter_state_dict_round_trip():
         fresh.load_state_dict(state)
         assert fresh.current_step == adapter.current_step
         assert fresh.current_value == pytest.approx(adapter.current_value)
+
+
+@pytest.mark.parametrize("saved_bound,constructor_bound", [(5, 1), (1, 5)])
+def test_feature_checkpoint_validates_restored_bounds(tmp_path, saved_bound, constructor_bound):
+    X, y = load_iris(return_X_y=True)
+    path = tmp_path / "feature_bound.pkl"
+    with path.open("wb") as stream:
+        pickle.dump({"estimator_state": {"max_features": saved_bound}, "logbook": None}, stream)
+    search = GAFeatureSelectionCV(
+        DecisionTreeClassifier(),
+        max_features=constructor_bound,
+        cv=2,
+        population_size=4,
+        generations=0,
+        verbose=False,
+    )
+    callback = ModelCheckpoint(checkpoint_path=str(path))
+    if saved_bound > X.shape[1]:
+        with pytest.raises(ValueError, match="max_features"):
+            search.fit(X, y, callbacks=callback)
+    else:
+        search.fit(X, y, callbacks=callback)
+        assert search.get_support().sum() == saved_bound

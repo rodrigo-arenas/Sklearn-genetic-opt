@@ -11,6 +11,11 @@ Full release notes with code examples are in the [documentation](https://sklearn
 
 ### Bug Fixes
 
+- Fresh fits clear cached scores while explicit checkpoint resumes retain their cache.
+- Both searches use fitness-aware tournament selection with `elitism=False`, supporting negative scores and minimization without losing population members.
+- Candidate ranks respect `criteria="min"`; final selection compares the requested number of distinct configurations rather than duplicate log rows.
+- Feature selection rejects non-integer, zero, negative, or oversized `max_features` at fit time.
+
 - `Continuous` now rejects a non-positive `lower` bound when `distribution="log-uniform"` at construction time, instead of failing later during `fit` with an opaque SciPy "Domain error in arguments".
 - `Categorical` now rejects negative `priors`. Previously they passed validation because they summed to one, then either raised a NumPy error (seeded) or silently sampled with distorted weights (unseeded).
 - Fixed pickling of fitted `GASearchCV` and `GAFeatureSelectionCV` instances. `pickle.dumps`/`pickle.loads` and `joblib.dump`/`joblib.load` previously failed on the unpicklable DEAP toolbox captured in `__dict__` (`Can't pickle <function ...>`) and now exclude the unpicklable DEAP internals (`toolbox`, `_stats`, `_pop`, `_hof`) via new `__getstate__`/`__setstate__` hooks on `GeneticEstimatorMixin`. The user-facing `hof` result is still preserved. `save()`/`load()` share the same protocol, and `load()` also accepts files written directly with `pickle.dump(self, f)` (#358).

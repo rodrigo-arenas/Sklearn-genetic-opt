@@ -55,6 +55,18 @@ GAFeatureSelectionCV(
 | `runtime_config` | `RuntimeConfig` | `None` | Parallelism, caching, verbosity |
 | `optimization_config` | `OptimizationConfig` | `None` | Local search, fitness sharing |
 
+## Search correctness
+
+Each fresh `fit` recomputes candidate scores for the supplied data and scoring settings.
+Caching avoids repeated evaluations within that fit; explicit checkpoint resumes retain
+saved evaluations. Both elitist and non-elitist searches use tournament selection, so
+negative scores and `criteria="min"` remain meaningful. Scikit-learn's negative loss
+scorers normally use the default `criteria="max"`.
+
+`max_features` must be `None` or an integer from 1 through the number of input
+columns. Initialisation, crossover and mutation repair masks to keep at least one
+feature and respect that upper bound.
+
 ## Attributes After `fit`
 
 | Attribute | Description |
