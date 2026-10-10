@@ -365,6 +365,86 @@ def test_set_params_validates_replaced_grouped_warm_start(initializer):
         search.fit(X_train[:100], y_train[:100])
 
 
+@pytest.mark.parametrize("fit_before_update", [False, True])
+def test_set_params_uses_replaced_search_space_on_next_fit(fit_before_update):
+    search = GASearchCV(
+        DecisionTreeClassifier(random_state=42),
+        param_grid={"max_depth": Integer(1, 2), "min_samples_leaf": Integer(1, 2)},
+        population_size=4,
+        generations=0,
+        cv=2,
+        random_state=42,
+        verbose=False,
+    )
+    if fit_before_update:
+        search.fit(X_train[:100], y_train[:100])
+
+    search.set_params(
+        param_grid={"max_depth": Integer(5, 6), "min_samples_leaf": Integer(3, 4)}
+    ).fit(X_train[:100], y_train[:100])
+
+    assert all(
+        params["max_depth"] in {5, 6} and params["min_samples_leaf"] in {3, 4}
+        for params in search.cv_results_["params"]
+    )
+    assert search.best_params_["max_depth"] in {5, 6}
+    assert search.best_params_["min_samples_leaf"] in {3, 4}
+
+
+def test_set_params_validates_replaced_search_space_on_next_fit():
+    search = _warm_start_search("smart")
+    search.set_params(param_grid={"max_depth": [1, 2]})
+
+    with pytest.raises(ValueError, match="Invalid param_grid entry for 'max_depth'"):
+        search.fit(X_train[:100], y_train[:100])
+
+
+def test_set_params_can_replace_search_space_parameter_names():
+    search = _warm_start_search("smart")
+    search.set_params(param_grid={"min_samples_leaf": Integer(2, 3)})
+    search.fit(X_train[:100], y_train[:100])
+
+    assert all(
+        set(params) == {"min_samples_leaf"} and params["min_samples_leaf"] in {2, 3}
+        for params in search.cv_results_["params"]
+    )
+    assert set(search.best_params_) == {"min_samples_leaf"}
+
+
+def test_checkpoint_resume_rebuilds_saved_space_after_different_constructor_grid(tmp_path):
+    checkpoint = ModelCheckpoint(checkpoint_path=str(tmp_path / "space-checkpoint.pkl"))
+    settings = dict(
+        estimator=DecisionTreeClassifier(random_state=42),
+        population_size=4,
+        generations=1,
+        cv=2,
+        random_state=42,
+        verbose=False,
+    )
+    saved = GASearchCV(
+        **settings,
+        param_grid={"max_depth": Integer(1, 2), "min_samples_leaf": Integer(1, 2)},
+    )
+    saved.fit(X_train[:100], y_train[:100], callbacks=[checkpoint])
+
+    resumed = GASearchCV(
+        **settings,
+        param_grid={
+            "min_samples_split": Integer(5, 6),
+            "criterion": Categorical(["gini", "entropy"]),
+        },
+    )
+    resumed.fit(X_train[:100], y_train[:100], callbacks=[checkpoint])
+
+    assert set(resumed.best_params_) == {"max_depth", "min_samples_leaf"}
+    assert all(
+        set(params) == {"max_depth", "min_samples_leaf"}
+        and params["max_depth"] in {1, 2}
+        and params["min_samples_leaf"] in {1, 2}
+        for params in resumed.cv_results_["params"]
+    )
+
+
 def test_wrong_parallel_backend():
     with pytest.raises(ValueError) as excinfo:
         GASearchCV(

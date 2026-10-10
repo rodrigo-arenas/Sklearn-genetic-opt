@@ -29,8 +29,9 @@ use only `squared_error`; choose `balanced` or `wide` if the more robust
 [configuration](./api/config), [algorithms](./api/algorithms), and
 [presets](./api/presets) references for their use and limits.
 
-On a reused `GASearchCV`, warm starts changed through `set_params` now apply to
-the next fit instead of leaving the original seed configuration active.
+On a reused `GASearchCV`, changes to `param_grid` and warm starts through
+`set_params` now apply to the next fit instead of leaving the original search
+space or seed configuration active.
 
 Benchmarks include Optuna, FLAML and AutoGluon, with reproducible settings in
 [`benchmarks/PERFORMANCE_V2.md`](https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/benchmarks/PERFORMANCE_V2.md).

@@ -1252,6 +1252,11 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
                         checkpoint_loaded = True
                     break
 
+        # ``set_params(param_grid=...)`` updates the public parameter but not
+        # the Space built at construction. Rebuild after any checkpoint load,
+        # which may restore its own param_grid for a resumed search.
+        self.space = Space(self.param_grid)
+
         # Seed after the checkpoint (if any) is loaded: ``self.__dict__.update()``
         # above may have just replaced ``self.random_state`` with the value from
         # a resumed run's checkpoint, and seeding before that point would use the

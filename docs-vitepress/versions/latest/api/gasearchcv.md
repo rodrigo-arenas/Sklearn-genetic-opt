@@ -88,6 +88,10 @@ candidate log contains repeated cache hits.
 | `score(X, y)` | Score using `best_estimator_` |
 | `get_params()` / `set_params()` | Standard sklearn estimator interface |
 
+After `set_params(param_grid=new_space)`, the next `fit` validates and uses
+`new_space`, including changed parameter names. An explicit checkpoint resume
+restores the saved search space.
+
 ## Example
 
 ```python
