@@ -1,7 +1,9 @@
 import pytest
 from deap import tools
+import pandas as pd
 from sklearn.base import clone
 from sklearn.datasets import load_iris, load_diabetes
+from sklearn.exceptions import NotFittedError
 from sklearn.linear_model import SGDClassifier
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.model_selection import train_test_split
@@ -38,6 +40,62 @@ noise = np.random.uniform(1, 4, size=(X.shape[0], 10))
 X = np.hstack((X, noise))
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
+
+
+def _fit_feature_name_selector(X, y):
+    selector = GAFeatureSelectionCV(
+        DecisionTreeClassifier(random_state=42),
+        cv=2,
+        scoring="accuracy",
+        population_size=4,
+        generations=1,
+        verbose=False,
+        n_jobs=1,
+        random_state=42,
+    )
+    return selector.fit(X, y)
+
+
+def test_get_feature_names_out_requires_fitted_selector():
+    selector = GAFeatureSelectionCV(DecisionTreeClassifier())
+
+    with pytest.raises(NotFittedError, match="not fitted"):
+        selector.get_feature_names_out()
+
+
+def test_get_feature_names_out_generates_numpy_feature_names():
+    iris = load_iris()
+    selector = _fit_feature_name_selector(iris.data, iris.target)
+    input_features = np.asarray([f"x{index}" for index in range(iris.data.shape[1])])
+
+    assert not hasattr(selector, "feature_names_in_")
+    np.testing.assert_array_equal(
+        selector.get_feature_names_out(),
+        input_features[selector.get_support()],
+    )
+
+    with pytest.raises(ValueError, match="input_features should have length equal"):
+        selector.get_feature_names_out(["first", "second"])
+
+
+def test_get_feature_names_out_preserves_dataframe_feature_names():
+    iris = load_iris()
+    input_features = np.asarray(
+        ["sepal_length", "sepal_width", "petal_length", "petal_width"],
+        dtype=object,
+    )
+    X_frame = pd.DataFrame(iris.data, columns=input_features)
+    selector = _fit_feature_name_selector(X_frame, iris.target)
+    expected = input_features[selector.get_support()]
+
+    np.testing.assert_array_equal(selector.feature_names_in_, input_features)
+    np.testing.assert_array_equal(selector.get_feature_names_out(), expected)
+    np.testing.assert_array_equal(selector.get_feature_names_out(input_features), expected)
+
+    mismatched = input_features.copy()
+    mismatched[0] = "different"
+    with pytest.raises(ValueError, match="input_features is not equal to feature_names_in_"):
+        selector.get_feature_names_out(mismatched)
 
 
 def test_default_n_jobs_is_none():
@@ -828,3 +886,86 @@ def test_expected_ga_schedulers():
     assert "features" in cv_result_keys
 
     assert crossover_scheduler.current_value + mutation_scheduler.current_value <= 1
+
+
+def test_feature_selection_fit_with_groups_supports_group_kfold():
+    """#338: GAFeatureSelectionCV.fit(..., groups=...) enables group-aware CV.
+
+    Every materialized split must keep train and test groups disjoint, and the
+    selector must still produce a valid support mask.
+    """
+    from sklearn.model_selection import GroupKFold
+
+    groups = np.arange(X_train.shape[0]) % 3
+    selector = GAFeatureSelectionCV(
+        DecisionTreeClassifier(random_state=0),
+        cv=GroupKFold(n_splits=3),
+        scoring="accuracy",
+        population_size=4,
+        generations=2,
+        verbose=False,
+    )
+
+    selector.fit(X_train, y_train, groups=groups)
+
+    assert selector.support_.shape[0] == X_train.shape[1]
+    assert len(selector._cv_splits) == 3
+    for train_idx, test_idx in selector._cv_splits:
+        assert set(groups[train_idx]).isdisjoint(set(groups[test_idx]))
+
+
+def test_feature_selection_forwards_sample_weight_and_slices_only_features():
+    """#339: GAFeatureSelectionCV forwards sample_weight while only X is
+    feature-sliced.
+
+    Candidate fits see a feature-sliced X but per-fold sample_weight slices;
+    the final refit sees the full weight vector.
+    """
+    recorded = []
+
+    class WeightRecordingTree(DecisionTreeClassifier):
+        def fit(self, X, y, sample_weight=None):
+            recorded.append((X.shape[1], None if sample_weight is None else len(sample_weight)))
+            return super().fit(X, y, sample_weight=sample_weight)
+
+    n_samples, n_features_total = X_train.shape
+    weights = np.linspace(0.5, 1.5, n_samples)
+    selector = GAFeatureSelectionCV(
+        WeightRecordingTree(random_state=0),
+        cv=2,
+        scoring="accuracy",
+        population_size=4,
+        generations=2,
+        verbose=False,
+    )
+
+    selector.fit(X_train, y_train, sample_weight=weights)
+
+    assert recorded, "no fit calls were recorded"
+    # Every fit received weights, and X never grew beyond the original features.
+    assert all(w is not None for _, w in recorded)
+    assert all(f <= n_features_total for f, _ in recorded)
+    # Candidate CV fits get per-fold weight slices; the refit gets all samples.
+    assert all(w < n_samples for _, w in recorded[:-1])
+    assert recorded[-1][1] == n_samples
+
+
+def test_feature_selection_unsupported_fit_param_raises_clearly():
+    """#364: GAFeatureSelectionCV rejects unsupported metadata up front with a
+    clear message naming the parameter and the wrapped estimator."""
+    selector = GAFeatureSelectionCV(
+        DecisionTreeClassifier(random_state=0),
+        cv=2,
+        scoring="accuracy",
+        population_size=4,
+        generations=1,
+        error_score="raise",
+        verbose=False,
+    )
+
+    with pytest.raises(TypeError) as excinfo:
+        selector.fit(X_train, y_train, not_a_real_fit_param=np.ones(X_train.shape[0]))
+
+    message = str(excinfo.value)
+    assert "not_a_real_fit_param" in message
+    assert "DecisionTreeClassifier" in message

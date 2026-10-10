@@ -29,7 +29,7 @@
       </div>
 
       <div class="recipes-cta">
-        <a href="/versions/latest/recipes/" class="browse-all-btn">Browse all 30 recipes →</a>
+        <a href="/versions/latest/recipes/" class="browse-all-btn">Browse all 35 recipes →</a>
       </div>
     </div>
   </section>
@@ -108,6 +108,15 @@ const recipes = [
     time: '8 min',
     difficulty: 'Intermediate',
     link: '/versions/latest/recipes/regression/xgboost-regressor',
+  },
+  {
+    icon: '⚓',
+    category: 'Regression',
+    title: 'Tune SGDRegressor',
+    desc: 'Perform genetic feature selection and hyperparameter tuning for SGDRegressor using GASearchCV and GAFeatureSelectionCV.',
+    time: '5 min',
+    difficulty: 'Intermediate',
+    link: '/versions/latest/recipes/regression/sgd-regressor',
   },
 ]
 </script>

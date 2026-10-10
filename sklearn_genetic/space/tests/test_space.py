@@ -90,6 +90,16 @@ def test_wrong_boundaries(data_object, parameters, message):
             {"lower": 2, "upper": 10, "distribution": "log-uniform"},
             "distribution must be one of ['uniform'], got log-uniform instead",
         ),
+        (
+            Continuous,
+            {"lower": 0, "upper": 1, "distribution": "log-uniform"},
+            "lower bound must be greater than zero for the log-uniform distribution, got 0 instead",
+        ),
+        (
+            Continuous,
+            {"lower": -1.5, "upper": 1, "distribution": "log-uniform"},
+            "lower bound must be greater than zero for the log-uniform distribution, got -1.5 instead",
+        ),
     ],
 )
 def test_wrong_distributions(data_object, parameters, message):
@@ -111,6 +121,11 @@ def test_wrong_distributions(data_object, parameters, message):
             Categorical,
             {"choices": [True], "priors": [0.1, 0.9]},
             "priors and choices must have same size",
+        ),
+        (
+            Categorical,
+            {"choices": ["a", "b"], "priors": [1.5, -0.5]},
+            "priors must be non-negative, got [1.5, -0.5] instead",
         ),
     ],
 )
@@ -472,3 +487,9 @@ def test_from_sklearn_space_rejects_broken_frozen_distribution_bounds(monkeypatc
 
     with pytest.raises(ValueError, match="must define low and high bounds"):
         from_sklearn_space({"max_depth": broken_distribution})
+
+
+def test_log_uniform_accepts_positive_lower_bound():
+    dimension = Continuous(1e-4, 1.0, distribution="log-uniform", random_state=0)
+    for _ in range(20):
+        assert 1e-4 <= dimension.sample() <= 1.0

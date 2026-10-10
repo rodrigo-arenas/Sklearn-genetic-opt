@@ -1,5 +1,7 @@
+import pickle
 import shutil
 
+import numpy as np
 import pytest
 from sklearn.datasets import load_iris
 from sklearn.exceptions import NotFittedError
@@ -27,7 +29,10 @@ def test_space_sample_warm_start_fills_missing_parameters():
     assert sampled_params == {"provided": 1, "sampled": 2}
 
 
-def test_ga_search_save_and_load_round_trip(tmp_path, capsys):
+def test_ga_search_save_and_load_round_trip(tmp_path, caplog):
+    import logging
+
+    caplog.set_level(logging.INFO)
     search = GASearchCV(
         estimator=DecisionTreeClassifier(),
         param_grid={"max_depth": Integer(1, 2)},
@@ -47,10 +52,9 @@ def test_ga_search_save_and_load_round_trip(tmp_path, capsys):
         scoring="accuracy",
     )
     restored.load(checkpoint_path)
-    output = capsys.readouterr().out
 
-    assert "GASearchCV model successfully saved" in output
-    assert "GASearchCV model successfully loaded" in output
+    assert "GASearchCV model successfully saved" in caplog.text
+    assert "GASearchCV model successfully loaded" in caplog.text
     assert restored.extra_state == "persisted"
     assert restored.logbook == [{"generation": 0}]
 
@@ -92,7 +96,60 @@ def test_fitted_ga_search_save_and_load_round_trip(tmp_path):
     assert restored.predict(X_test).shape[0] == X_test.shape[0]
 
 
-def test_ga_search_save_and_load_errors_are_reported(tmp_path, capsys):
+@pytest.mark.parametrize(
+    "build",
+    [
+        lambda: GASearchCV(
+            estimator=DecisionTreeClassifier(random_state=0),
+            param_grid={
+                "max_depth": Integer(1, 3),
+                "min_samples_split": Integer(2, 5),
+            },
+            cv=2,
+            scoring="accuracy",
+            population_size=4,
+            generations=2,
+        ),
+        lambda: GAFeatureSelectionCV(
+            estimator=DecisionTreeClassifier(random_state=0),
+            cv=2,
+            scoring="accuracy",
+            population_size=4,
+            generations=2,
+        ),
+    ],
+    ids=["GASearchCV", "GAFeatureSelectionCV"],
+)
+def test_load_accepts_raw_pickled_instance(build, tmp_path):
+    X, y = load_iris(return_X_y=True)
+    X_train, X_test, y_train, _ = train_test_split(
+        X,
+        y,
+        test_size=0.25,
+        stratify=y,
+        random_state=0,
+    )
+
+    estimator = build()
+    estimator.fit(X_train, y_train)
+
+    checkpoint_path = tmp_path / "raw_instance.pkl"
+    with open(checkpoint_path, "wb") as f:
+        pickle.dump(estimator, f)
+
+    restored = build()
+    restored.load(checkpoint_path)
+
+    assert restored.predict(X_test).shape[0] == X_test.shape[0]
+    if isinstance(restored, GAFeatureSelectionCV):
+        assert np.array_equal(restored.support_, estimator.support_)
+        assert np.array_equal(restored.best_features_, estimator.best_features_)
+    else:
+        assert restored.best_score_ == estimator.best_score_
+        assert restored.best_params_ == estimator.best_params_
+
+
+def test_ga_search_save_and_load_errors_are_reported(tmp_path, caplog):
     search = GASearchCV(
         estimator=DecisionTreeClassifier(),
         param_grid={"max_depth": Integer(1, 2)},
@@ -100,15 +157,19 @@ def test_ga_search_save_and_load_errors_are_reported(tmp_path, capsys):
         scoring="accuracy",
     )
 
-    search.save(tmp_path / "missing" / "ga_search.pkl")
-    search.load(tmp_path / "missing.pkl")
-    output = capsys.readouterr().out
+    with pytest.raises(OSError):
+        search.save(tmp_path / "missing" / "ga_search.pkl")
+    with pytest.raises(FileNotFoundError):
+        search.load(tmp_path / "missing.pkl")
 
-    assert "Error saving GASearchCV" in output
-    assert "Error loading GASearchCV" in output
+    assert "Error saving GASearchCV" in caplog.text
+    assert "Error loading GASearchCV" in caplog.text
 
 
-def test_ga_feature_selection_save_and_load_round_trip(tmp_path, capsys):
+def test_ga_feature_selection_save_and_load_round_trip(tmp_path, caplog):
+    import logging
+
+    caplog.set_level(logging.INFO)
     selector = GAFeatureSelectionCV(
         estimator=DecisionTreeClassifier(),
         cv=2,
@@ -130,15 +191,14 @@ def test_ga_feature_selection_save_and_load_round_trip(tmp_path, capsys):
         generations=2,
     )
     restored.load(checkpoint_path)
-    output = capsys.readouterr().out
 
-    assert "GAFeatureSelectionCV model successfully saved" in output
-    assert "GAFeatureSelectionCV model successfully loaded" in output
+    assert "GAFeatureSelectionCV model successfully saved" in caplog.text
+    assert "GAFeatureSelectionCV model successfully loaded" in caplog.text
     assert restored.extra_state == "persisted"
     assert restored.logbook == [{"generation": 0}]
 
 
-def test_ga_feature_selection_save_and_load_errors_are_reported(tmp_path, capsys):
+def test_ga_feature_selection_save_and_load_errors_are_reported(tmp_path, caplog):
     selector = GAFeatureSelectionCV(
         estimator=DecisionTreeClassifier(),
         cv=2,
@@ -147,12 +207,13 @@ def test_ga_feature_selection_save_and_load_errors_are_reported(tmp_path, capsys
         generations=2,
     )
 
-    selector.save(tmp_path / "missing" / "ga_feature_selection.pkl")
-    selector.load(tmp_path / "missing.pkl")
-    output = capsys.readouterr().out
+    with pytest.raises(OSError):
+        selector.save(tmp_path / "missing" / "ga_feature_selection.pkl")
+    with pytest.raises(FileNotFoundError):
+        selector.load(tmp_path / "missing.pkl")
 
-    assert "Error saving GAFeatureSelectionCV" in output
-    assert "Error loading GAFeatureSelectionCV" in output
+    assert "Error saving GAFeatureSelectionCV" in caplog.text
+    assert "Error loading GAFeatureSelectionCV" in caplog.text
 
 
 def test_ga_feature_selection_support_mask_requires_fit():
@@ -179,7 +240,10 @@ def _checkpoint_estimator():
     )
 
 
-def test_model_checkpoint_save_load_and_error_paths(tmp_path, capsys):
+def test_model_checkpoint_save_load_and_error_paths(tmp_path, caplog):
+    import logging
+
+    caplog.set_level(logging.INFO)
     estimator = _checkpoint_estimator()
     checkpoint_path = tmp_path / "checkpoint.pkl"
     checkpoint = ModelCheckpoint(checkpoint_path)
@@ -189,15 +253,15 @@ def test_model_checkpoint_save_load_and_error_paths(tmp_path, capsys):
 
     failing_checkpoint = ModelCheckpoint(tmp_path / "missing" / "checkpoint.pkl")
     failing_checkpoint.on_step(logbook=None, estimator=estimator)
-    missing_checkpoint = ModelCheckpoint(tmp_path / "missing.pkl").load()
-    output = capsys.readouterr().out
 
-    assert "Checkpoint saved to" in output
-    assert "Error saving checkpoint" in output
-    assert "Error loading checkpoint" in output
+    with pytest.raises(FileNotFoundError):
+        ModelCheckpoint(tmp_path / "missing.pkl").load()
+
+    assert "Checkpoint saved to" in caplog.text
+    assert "Error saving checkpoint" in caplog.text
+    assert "Error loading checkpoint" in caplog.text
     assert loaded_checkpoint["estimator_state"]["scoring"] == "accuracy"
     assert loaded_checkpoint["logbook"] is None
-    assert missing_checkpoint is None
 
 
 def test_model_checkpoint_estimator_state_keys(tmp_path):
@@ -263,7 +327,7 @@ def test_checkpoint_state_honors_serialization_contract(estimator):
     assert set(checkpoint).issubset(full), set(checkpoint) - set(full)
 
 
-def test_model_checkpoint_supports_feature_selection_estimator(tmp_path, capsys):
+def test_model_checkpoint_supports_feature_selection_estimator(tmp_path, caplog):
     """Checkpointing and resuming a GAFeatureSelectionCV must work (#297).
 
     GAFeatureSelectionCV has no ``param_grid`` attribute; the checkpoint state
@@ -285,8 +349,7 @@ def test_model_checkpoint_supports_feature_selection_estimator(tmp_path, capsys)
         )
 
     build().fit(X, y, callbacks=ModelCheckpoint(checkpoint_path=checkpoint_path))
-    output = capsys.readouterr().out
-    assert "Error saving checkpoint" not in output
+    assert "Error saving checkpoint" not in caplog.text
 
     loaded = ModelCheckpoint(checkpoint_path=checkpoint_path).load()
     assert "estimator_state" in loaded
@@ -469,3 +532,271 @@ def test_checkpoint_resume_preserves_random_state(tmp_path):
     assert resumed_a.best_params_ == resumed_b.best_params_
     assert resumed_a.best_score_ == resumed_b.best_score_
     assert list(resumed_a.history["fitness"]) == list(resumed_b.history["fitness"])
+
+
+import pickle
+from unittest.mock import patch
+
+
+def test_save_raises_on_serialization_error(tmp_path, caplog):
+    import logging
+
+    caplog.set_level(logging.ERROR)
+    search = GASearchCV(
+        estimator=DecisionTreeClassifier(),
+        param_grid={"max_depth": Integer(1, 2)},
+        cv=2,
+        scoring="accuracy",
+    )
+    with patch("sklearn_genetic._base.pickle.dumps", side_effect=pickle.PicklingError("boom")):
+        with pytest.raises(pickle.PicklingError, match="boom"):
+            search.save(tmp_path / "test.pkl")
+    assert "Error serializing GASearchCV" in caplog.text
+
+
+def test_load_raises_on_corrupted_file(tmp_path, caplog):
+    import logging
+
+    caplog.set_level(logging.ERROR)
+    corrupted = tmp_path / "corrupted.pkl"
+    corrupted.write_bytes(b"not a valid pickle")
+    search = GASearchCV(
+        estimator=DecisionTreeClassifier(),
+        param_grid={"max_depth": Integer(1, 2)},
+        cv=2,
+        scoring="accuracy",
+    )
+    with pytest.raises(pickle.UnpicklingError):
+        search.load(corrupted)
+    assert "corrupted checkpoint" in caplog.text
+
+
+def test_load_raises_on_missing_key(tmp_path, caplog):
+    import logging
+
+    caplog.set_level(logging.ERROR)
+    incomplete = tmp_path / "incomplete.pkl"
+    incomplete_data = {"estimator_state": {"some_key": "val"}}
+    with open(incomplete, "wb") as f:
+        pickle.dump(incomplete_data, f)
+    search = GASearchCV(
+        estimator=DecisionTreeClassifier(),
+        param_grid={"max_depth": Integer(1, 2)},
+        cv=2,
+        scoring="accuracy",
+    )
+    with pytest.raises(KeyError):
+        search.load(incomplete)
+    assert "missing key in checkpoint" in caplog.text
+
+
+def test_load_raises_on_non_instance_payload(tmp_path, caplog):
+    import logging
+
+    caplog.set_level(logging.ERROR)
+    # A pickled list is neither a checkpoint dict nor an object with ``__dict__``,
+    # so the raw-instance fallback has nothing to restore from.
+    not_an_instance = tmp_path / "not_an_instance.pkl"
+    with open(not_an_instance, "wb") as f:
+        pickle.dump(["not", "an", "instance"], f)
+    search = GASearchCV(
+        estimator=DecisionTreeClassifier(),
+        param_grid={"max_depth": Integer(1, 2)},
+        cv=2,
+        scoring="accuracy",
+    )
+    with pytest.raises(AttributeError):
+        search.load(not_an_instance)
+    assert "invalid checkpoint payload" in caplog.text
+
+
+def test_checkpoint_load_raises_on_corrupted_file(tmp_path, caplog):
+    import logging
+
+    caplog.set_level(logging.ERROR)
+    corrupted = tmp_path / "corrupted_checkpoint.pkl"
+    corrupted.write_bytes(b"not a valid pickle")
+    checkpoint = ModelCheckpoint(corrupted)
+    with pytest.raises(pickle.UnpicklingError):
+        checkpoint.load()
+    assert "corrupted file" in caplog.text
+
+
+def test_checkpoint_load_raises_on_file_not_found(tmp_path, caplog):
+    import logging
+
+    caplog.set_level(logging.ERROR)
+    inaccessible = tmp_path / "no_such_dir" / "checkpoint.pkl"
+    checkpoint = ModelCheckpoint(inaccessible)
+    with pytest.raises(FileNotFoundError):
+        checkpoint.load()
+    assert "file not found" in caplog.text
+
+
+def test_checkpoint_on_step_warns_on_oserror(tmp_path, caplog):
+    import logging
+
+    caplog.set_level(logging.WARNING)
+    estimator = GASearchCV(
+        estimator=DecisionTreeClassifier(),
+        param_grid={"max_depth": Integer(1, 2), "min_samples_split": Integer(2, 5)},
+        cv=2,
+        scoring="accuracy",
+        population_size=4,
+        generations=2,
+    )
+    bad_path = tmp_path / "missing_dir" / "checkpoint.pkl"
+    checkpoint = ModelCheckpoint(bad_path)
+    checkpoint.on_step(logbook=None, estimator=estimator)
+    assert "Error saving checkpoint" in caplog.text
+
+
+def test_checkpoint_on_step_warns_on_non_serializable_state(tmp_path, caplog):
+    import logging
+    import pickle
+    from unittest.mock import patch
+
+    caplog.set_level(logging.WARNING)
+    estimator = GASearchCV(
+        estimator=DecisionTreeClassifier(),
+        param_grid={"max_depth": Integer(1, 2), "min_samples_split": Integer(2, 5)},
+        cv=2,
+        scoring="accuracy",
+        population_size=4,
+        generations=2,
+    )
+    good_path = tmp_path / "checkpoint.pkl"
+    checkpoint = ModelCheckpoint(good_path)
+    with patch.object(pickle, "dump", side_effect=AttributeError("cannot pickle lambda")):
+        checkpoint.on_step(logbook=None, estimator=estimator)
+    assert "Error saving checkpoint" in caplog.text
+
+
+def test_load_raises_on_oserror(tmp_path, caplog):
+    import logging
+    from unittest.mock import mock_open, patch
+
+    caplog.set_level(logging.ERROR)
+    search = GASearchCV(
+        estimator=DecisionTreeClassifier(),
+        param_grid={"max_depth": Integer(1, 2)},
+        cv=2,
+        scoring="accuracy",
+    )
+    good_file = tmp_path / "good.pkl"
+    search.save(good_file)
+    with patch("builtins.open", side_effect=PermissionError("denied")):
+        with pytest.raises(PermissionError, match="denied"):
+            search.load(good_file)
+    assert "Error loading GASearchCV" in caplog.text
+
+
+def test_checkpoint_load_raises_on_oserror(tmp_path, caplog):
+    import logging
+    from unittest.mock import patch
+
+    caplog.set_level(logging.ERROR)
+    good_file = tmp_path / "checkpoint.pkl"
+    good_file.write_bytes(b"\x80\x04\x95\x05\x00\x00\x00\x00\x00\x00\x00N.")
+    checkpoint = ModelCheckpoint(good_file)
+    with patch("builtins.open", side_effect=PermissionError("denied")):
+        with pytest.raises(PermissionError, match="denied"):
+            checkpoint.load()
+    assert "Error loading checkpoint from" in caplog.text
+
+
+def test_checkpoint_resume_restores_adapter_state(tmp_path):
+    """Adapter step counters must survive checkpoint resume.
+
+    The crossover/mutation adapters are stateful: they track ``current_step``
+    and ``current_value`` which control the probability schedule across
+    generations. Before this fix the adapters were not included in the
+    checkpoint's ``runtime_state``, so a resumed run restarted from step 0
+    instead of continuing from where the previous run left off.
+    """
+    from ..schedules.schedulers import ExponentialAdapter
+
+    X, y = load_iris(return_X_y=True)
+    checkpoint_path = str(tmp_path / "adapter_checkpoint.pkl")
+
+    def build():
+        return GASearchCV(
+            estimator=DecisionTreeClassifier(random_state=0),
+            param_grid={"max_depth": Integer(1, 3)},
+            cv=2,
+            scoring="accuracy",
+            population_size=4,
+            generations=3,
+            crossover_probability=ExponentialAdapter(0.8, 0.2, 0.1),
+            mutation_probability=ExponentialAdapter(0.6, 0.1, 0.1),
+        )
+
+    first = build()
+    first.fit(X, y, callbacks=ModelCheckpoint(checkpoint_path=checkpoint_path))
+
+    cx_step_after_first = first.crossover_adapter.current_step
+    mut_step_after_first = first.mutation_adapter.current_step
+    cx_value_after_first = first.crossover_adapter.current_value
+    mut_value_after_first = first.mutation_adapter.current_value
+    assert cx_step_after_first > 0
+    assert mut_step_after_first > 0
+
+    resumed = build()
+    resumed.fit(X, y, callbacks=ModelCheckpoint(checkpoint_path=checkpoint_path))
+
+    # After resume, the adapter must continue from the first run's final
+    # state, not restart from step 0. With 3 more generations the final
+    # step count should be first_run_steps + 3.
+    assert resumed.crossover_adapter.current_step == cx_step_after_first + 3
+    assert resumed.mutation_adapter.current_step == mut_step_after_first + 3
+    # Values must continue decaying, not restart from initial values.
+    assert resumed.crossover_adapter.current_value < cx_value_after_first
+    assert resumed.mutation_adapter.current_value < mut_value_after_first
+
+
+def test_checkpoint_resume_restores_adapter_state_feature_selection(tmp_path):
+    """GAFeatureSelectionCV must also restore adapter state on resume."""
+    from ..schedules.schedulers import InverseAdapter
+
+    X, y = load_iris(return_X_y=True)
+    checkpoint_path = str(tmp_path / "fs_adapter_checkpoint.pkl")
+
+    def build():
+        return GAFeatureSelectionCV(
+            estimator=DecisionTreeClassifier(random_state=0),
+            cv=2,
+            scoring="accuracy",
+            population_size=4,
+            generations=3,
+            crossover_probability=InverseAdapter(0.8, 0.2, 0.1),
+            mutation_probability=InverseAdapter(0.6, 0.1, 0.1),
+        )
+
+    first = build()
+    first.fit(X, y, callbacks=ModelCheckpoint(checkpoint_path=checkpoint_path))
+
+    cx_step_after_first = first.crossover_adapter.current_step
+    mut_step_after_first = first.mutation_adapter.current_step
+
+    resumed = build()
+    resumed.fit(X, y, callbacks=ModelCheckpoint(checkpoint_path=checkpoint_path))
+
+    assert resumed.crossover_adapter.current_step == cx_step_after_first + 3
+    assert resumed.mutation_adapter.current_step == mut_step_after_first + 3
+
+
+def test_adapter_state_dict_round_trip():
+    """BaseAdapter.state_dict/load_state_dict preserve mutable state."""
+    from ..schedules.schedulers import ExponentialAdapter, InverseAdapter, PotentialAdapter
+
+    for cls in (ExponentialAdapter, InverseAdapter, PotentialAdapter):
+        adapter = cls(initial_value=0.8, end_value=0.2, adaptive_rate=0.1)
+        for _ in range(5):
+            adapter.step()
+        state = adapter.state_dict()
+
+        fresh = cls(initial_value=0.8, end_value=0.2, adaptive_rate=0.1)
+        assert fresh.current_step == 0
+        fresh.load_state_dict(state)
+        assert fresh.current_step == adapter.current_step
+        assert fresh.current_value == pytest.approx(adapter.current_value)

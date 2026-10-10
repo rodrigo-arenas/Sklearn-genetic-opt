@@ -97,7 +97,9 @@ param_grid = {
 ## Convert sklearn/scipy-style spaces
 
 `from_sklearn_space` converts common `RandomizedSearchCV`-style dictionaries into
-native `sklearn-genetic-opt` dimensions:
+native `sklearn-genetic-opt` dimensions. Use it when migrating an existing
+`param_distributions` mapping; when defining a new space, prefer the native
+dimensions directly:
 
 ```python
 from scipy import stats
@@ -128,6 +130,7 @@ distribution and suggests defining the corresponding `Integer`, `Continuous`, or
 
 ## See Also
 
+- [Migrating from RandomizedSearchCV](../guide/choosing-search-spaces#migrating-from-randomizedsearchcv) — copyable conversion recipe and bound semantics
 - [Basic Usage](../guide/basic-usage) — tutorial using all three dimension types
 - [Presets](./presets) — starter spaces for common scikit-learn estimators
 - [GASearchCV](./gasearchcv) — the search estimator that consumes `param_grid`

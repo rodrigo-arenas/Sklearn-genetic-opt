@@ -744,7 +744,18 @@ def print_summary_table(summaries: list[dict[str, Any]]) -> None:
         print("\t".join(row))
 
 
-def comparison_key(summary: dict[str, Any]) -> tuple[str, str, str, str, str]:
+def comparison_key(summary: dict[str, Any]) -> tuple[str, str, str, str, str, bool | None]:
+    return (
+        summary["scenario"],
+        summary["estimator"],
+        str(summary["n_jobs"]),
+        summary["parallel_backend"],
+        summary["population_initializer"],
+        summary.get("use_cache"),
+    )
+
+
+def _legacy_comparison_key(summary: dict[str, Any]) -> tuple[str, str, str, str, str]:
     return (
         summary["scenario"],
         summary["estimator"],
@@ -754,26 +765,40 @@ def comparison_key(summary: dict[str, Any]) -> tuple[str, str, str, str, str]:
     )
 
 
-def cache_aware_comparison_key(
-    summary: dict[str, Any],
-) -> tuple[tuple[str, str, str, str, str], bool]:
-    return comparison_key(summary), summary["use_cache"]
+def build_baseline_lookup(
+    baseline: list[dict[str, Any]], *, key_func: Callable[[dict[str, Any]], tuple]
+) -> dict[tuple, dict[str, Any]]:
+    """Build a ``{key_func(summary): summary}`` lookup.
+
+    Raises rather than silently letting a later row overwrite an earlier one
+    with the same key -- a silent overwrite would compare against the wrong
+    baseline row with no indication in the printed table (#336).
+    """
+    lookup: dict[tuple, dict[str, Any]] = {}
+    for summary in baseline:
+        key = key_func(summary)
+        if key in lookup:
+            raise ValueError(
+                f"Duplicate baseline comparison key {key!r}: more than one "
+                f"baseline row maps to it. Baseline summaries must be unique "
+                f"per comparison key."
+            )
+        lookup[key] = summary
+    return lookup
 
 
 def print_comparison_table(current: list[dict[str, Any]], baseline: list[dict[str, Any]]) -> None:
-    baseline_by_cache_key = {
-        cache_aware_comparison_key(summary): summary
-        for summary in baseline
-        if "use_cache" in summary
-    }
-    legacy_baseline_by_key = {
-        comparison_key(summary): summary for summary in baseline if "use_cache" not in summary
-    }
+    baseline_by_key = build_baseline_lookup(baseline, key_func=comparison_key)
+    legacy_baseline_by_key = build_baseline_lookup(
+        [summary for summary in baseline if "use_cache" not in summary],
+        key_func=_legacy_comparison_key,
+    )
+
     comparable = []
     for summary in current:
-        base = baseline_by_cache_key.get(cache_aware_comparison_key(summary))
-        if base is None and summary["use_cache"]:
-            base = legacy_baseline_by_key.get(comparison_key(summary))
+        base = baseline_by_key.get(comparison_key(summary))
+        if base is None and summary.get("use_cache", True):
+            base = legacy_baseline_by_key.get(_legacy_comparison_key(summary))
         if base is not None:
             comparable.append((summary, base))
 

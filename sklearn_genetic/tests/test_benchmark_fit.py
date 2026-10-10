@@ -1,6 +1,9 @@
+import pytest
+
 from benchmarks.benchmark_fit import (
     SCENARIOS,
     aggregate_results,
+    build_baseline_lookup,
     comparison_key,
     print_comparison_table,
 )
@@ -80,24 +83,127 @@ def test_comparison_matches_same_cache_mode_when_baseline_contains_both(capsys):
     assert rows[-1].split("\t")[5:9] == ["False", "False", "5.0000", "2.0000"]
 
 
-def test_comparison_supports_old_summaries_without_cache_mode(capsys):
+def test_comparison_key_includes_use_cache():
     cache_on = aggregate_results(
         [_benchmark_result(use_cache=True, cache_hits=3, duplicate_candidates=1, cv_calls=4)]
     )[0]
     cache_off = aggregate_results(
         [_benchmark_result(use_cache=False, cache_hits=0, duplicate_candidates=4, cv_calls=7)]
     )[0]
-    old_baseline = dict(cache_off)
+
+    assert comparison_key(cache_on) != comparison_key(cache_off)
+    assert comparison_key(cache_on)[-1] is True
+    assert comparison_key(cache_off)[-1] is False
+
+
+def test_comparison_supports_old_summaries_without_cache_mode(capsys):
+    cache_on = aggregate_results(
+        [_benchmark_result(use_cache=True, cache_hits=3, duplicate_candidates=1, cv_calls=4)]
+    )[0]
+    old_baseline = dict(cache_on)
     old_baseline.pop("use_cache")
 
-    assert comparison_key(cache_on) == comparison_key(cache_off)
-    assert comparison_key(cache_on) == comparison_key(old_baseline)
+    assert comparison_key(old_baseline)[-1] is None
 
-    print_comparison_table([cache_on, cache_off], [old_baseline])
+    print_comparison_table([cache_on], [old_baseline])
 
     output = capsys.readouterr().out
     assert "current_use_cache" in output
     assert "baseline_use_cache" in output
     rows = output.splitlines()
-    assert rows[-1].split("\t")[5:7] == ["True", "True"]
-    assert len(rows) == 5
+    data_rows = [r for r in rows if r.startswith("classification_lr_collisions")]
+    assert len(data_rows) == 1
+    assert data_rows[0].split("\t")[5:7] == ["True", "True"]
+
+
+def test_duplicate_cache_mode_keys_do_not_silently_overwrite(capsys):
+    cache_on = aggregate_results(
+        [_benchmark_result(use_cache=True, cache_hits=3, duplicate_candidates=1, cv_calls=4)]
+    )[0]
+    cache_off = aggregate_results(
+        [_benchmark_result(use_cache=False, cache_hits=0, duplicate_candidates=4, cv_calls=7)]
+    )[0]
+
+    current_on = dict(cache_on, fit_seconds_mean=10.0)
+    current_off = dict(cache_off, fit_seconds_mean=10.0)
+    baseline_on = dict(cache_on, fit_seconds_mean=2.0)
+    baseline_off = dict(cache_off, fit_seconds_mean=5.0)
+
+    print_comparison_table([current_on, current_off], [baseline_on, baseline_off])
+
+    rows = capsys.readouterr().out.splitlines()
+    data_rows = [r for r in rows if r.startswith("classification_lr_collisions")]
+    assert len(data_rows) == 2
+
+    on_row = [r for r in data_rows if "\tTrue\tTrue\t" in r][0]
+    off_row = [r for r in data_rows if "\tFalse\tFalse\t" in r][0]
+
+    assert on_row.split("\t")[7] == "8.0000"
+    assert off_row.split("\t")[7] == "5.0000"
+
+
+def test_legacy_baseline_only_matches_cache_on_current(capsys):
+    cache_on = aggregate_results(
+        [_benchmark_result(use_cache=True, cache_hits=3, duplicate_candidates=1, cv_calls=4)]
+    )[0]
+    cache_off = aggregate_results(
+        [_benchmark_result(use_cache=False, cache_hits=0, duplicate_candidates=4, cv_calls=7)]
+    )[0]
+
+    current_on = dict(cache_on, fit_seconds_mean=10.0)
+    current_off = dict(cache_off, fit_seconds_mean=10.0)
+
+    old_baseline = dict(cache_on)
+    old_baseline.pop("use_cache")
+    old_baseline["fit_seconds_mean"] = 2.0
+
+    print_comparison_table([current_on, current_off], [old_baseline])
+
+    rows = capsys.readouterr().out.splitlines()
+    data_rows = [r for r in rows if r.startswith("classification_lr_collisions")]
+    assert len(data_rows) == 1
+    assert data_rows[0].split("\t")[5:7] == ["True", "True"]
+
+
+def test_build_baseline_lookup_raises_on_duplicate_key():
+    with pytest.raises(ValueError, match="Duplicate baseline comparison key"):
+        build_baseline_lookup(
+            [{"scenario": "a", "n": 1}, {"scenario": "a", "n": 2}],
+            key_func=lambda summary: (summary["scenario"],),
+        )
+
+
+def test_build_baseline_lookup_allows_distinct_keys():
+    lookup = build_baseline_lookup(
+        [{"scenario": "a"}, {"scenario": "b"}],
+        key_func=lambda summary: (summary["scenario"],),
+    )
+
+    assert set(lookup) == {("a",), ("b",)}
+
+
+def test_duplicate_true_comparison_keys_raise():
+    """Two genuinely identical comparison keys (#336) must not silently pick
+    whichever baseline row happens to be built last."""
+    cache_on = aggregate_results(
+        [_benchmark_result(use_cache=True, cache_hits=3, duplicate_candidates=1, cv_calls=4)]
+    )[0]
+    baseline_a = dict(cache_on, fit_seconds_mean=2.0)
+    baseline_b = dict(cache_on, fit_seconds_mean=9.0)
+
+    with pytest.raises(ValueError, match="Duplicate baseline comparison key"):
+        print_comparison_table([cache_on], [baseline_a, baseline_b])
+
+
+def test_duplicate_legacy_comparison_keys_raise():
+    """Same as above, for the legacy (no use_cache) baseline lookup (#336)."""
+    cache_on = aggregate_results(
+        [_benchmark_result(use_cache=True, cache_hits=3, duplicate_candidates=1, cv_calls=4)]
+    )[0]
+    old_baseline_a = dict(cache_on)
+    old_baseline_a.pop("use_cache")
+    old_baseline_a["fit_seconds_mean"] = 2.0
+    old_baseline_b = dict(old_baseline_a, fit_seconds_mean=9.0)
+
+    with pytest.raises(ValueError, match="Duplicate baseline comparison key"):
+        print_comparison_table([cache_on], [old_baseline_a, old_baseline_b])

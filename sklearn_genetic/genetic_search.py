@@ -1,3 +1,4 @@
+import inspect
 import random
 import time
 import warnings
@@ -14,6 +15,14 @@ except ImportError:
     # Fallback for older sklearn versions
     def is_outlier_detector(estimator):
         return hasattr(estimator, "fit_predict") and hasattr(estimator, "decision_function")
+
+
+try:
+    from sklearn.utils.validation import _check_feature_names
+except ImportError:
+
+    def _check_feature_names(estimator, X, *, reset):
+        estimator._check_feature_names(X, reset=reset)
 
 
 def _safe_estimator_check(check, estimator):
@@ -103,6 +112,46 @@ def _resolve_config_value(config, field_name, fallback):
         return fallback
 
     return getattr(config, field_name, fallback)
+
+
+def _check_fit_params_supported(estimator, fit_params):
+    """Fail early and clearly when the wrapped estimator can't take a metadata key.
+
+    ``fit_params`` (e.g. ``sample_weight``) are forwarded to the estimator's
+    ``fit`` during cross-validation and refit. If the estimator doesn't accept a
+    given key it would otherwise blow up mid-search with scikit-learn's generic
+    "unexpected keyword argument" error, so we check up front and name the
+    offending parameter and estimator instead.
+
+    The check is intentionally conservative: if ``fit`` takes ``**kwargs`` (as
+    Pipeline and many meta-estimators do) we can't tell statically which keys are
+    valid, so we skip it and let the estimator decide at fit time. That keeps
+    valid routed usage like ``clf__sample_weight`` working untouched.
+    """
+    if not fit_params:
+        return
+
+    try:
+        parameters = inspect.signature(estimator.fit).parameters.values()
+    except (TypeError, ValueError):
+        # Can't introspect fit (e.g. a C-level callable); leave it to fit time.
+        return
+
+    if any(p.kind == inspect.Parameter.VAR_KEYWORD for p in parameters):
+        return
+
+    accepted = {
+        p.name
+        for p in parameters
+        if p.kind in (inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.KEYWORD_ONLY)
+    }
+    unsupported = sorted(name for name in fit_params if name not in accepted)
+    if unsupported:
+        raise TypeError(
+            f"{type(estimator).__name__}.fit does not accept the metadata "
+            f"{unsupported}; it was passed to fit() but the wrapped estimator "
+            f"cannot use it. Remove it or use an estimator whose fit accepts it."
+        )
 
 
 class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
@@ -833,6 +882,7 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
             pre_dispatch=self.pre_dispatch,
             error_score=self.error_score,
             return_train_score=self.return_train_score,
+            params=getattr(self, "_fit_params", None) or None,
         )
 
         cv_scores = cv_results[f"test_{self.refit_metric}"]
@@ -933,7 +983,10 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
             return self._cv_splits
 
         cv = check_cv(self.final_selection_cv, self.y_, classifier=_is_classifier(self.estimator))
-        return list(cv.split(self.X_, self.y_))
+        groups = getattr(self, "groups_", None)
+        if groups is None:
+            return list(cv.split(self.X_, self.y_))
+        return list(cv.split(self.X_, self.y_, groups=groups))
 
     def _score_final_candidate(self, params, cv_splits):
         local_estimator = clone(self.estimator)
@@ -949,6 +1002,7 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
             pre_dispatch=self.pre_dispatch,
             error_score=self.error_score,
             return_train_score=False,
+            params=getattr(self, "_fit_params", None) or None,
         )
         cv_scores = cv_results[f"test_{self.refit_metric}"]
         return float(np.mean(cv_scores)), cv_scores
@@ -1004,7 +1058,10 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
             )
 
         if candidate_results:
-            selected = max(candidate_results, key=lambda item: item["score"])
+            if self.criteria == "min":
+                selected = min(candidate_results, key=lambda item: item["score"])
+            else:
+                selected = max(candidate_results, key=lambda item: item["score"])
             selected_index = selected["index"]
             selected_score = selected["score"]
             selected_params = selected["params"]
@@ -1027,7 +1084,7 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
 
         return selected_index, selected_score, selected_params
 
-    def fit(self, X, y=None, callbacks=None):
+    def fit(self, X, y=None, callbacks=None, groups=None, **fit_params):
         """
         Main method of GASearchCV, starts the optimization
         procedure with the hyperparameters of the given estimator
@@ -1045,10 +1102,23 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
             One or a list of the callbacks methods available in
             :class:`~sklearn_genetic.callbacks`.
             The callback is evaluated after fitting the estimators from the generation 1.
+        groups : array-like of shape (n_samples,), default=None
+            Group labels for the samples used while splitting the dataset into
+            train/test sets. Only used in conjunction with a "Group" cv
+            instance such as :class:`~sklearn.model_selection.GroupKFold`.
+        **fit_params : dict of str -> object
+            Parameters passed to the ``fit`` method of the underlying
+            estimator (e.g. ``sample_weight``). They are forwarded to every
+            candidate cross-validation, to final-selection scoring, and to
+            the final refit. Sample-aligned parameters are sliced per CV
+            fold by scikit-learn.
         """
 
         self.X_ = X
         self.y_ = y
+        self.groups_ = groups
+        self._fit_params = fit_params
+        _check_fit_params_supported(self.estimator, fit_params)
         self._n_iterations = self.generations + 1
         self.refit_metric = "score"
         self.multimetric_ = False
@@ -1065,6 +1135,7 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         restored_logbook = None
         restored_fit_stats = None
         restored_generation_log = None
+        restored_adapter_state = None
 
         # Load state if a checkpoint exists
         for callback in self.callbacks:
@@ -1096,6 +1167,7 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
                         # numbering needs to continue from -- see
                         # ``_seed_logbook`` in ``algorithms.py``.
                         restored_generation_log = checkpoint_data.get("logbook")
+                        restored_adapter_state = runtime_state.get("adapter_state")
                         checkpoint_loaded = True
                     break
 
@@ -1105,7 +1177,13 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
         # pre-resume value instead (see #299).
         _seed_global_rngs(self.random_state)
 
-        if not checkpoint_loaded:
+        if checkpoint_loaded and restored_adapter_state is not None:
+            # Restore the crossover/mutation adapter step counters so the
+            # schedule continues from where the previous run left off
+            # instead of restarting from step 0 (see adapter checkpoint).
+            self.crossover_adapter.load_state_dict(restored_adapter_state["crossover"])
+            self.mutation_adapter.load_state_dict(restored_adapter_state["mutation"])
+        elif not checkpoint_loaded:
             _reset_adapters(self)
 
         # Preserve cumulative counters across a resume instead of zeroing them,
@@ -1143,6 +1221,10 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
             self.metrics_list = self.scorer_.keys()
             self.multimetric_ = True
 
+        # Only pass groups when given, so custom splitters written without a
+        # groups argument keep working when no groups are used.
+        cv_groups_kwargs = {} if self.groups_ is None else {"groups": self.groups_}
+
         # Check cv and get the n_splits
         if _is_outlier_detector(self.estimator):
             # For outlier detectors, better to use KFold instead of classifier-based CV
@@ -1152,8 +1234,8 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
             self.n_splits_ = cv_orig.get_n_splits(X, self.y_)
         else:
             cv_orig = check_cv(self.cv, self.y_, classifier=_is_classifier(self.estimator))
-            self.n_splits_ = cv_orig.get_n_splits(X, self.y_)
-        self._cv_splits = list(cv_orig.split(self.X_, self.y_))
+            self.n_splits_ = cv_orig.get_n_splits(X, self.y_, **cv_groups_kwargs)
+        self._cv_splits = list(cv_orig.split(self.X_, self.y_, **cv_groups_kwargs))
 
         # Set the DEAPs necessary methods
         self._register()
@@ -1214,6 +1296,7 @@ class GASearchCV(GeneticEstimatorMixin, BaseSearchCV):
             self.estimator.fit(
                 self.X_,
                 self.y_,
+                **getattr(self, "_fit_params", {}),
             )
             refit_end_time = time.time()
             self.refit_time_ = refit_end_time - refit_start_time
@@ -1874,7 +1957,9 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
 
         local_estimator = clone(self.estimator)
 
-        # Use standard cross_validate for all estimator types
+        # Use standard cross_validate for all estimator types. Only X is
+        # feature-sliced; fit params such as sample_weight stay aligned to
+        # samples and are sliced per CV fold by scikit-learn.
         cv_results = cross_validate(
             local_estimator,
             self.X_[:, bool_individual],
@@ -1885,6 +1970,7 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
             pre_dispatch=self.pre_dispatch,
             error_score=self.error_score,
             return_train_score=self.return_train_score,
+            params=getattr(self, "_fit_params", None) or None,
         )
 
         score, current_generation_params = self._build_feature_evaluation_record(
@@ -1965,7 +2051,7 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
 
         return fitness_result
 
-    def fit(self, X, y=None, callbacks=None):
+    def fit(self, X, y=None, callbacks=None, groups=None, **fit_params):
         """
         Main method of GAFeatureSelectionCV, starts the optimization
         procedure with to find the best features set
@@ -1982,9 +2068,23 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
             One or a list of the callbacks methods available in
             :class:`~sklearn_genetic.callbacks`.
             The callback is evaluated after fitting the estimators from the generation 1.
+        groups : array-like of shape (n_samples,), default=None
+            Group labels for the samples used while splitting the dataset into
+            train/test sets. Only used in conjunction with a "Group" cv
+            instance such as :class:`~sklearn.model_selection.GroupKFold`.
+        **fit_params : dict of str -> object
+            Parameters passed to the ``fit`` method of the underlying
+            estimator (e.g. ``sample_weight``). They are forwarded to every
+            candidate cross-validation and to the final refit. Only ``X`` is
+            feature-sliced during the search; sample-aligned parameters stay
+            aligned to samples and are sliced per CV fold by scikit-learn.
         """
 
+        _check_feature_names(self, X, reset=True)
         self.X_, self.y_ = check_X_y(X, y, accept_sparse=True) if y is not None else (X, None)
+        self.groups_ = groups
+        self._fit_params = fit_params
+        _check_fit_params_supported(self.estimator, fit_params)
 
         # Handle outlier detection case if y is none
         if _is_outlier_detector(self.estimator) and y is None:
@@ -2008,6 +2108,7 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         restored_logbook = None
         restored_fit_stats = None
         restored_generation_log = None
+        restored_adapter_state = None
 
         # Load state if a checkpoint exists
         for callback in self.callbacks:
@@ -2039,6 +2140,7 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
                         # numbering needs to continue from -- see
                         # ``_seed_logbook`` in ``algorithms.py``.
                         restored_generation_log = checkpoint_data.get("logbook")
+                        restored_adapter_state = runtime_state.get("adapter_state")
                         checkpoint_loaded = True
                     break
 
@@ -2048,7 +2150,13 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
         # pre-resume value instead (see #299).
         _seed_global_rngs(self.random_state)
 
-        if not checkpoint_loaded:
+        if checkpoint_loaded and restored_adapter_state is not None:
+            # Restore the crossover/mutation adapter step counters so the
+            # schedule continues from where the previous run left off
+            # instead of restarting from step 0 (see adapter checkpoint).
+            self.crossover_adapter.load_state_dict(restored_adapter_state["crossover"])
+            self.mutation_adapter.load_state_dict(restored_adapter_state["mutation"])
+        elif not checkpoint_loaded:
             _reset_adapters(self)
 
         # Preserve cumulative counters across a resume instead of zeroing them,
@@ -2086,6 +2194,10 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
             self.metrics_list = self.scorer_.keys()
             self.multimetric_ = True
 
+        # Only pass groups when given, so custom splitters written without a
+        # groups argument keep working when no groups are used.
+        cv_groups_kwargs = {} if self.groups_ is None else {"groups": self.groups_}
+
         # Check cv and get the n_splits
         if _is_outlier_detector(self.estimator):
             from sklearn.model_selection import KFold
@@ -2094,8 +2206,8 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
             self.n_splits_ = cv_orig.get_n_splits(X, self.y_)
         else:
             cv_orig = check_cv(self.cv, self.y_, classifier=_is_classifier(self.estimator))
-            self.n_splits_ = cv_orig.get_n_splits(X, self.y_)
-        self._cv_splits = list(cv_orig.split(self.X_, self.y_))
+            self.n_splits_ = cv_orig.get_n_splits(X, self.y_, **cv_groups_kwargs)
+        self._cv_splits = list(cv_orig.split(self.X_, self.y_, **cv_groups_kwargs))
 
         # Set the DEAPs necessary methods
         self._register()
@@ -2152,7 +2264,11 @@ class GAFeatureSelectionCV(GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMi
             bool_individual = np.array(self.best_features_, dtype=bool)
 
             refit_start_time = time.time()
-            self.estimator.fit(self.X_[:, bool_individual], self.y_)
+            self.estimator.fit(
+                self.X_[:, bool_individual],
+                self.y_,
+                **getattr(self, "_fit_params", {}),
+            )
             refit_end_time = time.time()
             self.refit_time_ = refit_end_time - refit_start_time
 

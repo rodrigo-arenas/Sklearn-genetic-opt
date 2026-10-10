@@ -40,6 +40,7 @@ Recipes are short, copy-paste ready solutions to specific problems. Each recipe 
 | [Tune XGBRegressor](./regression/xgboost-regressor) | Regression with custom `eval_metric` |
 | [Tune LGBMRegressor](./regression/lightgbm-regressor) | RMSE scoring, `min_child_samples` |
 | [Tune CatBoostRegressor](./regression/catboost-regressor) | Regression with ordered boosting |
+| [Tune SGDRegressor](./regression/sgd-regressor) | `learning_rate`/`eta0` interaction, log-uniform |
 | [Tune ElasticNet](./regression/elasticnet) | `l1_ratio`/`alpha` interaction, log-uniform |
 
 ## Feature Selection

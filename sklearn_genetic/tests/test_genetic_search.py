@@ -179,6 +179,29 @@ def test_gasearch_accepts_valid_error_score(error_score):
         assert estimator.error_score == error_score
 
 
+def test_fit_param_check_skips_uninspectable_fit():
+    class UninspectableEstimator:
+        fit = object()
+
+    # Some third-party/C-extension estimators do not expose an inspectable fit
+    # signature; their own fit implementation should validate the parameters.
+    genetic_search._check_fit_params_supported(
+        UninspectableEstimator(), {"sample_weight": np.ones(3)}
+    )
+
+
+def test_fit_param_check_skips_estimators_accepting_kwargs():
+    class KwargsEstimator:
+        def fit(self, X, y, **kwargs):
+            return self
+
+    # **kwargs may contain metadata routed by a meta-estimator, so static
+    # validation must leave those keys for the estimator to handle.
+    genetic_search._check_fit_params_supported(
+        KwargsEstimator(), {"not_a_real_fit_param": np.ones(3)}
+    )
+
+
 def test_wrong_population_initializer():
     with pytest.raises(ValueError) as excinfo:
         GASearchCV(
@@ -235,6 +258,39 @@ def test_final_selection_can_replace_original_best_candidate(monkeypatch):
     assert best_params == {"max_depth": 2}
     assert estimator.final_selection_results_["changed"] is True
     assert len(estimator.final_selection_results_["candidates"]) == 2
+
+
+def test_final_selection_respects_criteria_min(monkeypatch):
+    estimator = GASearchCV(
+        DecisionTreeClassifier(random_state=42),
+        param_grid={"max_depth": Integer(1, 3)},
+        final_selection=True,
+        final_selection_top_k=3,
+        criteria="min",
+        verbose=False,
+    )
+    estimator.refit_metric = "score"
+    estimator.cv_results_ = {
+        "rank_test_score": np.array([2, 3, 1]),
+        "mean_test_score": np.array([0.85, 0.70, 0.90]),
+        "params": [{"max_depth": 1}, {"max_depth": 2}, {"max_depth": 3}],
+    }
+
+    monkeypatch.setattr(estimator, "_final_selection_splits", lambda: ["split"])
+
+    def score_candidate(params, cv_splits):
+        if params["max_depth"] == 2:
+            return 0.65, np.array([0.64, 0.66])
+        return 0.95, np.array([0.94, 0.96])
+
+    monkeypatch.setattr(estimator, "_score_final_candidate", score_candidate)
+
+    best_index, best_score, best_params = estimator._select_final_candidate()
+
+    assert best_index == 1
+    assert best_score == pytest.approx(0.65)
+    assert best_params == {"max_depth": 2}
+    assert estimator.final_selection_results_["changed"] is True
 
 
 def test_wrong_optimizer_control_parameters():
@@ -1506,3 +1562,225 @@ def test_random_state_makes_gasearch_reproducible():
 
     assert first_score == second_score
     assert first_params == second_params
+
+
+def test_gasearch_fit_with_groups_supports_group_kfold():
+    """#338: fit(..., groups=...) enables group-aware CV splitters.
+
+    Before groups support, materializing splits raised "The 'groups'
+    parameter should not be None." for GroupKFold. Besides not crashing,
+    every materialized split must keep train and test groups disjoint.
+    """
+    from sklearn.model_selection import GroupKFold
+
+    groups = np.arange(X_train.shape[0]) % 5
+    evolved_estimator = GASearchCV(
+        DecisionTreeClassifier(random_state=0),
+        cv=GroupKFold(n_splits=3),
+        scoring="accuracy",
+        population_size=4,
+        generations=1,
+        param_grid={"max_depth": Integer(2, 10), "min_samples_split": Integer(2, 10)},
+        verbose=False,
+    )
+
+    evolved_estimator.fit(X_train, y_train, groups=groups)
+
+    assert evolved_estimator.best_params_
+    assert len(evolved_estimator._cv_splits) == 3
+    for train_idx, test_idx in evolved_estimator._cv_splits:
+        assert set(groups[train_idx]).isdisjoint(set(groups[test_idx]))
+
+
+def test_gasearch_final_selection_splits_use_groups():
+    """#338: an explicit group-aware final_selection_cv receives groups too."""
+    from sklearn.model_selection import GroupKFold
+
+    groups = np.arange(X_train.shape[0]) % 4
+    evolved_estimator = GASearchCV(
+        DecisionTreeClassifier(random_state=0),
+        cv=GroupKFold(n_splits=2),
+        scoring="accuracy",
+        population_size=4,
+        generations=1,
+        param_grid={"max_depth": Integer(2, 10), "min_samples_split": Integer(2, 10)},
+        final_selection=True,
+        final_selection_top_k=2,
+        final_selection_cv=GroupKFold(n_splits=4),
+        verbose=False,
+    )
+
+    evolved_estimator.fit(X_train, y_train, groups=groups)
+
+    final_splits = evolved_estimator._final_selection_splits()
+    assert len(final_splits) == 4
+    for train_idx, test_idx in final_splits:
+        assert set(groups[train_idx]).isdisjoint(set(groups[test_idx]))
+
+
+def test_fit_without_groups_keeps_old_style_custom_cv_working():
+    """A custom splitter written without a groups argument must keep working
+    when no groups are passed (groups is only forwarded when given).
+    """
+
+    class OldStyleCV:
+        def split(self, X, y=None):
+            n = len(X)
+            half = n // 2
+            yield np.arange(half), np.arange(half, n)
+            yield np.arange(half, n), np.arange(half)
+
+        def get_n_splits(self, X=None, y=None):
+            return 2
+
+    evolved_estimator = GASearchCV(
+        DecisionTreeClassifier(random_state=0),
+        cv=OldStyleCV(),
+        scoring="accuracy",
+        population_size=4,
+        generations=1,
+        param_grid={"max_depth": Integer(2, 8), "min_samples_split": Integer(2, 8)},
+        verbose=False,
+    )
+
+    evolved_estimator.fit(X_train, y_train)
+
+    assert evolved_estimator.n_splits_ == 2
+    assert len(evolved_estimator._cv_splits) == 2
+
+
+def test_final_selection_cv_without_groups_still_splits():
+    """An explicit final_selection_cv with no groups uses the plain split path."""
+    evolved_estimator = GASearchCV(
+        DecisionTreeClassifier(random_state=0),
+        cv=2,
+        scoring="accuracy",
+        population_size=4,
+        generations=1,
+        param_grid={"max_depth": Integer(2, 8), "min_samples_split": Integer(2, 8)},
+        final_selection=True,
+        final_selection_top_k=2,
+        final_selection_cv=3,
+        verbose=False,
+    )
+
+    evolved_estimator.fit(X_train, y_train)
+
+    final_splits = evolved_estimator._final_selection_splits()
+    assert len(final_splits) == 3
+    assert evolved_estimator.best_params_
+
+
+def test_gasearch_forwards_sample_weight_to_candidate_cv_and_refit():
+    """#339: fit(..., sample_weight=...) reaches candidate CV fits and the refit.
+
+    A recording estimator captures the sample_weight length of every fit call:
+    candidate CV fits must receive per-fold slices (smaller than n_samples),
+    and the final refit must receive the full weight vector.
+    """
+    recorded = []
+
+    class WeightRecordingTree(DecisionTreeClassifier):
+        def fit(self, X, y, sample_weight=None):
+            recorded.append(None if sample_weight is None else len(sample_weight))
+            return super().fit(X, y, sample_weight=sample_weight)
+
+    n_samples = X_train.shape[0]
+    weights = np.linspace(0.5, 1.5, n_samples)
+    evolved_estimator = GASearchCV(
+        WeightRecordingTree(random_state=0),
+        cv=2,
+        scoring="accuracy",
+        population_size=4,
+        generations=1,
+        param_grid={"max_depth": Integer(2, 10), "min_samples_split": Integer(2, 10)},
+        verbose=False,
+    )
+
+    evolved_estimator.fit(X_train, y_train, sample_weight=weights)
+
+    assert recorded, "no fit calls were recorded"
+    # Every single fit (candidate folds and refit) received weights.
+    assert all(length is not None for length in recorded)
+    # Candidate CV fits get per-fold slices, strictly smaller than n_samples.
+    assert all(length < n_samples for length in recorded[:-1])
+    # The final refit gets the full, unsliced weight vector.
+    assert recorded[-1] == n_samples
+
+
+def test_gasearch_final_selection_scoring_receives_fit_params():
+    """#339: final-selection candidate re-scoring forwards fit params too."""
+    recorded = []
+
+    class WeightRecordingTree(DecisionTreeClassifier):
+        def fit(self, X, y, sample_weight=None):
+            recorded.append(sample_weight is not None)
+            return super().fit(X, y, sample_weight=sample_weight)
+
+    weights = np.ones(X_train.shape[0])
+    evolved_estimator = GASearchCV(
+        WeightRecordingTree(random_state=0),
+        cv=2,
+        scoring="accuracy",
+        population_size=4,
+        generations=1,
+        param_grid={"max_depth": Integer(2, 10), "min_samples_split": Integer(2, 10)},
+        final_selection=True,
+        final_selection_top_k=2,
+        final_selection_cv=3,
+        verbose=False,
+    )
+
+    evolved_estimator.fit(X_train, y_train, sample_weight=weights)
+
+    # Search CV fits + final-selection re-scoring fits + refit: all weighted.
+    assert recorded and all(recorded)
+
+
+def test_gasearch_unsupported_fit_param_raises_clearly():
+    """#364: an unsupported fit param must fail up front with a clear message.
+
+    The message names the offending metadata and the wrapped estimator, and the
+    error is raised before the search runs (not deep inside cross-validation).
+    """
+    evolved_estimator = GASearchCV(
+        DecisionTreeClassifier(random_state=0),
+        cv=2,
+        scoring="accuracy",
+        population_size=4,
+        generations=1,
+        param_grid={"max_depth": Integer(2, 10), "min_samples_split": Integer(2, 10)},
+        error_score="raise",
+        verbose=False,
+    )
+
+    with pytest.raises(TypeError) as excinfo:
+        evolved_estimator.fit(X_train, y_train, not_a_real_fit_param=np.ones(X_train.shape[0]))
+
+    message = str(excinfo.value)
+    assert "not_a_real_fit_param" in message
+    assert "DecisionTreeClassifier" in message
+    # Failed up front, so the search never populated a logbook.
+    assert not hasattr(evolved_estimator, "logbook")
+
+
+def test_gasearch_pipeline_routed_fit_param_is_not_falsely_rejected():
+    """#364: a Pipeline forwards ``step__param``; the up-front check must not
+    reject it, since Pipeline.fit takes ``**params`` and validates at fit time."""
+    from sklearn.pipeline import Pipeline
+    from sklearn.preprocessing import StandardScaler
+
+    pipe = Pipeline([("scaler", StandardScaler()), ("clf", DecisionTreeClassifier(random_state=0))])
+    evolved_estimator = GASearchCV(
+        pipe,
+        cv=2,
+        scoring="accuracy",
+        population_size=4,
+        generations=1,
+        param_grid={"clf__max_depth": Integer(2, 10)},
+        verbose=False,
+    )
+
+    # Should run cleanly: clf__sample_weight is a valid routed metadata key.
+    evolved_estimator.fit(X_train, y_train, clf__sample_weight=np.ones(X_train.shape[0]))
+    assert hasattr(evolved_estimator, "best_estimator_")

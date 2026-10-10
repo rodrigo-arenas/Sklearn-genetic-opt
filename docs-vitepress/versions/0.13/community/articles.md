@@ -38,3 +38,6 @@ promotional.
 
 4. [GASearchCV vs RandomizedSearchCV: When Evolutionary Search Pays Off](https://github.com/andrianbalanesq/sklearn-genetic-opt-tutorials/tree/main/tutorials/01-ga-vs-random-search)  
    Andrian Balanescu (@andrianbalanesq) on GitHub. Compares `GASearchCV` against `RandomizedSearchCV` on a noisy XGBoost task with a runnable notebook.
+
+5. [From Scratch to Streamlined: Comparing My Hand-Built Genetic Algorithm with sklearn-genetic](https://mydatascienceacademy.com/2026/03/01/from-scratch-to-streamlined-comparing-my-hand-built-genetic-algorithm-with-sklearn-genetic/)  
+   William on William's Data Science Blog. Walks through building a genetic feature-selection algorithm from scratch, then shows how `sklearn-genetic-opt` replaces over a hundred lines of custom code with a single library call.

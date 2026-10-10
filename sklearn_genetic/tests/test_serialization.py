@@ -1,3 +1,5 @@
+import pickle
+
 import pytest
 from sklearn.datasets import load_iris, load_diabetes
 from sklearn.linear_model import SGDClassifier
@@ -9,7 +11,7 @@ from sklearn.metrics import accuracy_score, balanced_accuracy_score
 from sklearn.metrics import make_scorer
 import numpy as np
 
-from .. import GAFeatureSelectionCV, EvolutionConfig, PopulationConfig, RuntimeConfig
+from .. import GASearchCV, GAFeatureSelectionCV, EvolutionConfig, PopulationConfig, RuntimeConfig
 from ..callbacks import (
     ThresholdStopping,
     DeltaThreshold,
@@ -18,6 +20,7 @@ from ..callbacks import (
     ProgressBar,
 )
 from ..schedules import ExponentialAdapter, InverseAdapter
+from ..space import Integer
 from joblib import dump, load
 import os
 
@@ -137,3 +140,78 @@ def test_estimator_serialization_with_config_objects():
     assert bool(dumped_estimator.get_params())
 
     os.remove(dump_file)
+
+
+_PICKLABLE_ESTIMATOR_BUILDERS = [
+    pytest.param(
+        lambda: GASearchCV(
+            estimator=DecisionTreeClassifier(random_state=0),
+            param_grid={
+                "max_depth": Integer(1, 3),
+                "min_samples_split": Integer(2, 5),
+            },
+            cv=2,
+            scoring="accuracy",
+            population_size=4,
+            generations=2,
+            verbose=False,
+        ),
+        id="GASearchCV",
+    ),
+    pytest.param(
+        lambda: GAFeatureSelectionCV(
+            estimator=DecisionTreeClassifier(random_state=0),
+            cv=2,
+            scoring="accuracy",
+            population_size=4,
+            generations=2,
+            verbose=False,
+        ),
+        id="GAFeatureSelectionCV",
+    ),
+]
+
+
+@pytest.mark.parametrize("build", _PICKLABLE_ESTIMATOR_BUILDERS)
+def test_pickle_round_trip_preserves_fitted_state(build):
+    estimator = build()
+    estimator.fit(X_train, y_train)
+    expected_predictions = estimator.predict(X_test)
+
+    restored = pickle.loads(pickle.dumps(estimator))
+
+    assert check_is_fitted(restored) is None
+    assert np.array_equal(restored.predict(X_test), expected_predictions)
+    assert not hasattr(restored, "toolbox")
+    assert not hasattr(restored, "_pop")
+    assert not hasattr(restored, "_stats")
+    assert not hasattr(restored, "_hof")
+    if isinstance(restored, GAFeatureSelectionCV):
+        assert np.array_equal(restored.best_features_, estimator.best_features_)
+        assert np.array_equal(restored.support_, estimator.support_)
+    else:
+        assert restored.best_params_ == estimator.best_params_
+        assert restored.best_score_ == estimator.best_score_
+
+    restored.fit(X_train, y_train)
+    assert hasattr(restored, "toolbox")
+    assert restored.predict(X_test).shape[0] == X_test.shape[0]
+
+
+@pytest.mark.parametrize("build", _PICKLABLE_ESTIMATOR_BUILDERS)
+def test_joblib_round_trip_preserves_fitted_state(build, tmp_path):
+    estimator = build()
+    estimator.fit(X_train, y_train)
+    dump_file = str(tmp_path / "estimator.joblib")
+
+    dump(estimator, dump_file)
+    restored = load(dump_file)
+
+    assert check_is_fitted(restored) is None
+    assert np.array_equal(restored.predict(X_test), estimator.predict(X_test))
+    if isinstance(restored, GAFeatureSelectionCV):
+        assert np.array_equal(restored.best_features_, estimator.best_features_)
+        assert np.array_equal(restored.support_, estimator.support_)
+    else:
+        assert restored.best_params_ == estimator.best_params_
+        assert restored.best_score_ == estimator.best_score_
