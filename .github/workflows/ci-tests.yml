@@ -78,7 +78,7 @@ jobs:
       - name: Install coverage dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install --upgrade --upgrade-strategy eager -e ".[test,plot,mlflow,tensorflow]"
+          python -m pip install --upgrade --upgrade-strategy eager -e ".[test,plot,mlflow]"
       - name: Run coverage
         run: |
           pytest sklearn_genetic/ --cov-fail-under=95 --cov=./ --cov-report=term-missing:skip-covered --cov-report=xml

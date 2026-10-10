@@ -21,8 +21,7 @@ requirements:
     - wheel
   run:
     # Keep this in sync with the core "dependencies" in pyproject.toml.
-    # The optional extras (seaborn, mlflow, tensorflow, tensorboard) are imported
-    # lazily and MUST NOT be listed here. Pinning them as hard runtime
+    # Optional plotting and MLflow extras MUST NOT be listed here. Pinning them as hard runtime
     # requirements is what made the previous conda-forge recipe unsolvable
     # (see issue #138). Users who need them can install the extras separately.
     - python >=3.12

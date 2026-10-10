@@ -132,7 +132,7 @@ Quick Start
 .. code-block:: bash
 
    pip install sklearn-genetic-opt
-   # With optional plotting, MLflow, and TensorBoard extras:
+   # With optional plotting and MLflow extras:
    # pip install sklearn-genetic-opt[all]
 
 **Hyperparameter search**
@@ -369,7 +369,7 @@ Installation
    # Core package
    pip install sklearn-genetic-opt
 
-   # With plotting, MLflow, and TensorBoard:
+   # With plotting and MLflow:
    pip install sklearn-genetic-opt[all]
 
    # conda

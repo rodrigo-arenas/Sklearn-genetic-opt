@@ -1,6 +1,6 @@
 ---
 title: Installation
-description: Install sklearn-genetic-opt with pip or conda, including optional extras for plotting, MLflow, and TensorBoard.
+description: Install sklearn-genetic-opt with pip or conda, including optional extras for plotting and MLflow.
 ---
 
 :::warning Development version
@@ -22,7 +22,7 @@ Install the core package:
 pip install sklearn-genetic-opt
 ```
 
-Install all optional extras (plotting, MLflow, TensorBoard):
+Install all optional extras (plotting and MLflow):
 
 ```bash
 pip install sklearn-genetic-opt[all]
@@ -59,8 +59,6 @@ conda install -c conda-forge sklearn-genetic-opt seaborn mlflow
 | tqdm | 4.60.0 | Yes |
 | Seaborn | 0.13.2 | No (plots) |
 | MLflow | 3.14.0 | No (MLflow logging) |
-| TensorFlow | 2.21.0 | No (TensorBoard logging, Python < 3.14) |
-| TensorBoard | 2.20.0 | No (TensorBoard logging) |
 
 ## Verify the installation
 

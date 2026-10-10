@@ -11,6 +11,12 @@ You are reading the **latest (dev)** docs. For the stable version, see [stable](
 
 ## Unreleased
 
+TensorFlow and TensorBoard are no longer installed by any optional extra.
+`sklearn_genetic.plots.LivePlot` shows generation fitness during fitting and can
+update a PNG in headless runs; `plot_generation_metrics` draws from an in-progress
+logbook. The legacy `TensorBoard` callback remains importable and loads
+TensorFlow only when used, if users install it separately.
+
 Both search classes now rank candidates with non-finite cross-validation scores
 last during evolution and final selection, including when only one fold fails.
 The original fold scores remain visible in `cv_results_`. Fitness sharing and

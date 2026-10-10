@@ -15,6 +15,7 @@ except ModuleNotFoundError:  # noqa
     logger.error("seaborn not found, pip install seaborn to use plots functions")  # noqa
 
 from .genetic_search import GAFeatureSelectionCV
+from .callbacks.base import BaseCallback
 from .parameters import Metrics
 from .utils import logbook_to_pandas
 
@@ -314,6 +315,57 @@ def _plot_single_series(ax, series, kind="line", label=None, alpha=0.9, color=No
         ax.step(series.index, series.values, where="post", label=label, alpha=alpha, color=color)
     else:
         ax.plot(series.index, series.values, label=label, alpha=alpha, color=color)
+
+
+def plot_generation_metrics(logbook, metrics=("fitness_best", "fitness"), *, ax=None):
+    """Plot generation-level fitness from a running or completed search logbook.
+
+    Unlike plots based on ``estimator.history``, this works during ``fit``.
+    Pass the logbook received by a callback to inspect the search in progress.
+    """
+    if not logbook:
+        raise ValueError("logbook has no generations to plot")
+
+    metrics = _as_list(metrics)
+    if not metrics:
+        raise ValueError("metrics must contain at least one field")
+    missing = [metric for metric in metrics if any(metric not in row for row in logbook)]
+    if missing:
+        raise ValueError(f"metrics missing from logbook: {missing}")
+
+    if ax is None:
+        _, ax = plt.subplots(figsize=(10, 5))
+    generations = [row["gen"] for row in logbook]
+    for metric in metrics:
+        ax.plot(generations, [row[metric] for row in logbook], label=metric)
+    ax.set(xlabel="generations", ylabel="fitness", title="Training progress")
+    if len(metrics) > 1:
+        ax.legend(title="metric")
+    return ax
+
+
+class LivePlot(BaseCallback):
+    """Update a Matplotlib fitness chart after every generation.
+
+    ``save_path`` also writes the current chart after each update, which is
+    useful in a headless run. The interactive display depends on the active
+    Matplotlib backend.
+    """
+
+    def __init__(self, metrics=("fitness_best", "fitness"), *, ax=None, save_path=None):
+        self.metrics = metrics
+        self.ax = ax
+        self.save_path = save_path
+
+    def on_step(self, record=None, logbook=None, estimator=None):
+        if self.ax is not None:
+            self.ax.clear()
+        self.ax = plot_generation_metrics(logbook, metrics=self.metrics, ax=self.ax)
+        self.ax.figure.canvas.draw_idle()
+        if self.save_path is not None:
+            self.ax.figure.savefig(self.save_path)
+        plt.pause(0.001)
+        return False
 
 
 def plot_fitness_evolution(
@@ -1496,6 +1548,7 @@ class SearchPlotter:
 
 
 __all__ = [
+    "LivePlot",
     "SearchPlotter",
     "plot_candidate_scores",
     "plot_candidate_rankings",
@@ -1504,6 +1557,7 @@ __all__ = [
     "plot_diversity",
     "plot_feature_selection",
     "plot_fitness_evolution",
+    "plot_generation_metrics",
     "plot_history",
     "plot_optimizer_events",
     "plot_parameter_evolution",

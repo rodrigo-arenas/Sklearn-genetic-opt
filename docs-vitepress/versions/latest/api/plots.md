@@ -11,6 +11,7 @@ You are reading the **latest (dev)** docs. For the stable version, see [stable](
 
 ```python
 from sklearn_genetic.plots import (
+    LivePlot,
     SearchPlotter,
     plot_candidate_rankings,
     plot_candidate_scores,
@@ -19,6 +20,7 @@ from sklearn_genetic.plots import (
     plot_diversity,
     plot_feature_selection,
     plot_fitness_evolution,
+    plot_generation_metrics,
     plot_history,
     plot_optimizer_events,
     plot_parameter_evolution,
@@ -29,7 +31,25 @@ from sklearn_genetic.plots import (
 )
 ```
 
-Requires seaborn: `pip install sklearn-genetic-opt[all]`.
+Requires the plotting extra: `pip install sklearn-genetic-opt[plot]`.
+
+## During fitting
+
+`LivePlot` is a callback for both search classes. It redraws best and average
+fitness after each generation. With a graphical Matplotlib backend the chart
+updates on screen; `save_path` also rewrites a PNG for headless monitoring.
+
+```python
+from sklearn_genetic.plots import LivePlot
+
+live_plot = LivePlot(save_path="training-progress.png")
+search.fit(X, y, callbacks=live_plot)
+```
+
+For a custom callback, `plot_generation_metrics(logbook)` draws directly from
+the in-progress generation logbook. Pass `metrics` to choose fitness fields or
+`ax` to reuse a Matplotlib axis. After fitting, use the diagnostics below to
+explore all evaluated candidates and the selected solution.
 
 ## Quick diagnostic overview
 
@@ -216,6 +236,7 @@ plot_feature_selection(selector, feature_names=X.columns)
 | What space did the algorithm explore? | `plot_search_space`, `plot_parameter_evolution`, `plot_score_landscape` |
 | What decisions did it make? | `plot_optimizer_events`, `plot_search_decisions` |
 | How did it converge? | `plot_convergence`, `plot_fitness_evolution`, `plot_search_overview` |
+| What is happening during fitting? | `LivePlot`, `plot_generation_metrics` |
 | Did diversity collapse? | `plot_diversity`, `plot_search_overview` |
 | Are top solutions robust? | `plot_cv_scores`, `plot_candidate_rankings` |
 

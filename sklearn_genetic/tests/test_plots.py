@@ -88,6 +88,71 @@ def test_plot_evolution():
         plot_fitness_evolution(evolved_estimator, kind="scatter")
 
 
+def test_live_plot_tracks_generations_without_tensorflow(tmp_path, monkeypatch):
+    from deap.tools import Logbook
+    from matplotlib import pyplot as plt
+    from ..callbacks.validations import check_callback
+    from ..plots import LivePlot, plot_generation_metrics
+
+    monkeypatch.setattr(plt, "pause", lambda interval: None)
+    logbook = Logbook()
+    logbook.record(gen=0, fitness_best=0.4, fitness=0.2)
+    path = tmp_path / "progress.png"
+    callback = LivePlot(save_path=path)
+    assert check_callback(callback) == [callback]
+    assert callback.on_step(logbook=logbook) is False
+    first_image = path.read_bytes()
+
+    logbook.record(gen=1, fitness_best=0.7, fitness=0.5)
+    assert callback.on_step(logbook=logbook) is False
+    assert path.read_bytes() != first_image
+    assert len(callback.ax.lines) == 2
+    assert list(callback.ax.lines[0].get_xdata()) == [0, 1]
+    assert list(callback.ax.lines[0].get_ydata()) == [0.4, 0.7]
+
+    axis = plot_generation_metrics(logbook, metrics=["fitness_best"])
+    assert list(axis.lines[0].get_ydata()) == [0.4, 0.7]
+    plt.close("all")
+
+
+def test_generation_plot_rejects_missing_metric():
+    from deap.tools import Logbook
+    from ..plots import plot_generation_metrics
+
+    logbook = Logbook()
+    logbook.record(gen=0, fitness_best=0.4)
+    with pytest.raises(ValueError, match="missing"):
+        plot_generation_metrics(logbook, metrics=["missing"])
+
+
+@pytest.mark.parametrize("kind", ["hpo", "features"])
+def test_live_plot_receives_both_searches_generation_history(kind, tmp_path, monkeypatch):
+    from matplotlib import pyplot as plt
+    from ..plots import LivePlot
+
+    monkeypatch.setattr(plt, "pause", lambda interval: None)
+    callback = LivePlot(save_path=tmp_path / "training.png")
+    common = dict(
+        cv=2,
+        scoring="neg_mean_squared_error",
+        population_size=4,
+        generations=1,
+        random_state=7,
+        n_jobs=1,
+        verbose=False,
+    )
+    search = (
+        GASearchCV(DecisionTreeRegressor(), param_grid={"max_depth": Integer(1, 3)}, **common)
+        if kind == "hpo"
+        else GAFeatureSelectionCV(DecisionTreeRegressor(), **common)
+    ).fit(X[:40], y[:40], callbacks=callback)
+
+    assert (tmp_path / "training.png").is_file()
+    assert list(callback.ax.lines[0].get_xdata()) == search.history["gen"]
+    assert list(callback.ax.lines[0].get_ydata()) == search.history["fitness_best"]
+    plt.close("all")
+
+
 def test_plot_history():
     plot = plot_history(
         evolved_estimator,

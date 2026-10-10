@@ -26,7 +26,7 @@ You are reading the **latest (development)** docs. This version tracks the `mast
 - Optional local search, diversity control, random immigrants, and fitness sharing.
 - Parallel candidate evaluation with `n_jobs` and `parallel_backend`.
 - Evaluation caching, optimizer telemetry through `history`, and fit-cost counters through `fit_stats_`.
-- Callbacks for early stopping, progress reporting, checkpoints, TensorBoard, and custom logic.
+- Callbacks for early stopping, progress reporting, checkpoints, live plots, and custom logic.
 - Plotting helpers plus MLflow 3 logging support.
 
 ## Installation (dev)

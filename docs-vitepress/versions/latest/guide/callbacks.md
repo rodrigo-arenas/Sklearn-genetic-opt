@@ -1,6 +1,6 @@
 ---
 title: Early Stopping and Callbacks for Hyperparameter Search
-description: Use built-in callbacks to stop search early, track progress, save checkpoints, and log to TensorBoard during genetic algorithm hyperparameter optimization.
+description: Use callbacks to stop search early, track progress with live plots, and save checkpoints during genetic algorithm hyperparameter optimization.
 ---
 
 :::warning Development version
@@ -182,25 +182,30 @@ logbook = checkpoint["logbook"]
 
 ---
 
-### TensorBoard
+### Live training plot
 
-Logs per-generation fitness metrics to TensorBoard.
+Use the plotting extra to watch best and average fitness as each generation finishes.
+The same callback works for `GASearchCV` and `GAFeatureSelectionCV`.
 
 ```python
-import tensorflow as tf
-from sklearn_genetic.callbacks import TensorBoard
+from sklearn_genetic.plots import LivePlot
 
-writer = tf.summary.create_file_writer("./logs")
-callback = TensorBoard(writer=writer)
+callback = LivePlot(save_path="./training-progress.png")
+search.fit(X, y, callbacks=callback)
 ```
 
-Requires TensorFlow: `pip install sklearn-genetic-opt[all]`.
+Install with `pip install sklearn-genetic-opt[plot]`. The Matplotlib window
+updates during fitting when a graphical backend is available. `save_path`
+rewrites the current PNG after each generation, including in headless runs.
+The callback keeps the figure open for inspection after fitting.
 
-View results with:
+For a custom callback, use `plot_generation_metrics(logbook)` to draw the
+same generation traces from the logbook received by `on_step`. After fitting,
+use [`plot_search_overview`](../api/plots) to inspect convergence, diversity,
+optimizer events and the best candidates or selected features.
 
-```bash
-tensorboard --logdir ./logs
-```
+The legacy `TensorBoard` callback remains importable for existing users who
+install TensorFlow separately. TensorFlow is no longer included in any extra.
 
 ## Full Example
 

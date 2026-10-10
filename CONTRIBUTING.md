@@ -31,9 +31,7 @@ suggestion for a good next issue to tackle.
 
 ## Local development setup
 
-sklearn-genetic-opt supports Python 3.12 and newer. Python 3.13 is a good
-default for local development because it can run the regular test suite and the
-TensorFlow/TensorBoard optional tests.
+sklearn-genetic-opt supports Python 3.12 and newer.
 
 Create and activate a virtual environment, then install the project in editable
 mode with the development dependencies:
@@ -53,9 +51,6 @@ pip install -e .
 
 # Tests
 pip install -e ".[test,plot,mlflow]"
-
-# Tests with TensorBoard support
-pip install -e ".[test,plot,mlflow,tensorflow]"
 
 # Documentation Python helpers
 pip install -e ".[docs]"
