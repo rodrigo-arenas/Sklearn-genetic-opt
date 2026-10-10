@@ -1,0 +1,742 @@
+{
+  "question": "Does GA feature-mask search beat random masks at the same 72-proposal budget?",
+  "source_commit": "85faa63250409183c2a9cd19031586a931a19d2f",
+  "settings": {
+    "datasets": [
+      "breast",
+      "digits",
+      "synthetic"
+    ],
+    "seeds": [
+      951,
+      952,
+      953,
+      954,
+      955,
+      956,
+      957,
+      958
+    ],
+    "holdout_fraction": 0.25,
+    "cv_folds": 3,
+    "proposal_budget": 72,
+    "max_features": "half",
+    "model": "StandardScaler plus SVC(kernel=rbf, C=10)",
+    "cpu_threads": 1
+  },
+  "environment": {
+    "python": "3.12.0",
+    "numpy": "2.5.3",
+    "scikit-learn": "1.9.1",
+    "scipy": "1.18.1",
+    "deap": "1.4.4"
+  },
+  "source_sha256": {
+    "sklearn_genetic/genetic_search.py": "c7d49583e0250cd2208c2e9b6321b44ea8f850cb07816ef244adb72527a13600",
+    "sklearn_genetic/algorithms.py": "2f1b607b8c671923d4ea604f8ed81b8b502e609b4ebb5c49e904612c0b7affd7",
+    "sklearn_genetic/population.py": "84f210e606355a687cc91d220fe318ac4ea9e17a85a4acc62f53643a1b4928bf"
+  },
+  "split_sha256": {
+    "breast/951": "c26c219861bf51d0ba95221877980984e347644def03c907919d07ea63e25e2c",
+    "breast/952": "2fa555af5333c82563769931b6737d9888c37a9db76d3507b6440d451239f808",
+    "breast/953": "953e82993c20baa12becf2b04f9fc4867f36272092ba18d601b482ecd56b0231",
+    "breast/954": "f13f9053f736bacfaee572ea3b3049a9dbedf5cc7642605fd80480a8895fbea8",
+    "breast/955": "cba3ded1149729317ef3c3171449ebc918f45bc962cc510b8e7cb9eb943b9fb1",
+    "breast/956": "7b15dc3a4056bbd4fc57fd3be283606e495c1535a6a47326b69cedc9bdfac57a",
+    "breast/957": "d3c24741e34be812a2325cab30766f2cb27f5caa4cf0d47c5872b9d0225d9979",
+    "breast/958": "426719ca43eee3daabea4e198d1772ef0bcebe7db6d0a4896826bb9645805ca8",
+    "digits/951": "e1949df99c45f4d722da69a01c4ae7fa12905ae9f2354acf2dc254e25c01703c",
+    "digits/952": "d58835460d66cda6f01786f74d55ca587d0f5de5e94647b2be4574b53076ef7c",
+    "digits/953": "6fc74ed5ea41c0c199e10682c70e10c472ec107bd76c5465c4c63d056169f034",
+    "digits/954": "3c8a51765f48846c0b1c40212244d7405c468c332712d3fe252997bb63d832d3",
+    "digits/955": "8e7823e578ab96942b3cc5e7947685564e76699c6bcf0f9221067ee1b1966f46",
+    "digits/956": "55127be2340f145819620fe4bf1a3fa8f1ed6534bec482da0557ff89fa891dc1",
+    "digits/957": "340b411a6ef3a8250a283ab764f06f4331a933c1945ab0c03af151693a6d11cb",
+    "digits/958": "6bcf1cb5d0b0154bf4d2e5924a51c2dc918507faf47f29b4466797b55fc645d4",
+    "synthetic/951": "aeb542696e788dd40e2cb19eade701cc56ddb25d250740ccd2933db49a78c305",
+    "synthetic/952": "dda3ea18d2a1270a3abc5032c32fdace186253df8905afff47cb4a2eb27ae9a1",
+    "synthetic/953": "7ffddd8d27080f25338accbdd9d21d20e46e83efce2a8c0ec3989388f9980e5a",
+    "synthetic/954": "cc0346e272f0da17fcbfdb00978bf0ee4b285fec3dc85188d45be7bd27307f9c",
+    "synthetic/955": "26fbbb44e401665efe600d3ee6cb46bcd91af75c38b0219654b20cb88e60cd6f",
+    "synthetic/956": "5366d33ac5088896f350e4cedb0741b881e22530510f9579c414af3157cf4c52",
+    "synthetic/957": "06dac9e66c3596e2bd76d5505c3d79e62dd7cae5e3ecdca54e0d0f0ac3431ce5",
+    "synthetic/958": "816f563224cc370c851a81f80e8502dd3cd45353ce454f3a361cb2d503afe781"
+  },
+  "raw_sha256": "1d54d5f2d59f8c34211e66395d41ba8cdec756286621b9257cc4239af198aef5",
+  "summary": [
+    {
+      "dataset": "breast",
+      "method": "genetic",
+      "seconds_mean": 1.052364987506735,
+      "holdout_mean": 0.9737762237762237,
+      "cv_score_mean": 0.9765258215962441,
+      "selected_features_mean": 13.25,
+      "candidate_cv_calls_mean": 71.75
+    },
+    {
+      "dataset": "breast",
+      "method": "random",
+      "seconds_mean": 1.061650137500692,
+      "holdout_mean": 0.9685314685314685,
+      "cv_score_mean": 0.9747652582159625,
+      "selected_features_mean": 12.625,
+      "candidate_cv_calls_mean": 71.25
+    },
+    {
+      "dataset": "digits",
+      "method": "genetic",
+      "seconds_mean": 9.243254562501534,
+      "holdout_mean": 0.9727777777777777,
+      "cv_score_mean": 0.9719747587230884,
+      "selected_features_mean": 30,
+      "candidate_cv_calls_mean": 72
+    },
+    {
+      "dataset": "digits",
+      "method": "random",
+      "seconds_mean": 9.618337775002146,
+      "holdout_mean": 0.9683333333333333,
+      "cv_score_mean": 0.9644580549368968,
+      "selected_features_mean": 30.875,
+      "candidate_cv_calls_mean": 72
+    },
+    {
+      "dataset": "synthetic",
+      "method": "genetic",
+      "seconds_mean": 2.2427368624994415,
+      "holdout_mean": 0.90625,
+      "cv_score_mean": 0.8983333333333333,
+      "selected_features_mean": 9.125,
+      "candidate_cv_calls_mean": 71.75
+    },
+    {
+      "dataset": "synthetic",
+      "method": "random",
+      "seconds_mean": 2.3772706125018885,
+      "holdout_mean": 0.88,
+      "cv_score_mean": 0.8785416666666667,
+      "selected_features_mean": 8.875,
+      "candidate_cv_calls_mean": 71.625
+    }
+  ],
+  "comparisons": [
+    {
+      "dataset": "breast",
+      "ga_vs_random_speed_ratio": 1.0088231270559043,
+      "heldout_delta_mean": 0.005244755244755234,
+      "cv_delta_mean": 0.001760563380281674,
+      "heldout_wins": 4,
+      "heldout_ties": 2,
+      "heldout_losses": 2,
+      "worst_heldout_delta": -0.006993006993007089
+    },
+    {
+      "dataset": "digits",
+      "ga_vs_random_speed_ratio": 1.0405791282674683,
+      "heldout_delta_mean": 0.004444444444444473,
+      "cv_delta_mean": 0.007516703786191584,
+      "heldout_wins": 5,
+      "heldout_ties": 1,
+      "heldout_losses": 2,
+      "worst_heldout_delta": -0.008888888888888835
+    },
+    {
+      "dataset": "synthetic",
+      "ga_vs_random_speed_ratio": 1.059986417600732,
+      "heldout_delta_mean": 0.026250000000000023,
+      "cv_delta_mean": 0.019791666666666638,
+      "heldout_wins": 6,
+      "heldout_ties": 0,
+      "heldout_losses": 2,
+      "worst_heldout_delta": -0.025000000000000022
+    }
+  ],
+  "cohort_comparisons": [
+    {
+      "dataset": "breast",
+      "cohort": "pilot",
+      "ga_holdout_mean": 0.9813519813519813,
+      "random_holdout_mean": 0.9743589743589743,
+      "accuracy_delta_mean": 0.006993006993006978,
+      "ga_cv_mean": 0.9765258215962441,
+      "random_cv_mean": 0.9749608763693272
+    },
+    {
+      "dataset": "breast",
+      "cohort": "validation",
+      "ga_holdout_mean": 0.9692307692307692,
+      "random_holdout_mean": 0.965034965034965,
+      "accuracy_delta_mean": 0.004195804195804187,
+      "ga_cv_mean": 0.9765258215962441,
+      "random_cv_mean": 0.9746478873239437
+    },
+    {
+      "dataset": "digits",
+      "cohort": "pilot",
+      "ga_holdout_mean": 0.9725925925925927,
+      "random_holdout_mean": 0.9614814814814815,
+      "accuracy_delta_mean": 0.011111111111111146,
+      "ga_cv_mean": 0.9730264785944074,
+      "random_cv_mean": 0.9646127196238555
+    },
+    {
+      "dataset": "digits",
+      "cohort": "validation",
+      "ga_holdout_mean": 0.9728888888888889,
+      "random_holdout_mean": 0.9724444444444444,
+      "accuracy_delta_mean": 0.0004444444444444695,
+      "ga_cv_mean": 0.971343726800297,
+      "random_cv_mean": 0.9643652561247216
+    },
+    {
+      "dataset": "synthetic",
+      "cohort": "pilot",
+      "ga_holdout_mean": 0.9166666666666667,
+      "random_holdout_mean": 0.8733333333333333,
+      "accuracy_delta_mean": 0.04333333333333337,
+      "ga_cv_mean": 0.9122222222222223,
+      "random_cv_mean": 0.8772222222222222
+    },
+    {
+      "dataset": "synthetic",
+      "cohort": "validation",
+      "ga_holdout_mean": 0.9,
+      "random_holdout_mean": 0.884,
+      "accuracy_delta_mean": 0.016000000000000014,
+      "ga_cv_mean": 0.89,
+      "random_cv_mean": 0.8793333333333333
+    }
+  ],
+  "raw": [
+    {
+      "dataset": "breast",
+      "seed": 951,
+      "method": "genetic",
+      "seconds": 1.077944100019522,
+      "cv_score": 0.9671361502347419,
+      "holdout": 0.993006993006993,
+      "selected_features": 15,
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "dataset": "breast",
+      "seed": 951,
+      "method": "random",
+      "seconds": 1.12852379999822,
+      "cv_score": 0.9694835680751174,
+      "holdout": 0.9790209790209791,
+      "selected_features": 13,
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "dataset": "breast",
+      "seed": 952,
+      "method": "random",
+      "seconds": 1.083021300000837,
+      "cv_score": 0.9812206572769954,
+      "holdout": 0.951048951048951,
+      "selected_features": 13,
+      "candidate_cv_calls": 71,
+      "proposals": 72
+    },
+    {
+      "dataset": "breast",
+      "seed": 952,
+      "method": "genetic",
+      "seconds": 1.1091082000057213,
+      "cv_score": 0.983568075117371,
+      "holdout": 0.965034965034965,
+      "selected_features": 15,
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "dataset": "breast",
+      "seed": 953,
+      "method": "genetic",
+      "seconds": 1.0961827000137419,
+      "cv_score": 0.9788732394366196,
+      "holdout": 0.986013986013986,
+      "selected_features": 10,
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "dataset": "breast",
+      "seed": 953,
+      "method": "random",
+      "seconds": 1.1434051000105683,
+      "cv_score": 0.9741784037558686,
+      "holdout": 0.993006993006993,
+      "selected_features": 15,
+      "candidate_cv_calls": 70,
+      "proposals": 72
+    },
+    {
+      "dataset": "digits",
+      "seed": 951,
+      "method": "genetic",
+      "seconds": 9.860596900020028,
+      "cv_score": 0.9732739420935412,
+      "holdout": 0.9733333333333334,
+      "selected_features": 32,
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "dataset": "digits",
+      "seed": 951,
+      "method": "random",
+      "seconds": 10.014993800024968,
+      "cv_score": 0.96362286562732,
+      "holdout": 0.9533333333333334,
+      "selected_features": 29,
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "dataset": "digits",
+      "seed": 952,
+      "method": "random",
+      "seconds": 9.627284899994265,
+      "cv_score": 0.969561989606533,
+      "holdout": 0.9644444444444444,
+      "selected_features": 32,
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "dataset": "digits",
+      "seed": 952,
+      "method": "genetic",
+      "seconds": 9.119706400000723,
+      "cv_score": 0.9769858945805495,
+      "holdout": 0.9733333333333334,
+      "selected_features": 32,
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "dataset": "digits",
+      "seed": 953,
+      "method": "genetic",
+      "seconds": 9.298854599997867,
+      "cv_score": 0.9688195991091314,
+      "holdout": 0.9711111111111111,
+      "selected_features": 32,
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "dataset": "digits",
+      "seed": 953,
+      "method": "random",
+      "seconds": 10.029322099988349,
+      "cv_score": 0.9606533036377135,
+      "holdout": 0.9666666666666667,
+      "selected_features": 32,
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 951,
+      "method": "genetic",
+      "seconds": 2.2997958999767434,
+      "cv_score": 0.9349999999999999,
+      "holdout": 0.935,
+      "selected_features": 8,
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 951,
+      "method": "random",
+      "seconds": 2.49270850000903,
+      "cv_score": 0.875,
+      "holdout": 0.89,
+      "selected_features": 10,
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 952,
+      "method": "random",
+      "seconds": 2.4586471999937203,
+      "cv_score": 0.8866666666666667,
+      "holdout": 0.85,
+      "selected_features": 8,
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 952,
+      "method": "genetic",
+      "seconds": 2.293926600017585,
+      "cv_score": 0.9083333333333333,
+      "holdout": 0.91,
+      "selected_features": 9,
+      "candidate_cv_calls": 71,
+      "proposals": 72
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 953,
+      "method": "genetic",
+      "seconds": 2.3772114000166766,
+      "cv_score": 0.8933333333333334,
+      "holdout": 0.905,
+      "selected_features": 10,
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 953,
+      "method": "random",
+      "seconds": 2.642708400002448,
+      "cv_score": 0.8700000000000001,
+      "holdout": 0.88,
+      "selected_features": 8,
+      "candidate_cv_calls": 71,
+      "proposals": 72
+    },
+    {
+      "dataset": "breast",
+      "seed": 954,
+      "method": "random",
+      "seconds": 1.0417141999932937,
+      "cv_score": 0.9812206572769954,
+      "holdout": 0.965034965034965,
+      "selected_features": 14,
+      "candidate_cv_calls": 71,
+      "proposals": 72
+    },
+    {
+      "dataset": "breast",
+      "seed": 954,
+      "method": "genetic",
+      "seconds": 1.0451667000015732,
+      "cv_score": 0.9788732394366196,
+      "holdout": 0.9790209790209791,
+      "selected_features": 12,
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "dataset": "breast",
+      "seed": 955,
+      "method": "genetic",
+      "seconds": 1.0227710999897681,
+      "cv_score": 0.9765258215962441,
+      "holdout": 0.958041958041958,
+      "selected_features": 13,
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "dataset": "breast",
+      "seed": 955,
+      "method": "random",
+      "seconds": 1.015544800000498,
+      "cv_score": 0.971830985915493,
+      "holdout": 0.9440559440559441,
+      "selected_features": 7,
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "dataset": "breast",
+      "seed": 956,
+      "method": "random",
+      "seconds": 1.0126060000038706,
+      "cv_score": 0.976525821596244,
+      "holdout": 0.965034965034965,
+      "selected_features": 13,
+      "candidate_cv_calls": 70,
+      "proposals": 72
+    },
+    {
+      "dataset": "breast",
+      "seed": 956,
+      "method": "genetic",
+      "seconds": 0.9770933999971021,
+      "cv_score": 0.9765258215962441,
+      "holdout": 0.965034965034965,
+      "selected_features": 15,
+      "candidate_cv_calls": 71,
+      "proposals": 72
+    },
+    {
+      "dataset": "breast",
+      "seed": 957,
+      "method": "genetic",
+      "seconds": 1.0303384000144433,
+      "cv_score": 0.9788732394366196,
+      "holdout": 0.972027972027972,
+      "selected_features": 14,
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "dataset": "breast",
+      "seed": 957,
+      "method": "random",
+      "seconds": 1.0281633000122383,
+      "cv_score": 0.9694835680751174,
+      "holdout": 0.972027972027972,
+      "selected_features": 11,
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "dataset": "breast",
+      "seed": 958,
+      "method": "random",
+      "seconds": 1.0402225999860093,
+      "cv_score": 0.9741784037558685,
+      "holdout": 0.9790209790209791,
+      "selected_features": 15,
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "dataset": "breast",
+      "seed": 958,
+      "method": "genetic",
+      "seconds": 1.0603153000120074,
+      "cv_score": 0.971830985915493,
+      "holdout": 0.972027972027972,
+      "selected_features": 12,
+      "candidate_cv_calls": 71,
+      "proposals": 72
+    },
+    {
+      "dataset": "digits",
+      "seed": 954,
+      "method": "random",
+      "seconds": 9.223163499991642,
+      "cv_score": 0.9651076466221232,
+      "holdout": 0.9755555555555555,
+      "selected_features": 31,
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "dataset": "digits",
+      "seed": 954,
+      "method": "genetic",
+      "seconds": 9.506503699987661,
+      "cv_score": 0.9688195991091314,
+      "holdout": 0.9755555555555555,
+      "selected_features": 29,
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "dataset": "digits",
+      "seed": 955,
+      "method": "genetic",
+      "seconds": 9.133635800011689,
+      "cv_score": 0.9755011135857461,
+      "holdout": 0.9711111111111111,
+      "selected_features": 29,
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "dataset": "digits",
+      "seed": 955,
+      "method": "random",
+      "seconds": 9.564738400018541,
+      "cv_score": 0.9673348181143281,
+      "holdout": 0.98,
+      "selected_features": 31,
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "dataset": "digits",
+      "seed": 956,
+      "method": "random",
+      "seconds": 9.377706400002353,
+      "cv_score": 0.969561989606533,
+      "holdout": 0.9666666666666667,
+      "selected_features": 28,
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "dataset": "digits",
+      "seed": 956,
+      "method": "genetic",
+      "seconds": 9.034257699997397,
+      "cv_score": 0.9710467706013364,
+      "holdout": 0.9711111111111111,
+      "selected_features": 26,
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "dataset": "digits",
+      "seed": 957,
+      "method": "genetic",
+      "seconds": 9.1481735999987,
+      "cv_score": 0.9755011135857461,
+      "holdout": 0.96,
+      "selected_features": 28,
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "dataset": "digits",
+      "seed": 957,
+      "method": "random",
+      "seconds": 9.557835999992676,
+      "cv_score": 0.9517446176688938,
+      "holdout": 0.9644444444444444,
+      "selected_features": 32,
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "dataset": "digits",
+      "seed": 958,
+      "method": "random",
+      "seconds": 9.551657100004377,
+      "cv_score": 0.9680772086117297,
+      "holdout": 0.9755555555555555,
+      "selected_features": 32,
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "dataset": "digits",
+      "seed": 958,
+      "method": "genetic",
+      "seconds": 8.844307799998205,
+      "cv_score": 0.9658500371195249,
+      "holdout": 0.9866666666666667,
+      "selected_features": 32,
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 954,
+      "method": "random",
+      "seconds": 2.2955077000078745,
+      "cv_score": 0.8783333333333333,
+      "holdout": 0.905,
+      "selected_features": 10,
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 954,
+      "method": "genetic",
+      "seconds": 2.2020267999905627,
+      "cv_score": 0.8883333333333333,
+      "holdout": 0.88,
+      "selected_features": 8,
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 955,
+      "method": "genetic",
+      "seconds": 2.241978600010043,
+      "cv_score": 0.895,
+      "holdout": 0.905,
+      "selected_features": 10,
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 955,
+      "method": "random",
+      "seconds": 2.2490909000043757,
+      "cv_score": 0.91,
+      "holdout": 0.92,
+      "selected_features": 10,
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 956,
+      "method": "random",
+      "seconds": 2.345172300003469,
+      "cv_score": 0.8466666666666667,
+      "holdout": 0.855,
+      "selected_features": 6,
+      "candidate_cv_calls": 71,
+      "proposals": 72
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 956,
+      "method": "genetic",
+      "seconds": 2.2053060000180267,
+      "cv_score": 0.895,
+      "holdout": 0.905,
+      "selected_features": 9,
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 957,
+      "method": "genetic",
+      "seconds": 2.0952197999868076,
+      "cv_score": 0.9033333333333333,
+      "holdout": 0.92,
+      "selected_features": 10,
+      "candidate_cv_calls": 71,
+      "proposals": 72
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 957,
+      "method": "random",
+      "seconds": 2.240543299994897,
+      "cv_score": 0.8916666666666666,
+      "holdout": 0.855,
+      "selected_features": 10,
+      "candidate_cv_calls": 71,
+      "proposals": 72
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 958,
+      "method": "random",
+      "seconds": 2.2937865999992937,
+      "cv_score": 0.8700000000000001,
+      "holdout": 0.885,
+      "selected_features": 9,
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 958,
+      "method": "genetic",
+      "seconds": 2.226429799979087,
+      "cv_score": 0.8683333333333333,
+      "holdout": 0.89,
+      "selected_features": 9,
+      "candidate_cv_calls": 72,
+      "proposals": 72
+    }
+  ],
+  "reproduction_script": "\"\"\"Exploratory equal-proposal GA versus random feature-mask search.\"\"\"\n\nimport argparse\nimport json\nimport time\nfrom pathlib import Path\n\nimport numpy as np\nfrom sklearn.base import clone\nfrom sklearn.datasets import load_breast_cancer, load_digits, make_classification\nfrom sklearn.metrics import accuracy_score\nfrom sklearn.model_selection import StratifiedKFold, cross_val_score, train_test_split\nfrom sklearn.pipeline import make_pipeline\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.svm import SVC\nfrom threadpoolctl import threadpool_limits\n\nfrom sklearn_genetic import GAFeatureSelectionCV\n\n\nparser = argparse.ArgumentParser()\nparser.add_argument(\"--seed-start\", type=int, default=951)\nparser.add_argument(\"--seeds\", type=int, default=3)\nparser.add_argument(\"--output\", type=Path, default=Path(\".agent-runs/performance-v2/random-mask-ablation.jsonl\"))\nargs = parser.parse_args()\nargs.output.parent.mkdir(parents=True, exist_ok=True)\ndatasets = {\n    \"breast\": load_breast_cancer(return_X_y=True),\n    \"digits\": load_digits(return_X_y=True),\n    \"synthetic\": make_classification(\n        n_samples=800, n_features=20, n_informative=8, n_redundant=4, random_state=19\n    ),\n}\nwith threadpool_limits(limits=1), args.output.open(\"w\", encoding=\"utf-8\") as stream:\n    for dataset, (X, y) in datasets.items():\n        for seed in range(args.seed_start, args.seed_start + args.seeds):\n            train, test = train_test_split(\n                np.arange(len(y)), test_size=0.25, stratify=y, random_state=seed\n            )\n            Xtr, Xte, ytr, yte = X[train], X[test], y[train], y[test]\n            folds = list(StratifiedKFold(3, shuffle=True, random_state=seed).split(Xtr, ytr))\n            max_features = X.shape[1] // 2\n            model = make_pipeline(StandardScaler(), SVC(kernel=\"rbf\", C=10))\n            methods = (\"genetic\", \"random\") if seed % 2 else (\"random\", \"genetic\")\n            for method in methods:\n                started = time.perf_counter()\n                if method == \"genetic\":\n                    search = GAFeatureSelectionCV(\n                        clone(model),\n                        cv=folds,\n                        scoring=\"accuracy\",\n                        max_features=max_features,\n                        population_size=8,\n                        generations=4,\n                        random_state=seed,\n                        n_jobs=1,\n                        verbose=False,\n                        error_score=\"raise\",\n                    ).fit(Xtr, ytr)\n                    mask = search.support_\n                    cv_score = float(np.nanmax(search.cv_results_[\"mean_test_score\"]))\n                    calls = search.fit_stats_[\"cross_validate_calls\"]\n                    proposals = search.fit_stats_[\"evaluated_candidates\"]\n                    fitted = search.best_estimator_\n                else:\n                    rng = np.random.default_rng(seed)\n                    scored = {}\n                    for _ in range(72):\n                        count = int(rng.integers(1, max_features + 1))\n                        indices = rng.choice(X.shape[1], count, replace=False)\n                        candidate = np.zeros(X.shape[1], dtype=bool)\n                        candidate[indices] = True\n                        key = tuple(candidate)\n                        if key not in scored:\n                            scored[key] = float(\n                                np.mean(\n                                    cross_val_score(\n                                        clone(model),\n                                        Xtr[:, candidate],\n                                        ytr,\n                                        cv=folds,\n                                        scoring=\"accuracy\",\n                                        n_jobs=1,\n                                        error_score=\"raise\",\n                                    )\n                                )\n                            )\n                    best_key = max(scored, key=lambda key: (scored[key], -sum(key)))\n                    mask = np.asarray(best_key, dtype=bool)\n                    cv_score = scored[best_key]\n                    calls = len(scored)\n                    proposals = 72\n                    fitted = clone(model).fit(Xtr[:, mask], ytr)\n                seconds = time.perf_counter() - started\n                row = dict(\n                    dataset=dataset,\n                    seed=seed,\n                    method=method,\n                    seconds=seconds,\n                    cv_score=float(cv_score),\n                    holdout=float(accuracy_score(yte, fitted.predict(Xte[:, mask]))),\n                    selected_features=int(mask.sum()),\n                    candidate_cv_calls=int(calls),\n                    proposals=int(proposals),\n                )\n                print(json.dumps(row), flush=True)\n                stream.write(json.dumps(row) + \"\\n\")\n                stream.flush()\n",
+  "summary_script": "\"\"\"Summarize an equal-proposal random-mask control across eight paired seeds.\"\"\"\n\nimport hashlib\nimport importlib.metadata\nimport json\nimport math\nimport platform\nimport statistics\nimport subprocess\nfrom pathlib import Path\n\nimport numpy as np\nfrom sklearn.datasets import load_breast_cancer, load_digits, make_classification\nfrom sklearn.model_selection import StratifiedKFold, train_test_split\n\n\nwork = Path(\".agent-runs/performance-v2\")\npaths = [work / \"random-mask-ablation.jsonl\", work / \"random-mask-ablation-validation.jsonl\"]\nrows = [json.loads(line) for path in paths for line in path.read_text(encoding=\"utf-8\").splitlines()]\nexpected = {\n    (dataset, seed, method)\n    for dataset in (\"breast\", \"digits\", \"synthetic\")\n    for seed in range(951, 959)\n    for method in (\"genetic\", \"random\")\n}\nby_key = {(row[\"dataset\"], row[\"seed\"], row[\"method\"]): row for row in rows}\nassert len(rows) == len(by_key) == len(expected) == 48\nassert set(by_key) == expected\nfor row in rows:\n    assert row[\"proposals\"] == 72\n    assert 0 < row[\"candidate_cv_calls\"] <= 72\n    assert 1 <= row[\"selected_features\"] <= {\"breast\": 15, \"digits\": 32, \"synthetic\": 10}[row[\"dataset\"]]\n    assert math.isfinite(row[\"seconds\"]) and row[\"seconds\"] > 0\n    assert 0 <= row[\"holdout\"] <= 1 and 0 <= row[\"cv_score\"] <= 1\n\nsummary = []\ncomparisons = []\ncohort_comparisons = []\nfor dataset in (\"breast\", \"digits\", \"synthetic\"):\n    for method in (\"genetic\", \"random\"):\n        subset = [by_key[(dataset, seed, method)] for seed in range(951, 959)]\n        summary.append(\n            dict(\n                dataset=dataset,\n                method=method,\n                seconds_mean=statistics.mean(row[\"seconds\"] for row in subset),\n                holdout_mean=statistics.mean(row[\"holdout\"] for row in subset),\n                cv_score_mean=statistics.mean(row[\"cv_score\"] for row in subset),\n                selected_features_mean=statistics.mean(row[\"selected_features\"] for row in subset),\n                candidate_cv_calls_mean=statistics.mean(row[\"candidate_cv_calls\"] for row in subset),\n            )\n        )\n    pairs = [\n        (by_key[(dataset, seed, \"genetic\")], by_key[(dataset, seed, \"random\")])\n        for seed in range(951, 959)\n    ]\n    heldout_deltas = [ga[\"holdout\"] - random[\"holdout\"] for ga, random in pairs]\n    cv_deltas = [ga[\"cv_score\"] - random[\"cv_score\"] for ga, random in pairs]\n    comparisons.append(\n        dict(\n            dataset=dataset,\n            ga_vs_random_speed_ratio=sum(random[\"seconds\"] for _, random in pairs)\n            / sum(ga[\"seconds\"] for ga, _ in pairs),\n            heldout_delta_mean=statistics.mean(heldout_deltas),\n            cv_delta_mean=statistics.mean(cv_deltas),\n            heldout_wins=sum(delta > 0 for delta in heldout_deltas),\n            heldout_ties=sum(delta == 0 for delta in heldout_deltas),\n            heldout_losses=sum(delta < 0 for delta in heldout_deltas),\n            worst_heldout_delta=min(heldout_deltas),\n        )\n    )\n    for cohort, seeds in ((\"pilot\", range(951, 954)), (\"validation\", range(954, 959))):\n        cohort_pairs = [\n            (by_key[(dataset, seed, \"genetic\")], by_key[(dataset, seed, \"random\")])\n            for seed in seeds\n        ]\n        cohort_comparisons.append(\n            dict(\n                dataset=dataset,\n                cohort=cohort,\n                ga_holdout_mean=statistics.mean(ga[\"holdout\"] for ga, _ in cohort_pairs),\n                random_holdout_mean=statistics.mean(random[\"holdout\"] for _, random in cohort_pairs),\n                accuracy_delta_mean=statistics.mean(\n                    ga[\"holdout\"] - random[\"holdout\"] for ga, random in cohort_pairs\n                ),\n                ga_cv_mean=statistics.mean(ga[\"cv_score\"] for ga, _ in cohort_pairs),\n                random_cv_mean=statistics.mean(random[\"cv_score\"] for _, random in cohort_pairs),\n            )\n        )\n\ndatasets = {\n    \"breast\": load_breast_cancer(return_X_y=True),\n    \"digits\": load_digits(return_X_y=True),\n    \"synthetic\": make_classification(\n        n_samples=800, n_features=20, n_informative=8, n_redundant=4, random_state=19\n    ),\n}\nsplit_sha256 = {}\nfor dataset, (_, y) in datasets.items():\n    for seed in range(951, 959):\n        train, test = train_test_split(\n            np.arange(len(y)), test_size=0.25, stratify=y, random_state=seed\n        )\n        folds = list(StratifiedKFold(3, shuffle=True, random_state=seed).split(train, y[train]))\n        arrays = [train, test] + [array for fold in folds for array in fold]\n        split_sha256[f\"{dataset}/{seed}\"] = hashlib.sha256(\n            b\"\".join(np.asarray(array, dtype=\"<i8\").tobytes() for array in arrays)\n        ).hexdigest()\n\nsource_paths = [\n    Path(\"sklearn_genetic/genetic_search.py\"),\n    Path(\"sklearn_genetic/algorithms.py\"),\n    Path(\"sklearn_genetic/population.py\"),\n]\npayload = dict(\n    question=\"Does GA feature-mask search beat random masks at the same 72-proposal budget?\",\n    source_commit=subprocess.check_output([\"git\", \"rev-parse\", \"HEAD\"], text=True).strip(),\n    settings=dict(\n        datasets=[\"breast\", \"digits\", \"synthetic\"],\n        seeds=list(range(951, 959)),\n        holdout_fraction=0.25,\n        cv_folds=3,\n        proposal_budget=72,\n        max_features=\"half\",\n        model=\"StandardScaler plus SVC(kernel=rbf, C=10)\",\n        cpu_threads=1,\n    ),\n    environment={\n        \"python\": platform.python_version(),\n        **{\n            package: importlib.metadata.version(package)\n            for package in (\"numpy\", \"scikit-learn\", \"scipy\", \"deap\")\n        },\n    },\n    source_sha256={str(path).replace(\"\\\\\", \"/\"): hashlib.sha256(path.read_bytes()).hexdigest() for path in source_paths},\n    split_sha256=split_sha256,\n    raw_sha256=hashlib.sha256(json.dumps(rows, sort_keys=True).encode()).hexdigest(),\n    summary=summary,\n    comparisons=comparisons,\n    cohort_comparisons=cohort_comparisons,\n    raw=rows,\n    reproduction_script=(work / \"random-mask-ablation.py\").read_text(encoding=\"utf-8\"),\n    summary_script=Path(__file__).read_text(encoding=\"utf-8\"),\n)\ndestination = Path(\"benchmarks/results/performance-v2/random-mask-control.json\")\ndestination.write_text(json.dumps(payload, indent=2), encoding=\"utf-8\")\nprint(json.dumps(dict(summary=summary, comparisons=comparisons, cohort_comparisons=cohort_comparisons), indent=2))\n"
+}

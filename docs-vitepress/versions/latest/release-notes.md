@@ -47,6 +47,10 @@ digits, but fell by 0.00583 on synthetic data. Feature selection was 3.48–3.92
 faster and lost mean accuracy on all three datasets. Validating 24 finalists
 instead of eight did not consistently recover accuracy. Optuna TPE remained
 faster under matching fold policies in the earlier three-split comparison.
+In a separate equal-budget, eight-split feature-mask control, the GA exceeded
+random mask sampling by 0.0052, 0.0044 and 0.0263 mean held-out accuracy on
+breast cancer, digits and synthetic data, respectively, at similar fitting time.
+The five reserved validation splits showed a smaller 0.00044 gain on digits.
 
 The repository [changelog](https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/CHANGELOG.md)
 lists the remaining changes in this upcoming release.

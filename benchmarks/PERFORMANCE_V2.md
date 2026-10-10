@@ -748,3 +748,25 @@ New-Item -ItemType Directory -Force -Path .agent-runs/performance-v2 | Out-Null
 .\.venv\Scripts\python.exe -c "import json,pathlib; a=json.loads(pathlib.Path('benchmarks/results/performance-v2/top24-fivefold-validation.json').read_text(encoding='utf-8')); pathlib.Path('.agent-runs/performance-v2/top24-fivefold-validation.py').write_text(a['reproduction_script'], encoding='utf-8')"
 .\.venv\Scripts\python.exe .agent-runs/performance-v2/top24-fivefold-validation.py
 ```
+
+## Evolutionary feature masks versus random search
+
+A separate 48-fit control tests whether the default feature-search evolution adds value beyond random masks at the same proposal budget. Breast Cancer, Digits and the 800-row synthetic classification problem above each use eight fresh stratified 75/25 outer splits (seeds 951–958), three fixed CV folds, a scaled RBF SVC with C=10, one CPU and at most half the columns. `GAFeatureSelectionCV` uses its default `eaMuPlusLambda` algorithm, smart initialization, population eight and four generations: 72 mask proposals. The random control also proposes 72 masks, drawing the number of selected columns uniformly from one to the cap and then choosing that many columns uniformly; it caches duplicate CV scores and breaks equal scores toward fewer columns. Both refit the CV winner on the full outer-training partition. Timings include search and refit; execution order alternates by seed. The first three seeds were exploratory and the next five were reserved for validation.
+
+| Dataset | GA accuracy / CV / seconds | Random accuracy / CV / seconds | GA − random accuracy | Validation-only GA − random |
+|---|---:|---:|---:|---:|
+| Breast Cancer | .97378 / .97653 / 1.052 | .96853 / .97477 / 1.062 | +.00524 | +.00420 |
+| Digits | .97278 / .97197 / 9.243 | .96833 / .96446 / 9.618 | +.00444 | +.00044 |
+| Synthetic | .90625 / .89833 / 2.243 | .88000 / .87854 / 2.377 | +.02625 | +.01600 |
+
+The GA wins four, five and six of eight paired outer splits respectively, with two, one and zero ties. After duplicate caching, it makes 71–72 actual candidate CV calls per fit; the random control makes 70–72. Mean selected counts are 13.25 versus 12.63 on Breast Cancer, 30.00 versus 30.88 on Digits and 9.13 versus 8.88 on synthetic data. The held-out gains are therefore not accompanied by a consistent reduction in selected columns; two losses occur on each dataset. Validation-only Digits accuracy is nearly tied. This fixed-model control shows useful evolutionary search pressure on these workloads, not a general quality guarantee, statistical significance, a fourfold quality gain or superiority over stronger optimizers.
+
+The [48-fit artifact](results/performance-v2/random-mask-control.json) includes all raw rows, pilot/validation summaries, source and split hashes, dependency versions, and the search and summary scripts. From the repository root, extract and run them with PowerShell after installing the benchmark dependencies in `.venv`:
+
+```powershell
+New-Item -ItemType Directory -Force -Path .agent-runs/performance-v2 | Out-Null
+.\.venv\Scripts\python.exe -c "import json,pathlib; a=json.loads(pathlib.Path('benchmarks/results/performance-v2/random-mask-control.json').read_text(encoding='utf-8')); w=pathlib.Path('.agent-runs/performance-v2'); (w/'random-mask-ablation.py').write_text(a['reproduction_script'], encoding='utf-8'); (w/'summarize-random-mask.py').write_text(a['summary_script'], encoding='utf-8')"
+.\.venv\Scripts\python.exe .agent-runs/performance-v2/random-mask-ablation.py
+.\.venv\Scripts\python.exe .agent-runs/performance-v2/random-mask-ablation.py --seed-start 954 --seeds 5 --output .agent-runs/performance-v2/random-mask-ablation-validation.jsonl
+.\.venv\Scripts\python.exe .agent-runs/performance-v2/summarize-random-mask.py
+```
