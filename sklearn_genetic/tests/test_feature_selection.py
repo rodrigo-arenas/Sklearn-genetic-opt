@@ -1246,3 +1246,113 @@ def test_feature_refit_clears_inactive_finalist_results(disabled_option):
     search.fit(X_train, y_train)
     for attribute in ("best_index_", "best_score_", "final_selection_results_"):
         assert not hasattr(search, attribute)
+
+
+@pytest.mark.parametrize(
+    "algorithm,maximum,initializer,population_size",
+    [
+        (algorithm, maximum, "smart", 4)
+        for algorithm in (
+            "eaSimple",
+            "eaMuPlusLambda",
+            "eaMuCommaLambda",
+            "eaDifferentialEvolution",
+        )
+        for maximum in (None, 2)
+    ]
+    + [("eaMuPlusLambda", maximum, "random", 4) for maximum in (None, 2)]
+    + [("eaMuPlusLambda", None, "smart", 8)],
+)
+def test_timed_feature_search_evaluates_dense_initial_anchor(
+    algorithm, maximum, initializer, population_size, monkeypatch
+):
+    from datetime import datetime, timedelta
+    from ..callbacks import early_stoppers
+
+    ticks = [0]
+
+    class ControlledClock:
+        @staticmethod
+        def utcnow():
+            return datetime(2026, 1, 1) + timedelta(seconds=ticks[0])
+
+    original_cv = genetic_search.cross_validate
+
+    def timed_cv(*args, **kwargs):
+        result = original_cv(*args, **kwargs)
+        ticks[0] += 6
+        return result
+
+    monkeypatch.setattr(early_stoppers, "datetime", ControlledClock)
+    monkeypatch.setattr(genetic_search, "cross_validate", timed_cv)
+    values, labels = load_iris(return_X_y=True)
+    settings = dict(
+        population_size=population_size,
+        generations=0,
+        population_initializer=initializer,
+        algorithm=algorithm,
+        max_features=maximum,
+        cv=2,
+        n_jobs=1,
+        random_state=31,
+        verbose=False,
+        error_score="raise",
+    )
+    reference = GAFeatureSelectionCV(DecisionTreeClassifier(random_state=0), **settings)
+    reference.fit(values, labels)
+    masks = reference.cv_results_["features"]
+    expected = max(masks, key=np.sum) if initializer == "smart" else masks[0]
+    if initializer == "smart":
+        assert np.sum(masks[0]) == 1
+        assert np.sum(expected) == (maximum or values.shape[1])
+
+    timed = GAFeatureSelectionCV(DecisionTreeClassifier(random_state=0), **settings)
+    timed.fit(values, labels, callbacks=TimerStopping(5))
+    assert timed.fit_stats_["cross_validate_calls"] == 1
+    assert len(timed.cv_results_["features"]) == 1
+    np.testing.assert_array_equal(timed.support_, expected)
+    assert timed.support_.any()
+    assert timed.predict(values).shape == labels.shape
+
+    # With enough time, the same candidate masks and scores are still evaluated.
+    timed.fit(values, labels, callbacks=TimerStopping(1000))
+    results = lambda search: sorted(
+        (tuple(mask), score)
+        for mask, score in zip(
+            search.cv_results_["features"], search.cv_results_["mean_test_score"]
+        )
+    )
+    assert results(timed) == results(reference)
+    np.testing.assert_array_equal(timed.cv_results_["features"][0], expected)
+
+
+def test_timed_feature_resume_preserves_initial_candidate_order(tmp_path):
+    from pathlib import Path
+    from ..callbacks import ModelCheckpoint
+
+    values, labels = load_iris(return_X_y=True)
+    path = str(tmp_path / "feature_order.pkl")
+    settings = dict(
+        population_size=4,
+        generations=0,
+        cv=2,
+        n_jobs=1,
+        random_state=31,
+        use_cache=False,
+        verbose=False,
+        error_score="raise",
+    )
+    original = GAFeatureSelectionCV(DecisionTreeClassifier(random_state=0), **settings)
+    original.fit(values, labels, callbacks=ModelCheckpoint(path))
+    assert Path(path).is_file()
+    masks = original.cv_results_["features"]
+    assert np.sum(masks[0]) == 1
+
+    resumed = GAFeatureSelectionCV(DecisionTreeClassifier(random_state=0), **settings)
+    resumed.fit(values, labels, callbacks=[ModelCheckpoint(path), TimerStopping(60)])
+    assert len(resumed.cv_results_["features"]) == 2 * len(masks)
+    np.testing.assert_array_equal(resumed.cv_results_["features"][len(masks) :], masks)
+    np.testing.assert_array_equal(
+        resumed.cv_results_["mean_test_score"][len(masks) :],
+        original.cv_results_["mean_test_score"],
+    )

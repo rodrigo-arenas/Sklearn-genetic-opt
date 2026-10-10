@@ -6,6 +6,8 @@ Full release notes with code examples are in the [documentation](https://sklearn
 
 ### New Features
 
+- Fresh feature searches with smart initialization and `TimerStopping` evaluate their largest initial feature set first, so a short deadline does not leave only small masks evaluated. The same candidate masks and `max_features` bound are retained; random initialization and checkpoint resumes preserve their ordering.
+
 - Added `subsample_cv` to reduce training rows while retaining full validation folds. Both searches can re-evaluate finalists on full-training CV; `GAFeatureSelectionCV` now shares `final_selection`, `final_selection_top_k`, and `final_selection_cv` with `GASearchCV`. The default full-data search is unchanged.
 
 - Local refinement in both searches now chains accepted elite improvements across `local_search_steps`, retaining per-step population batching and the configured candidate count.

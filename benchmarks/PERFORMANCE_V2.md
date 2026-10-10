@@ -504,3 +504,47 @@ At four generations, duplicate replacements fall from 520 to 443 for SVM and 302
 These three overlapping train/test splits do not establish universal superiority of either strategy. They provide no basis for shipping this proposal as a performance improvement. The earlier native benchmark spaces contain no fixed dimensions and would not benefit from it. Total measured fitting time is 1,789.82 seconds. The eight ordinary controls preserve exact candidate/score hashes, selected parameters, scores, CV counts, cache hits and duplicate-replacement counters. All source snapshots remain unchanged.
 
 The [raw experiment](results/performance-v2/fixed-mutation-experiment.json) preserves the rejected mutation method, execution/aggregation scripts, dependency versions, settings, per-seed scores, counters, histories and source hashes; baseline is `aa61cd20b9aa4914bace5ab0f4b023a5b745b3f4`. Scripts reuse `benchmark_native_automl.py` and add the constants listed above. The prototype had five discriminating public regressions fail against the original operator and 28 focused checks pass with the proposal. Independent mutation checks covered interleaved fixed coordinates, custom and weighted sampling, and exact Python/NumPy RNG preservation on mutable spaces. Prototype tests and implementation are retained with the local experiment, not shipped as a library change. [Validation and dispersion](results/performance-v2/fixed-mutation-verification.txt).
+
+
+## A dense initial feature candidate under a short deadline
+
+Smart feature initialization constructs masks in increasing feature-count order. Candidate-level stopping can therefore spend an entire short budget evaluating only the sparsest masks, even though the initial population already contains a dense candidate. Fresh `GAFeatureSelectionCV` searches with smart initialization and `TimerStopping` now move the densest existing initial mask first. The candidate set, `max_features` bound and soft deadline semantics are retained. Searches without a timer, random initialization, checkpoint resumes and HPO keep their ordering. This is a change in the timed feature-search trajectory, not a new evolutionary algorithm or a preprocessing filter.
+
+The paired experiment has 136 fits: 120 feature searches across two sources, SVM/LightGBM, five datasets, three fresh seeds (2201-2203) and one-/five-second budgets, plus 16 no-timer initial-generation controls for features/HPO on the four earlier datasets at seed 2204. Each fit uses population eight, full-training three-fold CV, one CPU, a 25% held-out split and no finalist promotion. Timed runs allow at most 1,000 generations; execution order rotates by seed. In-flight CV and final refit finish beyond the soft deadline, and actual fitting times include this work.
+
+This adds [UCI Dry Bean](https://archive.ics.uci.edu/dataset/602/dry%2Bbean%2Bdataset): 13,611 samples, 16 measured features and seven classes, licensed CC BY 4.0, DOI [10.24432/C50S4B](https://doi.org/10.24432/C50S4B). The source ZIP/ARFF and prepared-array hashes are recorded with its provenance. Each split contains 10,208 training and 3,403 held-out rows. No external test labels enter the search.
+
+Mean held-out score / total fitting seconds across three seeds; classification uses accuracy and diabetes negative MSE:
+
+| Model / requested seconds | Dataset | Ascending initial masks | Dense candidate first |
+|---|---|---:|---:|
+| svm / 1 | breast | 0.969697 / 1.022 | 0.965035 / 1.026 |
+| svm / 1 | digits | 0.979259 / 1.115 | 0.977037 / 1.163 |
+| svm / 1 | diabetes | -3272.372678 / 1.033 | -3214.995440 / 1.029 |
+| svm / 1 | synthetic | 0.838000 / 1.150 | 0.864667 / 1.150 |
+| svm / 1 | drybean | 0.595945 / 7.486 | 0.925850 / 2.203 |
+| svm / 5 | breast | 0.958042 / 5.063 | 0.962704 / 5.062 |
+| svm / 5 | digits | 0.979259 / 5.135 | 0.978519 / 5.099 |
+| svm / 5 | diabetes | -3303.909203 / 5.067 | -3303.909203 / 5.066 |
+| svm / 5 | synthetic | 0.873333 / 5.129 | 0.867333 / 5.193 |
+| svm / 5 | drybean | 0.698012 / 7.922 | 0.925850 / 8.044 |
+| lightgbm / 1 | breast | 0.972028 / 1.063 | 0.967366 / 1.082 |
+| lightgbm / 1 | digits | 0.691852 / 1.800 | 0.973333 / 2.023 |
+| lightgbm / 1 | diabetes | -3350.847136 / 1.032 | -3339.863577 / 1.048 |
+| lightgbm / 1 | synthetic | 0.810000 / 1.722 | 0.898667 / 2.039 |
+| lightgbm / 1 | drybean | 0.588794 / 1.852 | 0.922421 / 4.332 |
+| lightgbm / 5 | breast | 0.962704 / 5.089 | 0.974359 / 5.090 |
+| lightgbm / 5 | digits | 0.966667 / 6.627 | 0.973333 / 5.615 |
+| lightgbm / 5 | diabetes | -3660.065813 / 5.061 | -3727.289848 / 5.056 |
+| lightgbm / 5 | synthetic | 0.904000 / 6.768 | 0.903333 / 6.485 |
+| lightgbm / 5 | drybean | 0.899500 / 6.337 | 0.922421 / 7.483 |
+
+With a one-second request, Dry Bean SVM improves from .59595 to .92585 accuracy: **5.45x lower mean classification error**, while elapsed time falls from 7.486 to 2.203 seconds (**3.40x faster**). All three seeds improve. The original one-feature SVM fits are slower than fitting all features on this data. At five seconds the mean error is 4.07x lower, but elapsed time is slightly higher (8.044 versus 7.922 seconds). These results retain all 16 features rather than one to two; they improve prediction under a short budget, not dimensionality reduction.
+
+Digits LightGBM at one second improves from .69185 to .97333 accuracy (**11.56x lower mean error**), at a 12.4% time increase. Dry Bean LightGBM at one second has 5.30x lower mean error but takes 4.332 instead of 1.852 seconds (2.34x as long). Synthetic accuracy also improves at one second with either model. Large gains occur where the old budget omitted the dense candidate; they do not demonstrate faster individual CV evaluations or universal SOTA performance.
+
+Other scenarios are mixed: SVM accuracy decreases by .00466 on breast and .00222 on digits at one second, and by .006 on synthetic at five seconds. LightGBM breast accuracy decreases by .00466 at one second, while five-second diabetes MSE rises about 1.84%. Full per-seed scores, masks, evaluation counts and dispersion are retained. Three overlapping splits are descriptive evidence, not statistical equivalence or universal non-regression. The strongest quality gains often retain every feature. Total measured fitting time is 478.99 seconds.
+
+Every timed current run starts with the dense mask, every baseline with one feature, and every returned mask is nonempty and within the feature bounds. The no-timer controls preserve exact candidate/score hashes, full histories, scores, chosen masks/parameters and counters in both APIs. Frozen source hashes remain unchanged. The [raw artifact](results/performance-v2/feature-timer.json) includes settings, dependencies, dataset provenance and driver/runner/reducer scripts that reuse `benchmark_native_automl.py`; baseline is `dac3879d15a26764f2107a133a2f11065c2a0192`. [Validation and dispersion](results/performance-v2/feature-timer-verification.txt).
+
+Verification: 66 focused checks pass across both search APIs, including timed candidate batching, smart initialization, unchanged complete initial candidate sets and real checkpoint resume. The new behavior failed eight cases against the baseline; random-initialization controls already passed. An independent mutant probe exposed a population-backfill coverage gap; extending the existing parameterization now rejects taking the last mask instead of the densest. Black and the test guard pass. The full suite was not run.

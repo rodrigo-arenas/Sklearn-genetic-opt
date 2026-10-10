@@ -1,0 +1,48 @@
+PASS136 finite fits /68pairs; source hashes, folds, budgets, first masks, nonempty/bounded winners and monotonic best fitness verified. No-timer feature/HPO controls preserve exact search hashes, complete histories, scores, winners and counters.
+Total measured fit seconds: 478.991
+| Model | Seconds | Dataset | Baseline score / elapsed / features / CV calls | Dense-first score / elapsed / features / CV calls | Holdout delta | Error ratio |
+|---|---|---|---:|---:|---:|---:|
+| svm | 1 | breast | 0.969697 / 1.022 / 20.3 / 66.0 | 0.965035 / 1.026 / 17.3 / 67.3 | -0.004662 | 0.867 |
+Score SD: 0.010682, 0.018502
+| svm | 1 | digits | 0.979259 / 1.115 / 55.0 / 7.7 | 0.977037 / 1.163 / 58.0 / 8.0 | -0.002222 | 0.903 |
+Score SD: 0.001283, 0.003395
+| svm | 1 | diabetes | -3272.372678 / 1.033 / 7.3 / 52.7 | -3214.995440 / 1.029 / 8.3 / 53.0 | +57.377238 | 1.018 |
+Score SD: 693.552629, 639.846794
+| svm | 1 | synthetic | 0.838000 / 1.150 / 53.7 / 6.3 | 0.864667 / 1.150 / 80.0 / 6.3 | +0.026667 | 1.197 |
+Score SD: 0.047286, 0.014468
+| svm | 1 | drybean | 0.595945 / 7.486 / 1.0 / 1.0 | 0.925850 / 2.203 / 16.0 / 1.0 | +0.329905 | 5.449 |
+Score SD: 0.012384, 0.006039
+| svm | 5 | breast | 0.958042 / 5.063 / 16.0 / 335.7 | 0.962704 / 5.062 / 12.7 / 324.0 | +0.004662 | 1.125 |
+Score SD: 0.006993, 0.022479
+| svm | 5 | digits | 0.979259 / 5.135 / 55.0 / 36.3 | 0.978519 / 5.099 / 56.0 / 35.7 | -0.000741 | 0.966 |
+Score SD: 0.004626, 0.001283
+| svm | 5 | diabetes | -3303.909203 / 5.067 / 8.0 / 258.3 | -3303.909203 / 5.066 / 8.0 / 249.0 | +0.000000 | 1.000 |
+Score SD: 465.093068, 465.093068
+| svm | 5 | synthetic | 0.873333 / 5.129 / 69.7 / 26.7 | 0.867333 / 5.193 / 70.3 / 28.3 | -0.006000 | 0.955 |
+Score SD: 0.025166, 0.021197
+| svm | 5 | drybean | 0.698012 / 7.922 / 1.7 / 1.3 | 0.925850 / 8.044 / 16.0 / 2.0 | +0.227838 | 4.073 |
+Score SD: 0.166755, 0.006039
+| lightgbm | 1 | breast | 0.972028 / 1.063 / 16.0 / 12.7 | 0.967366 / 1.082 / 14.0 / 12.0 | -0.004662 | 0.857 |
+Score SD: 0.018502, 0.014557
+| lightgbm | 1 | digits | 0.691852 / 1.800 / 10.0 / 2.0 | 0.973333 / 2.023 / 64.0 / 1.0 | +0.281481 | 11.556 |
+Score SD: 0.068865, 0.005879
+| lightgbm | 1 | diabetes | -3350.847136 / 1.032 / 8.3 / 30.3 | -3339.863577 / 1.048 / 9.0 / 30.7 | +10.983559 | 1.003 |
+Score SD: 376.577116, 359.897020
+| lightgbm | 1 | synthetic | 0.810000 / 1.722 / 27.3 / 4.0 | 0.898667 / 2.039 / 80.0 / 1.0 | +0.088667 | 1.875 |
+Score SD: 0.050120, 0.005033
+| lightgbm | 1 | drybean | 0.588794 / 1.852 / 1.0 / 1.0 | 0.922421 / 4.332 / 16.0 / 1.0 | +0.333627 | 5.301 |
+Score SD: 0.011295, 0.005395
+| lightgbm | 5 | breast | 0.962704 / 5.089 / 14.0 / 62.7 | 0.974359 / 5.090 / 16.0 / 59.7 | +0.011655 | 1.455 |
+Score SD: 0.004037, 0.010682
+| lightgbm | 5 | digits | 0.966667 / 6.627 / 46.0 / 6.0 | 0.973333 / 5.615 / 64.0 / 5.0 | +0.006667 | 1.250 |
+Score SD: 0.003849, 0.005879
+| lightgbm | 5 | diabetes | -3660.065813 / 5.061 / 7.3 / 149.3 | -3727.289848 / 5.056 / 6.7 / 146.7 | -67.224035 | 0.982 |
+Score SD: 663.971096, 665.847048
+| lightgbm | 5 | synthetic | 0.904000 / 6.768 / 72.7 / 8.0 | 0.903333 / 6.485 / 76.3 / 7.7 | -0.000667 | 0.993 |
+Score SD: 0.012490, 0.012858
+| lightgbm | 5 | drybean | 0.899500 / 6.337 / 5.0 / 3.3 | 0.922421 / 7.483 / 16.0 / 3.0 | +0.022921 | 1.295 |
+Score SD: 0.010873, 0.005395
+
+Focused validation (no full suite): baseline4pass; original feature regression8fail2preservationpass; final66pass in8.68s including both APIs timer batching, smart initialization and checkpoint resume. Black2files clean; test_guard clean against dac3879d15a26764f2107a133a2f11065c2a0192.
+Independent review VER-FT1: uncapped last-index shortcut survived original population4 fixture; extended public parameterization with population8 sparse backfill. Mutant1fail10pass, correct implementation passes. Frozen production source restored byte-for-byte after scratch mutant (UTF-8 docstrings preserved).
+Independent final review: VER-FT1 closed; no unresolved material findings. Reviewer independently checked136raw rows/68pairs, source/data hashes, exact8controlpairs, all aggregate claims and embedded scripts. Production SHA256 a6ef838555e34d45ff8f578cd319bdc79e39cd0619469b7463cdba76edbed1cb equals frozen benchmark source.

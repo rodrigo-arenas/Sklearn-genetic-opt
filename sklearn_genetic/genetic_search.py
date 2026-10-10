@@ -86,6 +86,7 @@ from .optimizer_control import (
 
 import os
 from .callbacks.model_checkpoint import ModelCheckpoint
+from .callbacks.early_stoppers import TimerStopping
 from .config import EvolutionConfig, OptimizationConfig, PopulationConfig, RuntimeConfig
 
 
@@ -2372,6 +2373,16 @@ class GAFeatureSelectionCV(
         # resumed candidates are not dropped from ``cv_results_``/``history``.
         if restored_logbook is not None:
             self.logbook = restored_logbook
+
+        if (
+            not checkpoint_loaded
+            and self.population_initializer == "smart"
+            and any(isinstance(callback, TimerStopping) for callback in self.callbacks)
+        ):
+            # Evaluate a dense baseline before a deadline can truncate the
+            # ascending-size smart population. Keep every original candidate.
+            densest = max(range(len(self._pop)), key=lambda index: sum(self._pop[index]))
+            self._pop.insert(0, self._pop.pop(densest))
 
         # Optimization routine from the selected evolutionary algorithm
         pop, log, n_gen = self._select_algorithm(pop=self._pop, stats=self._stats, hof=self._hof)
