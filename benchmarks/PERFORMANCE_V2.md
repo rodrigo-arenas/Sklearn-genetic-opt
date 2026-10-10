@@ -663,3 +663,22 @@ Across fixed runs, mean time fell from 19.102 to 9.493 seconds for RF (**2.01×*
 Under the five-second timer, RF evaluated 5.83 → 11.92 candidates on average, but mean accuracy fell .92620 → .92408 and elapsed time improved only 6.215 → 5.619 seconds. ET evaluated 11.08 → 22.33 candidates, while accuracy fell .94759 → .94282 and elapsed time improved 5.665 → 5.301 seconds. The fixed-budget speed gain therefore does not translate into a reliable short-deadline quality gain. Reducing the tree range is rejected as a default `fast` preset change; users who explicitly value speed over this measured quality loss can still define an `Integer(25, 90)` dimension themselves.
 
 The [raw artifact](results/performance-v2/fast-classifier-tree-range-rejected.json) preserves all 144 fits, per-seed scores, times, winning parameters, CV counts, source hashes, dependency versions and scripts. The experiment used source commit `065300e`; the source files were unchanged throughout these runs. The data are descriptive: six overlapping splits per fixed workload and three timed splits do not establish statistical equivalence or broad superiority.
+
+## One-fold evolution with full-CV finalist promotion
+
+Both `GASearchCV` and `GAFeatureSelectionCV` already allow different search and finalist CV folds. To measure the workflow, 108 fits on breast cancer, digits and 800-row synthetic classification used a 25% stratified holdout, three original CV folds, one CPU, RBF SVC models, population eight and four generations (at most 72 proposed candidates). Full searches scored candidates on all three folds. Reduced searches used the first fold for evolution and re-evaluated either four or eight finalists on all three folds; a two-fold/four-finalist variant was also tested. Timings include finalist CV and final refit. Pilot seeds 901–903 tested one fold with four finalists; independent validation seeds 904–906 compared all four methods. This keeps the evolutionary search and its candidate budget, changing only the fidelity of candidate evaluation.
+
+Validation means across three new seeds, shown as held-out accuracy / total fitting seconds:
+
+| Dataset | API | Full three-fold search | One fold + eight finalists | Two folds + four finalists |
+|---|---|---:|---:|---:|
+| breast | `GASearchCV` | .96970 / 2.353 | .96970 / .975 | .96970 / 1.608 |
+| breast | `GAFeatureSelectionCV` | .96737 / 1.009 | .96503 / .481 | .96970 / .742 |
+| digits | `GASearchCV` | .98444 / 27.236 | .98370 / 9.932 | .98444 / 18.351 |
+| digits | `GAFeatureSelectionCV` | .96889 / 9.199 | .96741 / 4.192 | .97037 / 6.722 |
+| synthetic | `GASearchCV` | .88833 / 4.600 | .87000 / 1.856 | .87167 / 3.304 |
+| synthetic | `GAFeatureSelectionCV` | .90667 / 2.130 | .89667 / .957 | .88667 / 1.546 |
+
+One fold plus eight finalists is **2.10–2.74× faster** across these six validation groups, with mean accuracy changes from zero to −.01833. The four-finalist pilot yielded 2.35–2.97× speedups, but its mean feature-selection accuracy fell on digits and synthetic data. Adding finalists helped some validation groups, yet the synthetic SVC search still lost 1.83 percentage points. Two preliminary folds cut the speedup to 1.36–1.48× and did not eliminate synthetic losses. Selected feature counts stay near baseline on average; this workflow is a speed/quality tradeoff, not a dimensionality-reduction improvement.
+
+The [raw artifact](results/performance-v2/fold-promotion-svm.json) contains all per-seed scores, times, candidate CV counts, finalist counts, selected feature counts, source hashes, dependency versions and reproduction scripts. At most 72 candidate CV calls were made in every fit (some cached duplicates made fewer); finalist calls are recorded separately. The groups share data and outer splits within each seed. Three overlapping validation seeds are descriptive rather than proof of equivalent accuracy. The [guide](../docs-vitepress/versions/latest/guide/advanced-optimizer-control.md) shows the opt-in API pattern; full three-fold search remains the default.

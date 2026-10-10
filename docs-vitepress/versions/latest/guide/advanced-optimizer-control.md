@@ -331,6 +331,8 @@ print(hpo.best_score_, hpo.score(X_test, y_test))
 print(features.best_score_, features.score(X_test, y_test), features.support_.sum())
 ```
 
+For models where each fold is expensive, another option is to replace the `subsample_cv(...)` line with `search_cv = full_cv[:1]` and set `final_selection_top_k=8` in `common`. The search then scores candidates on one original fold and validates the eight best distinct candidates on all three folds. This can save more time than shortening each training fold, but preliminary rankings use less validation data and can miss the best candidate. Compare held-out accuracy and the complete fitting time on your own data before choosing either shortcut.
+
 `cv_results_`, `history` and the hall of fame retain the original search scores and candidates. `final_selection_results_` records each promoted candidate's original and final scores, full-validation fold scores, the winner and validation time. `best_score_` describes the final-validation winner, so it need not equal a value in `cv_results_`. Feature selection breaks equal final scores by preferring fewer columns. Invalid NaN finalists cannot replace valid candidates; if every finalist score is NaN, fitting raises an error.
 
 Final selection runs with `refit=True`. Its extra CV evaluations and final refit are additional to the evolutionary budget; generation stopping callbacks do not cap those stages. Include them when timing a workflow. An explicit non-None `final_selection_cv` overrides the corresponding `OptimizationConfig` value. Both settings and explicit fold arrays survive cloning and checkpoints.
