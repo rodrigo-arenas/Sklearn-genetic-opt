@@ -196,24 +196,7 @@ jobs:
 
       - name: Update conda recipe source
         run: |
-          python - <<'EOF'
-          import re, pathlib, os
-          version = os.environ["VERSION"]
-          sha256 = os.environ["SHA256"]
-          sdist_url = (
-              f"https://pypi.io/packages/source/s/sklearn-genetic-opt/"
-              f"sklearn_genetic_opt-{version}.tar.gz"
-          )
-          recipe = pathlib.Path("conda.recipe/meta.yaml").read_text()
-          new_source = f"source:\n  url: {sdist_url}\n  sha256: {sha256}"
-          recipe = re.sub(
-              r"source:\n(?:  #[^\n]*\n)*  path: \.\.",
-              new_source,
-              recipe,
-          )
-          pathlib.Path("conda.recipe/meta.yaml").write_text(recipe)
-          print(f"Updated conda recipe for {version}")
-          EOF
+          python conda.recipe/update_source.py "$VERSION" "$SHA256"
 
       - name: Commit and push updated recipe
         run: |

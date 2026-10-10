@@ -37,8 +37,11 @@ From the repository root, with `conda-build` installed:
 conda build conda.recipe
 ```
 
-The recipe reads the version directly from `sklearn_genetic/_version.py` and
-builds from the local checkout (`source: path: ..`).
+The recipe reads the version directly from `sklearn_genetic/_version.py`.
+Before the next release it builds from the local checkout (`source: path: ..`).
+The tagged-release workflow replaces that source with the published PyPI sdist
+and its SHA256, so later local builds use the released archive. The updater
+accepts either form and fails if the source has an unrecognized structure.
 
 ## Updating the conda-forge feedstock
 

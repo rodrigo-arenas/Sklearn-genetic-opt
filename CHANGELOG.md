@@ -27,6 +27,8 @@ Full release notes with code examples are in the [documentation](https://sklearn
 
 ### Bug Fixes
 
+- The tagged-release workflow now refreshes the conda recipe from either a local checkout or a previous release archive, and fails clearly if it cannot recognize the complete source mapping. The unreleased 0.14.0 recipe builds from the current checkout instead of the stale 0.13.2 archive and declares the missing core `pandas` dependency.
+
 - `GASearchCV.fit` now rebuilds its search space after `set_params(param_grid=...)`, including changed parameter names and bounds. Previously a reused estimator could silently evaluate the old grid or ignore an invalid replacement.
 
 - `GASearchCV.fit` now honors warm starts changed with `set_params(warm_start_configs=...)` or a replacement `PopulationConfig`, including removal of old seeds. Previously it kept using the configuration captured at construction, which could silently ignore new seeds or validate an obsolete one.
