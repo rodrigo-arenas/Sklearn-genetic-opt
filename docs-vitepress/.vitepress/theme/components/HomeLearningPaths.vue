@@ -34,12 +34,12 @@ const paths = [
     title: 'First Optimization',
     desc: 'New to genetic search? Learn to fit GASearchCV and inspect cross-validation results.',
     steps: [
-      { text: 'Installation', link: '/versions/0.13/guide/installation' },
-      { text: 'How hyperparameter optimization works', link: '/versions/0.13/guide/how-hyperparameter-optimization-works' },
-      { text: 'Tune a Random Forest (tutorial)', link: '/versions/0.13/tutorials/tune-random-forest' },
-      { text: 'Basic usage guide', link: '/versions/0.13/guide/basic-usage' },
+      { text: 'Installation', link: '/versions/0.14/guide/installation' },
+      { text: 'How hyperparameter optimization works', link: '/versions/0.14/guide/how-hyperparameter-optimization-works' },
+      { text: 'Tune a Random Forest (tutorial)', link: '/versions/0.14/tutorials/tune-random-forest' },
+      { text: 'Basic usage guide', link: '/versions/0.14/guide/basic-usage' },
     ],
-    cta: { text: 'Start the beginner path', link: '/versions/0.13/guide/installation' },
+    cta: { text: 'Start the beginner path', link: '/versions/0.14/guide/installation' },
   },
   {
     icon: '⚙️',
@@ -47,12 +47,12 @@ const paths = [
     title: 'Production Tuning',
     desc: 'You\'ve run a basic search. Now learn callbacks, parallel evaluation, MLflow logging, and pipelines.',
     steps: [
-      { text: 'Choosing the right search space', link: '/versions/0.13/guide/choosing-search-spaces' },
-      { text: 'Common tuning mistakes to avoid', link: '/versions/0.13/guide/common-mistakes' },
-      { text: 'Tune XGBoost / LightGBM', link: '/versions/0.13/tutorials/tune-xgboost' },
-      { text: 'Callbacks & early stopping', link: '/versions/0.13/guide/callbacks' },
+      { text: 'Choosing the right search space', link: '/versions/0.14/guide/choosing-search-spaces' },
+      { text: 'Common tuning mistakes to avoid', link: '/versions/0.14/guide/common-mistakes' },
+      { text: 'Tune XGBoost / LightGBM', link: '/versions/0.14/tutorials/tune-xgboost' },
+      { text: 'Callbacks & early stopping', link: '/versions/0.14/guide/callbacks' },
     ],
-    cta: { text: 'Browse intermediate recipes', link: '/versions/0.13/recipes/' },
+    cta: { text: 'Browse intermediate recipes', link: '/versions/0.14/recipes/' },
   },
   {
     icon: '🏆',
@@ -60,12 +60,12 @@ const paths = [
     title: 'Evolutionary Mastery',
     desc: 'Deep-dive into GA mechanics, feature selection, custom operators, and multi-metric optimization.',
     steps: [
-      { text: 'Feature selection with GAFeatureSelectionCV', link: '/versions/0.13/tutorials/feature-selection' },
-      { text: 'Warm-start and custom initialization', link: '/versions/0.13/recipes/advanced/warm-start' },
-      { text: 'Benchmarks vs Optuna & random search', link: '/versions/0.13/benchmarks/' },
-      { text: 'API reference — all parameters', link: '/versions/0.13/api/gasearchcv' },
+      { text: 'Feature selection with GAFeatureSelectionCV', link: '/versions/0.14/tutorials/feature-selection' },
+      { text: 'Warm-start and custom initialization', link: '/versions/0.14/recipes/advanced/warm-start' },
+      { text: 'Benchmarks vs Optuna & random search', link: '/versions/0.14/benchmarks/' },
+      { text: 'API reference — all parameters', link: '/versions/0.14/api/gasearchcv' },
     ],
-    cta: { text: 'View advanced recipes', link: '/versions/0.13/recipes/advanced/' },
+    cta: { text: 'View advanced recipes', link: '/versions/0.14/recipes/advanced/' },
   },
 ]
 </script>
