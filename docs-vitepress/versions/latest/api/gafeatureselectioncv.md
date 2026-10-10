@@ -43,8 +43,8 @@ GAFeatureSelectionCV(
 |-----------|------|---------|-------------|
 | `estimator` | estimator | — | A scikit-learn estimator with a `fit` method |
 | `cv` | int or CV splitter | `5` | Cross-validation strategy |
-| `scoring` | str | `None` | Metric to evaluate. `None` uses the estimator's default scorer |
-| `refit` | bool | `True` | Refit the best estimator on the full training data after search |
+| `scoring` | str, callable or dict | `None` | Metric to evaluate. `None` uses the estimator's default scorer |
+| `refit` | bool or str | `True` | Refit the best estimator on the full training data after search; name the metric for multi-metric scoring |
 | `verbose` | int | `0` | Verbosity level |
 | `keep_top_k` | int | `1` | Number of hall-of-fame individuals to keep across generations |
 | `elitism` | bool | `True` | Whether to carry over the best individual to the next generation |
@@ -72,7 +72,7 @@ feature and respect that upper bound.
 | Attribute | Description |
 |-----------|-------------|
 | `support_` | Boolean mask — `True` for selected features |
-| `best_score_` | Mean CV score of the best feature subset |
+| `best_score_` | Winning finalist CV score, available when `final_selection=True` and `refit=True` |
 | `best_estimator_` | Estimator fitted with the selected features on the full training data |
 | `cv_results_` | Dict with per-candidate results |
 | `history` | List of per-generation dicts |
@@ -90,7 +90,13 @@ feature and respect that upper bound.
 | `get_feature_names_out(input_features=None)` | Return the selected feature names |
 | `predict(X)` | Predict using `best_estimator_` on selected features |
 | `predict_proba(X)` | Predict class probabilities |
-| `score(X, y)` | Score using `best_estimator_` on selected features |
+| `score(X, y)` | Score the selected features with the configured scorer, or the `refit` metric for multi-metric scoring |
+
+`score(X, y)` evaluates the refitted estimator on new data, so it can differ from
+the candidate CV scores in `cv_results_` and from `best_score_` when finalist
+selection is enabled. With a custom scorer that includes a feature-count penalty,
+`score(X, y)` includes that penalty too; calculate an unpenalized test metric
+separately when needed.
 
 ## Example
 
@@ -121,7 +127,7 @@ selector = GAFeatureSelectionCV(
 selector.fit(X_train, y_train)
 
 print("Selected features:", selector.support_)
-print("CV accuracy:", round(selector.best_score_, 4))
+print("Best search CV accuracy:", round(np.nanmax(selector.cv_results_["mean_test_score"]), 4))
 print("Test accuracy:", round(selector.score(X_test, y_test), 4))
 ```
 

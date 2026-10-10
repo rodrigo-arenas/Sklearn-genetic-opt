@@ -61,7 +61,7 @@ selector.fit(X_train, y_train)
 
 mask = selector.support_
 print(f"Features selected: {mask.sum()} / {X_train.shape[1]}")
-print(f"Best penalized score: {selector.best_score_:.4f}")
+print(f"Best search CV penalized score: {np.nanmax(selector.cv_results_['mean_test_score']):.4f}")
 
 # Evaluate on test set with standard AUC (no penalty)
 X_test_sel = X_test[:, mask]
@@ -74,8 +74,8 @@ print(f"Test ROC AUC (no penalty): {roc_auc_score(y_test, proba):.4f}")
 ## Key Points
 
 - **`scoring` as a callable**: Receives `(estimator, X, y)`. `X` is already masked to the selected features — check `X.shape[1]` to count selected features.
-- **`penalty_weight`**: Tune between 0.01 (light preference) and 0.1 (strong preference for small sets). Too high and the search converges to using zero features.
-- **Test evaluation**: Evaluate on the test set using standard (un-penalized) AUC for an honest comparison.
+- **`penalty_weight`**: Tune between 0.01 (light preference) and 0.1 (strong preference for small sets). Too high can sacrifice predictive quality for smaller subsets; the selector still keeps at least one feature.
+- **Test evaluation**: `selector.score(X_test, y_test)` applies the penalized scorer to the selected test columns. Calculate standard AUC separately, as above, for an unpenalized comparison.
 
 ## See Also
 

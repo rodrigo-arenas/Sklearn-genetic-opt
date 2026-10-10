@@ -9,7 +9,8 @@ from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.utils.validation import check_is_fitted
 from sklearn.cluster import KMeans
-from sklearn.metrics import accuracy_score, balanced_accuracy_score
+from sklearn.dummy import DummyClassifier
+from sklearn.metrics import accuracy_score, balanced_accuracy_score, f1_score
 from sklearn.metrics import make_scorer
 import numpy as np
 
@@ -754,6 +755,32 @@ def test_expected_ga_multimetric():
         assert f"mean_train_{metric}" in cv_result_keys
         assert f"std_train_{metric}" in cv_result_keys
         assert f"rank_train_{metric}" in cv_result_keys
+
+
+@pytest.mark.parametrize(
+    ("scoring", "refit"),
+    [
+        ("f1", True),
+        (make_scorer(f1_score), True),
+        ({"accuracy": "accuracy", "f1": "f1"}, "f1"),
+    ],
+)
+def test_feature_selection_score_uses_configured_scorer(scoring, refit):
+    X = np.arange(20).reshape(-1, 1)
+    y = np.array([0] * 16 + [1] * 4)
+    selector = GAFeatureSelectionCV(
+        DummyClassifier(strategy="most_frequent"),
+        cv=2,
+        scoring=scoring,
+        refit=refit,
+        population_size=4,
+        generations=1,
+        n_jobs=1,
+        random_state=42,
+    ).fit(X, y)
+
+    assert selector.score(X, y) == 0.0
+    assert selector.best_estimator_.score(selector.transform(X), y) == 0.8
 
 
 def test_expected_ga_callable_score():

@@ -2607,7 +2607,8 @@ class GAFeatureSelectionCV(
             ``best_estimator_.score`` method otherwise.
         """
         X = self.transform(X)
-        return self.best_estimator_.score(X, y)
+        scorer = self.scorer_[self.refit_metric] if isinstance(self.scorer_, dict) else self.scorer_
+        return scorer(self.best_estimator_, X, y)
 
 
 # helpers

@@ -27,6 +27,8 @@ Full release notes with code examples are in the [documentation](https://sklearn
 
 ### Bug Fixes
 
+- `GAFeatureSelectionCV.score(X, y)` now uses the configured scorer on the selected columns, including a callable scorer or the chosen `refit` metric in multi-metric searches. Previously it always returned `best_estimator_.score(X_selected, y)`, which could report a different metric from the one optimized.
+
 - The tagged-release workflow now refreshes the conda recipe from either a local checkout or a previous release archive, and fails clearly if it cannot recognize the complete source mapping. It uses the checksum of the exact sdist uploaded to PyPI instead of independently rebuilding one. The unreleased 0.14.0 recipe builds from the current checkout instead of the stale 0.13.2 archive and declares the missing core `pandas` dependency.
 
 - `GASearchCV.fit` now rebuilds its search space after `set_params(param_grid=...)`, including changed parameter names and bounds. Previously a reused estimator could silently evaluate the old grid or ignore an invalid replacement.
