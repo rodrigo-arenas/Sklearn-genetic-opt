@@ -55,6 +55,10 @@ Another 24-fit trajectory check found that feature evolution improved its best
 CV score in 23 runs; mean held-out accuracy rose by 0.0153 on digits and 0.0750
 on synthetic data, but fell by 0.00175 on breast cancer. Search progress on CV
 does not guarantee better unseen-data accuracy.
+A separate 24-fit `GASearchCV` trajectory check found CV improvement in 23 runs,
+with mean held-out gains of 0.00175 on breast cancer and 0.00194 on digits,
+but a loss of 0.00125 on synthetic data. Evolutionary progress therefore
+remains workload-dependent for both public search methods.
 
 The repository [changelog](https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/CHANGELOG.md)
 lists the remaining changes in this upcoming release.

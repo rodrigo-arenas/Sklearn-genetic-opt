@@ -1,0 +1,746 @@
+{
+  "question": "Does default HPO evolution improve solutions beyond the initial population?",
+  "source_commit": "cf5bd19951a9c72e8c1121d05d4d2b1709d9e632",
+  "settings": {
+    "datasets": [
+      "breast",
+      "digits",
+      "synthetic"
+    ],
+    "seeds": [
+      1001,
+      1002,
+      1003,
+      1004,
+      1005,
+      1006,
+      1007,
+      1008
+    ],
+    "holdout_fraction": 0.25,
+    "cv_folds": 3,
+    "population_size": 8,
+    "generations": 4,
+    "proposal_budget": 72,
+    "parameter_space": {
+      "svc__C": "log-uniform[0.01, 100]",
+      "svc__gamma": "log-uniform[1e-4, 1]"
+    },
+    "model": "StandardScaler plus SVC(kernel=rbf)",
+    "cpu_threads": 1
+  },
+  "environment": {
+    "python": "3.12.0",
+    "numpy": "2.5.3",
+    "scikit-learn": "1.9.1",
+    "scipy": "1.18.1",
+    "deap": "1.4.4"
+  },
+  "source_sha256": {
+    "sklearn_genetic/genetic_search.py": "c7d49583e0250cd2208c2e9b6321b44ea8f850cb07816ef244adb72527a13600",
+    "sklearn_genetic/algorithms.py": "2f1b607b8c671923d4ea604f8ed81b8b502e609b4ebb5c49e904612c0b7affd7",
+    "sklearn_genetic/population.py": "84f210e606355a687cc91d220fe318ac4ea9e17a85a4acc62f53643a1b4928bf"
+  },
+  "split_sha256": {
+    "breast/1001": "eec0faabb90b22a5fe6640c3c19224f62952b8fd5c3c0a4ec1f8466666be4764",
+    "breast/1002": "bd11265a0d8d6a6e5ef6fc8f103821722ea073f305499b1584bca902580bac39",
+    "breast/1003": "5feb33b0f02b3f3577e09df700bd1ad35773b77860f3a52b4c39a9e127b8ac1d",
+    "breast/1004": "a6f454aa837c50665c42fe6579ea97c3b5c72ee0cbeff09cc7803b3b02adadb0",
+    "breast/1005": "f42ed0932a8789aab4ddfa0b188c54e0272fd9c898840e8c94a70d8fa37f8c8c",
+    "breast/1006": "4f93eeb57c260acf8ceec1215ebc7edc1633804bf928cf3b276e69fa7a417f43",
+    "breast/1007": "8c194663e094a458278294868efc71c68594e32495bb9c89b40582e4d06d9352",
+    "breast/1008": "9f7cfab791f0becb69a9f25a82359d1d9bfa7285f4e067b76e4cafa004a83f71",
+    "digits/1001": "f432773cf4d0b4f99711b0ec56a690a5973cfca991b101081e0691315d0b4d5a",
+    "digits/1002": "b353f15d377868ae2908f611e370f991e734a343d3fab97da3f5ef14fb88e2fb",
+    "digits/1003": "1bc668252c9cbbf1de3e2fba284a4ff0b37866360d9e96114fa7ed51a7f4b302",
+    "digits/1004": "4a2749572db577dc36ab213a008f139be10d7825af50a505c18fc09d36a9a319",
+    "digits/1005": "ae966c76360976def860cc5dcdf1a7fecb76805103bff0bf5fa8de6cad08ca44",
+    "digits/1006": "9a5ab0416c81b3719ca3d54cf31e52bb706f4d4dbf02d90b417e98e4fa00c799",
+    "digits/1007": "8770a29ec35120ae3e69ae28c729bf2fcdefb043f1c1786c3f4d1decef00f290",
+    "digits/1008": "215543a26ebb33a58d40c9b0ca009028265054607fca9251fa004a3e8fb12d16",
+    "synthetic/1001": "c4e0fc8ce6329bd8347fd2696a973f5213bda8adcefd2e996a297c2892aaae2e",
+    "synthetic/1002": "37c2a3c65509be895cddf63fe038acae4d37bd99dcfafca89441f07f5fe4d447",
+    "synthetic/1003": "670438e87df2790458d21c38c694a37f430c0ae3631dc7b1b4da52eb4603434b",
+    "synthetic/1004": "45ebc16cf28be51c9d74b28607456cedfb77cad2b0f5b3d8dd34e6512c614212",
+    "synthetic/1005": "debd6c9d509ec63416140a4adc03c861f946c365d41ac82c0377531f2b524164",
+    "synthetic/1006": "21783c2ffd60bfe7cdfd09421c7f6ac604f2cfc4ce951b7bcb2c4db79fea3836",
+    "synthetic/1007": "41f850472b5346f3d8cadd1bebc0564d35a7039a0d122c0d25a250a322d19bec",
+    "synthetic/1008": "a6adbe720357cbbd839ec052473a761475bbec714f86001a31498864c9afe749"
+  },
+  "raw_sha256": "e37509c0c33fcb45357a7ec5e066f7ae67b347e51eb85629e6f3093be68308ce",
+  "summary": [
+    {
+      "dataset": "breast",
+      "initial_cv_mean": 0.9694835680751174,
+      "final_cv_mean": 0.977406103286385,
+      "cv_delta_mean": 0.007922535211267595,
+      "initial_holdout_mean": 0.9729020979020979,
+      "final_holdout_mean": 0.9746503496503497,
+      "heldout_delta_mean": 0.0017482517482517446,
+      "worst_heldout_delta": -0.006993006993006978,
+      "heldout_wins": 3,
+      "heldout_ties": 3,
+      "heldout_losses": 2,
+      "cv_improved": 8,
+      "generation_best_mean": [
+        0.9694835680751174,
+        0.9741784037558686,
+        0.9756455399061033,
+        0.977406103286385,
+        0.977406103286385
+      ],
+      "seconds_mean": 2.3846898750016408,
+      "cv_calls_mean": 70.875
+    },
+    {
+      "dataset": "digits",
+      "initial_cv_mean": 0.9776354862657758,
+      "final_cv_mean": 0.9803266518188567,
+      "cv_delta_mean": 0.0026911655530809514,
+      "initial_holdout_mean": 0.9816666666666667,
+      "final_holdout_mean": 0.9836111111111111,
+      "heldout_delta_mean": 0.001944444444444457,
+      "worst_heldout_delta": -0.0022222222222222365,
+      "heldout_wins": 5,
+      "heldout_ties": 2,
+      "heldout_losses": 1,
+      "cv_improved": 8,
+      "generation_best_mean": [
+        0.9776354862657758,
+        0.9798626577579808,
+        0.9801410541945064,
+        0.9801410541945064,
+        0.9803266518188567
+      ],
+      "seconds_mean": 28.08282838749801,
+      "cv_calls_mean": 71.25
+    },
+    {
+      "dataset": "synthetic",
+      "initial_cv_mean": 0.8658333333333333,
+      "final_cv_mean": 0.87375,
+      "cv_delta_mean": 0.007916666666666683,
+      "initial_holdout_mean": 0.858125,
+      "final_holdout_mean": 0.8568749999999999,
+      "heldout_delta_mean": -0.0012500000000000011,
+      "worst_heldout_delta": -0.030000000000000027,
+      "heldout_wins": 2,
+      "heldout_ties": 2,
+      "heldout_losses": 4,
+      "cv_improved": 7,
+      "generation_best_mean": [
+        0.8658333333333333,
+        0.8689583333333333,
+        0.8710416666666666,
+        0.8733333333333333,
+        0.87375
+      ],
+      "seconds_mean": 4.680787874996895,
+      "cv_calls_mean": 71.125
+    }
+  ],
+  "raw": [
+    {
+      "dataset": "breast",
+      "seed": 1001,
+      "seconds": 2.3193379000003915,
+      "candidate_cv_calls": 71,
+      "initial_cv": 0.971830985915493,
+      "final_cv": 0.9765258215962441,
+      "initial_holdout": 0.993006993006993,
+      "final_holdout": 0.986013986013986,
+      "initial_params": {
+        "svc__C": 24.113944818658616,
+        "svc__gamma": 0.0019303108645923636
+      },
+      "final_params": {
+        "svc__C": 17.11058400759518,
+        "svc__gamma": 0.00504109694033344
+      },
+      "history_best": [
+        0.971830985915493,
+        0.971830985915493,
+        0.9765258215962441,
+        0.9765258215962441,
+        0.9765258215962441
+      ]
+    },
+    {
+      "dataset": "breast",
+      "seed": 1002,
+      "seconds": 2.536161700001685,
+      "candidate_cv_calls": 70,
+      "initial_cv": 0.971830985915493,
+      "final_cv": 0.9741784037558686,
+      "initial_holdout": 0.951048951048951,
+      "final_holdout": 0.958041958041958,
+      "initial_params": {
+        "svc__C": 3.0435363524625814,
+        "svc__gamma": 0.032221507417618984
+      },
+      "final_params": {
+        "svc__C": 62.16474421925602,
+        "svc__gamma": 0.0011853619707655738
+      },
+      "history_best": [
+        0.971830985915493,
+        0.971830985915493,
+        0.971830985915493,
+        0.9741784037558686,
+        0.9741784037558686
+      ]
+    },
+    {
+      "dataset": "breast",
+      "seed": 1003,
+      "seconds": 2.4672354999929667,
+      "candidate_cv_calls": 72,
+      "initial_cv": 0.9694835680751174,
+      "final_cv": 0.9765258215962441,
+      "initial_holdout": 0.958041958041958,
+      "final_holdout": 0.958041958041958,
+      "initial_params": {
+        "svc__C": 25.699391654213134,
+        "svc__gamma": 0.013538466336220108
+      },
+      "final_params": {
+        "svc__C": 3.431037881922115,
+        "svc__gamma": 0.013538466336220108
+      },
+      "history_best": [
+        0.9694835680751174,
+        0.9694835680751174,
+        0.9765258215962441,
+        0.9765258215962441,
+        0.9765258215962441
+      ]
+    },
+    {
+      "dataset": "breast",
+      "seed": 1004,
+      "seconds": 2.2544492000015453,
+      "candidate_cv_calls": 69,
+      "initial_cv": 0.9694835680751174,
+      "final_cv": 0.9765258215962441,
+      "initial_holdout": 0.9790209790209791,
+      "final_holdout": 0.986013986013986,
+      "initial_params": {
+        "svc__C": 56.66213418586371,
+        "svc__gamma": 0.00021444921177747595
+      },
+      "final_params": {
+        "svc__C": 1.7832719434906,
+        "svc__gamma": 0.022755782605166797
+      },
+      "history_best": [
+        0.9694835680751174,
+        0.9765258215962441,
+        0.9765258215962441,
+        0.9765258215962441,
+        0.9765258215962441
+      ]
+    },
+    {
+      "dataset": "breast",
+      "seed": 1005,
+      "seconds": 2.4967599000083283,
+      "candidate_cv_calls": 71,
+      "initial_cv": 0.960093896713615,
+      "final_cv": 0.9765258215962441,
+      "initial_holdout": 0.9790209790209791,
+      "final_holdout": 0.9790209790209791,
+      "initial_params": {
+        "svc__C": 1.8638497837723857,
+        "svc__gamma": 0.04022538403729481
+      },
+      "final_params": {
+        "svc__C": 1.8638497837723857,
+        "svc__gamma": 0.020860707665992545
+      },
+      "history_best": [
+        0.960093896713615,
+        0.9765258215962441,
+        0.9765258215962441,
+        0.9765258215962441,
+        0.9765258215962441
+      ]
+    },
+    {
+      "dataset": "breast",
+      "seed": 1006,
+      "seconds": 2.437930000014603,
+      "candidate_cv_calls": 72,
+      "initial_cv": 0.9694835680751174,
+      "final_cv": 0.9788732394366196,
+      "initial_holdout": 0.972027972027972,
+      "final_holdout": 0.965034965034965,
+      "initial_params": {
+        "svc__C": 1.6536363393641318,
+        "svc__gamma": 0.019845107272012486
+      },
+      "final_params": {
+        "svc__C": 4.993056066599194,
+        "svc__gamma": 0.027124083462716407
+      },
+      "history_best": [
+        0.9694835680751174,
+        0.9741784037558686,
+        0.9741784037558686,
+        0.9788732394366196,
+        0.9788732394366196
+      ]
+    },
+    {
+      "dataset": "breast",
+      "seed": 1007,
+      "seconds": 2.2746209999895655,
+      "candidate_cv_calls": 71,
+      "initial_cv": 0.9624413145539906,
+      "final_cv": 0.9765258215962441,
+      "initial_holdout": 0.9790209790209791,
+      "final_holdout": 0.993006993006993,
+      "initial_params": {
+        "svc__C": 1.7041182594122855,
+        "svc__gamma": 0.0048857251679587784
+      },
+      "final_params": {
+        "svc__C": 12.292286429941289,
+        "svc__gamma": 0.007875187480442837
+      },
+      "history_best": [
+        0.9624413145539906,
+        0.971830985915493,
+        0.971830985915493,
+        0.9765258215962441,
+        0.9765258215962441
+      ]
+    },
+    {
+      "dataset": "breast",
+      "seed": 1008,
+      "seconds": 2.291023800004041,
+      "candidate_cv_calls": 71,
+      "initial_cv": 0.9812206572769954,
+      "final_cv": 0.983568075117371,
+      "initial_holdout": 0.972027972027972,
+      "final_holdout": 0.972027972027972,
+      "initial_params": {
+        "svc__C": 20.827258190977034,
+        "svc__gamma": 0.011179483068261989
+      },
+      "final_params": {
+        "svc__C": 20.827258190977034,
+        "svc__gamma": 0.014866277356242037
+      },
+      "history_best": [
+        0.9812206572769954,
+        0.9812206572769954,
+        0.9812206572769954,
+        0.983568075117371,
+        0.983568075117371
+      ]
+    },
+    {
+      "dataset": "digits",
+      "seed": 1001,
+      "seconds": 27.750834999984363,
+      "candidate_cv_calls": 71,
+      "initial_cv": 0.9799554565701559,
+      "final_cv": 0.9821826280623608,
+      "initial_holdout": 0.9888888888888889,
+      "final_holdout": 0.9911111111111112,
+      "initial_params": {
+        "svc__C": 24.113944818658616,
+        "svc__gamma": 0.0019303108645923636
+      },
+      "final_params": {
+        "svc__C": 48.3817677056945,
+        "svc__gamma": 0.007847921740288732
+      },
+      "history_best": [
+        0.9799554565701559,
+        0.9821826280623608,
+        0.9821826280623608,
+        0.9821826280623608,
+        0.9821826280623608
+      ]
+    },
+    {
+      "dataset": "digits",
+      "seed": 1002,
+      "seconds": 29.544747999985702,
+      "candidate_cv_calls": 70,
+      "initial_cv": 0.9777282850779511,
+      "final_cv": 0.9792130660727544,
+      "initial_holdout": 0.9777777777777777,
+      "final_holdout": 0.9777777777777777,
+      "initial_params": {
+        "svc__C": 29.12782040135666,
+        "svc__gamma": 0.0003886993460926748
+      },
+      "final_params": {
+        "svc__C": 29.12782040135666,
+        "svc__gamma": 0.0004481529094733723
+      },
+      "history_best": [
+        0.9777282850779511,
+        0.9777282850779511,
+        0.9792130660727542,
+        0.9792130660727542,
+        0.9792130660727544
+      ]
+    },
+    {
+      "dataset": "digits",
+      "seed": 1003,
+      "seconds": 28.725563000014517,
+      "candidate_cv_calls": 72,
+      "initial_cv": 0.9755011135857461,
+      "final_cv": 0.9762435040831478,
+      "initial_holdout": 0.9844444444444445,
+      "final_holdout": 0.9844444444444445,
+      "initial_params": {
+        "svc__C": 25.699391654213134,
+        "svc__gamma": 0.013538466336220108
+      },
+      "final_params": {
+        "svc__C": 3.431037881922115,
+        "svc__gamma": 0.013538466336220108
+      },
+      "history_best": [
+        0.9755011135857461,
+        0.9755011135857461,
+        0.9762435040831478,
+        0.9762435040831478,
+        0.9762435040831478
+      ]
+    },
+    {
+      "dataset": "digits",
+      "seed": 1004,
+      "seconds": 27.053301999985706,
+      "candidate_cv_calls": 72,
+      "initial_cv": 0.9747587230883444,
+      "final_cv": 0.9814402375649592,
+      "initial_holdout": 0.9755555555555555,
+      "final_holdout": 0.9822222222222222,
+      "initial_params": {
+        "svc__C": 56.66213418586371,
+        "svc__gamma": 0.00021444921177747595
+      },
+      "final_params": {
+        "svc__C": 15.146807506090017,
+        "svc__gamma": 0.0035553226726290866
+      },
+      "history_best": [
+        0.9747587230883444,
+        0.9806978470675576,
+        0.9806978470675576,
+        0.9806978470675576,
+        0.9814402375649592
+      ]
+    },
+    {
+      "dataset": "digits",
+      "seed": 1005,
+      "seconds": 27.203570100013167,
+      "candidate_cv_calls": 71,
+      "initial_cv": 0.9792130660727542,
+      "final_cv": 0.9814402375649592,
+      "initial_holdout": 0.9822222222222222,
+      "final_holdout": 0.98,
+      "initial_params": {
+        "svc__C": 62.554714924611126,
+        "svc__gamma": 0.020860707665992545
+      },
+      "final_params": {
+        "svc__C": 6.159955688450521,
+        "svc__gamma": 0.00799831523258953
+      },
+      "history_best": [
+        0.9792130660727542,
+        0.9814402375649592,
+        0.9814402375649592,
+        0.9814402375649592,
+        0.9814402375649592
+      ]
+    },
+    {
+      "dataset": "digits",
+      "seed": 1006,
+      "seconds": 30.47995149999042,
+      "candidate_cv_calls": 71,
+      "initial_cv": 0.9799554565701559,
+      "final_cv": 0.9814402375649592,
+      "initial_holdout": 0.9822222222222222,
+      "final_holdout": 0.9844444444444445,
+      "initial_params": {
+        "svc__C": 1.6536363393641318,
+        "svc__gamma": 0.019845107272012486
+      },
+      "final_params": {
+        "svc__C": 26.98439271230326,
+        "svc__gamma": 0.0054613750730231276
+      },
+      "history_best": [
+        0.9799554565701559,
+        0.9814402375649592,
+        0.9814402375649592,
+        0.9814402375649592,
+        0.9814402375649592
+      ]
+    },
+    {
+      "dataset": "digits",
+      "seed": 1007,
+      "seconds": 26.259454899991397,
+      "candidate_cv_calls": 71,
+      "initial_cv": 0.9762435040831478,
+      "final_cv": 0.9806978470675575,
+      "initial_holdout": 0.9822222222222222,
+      "final_holdout": 0.9866666666666667,
+      "initial_params": {
+        "svc__C": 1.7041182594122855,
+        "svc__gamma": 0.0048857251679587784
+      },
+      "final_params": {
+        "svc__C": 28.436455803071667,
+        "svc__gamma": 0.007875187480442837
+      },
+      "history_best": [
+        0.9762435040831478,
+        0.9799554565701558,
+        0.9799554565701558,
+        0.9799554565701558,
+        0.9806978470675575
+      ]
+    },
+    {
+      "dataset": "digits",
+      "seed": 1008,
+      "seconds": 27.64520260001882,
+      "candidate_cv_calls": 72,
+      "initial_cv": 0.9777282850779511,
+      "final_cv": 0.9799554565701559,
+      "initial_holdout": 0.98,
+      "final_holdout": 0.9822222222222222,
+      "initial_params": {
+        "svc__C": 20.827258190977034,
+        "svc__gamma": 0.011179483068261989
+      },
+      "final_params": {
+        "svc__C": 35.28120727511281,
+        "svc__gamma": 0.006593542260529443
+      },
+      "history_best": [
+        0.9777282850779511,
+        0.9799554565701559,
+        0.9799554565701559,
+        0.9799554565701559,
+        0.9799554565701559
+      ]
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 1001,
+      "seconds": 4.797890099987853,
+      "candidate_cv_calls": 71,
+      "initial_cv": 0.8583333333333334,
+      "final_cv": 0.87,
+      "initial_holdout": 0.84,
+      "final_holdout": 0.87,
+      "initial_params": {
+        "svc__C": 24.113944818658616,
+        "svc__gamma": 0.0019303108645923636
+      },
+      "final_params": {
+        "svc__C": 1.0914690373215519,
+        "svc__gamma": 0.06494677565053111
+      },
+      "history_best": [
+        0.8583333333333334,
+        0.8649999999999999,
+        0.8649999999999999,
+        0.87,
+        0.87
+      ]
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 1002,
+      "seconds": 4.7419883999973536,
+      "candidate_cv_calls": 69,
+      "initial_cv": 0.8666666666666667,
+      "final_cv": 0.8666666666666667,
+      "initial_holdout": 0.87,
+      "final_holdout": 0.87,
+      "initial_params": {
+        "svc__C": 3.0435363524625814,
+        "svc__gamma": 0.032221507417618984
+      },
+      "final_params": {
+        "svc__C": 3.0435363524625814,
+        "svc__gamma": 0.032221507417618984
+      },
+      "history_best": [
+        0.8666666666666667,
+        0.8666666666666667,
+        0.8666666666666667,
+        0.8666666666666667,
+        0.8666666666666667
+      ]
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 1003,
+      "seconds": 4.604830200027209,
+      "candidate_cv_calls": 72,
+      "initial_cv": 0.8783333333333333,
+      "final_cv": 0.8816666666666667,
+      "initial_holdout": 0.825,
+      "final_holdout": 0.835,
+      "initial_params": {
+        "svc__C": 67.9720329012843,
+        "svc__gamma": 0.0038193741069506614
+      },
+      "final_params": {
+        "svc__C": 1.910677586424827,
+        "svc__gamma": 0.028797559344942887
+      },
+      "history_best": [
+        0.8783333333333333,
+        0.8783333333333333,
+        0.8783333333333333,
+        0.8816666666666667,
+        0.8816666666666667
+      ]
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 1004,
+      "seconds": 4.868931299977703,
+      "candidate_cv_calls": 71,
+      "initial_cv": 0.8616666666666667,
+      "final_cv": 0.8633333333333333,
+      "initial_holdout": 0.88,
+      "final_holdout": 0.88,
+      "initial_params": {
+        "svc__C": 3.678912236095242,
+        "svc__gamma": 0.15033094463373928
+      },
+      "final_params": {
+        "svc__C": 5.933072725322405,
+        "svc__gamma": 0.14721335273400796
+      },
+      "history_best": [
+        0.8616666666666667,
+        0.8616666666666667,
+        0.8633333333333333,
+        0.8633333333333333,
+        0.8633333333333333
+      ]
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 1005,
+      "seconds": 4.495768799999496,
+      "candidate_cv_calls": 71,
+      "initial_cv": 0.8666666666666667,
+      "final_cv": 0.8883333333333333,
+      "initial_holdout": 0.865,
+      "final_holdout": 0.835,
+      "initial_params": {
+        "svc__C": 1.8638497837723857,
+        "svc__gamma": 0.04022538403729481
+      },
+      "final_params": {
+        "svc__C": 97.21160496906685,
+        "svc__gamma": 0.15677529191422782
+      },
+      "history_best": [
+        0.8666666666666667,
+        0.8849999999999999,
+        0.8883333333333333,
+        0.8883333333333333,
+        0.8883333333333333
+      ]
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 1006,
+      "seconds": 4.812588500004495,
+      "candidate_cv_calls": 72,
+      "initial_cv": 0.8566666666666666,
+      "final_cv": 0.86,
+      "initial_holdout": 0.865,
+      "final_holdout": 0.86,
+      "initial_params": {
+        "svc__C": 1.6536363393641318,
+        "svc__gamma": 0.019845107272012486
+      },
+      "final_params": {
+        "svc__C": 4.993056066599194,
+        "svc__gamma": 0.027124083462716407
+      },
+      "history_best": [
+        0.8566666666666666,
+        0.8566666666666666,
+        0.8583333333333334,
+        0.86,
+        0.86
+      ]
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 1007,
+      "seconds": 4.482212599978084,
+      "candidate_cv_calls": 71,
+      "initial_cv": 0.875,
+      "final_cv": 0.8850000000000001,
+      "initial_holdout": 0.86,
+      "final_holdout": 0.85,
+      "initial_params": {
+        "svc__C": 7.811244901838255,
+        "svc__gamma": 0.05684957885096838
+      },
+      "final_params": {
+        "svc__C": 2.994197646701374,
+        "svc__gamma": 0.03733437686737905
+      },
+      "history_best": [
+        0.875,
+        0.875,
+        0.88,
+        0.8850000000000001,
+        0.8850000000000001
+      ]
+    },
+    {
+      "dataset": "synthetic",
+      "seed": 1008,
+      "seconds": 4.642093100002967,
+      "candidate_cv_calls": 72,
+      "initial_cv": 0.8633333333333333,
+      "final_cv": 0.875,
+      "initial_holdout": 0.86,
+      "final_holdout": 0.855,
+      "initial_params": {
+        "svc__C": 0.8375674982187953,
+        "svc__gamma": 0.06124598605620043
+      },
+      "final_params": {
+        "svc__C": 1.7415614623406304,
+        "svc__gamma": 0.09879189419514445
+      },
+      "history_best": [
+        0.8633333333333333,
+        0.8633333333333334,
+        0.8683333333333333,
+        0.8716666666666667,
+        0.875
+      ]
+    }
+  ],
+  "reproduction_script": "\"\"\"Measure whether GA hyperparameter-search generations improve on initialization.\"\"\"\n\nimport json\nimport time\nfrom pathlib import Path\n\nimport numpy as np\nfrom sklearn.base import clone\nfrom sklearn.datasets import load_breast_cancer, load_digits, make_classification\nfrom sklearn.metrics import accuracy_score\nfrom sklearn.model_selection import StratifiedKFold, train_test_split\nfrom sklearn.pipeline import make_pipeline\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.svm import SVC\nfrom threadpoolctl import threadpool_limits\n\nfrom sklearn_genetic import GASearchCV\nfrom sklearn_genetic.space import Continuous\n\n\nwork = Path(\".agent-runs/performance-v2\")\ndatasets = {\n    \"breast\": load_breast_cancer(return_X_y=True),\n    \"digits\": load_digits(return_X_y=True),\n    \"synthetic\": make_classification(\n        n_samples=800, n_features=20, n_informative=8, n_redundant=4, random_state=19\n    ),\n}\nwith threadpool_limits(limits=1), (work / \"hpo-progress.jsonl\").open(\"w\", encoding=\"utf-8\") as stream:\n    for dataset, (X, y) in datasets.items():\n        for seed in range(1001, 1009):\n            train, test = train_test_split(\n                np.arange(len(y)), test_size=0.25, stratify=y, random_state=seed\n            )\n            Xtr, Xte, ytr, yte = X[train], X[test], y[train], y[test]\n            folds = list(StratifiedKFold(3, shuffle=True, random_state=seed).split(Xtr, ytr))\n            model = make_pipeline(StandardScaler(), SVC(kernel=\"rbf\"))\n            started = time.perf_counter()\n            search = GASearchCV(\n                clone(model),\n                param_grid={\n                    \"svc__C\": Continuous(0.01, 100, distribution=\"log-uniform\"),\n                    \"svc__gamma\": Continuous(1e-4, 1, distribution=\"log-uniform\"),\n                },\n                cv=folds,\n                scoring=\"accuracy\",\n                population_size=8,\n                generations=4,\n                random_state=seed,\n                n_jobs=1,\n                verbose=False,\n                error_score=\"raise\",\n            ).fit(Xtr, ytr)\n            seconds = time.perf_counter() - started\n            scores = np.asarray(search.cv_results_[\"mean_test_score\"], dtype=float)\n            assert len(scores) == 72\n            initial_index = int(np.nanargmax(scores[:8]))\n            initial_params = search.cv_results_[\"params\"][initial_index]\n            initial_model = clone(model).set_params(**initial_params).fit(Xtr, ytr)\n            row = dict(\n                dataset=dataset,\n                seed=seed,\n                seconds=seconds,\n                candidate_cv_calls=search.fit_stats_[\"cross_validate_calls\"],\n                initial_cv=float(scores[initial_index]),\n                final_cv=float(np.nanmax(scores)),\n                initial_holdout=float(accuracy_score(yte, initial_model.predict(Xte))),\n                final_holdout=float(accuracy_score(yte, search.best_estimator_.predict(Xte))),\n                initial_params={key: float(value) for key, value in initial_params.items()},\n                final_params={key: float(value) for key, value in search.best_params_.items()},\n                history_best=[float(np.ravel(value)[0]) for value in search.history[\"fitness_best\"]],\n            )\n            stream.write(json.dumps(row) + \"\\n\")\n            stream.flush()\n            print(json.dumps(row), flush=True)\n",
+  "summary_script": "\"\"\"Freeze HPO quality gains from generation zero to generation four.\"\"\"\n\nimport hashlib\nimport importlib.metadata\nimport json\nimport math\nimport platform\nimport statistics\nimport subprocess\nfrom pathlib import Path\n\nimport numpy as np\nfrom sklearn.datasets import load_breast_cancer, load_digits, make_classification\nfrom sklearn.model_selection import StratifiedKFold, train_test_split\n\n\nwork = Path(\".agent-runs/performance-v2\")\nrows = [json.loads(line) for line in (work / \"hpo-progress.jsonl\").read_text(encoding=\"utf-8\").splitlines()]\nexpected = {(dataset, seed) for dataset in (\"breast\", \"digits\", \"synthetic\") for seed in range(1001, 1009)}\nby_key = {(row[\"dataset\"], row[\"seed\"]): row for row in rows}\nassert len(rows) == len(by_key) == len(expected) == 24 and set(by_key) == expected\nfor row in rows:\n    assert 0 < row[\"candidate_cv_calls\"] <= 72\n    assert len(row[\"history_best\"]) == 5\n    assert math.isclose(row[\"initial_cv\"], row[\"history_best\"][0], abs_tol=1e-12)\n    assert math.isclose(row[\"final_cv\"], row[\"history_best\"][-1], abs_tol=1e-12)\n    assert all(left <= right + 1e-12 for left, right in zip(row[\"history_best\"], row[\"history_best\"][1:]))\n    assert 0 <= row[\"initial_holdout\"] <= 1 and 0 <= row[\"final_holdout\"] <= 1\n\nsummary = []\nfor dataset in (\"breast\", \"digits\", \"synthetic\"):\n    subset = [by_key[(dataset, seed)] for seed in range(1001, 1009)]\n    deltas = [row[\"final_holdout\"] - row[\"initial_holdout\"] for row in subset]\n    summary.append(dict(\n        dataset=dataset,\n        initial_cv_mean=statistics.mean(row[\"initial_cv\"] for row in subset),\n        final_cv_mean=statistics.mean(row[\"final_cv\"] for row in subset),\n        cv_delta_mean=statistics.mean(row[\"final_cv\"] - row[\"initial_cv\"] for row in subset),\n        initial_holdout_mean=statistics.mean(row[\"initial_holdout\"] for row in subset),\n        final_holdout_mean=statistics.mean(row[\"final_holdout\"] for row in subset),\n        heldout_delta_mean=statistics.mean(deltas),\n        worst_heldout_delta=min(deltas),\n        heldout_wins=sum(delta > 0 for delta in deltas),\n        heldout_ties=sum(delta == 0 for delta in deltas),\n        heldout_losses=sum(delta < 0 for delta in deltas),\n        cv_improved=sum(row[\"final_cv\"] > row[\"initial_cv\"] for row in subset),\n        generation_best_mean=[statistics.mean(row[\"history_best\"][generation] for row in subset) for generation in range(5)],\n        seconds_mean=statistics.mean(row[\"seconds\"] for row in subset),\n        cv_calls_mean=statistics.mean(row[\"candidate_cv_calls\"] for row in subset),\n    ))\n\ndatasets = {\n    \"breast\": load_breast_cancer(return_X_y=True),\n    \"digits\": load_digits(return_X_y=True),\n    \"synthetic\": make_classification(n_samples=800, n_features=20, n_informative=8, n_redundant=4, random_state=19),\n}\nsplit_sha256 = {}\nfor dataset, (_, y) in datasets.items():\n    for seed in range(1001, 1009):\n        train, test = train_test_split(np.arange(len(y)), test_size=0.25, stratify=y, random_state=seed)\n        folds = list(StratifiedKFold(3, shuffle=True, random_state=seed).split(train, y[train]))\n        arrays = [train, test] + [array for fold in folds for array in fold]\n        split_sha256[f\"{dataset}/{seed}\"] = hashlib.sha256(\n            b\"\".join(np.asarray(array, dtype=\"<i8\").tobytes() for array in arrays)\n        ).hexdigest()\n\nsource_paths = [Path(\"sklearn_genetic/genetic_search.py\"), Path(\"sklearn_genetic/algorithms.py\"), Path(\"sklearn_genetic/population.py\")]\npayload = dict(\n    question=\"Does default HPO evolution improve solutions beyond the initial population?\",\n    source_commit=subprocess.check_output([\"git\", \"rev-parse\", \"HEAD\"], text=True).strip(),\n    settings=dict(\n        datasets=list(datasets), seeds=list(range(1001, 1009)), holdout_fraction=0.25,\n        cv_folds=3, population_size=8, generations=4, proposal_budget=72,\n        parameter_space={\"svc__C\": \"log-uniform[0.01, 100]\", \"svc__gamma\": \"log-uniform[1e-4, 1]\"},\n        model=\"StandardScaler plus SVC(kernel=rbf)\", cpu_threads=1,\n    ),\n    environment={\"python\": platform.python_version(), **{name: importlib.metadata.version(name) for name in (\"numpy\", \"scikit-learn\", \"scipy\", \"deap\")}},\n    source_sha256={str(path).replace(\"\\\\\", \"/\"): hashlib.sha256(path.read_bytes()).hexdigest() for path in source_paths},\n    split_sha256=split_sha256,\n    raw_sha256=hashlib.sha256(json.dumps(rows, sort_keys=True).encode()).hexdigest(),\n    summary=summary, raw=rows,\n    reproduction_script=(work / \"hpo-progress.py\").read_text(encoding=\"utf-8\"),\n    summary_script=Path(__file__).read_text(encoding=\"utf-8\"),\n)\ndestination = Path(\"benchmarks/results/performance-v2/hpo-progress.json\")\ndestination.write_text(json.dumps(payload, indent=2), encoding=\"utf-8\")\nprint(json.dumps(summary, indent=2))\n"
+}

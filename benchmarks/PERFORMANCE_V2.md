@@ -816,3 +816,24 @@ New-Item -ItemType Directory -Force -Path .agent-runs/performance-v2 | Out-Null
 .\.venv\Scripts\python.exe .agent-runs/performance-v2/feature-progress.py
 .\.venv\Scripts\python.exe .agent-runs/performance-v2/summarize-feature-progress.py
 ```
+
+## Does hyperparameter evolution improve after initialization?
+
+A matching 24-fit trajectory check measures the default `GASearchCV` algorithm on eight fresh seeds 1001–1008 for each dataset. The scaled RBF SVC searches log-uniform `C` in `[.01, 100]` and `gamma` in `[.0001, 1]`; the outer 25% holdout, three CV folds, one CPU, population eight, four generations and 72 proposed candidates match the feature-progress budget. The initial comparator is the highest-CV candidate among the eight generation-zero proposals, separately refit on all outer-training rows. The final comparator is the search's refitted winner. Holdout labels are used only after selection.
+
+| Dataset | Initial → final mean CV accuracy | Initial → final mean held-out accuracy | Held-out wins/ties/losses |
+|---|---:|---:|---:|
+| Breast Cancer | .96948 → .97741 | .97290 → .97465 | 3/3/2 |
+| Digits | .97764 → .98033 | .98167 → .98361 | 5/2/1 |
+| Synthetic | .86583 → .87375 | .85813 → .85687 | 2/2/4 |
+
+Best-so-far CV accuracy improves in 23 of 24 runs. On synthetic data, its mean progression is `.86583 → .86896 → .87104 → .87333 → .87375` over the five recorded generations, yet the mean held-out accuracy falls .00125, with one split losing .030. Mean held-out gains on Breast Cancer and Digits are .00175 and .00194. Thus the default HPO evolutionary process improves the selection objective on these tasks, but may overfit CV and does not show a general external-quality gain. The separate initial-model refit is excluded from the reported search fitting time. The three datasets and overlapping outer splits are a limited check, not statistical proof of superiority over random search or AutoML.
+
+The [24-fit HPO artifact](results/performance-v2/hpo-progress.json) contains the initial and final candidate scores and parameters, per-generation best scores, holdout accuracies, fit counts and times, split and source hashes, dependency versions, and exact reproduction scripts. To rerun from the repository root in PowerShell after installing benchmark dependencies in `.venv`:
+
+```powershell
+New-Item -ItemType Directory -Force -Path .agent-runs/performance-v2 | Out-Null
+.\.venv\Scripts\python.exe -c "import json,pathlib; a=json.loads(pathlib.Path('benchmarks/results/performance-v2/hpo-progress.json').read_text(encoding='utf-8')); w=pathlib.Path('.agent-runs/performance-v2'); (w/'hpo-progress.py').write_text(a['reproduction_script'], encoding='utf-8'); (w/'summarize-hpo-progress.py').write_text(a['summary_script'], encoding='utf-8')"
+.\.venv\Scripts\python.exe .agent-runs/performance-v2/hpo-progress.py
+.\.venv\Scripts\python.exe .agent-runs/performance-v2/summarize-hpo-progress.py
+```
