@@ -1,0 +1,111 @@
+sharing-repair-red.txt
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 33 items / 30 deselected / 3 selected
+
+sklearn_genetic\tests\test_algorithms.py [31mF[0m[31mF[0m[31mF[0m[31m                             [100%][0m
+
+================================== FAILURES ===================================
+[31m[1m_______ test_shared_fitness_preserves_dimension_equality[large_integer] _______[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:301: in test_shared_fitness_preserves_dimension_equality
+    [0m[94massert[39;49;00m [item.fitness.values[[94m0[39;49;00m] [94mfor[39;49;00m item [95min[39;49;00m population] == [[94m10.0[39;49;00m, [94m10.0[39;49;00m][90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_______ test_shared_fitness_preserves_dimension_equality[nan_category] ________[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:301: in test_shared_fitness_preserves_dimension_equality
+    [0m[94massert[39;49;00m [item.fitness.values[[94m0[39;49;00m] [94mfor[39;49;00m item [95min[39;49;00m population] == [[94m10.0[39;49;00m, [94m10.0[39;49;00m][90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[31m[1m_______ test_shared_fitness_preserves_dimension_equality[list_category] _______[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:300: in test_shared_fitness_preserves_dimension_equality
+    [0m[94mwith[39;49;00m shared_fitness(population, estimator):[90m[39;49;00m
+[1m[31m..\..\AppData\Local\Programs\Python\Python312\Lib\contextlib.py[0m:137: in __enter__
+    [0m[94mreturn[39;49;00m [96mnext[39;49;00m([96mself[39;49;00m.gen)[90m[39;49;00m
+           ^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msklearn_genetic\optimizer_control.py[0m:385: in shared_fitness
+    [0mcounts = niche_counts(population, estimator)[90m[39;49;00m
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msklearn_genetic\optimizer_control.py[0m:326: in niche_counts
+    [0mlabels = {value: code [94mfor[39;49;00m code, value [95min[39;49;00m [96menumerate[39;49;00m([96mdict[39;49;00m.fromkeys(values))}[90m[39;49;00m
+                                                       ^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31mE   TypeError: unhashable type: 'list'[0m
+[36m[1m=========================== short test summary info ===========================[0m
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_shared_fitness_preserves_dimension_equality[large_integer][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_shared_fitness_preserves_dimension_equality[nan_category][0m - AssertionError
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_shared_fitness_preserves_dimension_equality[list_category][0m - TypeError: unhashable type: 'list'
+[31m====================== [31m[1m3 failed[0m, [33m30 deselected[0m[31m in 2.78s[0m[31m =======================[0m
+sharing-continuous-red.txt
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 34 items / 33 deselected / 1 selected
+
+sklearn_genetic\tests\test_algorithms.py [31mF[0m[31m                               [100%][0m
+
+================================== FAILURES ===================================
+[31m[1m____ test_shared_fitness_preserves_dimension_equality[continuous_integer] _____[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:302: in test_shared_fitness_preserves_dimension_equality
+    [0m[94massert[39;49;00m [item.fitness.values[[94m0[39;49;00m] [94mfor[39;49;00m item [95min[39;49;00m population] == [[94m10.0[39;49;00m, [94m10.0[39;49;00m][90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[36m[1m=========================== short test summary info ===========================[0m
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_shared_fitness_preserves_dimension_equality[continuous_integer][0m - AssertionError
+[31m====================== [31m[1m1 failed[0m, [33m33 deselected[0m[31m in 3.22s[0m[31m =======================[0m
+sharing-unsigned-red.txt
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 36 items / 35 deselected / 1 selected
+
+sklearn_genetic\tests\test_algorithms.py [31mF[0m[31m                               [100%][0m
+
+================================== FAILURES ===================================
+[31m[1m_____ test_shared_fitness_preserves_dimension_equality[unsigned_integer] ______[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:308: in test_shared_fitness_preserves_dimension_equality
+    [0m[94massert[39;49;00m [item.fitness.values[[94m0[39;49;00m] [94mfor[39;49;00m item [95min[39;49;00m population] == expected[90m[39;49;00m
+[1m[31mE   AssertionError[0m
+---------------------------- Captured stderr call -----------------------------
+C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt\sklearn_genetic\optimizer_control.py:349: RuntimeWarning: overflow encountered in scalar subtract
+  np.abs(values - values[index]) / span, dtype=float
+[36m[1m=========================== short test summary info ===========================[0m
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_shared_fitness_preserves_dimension_equality[unsigned_integer][0m - AssertionError
+[31m====================== [31m[1m1 failed[0m, [33m35 deselected[0m[31m in 2.69s[0m[31m =======================[0m
+sharing-ties-mutant-red.txt
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 35 items / 34 deselected / 1 selected
+
+sklearn_genetic\tests\test_algorithms.py [31mF[0m[31m                               [100%][0m
+
+================================== FAILURES ===================================
+[31m[1m________________ test_shared_fitness_preserves_selection_ties _________________[0m
+[1m[31msklearn_genetic\tests\test_algorithms.py[0m:320: in test_shared_fitness_preserves_selection_ties
+    [0m[94massert[39;49;00m tools.selBest(population, [94m1[39;49;00m)[[94m0[39;49;00m] [95mis[39;49;00m population[[94m2[39;49;00m][90m[39;49;00m
+[1m[31mE   AssertionError[0m
+[36m[1m=========================== short test summary info ===========================[0m
+[31mFAILED[0m sklearn_genetic/tests/test_algorithms.py::[1mtest_shared_fitness_preserves_selection_ties[0m - AssertionError
+[31m====================== [31m[1m1 failed[0m, [33m34 deselected[0m[31m in 0.65s[0m[31m =======================[0m
+sharing-tests.txt
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\dsdotpy\PycharmProjects\Sklearn-genetic-opt
+configfile: pyproject.toml
+plugins: platformdirs-4.12.4
+collected 102 items
+
+sklearn_genetic\tests\test_algorithms.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m [ 30%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m                                                                    [ 35%][0m
+sklearn_genetic\tests\test_internal_helpers.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m [ 59%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m                                [100%][0m
+
+[32m============================= [32m[1m102 passed[0m[32m in 2.80s[0m[32m =============================[0m
+sharing-guard.txt
+test_guard: clean against d6b2f3a
+Independent review: VER001-005 closed against literal d6b2f3a baseline. Invalid four-genome sum-based reproduction withdrawn; five-genome ordered-accumulation regression validated. Final benchmark preserves all four fit scores/evaluation counts, isolated speedup 7.90-14.76x. No full suite, push or deployment.

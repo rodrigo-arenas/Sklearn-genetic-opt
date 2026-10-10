@@ -10,6 +10,7 @@ from ..callbacks.base import BaseCallback
 from ..evaluation import create_fit_stats
 from ..optimizer_control import shared_fitness
 from ..schedules.schedulers import ConstantAdapter
+from ..space import Categorical, Continuous, Integer, Space
 
 
 class StopOnFirstStep(BaseCallback):
@@ -243,6 +244,85 @@ def test_shared_fitness_temporarily_penalizes_crowded_niches(simple_toolbox):
     assert crowded_a.fitness.values == (10,)
     assert crowded_b.fitness.values == (10,)
     assert isolated.fitness.values == (10,)
+
+
+@pytest.mark.parametrize("mixed", [False, True])
+@pytest.mark.parametrize("radius, alpha", [(0.25, 1.0), (0.8, 2.0)])
+def test_shared_fitness_matches_pairwise_reference(simple_toolbox, mixed, radius, alpha):
+    from ..optimizer_control import individual_distance, sharing_value
+
+    values = (
+        [[1, 0.1, ("a", 1), 2], [3, 0.5, None, 2], [1, 0.1, ("a", 1), 2], [5, 1.0, None, 2]]
+        if mixed
+        else [[1, 0, 0, 1], [1, 1, 0, 1], [1, 0, 0, 1], [0, 0, 1, 0]]
+    )
+    population = [creator.IndividualAlgorithmTest(row) for row in values]
+    estimator = SimpleNamespace(fitness_sharing=True, sharing_radius=radius, sharing_alpha=alpha)
+    if mixed:
+        estimator.space = Space(
+            {
+                "depth": Integer(1, 5),
+                "rate": Continuous(0.1, 1.0),
+                "category": Categorical([("a", 1), None]),
+                "fixed": Integer(2, 2),
+            }
+        )
+    expected = []
+    for index, individual in enumerate(population):
+        individual.fitness.values = (index + 1.0,)
+        count = sum(
+            sharing_value(individual_distance(estimator, individual, other), radius, alpha)
+            for other in population
+        )
+        expected.append((index + 1.0) / count)
+    with shared_fitness(population, estimator):
+        assert [item.fitness.values[0] for item in population] == pytest.approx(expected)
+    assert [item.fitness.values[0] for item in population] == [1.0, 2.0, 3.0, 4.0]
+
+
+@pytest.mark.parametrize(
+    "kind",
+    ["large_integer", "continuous_integer", "unsigned_integer", "nan_category", "list_category"],
+)
+def test_shared_fitness_preserves_dimension_equality(simple_toolbox, kind):
+    if kind in {"large_integer", "continuous_integer"}:
+        values = [2**53, 2**53 + 1]
+        dimension = Integer(*values) if kind == "large_integer" else Continuous(*values)
+    elif kind == "unsigned_integer":
+        values = [np.uint64(1), np.uint64(2)]
+        dimension = Integer(0, 10)
+    elif kind == "nan_category":
+        value = float("nan")
+        values = [value, value]
+        dimension = Categorical([value, "other"])
+    else:
+        values = [[1], [2]]
+        dimension = Categorical(values)
+    population = [creator.IndividualAlgorithmTest([value]) for value in values]
+    for individual in population:
+        individual.fitness.values = (10.0,)
+    estimator = SimpleNamespace(
+        space=Space({"x": dimension}), fitness_sharing=True, sharing_radius=0.5, sharing_alpha=1.0
+    )
+    with shared_fitness(population, estimator):
+        expected = [10.0, 10.0 / 1.8] if kind == "unsigned_integer" else [10.0, 10.0]
+        assert [item.fitness.values[0] for item in population] == expected
+
+
+def test_shared_fitness_preserves_selection_ties(simple_toolbox):
+    values = [
+        [1, 0, 0, 1, 1, 0, 0],
+        [1, 0, 1, 0, 1, 1, 0],
+        [1, 0, 0, 1, 0, 1, 1],
+        [1, 1, 0, 0, 1, 1, 0],
+        [1, 0, 0, 1, 0, 0, 0],
+    ]
+    population = [creator.IndividualAlgorithmTest(row) for row in values]
+    for individual in population:
+        individual.fitness.values = (1.0,)
+    estimator = SimpleNamespace(fitness_sharing=True, sharing_radius=0.8, sharing_alpha=1.0)
+    with shared_fitness(population, estimator):
+        assert tools.selBest(population, 1)[0] is population[2]
 
 
 def test_algorithm_records_fitness_sharing_telemetry(simple_toolbox):

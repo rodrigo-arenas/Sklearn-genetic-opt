@@ -310,14 +310,56 @@ def sharing_value(distance, radius, alpha):
 def niche_counts(population, estimator):
     radius = estimator.sharing_radius
     alpha = estimator.sharing_alpha
-    counts = []
+    size = len(population)
+    if size == 0:
+        return []
 
-    for individual in population:
-        count = 0.0
-        for other in population:
-            distance = individual_distance(estimator, individual, other)
-            count += sharing_value(distance, radius, alpha)
-        counts.append(max(count, 1.0))
+    # Convert columns once and vectorize distances one row at a time. Keep
+    # contribution accumulation ordered: reassociation can break selection ties.
+    feature_values = np.asarray(population) if not hasattr(estimator, "space") else None
+    columns = []
+    for index, values in enumerate(zip(*population)) if feature_values is None else []:
+        dimension = estimator.space[estimator.space.parameters[index]]
+        if isinstance(dimension, (Continuous, Integer)):
+            # Preserve subtraction precision for Python integers, including
+            # integer values supplied in a Continuous dimension.
+            columns.append((np.asarray(values, dtype=object), dimension.upper - dimension.lower))
+        else:
+            columns.append((np.fromiter(values, dtype=object, count=size), None))
+
+    counts = []
+    for index in range(size):
+        distances = np.zeros(size)
+        if feature_values is not None:
+            if feature_values.shape[1]:
+                distances = (
+                    np.count_nonzero(feature_values != feature_values[index], axis=1)
+                    / feature_values.shape[1]
+                )
+        else:
+            components = np.zeros((size, len(columns)))
+            for column, (values, span) in enumerate(columns):
+                if span is None:
+                    components[:, column] = np.fromiter(
+                        (0.0 if values[index] == value else 1.0 for value in values),
+                        dtype=float,
+                    )
+                elif span:
+                    components[:, column] = np.asarray(
+                        np.abs(values[index] - values) / span, dtype=float
+                    )
+            if columns:
+                distances = components.mean(axis=1)
+        contributions = np.fromiter(
+            # Python floats preserve the scalar sharing formula's rounding;
+            # inlining avoids a function call for every population pair.
+            (
+                0.0 if distance >= radius else 1.0 - (distance / radius) ** alpha
+                for distance in distances.tolist()
+            ),
+            dtype=float,
+        )
+        counts.append(max(float(np.cumsum(contributions)[-1]), 1.0))
 
     return counts
 
