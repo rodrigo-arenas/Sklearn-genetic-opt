@@ -70,7 +70,9 @@ def test_homepage_links_to_released_pages():
         if not href.startswith("/"):
             continue
         path = urlparse(href).path
-        if path == "/versions/latest/":  # explicit version menu entry
+        if path == "/versions/latest/" or any(  # explicit version menu entries
+            path.startswith(f"/versions/{older}/") for older in RELEASES[:-1]
+        ):
             continue
         if path not in indexed_paths:
             missing.append(href)
