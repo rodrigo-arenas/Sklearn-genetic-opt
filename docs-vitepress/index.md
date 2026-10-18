@@ -1,7 +1,7 @@
 ---
 layout: home
-title: Evolutionary Hyperparameter Tuning and Feature Selection
-description: "Tune scikit-learn hyperparameters and select feature subsets with evolutionary algorithms. Learn when to use GASearchCV and GAFeatureSelectionCV, with runnable examples and API reference."
+title: Genetic Algorithm Hyperparameter Tuning for scikit-learn
+description: "Tune scikit-learn hyperparameters and select features with genetic algorithms. GASearchCV and GAFeatureSelectionCV: examples, tutorials and API."
 
 hero:
   name: sklearn-genetic-opt
