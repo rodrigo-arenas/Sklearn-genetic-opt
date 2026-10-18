@@ -1,6 +1,6 @@
 ---
-title: "Gradient Boosting Hyperparameter Tuning: HistGradientBoosting and GradientBoosting"
-description: "Tune scikit-learn's HistGradientBoostingClassifier and GradientBoostingClassifier hyperparameters using GASearchCV, with a comparison between the two implementations."
+title: "Tune HistGradientBoosting & GradientBoosting in scikit-learn"
+description: "Tune HistGradientBoostingClassifier and GradientBoostingClassifier with GASearchCV: search spaces, runnable code and a comparison of both."
 ---
 
 :::warning Development version

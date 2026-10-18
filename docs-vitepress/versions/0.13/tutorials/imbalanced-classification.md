@@ -1,6 +1,6 @@
 ---
-title: "Hyperparameter Tuning for Imbalanced Datasets: Beyond Accuracy"
-description: "Tune classifiers on imbalanced datasets using balanced_accuracy, ROC-AUC, and class_weight — with a 95/5 imbalanced example using GASearchCV."
+title: "Tune Classifiers on Imbalanced Data: balanced_accuracy, ROC-AUC"
+description: "Hyperparameter tuning for imbalanced datasets with balanced_accuracy, ROC-AUC and class_weight. Runnable 95/5 example with GASearchCV."
 ---
 
 **Estimated reading time:** 15 minutes  

@@ -1,6 +1,6 @@
 ---
-title: "How Hyperparameter Optimization Works: A Complete Guide"
-description: "Understand the four main hyperparameter optimization strategies — Grid Search, Random Search, Bayesian Optimization, and Evolutionary/Genetic Search — with Python examples and practical guidance on when to use each."
+title: "Hyperparameter Optimization: Grid, Random, Bayesian, Genetic"
+description: "Compare grid search, random search, Bayesian and genetic optimization with Python examples, and learn when to use each."
 ---
 
 # How Hyperparameter Optimization Works: A Complete Guide
