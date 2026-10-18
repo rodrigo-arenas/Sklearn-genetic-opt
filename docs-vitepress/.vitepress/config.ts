@@ -22,6 +22,16 @@ function discoverReleaseVersions() {
 }
 
 const releaseVersions = discoverReleaseVersions()
+const stableVersion = releaseVersions[0]
+
+// Older releases and `latest` repeat the stable pages, so their canonical points
+// to the stable counterpart and ranking signals consolidate on one URL.
+function stableCounterpart(relativePath: string) {
+  const match = relativePath.replace(/\\/g, '/').match(/^versions\/(latest|\d+\.\d+)\/(.*)\.md$/)
+  if (!match || !stableVersion || match[1] === stableVersion) return undefined
+  if (!existsSync(join(DOCS_ROOT, 'versions', stableVersion, `${match[2]}.md`))) return undefined
+  return `/versions/${stableVersion}/${match[2]}`.replace(/\/index$/, '/')
+}
 
 const versionNavItems = [
   ...releaseVersions.map((version, index) => ({
@@ -230,7 +240,9 @@ export default defineConfig({
     hostname: 'https://sklearngeneticopt.rodrigo-arenas.com',
     transformItems: (items) => items.filter((item) => {
       const path = new URL(item.url, 'https://sklearngeneticopt.rodrigo-arenas.com/').pathname
-      return path !== '/stable/' && !path.startsWith('/versions/latest/')
+      if (path === '/stable/') return false
+      const version = path.match(/^\/versions\/([^/]+)\//)?.[1]
+      return !version || version === stableVersion
     }),
   },
 
@@ -249,13 +261,14 @@ export default defineConfig({
       .replace(/\\/g, '/')
       .replace(/index\.md$/, '')
       .replace(/\.md$/, '')
+    const counterpart = stableCounterpart(pageData.relativePath)
     const pageUrl = pageData.relativePath === 'stable/index.md' && releaseVersions.length
-      ? `${base}/versions/${releaseVersions[0]}/`
-      : `${base}/${cleanPath}`
+      ? `${base}/versions/${stableVersion}/`
+      : `${base}${counterpart ?? `/${cleanPath}`}`
 
     pageData.frontmatter.head ??= []
     if (pageData.relativePath === 'stable/index.md' ||
-        pageData.relativePath.startsWith('versions/latest/')) {
+        (pageData.relativePath.startsWith('versions/latest/') && !counterpart)) {
       pageData.frontmatter.head.push(['meta', { name: 'robots', content: 'noindex,follow' }])
     }
     pageData.frontmatter.head.push(

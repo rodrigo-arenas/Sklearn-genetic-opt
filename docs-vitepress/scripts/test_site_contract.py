@@ -47,7 +47,14 @@ def test_built_site_advertises_only_indexable_pages():
     latest_html = (dist / "versions" / "latest" / "index.html").read_text(encoding="utf-8")
     assert f'rel="canonical" href="{SITE}/versions/{RELEASES[-1]}/"' in stable_html
     assert 'name="robots" content="noindex,follow"' in stable_html
-    assert 'name="robots" content="noindex,follow"' in latest_html
+    # `latest` repeats the stable page, so it consolidates on it instead of noindex.
+    assert f'rel="canonical" href="{SITE}/versions/{RELEASES[-1]}/"' in latest_html
+    assert 'name="robots" content="noindex' not in latest_html
+
+    for older in RELEASES[:-1]:
+        older_html = (dist / "versions" / older / "index.html").read_text(encoding="utf-8")
+        assert f'rel="canonical" href="{SITE}/versions/{RELEASES[-1]}/"' in older_html
+    assert not any(f"/versions/{older}/" in url for older in RELEASES[:-1] for url in locations)
 
 
 def test_homepage_links_to_released_pages():
