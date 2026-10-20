@@ -7,15 +7,22 @@ from joblib import hash as joblib_hash
 
 @dataclass(frozen=True)
 class _UnhashableCandidate:
-    digest: str
+    kind: type
+    value: object
 
 
 def _hashable_key(value):
-    """Retain existing keys, digesting only values that cannot be hashed."""
+    """Retain hashable values without requiring their siblings to be pickled."""
     try:
         hash(value)
     except TypeError:
-        return _UnhashableCandidate(joblib_hash(value))
+        if isinstance(value, dict):
+            key = frozenset((_hashable_key(k), _hashable_key(v)) for k, v in value.items())
+        elif isinstance(value, (list, tuple)):
+            key = tuple(_hashable_key(item) for item in value)
+        else:
+            key = joblib_hash(value)
+        return _UnhashableCandidate(type(value), key)
     return value
 
 

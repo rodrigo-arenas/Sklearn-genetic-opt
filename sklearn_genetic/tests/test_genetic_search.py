@@ -108,6 +108,54 @@ def test_dictionary_class_weight_categories(population_initializer, use_cache, f
         assert len(search.final_selection_results_["candidates"]) == 2
 
 
+@pytest.mark.parametrize("use_cache", [False, True])
+@pytest.mark.parametrize("nested_callback", [False, True])
+def test_dictionary_categories_preserve_local_callbacks(use_cache, nested_callback):
+    from sklearn.datasets import load_iris
+    from sklearn.model_selection import GridSearchCV
+    from sklearn.pipeline import Pipeline
+    from sklearn.preprocessing import FunctionTransformer
+
+    samples, targets = load_iris(return_X_y=True)
+    callback = lambda values: values + 0.1
+    transform = lambda values, offset=None: values if offset is None else offset(values)
+    if nested_callback:
+        kwargs = [None, {"offset": callback}]
+    else:
+        transform = lambda values, shift=0: values + shift
+        kwargs = [None, {"shift": 0.1}]
+    model = Pipeline(
+        [("transform", FunctionTransformer()), ("model", DecisionTreeClassifier(random_state=0))]
+    )
+    control = GridSearchCV(
+        model,
+        {"transform__func": [transform], "transform__kw_args": kwargs, "model__max_depth": [1, 2]},
+        cv=2,
+    ).fit(samples, targets)
+    search = GASearchCV(
+        model,
+        param_grid={
+            "transform__func": Categorical([transform]),
+            "transform__kw_args": Categorical(kwargs),
+            "model__max_depth": Integer(1, 2),
+        },
+        use_cache=use_cache,
+        final_selection=True,
+        population_size=4,
+        generations=1,
+        cv=2,
+        n_jobs=1,
+        verbose=False,
+        random_state=0,
+    ).fit(samples, targets)
+
+    for params, score in zip(search.cv_results_["params"], search.cv_results_["mean_test_score"]):
+        index = control.cv_results_["params"].index(params)
+        assert score == pytest.approx(control.cv_results_["mean_test_score"][index])
+    assert search.best_estimator_["transform"].func is transform
+    assert search.predict(samples).shape == targets.shape
+
+
 def test_default_n_jobs_is_none():
     estimator = GASearchCV(
         SGDClassifier(loss="modified_huber", fit_intercept=True),
