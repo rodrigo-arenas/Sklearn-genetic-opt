@@ -66,6 +66,48 @@ def test_outlier_search_accepts_list_without_target():
     assert search.best_estimator_.n_features_in_ == 4
 
 
+@pytest.mark.parametrize("population_initializer", ["smart", "random"])
+@pytest.mark.parametrize("use_cache", [False, True])
+@pytest.mark.parametrize("final_selection", [False, True])
+def test_dictionary_class_weight_categories(population_initializer, use_cache, final_selection):
+    from sklearn.datasets import load_breast_cancer
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.model_selection import GridSearchCV
+
+    samples, targets = load_breast_cancer(return_X_y=True)
+    samples, targets = samples[::5], targets[::5]
+    weights = [None, {0: 1.0, 1: 3.0}, {0: 3.0, 1: 1.0}]
+    model = RandomForestClassifier(n_estimators=3, random_state=0)
+    control = GridSearchCV(model, {"class_weight": weights, "max_depth": [1, 2]}, cv=2)
+    control.fit(samples, targets)
+    search = GASearchCV(
+        model,
+        param_grid={"class_weight": Categorical(weights), "max_depth": Integer(1, 2)},
+        warm_start_configs=[{"class_weight": weight, "max_depth": 1} for weight in weights],
+        population_initializer=population_initializer,
+        use_cache=use_cache,
+        final_selection=final_selection,
+        final_selection_top_k=2,
+        population_size=6,
+        generations=1,
+        cv=2,
+        n_jobs=1,
+        verbose=False,
+        random_state=0,
+    )
+
+    search.fit(samples, targets)
+
+    for params, score in zip(search.cv_results_["params"], search.cv_results_["mean_test_score"]):
+        index = control.cv_results_["params"].index(params)
+        assert score == pytest.approx(control.cv_results_["mean_test_score"][index])
+    assert search.best_estimator_.class_weight == search.best_params_["class_weight"]
+    assert search.predict(samples).shape == targets.shape
+    assert weights == [None, {0: 1.0, 1: 3.0}, {0: 3.0, 1: 1.0}]
+    if final_selection:
+        assert len(search.final_selection_results_["candidates"]) == 2
+
+
 def test_default_n_jobs_is_none():
     estimator = GASearchCV(
         SGDClassifier(loss="modified_huber", fit_intercept=True),

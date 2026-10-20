@@ -5,6 +5,7 @@ from math import comb
 import numpy as np
 
 from .space import Categorical, Continuous, Integer
+from .utils.tools import _hashable_key
 
 
 def validate_optimizer_control(
@@ -196,7 +197,7 @@ def finite_search_space_size(estimator, limit):
             if isinstance(dimension, Integer):
                 size *= dimension.upper - dimension.lower + 1
             elif isinstance(dimension, Categorical):
-                choices = set(dimension.choices)
+                choices = {_hashable_key(value) for value in dimension.choices}
                 if any(value != value for value in choices):
                     return None
                 size *= len(choices)

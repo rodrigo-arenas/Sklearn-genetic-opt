@@ -1,5 +1,22 @@
 import random
+from dataclasses import dataclass
+
 import numpy as np
+from joblib import hash as joblib_hash
+
+
+@dataclass(frozen=True)
+class _UnhashableCandidate:
+    digest: str
+
+
+def _hashable_key(value):
+    """Retain existing keys, digesting only values that cannot be hashed."""
+    try:
+        hash(value)
+    except TypeError:
+        return _UnhashableCandidate(joblib_hash(value))
+    return value
 
 
 def mutFlipBit(individual, indpb):
