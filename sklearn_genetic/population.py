@@ -7,6 +7,7 @@ from sklearn.utils import check_random_state
 
 from .space import Categorical, Continuous, Integer, Space
 from .optimizer_control import finite_search_space_size
+from .utils.tools import _hashable_key
 
 
 def validate_population_initializer(population_initializer):
@@ -70,7 +71,7 @@ def _stratified_categorical_value(dimension, index, population_size):
 
 
 def _append_unique_individual(population, seen_individuals, individual_values, individual_cls):
-    individual_key = tuple(individual_values)
+    individual_key = _hashable_key(tuple(individual_values))
     if individual_key in seen_individuals:
         return False
 

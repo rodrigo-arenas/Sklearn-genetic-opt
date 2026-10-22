@@ -6,6 +6,7 @@ from deap.algorithms import varAnd, varOr
 
 from .callbacks.validations import eval_callbacks
 from .evaluation import _time_budget_exhausted
+from .utils.tools import _hashable_key
 from .optimizer_control import (
     differential_offspring,
     finite_search_space_size,
@@ -142,7 +143,7 @@ def _flatten_record(record):
 
 
 def _individual_key(individual):
-    return tuple(individual)
+    return _hashable_key(tuple(individual))
 
 
 def _primary_fitness_weight(population):
@@ -194,7 +195,7 @@ def _population_diversity(population):
     else:
         gene_diversities = []
         for gene_values in zip(*population):
-            counts = Counter(gene_values)
+            counts = Counter(_hashable_key(value) for value in gene_values)
             # Probability that two distinct population members disagree at this
             # gene. Unlike distinct-allele counts, this stays meaningful for
             # binary/categorical genes as the population grows.

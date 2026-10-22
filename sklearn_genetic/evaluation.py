@@ -19,7 +19,9 @@ def validate_error_score(error_score):
 def logbook_record(logbook, chapter_name, parameters):
     index = len(logbook.chapters[chapter_name])
     parameters = {"index": index, **parameters}
-    logbook.record(**{chapter_name: parameters})
+    # Dictionary-valued parameters are values, not nested DEAP chapters.
+    logbook.chapters[chapter_name].append(parameters)
+    logbook.record()
     return parameters
 
 
@@ -161,7 +163,7 @@ def evaluate_population(estimator, individuals, cache_record_key):
 
         if estimator.use_cache and individual_key in estimator.fitness_cache:
             cached_result = estimator.fitness_cache[individual_key]
-            estimator.logbook.record(parameters=cached_result[cache_record_key])
+            logbook_record(estimator.logbook, "parameters", cached_result[cache_record_key])
         else:
             if lookup_key not in pending_results:
                 break
