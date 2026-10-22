@@ -187,14 +187,25 @@ def test_dictionary_categories_preserve_local_callbacks(use_cache, callback_loca
     "optimizer_controls", ["disabled", "local_search", "fitness_sharing", "both"]
 )
 def test_dictionary_array_categories(population_initializer, use_cache, optimizer_controls):
+    from copy import deepcopy
     from sklearn.datasets import load_iris
     from sklearn.model_selection import GridSearchCV
     from sklearn.pipeline import Pipeline
     from sklearn.preprocessing import FunctionTransformer
 
     samples, targets = load_iris(return_X_y=True)
-    transform = lambda values, offset: values + offset
-    kwargs = [{"offset": np.zeros(4)}, {"offset": np.ones(4)}, {"offset": 1.0}]
+    transform = lambda values, columns: values[:, np.atleast_1d(columns)]
+
+    def columns_key(option):
+        value = option["columns"]
+        return type(value), getattr(value, "dtype", None), tuple(np.atleast_1d(value))
+
+    kwargs = [
+        {"columns": np.array([0, 1], dtype=np.int64)},
+        {"columns": np.array([2, 3], dtype=np.int64)},
+        {"columns": np.array([2, 3], dtype=np.int32)},
+        {"columns": 2},
+    ]
     model = Pipeline(
         [
             ("transform", FunctionTransformer(transform)),
@@ -204,11 +215,20 @@ def test_dictionary_array_categories(population_initializer, use_cache, optimize
     control = GridSearchCV(
         model, {"transform__kw_args": kwargs, "model__max_depth": [1, 2]}, cv=2
     ).fit(samples, targets)
+    # Different array contents choose different features and produce distinct fitness.
+    grid_scores = {
+        columns_key(params["transform__kw_args"]): score
+        for params, score in zip(
+            control.cv_results_["params"], control.cv_results_["mean_test_score"]
+        )
+        if params["model__max_depth"] == 2
+    }
+    assert grid_scores[columns_key(kwargs[0])] != grid_scores[columns_key(kwargs[1])]
     search = GASearchCV(
         model,
         param_grid={"transform__kw_args": Categorical(kwargs), "model__max_depth": Integer(1, 2)},
         warm_start_configs=[
-            {"transform__kw_args": option, "model__max_depth": 1} for option in kwargs
+            {"transform__kw_args": deepcopy(option), "model__max_depth": 1} for option in kwargs
         ],
         population_initializer=population_initializer,
         use_cache=use_cache,
@@ -225,14 +245,18 @@ def test_dictionary_array_categories(population_initializer, use_cache, optimize
         random_state=0,
     ).fit(samples, targets)
 
+    # Check the seeded population before later mutation/final selection can restore lost choices.
+    assert {
+        columns_key(params["transform__kw_args"])
+        for params in search.cv_results_["params"][: len(kwargs)]
+    } == {columns_key(option) for option in kwargs}
     for params, score in zip(search.cv_results_["params"], search.cv_results_["mean_test_score"]):
         index = next(
             i
             for i, expected in enumerate(control.cv_results_["params"])
             if expected["model__max_depth"] == params["model__max_depth"]
-            and np.array_equal(
-                expected["transform__kw_args"]["offset"], params["transform__kw_args"]["offset"]
-            )
+            and columns_key(expected["transform__kw_args"])
+            == columns_key(params["transform__kw_args"])
         )
         assert score == pytest.approx(control.cv_results_["mean_test_score"][index])
     assert search.predict(samples).shape == targets.shape
@@ -242,6 +266,7 @@ def test_dictionary_array_categories(population_initializer, use_cache, optimize
 @pytest.mark.parametrize("use_cache", [False, True])
 def test_ordered_dictionary_categories(population_initializer, use_cache):
     from collections import OrderedDict
+    from copy import deepcopy
     from sklearn.datasets import load_diabetes
     from sklearn.linear_model import Ridge
     from sklearn.model_selection import GridSearchCV
@@ -256,6 +281,7 @@ def test_ordered_dictionary_categories(population_initializer, use_cache):
     samples, targets = load_diabetes(return_X_y=True)
     samples, targets = samples[:60], targets[:60]
     kwargs = [
+        {"shift": 1.0, "power": 2},
         OrderedDict([("shift", 1.0), ("power", 2)]),
         OrderedDict([("power", 2), ("shift", 1.0)]),
     ]
@@ -267,15 +293,15 @@ def test_ordered_dictionary_categories(population_initializer, use_cache):
         model,
         param_grid={"transform__kw_args": Categorical(kwargs), "model__alpha": Integer(1, 2)},
         warm_start_configs=[
-            {"transform__kw_args": option, "model__alpha": alpha}
+            {"transform__kw_args": deepcopy(option), "model__alpha": alpha}
             for option in kwargs
             for alpha in [1, 2]
         ],
         population_initializer=population_initializer,
         use_cache=use_cache,
         final_selection=True,
-        final_selection_top_k=4,
-        population_size=4,
+        final_selection_top_k=6,
+        population_size=6,
         generations=2,
         cv=2,
         n_jobs=1,
@@ -283,12 +309,22 @@ def test_ordered_dictionary_categories(population_initializer, use_cache):
         random_state=0,
     ).fit(samples, targets)
 
-    assert (
-        len({tuple(params["transform__kw_args"]) for params in search.cv_results_["params"]}) == 2
-    )
-    assert len(search.final_selection_results_["candidates"]) == 4
+    assert {
+        (type(params["transform__kw_args"]), tuple(params["transform__kw_args"].items()))
+        for params in search.cv_results_["params"][: len(kwargs) * 2]
+    } == {(type(option), tuple(option.items())) for option in kwargs}
+    assert len(search.final_selection_results_["candidates"]) == 6
     for params, score in zip(search.cv_results_["params"], search.cv_results_["mean_test_score"]):
-        index = control.cv_results_["params"].index(params)
+        matches = [
+            i
+            for i, expected in enumerate(control.cv_results_["params"])
+            if expected["model__alpha"] == params["model__alpha"]
+            and type(expected["transform__kw_args"]) is type(params["transform__kw_args"])
+            and tuple(expected["transform__kw_args"].items())
+            == tuple(params["transform__kw_args"].items())
+        ]
+        assert len(matches) == 1
+        index = matches[0]
         assert score == pytest.approx(control.cv_results_["mean_test_score"][index])
 
 

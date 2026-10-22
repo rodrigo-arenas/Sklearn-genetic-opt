@@ -24,6 +24,8 @@ def _same_config(left, right):
             left.get_params(deep=False), right.get_params(deep=False)
         )
     if isinstance(left, dict):
+        if type(left) is not type(right):
+            return False
         if isinstance(left, OrderedDict) and isinstance(right, OrderedDict):
             if tuple(left) != tuple(right):
                 return False
@@ -42,6 +44,7 @@ def _same_config(left, right):
         return (
             isinstance(left, np.ndarray)
             and isinstance(right, np.ndarray)
+            and left.dtype == right.dtype
             and np.array_equal(
                 left, right, equal_nan=left.dtype.kind in "fc" and right.dtype.kind in "fc"
             )
