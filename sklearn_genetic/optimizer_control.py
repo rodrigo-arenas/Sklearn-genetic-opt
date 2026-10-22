@@ -5,6 +5,7 @@ from math import comb
 import numpy as np
 
 from .space import Categorical, Continuous, Integer
+from .space.space import _same_config
 from .utils.tools import _hashable_key
 
 
@@ -293,8 +294,16 @@ def _bounded_continuous_neighbor(dimension, value, radius):
     return float(np.clip(sampled, dimension.lower, dimension.upper))
 
 
+def _same_category(left, right):
+    if isinstance(left, (dict, list, tuple, np.ndarray)) or isinstance(
+        right, (dict, list, tuple, np.ndarray)
+    ):
+        return _same_config(left, right)
+    return left == right
+
+
 def _categorical_neighbor(dimension, value):
-    choices = [choice for choice in dimension.choices if choice != value]
+    choices = [choice for choice in dimension.choices if not _same_category(choice, value)]
     return random.choice(choices) if choices else value
 
 
@@ -363,9 +372,9 @@ def _search_space_distance(estimator, left, right):
             span = dimension.upper - dimension.lower
             distance = 0.0 if span == 0 else abs(left_value - right_value) / span
         elif isinstance(dimension, Categorical):
-            distance = 0.0 if left_value == right_value else 1.0
+            distance = 0.0 if _same_category(left_value, right_value) else 1.0
         else:  # pragma: no cover
-            distance = 0.0 if left_value == right_value else 1.0
+            distance = 0.0 if _same_category(left_value, right_value) else 1.0
 
         distances.append(distance)
 
@@ -424,7 +433,7 @@ def niche_counts(population, estimator):
             for column, (values, span) in enumerate(columns):
                 if span is None:
                     components[:, column] = np.fromiter(
-                        (0.0 if values[index] == value else 1.0 for value in values),
+                        (0.0 if _same_category(values[index], value) else 1.0 for value in values),
                         dtype=float,
                     )
                 elif span:

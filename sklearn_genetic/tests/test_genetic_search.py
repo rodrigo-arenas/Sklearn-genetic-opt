@@ -158,7 +158,10 @@ def test_dictionary_categories_preserve_local_callbacks(use_cache, nested_callba
 
 @pytest.mark.parametrize("population_initializer", ["smart", "random"])
 @pytest.mark.parametrize("use_cache", [False, True])
-def test_dictionary_array_categories(population_initializer, use_cache):
+@pytest.mark.parametrize(
+    "optimizer_controls", ["disabled", "local_search", "fitness_sharing", "both"]
+)
+def test_dictionary_array_categories(population_initializer, use_cache, optimizer_controls):
     from sklearn.datasets import load_iris
     from sklearn.model_selection import GridSearchCV
     from sklearn.pipeline import Pipeline
@@ -184,6 +187,10 @@ def test_dictionary_array_categories(population_initializer, use_cache):
         ],
         population_initializer=population_initializer,
         use_cache=use_cache,
+        local_search=optimizer_controls in ("local_search", "both"),
+        local_search_top_k=1,
+        local_search_steps=1,
+        fitness_sharing=optimizer_controls in ("fitness_sharing", "both"),
         final_selection=True,
         population_size=4,
         generations=2,
