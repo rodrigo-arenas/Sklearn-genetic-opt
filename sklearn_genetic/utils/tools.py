@@ -22,6 +22,10 @@ def _hashable_key(value):
             key = tuple(items) if isinstance(value, OrderedDict) else frozenset(items)
         elif isinstance(value, (list, tuple)):
             key = tuple(_hashable_key(item) for item in value)
+        elif isinstance(value, set):
+            key = frozenset(_hashable_key(item) for item in value)
+        elif isinstance(value, np.ndarray) and value.dtype.hasobject:
+            key = (value.dtype, value.shape, _hashable_key(value.tolist()))
         else:
             key = joblib_hash(value)
         return _UnhashableCandidate(type(value), key)

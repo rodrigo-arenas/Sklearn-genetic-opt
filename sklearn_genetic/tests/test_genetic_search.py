@@ -109,8 +109,10 @@ def test_dictionary_class_weight_categories(population_initializer, use_cache, f
 
 
 @pytest.mark.parametrize("use_cache", [False, True])
-@pytest.mark.parametrize("nested_callback", [False, True])
-def test_dictionary_categories_preserve_local_callbacks(use_cache, nested_callback):
+@pytest.mark.parametrize(
+    "callback_location", ["sibling", "dictionary", "set", "frozenset", "array"]
+)
+def test_dictionary_categories_preserve_local_callbacks(use_cache, callback_location):
     from sklearn.datasets import load_iris
     from sklearn.model_selection import GridSearchCV
     from sklearn.pipeline import Pipeline
@@ -118,9 +120,22 @@ def test_dictionary_categories_preserve_local_callbacks(use_cache, nested_callba
 
     samples, targets = load_iris(return_X_y=True)
     callback = lambda values: values + 0.1
-    transform = lambda values, offset=None: values if offset is None else offset(values)
-    if nested_callback:
-        kwargs = [None, {"offset": callback}]
+
+    def transform(values, offset=None):
+        if offset is not None:
+            for operation in [offset] if callable(offset) else offset:
+                values = operation(values)
+        return values
+
+    if callback_location != "sibling":
+        offset = callback
+        if callback_location == "set":
+            offset = {callback}
+        elif callback_location == "frozenset":
+            offset = frozenset([callback])
+        elif callback_location == "array":
+            offset = np.array([callback], dtype=object)
+        kwargs = [None, {"offset": offset}]
     else:
         transform = lambda values, shift=0: values + shift
         kwargs = [None, {"shift": 0.1}]
@@ -139,6 +154,11 @@ def test_dictionary_categories_preserve_local_callbacks(use_cache, nested_callba
             "transform__kw_args": Categorical(kwargs),
             "model__max_depth": Integer(1, 2),
         },
+        warm_start_configs=[
+            {"transform__func": transform, "transform__kw_args": option, "model__max_depth": depth}
+            for option in kwargs
+            for depth in [1, 2]
+        ],
         use_cache=use_cache,
         final_selection=True,
         population_size=4,
@@ -150,7 +170,12 @@ def test_dictionary_categories_preserve_local_callbacks(use_cache, nested_callba
     ).fit(samples, targets)
 
     for params, score in zip(search.cv_results_["params"], search.cv_results_["mean_test_score"]):
-        index = control.cv_results_["params"].index(params)
+        index = next(
+            i
+            for i, expected in enumerate(control.cv_results_["params"])
+            if expected["model__max_depth"] == params["model__max_depth"]
+            and (expected["transform__kw_args"] is None) == (params["transform__kw_args"] is None)
+        )
         assert score == pytest.approx(control.cv_results_["mean_test_score"][index])
     assert search.best_estimator_["transform"].func is transform
     assert search.predict(samples).shape == targets.shape
