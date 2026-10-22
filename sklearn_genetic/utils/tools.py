@@ -1,4 +1,5 @@
 import random
+from collections import OrderedDict
 from dataclasses import dataclass
 
 import numpy as np
@@ -17,7 +18,8 @@ def _hashable_key(value):
         hash(value)
     except TypeError:
         if isinstance(value, dict):
-            key = frozenset((_hashable_key(k), _hashable_key(v)) for k, v in value.items())
+            items = ((_hashable_key(k), _hashable_key(v)) for k, v in value.items())
+            key = tuple(items) if isinstance(value, OrderedDict) else frozenset(items)
         elif isinstance(value, (list, tuple)):
             key = tuple(_hashable_key(item) for item in value)
         else:

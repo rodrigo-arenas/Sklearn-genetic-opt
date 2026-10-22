@@ -156,6 +156,110 @@ def test_dictionary_categories_preserve_local_callbacks(use_cache, nested_callba
     assert search.predict(samples).shape == targets.shape
 
 
+@pytest.mark.parametrize("population_initializer", ["smart", "random"])
+@pytest.mark.parametrize("use_cache", [False, True])
+def test_dictionary_array_categories(population_initializer, use_cache):
+    from sklearn.datasets import load_iris
+    from sklearn.model_selection import GridSearchCV
+    from sklearn.pipeline import Pipeline
+    from sklearn.preprocessing import FunctionTransformer
+
+    samples, targets = load_iris(return_X_y=True)
+    transform = lambda values, offset: values + offset
+    kwargs = [{"offset": np.zeros(4)}, {"offset": np.ones(4)}, {"offset": 1.0}]
+    model = Pipeline(
+        [
+            ("transform", FunctionTransformer(transform)),
+            ("model", DecisionTreeClassifier(random_state=0)),
+        ]
+    )
+    control = GridSearchCV(
+        model, {"transform__kw_args": kwargs, "model__max_depth": [1, 2]}, cv=2
+    ).fit(samples, targets)
+    search = GASearchCV(
+        model,
+        param_grid={"transform__kw_args": Categorical(kwargs), "model__max_depth": Integer(1, 2)},
+        warm_start_configs=[
+            {"transform__kw_args": option, "model__max_depth": 1} for option in kwargs
+        ],
+        population_initializer=population_initializer,
+        use_cache=use_cache,
+        final_selection=True,
+        population_size=4,
+        generations=2,
+        cv=2,
+        n_jobs=1,
+        verbose=False,
+        random_state=0,
+    ).fit(samples, targets)
+
+    for params, score in zip(search.cv_results_["params"], search.cv_results_["mean_test_score"]):
+        index = next(
+            i
+            for i, expected in enumerate(control.cv_results_["params"])
+            if expected["model__max_depth"] == params["model__max_depth"]
+            and np.array_equal(
+                expected["transform__kw_args"]["offset"], params["transform__kw_args"]["offset"]
+            )
+        )
+        assert score == pytest.approx(control.cv_results_["mean_test_score"][index])
+    assert search.predict(samples).shape == targets.shape
+
+
+@pytest.mark.parametrize("population_initializer", ["smart", "random"])
+@pytest.mark.parametrize("use_cache", [False, True])
+def test_ordered_dictionary_categories(population_initializer, use_cache):
+    from collections import OrderedDict
+    from sklearn.datasets import load_diabetes
+    from sklearn.linear_model import Ridge
+    from sklearn.model_selection import GridSearchCV
+    from sklearn.pipeline import Pipeline
+    from sklearn.preprocessing import FunctionTransformer
+
+    def transform(values, **operations):
+        for operation, value in operations.items():
+            values = values + value if operation == "shift" else values**value
+        return values
+
+    samples, targets = load_diabetes(return_X_y=True)
+    samples, targets = samples[:60], targets[:60]
+    kwargs = [
+        OrderedDict([("shift", 1.0), ("power", 2)]),
+        OrderedDict([("power", 2), ("shift", 1.0)]),
+    ]
+    model = Pipeline([("transform", FunctionTransformer(transform)), ("model", Ridge())])
+    control = GridSearchCV(model, {"transform__kw_args": kwargs, "model__alpha": [1, 2]}, cv=2).fit(
+        samples, targets
+    )
+    search = GASearchCV(
+        model,
+        param_grid={"transform__kw_args": Categorical(kwargs), "model__alpha": Integer(1, 2)},
+        warm_start_configs=[
+            {"transform__kw_args": option, "model__alpha": alpha}
+            for option in kwargs
+            for alpha in [1, 2]
+        ],
+        population_initializer=population_initializer,
+        use_cache=use_cache,
+        final_selection=True,
+        final_selection_top_k=4,
+        population_size=4,
+        generations=2,
+        cv=2,
+        n_jobs=1,
+        verbose=False,
+        random_state=0,
+    ).fit(samples, targets)
+
+    assert (
+        len({tuple(params["transform__kw_args"]) for params in search.cv_results_["params"]}) == 2
+    )
+    assert len(search.final_selection_results_["candidates"]) == 4
+    for params, score in zip(search.cv_results_["params"], search.cv_results_["mean_test_score"]):
+        index = control.cv_results_["params"].index(params)
+        assert score == pytest.approx(control.cv_results_["mean_test_score"][index])
+
+
 def test_default_n_jobs_is_none():
     estimator = GASearchCV(
         SGDClassifier(loss="modified_huber", fit_intercept=True),
