@@ -30,6 +30,8 @@ Full release notes with code examples are in the [documentation](https://sklearn
 
 ### Bug Fixes
 
+- Both searches refresh their optimization direction after `set_params(criteria=...)`, including when reusing a fitted search. Previously evolution, hall-of-fame selection, and best-fitness history could continue using the opposite direction captured at construction. Invalid replacement criteria now raise the same error as invalid constructor values.
+
 - `GASearchCV` now honors its documented `return_train_score=False` default when initializing scikit-learn's search base. Previously scikit-learn reset it to `True`, scoring every training fold and adding unwanted train-score fields to `cv_results_`. Explicit `return_train_score=True` still includes those fields. A paired four-family benchmark measured 1.23–1.84× lower elapsed time for cheap tree, KNN and ElasticNet searches with identical CV winners; random-forest timings showed no benefit.
 
 - Unsupervised `GAFeatureSelectionCV.fit(X)` now accepts pandas DataFrames with outlier detectors. Input validation converts `X` to a sliceable array while retaining the original column names for `get_feature_names_out()`; previously mask evaluation raised `InvalidIndexError`. Unsupervised `GASearchCV.fit(X)` also accepts list input instead of assuming `X.shape` exists.
