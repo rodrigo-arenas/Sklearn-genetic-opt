@@ -90,6 +90,12 @@ from .callbacks.early_stoppers import TimerStopping
 from .config import EvolutionConfig, OptimizationConfig, PopulationConfig, RuntimeConfig
 
 
+def _get_criteria_sign(criteria):
+    if criteria not in Criteria.list():
+        raise ValueError(f"Criteria must be one of {Criteria.list()}, got {criteria} instead")
+    return 1.0 if criteria == Criteria.max.value else -1.0
+
+
 def _seed_global_rngs(random_state):
     """Seed the global ``random`` and NumPy RNGs from a single ``random_state``.
 
@@ -868,13 +874,7 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
                 f"{self.estimator} is not a valid Sklearn classifier, regressor, or outlier detector"
             )
 
-        if criteria not in Criteria.list():
-            raise ValueError(f"Criteria must be one of {Criteria.list()}, got {criteria} instead")
-        # Minimization is handle like an optimization problem with a change in the score sign
-        elif criteria == Criteria.max.value:
-            self.criteria_sign = 1.0
-        elif criteria == Criteria.min.value:
-            self.criteria_sign = -1.0
+        self.criteria_sign = _get_criteria_sign(self.criteria)
 
         # Saves the param_grid and computes some extra properties in the same object
         self.space = Space(param_grid)
@@ -902,6 +902,8 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
         This function is the responsible for registering the DEAPs necessary methods
         and create other objects to hold the hof, logbook and stats.
         """
+        # Rebuild derived fitness weights from the current public parameter.
+        self.criteria_sign = _get_criteria_sign(self.criteria)
         self.toolbox = base.Toolbox()
 
         creator.create("FitnessMax", base.Fitness, weights=(self.criteria_sign,))
@@ -1946,19 +1948,15 @@ class GAFeatureSelectionCV(
                 f"{self.estimator} is not a valid Sklearn classifier, regressor, or outlier detector"
             )
 
-        if criteria not in Criteria.list():
-            raise ValueError(f"Criteria must be one of {Criteria.list()}, got {criteria} instead")
-        # Minimization is handle like an optimization problem with a change in the score sign
-        elif criteria == Criteria.max.value:
-            self.criteria_sign = 1.0
-        elif criteria == Criteria.min.value:
-            self.criteria_sign = -1.0
+        self.criteria_sign = _get_criteria_sign(self.criteria)
 
     def _register(self):
         """
         This function is the responsible for registering the DEAPs necessary methods
         and create other objects to hold the hof, logbook and stats.
         """
+        # Rebuild derived fitness weights from the current public parameter.
+        self.criteria_sign = _get_criteria_sign(self.criteria)
         self.toolbox = base.Toolbox()
 
         # Criteria sign to set max or min problem
