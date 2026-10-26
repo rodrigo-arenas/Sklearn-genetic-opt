@@ -315,15 +315,16 @@ def test_fitness_sharing_distance_helpers_cover_search_space_and_empty_masks():
     assert _shared_primary_fitness([], []) == []
 
 
-@pytest.mark.parametrize("ordered", [False, True])
-def test_dictionary_category_neighbors_and_distances(ordered):
+@pytest.mark.parametrize("category_kind", ["array", "ordered", "plain"])
+def test_dictionary_category_neighbors_and_distances(category_kind):
     from collections import OrderedDict
     from copy import deepcopy
     from ..space.base import BaseDimension
 
-    if ordered:
-        current = OrderedDict([("shift", 1.0), ("power", 2)])
-        other = OrderedDict(reversed(list(current.items())))
+    if category_kind != "array":
+        mapping_type = OrderedDict if category_kind == "ordered" else dict
+        current = mapping_type([("shift", 1.0), ("power", 2)])
+        other = mapping_type(reversed(list(current.items())))
     else:
         current = {"offset": np.zeros(4)}
         other = {"offset": np.ones(4)}

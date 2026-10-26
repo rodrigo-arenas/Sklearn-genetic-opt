@@ -264,7 +264,8 @@ def test_dictionary_array_categories(population_initializer, use_cache, optimize
 
 @pytest.mark.parametrize("population_initializer", ["smart", "random"])
 @pytest.mark.parametrize("use_cache", [False, True])
-def test_ordered_dictionary_categories(population_initializer, use_cache):
+@pytest.mark.parametrize("category_kind", ["plain", "mixed"])
+def test_dictionary_category_order(population_initializer, use_cache, category_kind):
     from collections import OrderedDict
     from copy import deepcopy
     from sklearn.datasets import load_diabetes
@@ -280,15 +281,20 @@ def test_ordered_dictionary_categories(population_initializer, use_cache):
 
     samples, targets = load_diabetes(return_X_y=True)
     samples, targets = samples[:60], targets[:60]
-    kwargs = [
-        {"shift": 1.0, "power": 2},
-        OrderedDict([("shift", 1.0), ("power", 2)]),
-        OrderedDict([("power", 2), ("shift", 1.0)]),
-    ]
+    kwargs = [{"shift": 1.0, "power": 2}, {"power": 2, "shift": 1.0}]
+    if category_kind == "mixed":
+        kwargs = [kwargs[0], OrderedDict(kwargs[0]), OrderedDict(kwargs[1])]
     model = Pipeline([("transform", FunctionTransformer(transform)), ("model", Ridge())])
     control = GridSearchCV(model, {"transform__kw_args": kwargs, "model__alpha": [1, 2]}, cv=2).fit(
         samples, targets
     )
+    grid_scores = {
+        (tuple(params["transform__kw_args"].items()), params["model__alpha"]): score
+        for params, score in zip(
+            control.cv_results_["params"], control.cv_results_["mean_test_score"]
+        )
+    }
+    assert grid_scores[(tuple(kwargs[0].items()), 1)] != grid_scores[(tuple(kwargs[-1].items()), 1)]
     search = GASearchCV(
         model,
         param_grid={"transform__kw_args": Categorical(kwargs), "model__alpha": Integer(1, 2)},
@@ -300,8 +306,8 @@ def test_ordered_dictionary_categories(population_initializer, use_cache):
         population_initializer=population_initializer,
         use_cache=use_cache,
         final_selection=True,
-        final_selection_top_k=6,
-        population_size=6,
+        final_selection_top_k=len(kwargs) * 2,
+        population_size=len(kwargs) * 2,
         generations=2,
         cv=2,
         n_jobs=1,
@@ -310,10 +316,14 @@ def test_ordered_dictionary_categories(population_initializer, use_cache):
     ).fit(samples, targets)
 
     assert {
-        (type(params["transform__kw_args"]), tuple(params["transform__kw_args"].items()))
+        (
+            type(params["transform__kw_args"]),
+            tuple(params["transform__kw_args"].items()),
+            params["model__alpha"],
+        )
         for params in search.cv_results_["params"][: len(kwargs) * 2]
-    } == {(type(option), tuple(option.items())) for option in kwargs}
-    assert len(search.final_selection_results_["candidates"]) == 6
+    } == {(type(option), tuple(option.items()), alpha) for option in kwargs for alpha in [1, 2]}
+    assert len(search.final_selection_results_["candidates"]) == len(kwargs) * 2
     for params, score in zip(search.cv_results_["params"], search.cv_results_["mean_test_score"]):
         matches = [
             i

@@ -1,5 +1,4 @@
 import random
-from collections import OrderedDict
 from typing import Any, List, Optional, Union
 
 import numpy as np
@@ -26,9 +25,8 @@ def _same_config(left, right):
     if isinstance(left, dict):
         if type(left) is not type(right):
             return False
-        if isinstance(left, OrderedDict) and isinstance(right, OrderedDict):
-            if tuple(left) != tuple(right):
-                return False
+        if tuple(left) != tuple(right):
+            return False
         return (
             isinstance(right, dict)
             and left.keys() == right.keys()
