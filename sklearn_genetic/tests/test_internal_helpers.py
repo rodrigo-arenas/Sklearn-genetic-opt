@@ -315,6 +315,41 @@ def test_fitness_sharing_distance_helpers_cover_search_space_and_empty_masks():
     assert _shared_primary_fitness([], []) == []
 
 
+@pytest.mark.parametrize("category_kind", ["array", "ordered", "plain"])
+def test_dictionary_category_neighbors_and_distances(category_kind):
+    from collections import OrderedDict
+    from copy import deepcopy
+    from ..space.base import BaseDimension
+
+    if category_kind != "array":
+        mapping_type = OrderedDict if category_kind == "ordered" else dict
+        current = mapping_type([("shift", 1.0), ("power", 2)])
+        other = mapping_type(reversed(list(current.items())))
+    else:
+        current = {"offset": np.zeros(4)}
+        other = {"offset": np.ones(4)}
+    copied = deepcopy(current)
+    estimator = SimpleNamespace(
+        space=Space({"transform__kw_args": Categorical([current, other])}),
+        sharing_radius=1.0,
+        sharing_alpha=1.0,
+    )
+
+    assert local_neighbor(estimator, [copied], list)[0] is other
+    assert individual_distance(estimator, [current], [copied]) == 0.0
+    assert individual_distance(estimator, [current], [other]) == 1.0
+    assert niche_counts([[current], [copied], [other]], estimator) == [2.0, 2.0, 1.0]
+
+    class DictionaryDimension(BaseDimension):
+        def sample(self):
+            return current
+
+    estimator.space = Space({"transform__kw_args": DictionaryDimension()})
+    assert individual_distance(estimator, [current], [copied]) == 0.0
+    assert individual_distance(estimator, [current], [other]) == 1.0
+    assert niche_counts([[current], [copied], [other]], estimator) == [2.0, 2.0, 1.0]
+
+
 def test_shared_primary_fitness_preserves_minimization_direction():
     if not hasattr(creator, "FitnessCoverageMin"):
         creator.create("FitnessCoverageMin", base.Fitness, weights=(-1.0,))

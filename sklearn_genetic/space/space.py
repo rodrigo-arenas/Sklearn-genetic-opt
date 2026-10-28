@@ -23,6 +23,10 @@ def _same_config(left, right):
             left.get_params(deep=False), right.get_params(deep=False)
         )
     if isinstance(left, dict):
+        if type(left) is not type(right):
+            return False
+        if tuple(left) != tuple(right):
+            return False
         return (
             isinstance(right, dict)
             and left.keys() == right.keys()
@@ -34,9 +38,14 @@ def _same_config(left, right):
             and len(left) == len(right)
             and all(_same_config(a, b) for a, b in zip(left, right))
         )
-    if isinstance(left, np.ndarray):
-        return isinstance(right, np.ndarray) and np.array_equal(
-            left, right, equal_nan=left.dtype.kind in "fc" and right.dtype.kind in "fc"
+    if isinstance(left, np.ndarray) or isinstance(right, np.ndarray):
+        return (
+            isinstance(left, np.ndarray)
+            and isinstance(right, np.ndarray)
+            and left.dtype == right.dtype
+            and np.array_equal(
+                left, right, equal_nan=left.dtype.kind in "fc" and right.dtype.kind in "fc"
+            )
         )
     if isinstance(left, np.random.RandomState):
         return isinstance(right, np.random.RandomState) and _same_config(
@@ -250,11 +259,11 @@ class Categorical(BaseDimension):
         return f"{self.__class__.__name__}(choices={self.choices!r}, priors={self.priors!r})"
 
     def _choice_index(self, value):
-        """Resolve cloned estimator configurations to their original category."""
+        """Resolve cloned estimator and container values to their original category."""
         for index, choice in enumerate(self.choices):
             if choice is value:
                 return index
-        if isinstance(value, BaseEstimator):
+        if isinstance(value, (BaseEstimator, dict, list, tuple, np.ndarray)):
             # Learned attributes are not part of a hyperparameter choice.
             for index, choice in enumerate(self.choices):
                 if _same_config(value, choice):

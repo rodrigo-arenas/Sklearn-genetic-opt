@@ -66,6 +66,278 @@ def test_outlier_search_accepts_list_without_target():
     assert search.best_estimator_.n_features_in_ == 4
 
 
+@pytest.mark.parametrize("population_initializer", ["smart", "random"])
+@pytest.mark.parametrize("use_cache", [False, True])
+@pytest.mark.parametrize("final_selection", [False, True])
+def test_dictionary_class_weight_categories(population_initializer, use_cache, final_selection):
+    from sklearn.datasets import load_breast_cancer
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.model_selection import GridSearchCV
+
+    samples, targets = load_breast_cancer(return_X_y=True)
+    samples, targets = samples[::5], targets[::5]
+    weights = [None, {0: 1.0, 1: 3.0}, {0: 3.0, 1: 1.0}]
+    model = RandomForestClassifier(n_estimators=3, random_state=0)
+    control = GridSearchCV(model, {"class_weight": weights, "max_depth": [1, 2]}, cv=2)
+    control.fit(samples, targets)
+    search = GASearchCV(
+        model,
+        param_grid={"class_weight": Categorical(weights), "max_depth": Integer(1, 2)},
+        warm_start_configs=[{"class_weight": weight, "max_depth": 1} for weight in weights],
+        population_initializer=population_initializer,
+        use_cache=use_cache,
+        final_selection=final_selection,
+        final_selection_top_k=2,
+        population_size=6,
+        generations=1,
+        cv=2,
+        n_jobs=1,
+        verbose=False,
+        random_state=0,
+    )
+
+    search.fit(samples, targets)
+
+    for params, score in zip(search.cv_results_["params"], search.cv_results_["mean_test_score"]):
+        index = control.cv_results_["params"].index(params)
+        assert score == pytest.approx(control.cv_results_["mean_test_score"][index])
+    assert search.best_estimator_.class_weight == search.best_params_["class_weight"]
+    assert search.predict(samples).shape == targets.shape
+    assert weights == [None, {0: 1.0, 1: 3.0}, {0: 3.0, 1: 1.0}]
+    if final_selection:
+        assert len(search.final_selection_results_["candidates"]) == 2
+
+
+@pytest.mark.parametrize("use_cache", [False, True])
+@pytest.mark.parametrize(
+    "callback_location", ["sibling", "dictionary", "set", "frozenset", "array"]
+)
+def test_dictionary_categories_preserve_local_callbacks(use_cache, callback_location):
+    from sklearn.datasets import load_iris
+    from sklearn.model_selection import GridSearchCV
+    from sklearn.pipeline import Pipeline
+    from sklearn.preprocessing import FunctionTransformer
+
+    samples, targets = load_iris(return_X_y=True)
+    callback = lambda values: values + 0.1
+
+    def transform(values, offset=None):
+        if offset is not None:
+            for operation in [offset] if callable(offset) else offset:
+                values = operation(values)
+        return values
+
+    if callback_location != "sibling":
+        offset = callback
+        if callback_location == "set":
+            offset = {callback}
+        elif callback_location == "frozenset":
+            offset = frozenset([callback])
+        elif callback_location == "array":
+            offset = np.array([callback], dtype=object)
+        kwargs = [None, {"offset": offset}]
+    else:
+        transform = lambda values, shift=0: values + shift
+        kwargs = [None, {"shift": 0.1}]
+    model = Pipeline(
+        [("transform", FunctionTransformer()), ("model", DecisionTreeClassifier(random_state=0))]
+    )
+    control = GridSearchCV(
+        model,
+        {"transform__func": [transform], "transform__kw_args": kwargs, "model__max_depth": [1, 2]},
+        cv=2,
+    ).fit(samples, targets)
+    search = GASearchCV(
+        model,
+        param_grid={
+            "transform__func": Categorical([transform]),
+            "transform__kw_args": Categorical(kwargs),
+            "model__max_depth": Integer(1, 2),
+        },
+        warm_start_configs=[
+            {"transform__func": transform, "transform__kw_args": option, "model__max_depth": depth}
+            for option in kwargs
+            for depth in [1, 2]
+        ],
+        use_cache=use_cache,
+        final_selection=True,
+        population_size=4,
+        generations=1,
+        cv=2,
+        n_jobs=1,
+        verbose=False,
+        random_state=0,
+    ).fit(samples, targets)
+
+    for params, score in zip(search.cv_results_["params"], search.cv_results_["mean_test_score"]):
+        index = next(
+            i
+            for i, expected in enumerate(control.cv_results_["params"])
+            if expected["model__max_depth"] == params["model__max_depth"]
+            and (expected["transform__kw_args"] is None) == (params["transform__kw_args"] is None)
+        )
+        assert score == pytest.approx(control.cv_results_["mean_test_score"][index])
+    assert search.best_estimator_["transform"].func is transform
+    assert search.predict(samples).shape == targets.shape
+
+
+@pytest.mark.parametrize("population_initializer", ["smart", "random"])
+@pytest.mark.parametrize("use_cache", [False, True])
+@pytest.mark.parametrize(
+    "optimizer_controls", ["disabled", "local_search", "fitness_sharing", "both"]
+)
+def test_dictionary_array_categories(population_initializer, use_cache, optimizer_controls):
+    from copy import deepcopy
+    from sklearn.datasets import load_iris
+    from sklearn.model_selection import GridSearchCV
+    from sklearn.pipeline import Pipeline
+    from sklearn.preprocessing import FunctionTransformer
+
+    samples, targets = load_iris(return_X_y=True)
+    transform = lambda values, columns: values[:, np.atleast_1d(columns)]
+
+    def columns_key(option):
+        value = option["columns"]
+        return type(value), getattr(value, "dtype", None), tuple(np.atleast_1d(value))
+
+    kwargs = [
+        {"columns": np.array([0, 1], dtype=np.int64)},
+        {"columns": np.array([2, 3], dtype=np.int64)},
+        {"columns": np.array([2, 3], dtype=np.int32)},
+        {"columns": 2},
+    ]
+    model = Pipeline(
+        [
+            ("transform", FunctionTransformer(transform)),
+            ("model", DecisionTreeClassifier(random_state=0)),
+        ]
+    )
+    control = GridSearchCV(
+        model, {"transform__kw_args": kwargs, "model__max_depth": [1, 2]}, cv=2
+    ).fit(samples, targets)
+    # Different array contents choose different features and produce distinct fitness.
+    grid_scores = {
+        columns_key(params["transform__kw_args"]): score
+        for params, score in zip(
+            control.cv_results_["params"], control.cv_results_["mean_test_score"]
+        )
+        if params["model__max_depth"] == 2
+    }
+    assert grid_scores[columns_key(kwargs[0])] != grid_scores[columns_key(kwargs[1])]
+    search = GASearchCV(
+        model,
+        param_grid={"transform__kw_args": Categorical(kwargs), "model__max_depth": Integer(1, 2)},
+        warm_start_configs=[
+            {"transform__kw_args": deepcopy(option), "model__max_depth": 1} for option in kwargs
+        ],
+        population_initializer=population_initializer,
+        use_cache=use_cache,
+        local_search=optimizer_controls in ("local_search", "both"),
+        local_search_top_k=1,
+        local_search_steps=1,
+        fitness_sharing=optimizer_controls in ("fitness_sharing", "both"),
+        final_selection=True,
+        population_size=4,
+        generations=2,
+        cv=2,
+        n_jobs=1,
+        verbose=False,
+        random_state=0,
+    ).fit(samples, targets)
+
+    # Check the seeded population before later mutation/final selection can restore lost choices.
+    assert {
+        columns_key(params["transform__kw_args"])
+        for params in search.cv_results_["params"][: len(kwargs)]
+    } == {columns_key(option) for option in kwargs}
+    for params, score in zip(search.cv_results_["params"], search.cv_results_["mean_test_score"]):
+        index = next(
+            i
+            for i, expected in enumerate(control.cv_results_["params"])
+            if expected["model__max_depth"] == params["model__max_depth"]
+            and columns_key(expected["transform__kw_args"])
+            == columns_key(params["transform__kw_args"])
+        )
+        assert score == pytest.approx(control.cv_results_["mean_test_score"][index])
+    assert search.predict(samples).shape == targets.shape
+
+
+@pytest.mark.parametrize("population_initializer", ["smart", "random"])
+@pytest.mark.parametrize("use_cache", [False, True])
+@pytest.mark.parametrize("category_kind", ["plain", "mixed"])
+def test_dictionary_category_order(population_initializer, use_cache, category_kind):
+    from collections import OrderedDict
+    from copy import deepcopy
+    from sklearn.datasets import load_diabetes
+    from sklearn.linear_model import Ridge
+    from sklearn.model_selection import GridSearchCV
+    from sklearn.pipeline import Pipeline
+    from sklearn.preprocessing import FunctionTransformer
+
+    def transform(values, **operations):
+        for operation, value in operations.items():
+            values = values + value if operation == "shift" else values**value
+        return values
+
+    samples, targets = load_diabetes(return_X_y=True)
+    samples, targets = samples[:60], targets[:60]
+    kwargs = [{"shift": 1.0, "power": 2}, {"power": 2, "shift": 1.0}]
+    if category_kind == "mixed":
+        kwargs = [kwargs[0], OrderedDict(kwargs[0]), OrderedDict(kwargs[1])]
+    model = Pipeline([("transform", FunctionTransformer(transform)), ("model", Ridge())])
+    control = GridSearchCV(model, {"transform__kw_args": kwargs, "model__alpha": [1, 2]}, cv=2).fit(
+        samples, targets
+    )
+    grid_scores = {
+        (tuple(params["transform__kw_args"].items()), params["model__alpha"]): score
+        for params, score in zip(
+            control.cv_results_["params"], control.cv_results_["mean_test_score"]
+        )
+    }
+    assert grid_scores[(tuple(kwargs[0].items()), 1)] != grid_scores[(tuple(kwargs[-1].items()), 1)]
+    search = GASearchCV(
+        model,
+        param_grid={"transform__kw_args": Categorical(kwargs), "model__alpha": Integer(1, 2)},
+        warm_start_configs=[
+            {"transform__kw_args": deepcopy(option), "model__alpha": alpha}
+            for option in kwargs
+            for alpha in [1, 2]
+        ],
+        population_initializer=population_initializer,
+        use_cache=use_cache,
+        final_selection=True,
+        final_selection_top_k=len(kwargs) * 2,
+        population_size=len(kwargs) * 2,
+        generations=2,
+        cv=2,
+        n_jobs=1,
+        verbose=False,
+        random_state=0,
+    ).fit(samples, targets)
+
+    assert {
+        (
+            type(params["transform__kw_args"]),
+            tuple(params["transform__kw_args"].items()),
+            params["model__alpha"],
+        )
+        for params in search.cv_results_["params"][: len(kwargs) * 2]
+    } == {(type(option), tuple(option.items()), alpha) for option in kwargs for alpha in [1, 2]}
+    assert len(search.final_selection_results_["candidates"]) == len(kwargs) * 2
+    for params, score in zip(search.cv_results_["params"], search.cv_results_["mean_test_score"]):
+        matches = [
+            i
+            for i, expected in enumerate(control.cv_results_["params"])
+            if expected["model__alpha"] == params["model__alpha"]
+            and type(expected["transform__kw_args"]) is type(params["transform__kw_args"])
+            and tuple(expected["transform__kw_args"].items())
+            == tuple(params["transform__kw_args"].items())
+        ]
+        assert len(matches) == 1
+        index = matches[0]
+        assert score == pytest.approx(control.cv_results_["mean_test_score"][index])
+
+
 def test_default_n_jobs_is_none():
     estimator = GASearchCV(
         SGDClassifier(loss="modified_huber", fit_intercept=True),

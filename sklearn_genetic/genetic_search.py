@@ -65,7 +65,7 @@ from .utils.cv_scores import (
     create_feature_selection_cv_results_,
 )
 from .utils.random import weighted_bool_individual
-from .utils.tools import cxUniform, mutFlipBit
+from .utils.tools import _hashable_key, cxUniform, mutFlipBit
 from .evaluation import (
     create_fit_stats as _create_fit_stats,
     evaluate_population as _evaluate_population_batch,
@@ -188,7 +188,7 @@ class _FinalSelectionMixin:
             else np.argsort(ranks, kind="stable")
         )
         for index in order:
-            key = tuple(sorted(self._candidate_params_from_index(index).items()))
+            key = _hashable_key(tuple(sorted(self._candidate_params_from_index(index).items())))
             if key not in seen:
                 seen.add(key)
                 indices.append(index)
@@ -207,7 +207,7 @@ class _FinalSelectionMixin:
             for index in reversed(order):
                 if ranks[index] != ranks[cutoff] or counts[index] <= counts[cutoff]:
                     continue
-                key = tuple(sorted(self._candidate_params_from_index(index).items()))
+                key = _hashable_key(tuple(sorted(self._candidate_params_from_index(index).items())))
                 if key not in seen:
                     indices[-1] = index
                     break
@@ -1048,7 +1048,7 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
                 if choice_index is not None:
                     value = dimension.choices[choice_index]
             current_generation_params[name] = value
-        return tuple(sorted(current_generation_params.items()))
+        return _hashable_key(tuple(sorted(current_generation_params.items())))
 
     def evaluate_population(self, individuals):
         for individual in individuals:
@@ -1128,7 +1128,7 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
             # Retrieve cached result
             cached_result = self.fitness_cache[individual_key]
             # Ensure the logbook is updated even if the individual is cached
-            self.logbook.record(parameters=cached_result["current_generation_params"])
+            _logbook_record(self.logbook, "parameters", cached_result["current_generation_params"])
             _record_fit_stats(self, evaluated=1, cache_hits=1)
             return cached_result["fitness"]
 
@@ -2166,7 +2166,9 @@ class GAFeatureSelectionCV(
         if individual_key in self.fitness_cache and self.use_cache:
             cached_result = self.fitness_cache[individual_key]
             # Ensure the logbook is updated even if the individual is cached
-            self.logbook.record(parameters=cached_result["current_generation_features"])
+            _logbook_record(
+                self.logbook, "parameters", cached_result["current_generation_features"]
+            )
             _record_fit_stats(self, evaluated=1, cache_hits=1)
             return cached_result["fitness"]
 

@@ -1,5 +1,33 @@
 import random
+from dataclasses import dataclass
+
 import numpy as np
+from joblib import hash as joblib_hash
+
+
+@dataclass(frozen=True)
+class _UnhashableCandidate:
+    kind: type
+    value: object
+
+
+def _hashable_key(value):
+    """Retain hashable values without requiring their siblings to be pickled."""
+    try:
+        hash(value)
+    except TypeError:
+        if isinstance(value, dict):
+            key = tuple((_hashable_key(k), _hashable_key(v)) for k, v in value.items())
+        elif isinstance(value, (list, tuple)):
+            key = tuple(_hashable_key(item) for item in value)
+        elif isinstance(value, set):
+            key = frozenset(_hashable_key(item) for item in value)
+        elif isinstance(value, np.ndarray) and value.dtype.hasobject:
+            key = (value.dtype, value.shape, _hashable_key(value.tolist()))
+        else:
+            key = joblib_hash(value)
+        return _UnhashableCandidate(type(value), key)
+    return value
 
 
 def mutFlipBit(individual, indpb):
