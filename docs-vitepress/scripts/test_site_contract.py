@@ -1,11 +1,17 @@
 """Checks for the built site's crawl signals and the release documentation switch."""
 
 from pathlib import Path
+import importlib.util
+import io
+import json
 import re
 import shutil
 import subprocess
 import xml.etree.ElementTree as ET
+from urllib.error import HTTPError
 from urllib.parse import urlparse
+
+import pytest
 
 DOCS = Path(__file__).resolve().parents[1]
 SITE = "https://sklearngeneticopt.rodrigo-arenas.com"
@@ -116,3 +122,172 @@ def test_freeze_points_homepage_at_new_stable_version(tmp_path):
         if f"/versions/{old_version}/" in source:
             assert f"/versions/{next_version}/" in frozen
     assert (docs / "versions" / next_version / "guide" / "basic-usage.md").is_file()
+
+
+@pytest.fixture
+def indexnow_site(tmp_path):
+    site = tmp_path / "site"
+    site.mkdir()
+    (site / "indexnow-key.txt").write_text("a" * 32 + "\n", encoding="utf-8")
+    (site / "index.html").write_text("<main>Home</main>", encoding="utf-8")
+    (site / "guide.html").write_text("<main>Guide</main>", encoding="utf-8")
+    (site / "sitemap.xml").write_text(
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+        f"<url><loc>{SITE}/</loc></url><url><loc>{SITE}/guide</loc></url>"
+        "</urlset>",
+        encoding="utf-8",
+    )
+    spec = importlib.util.spec_from_file_location(
+        "submit_indexnow", DOCS / "scripts" / "submit_indexnow.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module, site, tmp_path / "state.json"
+
+
+@pytest.mark.parametrize("status", [200, 202])
+def test_indexnow_submits_changes_and_removals_only_after_acceptance(
+    indexnow_site, monkeypatch, status
+):
+    module, site, state = indexnow_site
+    posts = []
+
+    def respond(request, timeout):
+        if request.get_method() == "GET":
+            assert request.full_url == f"{SITE}/indexnow-key.txt"
+            return io.BytesIO(("a" * 32 + "\n").encode())
+        posts.append((request.full_url, json.loads(request.data)))
+        response = io.BytesIO()
+        response.status = status
+        return response
+
+    monkeypatch.setattr(module, "urlopen", respond)
+    module.submit(site, state)
+    assert posts == [
+        (
+            "https://www.bing.com/indexnow",
+            {
+                "host": urlparse(SITE).netloc,
+                "key": "a" * 32,
+                "keyLocation": f"{SITE}/indexnow-key.txt",
+                "urlList": [f"{SITE}/", f"{SITE}/guide"],
+            },
+        )
+    ]
+    posts.clear()
+    module.submit(site, state)
+    assert posts == []
+
+    (site / "guide.html").write_text("<main>Updated</main>", encoding="utf-8")
+    module.submit(site, state)
+    assert posts[-1][1]["urlList"] == [f"{SITE}/guide"]
+    posts.clear()
+    (site / "sitemap.xml").write_text(
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+        f"<url><loc>{SITE}/</loc></url></urlset>",
+        encoding="utf-8",
+    )
+    module.submit(site, state)
+    assert [payload["urlList"] for _, payload in posts] == [[f"{SITE}/guide"]]
+    assert set(json.loads(state.read_text(encoding="utf-8"))) == {f"{SITE}/"}
+
+
+@pytest.mark.parametrize("failure", ["wrong-key", 403, 429, 500, 204])
+def test_indexnow_failure_preserves_last_successful_state(indexnow_site, monkeypatch, failure):
+    module, site, state = indexnow_site
+    previous = json.dumps({f"{SITE}/": "0" * 64})
+    state.write_text(previous, encoding="utf-8")
+    posts = []
+
+    def respond(request, timeout):
+        if request.get_method() == "GET":
+            return io.BytesIO(("wrong" if failure == "wrong-key" else "a" * 32).encode())
+        posts.append(request)
+        if failure != 204:
+            raise HTTPError(request.full_url, failure, "Rejected", {}, io.BytesIO())
+        response = io.BytesIO()
+        response.status = 204
+        return response
+
+    monkeypatch.setattr(module, "urlopen", respond)
+    with pytest.raises((HTTPError, ValueError)):
+        module.submit(site, state)
+    assert state.read_text(encoding="utf-8") == previous
+    if failure == "wrong-key":
+        assert posts == []
+
+
+@pytest.mark.parametrize("url", ["https://elsewhere.example/", f"{SITE}/../outside"])
+def test_indexnow_rejects_invalid_sitemap_before_network(indexnow_site, monkeypatch, url):
+    module, site, state = indexnow_site
+    (site / "sitemap.xml").write_text(
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+        f"<url><loc>{url}</loc></url></urlset>",
+        encoding="utf-8",
+    )
+
+    def unexpected_network(*args, **kwargs):
+        pytest.fail("Invalid sitemap must not reach the network")
+
+    monkeypatch.setattr(module, "urlopen", unexpected_network)
+    with pytest.raises(ValueError):
+        module.submit(site, state)
+    assert not state.exists()
+
+
+def test_indexnow_dry_run_neither_sends_nor_updates_state(indexnow_site, monkeypatch, capsys):
+    module, site, state = indexnow_site
+
+    def unexpected_network(*args, **kwargs):
+        pytest.fail("Dry run must not reach the network")
+
+    monkeypatch.setattr(module, "urlopen", unexpected_network)
+    module.submit(site, state, dry_run=True)
+    assert json.loads(capsys.readouterr().out)["urlList"] == [f"{SITE}/", f"{SITE}/guide"]
+    assert not state.exists()
+
+
+def test_indexnow_batches_removals_and_preserves_state_if_later_batch_fails(
+    indexnow_site, monkeypatch
+):
+    module, site, state = indexnow_site
+    previous = json.dumps({f"{SITE}/removed-{index}": "0" * 64 for index in range(10_001)})
+    state.write_text(previous, encoding="utf-8")
+    batches = []
+
+    def respond(request, timeout):
+        if request.get_method() == "GET":
+            return io.BytesIO(("a" * 32).encode())
+        batches.append(json.loads(request.data)["urlList"])
+        if len(batches) == 2:
+            raise HTTPError(request.full_url, 429, "Rate limited", {}, io.BytesIO())
+        response = io.BytesIO()
+        response.status = 200
+        return response
+
+    monkeypatch.setattr(module, "urlopen", respond)
+    with pytest.raises(HTTPError):
+        module.submit(site, state)
+    assert list(map(len, batches)) == [10_000, 3]
+    submitted = [url for batch in batches for url in batch]
+    assert len(set(submitted)) == 10_003
+    assert set(submitted) == set(json.loads(previous)) | {f"{SITE}/", f"{SITE}/guide"}
+    assert state.read_text(encoding="utf-8") == previous
+
+
+@pytest.mark.parametrize(
+    "contents",
+    ["[]", '{"https://elsewhere.example/": "bad"}', "{", json.dumps({f"{SITE}/": "bad"})],
+)
+def test_indexnow_invalid_state_is_not_overwritten(indexnow_site, contents):
+    module, site, state = indexnow_site
+    state.write_text(contents, encoding="utf-8")
+    with pytest.raises(ValueError):
+        module.submit(site, state, dry_run=True)
+    assert state.read_text(encoding="utf-8") == contents
+
+
+def test_built_site_publishes_indexnow_key():
+    key = (DOCS / ".vitepress" / "dist" / "indexnow-key.txt").read_text(encoding="utf-8")
+    assert re.fullmatch(r"[a-zA-Z0-9-]{8,128}\n?", key)
+    assert key == (DOCS / "public" / "indexnow-key.txt").read_text(encoding="utf-8")

@@ -144,6 +144,29 @@ in [Google Search Console](https://search.google.com/search-console) and
 [Bing Webmaster Tools](https://www.bing.com/webmasters). Search visits alone do
 not establish whether a page is indexed.
 
+After each successful GitHub Pages deployment, `docs.yml` notifies Bing through
+[IndexNow](https://www.indexnow.org/documentation). The notification uses the
+deployed artifact's sitemap and HTML hashes: new or changed pages and URLs removed
+from the sitemap are submitted in batches of at most 10,000. Unchanged pages are
+skipped. The first run, or a missing GitHub Actions cache, submits the entire
+indexable sitemap. The cache is updated only after Bing accepts every batch;
+failed requests fail the notification job without rolling back the deployed site.
+Rerun failed jobs to retry the notification.
+
+The verification key in `docs-vitepress/public/indexnow-key.txt` is public by
+design and requires no repository secret or Bing login. Before sending, the
+script checks that the published key matches the deployed artifact. To rotate
+it, replace that file with a new 8–128 character key using letters, digits and
+dashes, then deploy. An HTTP 200 means URLs were received; HTTP 202 means key
+validation is pending. Neither guarantees indexing. Check receipt and indexing
+in [Bing Webmaster Tools](https://www.bing.com/webmasters).
+
+Preview the request locally after building the docs (no network or state writes):
+
+```powershell
+python docs-vitepress/scripts/submit_indexnow.py --site-dir docs-vitepress/.vitepress/dist --state .codex_tmp/indexnow-state.json --dry-run
+```
+
 Run a quick fit-performance benchmark smoke check:
 
 ```bash
