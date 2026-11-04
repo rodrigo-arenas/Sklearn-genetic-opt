@@ -47,3 +47,6 @@ promotional.
 
 7. [Building ML Pipelines with sklearn-genetic-opt](https://medium.com/@hardikpandey0903/building-ml-pipelines-with-sklearn-genetic-opt-e02c0d2d3da6)  
    Hardik Pandey (@hardik0903) on Medium. A beginner-friendly walkthrough of combining `GASearchCV` with a full scikit-learn `Pipeline` and `ColumnTransformer` on the Telecom Customer Churn dataset, covering data leakage, mixed categorical/numerical preprocessing, and tuning three different model types.
+
+8. [Mastering Search Spaces and Callbacks in sklearn-genetic-opt: Faster, Smarter Hyperparameter Tuning](https://github.com/shaw778/sklearn-genetic-opt-tutorial/blob/main/article.md)  
+   Masfiquil Islam (@shaw778) on GitHub. A hands-on guide to modeling continuous, categorical, and integer parameter spaces with `sklearn_genetic.space` and cutting wasted compute using early-stopping callbacks like `ConsecutiveStopping` and `TimerStopping`.
