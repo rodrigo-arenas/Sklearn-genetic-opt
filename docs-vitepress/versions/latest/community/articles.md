@@ -50,3 +50,6 @@ promotional.
 
 8. [Mastering Search Spaces and Callbacks in sklearn-genetic-opt: Faster, Smarter Hyperparameter Tuning](https://github.com/shaw778/sklearn-genetic-opt-tutorial/blob/main/article.md)  
    Masfiquil Islam (@shaw778) on GitHub. A hands-on guide to modeling continuous, categorical, and integer parameter spaces with `sklearn_genetic.space` and cutting wasted compute using early-stopping callbacks like `ConsecutiveStopping` and `TimerStopping`.
+
+9. [Hyperparameter Tuning Made Easy with GASearchCV](https://dev.to/shivampandey261/hyperparameter-tuning-made-easy-with-gasearchcv-26b6)  
+   Shivam Pandey (@shivampandey261) on dev.to. Walks through tuning a random forest on Iris with `GASearchCV`, from defining the search space to checking test accuracy.

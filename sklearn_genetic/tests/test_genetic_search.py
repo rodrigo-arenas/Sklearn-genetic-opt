@@ -14,9 +14,11 @@ from sklearn.metrics import make_scorer
 
 import numpy as np
 import os
+import pandas as pd
 
 from .. import (
     EvolutionConfig,
+    GAFeatureSelectionCV,
     GASearchCV,
     OptimizationConfig,
     PopulationConfig,
@@ -43,6 +45,64 @@ y = data["target"]
 X = data["data"]
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
+
+
+@pytest.mark.parametrize("search_type", [GASearchCV, GAFeatureSelectionCV])
+@pytest.mark.parametrize("multimetric", [False, True])
+def test_cv_results_dataframe(search_type, multimetric):
+    from copy import deepcopy
+    from sklearn.datasets import make_classification
+    from sklearn.exceptions import NotFittedError
+
+    samples, targets = make_classification(n_samples=48, n_features=6, random_state=0)
+    options = {}
+    if search_type is GASearchCV:
+        options["param_grid"] = {"max_depth": Integer(1, 10), "min_samples_leaf": Integer(1, 2)}
+
+    # Score the candidate configuration directly so ranks are deterministic,
+    # have ties, and point in opposite directions for the two metrics.
+    def size_score(estimator, X, y):
+        size = estimator.max_depth or estimator.n_features_in_
+        return float(min(size, 2))
+
+    def inverse_size_score(estimator, X, y):
+        return -size_score(estimator, X, y)
+
+    search = search_type(
+        DecisionTreeClassifier(random_state=0),
+        scoring={"size": size_score, "inverse": inverse_size_score} if multimetric else size_score,
+        refit="inverse" if multimetric else False,
+        cv=2,
+        population_size=20,
+        generations=0,
+        n_jobs=1,
+        random_state=3,
+        verbose=False,
+        **options,
+    )
+    if not multimetric:
+        with pytest.raises(NotFittedError):
+            search.cv_results_dataframe()
+
+    search.fit(samples, targets)
+    before = pd.DataFrame(deepcopy(search.cv_results_))
+    metric = "inverse" if multimetric else "score"
+    ranks = before[f"rank_test_{metric}"]
+    assert 1 < ranks.nunique() < len(ranks)
+    if multimetric:
+        assert not before["rank_test_size"].equals(ranks)
+    assert np.isfinite(before[f"mean_test_{metric}"]).all()
+    assert np.isfinite(before[f"std_test_{metric}"]).all()
+
+    expected = before.iloc[sorted(range(len(before)), key=ranks.iloc.__getitem__)].reset_index(
+        drop=True
+    )
+    if search_type is GAFeatureSelectionCV:
+        assert "params" not in before
+        expected["params"] = [{"features": list(mask)} for mask in expected["features"]]
+
+    pd.testing.assert_frame_equal(search.cv_results_dataframe(), expected)
+    pd.testing.assert_frame_equal(pd.DataFrame(search.cv_results_), before)
 
 
 def test_outlier_search_accepts_list_without_target():
