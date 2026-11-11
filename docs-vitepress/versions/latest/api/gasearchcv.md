@@ -83,6 +83,7 @@ candidate log contains repeated cache hits.
 | Method | Description |
 |--------|-------------|
 | `fit(X, y, callbacks=None)` | Run the genetic search |
+| `cv_results_dataframe()` | Return candidate parameters and scores as a pandas DataFrame sorted by test rank |
 | `predict(X)` | Predict using `best_estimator_` |
 | `predict_proba(X)` | Predict class probabilities (if estimator supports it) |
 | `score(X, y)` | Score using `best_estimator_` |
@@ -91,6 +92,10 @@ candidate log contains repeated cache hits.
 After `set_params(param_grid=new_space)`, the next `fit` validates and uses
 `new_space`, including changed parameter names. An explicit checkpoint resume
 restores the saved search space.
+
+`cv_results_dataframe()` uses the selected `refit` metric for multi-metric
+searches and keeps evaluation order for tied ranks. It leaves `cv_results_`
+unchanged and also works after a single-metric fit with `refit=False`.
 
 ## Example
 
@@ -115,6 +120,7 @@ search = GASearchCV(
 search.fit(X_train, y_train)
 print(search.best_params_)
 print(search.best_score_)
+print(search.cv_results_dataframe()[["params", "mean_test_score", "rank_test_score"]].head())
 ```
 
 ## See Also

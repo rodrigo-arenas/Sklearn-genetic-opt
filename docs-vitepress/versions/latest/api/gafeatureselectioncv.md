@@ -86,6 +86,7 @@ feature and respect that upper bound.
 | Method | Description |
 |--------|-------------|
 | `fit(X, y, callbacks=None)` | Run the genetic feature selection |
+| `cv_results_dataframe()` | Return feature masks and scores as a pandas DataFrame sorted by test rank |
 | `transform(X)` | Return `X` with only the selected features |
 | `get_feature_names_out(input_features=None)` | Return the selected feature names |
 | `predict(X)` | Predict using `best_estimator_` on selected features |
@@ -97,6 +98,11 @@ the candidate CV scores in `cv_results_` and from `best_score_` when finalist
 selection is enabled. With a custom scorer that includes a feature-count penalty,
 `score(X, y)` includes that penalty too; calculate an unpenalized test metric
 separately when needed.
+
+`cv_results_dataframe()` uses the selected `refit` metric for multi-metric
+searches and keeps evaluation order for tied ranks. Its `params` column contains
+each candidate's feature mask. It leaves `cv_results_` unchanged and also works
+after a single-metric fit with `refit=False`.
 
 ## Example
 
@@ -129,6 +135,7 @@ selector.fit(X_train, y_train)
 print("Selected features:", selector.support_)
 print("Best search CV accuracy:", round(np.nanmax(selector.cv_results_["mean_test_score"]), 4))
 print("Test accuracy:", round(selector.score(X_test, y_test), 4))
+print(selector.cv_results_dataframe()[["n_features", "mean_test_score", "rank_test_score"]].head())
 ```
 
 ## See Also

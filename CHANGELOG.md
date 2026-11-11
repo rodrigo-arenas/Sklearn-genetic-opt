@@ -28,6 +28,8 @@ Full release notes with code examples are in the [documentation](https://sklearn
 - `GASearchCV` and `GAFeatureSelectionCV` now reject unsupported `fit` metadata up front with a clear error naming the parameter and the wrapped estimator, instead of failing deep inside cross-validation. Estimators whose `fit` takes `**kwargs` (e.g. `Pipeline`) are left to validate at fit time, so routed keys like `clf__sample_weight` keep working (#364).
 - Added `GAFeatureSelectionCV.get_feature_names_out()` support for DataFrame column names and generated NumPy feature names.
 
+- Added `cv_results_dataframe()` to both search estimators. It returns candidate results sorted by the selected metric's rank and leaves `cv_results_` unchanged (#363).
+
 ### Bug Fixes
 
 - Both searches refresh their optimization direction after `set_params(criteria=...)`, including when reusing a fitted search. Previously evolution, hall-of-fame selection, and best-fitness history could continue using the opposite direction captured at construction. Invalid replacement criteria now raise the same error as invalid constructor values.

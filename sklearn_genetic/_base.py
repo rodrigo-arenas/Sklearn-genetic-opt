@@ -1,6 +1,7 @@
 import logging
 import pickle
 
+import pandas as pd
 from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import check_is_fitted
 
@@ -198,6 +199,23 @@ class GeneticEstimatorMixin:
             )
 
         return pop, log, gen
+
+    def cv_results_dataframe(self):
+        """Return the candidate CV results as a pandas DataFrame.
+
+        Rows are sorted by ascending test rank for the selected scoring metric
+        (the `refit` metric in a multi-metric search). Ties retain their order
+        in `cv_results_`. For feature selection, `params` contains the feature
+        mask for each candidate. The method leaves `cv_results_` unchanged and
+        also works after a single-metric fit with `refit=False`.
+        """
+        check_is_fitted(self, "cv_results_")
+        results = pd.DataFrame(self.cv_results_)
+        if "features" in results:
+            results["params"] = [{"features": list(mask)} for mask in results["features"]]
+        return results.sort_values(
+            f"rank_test_{self.refit_metric}", kind="stable", ignore_index=True
+        )
 
     def _run_search(self, evaluate_candidates):
         pass  # noqa
