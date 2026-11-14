@@ -27,4 +27,4 @@ or wording if you can.
 ## Notes for contributors
 
 Anything that makes this easier to pick up (related pages, the writing-style
-guide in `CLAUDE.md`, etc.).
+guide in `AGENTS.md`, etc.).
