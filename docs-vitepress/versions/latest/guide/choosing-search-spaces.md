@@ -599,7 +599,7 @@ The default cold start uses Latin hypercube sampling to produce a diverse, well-
 | Strong domain knowledge about good values | `warm_start_configs` from prior knowledge |
 
 :::tip Warm-start configs must be within the search space bounds
-A warm-start config is silently skipped if any value is out of bounds for its dimension or not in the `choices` list for a `Categorical`. Verify your configs against `list(search.param_grid.keys())` and the declared bounds before fitting. See [Troubleshooting](./troubleshooting#warm-start-configs-are-ignored).
+Warm-start configs are checked at fit time. A key that isn't in `param_grid`, or a value outside an `Integer`/`Continuous` dimension's bounds or not in a `Categorical` dimension's `choices`, raises a `ValueError`. Omitted parameters are allowed and filled by sampling. Verify your configs against `list(search.param_grid.keys())` and the declared bounds before fitting. See [Troubleshooting](./troubleshooting#warm-start-config-errors).
 :::
 
 ---
