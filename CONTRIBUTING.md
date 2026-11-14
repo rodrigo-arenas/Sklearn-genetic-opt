@@ -131,6 +131,43 @@ Run the coverage check used by CI:
 pytest sklearn_genetic/ --cov-fail-under=95 --cov=./ --cov-report=term-missing:skip-covered
 ```
 
+Run focused tests while you work:
+
+```bash
+# Install the test dependencies once. This is the test group alone: the plotting
+# and MLflow test modules need their own groups, see below.
+python -m pip install -e ".[test]"
+
+# One file: the scheduler tests
+pytest sklearn_genetic/schedules/tests/test_schedules.py
+
+# One test, chosen by name
+pytest sklearn_genetic/schedules/tests/test_schedules.py -k scheduler_reset
+
+# One test, by its node id
+pytest sklearn_genetic/schedules/tests/test_schedules.py::test_scheduler_reset
+```
+
+Substitute the file your change touches; the `-k` and node-id forms need the file
+to be named too. Pointing `pytest` at the whole package collects
+`sklearn_genetic/tests/test_plots.py` and `test_mlflow.py`, which import
+`matplotlib` and `mlflow`: without those groups collection fails and no test runs
+at all. If you would rather run the package-wide command, install the groups the
+modules need (`pip install -e ".[test,plot,mlflow]"`) or leave the modules out:
+
+```bash
+pytest sklearn_genetic/ -k scheduler_reset \
+  --ignore=sklearn_genetic/tests/test_plots.py \
+  --ignore=sklearn_genetic/tests/test_mlflow.py
+```
+
+A focused run is for the loop, and it is also what a pull request handoff needs:
+that is what `AGENTS.md`'s "Validation proportional to the change" asks for. The
+full suite and the coverage gate above belong to the merge or release step, and
+for a Markdown-only change neither runs: validate the formatting, the paths and
+the links instead. CI runs the whole suite and the coverage gate as part of
+merging, so they do not have to be repeated to open a pull request.
+
 Build the package and check the generated distribution metadata:
 
 ```bash
@@ -203,7 +240,7 @@ We encourage you to follow these guidelines:
 * The changes should come with their respective tests and documentation
 * Describe why you are proposing those changes
 * Please run Black to keep the formatting style.
-* Make sure all the tests are passing by running `pytest sklearn_genetic/` in the root of the project.
+* Run the checks proportional to your change, as [AGENTS.md](AGENTS.md) describes: the affected tests while you work, and the full suite with its coverage gate before a merge or a release. A Markdown-only change needs its formatting, paths and links checked, not the Python suite.
 * We can not merge if the tests fail.
 
 # Community Articles
