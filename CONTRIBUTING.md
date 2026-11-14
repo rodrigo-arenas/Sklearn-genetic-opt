@@ -31,6 +31,22 @@ suggestion for a good next issue to tackle.
 
 ## Local development setup
 
+### Using AI coding agents
+
+Read [AGENTS.md](AGENTS.md) before starting an AI-assisted contribution. It is the
+shared project guide for implementation, testing, documentation and delivery.
+Review generated changes yourself and include the checks you actually ran in the PR.
+
+Use the filename `AGENTS.md` (no leading dot). Confirm that your client has loaded
+it; clients without automatic support should be explicitly given this file as
+context. In Claude Code, check the loaded instructions with `/context all`.
+Current Claude Code supports `AGENTS.md`, but ancestor or local `CLAUDE.md` files
+and client settings can change which instructions load; see the
+[Claude Code instructions documentation](https://code.claude.com/docs/en/memory#agents-md).
+Keep personal agent configuration local rather than duplicating project rules.
+
+### Python environment
+
 sklearn-genetic-opt supports Python 3.12 and newer. Python 3.13 is a good
 default for local development because it can run the regular test suite and the
 TensorFlow/TensorBoard optional tests.
