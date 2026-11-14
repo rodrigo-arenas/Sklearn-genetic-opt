@@ -65,7 +65,11 @@ def parse_args(pages: dict[str, Path]) -> argparse.Namespace:
     parser.add_argument(
         "--check",
         action="store_true",
-        help="Fail if any committed page differs from the generated output",
+        help=(
+            "Run the selected generators end to end and report any failures; "
+            "does not compare generated pages with the committed files, "
+            "and may write generated output"
+        ),
     )
     return parser.parse_args()
 
