@@ -52,19 +52,24 @@ ga = GASearchCV(
 )
 ga.fit(X_train, y_train)
 
+# Mean MAE across CV folds for the selected candidate.
+best_cv_mae = -ga.best_score_
+
 pred = ga.predict(X_test)
+# MAE on held-out test data, which was not used for tuning.
 test_mae = mean_absolute_error(y_test, pred)
 
 print(f"Best CV score (neg MAE): {ga.best_score_:.4f}")
-print(f"Best CV MAE:             {-ga.best_score_:.4f}")    # negate to get MAE
-print(f"Test MAE:                {test_mae:.4f}")
+print(f"Best CV MAE:             {best_cv_mae:.4f}")
+print(f"Held-out test MAE:       {test_mae:.4f}")
 print("Best params:", ga.best_params_)
 ```
 
 ## Key Points
 
-- **`neg_mean_absolute_error`**: sklearn maximizes scoring functions, so it negates MAE. The best score will be a large negative number close to 0.
-- **Negate to read**: `test_mae = -ga.best_score_` gives the actual MAE.
+- **`neg_mean_absolute_error`**: sklearn maximizes scoring functions, so it negates MAE. A score of -2 is better than -5 because the MAE is smaller. The best score depends on the data and model; it need not be close to zero.
+- **Cross-validation MAE**: `best_cv_mae = -ga.best_score_` is the selected candidate's mean MAE across the validation folds used for hyperparameter selection.
+- **Held-out test MAE**: `test_mae = mean_absolute_error(y_test, pred)` evaluates predictions on the test set after tuning. Keep this estimate separate from the CV MAE; do not use the test set to select hyperparameters.
 - **`KFold` not `StratifiedKFold`**: For regression there are no classes to stratify.
 - **MAE vs RMSE**: MAE is robust to outliers (linear penalty). RMSE penalizes large errors more (squared). Choose based on whether large errors matter disproportionately.
 
