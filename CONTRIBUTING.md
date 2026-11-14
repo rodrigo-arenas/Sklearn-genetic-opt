@@ -161,8 +161,12 @@ pytest sklearn_genetic/ -k scheduler_reset \
   --ignore=sklearn_genetic/tests/test_mlflow.py
 ```
 
-A focused run is for the loop. CI runs the whole suite and the coverage gate
-above, so run that before you open the pull request.
+A focused run is for the loop, and it is also what a pull request handoff needs:
+that is what `AGENTS.md`'s "Validation proportional to the change" asks for. The
+full suite and the coverage gate above belong to the merge or release step, and
+for a Markdown-only change neither runs: validate the formatting, the paths and
+the links instead. CI runs the whole suite and the coverage gate as part of
+merging, so they do not have to be repeated to open a pull request.
 
 Build the package and check the generated distribution metadata:
 
@@ -236,7 +240,7 @@ We encourage you to follow these guidelines:
 * The changes should come with their respective tests and documentation
 * Describe why you are proposing those changes
 * Please run Black to keep the formatting style.
-* Make sure all the tests are passing by running `pytest sklearn_genetic/` in the root of the project.
+* Run the checks proportional to your change, as [AGENTS.md](AGENTS.md) describes: the affected tests while you work, and the full suite with its coverage gate before a merge or a release. A Markdown-only change needs its formatting, paths and links checked, not the Python suite.
 * We can not merge if the tests fail.
 
 # Community Articles
