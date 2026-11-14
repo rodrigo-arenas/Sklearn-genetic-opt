@@ -7,6 +7,8 @@ import subprocess
 import xml.etree.ElementTree as ET
 from urllib.parse import urlparse
 
+import pytest
+
 DOCS = Path(__file__).resolve().parents[1]
 SITE = "https://sklearngeneticopt.rodrigo-arenas.com"
 RELEASES = sorted(
@@ -118,3 +120,23 @@ def test_freeze_points_homepage_at_new_stable_version(tmp_path):
         if f"/versions/{old_version}/" in source:
             assert f"/versions/{next_version}/" in frozen
     assert (docs / "versions" / next_version / "guide" / "basic-usage.md").is_file()
+
+
+@pytest.mark.parametrize("script", ["examples:generate", "examples:check"])
+def test_example_npm_scripts_reach_the_generator_cli(script):
+    npm = shutil.which("npm")
+    if npm is None:
+        pytest.skip("npm is not installed")
+
+    # --help is forwarded to the generator, so this checks the entry point without
+    # running any example.
+    result = subprocess.run(
+        [npm, "run", "--silent", script, "--", "--help"],
+        cwd=DOCS,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "usage: build_docs.py" in result.stdout
