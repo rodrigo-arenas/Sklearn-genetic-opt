@@ -72,7 +72,10 @@ def _stratified_categorical_value(dimension, index, population_size):
 
 
 def _append_unique_individual(population, seen_individuals, individual_values, individual_cls):
-    individual_key = tuple(individual_values)
+    # Feature masks are already immutable binary keys. HPO values can be mixed types.
+    individual_key = (
+        individual_values if isinstance(individual_values, bytes) else tuple(individual_values)
+    )
     if individual_key in seen_individuals:
         return False
 
@@ -85,10 +88,10 @@ def _feature_mask(n_features, n_selected):
     # Sampling the excluded columns gives the same uniform mask distribution.
     dense = n_selected > n_features // 2
     count = n_features - n_selected if dense else n_selected
-    values = [int(dense)] * n_features
+    values = bytearray([dense]) * n_features
     for index in random.sample(range(n_features), k=count):
-        values[index] = int(not dense)
-    return values
+        values[index] = not dense
+    return bytes(values)
 
 
 def random_search_population(estimator, toolbox, individual_cls):

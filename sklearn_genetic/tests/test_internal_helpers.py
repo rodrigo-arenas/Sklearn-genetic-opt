@@ -373,7 +373,7 @@ def test_initialize_search_population_random_and_smart_fallbacks():
     assert smart_search_population(smart_estimator, toolbox, list) == [["gini"], ["x"]]
 
 
-def test_smart_population_warm_start_early_return_and_feature_fallback():
+def test_smart_population_warm_start_early_return_and_feature_fallback(monkeypatch):
     search_estimator = SimpleNamespace(
         estimator=DecisionTreeClassifier(),
         population_size=1,
@@ -386,6 +386,21 @@ def test_smart_population_warm_start_early_return_and_feature_fallback():
 
     feature_estimator = SimpleNamespace(population_size=2, n_features=1, max_features=1)
     assert smart_feature_population(feature_estimator, toolbox, list) == [[1], [1]]
+
+    # The first three exhaust the grid. Later duplicates remain independent chromosomes.
+    feature_estimator = SimpleNamespace(
+        population_size=10, n_features=2, max_features=None, use_cache=True
+    )
+    positions = iter([1, 0, 1, 0, 1])
+    draws = SimpleNamespace(
+        sample=lambda indices, k: [next(positions)] if k else [],
+        randint=lambda low, high: high,
+    )
+    monkeypatch.setattr("sklearn_genetic.population.random", draws)
+    masks = smart_feature_population(feature_estimator, toolbox, list)
+    assert masks == [[0, 1], [1, 0]] + [[1, 1]] * 8
+    masks[2][0] = 0
+    assert masks[3] == [1, 1]
 
 
 def test_weighted_bool_individual_uses_weighted_and_unweighted_sampling(monkeypatch):
@@ -735,14 +750,16 @@ def test_integer_local_search_reaches_all_neighbors(lower, upper, value):
     assert all(abs(count - 10000 / len(expected)) < 250 for count in observed.values())
 
 
-@pytest.mark.parametrize("cap", [3, 49997], ids=["sparse", "dense"])
-def test_wide_smart_feature_initialization_limits_temporary_memory(cap, monkeypatch):
+@pytest.mark.parametrize("cap, size, peak_arrays", [(3, 2, 8), (49997, 2, 8), (12, 16, 23)])
+def test_wide_smart_feature_initialization_limits_temporary_memory(
+    cap, size, peak_arrays, monkeypatch
+):
     import struct
     import tracemalloc
 
     width = 50000
     estimator = SimpleNamespace(
-        population_initializer="smart", population_size=2, n_features=width, max_features=cap
+        population_initializer="smart", population_size=size, n_features=width, max_features=cap
     )
     monkeypatch.setattr("sklearn_genetic.population.random", random.Random(3101))
     tracemalloc.start()
@@ -751,5 +768,5 @@ def test_wide_smart_feature_initialization_limits_temporary_memory(cap, monkeypa
         _, peak = tracemalloc.get_traced_memory()
     finally:
         tracemalloc.stop()
-    assert [sum(mask) for mask in population] == [1, cap]
-    assert peak < 8 * width * struct.calcsize("P")
+    assert [sum(mask) for mask in population] == np.rint(np.linspace(1, cap, size)).tolist()
+    assert peak < peak_arrays * width * struct.calcsize("P")

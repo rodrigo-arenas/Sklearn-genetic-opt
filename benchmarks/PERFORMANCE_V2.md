@@ -1553,3 +1553,26 @@ quality claim. The clear measured speedup applies to initialization.
 
 The [timings, allocation measurements and reproduction script](results/performance-v2/smart-columns.json)
 include the environment and per-seed full-fit results.
+
+### Memory used to detect duplicate feature masks
+
+The smart initializer now constructs each mask as an immutable sequence of
+bytes for its duplicate check. Iterating that sequence still supplies the
+integer genes for a mutable DEAP individual. The set of seen masks previously
+retained one tuple entry per feature per unique mask during initialization.
+
+With 16 individuals, 50,000 columns and a cap of 12, peak traced Python
+allocation during initialization dropped from 13,202,907 to 7,202,771 bytes.
+Median creation time fell from 8.45 to 2.88 ms. With 4,096 columns, peak
+allocation fell from 1,084,251 to 592,595 bytes at cap 12 and from 1,084,419
+to 646,366 bytes at cap 4,096. Peak allocation is measured separately from
+the five alternating timing pairs and includes the returned population.
+
+Each paired initializer run produced identical masks in identical order and
+left the Python random generator in the same state. Five paired full fits
+with eight individuals, 4,096 columns, cap 12 and one generation produced
+identical candidate masks, CV scores, selected supports and holdout
+predictions. Median full-fit time was 285.7 ms previously and 306.8 ms with
+the compact representation on this machine. The measured benefit is confined
+to the initialization phase. See the [raw measurements and reproduction
+script](results/performance-v2/compact-mask-keys.json).
