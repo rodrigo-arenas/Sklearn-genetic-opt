@@ -2380,7 +2380,11 @@ class GAFeatureSelectionCV(
             self.__dict__.pop(attribute, None)
 
         _check_feature_names(self, X, reset=True)
-        self.X_, self.y_ = check_X_y(X, y, accept_sparse=True) if y is not None else (X, None)
+        # Keep compressed inputs in place; other sparse formats need column slicing.
+        sparse_formats = ("csc", "csr")
+        self.X_, self.y_ = (
+            check_X_y(X, y, accept_sparse=sparse_formats) if y is not None else (X, None)
+        )
         self.groups_ = groups
         self._fit_params = fit_params
         _check_fit_params_supported(self.estimator, fit_params)
@@ -2393,7 +2397,7 @@ class GAFeatureSelectionCV(
                 if "ensure_all_finite" in inspect.signature(check_array).parameters
                 else "force_all_finite"
             )
-            self.X_ = check_array(X, accept_sparse=True, **{finite_arg: False})
+            self.X_ = check_array(X, accept_sparse=sparse_formats, **{finite_arg: False})
             self.y_ = np.zeros(self.X_.shape[0])
 
         self.n_features = self.X_.shape[1]

@@ -99,6 +99,10 @@ feature and respect that upper bound.
 | `predict_proba(X)` | Predict class probabilities |
 | `score(X, y)` | Score the selected features with the configured scorer, or the `refit` metric for multi-metric scoring |
 
+With a sparse-compatible estimator, you can pass a SciPy sparse matrix directly to
+`fit`. The selector keeps CSR and CSC training matrices in their original formats
+and converts other sparse formats, including COO, to CSC before selecting columns.
+
 `score(X, y)` evaluates the refitted estimator on new data, so it can differ from
 the candidate CV scores in `cv_results_` and from `best_score_` when finalist
 selection is enabled. With a custom scorer that includes a feature-count penalty,

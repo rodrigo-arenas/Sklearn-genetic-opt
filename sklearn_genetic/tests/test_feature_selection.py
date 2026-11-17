@@ -1,6 +1,7 @@
 import pytest
 from functools import partial
 from deap import tools
+from scipy import sparse
 import pandas as pd
 from sklearn.base import BaseEstimator, OutlierMixin, clone
 from sklearn.datasets import load_iris, load_diabetes
@@ -155,6 +156,31 @@ def test_outlier_selection_accepts_array_like_without_target(as_dataframe):
         np.testing.assert_array_equal(
             selector.get_feature_names_out(), frame.columns.to_numpy()[selector.get_support()]
         )
+
+
+@pytest.mark.parametrize("outlier", [False, True])
+def test_feature_selection_handles_sparse_coo(outlier):
+    X, y = load_iris(return_X_y=True)
+    model = (
+        IsolationForest(n_estimators=5, random_state=0)
+        if outlier
+        else DecisionTreeClassifier(random_state=0)
+    )
+    selector = GAFeatureSelectionCV(
+        model, cv=2, population_size=4, generations=0, n_jobs=1, random_state=0, verbose=False
+    )
+    coo = sparse.coo_matrix(X)
+    target = None if outlier else y
+    compressed = coo.tocsc() if outlier else coo.tocsr()
+    reference = clone(selector).fit(compressed, target)
+    selector.fit(coo, target)
+    assert selector.X_.format == "csc"
+    assert reference.X_.format == compressed.format
+    np.testing.assert_array_equal(selector.get_support(), reference.get_support())
+    transformed = selector.transform(coo)
+    assert sparse.issparse(transformed)
+    np.testing.assert_array_equal(transformed.toarray(), X[:, reference.get_support()])
+    np.testing.assert_array_equal(selector.predict(coo), reference.predict(compressed))
 
 
 def test_outlier_selection_preserves_detector_nan_policy():
