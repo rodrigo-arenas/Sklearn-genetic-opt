@@ -11,7 +11,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.datasets import load_digits
 from sklearn.model_selection import train_test_split
 
-from ... import GASearchCV
+from ... import GAFeatureSelectionCV, GASearchCV
 from ...space import Integer, Continuous
 from .. import (
     ProgressBar,
@@ -185,6 +185,28 @@ def test_consecutive_callback():
     with pytest.raises(Exception) as excinfo:
         callback()
     assert str(excinfo.value) == "logbook parameter must be provided"
+
+
+@pytest.mark.parametrize("criteria", ["min", "max"])
+@pytest.mark.parametrize(
+    "metric", ["fitness", "fitness_best", "fitness_min", "fitness_max", "fitness_std"]
+)
+def test_consecutive_callback_uses_search_direction(criteria, metric):
+    callback = ConsecutiveStopping(generations=2, metric=metric)
+    searches = [
+        GASearchCV(
+            DecisionTreeClassifier(), param_grid={"max_depth": Integer(1, 3)}, criteria=criteria
+        ),
+        GAFeatureSelectionCV(DecisionTreeClassifier(), criteria=criteria),
+    ]
+    for current in (1, 2, 3, 4):
+        logbook = Logbook()
+        for value in (2, 3, current):
+            logbook.record(**{metric: value})
+        expected = current >= 3 if criteria == "min" and metric != "fitness_std" else current <= 2
+        for search in searches:
+            assert callback(logbook=logbook, estimator=search) == expected
+            assert callback(record=logbook[-1], logbook=logbook, estimator=search) == expected
 
 
 @pytest.mark.parametrize("generations", ["3", None, object()])

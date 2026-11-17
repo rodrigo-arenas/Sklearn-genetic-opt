@@ -61,7 +61,7 @@ ThresholdStopping(threshold=0.98, metric="fitness_max")
 
 ## ConsecutiveStopping
 
-Stops if the metric fails to improve for `N` consecutive generations.
+Compares the current value with each of the previous `N` values and stops if it improves on none of them. Score metrics follow the search criterion: lower values improve a minimizing search and higher values improve a maximizing search. For `fitness_std`, an increase in dispersion counts as improvement in either direction.
 
 ```python
 ConsecutiveStopping(generations, metric="fitness")
