@@ -22,7 +22,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from sklearn_genetic import GAFeatureSelectionCV
 
 
-def run_pair(seed, interaction, pair_coverage=False):
+def run_pair(seed, interaction, pair_coverage=False, score_guided=False):
     rng = np.random.default_rng(seed)
     signal = sorted(rng.choice(16, size=2, replace=False).tolist())
 
@@ -103,37 +103,54 @@ def run_pair(seed, interaction, pair_coverage=False):
         known_support=evaluate(signal),
     )
 
-    if pair_coverage:
+    if pair_coverage or score_guided:
         history = dict(list(genetic.items())[:6])
-        covered = {pair for mask in history for pair in combinations(mask, 2)}
         candidates = {size: list(combinations(range(X.shape[1]), size)) for size in range(1, 5)}
         pool_rng = np.random.default_rng(seed + 20000)
         for random_mask in list(control)[6:]:
             available = [mask for mask in candidates[len(random_mask)] if mask not in history]
             pool = pool_rng.choice(len(available), size=min(16, len(available)), replace=False)
-            mask = max(
-                (available[idx] for idx in pool),
-                key=lambda candidate: sum(
-                    pair not in covered for pair in combinations(candidate, 2)
-                ),
-            )
+            proposals = [available[idx] for idx in pool]
+            if score_guided:
+                # Two observations at the running mean shrink sparse column estimates.
+                center = np.mean(list(history.values()))
+                evidence = np.zeros(X.shape[1])
+                observations = np.zeros(X.shape[1])
+                for mask, score in history.items():
+                    evidence[list(mask)] += score - center
+                    observations[list(mask)] += 1
+                weights = evidence / (2 + observations)
+                mask = max(proposals, key=lambda candidate: weights[list(candidate)].sum())
+            else:
+                covered = {pair for mask in history for pair in combinations(mask, 2)}
+                mask = max(
+                    proposals,
+                    key=lambda candidate: sum(
+                        pair not in covered for pair in combinations(candidate, 2)
+                    ),
+                )
             history[mask] = cv_score(mask)
-            covered.update(combinations(mask, 2))
-        result["pair_coverage"] = summary(history)
+        result["score_guided" if score_guided else "pair_coverage"] = summary(history)
     return result
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("output", type=Path)
-    parser.add_argument(
+    policies = parser.add_mutually_exclusive_group()
+    policies.add_argument(
         "--pair-coverage", action="store_true", help="Test pair coverage on six new dataset seeds."
+    )
+    policies.add_argument(
+        "--score-guided", action="store_true", help="Rank proposals using earlier mask CV scores."
     )
     args = parser.parse_args()
     seeds = range(2201, 2207) if args.pair_coverage else range(2101, 2105)
+    if args.score_guided:
+        seeds = range(3201, 3207)
     with threadpool_limits(1):
         rows = [
-            run_pair(seed, interaction, args.pair_coverage)
+            run_pair(seed, interaction, args.pair_coverage, args.score_guided)
             for seed in seeds
             for interaction in (False, True)
         ]

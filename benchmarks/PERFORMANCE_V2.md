@@ -1872,3 +1872,44 @@ Full-fit times include estimator training and vary between repetitions.
 The [final allocation measurements](results/performance-v2/binary-diversity-final-memory.json)
 and [final full-fit records](results/performance-v2/binary-diversity-final-fits.json)
 include reproduction scripts and per-run measurements.
+
+## Selecting masks using scores of previously evaluated subsets
+
+This pilot tested whether the columns in high-scoring masks are worth trying
+again. Six new dataset seeds (3201–3206) used the additive and XOR label
+rules from the known-support experiment. All three policies started with the
+same six masks and inner CV scores. The genetic arm continued with the
+library operators. The two other arms evaluated the same sequence of mask
+sizes. Random search drew each new subset uniformly. The score-guided policy
+drew up to 16 unseen alternatives of that size and evaluated one.
+
+For each column, the policy summed the previous mask scores minus the
+running mean over masks containing that column. It divided by the number
+of such masks plus two, shrinking estimates for rarely sampled columns
+toward zero. It selected the proposed subset with the largest sum of column
+estimates. Each arm used 24 distinct masks and 72 training-fold fits. No
+holdout labels or known signal identities entered proposal generation.
+
+| Label rule | Search | Final masks containing both signal columns | Mean held-out balanced accuracy |
+| --- | --- | ---: | ---: |
+| Additive | Genetic | 4/6 | 0.8571 |
+| Additive | Random | 2/6 | 0.7858 |
+| Additive | Score-guided | 5/6 | 0.8857 |
+| XOR | Genetic | 2/6 | 0.6239 |
+| XOR | Random | 2/6 | 0.6245 |
+| XOR | Score-guided | 2/6 | 0.6197 |
+
+For these seeds the score-guided arm recovered both additive signals more
+often than either comparator. On XOR, all three methods recovered the pair
+twice. Score-guided minus random balanced accuracy ranged from −0.401 to
++0.365 across the six XOR datasets. Each arm used only one search seed per
+dataset, so this experiment cannot separate dataset variability from search
+variability. The result supports testing transfer before changing defaults.
+
+The [per-mask trajectories and held-out scores](results/performance-v2/score-guided-masks.json)
+can be regenerated using the [known-support runner](results/performance-v2/known-support.py)
+with the following arguments from the repository root.
+
+```powershell
+.\.venv\Scripts\python.exe benchmarks/results/performance-v2/known-support.py --score-guided benchmarks/results/performance-v2/score-guided-masks.json
+```
