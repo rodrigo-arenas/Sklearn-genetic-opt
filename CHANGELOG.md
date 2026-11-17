@@ -7,6 +7,7 @@ Full release notes with code examples are in the [documentation](https://sklearn
 - Smart feature selection reuses initial mask draws for padding when the population exceeds the entire cached search space. Seeded populations in this case can differ from earlier versions.
 
 - Smart initialization in `GASearchCV` varies fractional categorical allocations across search seeds while retaining exact stratified counts when the configured priors fit the available slots.
+- Equal positive categorical priors now produce the same seeded smart-initialization draws as uniform sampling over the eligible choices, including when some choices have zero weight.
 
 - Feature selection computes generation diversity for wide binary masks one row at a time and stores packed masks to count unique candidates.
 

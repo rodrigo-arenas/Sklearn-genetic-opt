@@ -115,6 +115,50 @@ def test_search_default_omits_train_cv_scores():
     assert scored_rows and set(scored_rows) == {30}
 
 
+@pytest.mark.parametrize("slots", [4, 10])
+def test_uniform_categorical_priors_match_uniform_initialization(slots):
+    choices = list(range(2, 18, 2))
+    dimensions = [
+        Categorical(choices),
+        Categorical(choices, priors=[0.125] * 8),
+        Categorical(list(range(1, 17)), priors=[0, 0.125] * 8),
+    ]
+    candidates = []
+    for dimension in dimensions:
+        search = GASearchCV(
+            DecisionTreeClassifier(random_state=0),
+            param_grid={"min_samples_leaf": dimension, "ccp_alpha": Continuous(0.001, 0.01)},
+            cv=2,
+            population_size=slots,
+            generations=0,
+            random_state=42,
+            n_jobs=1,
+            verbose=False,
+        ).fit(X_train[:40], y_train[:40])
+        candidates.append(search.cv_results_["params"])
+    assert candidates[0] == candidates[1] == candidates[2]
+
+
+def test_smart_initialization_stratifies_nearly_equal_categorical_priors():
+    delta = 2**-24
+    priors = [0.125 + delta, 0.125 - delta] + [0.125] * 6
+    search = GASearchCV(
+        DecisionTreeClassifier(random_state=0),
+        param_grid={
+            "min_samples_leaf": Categorical(list(range(2, 10)), priors=priors),
+            "ccp_alpha": Continuous(0.001, 0.01),
+        },
+        cv=2,
+        population_size=4,
+        generations=0,
+        random_state=42,
+        n_jobs=1,
+        verbose=False,
+    ).fit(X_train[:40], y_train[:40])
+    # Each adjacent pair accounts for exactly one quarter of the total weight.
+    assert {(p["min_samples_leaf"] - 2) // 2 for p in search.cv_results_["params"]} == set(range(4))
+
+
 @pytest.mark.parametrize("kind", ["parameters", "features"])
 @pytest.mark.parametrize("criteria", ["max", "min"])
 def test_differential_evolution_search_improves_with_bounded_evaluations(kind, criteria):

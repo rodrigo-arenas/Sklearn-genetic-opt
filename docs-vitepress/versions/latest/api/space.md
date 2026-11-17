@@ -85,6 +85,8 @@ Categorical(choices, priors=None, distribution="choice", random_state=None)
 
 For example, `Categorical(["gini", "entropy"], priors=[0.75, 0.25])` assigns three quarters of the sampling probability to Gini. Smart initialization stratifies the weighted draws across the available population slots. With four slots this allocation gives three Gini draws and one entropy draw before duplicate removal. With fewer slots, the search seed controls which categories receive the fractional slots. Warm starts and estimator defaults are added separately.
 
+When all positive weights are equal, the stratified draws use the same seeded sample as `priors=None` over the eligible choices. If fewer slots remain than eligible choices, any subset of the requested size can be drawn.
+
 **Example:**
 
 ```python

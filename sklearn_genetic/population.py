@@ -132,22 +132,25 @@ def smart_search_population(estimator, toolbox, individual_cls):
         if isinstance(dimension, Categorical):
             if not remaining:
                 continue
-            if dimension.priors is None:
-                # Sample the full domain, cycling only when more slots are available.
-                choices = random.sample(
-                    range(len(dimension.choices)), k=min(remaining, len(dimension.choices))
-                )
+            eligible = range(len(dimension.choices))
+            weights = None
+            if dimension.priors is not None:
+                priors = np.asarray(dimension.priors, dtype=float)
+                eligible = np.flatnonzero(priors).tolist()
+                weights = priors[eligible]
+            if weights is None or np.all(weights == weights[0]):
+                # Sample equal-weight choices uniformly without replacement per cycle.
+                choices = random.sample(eligible, k=min(remaining, len(eligible)))
                 indices = [choices[index % len(choices)] for index in range(remaining)]
             else:
                 # Systematic sampling gives each stratum the same random offset.
-                positive = np.flatnonzero(dimension.priors)
-                cumulative = np.cumsum(np.asarray(dimension.priors, dtype=float)[positive])
+                cumulative = np.cumsum(weights)
                 boundaries = cumulative / cumulative[-1] * remaining
                 ends = np.floor(boundaries).astype(int)
                 fractions = boundaries - ends
                 if np.any(fractions):
                     ends += random.random() < fractions
-                indices = np.repeat(positive, np.diff(ends, prepend=0)).tolist()
+                indices = np.repeat(eligible, np.diff(ends, prepend=0)).tolist()
             # Independent strata prevent unrelated categorical genes from
             # being locked into the same repeating combinations.
             random.shuffle(indices)
