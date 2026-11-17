@@ -77,7 +77,10 @@ def _history_frame(estimator, source="history", fields=None):
             raise ValueError(
                 f"fields not found in {source}: {missing}. Available fields include: {list(frame.columns)}"
             )
-        frame = frame.loc[:, list(fields)]
+        columns = list(fields)
+        if source == "history" and "gen" in frame and "gen" not in columns:
+            columns.append("gen")
+        frame = frame.loc[:, columns]
 
     return frame
 

@@ -344,6 +344,33 @@ def test_candidate_scores_keep_distinct_rows_with_identical_display_labels():
         plt.close(fig)
 
 
+@pytest.mark.parametrize("diagnostic", [plot_convergence, plot_diversity, plot_optimizer_events])
+def test_diagnostics_use_recorded_generations(diagnostic):
+    from matplotlib import pyplot as plt
+
+    generations = [4, 7, 12]
+    estimator = SimpleNamespace(
+        history={
+            "gen": generations,
+            "fitness_best": [0.6, 0.7, 0.7],
+            "genotype_diversity": [0.8, 0.5, 0.2],
+            "stagnation_generations": [0, 0, 1],
+            "random_immigrants": [0, 2, 0],
+        }
+    )
+    fig, ax = plt.subplots()
+    try:
+        diagnostic(estimator, ax=ax)
+        if diagnostic is plot_optimizer_events:
+            np.testing.assert_array_equal(ax.collections[0].get_offsets()[:, 0], [7])
+        else:
+            assert len(fig.axes) == (2 if diagnostic is plot_diversity else 1)
+            for axis in fig.axes:
+                np.testing.assert_array_equal(axis.lines[0].get_xdata(), generations)
+    finally:
+        plt.close(fig)
+
+
 def test_plot_convergence_and_diversity():
     convergence = plot_convergence(evolved_estimator)
     assert convergence.get_title() == "Convergence"

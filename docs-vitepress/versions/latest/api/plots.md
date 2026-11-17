@@ -68,6 +68,12 @@ plot_search_overview(search)
 
 Returns a 2x2 array of `matplotlib.axes.Axes`.
 
+The convergence, diversity and optimizer-event panels use the generation numbers in
+`search.history["gen"]`, including gaps in a filtered history. To see how many
+candidate cross-validations the search actually ran, inspect
+`search.fit_stats_["cross_validate_calls"]`. Repeated candidates can reuse a cached
+score, so successive generations can have different evaluation costs.
+
 ## Object-oriented API
 
 Use `SearchPlotter` when you want a compact, sklearn-style object around a fitted search.
