@@ -1826,3 +1826,49 @@ mask and held-out predictions.
 The [allocation measurements](results/performance-v2/binary-diversity-memory.json)
 and [paired search timings](results/performance-v2/binary-diversity-stream-fits.json)
 include the individual observations and reproduction scripts.
+
+### Integrated feature-selector results
+
+Feature selection now uses row-at-a-time counting on native binary masks wider
+than 16 columns. Smaller or non-native masks use the generic calculation.
+Hyperparameter search continues to use its original diversity routine.
+
+The first integrated version checked each bit in a Python generator. On 64
+distinct masks of 8192 columns it reduced peak allocation to 333 KiB, but
+increased median calculation time from 34.04 to 43.45 ms. Profiling the
+validation step led to separate bulk checks of integer types and binary
+values. The [initial integrated allocation measurements](results/performance-v2/binary-diversity-integrated-memory.json)
+and [initial full fits](results/performance-v2/binary-diversity-integrated-fits.json)
+are retained for comparison.
+
+The final implementation repeated the allocation experiment above. Entries
+show generic / integrated medians for one diversity calculation.
+
+| Population | Columns | Distinct masks | Peak traced allocation (KiB) | Time (ms) |
+| ---: | ---: | ---: | ---: | ---: |
+| 8 | 16 | 8 | 3.6 / 3.6 | 0.04 / 0.04 |
+| 8 | 16 | 2 | 2.8 / 2.8 | 0.04 / 0.04 |
+| 8 | 4096 | 8 | 257.1 / 138.0 | 7.91 / 1.89 |
+| 8 | 4096 | 2 | 161.9 / 134.3 | 7.04 / 1.60 |
+| 32 | 4096 | 32 | 1027.5 / 152.3 | 10.85 / 6.54 |
+| 32 | 4096 | 4 | 161.9 / 135.4 | 11.18 / 6.79 |
+| 64 | 8192 | 64 | 4100.8 / 333.3 | 35.24 / 29.34 |
+| 64 | 8192 | 8 | 577.1 / 274.0 | 32.57 / 25.90 |
+
+For the full-fit comparison, both arms ran the same selector with either the
+generic calculation or the production feature calculation. The four earlier
+workloads used seeds 3101 through 3103 in both orders. The comparison checked
+all generation-history arrays, candidate masks and their order, CV scores,
+CV call counts, selected masks and held-out predictions across 24 pairs.
+
+| Columns | Algorithm | Median cumulative diversity time, generic / integrated (ms) | Median paired full-fit change (ms) | Faster integrated fits |
+| ---: | --- | ---: | ---: | ---: |
+| 16 | eaSimple | 0.16 / 0.16 | -1.58 | 4/6 |
+| 256 | eaMuCommaLambda | 1.39 / 0.45 | -5.73 | 4/6 |
+| 4096 | eaMuPlusLambda | 21.27 / 4.48 | -7.15 | 4/6 |
+| 4096 | eaDifferentialEvolution | 22.03 / 4.58 | -21.09 | 6/6 |
+
+Full-fit times include estimator training and vary between repetitions.
+The [final allocation measurements](results/performance-v2/binary-diversity-final-memory.json)
+and [final full-fit records](results/performance-v2/binary-diversity-final-fits.json)
+include reproduction scripts and per-run measurements.
