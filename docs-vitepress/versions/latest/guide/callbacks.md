@@ -160,7 +160,7 @@ print(logbook)
 
 ### ModelCheckpoint
 
-Saves the full estimator state (logbook + fitted model) to a pickle file after each generation.
+Saves the search configuration, generation history and runtime state, including cached candidate scores. Each successful write replaces the previous snapshot. See the [checkpoint recipe](../recipes/advanced/checkpointing) to resume a search.
 
 ```python
 from sklearn_genetic.callbacks import ModelCheckpoint
@@ -168,7 +168,7 @@ from sklearn_genetic.callbacks import ModelCheckpoint
 callback = ModelCheckpoint(checkpoint_path="./checkpoint.pkl")
 ```
 
-Restore with pickle:
+Inspect the saved state:
 
 ```python
 import pickle

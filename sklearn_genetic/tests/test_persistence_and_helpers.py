@@ -653,23 +653,49 @@ def test_checkpoint_on_step_warns_on_oserror(tmp_path, caplog):
 
 def test_checkpoint_on_step_warns_on_non_serializable_state(tmp_path, caplog):
     import logging
-    import pickle
-    from unittest.mock import patch
 
     caplog.set_level(logging.WARNING)
-    estimator = GASearchCV(
-        estimator=DecisionTreeClassifier(),
-        param_grid={"max_depth": Integer(1, 2), "min_samples_split": Integer(2, 5)},
-        cv=2,
-        scoring="accuracy",
-        population_size=4,
-        generations=2,
-    )
-    good_path = tmp_path / "checkpoint.pkl"
-    checkpoint = ModelCheckpoint(good_path)
-    with patch.object(pickle, "dump", side_effect=AttributeError("cannot pickle lambda")):
-        checkpoint.on_step(logbook=None, estimator=estimator)
+    estimator = _checkpoint_estimator()
+    estimator.fit(*load_iris(return_X_y=True))
+    path = tmp_path / "checkpoint.pkl"
+    checkpoint = ModelCheckpoint(path)
+    log = [{"gen": 0}]
+    checkpoint.on_step(logbook=log, estimator=estimator)
+    saved = path.read_bytes()
+    estimator.scoring = lambda model, X, y: 0
+    log.append({"gen": 1})
+    checkpoint.on_step(logbook=log, estimator=estimator)
     assert "Error saving checkpoint" in caplog.text
+    assert path.read_bytes() == saved
+    assert checkpoint.load()["logbook"] == [{"gen": 0}]
+    assert list(tmp_path.iterdir()) == [path]
+
+
+@pytest.mark.parametrize("cleanup_locked", [False, True])
+def test_checkpoint_preserves_snapshot_on_publish_failure(
+    tmp_path, caplog, monkeypatch, cleanup_locked
+):
+    from pathlib import Path
+
+    checkpoint = ModelCheckpoint(tmp_path / "checkpoint.pkl")
+    estimator = _checkpoint_estimator()
+    checkpoint.on_step(logbook=[{"gen": 0}], estimator=estimator)
+
+    def denied(*args, **kwargs):
+        raise PermissionError("file is locked")
+
+    with monkeypatch.context() as patch:
+        patch.setattr(Path, "replace", denied)
+        if cleanup_locked:
+            patch.setattr(Path, "unlink", denied)
+        checkpoint.on_step(logbook=[{"gen": 1}], estimator=estimator)
+
+    assert checkpoint.load()["logbook"] == [{"gen": 0}]
+    assert "Error saving checkpoint" in caplog.text
+    if cleanup_locked:
+        assert "Error removing temporary checkpoint" in caplog.text
+    else:
+        assert list(tmp_path.iterdir()) == [checkpoint.checkpoint_path]
 
 
 def test_load_raises_on_oserror(tmp_path, caplog):

@@ -13,87 +13,73 @@ You are reading the **latest (development)** docs. For stable documentation, see
 
 ## What This Solves
 
-Long searches can be interrupted (OOM, timeout, instance preemption). Checkpointing saves the search state after each generation so you can resume without re-evaluating already-visited candidates.
+Use a generation checkpoint to resume a search with its saved candidate scores
+and cumulative evaluation counts. Give each experiment its own checkpoint path.
+The first run below assumes the file does not exist.
 
-## Recipe: Save a Checkpoint
+## Save a time-limited search
 
-```python
-from sklearn.datasets import load_breast_cancer
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import StratifiedKFold, train_test_split
-
-from sklearn_genetic import GASearchCV, EvolutionConfig, RuntimeConfig
-from sklearn_genetic.callbacks import ConsecutiveStopping
-from sklearn_genetic.space import Continuous, Integer
-
-X, y = load_breast_cancer(return_X_y=True)
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, stratify=y, random_state=42
-)
-
-param_grid = {
-    "n_estimators": Integer(50, 300),
-    "max_depth":    Integer(3, 20),
-    "max_features": Continuous(0.1, 1.0),
-}
-
-cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
-
-ga = GASearchCV(
-    estimator=RandomForestClassifier(random_state=42, n_jobs=-1),
-    param_grid=param_grid,
-    scoring="roc_auc",
-    cv=cv,
-    evolution_config=EvolutionConfig(population_size=20, generations=30, elitism=True),
-    runtime_config=RuntimeConfig(n_jobs=-1, verbose=True),
-    random_state=42,
-)
-
-# checkpoint_path: file to save state after each generation
-ga.fit(
-    X_train, y_train,
-    checkpoint_path="./ga_search_checkpoint.pkl",
-    callbacks=[ConsecutiveStopping(generations=5, metric="fitness_best")],
-)
-
-print(f"Best CV ROC AUC: {ga.best_score_:.4f}")
-```
-
-## Recipe: Resume from a Checkpoint
+Run the following from a directory where you can write files.
 
 ```python
-import joblib
+from pathlib import Path
+
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+
+from sklearn_genetic import GASearchCV
+from sklearn_genetic.callbacks import ModelCheckpoint, TimerStopping
+from sklearn_genetic.space import Integer
 
 X, y = load_breast_cancer(return_X_y=True)
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, stratify=y, random_state=42
 )
+path = Path("tree-search.pkl")
 
-# Load the saved search
-ga = joblib.load("./ga_search_checkpoint.pkl")
+def make_search():
+    return GASearchCV(
+        DecisionTreeClassifier(random_state=42),
+        param_grid={"max_depth": Integer(2, 20), "min_samples_leaf": Integer(1, 16)},
+        scoring="roc_auc", cv=3, population_size=6, generations=2,
+        random_state=42, n_jobs=1, verbose=False,
+    )
 
-print(f"Resumed from generation {ga.history[-1]['gen']}")
-print(f"Best CV ROC AUC so far: {ga.best_score_:.4f}")
-
-# Continue from where it stopped — provide the same data
-ga.fit(
-    X_train, y_train,
-    checkpoint_path="./ga_search_checkpoint.pkl",
-    # Increase generations or remove early stopping to run more
-)
-
-print(f"Final best CV ROC AUC: {ga.best_score_:.4f}")
+first = make_search()
+first.fit(X_train, y_train, callbacks=[ModelCheckpoint(path), TimerStopping(total_seconds=0.01)])
+print("Last saved generation", first.history["gen"][-1])
+print("Candidate CV calls", first.fit_stats_["cross_validate_calls"])
 ```
 
-## Key Points
+## Resume from the saved file
 
-- **`checkpoint_path`**: Saves the full `GASearchCV` object (including population, history, best params) after each generation using `joblib.dump`.
-- **Same data required**: Resume with the same `X_train`, `y_train` and `cv` splits. Different data produces incorrect results.
-- **`random_state` preserved**: The checkpoint restores the PRNG state, so resumed generations are deterministic.
-- **Cache hits**: Evaluated candidates from the checkpoint are cached — they won't be re-evaluated on resume.
-- **File size**: Checkpoints include the full population. For large estimators, this can be 10–100 MB.
+Recreate the same data, split and search definition if you start a new Python
+session. Leave out the short timer to allow more evaluations. Pass a checkpoint callback pointing to the existing file on the next
+`fit`. The generation log continues from its last saved entry.
+
+```python
+checkpoint = ModelCheckpoint(path)
+previous = checkpoint.load()
+last_generation = previous["logbook"][-1]["gen"]
+previous_calls = previous["runtime_state"]["fit_stats_"]["cross_validate_calls"]
+
+resumed = make_search()
+resumed.fit(X_train, y_train, callbacks=[checkpoint])
+print("Generation before and after resume", last_generation, resumed.history["gen"][-1])
+print("Additional candidate CV calls", resumed.fit_stats_["cross_validate_calls"] - previous_calls)
+```
+
+With caching enabled, the resumed search reuses saved candidate scores. Use
+the same training rows in the same order, CV splits and scoring rule so those
+scores remain comparable. A resume initializes a population and restores the
+recorded history, cache and supported schedule state. Its sequence of proposals
+can differ from a single uninterrupted run.
+
+Each successful checkpoint replaces the previous snapshot. If serialization
+fails, the callback logs a warning and the previous file remains available.
+To keep a fitted estimator for prediction, use the search object's `save`
+method after `fit`.
 
 ## See Also
 

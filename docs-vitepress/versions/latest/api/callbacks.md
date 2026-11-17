@@ -135,7 +135,7 @@ logbook = load("./logbook.pkl")
 
 ## ModelCheckpoint
 
-Saves the full estimator state (logbook + model state) to a pickle file after each generation.
+Saves the search configuration, generation history and runtime state, including cached candidate scores. Each successful write replaces the previous snapshot. See the [checkpoint recipe](../recipes/advanced/checkpointing) to resume a search.
 
 ```python
 ModelCheckpoint(checkpoint_path)
@@ -145,7 +145,7 @@ ModelCheckpoint(checkpoint_path)
 |-----------|------|-------------|
 | `checkpoint_path` | str or Path | File path for the checkpoint |
 
-Restore with:
+Inspect the saved state:
 
 ```python
 import pickle

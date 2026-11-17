@@ -1,6 +1,6 @@
 ---
 title: Reproducibility and Checkpointing in Hyperparameter Optimization
-description: Make genetic algorithm hyperparameter searches reproducible with random_state, checkpoint with LogbookSaver, and resume interrupted searches.
+description: Make genetic algorithm hyperparameter searches reproducible with random_state, inspect candidate logs with LogbookSaver, and resume searches with ModelCheckpoint.
 ---
 
 :::warning Development version
@@ -86,10 +86,11 @@ search.fit(X_train, y_train, callbacks=[
 ])
 
 # Load later:
-import pickle
-with open("./logbook.pkl", "rb") as f:
-    logbook = pickle.load(f)
+import joblib
+logbook = joblib.load("./logbook.pkl")
 ```
+
+To continue a search from saved candidate scores, use the [ModelCheckpoint resume recipe](../recipes/advanced/checkpointing).
 
 ## Tips & Gotchas
 

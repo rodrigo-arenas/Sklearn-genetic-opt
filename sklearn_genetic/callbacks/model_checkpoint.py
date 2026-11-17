@@ -1,8 +1,9 @@
 import logging
 import pickle
+from pathlib import Path
+from tempfile import NamedTemporaryFile
 
 from .base import BaseCallback
-from .loggers import LogbookSaver
 from copy import deepcopy
 
 logger = logging.getLogger(__name__)
@@ -14,10 +15,7 @@ class ModelCheckpoint(BaseCallback):
         self.dump_options = dump_options
 
     def on_step(self, record=None, logbook=None, estimator=None):
-        if logbook is not None and len(logbook) > 0:
-            logbook_saver = LogbookSaver(self.checkpoint_path, **self.dump_options)  # noqa
-            logbook_saver.on_step(record, logbook, estimator)
-
+        temporary_path = None
         try:
             estimator_state = estimator._checkpoint_state()
             # Runtime state is kept separate from ``estimator_state`` so the
@@ -54,11 +52,23 @@ class ModelCheckpoint(BaseCallback):
                 "logbook": deepcopy(logbook),
                 "runtime_state": runtime_state,
             }
-            with open(self.checkpoint_path, "wb") as f:
-                pickle.dump(checkpoint_data, f)
+            destination = Path(self.checkpoint_path)
+            with NamedTemporaryFile(dir=destination.parent, delete=False) as stream:
+                temporary_path = Path(stream.name)
+                pickle.dump(checkpoint_data, stream)
+            temporary_path.replace(destination)
+            temporary_path = None
         except (OSError, pickle.PicklingError, AttributeError, TypeError) as e:
             logger.warning("Error saving checkpoint to %s: %s", self.checkpoint_path, e)
             return
+        finally:
+            if temporary_path is not None:
+                try:
+                    temporary_path.unlink(missing_ok=True)
+                except OSError as error:
+                    logger.warning(
+                        "Error removing temporary checkpoint %s: %s", temporary_path, error
+                    )
 
         logger.info("Checkpoint saved to %s", self.checkpoint_path)
 

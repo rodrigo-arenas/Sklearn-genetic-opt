@@ -13,7 +13,7 @@ You are reading the **latest (development)** docs. For stable documentation, see
 
 ## What This Solves
 
-When you have a deployment pipeline with a fixed training window (e.g. must finish within 10 minutes), `TimerStopping` ends the search after the wall-clock time limit — however many generations that produces.
+Use `TimerStopping` to stop launching candidate batches once the search budget expires. Allow extra wall-clock time for a running batch, final selection and refit.
 
 ## Recipe
 
@@ -32,10 +32,10 @@ X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, stratify=y, random_state=42
 )
 
-BUDGET_SECONDS = 60   # 1 minute budget
+BUDGET_SECONDS = 2
 
 ga = GASearchCV(
-    estimator=RandomForestClassifier(random_state=42, n_jobs=-1),
+    estimator=RandomForestClassifier(random_state=42, n_jobs=1),
     param_grid={
         "n_estimators": Integer(50, 300),
         "max_depth":    Integer(3, 20),
@@ -49,7 +49,7 @@ ga = GASearchCV(
         generations=100,   # large upper limit — timer will stop it sooner
         elitism=True,
     ),
-    runtime_config=RuntimeConfig(n_jobs=-1, verbose=True),
+    runtime_config=RuntimeConfig(n_jobs=1, verbose=False),
     random_state=42,
 )
 
@@ -57,8 +57,8 @@ started = time.perf_counter()
 ga.fit(X_train, y_train, callbacks=[TimerStopping(total_seconds=BUDGET_SECONDS)])
 elapsed = time.perf_counter() - started
 
-gens_completed = ga.history[-1]["gen"]
-print(f"Ran {gens_completed} generations in {elapsed:.1f}s (budget: {BUDGET_SECONDS}s)")
+last_generation = ga.history["gen"][-1]
+print(f"Last logged generation {last_generation} after {elapsed:.1f}s (budget: {BUDGET_SECONDS}s)")
 print(f"Best CV ROC AUC: {ga.best_score_:.4f}")
 ```
 
@@ -71,7 +71,7 @@ from sklearn_genetic.callbacks import ConsecutiveStopping, TimerStopping
 ga.fit(
     X_train, y_train,
     callbacks=[
-        TimerStopping(total_seconds=120),
+        TimerStopping(total_seconds=BUDGET_SECONDS),
         ConsecutiveStopping(generations=5, metric="fitness_best"),
     ]
 )
@@ -79,10 +79,9 @@ ga.fit(
 
 ## Key Points
 
-- **Timer checks at generation boundaries**: The timer is checked after each complete generation, not mid-generation. Actual elapsed time will be slightly over the budget by one generation.
-- **`generations=100` as a fallback**: Set a large upper limit so the search runs as many generations as possible before the timer fires.
-- **`ga.history[-1]["gen"]`**: Reports the last completed generation — useful for logging how many generations ran within the budget.
-- **First generation always completes**: The timer can't interrupt mid-generation, so you always get at least one result.
+- The initial batch runs even with a very short budget, so generation zero can be the last entry.
+- Smaller candidate batches reduce the amount of work already in progress at the deadline. With `n_jobs=1`, a single expensive candidate can still take longer than the entire budget.
+- Compare `ga.fit_stats_["cross_validate_calls"]` across runs to see how many candidate evaluations the time window allowed. The elapsed time around `fit` also includes refitting.
 
 ## See Also
 
