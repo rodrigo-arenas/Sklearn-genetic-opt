@@ -495,6 +495,16 @@ def test_log_uniform_accepts_positive_lower_bound():
         assert 1e-4 <= dimension.sample() <= 1.0
 
 
+def test_seeded_fixed_log_dimension_samples_its_only_value():
+    assert Continuous(0.01, 0.01, distribution="log-uniform", random_state=0).sample() == 0.01
+
+
+@pytest.mark.parametrize("bound", [np.inf, -np.inf, 2**53 + 1, 10**400])
+def test_fixed_continuous_bound_requires_an_exact_finite_float(bound):
+    with pytest.raises(ValueError, match="finite, exactly representable"):
+        Continuous(bound, bound)
+
+
 @pytest.mark.parametrize("weights", [np.array([1.0, 2.0]), np.array([1.0, np.nan])])
 @pytest.mark.parametrize("random_state", [0, np.random.RandomState(3), np.random.default_rng(3)])
 def test_warm_start_accepts_cloned_nested_estimator_configuration(random_state, weights):

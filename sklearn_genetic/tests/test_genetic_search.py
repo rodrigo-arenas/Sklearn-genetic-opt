@@ -191,6 +191,28 @@ def test_differential_evolution_rejects_small_population_before_evaluation(kind)
         search.fit(X_train[:40], y_train[:40])
 
 
+def test_fixed_log_dimension_preserves_distinct_smart_candidates():
+    search = GASearchCV(
+        DecisionTreeClassifier(random_state=0),
+        param_grid={
+            "criterion": Categorical(["gini", "entropy"], priors=[0.75, 0.25]),
+            "ccp_alpha": Continuous(0.01, 0.01, distribution="log-uniform"),
+        },
+        warm_start_configs=[{"criterion": "gini", "ccp_alpha": 0.01}],
+        population_size=2,
+        generations=0,
+        random_state=2,
+        cv=2,
+        n_jobs=1,
+        verbose=False,
+    ).fit(X_train[:40], y_train[:40])
+    assert {(p["criterion"], p["ccp_alpha"]) for p in search.cv_results_["params"]} == {
+        ("gini", 0.01),
+        ("entropy", 0.01),
+    }
+    assert search.search_space_exhausted_
+
+
 @pytest.mark.parametrize("kind", ["parameters", "features"])
 @pytest.mark.parametrize(
     "algorithm", ["eaSimple", "eaMuPlusLambda", "eaMuCommaLambda", "eaDifferentialEvolution"]
@@ -235,6 +257,7 @@ def test_search_stops_after_evaluating_entire_finite_space(kind, algorithm, use_
                 "max_depth": Integer(1, 2),
                 "criterion": Categorical(["gini", "entropy", "entropy"]),
                 "ccp_alpha": Continuous(0, 0),
+                "min_impurity_decrease": Continuous(0.01, 0.01, distribution="log-uniform"),
             },
             **common,
         )

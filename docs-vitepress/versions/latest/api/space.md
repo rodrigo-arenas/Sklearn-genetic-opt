@@ -50,6 +50,11 @@ Continuous(lower, upper, distribution="uniform")
 | `upper` | float | — | Maximum value |
 | `distribution` | str | `"uniform"` | Sampling distribution: `"uniform"` or `"log-uniform"` |
 
+Equal bounds hold a continuous parameter fixed. For example,
+`Continuous(0.01, 0.01, distribution="log-uniform")` always proposes 0.01
+while other dimensions evolve. A fixed continuous value must be finite and
+exactly representable as a float. Log-uniform bounds must both be positive.
+
 Use `distribution="log-uniform"` for parameters that span orders of magnitude (learning rates, regularization strengths):
 
 ```python

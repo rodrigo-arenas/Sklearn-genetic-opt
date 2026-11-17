@@ -4,6 +4,7 @@ Full release notes with code examples are in the [documentation](https://sklearn
 
 ## Unreleased
 
+- Fixed sampling of log-uniform continuous dimensions with equal bounds. Smart initialization now recognizes the same fixed value in warm-start and generated candidates, preserving room for distinct configurations.
 - Candidate score, ranking and fold plots now honor the search's minimization or maximization criterion and omit non-finite means. Horizontal charts show the best candidate at the top, and identical display labels retain separate bars.
 - Fixed population growth in `eaSimple` when the initial population contains duplicates and the elite archive grows during evolution. Both search estimators now keep archived elites within the configured population budget.
 

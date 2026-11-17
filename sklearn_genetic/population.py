@@ -48,6 +48,8 @@ def _sample_dimension_from_unit(dimension, value):
         return int(np.clip(sampled, dimension.lower, dimension.upper))
 
     if isinstance(dimension, Continuous):
+        if dimension.lower == dimension.upper:
+            return dimension.sample()
         if dimension.distribution == "log-uniform" and dimension.lower > 0:
             log_lower = np.log(dimension.lower)
             log_upper = np.log(dimension.upper)
