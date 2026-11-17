@@ -2234,12 +2234,12 @@ class GAFeatureSelectionCV(
         return cv_results
 
     def _evaluate_individual(self, individual, n_jobs=None):
-        self._repair_individual(individual)
+        # Both evaluation entry points repair the mask before cache lookup.
         bool_individual = np.array(individual, dtype=bool)
 
         current_generation_params = {"features": bool_individual}
 
-        n_selected_features = np.sum(individual)
+        n_selected_features = np.count_nonzero(bool_individual)
 
         max_features = getattr(self, "max_features", None)
 
