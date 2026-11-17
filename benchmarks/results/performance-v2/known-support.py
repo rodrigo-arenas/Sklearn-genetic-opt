@@ -1,4 +1,4 @@
-"""Compare feature searches on independently generated datasets with known support."""
+"""Compare feature proposal policies at matched budgets on synthetic and real datasets."""
 
 import argparse
 import json
@@ -10,9 +10,11 @@ from pathlib import Path
 
 import numpy as np
 from sklearn.base import clone
+from sklearn.datasets import load_diabetes, load_wine
+from sklearn.linear_model import LogisticRegression, Ridge
 from sklearn.feature_selection import SelectKBest, f_classif
-from sklearn.metrics import balanced_accuracy_score
-from sklearn.model_selection import StratifiedKFold, cross_val_score
+from sklearn.metrics import get_scorer
+from sklearn.model_selection import KFold, StratifiedKFold, cross_val_score, train_test_split
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
@@ -36,10 +38,47 @@ def run_pair(seed, interaction, pair_coverage=False, score_guided=False):
     test, labels = sample(1000)
     cv = list(StratifiedKFold(3, shuffle=True, random_state=seed).split(X, y))
     model = make_pipeline(StandardScaler(), SVC(C=2))
+    result = compare(
+        X,
+        y,
+        test,
+        labels,
+        cv,
+        model,
+        "balanced_accuracy",
+        seed,
+        pair_coverage,
+        score_guided,
+        signal,
+    )
+    return dict(task="xor" if interaction else "additive", signal=signal, **result)
+
+
+def run_real(task, split_seed, seed):
+    classification = task == "wine"
+    X, y = (load_wine if classification else load_diabetes)(return_X_y=True)
+    X, test, y, labels = train_test_split(
+        X, y, test_size=0.25, random_state=split_seed, stratify=y if classification else None
+    )
+    splitter = StratifiedKFold if classification else KFold
+    cv = list(splitter(3, shuffle=True, random_state=split_seed).split(X, y))
+    model = make_pipeline(
+        StandardScaler(), LogisticRegression(max_iter=300) if classification else Ridge()
+    )
+    metric = "balanced_accuracy" if classification else "r2"
+    return dict(
+        task=task,
+        split_seed=split_seed,
+        metric=metric,
+        **compare(X, y, test, labels, cv, model, metric, seed, False, True),
+    )
+
+
+def compare(X, y, test, labels, cv, model, metric, seed, pair_coverage, score_guided, signal=None):
     search = GAFeatureSelectionCV(
         model,
         cv=cv,
-        scoring="balanced_accuracy",
+        scoring=metric,
         max_features=4,
         population_size=6,
         generations=3,
@@ -65,24 +104,28 @@ def run_pair(seed, interaction, pair_coverage=False, score_guided=False):
                 X[:, columns],
                 y,
                 cv=cv,
-                scoring="balanced_accuracy",
+                scoring=metric,
                 n_jobs=1,
                 error_score="raise",
             ).mean()
         )
 
     while len(control) < len(genetic):
-        columns = tuple(sorted(draw.choice(16, size=draw.integers(1, 5), replace=False).tolist()))
+        columns = tuple(
+            sorted(draw.choice(X.shape[1], size=draw.integers(1, 5), replace=False).tolist())
+        )
         if columns not in control:
             control[columns] = cv_score(columns)
 
     def evaluate(columns):
         fitted = clone(model).fit(X[:, columns], y)
-        return dict(
+        result = dict(
             columns=list(columns),
-            recovered=len(set(columns).intersection(signal)),
-            holdout=float(balanced_accuracy_score(labels, fitted.predict(test[:, columns]))),
+            holdout=float(get_scorer(metric)(fitted, test[:, columns], labels)),
         )
+        if signal is not None:
+            result["recovered"] = len(set(columns).intersection(signal))
+        return result
 
     def summary(history):
         winner = max(history, key=lambda mask: (history[mask], -len(mask)))
@@ -92,16 +135,10 @@ def run_pair(seed, interaction, pair_coverage=False, score_guided=False):
             proposals=[dict(columns=list(mask), cv=score) for mask, score in history.items()],
         )
 
-    univariate = SelectKBest(f_classif, k=2).fit(X, y).get_support(indices=True).tolist()
-    result = dict(
-        seed=seed,
-        task="xor" if interaction else "additive",
-        signal=signal,
-        genetic=summary(genetic),
-        random=summary(control),
-        filter=evaluate(univariate),
-        known_support=evaluate(signal),
-    )
+    result = dict(seed=seed, genetic=summary(genetic), random=summary(control))
+    if signal is not None:
+        univariate = SelectKBest(f_classif, k=2).fit(X, y).get_support(indices=True).tolist()
+        result.update(filter=evaluate(univariate), known_support=evaluate(signal))
 
     if pair_coverage or score_guided:
         history = dict(list(genetic.items())[:6])
@@ -144,16 +181,29 @@ if __name__ == "__main__":
     policies.add_argument(
         "--score-guided", action="store_true", help="Rank proposals using earlier mask CV scores."
     )
+    policies.add_argument(
+        "--real-transfer",
+        action="store_true",
+        help="Test the score-guided rule on Wine and Diabetes.",
+    )
     args = parser.parse_args()
     seeds = range(2201, 2207) if args.pair_coverage else range(2101, 2105)
     if args.score_guided:
         seeds = range(3201, 3207)
     with threadpool_limits(1):
-        rows = [
-            run_pair(seed, interaction, args.pair_coverage, args.score_guided)
-            for seed in seeds
-            for interaction in (False, True)
-        ]
+        if args.real_transfer:
+            rows = [
+                run_real(task, split_seed, seed)
+                for task in ("wine", "diabetes")
+                for split_seed in (3301, 3302)
+                for seed in (3311, 3312, 3313)
+            ]
+        else:
+            rows = [
+                run_pair(seed, interaction, args.pair_coverage, args.score_guided)
+                for seed in seeds
+                for interaction in (False, True)
+            ]
     payload = dict(
         python=platform.python_version(),
         versions={p: version(p) for p in ("scikit-learn", "numpy", "deap")},

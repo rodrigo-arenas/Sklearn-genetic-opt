@@ -1913,3 +1913,39 @@ with the following arguments from the repository root.
 ```powershell
 .\.venv\Scripts\python.exe benchmarks/results/performance-v2/known-support.py --score-guided benchmarks/results/performance-v2/score-guided-masks.json
 ```
+
+### Transfer of score-guided proposals to Wine and Diabetes
+
+The same proposal rule was applied to two real datasets, retaining the
+four-column cap, six shared initial masks, 16 alternatives per proposal
+and two-observation shrinkage. Wine used standardized logistic regression
+and balanced accuracy. Diabetes used standardized Ridge and R². Both
+pipelines fitted their scaler inside each training fold.
+
+Two 75/25 splits per dataset used seeds 3301 and 3302. Each split used
+three search seeds (3311–3313), with fixed inner folds and an untouched
+outer holdout. The table averages the three search seeds within each split.
+Each scored search prefix used 24 distinct masks and 72 inner fold fits.
+Random and score-guided proposals matched mask sizes at every step.
+
+| Dataset and outer split | Genetic | Random | Score-guided |
+| --- | ---: | ---: | ---: |
+| Wine 3301 | 0.87469 | 0.94568 | 0.92284 |
+| Wine 3302 | 0.94938 | 0.96296 | 0.95988 |
+| Diabetes 3301 | 0.51355 | 0.48196 | 0.48075 |
+| Diabetes 3302 | 0.51091 | 0.50150 | 0.48145 |
+
+The score-guided policy lost to the size-matched random control on average
+on each of the four outer splits. Across their twelve search-seed pairs it
+won three, tied two and lost seven. Relative to the genetic arm it improved
+mean balanced accuracy on both Wine splits and lost on all six Diabetes
+runs. The transfer evidence does not support promoting this rule to a
+library default. Three search seeds per split measure search variability;
+they do not provide three independent test sets.
+
+The [candidate trajectories and held-out scores](results/performance-v2/score-guided-transfer.json)
+can be regenerated from the repository root with the same benchmark runner:
+
+```powershell
+.\.venv\Scripts\python.exe benchmarks/results/performance-v2/known-support.py --real-transfer benchmarks/results/performance-v2/score-guided-transfer.json
+```
