@@ -4,10 +4,11 @@ description: Compare GASearchCV, Optuna TPE and random search by candidate evalu
 ---
 <script setup>
 import holdoutResultsUrl from '../../../../benchmarks/results/performance-v2/holdout-by-budget.json?url'
+import resumeResultsUrl from '../../../../benchmarks/results/performance-v2/resume-equal-cost.json?url'
 </script>
 
 :::warning Development version
-This is the **latest (dev)** documentation. It may contain unreleased features or breaking changes. For the stable release, use [version 0.13](/versions/0.13/).
+This is the **latest (dev)** documentation. It may contain unreleased features or breaking changes. For the stable release, use [the stable documentation](/stable/).
 :::
 
 
@@ -39,6 +40,18 @@ With three CV folds, six additional distinct candidates cost 18 more fold fits. 
 Each point averages the same three outer partitions. Each panel has its own vertical scale. At each budget, inner CV chose the winner before the holdout was scored. In 11 of the 12 genetic runs the winner stayed the same between budgets 12 and 18. Four of those runs later found a higher inner CV score. The holdout score ultimately rose in two of the eleven runs, fell in two and tied in seven. A single flat interval gave little guidance on when to stop.
 
 <a :href="holdoutResultsUrl" download="holdout-by-budget.json">Download the per-split candidates, CV scores and holdout scores (JSON)</a>.
+
+## Does resuming a checkpoint change search quality at the same budget?
+
+At 24 distinct candidates, resumed and uninterrupted searches tied on held-out score in 10 of 12 comparisons. At 36 candidates, feature selection on Wine improved on one split and tied on two. On Diabetes it scored lower on two splits and tied on one.
+
+![Resumed minus continuous held-out score for each of three splits. At 36 candidates the Wine feature selector gained 0.0852 balanced accuracy on one split. The Diabetes feature selector lost 0.0207 and 0.0064 R² on two splits.](../../../../benchmarks/results/performance-v2/resume-equal-cost.svg)
+
+Each cell subtracts the uninterrupted winner's score from the resumed winner's score on the same 25% outer holdout. Positive values favor resuming. Wine used a decision tree and balanced accuracy. Diabetes used Ridge and R². The three outer splits within each dataset overlap.
+
+Both methods started with the same 17 or 18 candidates and their CV scores. At budgets of 24 and 36, each method used 72 and 108 inner fold fits respectively to rank the candidates in its prefix. Only then was the winner refitted and scored on the holdout. These budgets compare solution quality per evaluation. They do not measure elapsed time.
+
+<a :href="resumeResultsUrl" download="resume-equal-cost.json">Download per-split winners, scores and the reproduction script (JSON)</a>. To resume your own search, see [Resume from a checkpoint](../recipes/advanced/checkpointing).
 
 ## Why Bayesmark?
 
