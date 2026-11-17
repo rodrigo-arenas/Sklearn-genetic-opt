@@ -1177,3 +1177,28 @@ New-Item -ItemType Directory -Force -Path .agent-runs | Out-Null
 .\.venv\Scripts\python.exe -c "import json,pathlib; r=json.loads(pathlib.Path('benchmarks/results/performance-v2/single-axis-log-crossover.json').read_text()); pathlib.Path('.agent-runs/log-cross.py').write_text(r['reproduction_script'], encoding='utf-8')"
 .\.venv\Scripts\python.exe .agent-runs/log-cross.py .agent-runs/reproduced-log-cross.json
 ```
+
+## Repeated fold work in finalist validation
+
+At commit `1d73370`, a diagnostic on Breast Cancer/logistic regression and
+Diabetes/Ridge used both estimators, three finalists per search, one worker
+and seed 1407. Each search used two preliminary folds. Final validation ran
+three folds in a different order. One fold had identical training and
+validation indices in both stages. Another shared its validation indices
+but used only every second training observation in the preliminary stage.
+
+| Task | Search | Exactly repeated fold scores / finalists | Scores changed with reduced training / finalists |
+| --- | --- | ---: | ---: |
+| Breast Cancer | HPO | 3/3 | 2/3 |
+| Breast Cancer | Features | 3/3 | 3/3 |
+| Diabetes | HPO | 3/3 | 3/3 |
+| Diabetes | Features | 3/3 | 3/3 |
+
+Reusing the exactly matching folds would have avoided 12 of 36 finalist
+fold fits in this configuration. These are potential savings in the final
+stage only. The diagnostic ran the current implementation and measured
+score agreement, not an optimized implementation or elapsed-time savings.
+A reuse experiment should match ordered training and validation indices
+inside the same fit, use deterministic estimators and scorers, and preserve
+fresh evaluation for stochastic searches. The outer holdout was excluded
+from the diagnostic. See the [reproduction script](results/performance-v2/fold-reuse-audit.py).
