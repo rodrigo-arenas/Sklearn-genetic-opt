@@ -1778,3 +1778,51 @@ defaults were unchanged during this pilot. The prototype allocates a dense
 byte matrix; peak memory was not measured here. The
 [paired timings and script](results/performance-v2/binary-diversity-pilot.json)
 include time inside the diversity calculation and the full fit.
+
+### Peak allocation and a row-at-a-time alternative
+
+The stacked prototype holds both the encoded rows and a joined matrix.
+A second prototype accumulates per-column counts one row at a time and
+stores packed bits for each distinct mask. It computes the equal-pair
+numerator in integer arithmetic before applying the original division and
+subtraction. All three methods returned exactly the same diversity record
+for each population below.
+
+Each triple lists the current, stacked and row-at-a-time methods in that
+order. Peak traced allocations exclude the input population, which was built
+before tracing. Each peak is the median of three separate calls with
+`tracemalloc`. Timing used six orders without tracing. The masks contain
+equiprobable zeros and ones; duplicate rows were copied from the same seed's
+templates. These measurements cover allocations visible to Python's tracer.
+
+| Population | Columns | Distinct rows | Median peak (KiB) | Median time per call (ms) |
+| ---: | ---: | ---: | --- | --- |
+| 8 | 16 | 8 | 3.6 / 3.2 / 6.9 | 0.044 / 0.027 / 0.045 |
+| 8 | 16 | 2 | 2.8 / 3.2 / 6.3 | 0.041 / 0.025 / 0.042 |
+| 8 | 4096 | 8 | 257.1 / 225.6 / 138.0 | 7.872 / 0.252 / 0.278 |
+| 8 | 4096 | 2 | 161.9 / 225.6 / 134.3 | 7.414 / 0.240 / 0.266 |
+| 32 | 4096 | 32 | 1027.5 / 418.6 / 152.3 | 10.913 / 0.771 / 0.903 |
+| 32 | 4096 | 4 | 161.9 / 418.6 / 135.4 | 10.980 / 0.753 / 0.882 |
+| 64 | 8192 | 64 | 4100.8 / 1347.9 / 333.3 | 34.737 / 3.187 / 3.575 |
+| 64 | 8192 | 8 | 577.1 / 1347.9 / 274.0 | 33.454 / 3.038 / 3.185 |
+
+The joined matrix exceeded the current implementation's peak on all three
+wide populations with repeated masks. Row-at-a-time counting reduced the
+peak on all six wide populations, at a small time cost relative to stacking.
+On 16 columns it used more traced memory than either alternative.
+
+The complete-fit comparison repeated the four earlier workloads with fresh
+seeds 3002 through 3004. All 24 pairs matched on every generation-history
+field, evaluated masks in order, mean CV scores, CV call count, selected
+mask and held-out predictions.
+
+| Columns | Algorithm | Median paired full-fit change (ms) | Faster row-at-a-time fits |
+| ---: | --- | ---: | ---: |
+| 16 | eaSimple | +0.68 | 2/6 |
+| 256 | eaMuCommaLambda | -1.58 | 5/6 |
+| 4096 | eaMuPlusLambda | -14.66 | 3/6 |
+| 4096 | eaDifferentialEvolution | -15.62 | 6/6 |
+
+The [allocation measurements](results/performance-v2/binary-diversity-memory.json)
+and [paired search timings](results/performance-v2/binary-diversity-stream-fits.json)
+include the individual observations and reproduction scripts.
