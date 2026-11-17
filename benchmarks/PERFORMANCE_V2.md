@@ -1076,3 +1076,47 @@ New-Item -ItemType Directory -Force -Path .agent-runs/performance-v2 | Out-Null
 .\.venv\Scripts\python.exe -c "import json,pathlib; a=json.loads(pathlib.Path('benchmarks/results/performance-v2/hpo-optuna-transfer.json').read_text(encoding='utf-8')); pathlib.Path('.agent-runs/performance-v2/hpo-optuna-transfer.py').write_text(a['reproduction_script'], encoding='utf-8')"
 .\.venv\Scripts\python.exe .agent-runs/performance-v2/hpo-optuna-transfer.py
 ```
+
+## Evolution after a shared initial population
+
+How much does evolution add once six candidates have already been scored? This
+pilot compares two continuations of exactly the same six smart-initialized
+candidates. One runs the default evolutionary operators for two generations.
+The other samples unseen hyperparameter combinations from the same distributions,
+or feature masks with uniformly sampled size from one through half the columns
+and uniformly sampled columns at that size. Both continuations select the
+earliest candidate attaining the best mean inner CV score.
+
+Each pair uses identical three-fold splits and the same number of distinct CV
+evaluations, including initialization. Seeds 1201–1203 control the 25% outer
+split and search. Holdout scores are computed after selection. All fits use
+one worker and one native thread. The random continuation shares the recorded
+initial scores, so this experiment compares proposal quality per fit and does
+not measure end-to-end time.
+
+| Dataset / estimator | Search | Distinct candidates per method | Initial holdout | Evolved holdout | Random continuation holdout |
+|---|---|---:|---:|---:|---:|
+| Breast Cancer / logistic regression | Hyperparameters | 29–30 | .995318 | .996296 | .995528 |
+| Breast Cancer / logistic regression | Features | 30 | .991684 | .990287 | .993920 |
+| Diabetes / Ridge | Hyperparameters | 29–30 | .491372 | .492728 | .492926 |
+| Diabetes / Ridge | Features | 29–30 | .437615 | .480064 | .464764 |
+
+![Paired holdout differences. Each dot is one split and diamonds are means. Ridge feature selection favors evolution on two splits and random search on one. Logistic feature selection favors random search on two splits and ties on one.](results/performance-v2/shared-initialization.svg)
+
+Entries are three-split mean ROC AUC for classification and R² for regression.
+For Ridge masks, random continuation had the higher mean inner CV score
+(.461750 versus .454231), while evolution had the higher mean holdout score.
+For logistic masks, evolution reduced mean holdout AUC from its initial value.
+The sign depends on the task, and the three outer partitions overlap. These
+observations support retaining the existing defaults and testing space-specific
+proposals on reserved datasets before changing them.
+
+The [paired results and reproduction script](results/performance-v2/shared-initialization.json)
+include the winners, environment and best CV scores at 6, 12, 18, 24 and the
+final number of distinct candidates. Run from the repository root:
+
+```powershell
+New-Item -ItemType Directory -Force -Path .agent-runs | Out-Null
+.\.venv\Scripts\python.exe -c "import json,pathlib; p=pathlib.Path('benchmarks/results/performance-v2/shared-initialization.json'); pathlib.Path('.agent-runs/paired.py').write_text(json.loads(p.read_text(encoding='utf-8'))['reproduction_script'], encoding='utf-8')"
+.\.venv\Scripts\python.exe .agent-runs/paired.py .agent-runs/reproduced.json
+```
