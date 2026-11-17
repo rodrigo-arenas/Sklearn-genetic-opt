@@ -1374,3 +1374,37 @@ isolates proposal behavior; it does not compare quality at equal fit cost.
 
 The [per-seed results and reproduction script](results/performance-v2/fixed-dimension-de.json)
 include the initial candidates, winners, target copies and actual CV calls.
+
+### Quality after the same twelve distinct evaluations
+
+A follow-up paired the two crossover implementations at a fixed budget of
+12 distinct configurations, including six shared initial candidates. Every
+pair reached that budget. Each method therefore used 36 inner fold fits
+for the measured prefix and one full-training refit for the outer score.
+The harness ran longer trajectories and evaluated the winner from each
+prefix afterwards. Later candidates had no role in choosing that winner.
+
+The search varied one log-uniform regularization parameter and kept three
+other parameters fixed. Zero crossover probability exercised the mandatory
+donor coordinate on every trial. Mutation and diversity control were
+disabled. Seeds 1901–1903 controlled the search and the 25% outer split.
+Wine added a multiclass task with scaled logistic regression, the LBFGS
+solver and balanced accuracy.
+
+| Task and holdout metric | Proposals to reach 12, previous | Proposals to reach 12, current | Previous holdout | Current holdout |
+| --- | ---: | ---: | ---: | ---: |
+| Breast Cancer, ROC AUC | 86 | 37 | .998323 | .998113 |
+| Diabetes, R² | 143 | 36 | .491539 | .490931 |
+| Wine, balanced accuracy | 91 | 37 | .981481 | .981481 |
+
+Proposal counts include initialization and sum the three splits per task.
+Holdout scores are three-split means. Across all nine pairs, the current
+operator reached the same distinct-evaluation budget in 110 proposals
+versus 320 previously. At that budget it won one holdout comparison, tied
+five and lost three. These results demonstrate fewer repeated proposals.
+They provide no evidence of a general quality gain per model fitted.
+Wall-clock time was outside this experiment.
+
+The [matched trajectories and reproduction script](results/performance-v2/de-equal-fits.json)
+record each distinct value, its first proposal position and inner CV score,
+as well as the winner and external score for each prefix.

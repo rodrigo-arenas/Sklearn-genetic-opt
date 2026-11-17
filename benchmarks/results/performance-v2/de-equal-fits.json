@@ -1,0 +1,1327 @@
+{
+  "baseline_commit": "e62e1e8b280615919e02a25d61723c90a7349e67",
+  "current_commit": "d83606d0b87835164be46f71ff7ea5ed1750e879",
+  "python": "3.12.0",
+  "versions": {
+    "scikit-learn": "1.9.1",
+    "numpy": "2.5.3",
+    "deap": "1.4.4"
+  },
+  "rows": [
+    {
+      "task": "classification_lr",
+      "scoring": "roc_auc",
+      "seed": 1901,
+      "crossover": 0,
+      "baseline": {
+        "evaluations": 12,
+        "proposals": 34,
+        "available": 20,
+        "winner": 0.07508389647139135,
+        "cv": 0.9945586884319129,
+        "holdout": 0.9960167714884696,
+        "trajectory": [
+          {
+            "value": 1.0,
+            "proposal": 1,
+            "cv": 0.9912373683838598
+          },
+          {
+            "value": 0.07508389647139135,
+            "proposal": 2,
+            "cv": 0.9945586884319129
+          },
+          {
+            "value": 26.91144527232455,
+            "proposal": 3,
+            "cv": 0.9882693802558123
+          },
+          {
+            "value": 0.0035534046140780814,
+            "proposal": 4,
+            "cv": 0.9910253692318566
+          },
+          {
+            "value": 1.0161778462064355,
+            "proposal": 5,
+            "cv": 0.9910960356158576
+          },
+          {
+            "value": 0.0010958462136616217,
+            "proposal": 6,
+            "cv": 0.9881987138718111
+          },
+          {
+            "value": 0.00010000000000000009,
+            "proposal": 8,
+            "cv": 0.983181400607731
+          },
+          {
+            "value": 2.344311456089519,
+            "proposal": 12,
+            "cv": 0.9899653734718394
+          },
+          {
+            "value": 0.5123462126575231,
+            "proposal": 28,
+            "cv": 0.9924386969118789
+          },
+          {
+            "value": 7.1599022363680325,
+            "proposal": 31,
+            "cv": 0.9889760440958236
+          },
+          {
+            "value": 32.6561458851276,
+            "proposal": 32,
+            "cv": 0.9881280474878101
+          },
+          {
+            "value": 0.14192621807667405,
+            "proposal": 34,
+            "cv": 0.9944880220479119
+          }
+        ]
+      },
+      "current": {
+        "evaluations": 12,
+        "proposals": 13,
+        "available": 76,
+        "winner": 0.03399086740337205,
+        "cv": 0.9947000211999152,
+        "holdout": 0.9953878406708595,
+        "trajectory": [
+          {
+            "value": 1.0,
+            "proposal": 1,
+            "cv": 0.9912373683838598
+          },
+          {
+            "value": 0.07508389647139135,
+            "proposal": 2,
+            "cv": 0.9945586884319129
+          },
+          {
+            "value": 26.91144527232455,
+            "proposal": 3,
+            "cv": 0.9882693802558123
+          },
+          {
+            "value": 0.0035534046140780814,
+            "proposal": 4,
+            "cv": 0.9910253692318566
+          },
+          {
+            "value": 1.0161778462064355,
+            "proposal": 5,
+            "cv": 0.9910960356158576
+          },
+          {
+            "value": 0.0010958462136616217,
+            "proposal": 6,
+            "cv": 0.9881987138718111
+          },
+          {
+            "value": 2.344311456089519,
+            "proposal": 7,
+            "cv": 0.9899653734718394
+          },
+          {
+            "value": 0.00010000000000000009,
+            "proposal": 8,
+            "cv": 0.983181400607731
+          },
+          {
+            "value": 0.39019703013802853,
+            "proposal": 9,
+            "cv": 0.9929333615998869
+          },
+          {
+            "value": 0.0011100061614132198,
+            "proposal": 10,
+            "cv": 0.9882693802558125
+          },
+          {
+            "value": 0.03399086740337205,
+            "proposal": 11,
+            "cv": 0.9947000211999152
+          },
+          {
+            "value": 0.025036985147863223,
+            "proposal": 13,
+            "cv": 0.994558688431913
+          }
+        ]
+      }
+    },
+    {
+      "task": "classification_lr",
+      "scoring": "roc_auc",
+      "seed": 1902,
+      "crossover": 0,
+      "baseline": {
+        "evaluations": 12,
+        "proposals": 19,
+        "available": 25,
+        "winner": 0.12538933368239472,
+        "cv": 0.994064023743905,
+        "holdout": 1.0,
+        "trajectory": [
+          {
+            "value": 1.0,
+            "proposal": 1,
+            "cv": 0.9930746943678893
+          },
+          {
+            "value": 0.47378914046192455,
+            "proposal": 2,
+            "cv": 0.993569359055897
+          },
+          {
+            "value": 7.265163558470496,
+            "proposal": 3,
+            "cv": 0.9886227121758179
+          },
+          {
+            "value": 0.0007677981715229445,
+            "proposal": 4,
+            "cv": 0.981061409087697
+          },
+          {
+            "value": 0.00728126428640632,
+            "proposal": 5,
+            "cv": 0.9881280474878101
+          },
+          {
+            "value": 0.12538933368239472,
+            "proposal": 6,
+            "cv": 0.994064023743905
+          },
+          {
+            "value": 0.007483247569714084,
+            "proposal": 7,
+            "cv": 0.9882693802558123
+          },
+          {
+            "value": 0.008038486475044961,
+            "proposal": 9,
+            "cv": 0.9884813794078157
+          },
+          {
+            "value": 21.405778022550273,
+            "proposal": 15,
+            "cv": 0.9871387181117942
+          },
+          {
+            "value": 0.0015268021436351292,
+            "proposal": 17,
+            "cv": 0.9833933997597343
+          },
+          {
+            "value": 0.00031245425575956564,
+            "proposal": 18,
+            "cv": 0.978870751183662
+          },
+          {
+            "value": 43.93525717874948,
+            "proposal": 19,
+            "cv": 0.9867853861917886
+          }
+        ]
+      },
+      "current": {
+        "evaluations": 12,
+        "proposals": 12,
+        "available": 76,
+        "winner": 0.12538933368239472,
+        "cv": 0.994064023743905,
+        "holdout": 1.0,
+        "trajectory": [
+          {
+            "value": 1.0,
+            "proposal": 1,
+            "cv": 0.9930746943678893
+          },
+          {
+            "value": 0.47378914046192455,
+            "proposal": 2,
+            "cv": 0.993569359055897
+          },
+          {
+            "value": 7.265163558470496,
+            "proposal": 3,
+            "cv": 0.9886227121758179
+          },
+          {
+            "value": 0.0007677981715229445,
+            "proposal": 4,
+            "cv": 0.981061409087697
+          },
+          {
+            "value": 0.00728126428640632,
+            "proposal": 5,
+            "cv": 0.9881280474878101
+          },
+          {
+            "value": 0.12538933368239472,
+            "proposal": 6,
+            "cv": 0.994064023743905
+          },
+          {
+            "value": 0.007483247569714084,
+            "proposal": 7,
+            "cv": 0.9882693802558123
+          },
+          {
+            "value": 0.00010000000000000009,
+            "proposal": 8,
+            "cv": 0.9773867571196383
+          },
+          {
+            "value": 0.008038486475044961,
+            "proposal": 9,
+            "cv": 0.9884813794078157
+          },
+          {
+            "value": 100.0,
+            "proposal": 10,
+            "cv": 0.9863613878877818
+          },
+          {
+            "value": 27.925176003781672,
+            "proposal": 11,
+            "cv": 0.9868560525757898
+          },
+          {
+            "value": 0.000819744591334228,
+            "proposal": 12,
+            "cv": 0.9812027418556992
+          }
+        ]
+      }
+    },
+    {
+      "task": "classification_lr",
+      "scoring": "roc_auc",
+      "seed": 1903,
+      "crossover": 0,
+      "baseline": {
+        "evaluations": 12,
+        "proposals": 33,
+        "available": 19,
+        "winner": 1.0,
+        "cv": 0.9942053565119074,
+        "holdout": 0.9989517819706499,
+        "trajectory": [
+          {
+            "value": 1.0,
+            "proposal": 1,
+            "cv": 0.9942053565119074
+          },
+          {
+            "value": 0.020520191695308394,
+            "proposal": 2,
+            "cv": 0.9910253692318566
+          },
+          {
+            "value": 97.6680819968047,
+            "proposal": 3,
+            "cv": 0.9846653946717548
+          },
+          {
+            "value": 0.00033311889712844486,
+            "proposal": 4,
+            "cv": 0.9800014133276802
+          },
+          {
+            "value": 1.4798049505457032,
+            "proposal": 5,
+            "cv": 0.9938520245919017
+          },
+          {
+            "value": 0.20648417594623766,
+            "proposal": 6,
+            "cv": 0.9938520245919017
+          },
+          {
+            "value": 0.05476949808791299,
+            "proposal": 15,
+            "cv": 0.9928626952158859
+          },
+          {
+            "value": 100.0,
+            "proposal": 21,
+            "cv": 0.9846653946717548
+          },
+          {
+            "value": 0.0749380420327454,
+            "proposal": 22,
+            "cv": 0.9934280262878948
+          },
+          {
+            "value": 0.0341677565284467,
+            "proposal": 29,
+            "cv": 0.9920146986078722
+          },
+          {
+            "value": 5.2275122117287856,
+            "proposal": 32,
+            "cv": 0.9922973641438767
+          },
+          {
+            "value": 0.028076630998420195,
+            "proposal": 33,
+            "cv": 0.9915907003038655
+          }
+        ]
+      },
+      "current": {
+        "evaluations": 12,
+        "proposals": 12,
+        "available": 77,
+        "winner": 1.0,
+        "cv": 0.9942053565119074,
+        "holdout": 0.9989517819706499,
+        "trajectory": [
+          {
+            "value": 1.0,
+            "proposal": 1,
+            "cv": 0.9942053565119074
+          },
+          {
+            "value": 0.020520191695308394,
+            "proposal": 2,
+            "cv": 0.9910253692318566
+          },
+          {
+            "value": 97.6680819968047,
+            "proposal": 3,
+            "cv": 0.9846653946717548
+          },
+          {
+            "value": 0.00033311889712844486,
+            "proposal": 4,
+            "cv": 0.9800014133276802
+          },
+          {
+            "value": 1.4798049505457032,
+            "proposal": 5,
+            "cv": 0.9938520245919017
+          },
+          {
+            "value": 0.20648417594623766,
+            "proposal": 6,
+            "cv": 0.9938520245919017
+          },
+          {
+            "value": 15.402399017675304,
+            "proposal": 7,
+            "cv": 0.989188043247827
+          },
+          {
+            "value": 0.00010000000000000009,
+            "proposal": 8,
+            "cv": 0.9787294184156597
+          },
+          {
+            "value": 0.006737027575092585,
+            "proposal": 9,
+            "cv": 0.9881280474878101
+          },
+          {
+            "value": 0.03502365396437464,
+            "proposal": 10,
+            "cv": 0.9920146986078722
+          },
+          {
+            "value": 0.0011767652906245546,
+            "proposal": 11,
+            "cv": 0.9820507384637128
+          },
+          {
+            "value": 0.05476949808791299,
+            "proposal": 12,
+            "cv": 0.9928626952158859
+          }
+        ]
+      }
+    },
+    {
+      "task": "regression_ridge",
+      "scoring": "r2",
+      "seed": 1901,
+      "crossover": 0,
+      "baseline": {
+        "evaluations": 12,
+        "proposals": 62,
+        "available": 16,
+        "winner": 59.9332294334397,
+        "cv": 0.45198525062137307,
+        "holdout": 0.488856975701667,
+        "trajectory": [
+          {
+            "value": 1.0,
+            "proposal": 1,
+            "cv": 0.45075933945245233
+          },
+          {
+            "value": 0.07508389647139135,
+            "proposal": 2,
+            "cv": 0.4506249379000911
+          },
+          {
+            "value": 1.5215363600655771,
+            "proposal": 3,
+            "cv": 0.45073716077971476
+          },
+          {
+            "value": 59.9332294334397,
+            "proposal": 4,
+            "cv": 0.45198525062137307
+          },
+          {
+            "value": 0.0035534046140780814,
+            "proposal": 5,
+            "cv": 0.45057588688098155
+          },
+          {
+            "value": 0.0011953275381779236,
+            "proposal": 6,
+            "cv": 0.4505740608235276
+          },
+          {
+            "value": 2.390706099449309,
+            "proposal": 27,
+            "cv": 0.4507353960091051
+          },
+          {
+            "value": 100.0,
+            "proposal": 30,
+            "cv": 0.44415678824883914
+          },
+          {
+            "value": 0.013270135313384631,
+            "proposal": 31,
+            "cv": 0.45058326193463083
+          },
+          {
+            "value": 0.00017372223022696685,
+            "proposal": 33,
+            "cv": 0.4505732652540415
+          },
+          {
+            "value": 0.0001344344324734959,
+            "proposal": 45,
+            "cv": 0.4505732346049299
+          },
+          {
+            "value": 0.01670313782475622,
+            "proposal": 62,
+            "cv": 0.45058581098305406
+          }
+        ]
+      },
+      "current": {
+        "evaluations": 12,
+        "proposals": 12,
+        "available": 73,
+        "winner": 22.87616025837659,
+        "cv": 0.45381602311854524,
+        "holdout": 0.4926561531884265,
+        "trajectory": [
+          {
+            "value": 1.0,
+            "proposal": 1,
+            "cv": 0.45075933945245233
+          },
+          {
+            "value": 0.07508389647139135,
+            "proposal": 2,
+            "cv": 0.4506249379000911
+          },
+          {
+            "value": 1.5215363600655771,
+            "proposal": 3,
+            "cv": 0.45073716077971476
+          },
+          {
+            "value": 59.9332294334397,
+            "proposal": 4,
+            "cv": 0.45198525062137307
+          },
+          {
+            "value": 0.0035534046140780814,
+            "proposal": 5,
+            "cv": 0.45057588688098155
+          },
+          {
+            "value": 0.0011953275381779236,
+            "proposal": 6,
+            "cv": 0.4505740608235276
+          },
+          {
+            "value": 0.00024643958801006787,
+            "proposal": 7,
+            "cv": 0.4505733219715957
+          },
+          {
+            "value": 100.0,
+            "proposal": 8,
+            "cv": 0.44415678824883914
+          },
+          {
+            "value": 0.00010000000000000009,
+            "proposal": 9,
+            "cv": 0.4505732077387252
+          },
+          {
+            "value": 0.007846750819943515,
+            "proposal": 10,
+            "cv": 0.4505791750154082
+          },
+          {
+            "value": 22.87616025837659,
+            "proposal": 11,
+            "cv": 0.45381602311854524
+          },
+          {
+            "value": 0.10504434328762262,
+            "proposal": 12,
+            "cv": 0.45064218663079286
+          }
+        ]
+      }
+    },
+    {
+      "task": "regression_ridge",
+      "scoring": "r2",
+      "seed": 1902,
+      "crossover": 0,
+      "baseline": {
+        "evaluations": 12,
+        "proposals": 50,
+        "available": 17,
+        "winner": 12.379975247126312,
+        "cv": 0.4798291308570346,
+        "holdout": 0.4289925026673299,
+        "trajectory": [
+          {
+            "value": 1.0,
+            "proposal": 1,
+            "cv": 0.4713223982897962
+          },
+          {
+            "value": 0.02989407379094089,
+            "proposal": 2,
+            "cv": 0.4659840026352137
+          },
+          {
+            "value": 10.258490075137189,
+            "proposal": 3,
+            "cv": 0.4792204376811453
+          },
+          {
+            "value": 0.01782981323252356,
+            "proposal": 4,
+            "cv": 0.46587528870884415
+          },
+          {
+            "value": 0.0007677981715229445,
+            "proposal": 5,
+            "cv": 0.4657186289029176
+          },
+          {
+            "value": 3.84300614006767,
+            "proposal": 6,
+            "cv": 0.47602051400718276
+          },
+          {
+            "value": 0.012384222244810646,
+            "proposal": 10,
+            "cv": 0.46582566290039623
+          },
+          {
+            "value": 100.0,
+            "proposal": 14,
+            "cv": 0.47262460398791956
+          },
+          {
+            "value": 0.00010000000000000009,
+            "proposal": 16,
+            "cv": 0.4657124266954314
+          },
+          {
+            "value": 0.00018519778292908575,
+            "proposal": 17,
+            "cv": 0.46571321827328127
+          },
+          {
+            "value": 12.379975247126312,
+            "proposal": 48,
+            "cv": 0.4798291308570346
+          },
+          {
+            "value": 0.14404741180711933,
+            "proposal": 50,
+            "cv": 0.46693528245812105
+          }
+        ]
+      },
+      "current": {
+        "evaluations": 12,
+        "proposals": 12,
+        "available": 56,
+        "winner": 10.258490075137189,
+        "cv": 0.4792204376811453,
+        "holdout": 0.42848035131476203,
+        "trajectory": [
+          {
+            "value": 1.0,
+            "proposal": 1,
+            "cv": 0.4713223982897962
+          },
+          {
+            "value": 0.02989407379094089,
+            "proposal": 2,
+            "cv": 0.4659840026352137
+          },
+          {
+            "value": 10.258490075137189,
+            "proposal": 3,
+            "cv": 0.4792204376811453
+          },
+          {
+            "value": 0.01782981323252356,
+            "proposal": 4,
+            "cv": 0.46587528870884415
+          },
+          {
+            "value": 0.0007677981715229445,
+            "proposal": 5,
+            "cv": 0.4657186289029176
+          },
+          {
+            "value": 3.84300614006767,
+            "proposal": 6,
+            "cv": 0.47602051400718276
+          },
+          {
+            "value": 0.03910899765883083,
+            "proposal": 7,
+            "cv": 0.4660659193318708
+          },
+          {
+            "value": 0.0005004156746220349,
+            "proposal": 8,
+            "cv": 0.46571614622076724
+          },
+          {
+            "value": 96.32824393837164,
+            "proposal": 9,
+            "cv": 0.47344985449001625
+          },
+          {
+            "value": 0.012384222244810646,
+            "proposal": 10,
+            "cv": 0.46582566290039623
+          },
+          {
+            "value": 0.03599750544038393,
+            "proposal": 11,
+            "cv": 0.46603836688018796
+          },
+          {
+            "value": 9.276570369880211,
+            "proposal": 12,
+            "cv": 0.4788935237152925
+          }
+        ]
+      }
+    },
+    {
+      "task": "regression_ridge",
+      "scoring": "r2",
+      "seed": 1903,
+      "crossover": 0,
+      "baseline": {
+        "evaluations": 12,
+        "proposals": 31,
+        "available": 20,
+        "winner": 13.756017531119603,
+        "cv": 0.43666515638779635,
+        "holdout": 0.5567677198999375,
+        "trajectory": [
+          {
+            "value": 1.0,
+            "proposal": 1,
+            "cv": 0.4339359178694903
+          },
+          {
+            "value": 5.154439109142073,
+            "proposal": 2,
+            "cv": 0.43497466597135465
+          },
+          {
+            "value": 0.0003449604924901574,
+            "proposal": 3,
+            "cv": 0.4328713276142766
+          },
+          {
+            "value": 6.421495351329107,
+            "proposal": 4,
+            "cv": 0.435245521045689
+          },
+          {
+            "value": 0.005279578723390258,
+            "proposal": 5,
+            "cv": 0.4328817414517531
+          },
+          {
+            "value": 0.28450498137745783,
+            "proposal": 6,
+            "cv": 0.4333467239194096
+          },
+          {
+            "value": 0.010910676014097785,
+            "proposal": 8,
+            "cv": 0.4328935121163015
+          },
+          {
+            "value": 13.756017531119603,
+            "proposal": 14,
+            "cv": 0.43666515638779635
+          },
+          {
+            "value": 0.08263479649042095,
+            "proposal": 20,
+            "cv": 0.4330335269995753
+          },
+          {
+            "value": 0.09676439563968492,
+            "proposal": 21,
+            "cv": 0.4330590863470071
+          },
+          {
+            "value": 0.2784972914149826,
+            "proposal": 28,
+            "cv": 0.43333882069502466
+          },
+          {
+            "value": 0.1175226421263879,
+            "proposal": 31,
+            "cv": 0.433095521005709
+          }
+        ]
+      },
+      "current": {
+        "evaluations": 12,
+        "proposals": 12,
+        "available": 76,
+        "winner": 56.950835674299846,
+        "cv": 0.4359706800802569,
+        "holdout": 0.5516550968375811,
+        "trajectory": [
+          {
+            "value": 1.0,
+            "proposal": 1,
+            "cv": 0.4339359178694903
+          },
+          {
+            "value": 5.154439109142073,
+            "proposal": 2,
+            "cv": 0.43497466597135465
+          },
+          {
+            "value": 0.0003449604924901574,
+            "proposal": 3,
+            "cv": 0.4328713276142766
+          },
+          {
+            "value": 6.421495351329107,
+            "proposal": 4,
+            "cv": 0.435245521045689
+          },
+          {
+            "value": 0.005279578723390258,
+            "proposal": 5,
+            "cv": 0.4328817414517531
+          },
+          {
+            "value": 0.28450498137745783,
+            "proposal": 6,
+            "cv": 0.4333467239194096
+          },
+          {
+            "value": 0.08500316060514998,
+            "proposal": 7,
+            "cv": 0.43303785512211906
+          },
+          {
+            "value": 0.010910676014097785,
+            "proposal": 8,
+            "cv": 0.4328935121163015
+          },
+          {
+            "value": 0.07662045805907107,
+            "proposal": 9,
+            "cv": 0.43302245524231137
+          },
+          {
+            "value": 0.014432028244100848,
+            "proposal": 10,
+            "cv": 0.4329008122299874
+          },
+          {
+            "value": 0.33919831171681253,
+            "proposal": 11,
+            "cv": 0.4334153477226413
+          },
+          {
+            "value": 56.950835674299846,
+            "proposal": 12,
+            "cv": 0.4359706800802569
+          }
+        ]
+      }
+    },
+    {
+      "task": "wine_lr",
+      "scoring": "balanced_accuracy",
+      "seed": 1901,
+      "crossover": 0,
+      "baseline": {
+        "evaluations": 12,
+        "proposals": 34,
+        "available": 20,
+        "winner": 1.0,
+        "cv": 0.9934640522875817,
+        "holdout": 0.9722222222222222,
+        "trajectory": [
+          {
+            "value": 1.0,
+            "proposal": 1,
+            "cv": 0.9934640522875817
+          },
+          {
+            "value": 0.07508389647139135,
+            "proposal": 2,
+            "cv": 0.9869281045751634
+          },
+          {
+            "value": 26.91144527232455,
+            "proposal": 3,
+            "cv": 0.9798838053740014
+          },
+          {
+            "value": 0.0035534046140780814,
+            "proposal": 4,
+            "cv": 0.9679894179894181
+          },
+          {
+            "value": 1.0161778462064355,
+            "proposal": 5,
+            "cv": 0.9934640522875817
+          },
+          {
+            "value": 0.0010958462136616217,
+            "proposal": 6,
+            "cv": 0.5880952380952381
+          },
+          {
+            "value": 0.00010000000000000009,
+            "proposal": 8,
+            "cv": 0.3333333333333333
+          },
+          {
+            "value": 2.344311456089519,
+            "proposal": 12,
+            "cv": 0.9798838053740014
+          },
+          {
+            "value": 0.5123462126575231,
+            "proposal": 28,
+            "cv": 0.9934640522875817
+          },
+          {
+            "value": 7.1599022363680325,
+            "proposal": 31,
+            "cv": 0.9798838053740014
+          },
+          {
+            "value": 32.6561458851276,
+            "proposal": 32,
+            "cv": 0.9798838053740014
+          },
+          {
+            "value": 0.14192621807667405,
+            "proposal": 34,
+            "cv": 0.9934640522875817
+          }
+        ]
+      },
+      "current": {
+        "evaluations": 12,
+        "proposals": 13,
+        "available": 70,
+        "winner": 1.0,
+        "cv": 0.9934640522875817,
+        "holdout": 0.9722222222222222,
+        "trajectory": [
+          {
+            "value": 1.0,
+            "proposal": 1,
+            "cv": 0.9934640522875817
+          },
+          {
+            "value": 0.07508389647139135,
+            "proposal": 2,
+            "cv": 0.9869281045751634
+          },
+          {
+            "value": 26.91144527232455,
+            "proposal": 3,
+            "cv": 0.9798838053740014
+          },
+          {
+            "value": 0.0035534046140780814,
+            "proposal": 4,
+            "cv": 0.9679894179894181
+          },
+          {
+            "value": 1.0161778462064355,
+            "proposal": 5,
+            "cv": 0.9934640522875817
+          },
+          {
+            "value": 0.0010958462136616217,
+            "proposal": 6,
+            "cv": 0.5880952380952381
+          },
+          {
+            "value": 2.344311456089519,
+            "proposal": 7,
+            "cv": 0.9798838053740014
+          },
+          {
+            "value": 0.00010000000000000009,
+            "proposal": 8,
+            "cv": 0.3333333333333333
+          },
+          {
+            "value": 0.39019703013802853,
+            "proposal": 9,
+            "cv": 0.9934640522875817
+          },
+          {
+            "value": 0.0011100061614132198,
+            "proposal": 10,
+            "cv": 0.6047619047619047
+          },
+          {
+            "value": 0.03399086740337205,
+            "proposal": 11,
+            "cv": 0.9869281045751634
+          },
+          {
+            "value": 0.0016523271977888002,
+            "proposal": 13,
+            "cv": 0.7947089947089947
+          }
+        ]
+      }
+    },
+    {
+      "task": "wine_lr",
+      "scoring": "balanced_accuracy",
+      "seed": 1902,
+      "crossover": 0,
+      "baseline": {
+        "evaluations": 12,
+        "proposals": 19,
+        "available": 24,
+        "winner": 0.12538933368239472,
+        "cv": 0.9934640522875817,
+        "holdout": 0.9722222222222222,
+        "trajectory": [
+          {
+            "value": 1.0,
+            "proposal": 1,
+            "cv": 0.9869281045751634
+          },
+          {
+            "value": 0.47378914046192455,
+            "proposal": 2,
+            "cv": 0.9869281045751634
+          },
+          {
+            "value": 7.265163558470496,
+            "proposal": 3,
+            "cv": 0.9872912127814089
+          },
+          {
+            "value": 0.0007677981715229445,
+            "proposal": 4,
+            "cv": 0.4777777777777778
+          },
+          {
+            "value": 0.00728126428640632,
+            "proposal": 5,
+            "cv": 0.9762682850918146
+          },
+          {
+            "value": 0.12538933368239472,
+            "proposal": 6,
+            "cv": 0.9934640522875817
+          },
+          {
+            "value": 0.007483247569714084,
+            "proposal": 7,
+            "cv": 0.9762682850918146
+          },
+          {
+            "value": 0.008038486475044961,
+            "proposal": 9,
+            "cv": 0.9855275443510738
+          },
+          {
+            "value": 21.405778022550273,
+            "proposal": 15,
+            "cv": 0.9872912127814089
+          },
+          {
+            "value": 0.0015268021436351292,
+            "proposal": 17,
+            "cv": 0.6936507936507935
+          },
+          {
+            "value": 0.00031245425575956564,
+            "proposal": 18,
+            "cv": 0.3333333333333333
+          },
+          {
+            "value": 43.93525717874948,
+            "proposal": 19,
+            "cv": 0.981118373275236
+          }
+        ]
+      },
+      "current": {
+        "evaluations": 12,
+        "proposals": 12,
+        "available": 66,
+        "winner": 0.12538933368239472,
+        "cv": 0.9934640522875817,
+        "holdout": 0.9722222222222222,
+        "trajectory": [
+          {
+            "value": 1.0,
+            "proposal": 1,
+            "cv": 0.9869281045751634
+          },
+          {
+            "value": 0.47378914046192455,
+            "proposal": 2,
+            "cv": 0.9869281045751634
+          },
+          {
+            "value": 7.265163558470496,
+            "proposal": 3,
+            "cv": 0.9872912127814089
+          },
+          {
+            "value": 0.0007677981715229445,
+            "proposal": 4,
+            "cv": 0.4777777777777778
+          },
+          {
+            "value": 0.00728126428640632,
+            "proposal": 5,
+            "cv": 0.9762682850918146
+          },
+          {
+            "value": 0.12538933368239472,
+            "proposal": 6,
+            "cv": 0.9934640522875817
+          },
+          {
+            "value": 0.007483247569714084,
+            "proposal": 7,
+            "cv": 0.9762682850918146
+          },
+          {
+            "value": 0.00010000000000000009,
+            "proposal": 8,
+            "cv": 0.3333333333333333
+          },
+          {
+            "value": 0.008038486475044961,
+            "proposal": 9,
+            "cv": 0.9855275443510738
+          },
+          {
+            "value": 100.0,
+            "proposal": 10,
+            "cv": 0.981118373275236
+          },
+          {
+            "value": 27.925176003781672,
+            "proposal": 11,
+            "cv": 0.981118373275236
+          },
+          {
+            "value": 0.000819744591334228,
+            "proposal": 12,
+            "cv": 0.5153439153439153
+          }
+        ]
+      }
+    },
+    {
+      "task": "wine_lr",
+      "scoring": "balanced_accuracy",
+      "seed": 1903,
+      "crossover": 0,
+      "baseline": {
+        "evaluations": 12,
+        "proposals": 38,
+        "available": 13,
+        "winner": 0.020520191695308394,
+        "cv": 0.9714960058097312,
+        "holdout": 1.0,
+        "trajectory": [
+          {
+            "value": 1.0,
+            "proposal": 1,
+            "cv": 0.9640885984023239
+          },
+          {
+            "value": 0.020520191695308394,
+            "proposal": 2,
+            "cv": 0.9714960058097312
+          },
+          {
+            "value": 97.6680819968047,
+            "proposal": 3,
+            "cv": 0.9714960058097312
+          },
+          {
+            "value": 0.00033311889712844486,
+            "proposal": 4,
+            "cv": 0.3333333333333333
+          },
+          {
+            "value": 1.4798049505457032,
+            "proposal": 5,
+            "cv": 0.9640885984023239
+          },
+          {
+            "value": 0.20648417594623766,
+            "proposal": 6,
+            "cv": 0.9640885984023239
+          },
+          {
+            "value": 0.05476949808791299,
+            "proposal": 15,
+            "cv": 0.9714960058097312
+          },
+          {
+            "value": 100.0,
+            "proposal": 21,
+            "cv": 0.9714960058097312
+          },
+          {
+            "value": 0.11427283541569215,
+            "proposal": 29,
+            "cv": 0.9640885984023239
+          },
+          {
+            "value": 5.2275122117287856,
+            "proposal": 32,
+            "cv": 0.9640885984023239
+          },
+          {
+            "value": 0.028076630998420195,
+            "proposal": 33,
+            "cv": 0.9714960058097312
+          },
+          {
+            "value": 1.019055583081644,
+            "proposal": 38,
+            "cv": 0.9640885984023239
+          }
+        ]
+      },
+      "current": {
+        "evaluations": 12,
+        "proposals": 12,
+        "available": 39,
+        "winner": 0.020520191695308394,
+        "cv": 0.9714960058097312,
+        "holdout": 1.0,
+        "trajectory": [
+          {
+            "value": 1.0,
+            "proposal": 1,
+            "cv": 0.9640885984023239
+          },
+          {
+            "value": 0.020520191695308394,
+            "proposal": 2,
+            "cv": 0.9714960058097312
+          },
+          {
+            "value": 97.6680819968047,
+            "proposal": 3,
+            "cv": 0.9714960058097312
+          },
+          {
+            "value": 0.00033311889712844486,
+            "proposal": 4,
+            "cv": 0.3333333333333333
+          },
+          {
+            "value": 1.4798049505457032,
+            "proposal": 5,
+            "cv": 0.9640885984023239
+          },
+          {
+            "value": 0.20648417594623766,
+            "proposal": 6,
+            "cv": 0.9640885984023239
+          },
+          {
+            "value": 15.402399017675304,
+            "proposal": 7,
+            "cv": 0.9640885984023239
+          },
+          {
+            "value": 0.00010000000000000009,
+            "proposal": 8,
+            "cv": 0.3333333333333333
+          },
+          {
+            "value": 0.006737027575092585,
+            "proposal": 9,
+            "cv": 0.9714960058097312
+          },
+          {
+            "value": 0.03502365396437464,
+            "proposal": 10,
+            "cv": 0.9714960058097312
+          },
+          {
+            "value": 0.0011767652906245546,
+            "proposal": 11,
+            "cv": 0.6243386243386243
+          },
+          {
+            "value": 0.05476949808791299,
+            "proposal": 12,
+            "cv": 0.9714960058097312
+          }
+        ]
+      }
+    }
+  ],
+  "reproduction_script": "import ast\nimport json\nimport platform\nimport random\nimport subprocess\nimport sys\nfrom importlib.metadata import version\nfrom pathlib import Path\nfrom unittest.mock import patch\n\nimport numpy as np\nfrom sklearn.base import clone\nfrom sklearn.datasets import load_wine\nfrom sklearn.metrics import get_scorer\nfrom sklearn.model_selection import train_test_split\nfrom threadpoolctl import threadpool_limits\n\nsys.path.insert(0, str(Path.cwd()))\nfrom benchmarks.benchmark_fit import SCENARIOS, make_cv\nfrom sklearn_genetic import GASearchCV, algorithms, optimizer_control\nfrom sklearn_genetic.space import Categorical, Continuous, Integer\n\nbaseline = subprocess.check_output([\"git\", \"rev-parse\", \"e62e1e8\"], text=True).strip()\npath = \"sklearn_genetic/optimizer_control.py\"\nsource = subprocess.check_output([\"git\", \"show\", f\"{baseline}:{path}\"], text=True)\nmethod = next(\n    node for node in ast.parse(source).body if getattr(node, \"name\", \"\") == \"differential_offspring\"\n)\nexec(compile(ast.Module(body=[method], type_ignores=[]), path, \"exec\"), globals())\n\n\ndef paired(task, seed, crossover):\n    sc = SCENARIOS[\"classification_lr\" if task == \"wine_lr\" else task]\n    classification = sc.task == \"classification\"\n    X, y = load_wine(return_X_y=True) if task == \"wine_lr\" else sc.loader()\n    Xtr, Xte, ytr, yte = train_test_split(\n        X, y, test_size=0.25, random_state=seed, stratify=y if classification else None\n    )\n    folds = list(make_cv(sc, 3, seed).split(Xtr, ytr))\n    prefix = \"clf__\" if classification else \"ridge__\"\n    variable = prefix + (\"C\" if classification else \"alpha\")\n    scoring = \"balanced_accuracy\" if task == \"wine_lr\" else sc.scoring\n    model = sc.estimator_builder(seed)\n    if task == \"wine_lr\":\n        model.set_params(clf__solver=\"lbfgs\")\n    rows = []\n    for operator in (differential_offspring, optimizer_control.differential_offspring):\n        params = model.get_params()\n        grid = {\n            prefix + \"fit_intercept\": Categorical([True]),\n            variable: Continuous(1e-4, 100, distribution=\"log-uniform\"),\n            prefix + \"tol\": Continuous(params[prefix + \"tol\"], params[prefix + \"tol\"]),\n        }\n        if classification:\n            grid[prefix + \"max_iter\"] = Integer(\n                params[prefix + \"max_iter\"], params[prefix + \"max_iter\"]\n            )\n        else:\n            grid[prefix + \"solver\"] = Categorical([params[prefix + \"solver\"]])\n        search = GASearchCV(\n            model,\n            param_grid=grid,\n            algorithm=\"eaDifferentialEvolution\",\n            cv=folds,\n            scoring=scoring,\n            population_size=6,\n            refit=False,\n            generations=12,\n            mutation_probability=0,\n            crossover_probability=crossover,\n            random_state=seed,\n            n_jobs=1,\n            error_score=\"raise\",\n            verbose=False,\n            diversity_control=False,\n        )\n        with patch.object(algorithms, \"differential_offspring\", operator):\n            search.fit(Xtr, ytr)\n        table = search.cv_results_\n        unique = {}\n        for proposal, (param, score) in enumerate(\n            zip(table[\"params\"], table[\"mean_test_score\"], strict=True), start=1\n        ):\n            unique.setdefault(param[variable], (proposal, float(score)))\n        assert len(unique) == search.fit_stats_[\"cross_validate_calls\"]\n        assert len(table[\"params\"]) == search.fit_stats_[\"evaluated_candidates\"]\n        rows.append(unique)\n    assert list(rows[0].items())[:6] == list(rows[1].items())[:6]\n    budget = min(12, *(len(history) for history in rows))\n    result = []\n    for history in rows:\n        prefix_items = list(history.items())[:budget]\n        winner, (_, cv) = max(prefix_items, key=lambda item: item[1][1])\n        fitted = clone(model).set_params(**{variable: winner}).fit(Xtr, ytr)\n        result.append(\n            dict(\n                evaluations=budget,\n                proposals=prefix_items[-1][1][0],\n                available=len(history),\n                winner=winner,\n                cv=cv,\n                holdout=float(get_scorer(scoring)(fitted, Xte, yte)),\n                trajectory=[dict(value=v, proposal=p, cv=s) for v, (p, s) in prefix_items],\n            )\n        )\n    rows = result\n    return dict(\n        task=task,\n        scoring=scoring,\n        seed=seed,\n        crossover=crossover,\n        baseline=rows[0],\n        current=rows[1],\n    )\n\n\nwith threadpool_limits(1):\n    rows = [\n        paired(task, seed, crossover)\n        for task in (\"classification_lr\", \"regression_ridge\", \"wine_lr\")\n        for seed in (1901, 1902, 1903)\n        for crossover in (0,)\n    ]\nprint(\n    json.dumps(\n        dict(\n            baseline_commit=baseline,\n            current_commit=subprocess.check_output([\"git\", \"rev-parse\", \"HEAD\"], text=True).strip(),\n            python=platform.python_version(),\n            versions={p: version(p) for p in (\"scikit-learn\", \"numpy\", \"deap\")},\n            rows=rows,\n            reproduction_script=Path(__file__).read_text(encoding=\"utf-8\"),\n        ),\n        indent=2,\n    )\n)\n"
+}
