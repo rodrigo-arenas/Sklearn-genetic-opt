@@ -1253,3 +1253,40 @@ repository root with the benchmark dependencies installed:
 ```powershell
 .\.venv\Scripts\python.exe benchmarks/results/performance-v2/holdout-by-budget.py holdout-by-budget.json
 ```
+
+## Exchanging features during mutation
+
+Does preserving mask size during mutation help the search find a better subset
+at the same validation cost? A pilot replaced independent bit flips with a
+uniformly chosen exchange: remove one selected column and add one previously
+unselected column. Crossover and initialization could still change mask size.
+The public estimator used its usual genetic operators in the control.
+
+Each pair started with six identical evaluated masks and allowed one to half
+the available columns. Both methods used the same seed, inner three-fold CV,
+population size, selection and crossover. We ran three generations and
+compared the first 12 and first 24 **distinct** masks from each trajectory.
+At each checkpoint, the first mask with the highest inner CV score was fitted
+on the outer training partition and scored on the reserved 25%. Each
+24-mask comparison therefore represents 72 inner fold fits per method.
+The experiment measures proposal quality per fit. Elapsed time was not measured.
+
+| Dataset and model | Holdout metric | Default at 12 | Exchange at 12 | Default at 24 | Exchange at 24 |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Breast Cancer, logistic regression | ROC AUC | .996646 | .996646 | .996087 | .994410 |
+| Diabetes, Ridge | R² | .411859 | .440002 | .415341 | .434351 |
+| Friedman1, Ridge | R² | .442013 | .442013 | .618285 | .584764 |
+
+Values are means over seeds 1501–1503. At 24 masks the exchange lost all
+three Breast Cancer comparisons. On Diabetes its higher mean came from one
+win and two losses. On Friedman1 two pairs tied and the exchange lost the
+third. The current mutation remains the default. This small cohort includes
+two regression tasks with the same estimator and overlapping outer splits.
+
+The [raw records](results/performance-v2/feature-exchange.json) include mask
+indices, CV and holdout scores for each paired checkpoint. Run the
+[experiment](results/performance-v2/feature-exchange.py) from the repository root:
+
+```powershell
+.\.venv\Scripts\python.exe benchmarks/results/performance-v2/feature-exchange.py feature-exchange.json
+```
