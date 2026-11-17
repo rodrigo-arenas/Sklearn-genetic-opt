@@ -4,6 +4,7 @@ description: Compare GASearchCV, Optuna TPE and random search by candidate evalu
 ---
 <script setup>
 import holdoutResultsUrl from '../../../../benchmarks/results/performance-v2/holdout-by-budget.json?url'
+import kernelResultsUrl from '../../../../benchmarks/results/performance-v2/default-kernel-coverage.json?url'
 import resumeResultsUrl from '../../../../benchmarks/results/performance-v2/resume-equal-cost.json?url'
 </script>
 
@@ -40,6 +41,16 @@ With three CV folds, six additional distinct candidates cost 18 more fold fits. 
 Each point averages the same three outer partitions. Each panel has its own vertical scale. At each budget, inner CV chose the winner before the holdout was scored. In 11 of the 12 genetic runs the winner stayed the same between budgets 12 and 18. Four of those runs later found a higher inner CV score. The holdout score ultimately rose in two of the eleven runs, fell in two and tied in seven. A single flat interval gave little guidance on when to stop.
 
 <a :href="holdoutResultsUrl" download="holdout-by-budget.json">Download the per-split candidates, CV scores and holdout scores (JSON)</a>.
+
+## Should a small initial population try a different kernel in every slot?
+
+In this SVM experiment, forcing a third distinct kernel changed mean held-out balanced accuracy by at most 0.18 percentage points per dataset. A repeated kernel can still be worth evaluating when another hyperparameter changes.
+
+Each `GASearchCV` run started with three candidates, including the estimator default (`rbf`, `C=1`). The search sampled from four equally weighted kernels and a log-uniform range for `C`. In 24 of 64 runs, another candidate used `rbf` at a different `C`. For each such run, we replaced that kernel with each unused kernel in turn, keeping its `C` and the other two candidates fixed. Each alternative had the same nine fold fits. Three-fold CV selected its winner before we scored it on the outer holdout.
+
+Choosing an unused kernel uniformly improved the expected holdout score in eight of those 24 runs, reduced it in two and tied in fourteen. The expectation averages the two possible replacements. The study used Iris, Wine, Breast Cancer and a 450-observation Digits subset, with two outer splits and eight search seeds per dataset. It covers the initial population only.
+
+To check coverage in your own run, inspect `cv_results_["params"]`: two entries with the same kernel and different `C` values represent distinct model fits. See the [categorical sampling rules](../api/space#categorical) or <a :href="kernelResultsUrl" download="default-kernel-coverage.json">download all candidates, splits and scores (JSON)</a>.
 
 ## Does resuming a checkpoint change search quality at the same budget?
 
