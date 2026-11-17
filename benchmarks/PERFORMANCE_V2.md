@@ -1664,3 +1664,33 @@ values, candidate scores and candidate CV counts. Final file sizes also matched
 within each pair. These measurements cover short runs on a local filesystem.
 The [raw timings and reproduction script](results/performance-v2/checkpoint-write.json)
 include each generation's write duration and file size.
+
+## Candidate coverage after repeated seeded checkpoint resumes
+
+Does a new generation number mean a resumed search explored a new candidate?
+Each segmented search ran one evolutionary generation, then resumed twice from
+its own checkpoint for one generation each time. A control ran three generations
+in one fit with the same seed, population of six, three inner folds and caching.
+Both arms checkpointed every generation. Each of four seeds generated a
+different 24-feature classification dataset with 144 training and 72 held-out
+rows. Hyperparameter search tuned two integer tree parameters with 304 possible
+configurations. Feature selection allowed masks of up to six columns.
+
+| Search | Distinct candidates after first segment, per seed | Added on first resume | Added on second resume | Distinct in uninterrupted control |
+| --- | --- | --- | --- | --- |
+| Hyperparameters | 17, 18, 18, 17 | 0, 0, 0, 0 | 0, 0, 0, 0 | 39, 38, 41, 38 |
+| Features | 18, 18, 18, 18 | 0, 0, 0, 0 | 0, 0, 0, 0 | 41, 42, 42, 42 |
+
+Across the two resumes, each search recorded 36 additional cache hits and
+zero additional candidate CV calls. The final logged generation reached five
+because each fit also logged initialization. All segmented candidates occurred
+in the corresponding uninterrupted control. The tested implementation reseeds
+the search and initializes a population on resume. It restores the cache and
+generation log, so repeated proposals can advance the log at very little CV
+cost without expanding coverage.
+
+This compares equal numbers of evolutionary generations, with different actual
+fit counts. The results diagnose replay on these fixed-seed workloads. They
+cannot establish a quality advantage at equal compute. The
+[per-seed results and reproduction script](results/performance-v2/resume-coverage.json)
+include held-out accuracy, candidate counts, cache hits and generation indices.

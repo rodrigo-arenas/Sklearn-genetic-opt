@@ -74,7 +74,9 @@ With caching enabled, the resumed search reuses saved candidate scores. Use
 the same training rows in the same order, CV splits and scoring rule so those
 scores remain comparable. A resume initializes a population and restores the
 recorded history, cache and supported schedule state. Its sequence of proposals
-can differ from a single uninterrupted run.
+can differ from a single uninterrupted run. With a fixed seed, repeating the
+same generation budget can replay only cached candidates. Compare the additional
+CV calls printed above with the generation index to check for new evaluations.
 
 Each successful checkpoint replaces the previous snapshot. If serialization
 fails, the callback logs a warning and the previous file remains available.
