@@ -1,0 +1,984 @@
+{
+  "checkout": "984b17c4fe365a141152d49ff041a495558c301c",
+  "python": "3.12.0",
+  "versions": {
+    "scikit-learn": "1.9.1",
+    "numpy": "2.5.3",
+    "deap": "1.4.4"
+  },
+  "records": [
+    {
+      "dataset": "wine",
+      "kind": "hyperparameters",
+      "seed": 2801,
+      "metric": "balanced_accuracy",
+      "budget": 24,
+      "shared_initial": 18,
+      "shared_at_budget": 19,
+      "continuous": {
+        "winner": [
+          [
+            "max_depth",
+            7
+          ],
+          [
+            "min_samples_leaf",
+            3
+          ]
+        ],
+        "inner": 0.9252360203340594,
+        "holdout": 0.9444444444444445
+      },
+      "resumed": {
+        "winner": [
+          [
+            "max_depth",
+            7
+          ],
+          [
+            "min_samples_leaf",
+            3
+          ]
+        ],
+        "inner": 0.9252360203340594,
+        "holdout": 0.9444444444444445
+      }
+    },
+    {
+      "dataset": "wine",
+      "kind": "hyperparameters",
+      "seed": 2801,
+      "metric": "balanced_accuracy",
+      "budget": 36,
+      "shared_initial": 18,
+      "shared_at_budget": 27,
+      "continuous": {
+        "winner": [
+          [
+            "max_depth",
+            7
+          ],
+          [
+            "min_samples_leaf",
+            3
+          ]
+        ],
+        "inner": 0.9252360203340594,
+        "holdout": 0.9444444444444445
+      },
+      "resumed": {
+        "winner": [
+          [
+            "max_depth",
+            7
+          ],
+          [
+            "min_samples_leaf",
+            3
+          ]
+        ],
+        "inner": 0.9252360203340594,
+        "holdout": 0.9444444444444445
+      }
+    },
+    {
+      "dataset": "wine",
+      "kind": "features",
+      "seed": 2801,
+      "metric": "balanced_accuracy",
+      "budget": 24,
+      "shared_initial": 18,
+      "shared_at_budget": 18,
+      "continuous": {
+        "winner": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0
+        ],
+        "inner": 0.9468046477850399,
+        "holdout": 0.9037037037037038
+      },
+      "resumed": {
+        "winner": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0
+        ],
+        "inner": 0.9468046477850399,
+        "holdout": 0.9037037037037038
+      }
+    },
+    {
+      "dataset": "wine",
+      "kind": "features",
+      "seed": 2801,
+      "metric": "balanced_accuracy",
+      "budget": 36,
+      "shared_initial": 18,
+      "shared_at_budget": 24,
+      "continuous": {
+        "winner": [
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          1,
+          1,
+          0,
+          1,
+          0,
+          0,
+          1
+        ],
+        "inner": 0.9570442992011619,
+        "holdout": 0.9259259259259259
+      },
+      "resumed": {
+        "winner": [
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          1,
+          1,
+          0,
+          1,
+          0,
+          0,
+          1
+        ],
+        "inner": 0.9570442992011619,
+        "holdout": 0.9259259259259259
+      }
+    },
+    {
+      "dataset": "wine",
+      "kind": "hyperparameters",
+      "seed": 2802,
+      "metric": "balanced_accuracy",
+      "budget": 24,
+      "shared_initial": 17,
+      "shared_at_budget": 18,
+      "continuous": {
+        "winner": [
+          [
+            "max_depth",
+            8
+          ],
+          [
+            "min_samples_leaf",
+            1
+          ]
+        ],
+        "inner": 0.9604730781201369,
+        "holdout": 0.9814814814814815
+      },
+      "resumed": {
+        "winner": [
+          [
+            "max_depth",
+            8
+          ],
+          [
+            "min_samples_leaf",
+            1
+          ]
+        ],
+        "inner": 0.9604730781201369,
+        "holdout": 0.9814814814814815
+      }
+    },
+    {
+      "dataset": "wine",
+      "kind": "hyperparameters",
+      "seed": 2802,
+      "metric": "balanced_accuracy",
+      "budget": 36,
+      "shared_initial": 17,
+      "shared_at_budget": 24,
+      "continuous": {
+        "winner": [
+          [
+            "max_depth",
+            8
+          ],
+          [
+            "min_samples_leaf",
+            1
+          ]
+        ],
+        "inner": 0.9604730781201369,
+        "holdout": 0.9814814814814815
+      },
+      "resumed": {
+        "winner": [
+          [
+            "max_depth",
+            8
+          ],
+          [
+            "min_samples_leaf",
+            1
+          ]
+        ],
+        "inner": 0.9604730781201369,
+        "holdout": 0.9814814814814815
+      }
+    },
+    {
+      "dataset": "wine",
+      "kind": "features",
+      "seed": 2802,
+      "metric": "balanced_accuracy",
+      "budget": 24,
+      "shared_initial": 18,
+      "shared_at_budget": 18,
+      "continuous": {
+        "winner": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          1,
+          1
+        ],
+        "inner": 0.9471677559912854,
+        "holdout": 0.8537037037037036
+      },
+      "resumed": {
+        "winner": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          1,
+          1
+        ],
+        "inner": 0.9471677559912854,
+        "holdout": 0.8537037037037036
+      }
+    },
+    {
+      "dataset": "wine",
+      "kind": "features",
+      "seed": 2802,
+      "metric": "balanced_accuracy",
+      "budget": 36,
+      "shared_initial": 18,
+      "shared_at_budget": 21,
+      "continuous": {
+        "winner": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          1,
+          1
+        ],
+        "inner": 0.9471677559912854,
+        "holdout": 0.8537037037037036
+      },
+      "resumed": {
+        "winner": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          1,
+          1
+        ],
+        "inner": 0.9471677559912854,
+        "holdout": 0.8537037037037036
+      }
+    },
+    {
+      "dataset": "wine",
+      "kind": "hyperparameters",
+      "seed": 2803,
+      "metric": "balanced_accuracy",
+      "budget": 24,
+      "shared_initial": 17,
+      "shared_at_budget": 19,
+      "continuous": {
+        "winner": [
+          [
+            "max_depth",
+            4
+          ],
+          [
+            "min_samples_leaf",
+            1
+          ]
+        ],
+        "inner": 0.8655773420479304,
+        "holdout": 0.937037037037037
+      },
+      "resumed": {
+        "winner": [
+          [
+            "max_depth",
+            4
+          ],
+          [
+            "min_samples_leaf",
+            1
+          ]
+        ],
+        "inner": 0.8655773420479304,
+        "holdout": 0.937037037037037
+      }
+    },
+    {
+      "dataset": "wine",
+      "kind": "hyperparameters",
+      "seed": 2803,
+      "metric": "balanced_accuracy",
+      "budget": 36,
+      "shared_initial": 17,
+      "shared_at_budget": 23,
+      "continuous": {
+        "winner": [
+          [
+            "max_depth",
+            4
+          ],
+          [
+            "min_samples_leaf",
+            1
+          ]
+        ],
+        "inner": 0.8655773420479304,
+        "holdout": 0.937037037037037
+      },
+      "resumed": {
+        "winner": [
+          [
+            "max_depth",
+            4
+          ],
+          [
+            "min_samples_leaf",
+            1
+          ]
+        ],
+        "inner": 0.8655773420479304,
+        "holdout": 0.937037037037037
+      }
+    },
+    {
+      "dataset": "wine",
+      "kind": "features",
+      "seed": 2803,
+      "metric": "balanced_accuracy",
+      "budget": 24,
+      "shared_initial": 18,
+      "shared_at_budget": 18,
+      "continuous": {
+        "winner": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          1,
+          0,
+          1
+        ],
+        "inner": 0.9224556489262371,
+        "holdout": 1.0
+      },
+      "resumed": {
+        "winner": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          1,
+          0,
+          1
+        ],
+        "inner": 0.9224556489262371,
+        "holdout": 1.0
+      }
+    },
+    {
+      "dataset": "wine",
+      "kind": "features",
+      "seed": 2803,
+      "metric": "balanced_accuracy",
+      "budget": 36,
+      "shared_initial": 18,
+      "shared_at_budget": 18,
+      "continuous": {
+        "winner": [
+          1,
+          0,
+          0,
+          1,
+          1,
+          0,
+          1,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        "inner": 0.9324981844589688,
+        "holdout": 0.9148148148148149
+      },
+      "resumed": {
+        "winner": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          1,
+          0,
+          1
+        ],
+        "inner": 0.9224556489262371,
+        "holdout": 1.0
+      }
+    },
+    {
+      "dataset": "diabetes",
+      "kind": "hyperparameters",
+      "seed": 2801,
+      "metric": "r2",
+      "budget": 24,
+      "shared_initial": 18,
+      "shared_at_budget": 19,
+      "continuous": {
+        "winner": [
+          [
+            "alpha",
+            0.027056730207146065
+          ],
+          [
+            "fit_intercept",
+            true
+          ]
+        ],
+        "inner": 0.4855163320997115,
+        "holdout": 0.4419601947772752
+      },
+      "resumed": {
+        "winner": [
+          [
+            "alpha",
+            0.027056730207146065
+          ],
+          [
+            "fit_intercept",
+            true
+          ]
+        ],
+        "inner": 0.4855163320997115,
+        "holdout": 0.4419601947772752
+      }
+    },
+    {
+      "dataset": "diabetes",
+      "kind": "hyperparameters",
+      "seed": 2801,
+      "metric": "r2",
+      "budget": 36,
+      "shared_initial": 18,
+      "shared_at_budget": 26,
+      "continuous": {
+        "winner": [
+          [
+            "alpha",
+            0.020687429384432642
+          ],
+          [
+            "fit_intercept",
+            true
+          ]
+        ],
+        "inner": 0.4855398994447826,
+        "holdout": 0.4413480831827198
+      },
+      "resumed": {
+        "winner": [
+          [
+            "alpha",
+            0.027056730207146065
+          ],
+          [
+            "fit_intercept",
+            true
+          ]
+        ],
+        "inner": 0.4855163320997115,
+        "holdout": 0.4419601947772752
+      }
+    },
+    {
+      "dataset": "diabetes",
+      "kind": "features",
+      "seed": 2801,
+      "metric": "r2",
+      "budget": 24,
+      "shared_initial": 18,
+      "shared_at_budget": 18,
+      "continuous": {
+        "winner": [
+          0,
+          1,
+          1,
+          1,
+          0,
+          1,
+          0,
+          0,
+          1,
+          1
+        ],
+        "inner": 0.33795482650791486,
+        "holdout": 0.3421103590934621
+      },
+      "resumed": {
+        "winner": [
+          0,
+          1,
+          1,
+          1,
+          0,
+          1,
+          0,
+          0,
+          1,
+          1
+        ],
+        "inner": 0.33795482650791486,
+        "holdout": 0.3421103590934621
+      }
+    },
+    {
+      "dataset": "diabetes",
+      "kind": "features",
+      "seed": 2801,
+      "metric": "r2",
+      "budget": 36,
+      "shared_initial": 18,
+      "shared_at_budget": 18,
+      "continuous": {
+        "winner": [
+          0,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1
+        ],
+        "inner": 0.3547234879567482,
+        "holdout": 0.36285730019403195
+      },
+      "resumed": {
+        "winner": [
+          0,
+          1,
+          1,
+          1,
+          0,
+          1,
+          0,
+          0,
+          1,
+          1
+        ],
+        "inner": 0.33795482650791486,
+        "holdout": 0.3421103590934621
+      }
+    },
+    {
+      "dataset": "diabetes",
+      "kind": "hyperparameters",
+      "seed": 2802,
+      "metric": "r2",
+      "budget": 24,
+      "shared_initial": 18,
+      "shared_at_budget": 18,
+      "continuous": {
+        "winner": [
+          [
+            "alpha",
+            0.05437843718455069
+          ],
+          [
+            "fit_intercept",
+            true
+          ]
+        ],
+        "inner": 0.4534747655833849,
+        "holdout": 0.5238145285305837
+      },
+      "resumed": {
+        "winner": [
+          [
+            "alpha",
+            0.06780255914935311
+          ],
+          [
+            "fit_intercept",
+            true
+          ]
+        ],
+        "inner": 0.4539765093008062,
+        "holdout": 0.5246669795899892
+      }
+    },
+    {
+      "dataset": "diabetes",
+      "kind": "hyperparameters",
+      "seed": 2802,
+      "metric": "r2",
+      "budget": 36,
+      "shared_initial": 18,
+      "shared_at_budget": 25,
+      "continuous": {
+        "winner": [
+          [
+            "alpha",
+            0.05437843718455069
+          ],
+          [
+            "fit_intercept",
+            true
+          ]
+        ],
+        "inner": 0.4534747655833849,
+        "holdout": 0.5238145285305837
+      },
+      "resumed": {
+        "winner": [
+          [
+            "alpha",
+            0.07850004488570479
+          ],
+          [
+            "fit_intercept",
+            true
+          ]
+        ],
+        "inner": 0.4540720739116028,
+        "holdout": 0.5252357278738996
+      }
+    },
+    {
+      "dataset": "diabetes",
+      "kind": "features",
+      "seed": 2802,
+      "metric": "r2",
+      "budget": 24,
+      "shared_initial": 18,
+      "shared_at_budget": 18,
+      "continuous": {
+        "winner": [
+          0,
+          0,
+          1,
+          1,
+          1,
+          0,
+          1,
+          0,
+          1,
+          1
+        ],
+        "inner": 0.34203237811594756,
+        "holdout": 0.44077213143164573
+      },
+      "resumed": {
+        "winner": [
+          0,
+          0,
+          1,
+          1,
+          1,
+          0,
+          1,
+          0,
+          1,
+          1
+        ],
+        "inner": 0.34203237811594756,
+        "holdout": 0.44077213143164573
+      }
+    },
+    {
+      "dataset": "diabetes",
+      "kind": "features",
+      "seed": 2802,
+      "metric": "r2",
+      "budget": 36,
+      "shared_initial": 18,
+      "shared_at_budget": 18,
+      "continuous": {
+        "winner": [
+          0,
+          0,
+          1,
+          1,
+          1,
+          0,
+          1,
+          0,
+          1,
+          1
+        ],
+        "inner": 0.34203237811594756,
+        "holdout": 0.44077213143164573
+      },
+      "resumed": {
+        "winner": [
+          0,
+          0,
+          1,
+          1,
+          1,
+          0,
+          1,
+          0,
+          1,
+          1
+        ],
+        "inner": 0.34203237811594756,
+        "holdout": 0.44077213143164573
+      }
+    },
+    {
+      "dataset": "diabetes",
+      "kind": "hyperparameters",
+      "seed": 2803,
+      "metric": "r2",
+      "budget": 24,
+      "shared_initial": 18,
+      "shared_at_budget": 18,
+      "continuous": {
+        "winner": [
+          [
+            "alpha",
+            0.024342414412769752
+          ],
+          [
+            "fit_intercept",
+            true
+          ]
+        ],
+        "inner": 0.4584993164252933,
+        "holdout": 0.5471050883736239
+      },
+      "resumed": {
+        "winner": [
+          [
+            "alpha",
+            0.03067698801929795
+          ],
+          [
+            "fit_intercept",
+            true
+          ]
+        ],
+        "inner": 0.45856681511360353,
+        "holdout": 0.545640150377628
+      }
+    },
+    {
+      "dataset": "diabetes",
+      "kind": "hyperparameters",
+      "seed": 2803,
+      "metric": "r2",
+      "budget": 36,
+      "shared_initial": 18,
+      "shared_at_budget": 22,
+      "continuous": {
+        "winner": [
+          [
+            "alpha",
+            0.024342414412769752
+          ],
+          [
+            "fit_intercept",
+            true
+          ]
+        ],
+        "inner": 0.4584993164252933,
+        "holdout": 0.5471050883736239
+      },
+      "resumed": {
+        "winner": [
+          [
+            "alpha",
+            0.03067698801929795
+          ],
+          [
+            "fit_intercept",
+            true
+          ]
+        ],
+        "inner": 0.45856681511360353,
+        "holdout": 0.545640150377628
+      }
+    },
+    {
+      "dataset": "diabetes",
+      "kind": "features",
+      "seed": 2803,
+      "metric": "r2",
+      "budget": 24,
+      "shared_initial": 18,
+      "shared_at_budget": 18,
+      "continuous": {
+        "winner": [
+          0,
+          0,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        "inner": 0.35826090091098456,
+        "holdout": 0.3918660583302527
+      },
+      "resumed": {
+        "winner": [
+          0,
+          0,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        "inner": 0.35826090091098456,
+        "holdout": 0.3918660583302527
+      }
+    },
+    {
+      "dataset": "diabetes",
+      "kind": "features",
+      "seed": 2803,
+      "metric": "r2",
+      "budget": 36,
+      "shared_initial": 18,
+      "shared_at_budget": 18,
+      "continuous": {
+        "winner": [
+          0,
+          1,
+          1,
+          1,
+          0,
+          0,
+          1,
+          1,
+          1,
+          0
+        ],
+        "inner": 0.3590189108131789,
+        "holdout": 0.39821966862398495
+      },
+      "resumed": {
+        "winner": [
+          0,
+          0,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        "inner": 0.35826090091098456,
+        "holdout": 0.3918660583302527
+      }
+    }
+  ],
+  "reproduction_script": "\"\"\"Compare uninterrupted evolution and checkpoint restarts at 24 and 36 distinct candidates.\"\"\"\nimport json\nimport platform\nimport subprocess\nimport sys\nfrom importlib.metadata import version\nfrom pathlib import Path\nfrom tempfile import TemporaryDirectory\n\nimport numpy as np\nfrom sklearn.base import clone\nfrom sklearn.datasets import load_diabetes, load_wine\nfrom sklearn.linear_model import Ridge\nfrom sklearn.metrics import get_scorer\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.tree import DecisionTreeClassifier\nfrom threadpoolctl import threadpool_limits\n\nsys.path.insert(0, str(Path.cwd()))\nfrom sklearn_genetic import GAFeatureSelectionCV, GASearchCV\nfrom sklearn_genetic.callbacks import ModelCheckpoint\nfrom sklearn_genetic.space import Categorical, Continuous, Integer\n\n\ndef trajectory(dataset, kind, seed, generations, checkpoint, X, y):\n    classification = dataset == \"wine\"\n    model = DecisionTreeClassifier(max_depth=4, random_state=seed) if classification else Ridge()\n    metric = \"balanced_accuracy\" if classification else \"r2\"\n    options = dict(estimator=model, scoring=metric, cv=3, n_jobs=1, population_size=6,\n                   generations=generations, error_score=\"raise\", random_state=seed, verbose=False)\n    if kind == \"features\":\n        search = GAFeatureSelectionCV(max_features=6, **options)\n    else:\n        grid = ({\"max_depth\": Integer(2, 20), \"min_samples_leaf\": Integer(1, 12)}\n                if classification else\n                {\"alpha\": Continuous(0.001, 10, distribution=\"log-uniform\"),\n                 \"fit_intercept\": Categorical([False, True])})\n        search = GASearchCV(param_grid=grid, **options)\n    search.fit(X, y, callbacks=[ModelCheckpoint(checkpoint)])\n    candidates = {}\n    key = \"features\" if kind == \"features\" else \"params\"\n    for values, score in zip(search.cv_results_[key], search.cv_results_[\"mean_test_score\"], strict=True):\n        identity = (tuple(map(int, values)) if kind == \"features\" else tuple(sorted(values.items())))\n        if identity in candidates:\n            assert candidates[identity] == score\n        candidates[identity] = float(score)\n    assert len(candidates) == search.fit_stats_[\"cross_validate_calls\"]\n    return list(candidates.items()), model, metric\n\n\ndef evaluate(items, model, metric, kind, data):\n    X, Z, y, target = data\n    # Break feature-score ties in favor of fewer columns, then earlier evaluation.\n    winner, score = max(items, key=lambda item: (item[1], -sum(item[0]) if kind == \"features\" else 0))\n    fitted = clone(model)\n    if kind == \"features\":\n        mask = np.asarray(winner, dtype=bool)\n        X, Z = X[:, mask], Z[:, mask]\n    else:\n        fitted.set_params(**dict(winner))\n    fitted.fit(X, y)\n    return dict(winner=winner, inner=score, holdout=float(get_scorer(metric)(fitted, Z, target)))\n\n\nrecords = []\nwith threadpool_limits(1), TemporaryDirectory() as folder:\n    for dataset, loader in [(\"wine\", load_wine), (\"diabetes\", load_diabetes)]:\n        X, y = loader(return_X_y=True)\n        for seed in (2801, 2802, 2803):\n            data = train_test_split(X, y, test_size=0.25, random_state=seed,\n                                    stratify=y if dataset == \"wine\" else None)\n            for kind in (\"hyperparameters\", \"features\"):\n                path = Path(folder) / f\"{dataset}-{seed}-{kind}\"\n                def run(generations, path):\n                    return trajectory(dataset, kind, seed, generations, path, data[0], data[2])\n\n                full, model, metric = run(5, path.with_suffix(\".full\"))\n                initial, _, _ = run(1, path.with_suffix(\".segments\"))\n                run(1, path.with_suffix(\".segments\"))\n                resumed, _, _ = run(1, path.with_suffix(\".segments\"))\n                assert initial == full[:len(initial)] == resumed[:len(initial)]\n                for budget in (24, 36):\n                    assert len(initial) < budget <= min(len(full), len(resumed))\n                    first = dict(full[:budget])\n                    second = dict(resumed[:budget])\n                    records.append(dict(dataset=dataset, kind=kind, seed=seed, metric=metric,\n                                        budget=budget, shared_initial=len(initial),\n                                        shared_at_budget=len(first.keys() & second.keys()),\n                                        continuous=evaluate(full[:budget], model, metric, kind, data),\n                                        resumed=evaluate(resumed[:budget], model, metric, kind, data)))\nprint(json.dumps(dict(checkout=subprocess.check_output([\"git\",\"rev-parse\",\"HEAD\"],text=True).strip(),\n                      python=platform.python_version(), versions={p:version(p) for p in\n                      (\"scikit-learn\",\"numpy\",\"deap\")}, records=records,\n                      reproduction_script=Path(__file__).read_text()),indent=2))\n"
+}

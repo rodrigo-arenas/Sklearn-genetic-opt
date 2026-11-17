@@ -1715,3 +1715,36 @@ more fold fits because they evaluated new candidates. Equal-cost comparisons
 on independent tasks are needed to assess proposal quality. The
 [post-change trajectories and script](results/performance-v2/resume-coverage-restored.json)
 include cumulative evaluations and the selected candidate's CV score.
+
+### Held-out quality at equal candidate budgets after resume
+
+Wine classification with a decision tree and Diabetes regression with Ridge
+each used three new 75/25 splits (seeds 2801 through 2803). For both search
+estimators, a continuous five-generation run and three one-generation
+checkpoint segments shared the complete first segment. The script checks
+that its 17 or 18 distinct candidates and CV scores match in order.
+
+At 24 and 36 distinct candidates, the comparison refits the best mean
+three-fold CV candidate in each prefix and scores it on the untouched
+holdout. Feature-score ties favor fewer columns and then earlier evaluation.
+Hyperparameter ties favor earlier evaluation. Each comparison therefore uses
+72 or 108 inner fold fits per arm for the scored prefix. Runs continued
+beyond those prefixes to collect trajectories. Timing and checkpoint overhead
+are outside this comparison.
+
+| Dataset | Search | Distinct candidates | Continuous mean | Resumed mean | Resumed wins/ties/losses |
+| --- | --- | ---: | ---: | ---: | --- |
+| Wine | Hyperparameters | 24 | 0.95432 | 0.95432 | 0/3/0 |
+| Wine | Features | 24 | 0.91914 | 0.91914 | 0/3/0 |
+| Diabetes | Hyperparameters | 24 | 0.50429 | 0.50409 | 1/1/1 |
+| Diabetes | Features | 24 | 0.39158 | 0.39158 | 0/3/0 |
+| Wine | Hyperparameters | 36 | 0.95432 | 0.95432 | 0/3/0 |
+| Wine | Features | 36 | 0.89815 | 0.92654 | 1/2/0 |
+| Diabetes | Hyperparameters | 36 | 0.50409 | 0.50428 | 2/0/1 |
+| Diabetes | Features | 36 | 0.40062 | 0.39158 | 0/1/2 |
+
+Wine reports balanced accuracy and Diabetes reports R². Both budgets reuse
+the same trajectories, and splits within a dataset overlap. The small paired
+sample describes how the policies behave on these tasks. It cannot establish
+a general quality ranking. The [per-split results and script](results/performance-v2/resume-equal-cost.json)
+record the shared candidate counts, selected parameters or masks and scores.
