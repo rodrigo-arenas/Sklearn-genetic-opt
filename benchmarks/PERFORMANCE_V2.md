@@ -1484,3 +1484,41 @@ from the repository root:
 ```powershell
 .\.venv\Scripts\python.exe benchmarks/results/performance-v2/known-support.py known-support.json
 ```
+
+### Favoring unseen pairs at the same mask sizes
+
+Six new dataset seeds (2201–2206) tested a proposal rule motivated by the
+missed interactions. All methods shared six initial masks. For each of 18
+further evaluations, the pair-coverage method took the next random control's
+mask size and sampled up to 16 distinct, previously unevaluated masks of
+that size. It chose the mask containing the most previously unseen column
+pairs, breaking ties by the sampled order. Only the selected mask incurred
+CV fits. This is a pilot of a standalone proposal rule. The library's
+genetic operators were the third comparison arm.
+
+| Label rule | Proposal method | Distinct column pairs covered, mean of 120 possible | Winners containing both signals | Mean test balanced accuracy |
+| --- | --- | ---: | ---: | ---: |
+| Additive | Genetic | 55.83 | 3/6 | .8094 |
+| Additive | Random | 50.50 | 2/6 | .7735 |
+| Additive | Favor unseen pairs | 61.17 | 2/6 | .7731 |
+| XOR | Genetic | 52.00 | 4/6 | .7141 |
+| XOR | Random | 50.50 | 2/6 | .6231 |
+| XOR | Favor unseen pairs | 61.17 | 2/6 | .6163 |
+
+The size-matched methods covered about 42% and 51% of the possible pairs,
+respectively. Every method used 24 distinct masks and 72 fold fits per run.
+Whenever a trajectory included the informative pair, its winner contained
+both columns. Broader coverage alone did not improve observed recovery or
+mean held-out performance on these six seeds. Genetic selection recovered
+more informative pairs on both tasks despite covering fewer pairs than the
+coverage rule. Additive and XOR data share column draws within each seed.
+The two label rules therefore give six independent hidden-pair placements.
+Wall-clock cost was not measured.
+
+The [per-mask trajectories and held-out results](results/performance-v2/pair-coverage.json)
+include every chosen mask and its inner CV score. Reproduce the pilot from
+the repository root:
+
+```powershell
+.\.venv\Scripts\python.exe benchmarks/results/performance-v2/known-support.py pair-coverage.json --pair-coverage
+```

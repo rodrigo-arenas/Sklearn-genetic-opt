@@ -1,9 +1,11 @@
 """Compare feature searches on independently generated datasets with known support."""
 
+import argparse
 import json
 import platform
 import sys
 from importlib.metadata import version
+from itertools import combinations
 from pathlib import Path
 
 import numpy as np
@@ -20,7 +22,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from sklearn_genetic import GAFeatureSelectionCV
 
 
-def run_pair(seed, interaction):
+def run_pair(seed, interaction, pair_coverage=False):
     rng = np.random.default_rng(seed)
     signal = sorted(rng.choice(16, size=2, replace=False).tolist())
 
@@ -55,20 +57,24 @@ def run_pair(seed, interaction):
     genetic = dict(list(genetic.items())[:24])
     control = dict(list(genetic.items())[:6])
     draw = np.random.default_rng(seed + 10000)
+
+    def cv_score(columns):
+        return float(
+            cross_val_score(
+                model,
+                X[:, columns],
+                y,
+                cv=cv,
+                scoring="balanced_accuracy",
+                n_jobs=1,
+                error_score="raise",
+            ).mean()
+        )
+
     while len(control) < len(genetic):
         columns = tuple(sorted(draw.choice(16, size=draw.integers(1, 5), replace=False).tolist()))
         if columns not in control:
-            control[columns] = float(
-                cross_val_score(
-                    model,
-                    X[:, columns],
-                    y,
-                    cv=cv,
-                    scoring="balanced_accuracy",
-                    n_jobs=1,
-                    error_score="raise",
-                ).mean()
-            )
+            control[columns] = cv_score(columns)
 
     def evaluate(columns):
         fitted = clone(model).fit(X[:, columns], y)
@@ -87,7 +93,7 @@ def run_pair(seed, interaction):
         )
 
     univariate = SelectKBest(f_classif, k=2).fit(X, y).get_support(indices=True).tolist()
-    return dict(
+    result = dict(
         seed=seed,
         task="xor" if interaction else "additive",
         signal=signal,
@@ -97,12 +103,38 @@ def run_pair(seed, interaction):
         known_support=evaluate(signal),
     )
 
+    if pair_coverage:
+        history = dict(list(genetic.items())[:6])
+        covered = {pair for mask in history for pair in combinations(mask, 2)}
+        candidates = {size: list(combinations(range(X.shape[1]), size)) for size in range(1, 5)}
+        pool_rng = np.random.default_rng(seed + 20000)
+        for random_mask in list(control)[6:]:
+            available = [mask for mask in candidates[len(random_mask)] if mask not in history]
+            pool = pool_rng.choice(len(available), size=min(16, len(available)), replace=False)
+            mask = max(
+                (available[idx] for idx in pool),
+                key=lambda candidate: sum(
+                    pair not in covered for pair in combinations(candidate, 2)
+                ),
+            )
+            history[mask] = cv_score(mask)
+            covered.update(combinations(mask, 2))
+        result["pair_coverage"] = summary(history)
+    return result
+
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("output", type=Path)
+    parser.add_argument(
+        "--pair-coverage", action="store_true", help="Test pair coverage on six new dataset seeds."
+    )
+    args = parser.parse_args()
+    seeds = range(2201, 2207) if args.pair_coverage else range(2101, 2105)
     with threadpool_limits(1):
         rows = [
-            run_pair(seed, interaction)
-            for seed in range(2101, 2105)
+            run_pair(seed, interaction, args.pair_coverage)
+            for seed in seeds
             for interaction in (False, True)
         ]
     payload = dict(
@@ -110,6 +142,4 @@ if __name__ == "__main__":
         versions={p: version(p) for p in ("scikit-learn", "numpy", "deap")},
         rows=rows,
     )
-    Path(sys.argv[1]).write_text(
-        json.dumps(payload, indent=2, allow_nan=False) + "\n", encoding="utf-8"
-    )
+    args.output.write_text(json.dumps(payload, indent=2, allow_nan=False) + "\n", encoding="utf-8")
