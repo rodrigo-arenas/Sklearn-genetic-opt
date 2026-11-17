@@ -1,4 +1,6 @@
 from collections import Counter
+from itertools import repeat
+from operator import is_
 
 import numpy as np
 from deap import tools
@@ -219,7 +221,11 @@ def feature_population_diversity(population):
     counts = np.zeros(width, dtype=np.int64)
     distinct = set()
     for mask in population:
-        if len(mask) != width or not all(type(bit) is int and bit in (0, 1) for bit in mask):
+        if (
+            len(mask) != width
+            or not all(map(is_, map(type, mask), repeat(int)))
+            or not set(mask) <= {0, 1}
+        ):
             return _population_diversity(population)
         row = np.frombuffer(bytes(iter(mask)), dtype=np.uint8)
         counts += row
