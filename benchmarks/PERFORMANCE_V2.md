@@ -1120,3 +1120,31 @@ New-Item -ItemType Directory -Force -Path .agent-runs | Out-Null
 .\.venv\Scripts\python.exe -c "import json,pathlib; p=pathlib.Path('benchmarks/results/performance-v2/shared-initialization.json'); pathlib.Path('.agent-runs/paired.py').write_text(json.loads(p.read_text(encoding='utf-8'))['reproduction_script'], encoding='utf-8')"
 .\.venv\Scripts\python.exe .agent-runs/paired.py .agent-runs/reproduced.json
 ```
+
+## Building cross-validation results
+
+Both estimators now read each train or validation metric column once and
+summarize ordinary fold timing arrays in bounded batches. On 512 candidate
+records with five folds, two metrics and training scores, median construction
+time across five alternating pairs fell from 84.7 to 36.2 ms for HPO and from
+87.3 to 35.0 ms for feature selection. Both implementations returned identical
+columns on the same input, including mixed fold counts, missing values and
+mixed timing precision.
+
+Complete three-fold decision-tree regression searches on Diabetes showed a
+smaller, mixed effect. Four paired seeds, population eight, three generations,
+one worker and alternating run order gave median baseline/optimized fit-time
+ratios of 0.93 for HPO and 1.02 for feature selection. A ratio above one favors
+the optimized implementation. Each pair produced identical candidate scores,
+rankings, predictions and CV evaluation counts. These timings support faster
+result construction; the HPO full-fit cohort was slower.
+
+The [timings, environment and reproduction scripts](results/performance-v2/cv-results-statistics.json)
+include both the isolated and full-fit measurements. From the repository root:
+
+```powershell
+New-Item -ItemType Directory -Force -Path .agent-runs | Out-Null
+.\.venv\Scripts\python.exe -c "import json,pathlib,subprocess; r=json.loads(pathlib.Path('benchmarks/results/performance-v2/cv-results-statistics.json').read_text()); d=pathlib.Path('.agent-runs'); (d/'cv_before.py').write_bytes(subprocess.check_output(['git','show',r['baseline_commit']+':sklearn_genetic/utils/cv_scores.py'])); [(d/n).write_text(s,encoding='utf-8') for n,s in r['scripts'].items()]"
+.\.venv\Scripts\python.exe .agent-runs/profile_cv_results.py
+.\.venv\Scripts\python.exe .agent-runs/fit_cv_results.py
+```
