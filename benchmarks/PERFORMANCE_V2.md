@@ -1522,3 +1522,34 @@ the repository root:
 ```powershell
 .\.venv\Scripts\python.exe benchmarks/results/performance-v2/known-support.py pair-coverage.json --pair-coverage
 ```
+
+## Initializing masks on wide inputs
+
+For each target mask size, smart initialization used to create, shuffle and
+rotate a list of all column indices. It now samples distinct indices directly.
+For dense masks it samples the excluded columns. A uniform sample and its
+complement each produce a uniform subset at the requested size. The random
+number sequence changes, so rerun historical seeded comparisons on their
+recorded revision. The known-support and pair-coverage pilots above can both
+be reproduced from commit `1a9caa6`.
+
+Eight-member populations gave the following median initialization times over
+five alternating pairs. Peak traced Python allocations were measured separately
+using the first seed. Dense mask storage and duplicate detection are included.
+
+| Columns | Maximum selected | Previous ms | Current ms | Previous peak bytes | Current peak bytes |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 32 | 32 | 0.080 | 0.053 | 6,947 | 6,531 |
+| 4,096 | 12 | 10.03 | 0.36 | 804,968 | 559,067 |
+| 50,000 | 12 | 130.52 | 4.29 | 9,985,768 | 6,802,011 |
+| 4,096 | 4,096 | 9.81 | 3.12 | 804,968 | 621,416 |
+
+In five paired full fits on synthetic 4,096-column data (population eight,
+one generation, cap 12, three folds, one worker), both implementations made
+24 candidate CV calls per fit. Median fit times were 282.2 and 281.9 ms.
+Outer balanced accuracy averaged .4940 and .5169 over five 60-row holdouts.
+These small near-chance cohorts used different masks and support no general
+quality claim. The clear measured speedup applies to initialization.
+
+The [timings, allocation measurements and reproduction script](results/performance-v2/smart-columns.json)
+include the environment and per-seed full-fit results.

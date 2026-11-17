@@ -733,3 +733,23 @@ def test_integer_local_search_reaches_all_neighbors(lower, upper, value):
     expected = set(range(lower, upper + 1)) - {value} or {value}
     assert set(observed) == expected
     assert all(abs(count - 10000 / len(expected)) < 250 for count in observed.values())
+
+
+@pytest.mark.parametrize("cap", [3, 49997], ids=["sparse", "dense"])
+def test_wide_smart_feature_initialization_limits_temporary_memory(cap, monkeypatch):
+    import struct
+    import tracemalloc
+
+    width = 50000
+    estimator = SimpleNamespace(
+        population_initializer="smart", population_size=2, n_features=width, max_features=cap
+    )
+    monkeypatch.setattr("sklearn_genetic.population.random", random.Random(3101))
+    tracemalloc.start()
+    try:
+        population = initialize_feature_population(estimator, None, list)
+        _, peak = tracemalloc.get_traced_memory()
+    finally:
+        tracemalloc.stop()
+    assert [sum(mask) for mask in population] == [1, cap]
+    assert peak < 8 * width * struct.calcsize("P")

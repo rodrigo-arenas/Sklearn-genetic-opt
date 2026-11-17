@@ -81,14 +81,13 @@ def _append_unique_individual(population, seen_individuals, individual_values, i
     return True
 
 
-def _bounded_feature_mask(n_features, max_selected):
-    n_selected = random.randint(1, max_selected)
-    selected_features = random.sample(range(n_features), k=n_selected)
-    values = [0] * n_features
-
-    for feature_index in selected_features:
-        values[feature_index] = 1
-
+def _feature_mask(n_features, n_selected):
+    # Sampling the excluded columns gives the same uniform mask distribution.
+    dense = n_selected > n_features // 2
+    count = n_features - n_selected if dense else n_selected
+    values = [int(dense)] * n_features
+    for index in random.sample(range(n_features), k=count):
+        values[index] = int(not dense)
     return values
 
 
@@ -232,16 +231,8 @@ def smart_feature_population(estimator, toolbox, individual_cls):
     selected_counts = np.linspace(1, max_selected, num=estimator.population_size)
     selected_counts = np.rint(selected_counts).astype(int)
 
-    for sample_index, n_selected in enumerate(selected_counts):
-        offset = sample_index % estimator.n_features
-        feature_order = list(range(estimator.n_features))
-        random.shuffle(feature_order)
-        feature_order = feature_order[offset:] + feature_order[:offset]
-
-        values = [0] * estimator.n_features
-        for feature_index in feature_order[:n_selected]:
-            values[feature_index] = 1
-
+    for n_selected in selected_counts:
+        values = _feature_mask(estimator.n_features, int(n_selected))
         _append_unique_individual(population, seen_individuals, values, individual_cls)
 
     space_size = finite_search_space_size(estimator, estimator.population_size)
@@ -252,12 +243,12 @@ def smart_feature_population(estimator, toolbox, individual_cls):
         and attempts < max_attempts
         and (space_size is None or len(seen_individuals) < space_size)
     ):
-        values = _bounded_feature_mask(estimator.n_features, max_selected)
+        values = _feature_mask(estimator.n_features, random.randint(1, max_selected))
         _append_unique_individual(population, seen_individuals, values, individual_cls)
         attempts += 1
 
     while len(population) < estimator.population_size:
-        values = _bounded_feature_mask(estimator.n_features, max_selected)
+        values = _feature_mask(estimator.n_features, random.randint(1, max_selected))
         population.append(individual_cls(values))
 
     return population

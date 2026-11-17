@@ -4,6 +4,8 @@ Full release notes with code examples are in the [documentation](https://sklearn
 
 ## Unreleased
 
+- Smart feature-selection initialization samples the smaller of the selected and excluded column sets. This reduces temporary memory for wide inputs. Seeded runs remain reproducible, but the masks for a given seed can differ from earlier versions.
+
 - Local refinement in `GASearchCV` now chooses variable dimensions when proposing neighbors in mixed fixed/variable grids.
 
 - Differential evolution in `GASearchCV` directs its mandatory donor coordinate to a variable hyperparameter when a grid also contains fixed dimensions.
