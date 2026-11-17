@@ -308,9 +308,10 @@ def _categorical_neighbor(dimension, value):
 
 def _search_space_neighbor(estimator, parent):
     values = list(parent)
-    index = random.randrange(0, len(estimator.space))
-    parameter_name = estimator.space.parameters[index]
-    dimension = estimator.space[parameter_name]
+    mutable = mutable_dimensions(estimator.space.param_grid.values())
+    if not mutable:
+        return values
+    index, dimension = mutable[random.randrange(len(mutable))]
     value = values[index]
 
     if isinstance(dimension, Integer):

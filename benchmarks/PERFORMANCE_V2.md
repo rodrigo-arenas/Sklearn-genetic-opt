@@ -1408,3 +1408,31 @@ Wall-clock time was outside this experiment.
 The [matched trajectories and reproduction script](results/performance-v2/de-equal-fits.json)
 record each distinct value, its first proposal position and inner CV score,
 as well as the winner and external score for each prefix.
+
+## Local refinement in mixed fixed and variable grids
+
+Local search now draws the coordinate of each HPO neighbor from variable
+dimensions. To isolate this change, nine paired searches started from the
+same six candidates and ran eight local steps with a single elite and zero
+evolutionary generations. One log-uniform regularization parameter could
+change and three other parameters were fixed. Seeds 2001–2003 controlled
+each search and its 25% outer split. The estimator and scoring metric were
+the same as in the matched differential-crossover experiment above.
+
+| Task | New distinct neighbors, previous → current | Mean holdout at eight steps, previous → current | Mean holdout at equal fit cost, previous → current |
+| --- | ---: | ---: | ---: |
+| Breast Cancer, logistic regression ROC AUC | 10 → 24 | .995178 → .994410 | .995178 → .995178 |
+| Diabetes, Ridge R² | 9 → 22 | .507578 → .507077 | .507578 → .507117 |
+| Wine, logistic regression balanced accuracy | 10 → 24 | .993827 → .993827 | .993827 → .993827 |
+
+Counts sum three splits per task and exclude the six initial candidates per
+run. The old and new operators evaluated 29 and 70 new configurations,
+respectively, from 72 neighbor proposals each. The additional 41 distinct
+configurations cost 123 inner fold fits. For the equal-cost comparison, each
+pair used the shorter distinct-candidate history (8–10 total configurations
+including initialization), selected its highest inner CV score, then refitted
+and scored that candidate on the outer holdout. The change increased
+exploration per local step. These small cohorts show no average holdout gain.
+
+The [trajectories and reproduction script](results/performance-v2/local-variable-dimensions.json)
+include scores and proposal positions for every distinct configuration.

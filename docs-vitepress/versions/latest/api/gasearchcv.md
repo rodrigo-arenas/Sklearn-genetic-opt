@@ -60,6 +60,11 @@ the remaining dimensions and draws from the chosen distribution. A discrete draw
 repeat the parent value. With caching enabled, fewer repeated proposals can
 increase the number of distinct models fitted in a generation.
 
+Local refinement (`local_search=True`) uses the same variable dimensions when
+choosing a neighbor of an elite candidate. Each step proposes one neighbor per
+selected elite. Clipping and previously visited configurations can reduce the
+number of distinct evaluations.
+
 With `algorithm="eaDifferentialEvolution"`, binomial crossover always takes
 one coordinate from the donor trial, even when `crossover_probability=0`.
 If the grid has any variable dimensions, the algorithm chooses this coordinate

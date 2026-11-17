@@ -4,6 +4,8 @@ Full release notes with code examples are in the [documentation](https://sklearn
 
 ## Unreleased
 
+- Local refinement in `GASearchCV` now chooses variable dimensions when proposing neighbors in mixed fixed/variable grids.
+
 - Differential evolution in `GASearchCV` directs its mandatory donor coordinate to a variable hyperparameter when a grid also contains fixed dimensions.
 
 - Standard `GASearchCV` mutation skips numeric dimensions with equal bounds and single-choice categories, focusing proposals on variable dimensions in mixed grids.

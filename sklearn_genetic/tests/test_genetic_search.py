@@ -191,15 +191,20 @@ def test_differential_evolution_rejects_small_population_before_evaluation(kind)
         search.fit(X_train[:40], y_train[:40])
 
 
-def test_local_search_preserves_adjacent_large_integer_candidates():
+@pytest.mark.parametrize("fixed_position", [None, "first", "last"])
+def test_local_search_preserves_adjacent_large_integer_candidates(fixed_position):
     from sklearn.dummy import DummyClassifier
 
     lower = 2**53
     majority = lower + 1
     labels = np.array([majority, majority, lower] * 8, dtype=np.int64)
+    grid = {"constant": Integer(lower, majority)}
+    fixed = {"strategy": Categorical(["constant"])}
+    if fixed_position is not None:
+        grid = fixed | grid if fixed_position == "first" else grid | fixed
     search = GASearchCV(
         DummyClassifier(strategy="constant"),
-        param_grid={"constant": Integer(lower, majority)},
+        param_grid=grid,
         warm_start_configs=[{"constant": np.int64(majority)}] * 2,
         population_initializer="random",
         population_size=2,
@@ -215,8 +220,36 @@ def test_local_search_preserves_adjacent_large_integer_candidates():
 
     assert [p["constant"] for p in search.cv_results_["params"]] == [majority, majority, lower]
     assert search.fit_stats_["cross_validate_calls"] == 2
-    assert search.best_params_ == {"constant": majority}
+    assert search.best_params_ == (
+        {"strategy": "constant", "constant": majority}
+        if fixed_position is not None
+        else {"constant": majority}
+    )
     assert search.best_score_ == pytest.approx(2 / 3)
+
+
+def test_local_search_changes_category_between_fixed_numeric_bounds():
+    search = GASearchCV(
+        DecisionTreeClassifier(random_state=1),
+        param_grid={
+            "max_depth": Integer(3, 3),
+            "criterion": Categorical(["gini", "entropy"]),
+            "ccp_alpha": Continuous(0.1, 0.1),
+        },
+        warm_start_configs=[{"criterion": "gini"}] * 2,
+        population_initializer="random",
+        population_size=2,
+        generations=0,
+        local_search=True,
+        local_search_steps=8,
+        random_state=1,
+        scoring=lambda model, X, y: float(model.criterion == "gini"),
+        cv=2,
+        n_jobs=1,
+        verbose=False,
+    ).fit(X_train[:40], y_train[:40])
+    criteria = [p["criterion"] for p in search.cv_results_["params"]]
+    assert criteria == ["gini"] * 2 + ["entropy"] * 8
 
 
 def test_fixed_log_dimension_preserves_distinct_smart_candidates():
