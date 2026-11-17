@@ -28,7 +28,6 @@ from ..population import (
     _default_estimator_params,
     _is_dimension_value_valid,
     _sample_dimension_from_unit,
-    _stratified_categorical_value,
     initialize_feature_population,
     initialize_search_population,
     random_search_population,
@@ -347,8 +346,6 @@ def test_population_helper_edge_cases():
 
     with pytest.raises(TypeError, match="Latin hypercube"):
         _sample_dimension_from_unit(Categorical(["a"]), 0.5)
-
-    assert _stratified_categorical_value(Categorical(["a", "b"], priors=[0.25, 0.75]), 0, 2) == "b"
 
 
 def test_initialize_search_population_random_and_smart_fallbacks():

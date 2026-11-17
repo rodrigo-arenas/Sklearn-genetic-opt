@@ -4,6 +4,8 @@ Full release notes with code examples are in the [documentation](https://sklearn
 
 ## Unreleased
 
+- Smart initialization in `GASearchCV` varies fractional categorical allocations across search seeds while retaining exact stratified counts when the configured priors fit the available slots.
+
 - Feature selection computes generation diversity for wide binary masks one row at a time and stores packed masks to count unique candidates.
 
 - Seeded checkpoint resumes in both estimators continue the Python and NumPy proposal streams and retain the archived elites. Smart numeric hyperparameter initialization draws new strata on resume.

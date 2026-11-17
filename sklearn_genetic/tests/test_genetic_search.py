@@ -2359,14 +2359,15 @@ def test_smart_initialization_explores_independent_categories(weighted):
     assert repeated.cv_results_["params"] == params
 
 
-@pytest.mark.parametrize("weighted", [False, True])
-def test_smart_initialization_samples_beyond_category_prefix(weighted):
+@pytest.mark.parametrize(
+    "priors",
+    [None, [0] * 16 + [0.25] * 4, [0.0625] * 16 + [0] * 4, [0.0625] * 8 + [0] * 11 + [0.5]],
+)
+def test_smart_initialization_samples_beyond_category_prefix(priors):
     template = GASearchCV(
         DecisionTreeClassifier(random_state=0),
         param_grid={
-            "max_features": Categorical(
-                list(range(1, 21)), priors=([0] * 16 + [0.25] * 4) if weighted else None
-            ),
+            "max_features": Categorical(list(range(1, 21)), priors=priors),
             "ccp_alpha": Continuous(0.001, 0.01),
         },
         scoring=lambda model, X, y: float(model.max_features),
@@ -2380,16 +2381,18 @@ def test_smart_initialization_samples_beyond_category_prefix(weighted):
     from collections import Counter
 
     counts = Counter()
-    for seed in ([42] if weighted else range(20)):
+    for seed in range(20):
         search = clone(template).set_params(random_state=seed).fit(X_train[:40], y_train[:40])
         selected = [p["max_features"] for p in search.cv_results_["params"]]
         assert search.best_score_ > 4
-        assert len(set(selected)) == 4
+        if priors and priors[-1] == 0.5:
+            assert selected.count(20) == 2
+            assert len(set(selected)) == 3
+        else:
+            assert len(set(selected)) == 4
         counts.update(selected)
-    if weighted:
-        assert set(counts) == {17, 18, 19, 20}
-    else:
-        assert set(counts) == set(range(1, 21))
+    expected = {i for i, weight in enumerate(priors, 1) if weight} if priors else set(range(1, 21))
+    assert set(counts) == expected
 
 
 @pytest.mark.parametrize("kind", ["parameters", "features"])

@@ -73,12 +73,17 @@ Samples from a fixed list of choices.
 ```python
 from sklearn_genetic.space import Categorical
 
-Categorical(choices)
+Categorical(choices, priors=None, distribution="choice", random_state=None)
 ```
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `choices` | list | — | List of valid values. Can include `None` |
+| `priors` | list of floats | `None` | Sampling probabilities in the same order as `choices`. They must be nonnegative and sum to one. |
+| `distribution` | str | `"choice"` | Distribution used to sample this dimension. |
+| `random_state` | int or None | `None` | Seed for direct sampling of this dimension. |
+
+For example, `Categorical(["gini", "entropy"], priors=[0.75, 0.25])` assigns three quarters of the sampling probability to Gini. Smart initialization stratifies the weighted draws across the available population slots. With four slots this allocation gives three Gini draws and one entropy draw before duplicate removal. With fewer slots, the search seed controls which categories receive the fractional slots. Warm starts and estimator defaults are added separately.
 
 **Example:**
 

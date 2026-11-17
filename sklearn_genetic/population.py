@@ -60,17 +60,6 @@ def _sample_dimension_from_unit(dimension, value):
     raise TypeError("Latin hypercube sampling only supports numeric dimensions")
 
 
-def _stratified_categorical_value(dimension, index, population_size):
-    if dimension.priors is not None:
-        midpoint = (index + 0.5) / population_size
-        cumulative_priors = np.cumsum(dimension.priors)
-        choice_index = int(np.searchsorted(cumulative_priors, midpoint, side="right"))
-        choice_index = min(choice_index, len(dimension.choices) - 1)
-        return dimension.choices[choice_index]
-
-    return dimension.choices[index % len(dimension.choices)]
-
-
 def _append_unique_individual(population, seen_individuals, individual_values, individual_cls):
     # Feature masks are already immutable binary keys. HPO values can be mixed types.
     individual_key = (
@@ -141,14 +130,24 @@ def smart_search_population(estimator, toolbox, individual_cls):
     categorical_indices = {}
     for parameter, dimension in estimator.space.param_grid.items():
         if isinstance(dimension, Categorical):
-            indices = list(range(remaining))
-            if dimension.priors is None and remaining:
-                # Sample from the entire domain even when the population is
-                # smaller than it; retain balanced counts for larger batches.
+            if not remaining:
+                continue
+            if dimension.priors is None:
+                # Sample the full domain, cycling only when more slots are available.
                 choices = random.sample(
                     range(len(dimension.choices)), k=min(remaining, len(dimension.choices))
                 )
-                indices = [choices[index % len(choices)] for index in indices]
+                indices = [choices[index % len(choices)] for index in range(remaining)]
+            else:
+                # Systematic sampling gives each stratum the same random offset.
+                positive = np.flatnonzero(dimension.priors)
+                cumulative = np.cumsum(np.asarray(dimension.priors, dtype=float)[positive])
+                boundaries = cumulative / cumulative[-1] * remaining
+                ends = np.floor(boundaries).astype(int)
+                fractions = boundaries - ends
+                if np.any(fractions):
+                    ends += random.random() < fractions
+                indices = np.repeat(positive, np.diff(ends, prepend=0)).tolist()
             # Independent strata prevent unrelated categorical genes from
             # being locked into the same repeating combinations.
             random.shuffle(indices)
@@ -191,9 +190,7 @@ def smart_search_population(estimator, toolbox, individual_cls):
                 )
                 numeric_index += 1
             elif isinstance(dimension, Categorical):
-                value = _stratified_categorical_value(
-                    dimension, categorical_indices[parameter][sample_index], remaining
-                )
+                value = dimension.choices[categorical_indices[parameter][sample_index]]
             else:  # pragma: no cover
                 value = dimension.sample()
 
