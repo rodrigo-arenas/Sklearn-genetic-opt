@@ -4,6 +4,8 @@ Full release notes with code examples are in the [documentation](https://sklearn
 
 ## Unreleased
 
+- Feature selection computes generation diversity for wide binary masks one row at a time and stores packed masks to count unique candidates.
+
 - Seeded checkpoint resumes in both estimators continue the Python and NumPy proposal streams and retain the archived elites. Smart numeric hyperparameter initialization draws new strata on resume.
 
 - `ModelCheckpoint` writes one snapshot per generation and replaces the previous checkpoint only after serialization succeeds. A failed update preserves the last readable snapshot.

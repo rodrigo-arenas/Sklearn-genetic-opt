@@ -59,6 +59,34 @@ def _fit_feature_name_selector(X, y):
     return selector.fit(X, y)
 
 
+@pytest.mark.parametrize("copies, population, max_features", [(65, 8, 8), (5, 24, 1)])
+def test_wide_mask_diversity_matches_population_pair_disagreements(
+    copies, population, max_features
+):
+    X, y = load_iris(return_X_y=True)
+    data = np.tile(X, (1, copies))
+    selector = GAFeatureSelectionCV(
+        DummyClassifier(),
+        population_size=population,
+        generations=0,
+        cv=2,
+        max_features=max_features,
+        use_cache=False,
+        random_state=31,
+        n_jobs=1,
+        verbose=False,
+    ).fit(data, y)
+    masks = np.asarray(selector.cv_results_["features"])
+    n = len(masks)
+    assert n == selector.population_size
+    unequal = sum(
+        np.not_equal(left, right) for i, left in enumerate(masks) for right in masks[i + 1 :]
+    )
+    expected = np.mean(1 - (n * (n - 1) - 2 * unequal) / (n * (n - 1)))
+    assert selector.history["genotype_diversity"] == [expected]
+    assert selector.history["unique_individuals"] == [len(set(map(tuple, masks)))]
+
+
 def test_get_feature_names_out_requires_fitted_selector():
     selector = GAFeatureSelectionCV(DecisionTreeClassifier())
 

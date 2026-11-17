@@ -210,11 +210,38 @@ def _population_diversity(population):
     }
 
 
+def feature_population_diversity(population):
+    size = len(population)
+    if size < 2 or len(population[0]) <= 16:
+        return _population_diversity(population)
+
+    width = len(population[0])
+    counts = np.zeros(width, dtype=np.int64)
+    distinct = set()
+    for mask in population:
+        if len(mask) != width or not all(type(bit) is int and bit in (0, 1) for bit in mask):
+            return _population_diversity(population)
+        row = np.frombuffer(bytes(iter(mask)), dtype=np.uint8)
+        counts += row
+        distinct.add(np.packbits(row).tobytes())
+
+    pairs = size * (size - 1)
+    # Preserve the generic calculation's floating-point subtraction order.
+    equal_pairs = pairs - 2 * counts * (size - counts)
+    return {
+        "population_size": size,
+        "unique_individuals": len(distinct),
+        "unique_individual_ratio": len(distinct) / size,
+        "genotype_diversity": float(np.mean(1 - equal_pairs / pairs)),
+    }
+
+
 def _compile_generation_record(stats, population, state, gen, control_record=None, halloffame=None):
     record = stats.compile(population) if stats else {}
     record = _flatten_record(record)
 
-    record.update(_population_diversity(population))
+    diversity = getattr(stats, "population_diversity", _population_diversity)
+    record.update(diversity(population))
 
     primary_weight = _primary_fitness_weight(population)
     current_best_key = "fitness_max" if primary_weight >= 0 else "fitness_min"

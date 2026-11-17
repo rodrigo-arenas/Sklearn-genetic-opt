@@ -59,6 +59,7 @@ from sklearn.metrics._scorer import _check_multimetric_scoring
 
 from .parameters import Criteria
 from .space import Categorical, Continuous, Integer, Space
+from .algorithms import feature_population_diversity
 from ._base import GeneticEstimatorMixin, reset_adapters as _reset_adapters
 from .callbacks.validations import check_callback
 from .schedules.validations import check_adapter
@@ -2136,6 +2137,7 @@ class GAFeatureSelectionCV(
         # Stats among axis 0 to get two values:
         # One based on the score and the other in the number of features
         self._stats = tools.Statistics(ind_fitness_values)
+        self._stats.population_diversity = feature_population_diversity
         self._stats.register("fitness", np.mean, axis=0)
         self._stats.register("fitness_std", np.std, axis=0)
         self._stats.register("fitness_max", np.max, axis=0)
