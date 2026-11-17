@@ -479,6 +479,107 @@ def test_checkpoint_resume_continues_generation_numbering(tmp_path):
     assert len(resumed_gens) == len(set(resumed_gens))
 
 
+@pytest.mark.parametrize(
+    "kind, initializer",
+    [("hyperparameters", "random"), ("hyperparameters", "smart"), ("features", "random")],
+)
+def test_resume_explores_new_candidates_reproducibly(tmp_path, kind, initializer):
+    from sklearn.datasets import make_classification
+
+    X, y = make_classification(n_samples=64, n_features=24, random_state=42)
+
+    def run(path):
+        options = dict(
+            estimator=DecisionTreeClassifier(random_state=42),
+            random_state=42,
+            n_jobs=1,
+            cv=2,
+            population_size=6,
+            population_initializer=initializer,
+            generations=0 if kind == "hyperparameters" else 1,
+            verbose=False,
+        )
+        if kind == "features":
+            search = GAFeatureSelectionCV(max_features=6, **options)
+        else:
+            search = GASearchCV(
+                param_grid={"max_depth": Integer(2, 20), "min_samples_leaf": Integer(1, 16)},
+                **options,
+            )
+        search.fit(X, y, callbacks=[ModelCheckpoint(path)])
+        return list(search.fitness_cache)
+
+    first_path = tmp_path / "first.pkl"
+    duplicate = tmp_path / "duplicate.pkl"
+    first = run(first_path)
+    shutil.copyfile(first_path, duplicate)
+    second = run(first_path)
+    assert second[: len(first)] == first and len(second) > len(first)
+    assert run(duplicate) == second
+    assert len(run(first_path)) > len(second)
+
+
+@pytest.mark.parametrize("kind", ["hyperparameters", "features"])
+@pytest.mark.parametrize("resumed_size", [1, 3])
+def test_resume_keeps_tied_elites_in_order(tmp_path, kind, resumed_size):
+    from sklearn.dummy import DummyClassifier
+
+    X, y = load_iris(return_X_y=True)
+    path = tmp_path / "ties.pkl"
+
+    def archive(size):
+        options = dict(
+            estimator=DummyClassifier(),
+            random_state=42,
+            generations=0,
+            population_size=6,
+            keep_top_k=size,
+            scoring="accuracy",
+            refit=False,
+            cv=2,
+            n_jobs=1,
+            verbose=False,
+        )
+        if kind == "features":
+            search = GAFeatureSelectionCV(max_features=1, **options)
+        else:
+            search = GASearchCV(param_grid={"random_state": Integer(0, 999)}, **options)
+        search.fit(X, y, callbacks=[ModelCheckpoint(path)])
+        return list(map(tuple, search.hof)) if kind == "features" else list(search.hof.values())
+
+    original = archive(3)
+    assert len(original) == 3
+    assert archive(resumed_size) == original[:resumed_size]
+
+
+def test_resumed_selector_retains_earlier_elite(tmp_path):
+    from sklearn.datasets import make_classification
+
+    X, y = make_classification(
+        n_samples=216, n_features=24, n_informative=8, n_redundant=4, random_state=2702
+    )
+    path = tmp_path / "elite.pkl"
+    for _ in range(2):
+        selector = GAFeatureSelectionCV(
+            DecisionTreeClassifier(random_state=2702),
+            max_features=6,
+            scoring="accuracy",
+            cv=3,
+            population_size=6,
+            generations=1,
+            random_state=2702,
+            n_jobs=1,
+            verbose=False,
+        )
+        selector.fit(X[:144], y[:144], callbacks=[ModelCheckpoint(path)])
+        masks = selector.cv_results_["features"]
+        scores = selector.cv_results_["mean_test_score"]
+        selected = next(
+            score for mask, score in zip(masks, scores) if np.array_equal(mask, selector.support_)
+        )
+        assert selected == max(scores)
+
+
 def test_checkpoint_resume_preserves_random_state(tmp_path):
     """#299: random_state must survive checkpoint resume and actually seed it.
 

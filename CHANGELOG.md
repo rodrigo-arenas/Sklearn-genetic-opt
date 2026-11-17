@@ -4,6 +4,8 @@ Full release notes with code examples are in the [documentation](https://sklearn
 
 ## Unreleased
 
+- Seeded checkpoint resumes in both estimators continue the Python and NumPy proposal streams and retain the archived elites. Smart numeric hyperparameter initialization draws new strata on resume.
+
 - `ModelCheckpoint` writes one snapshot per generation and replaces the previous checkpoint only after serialization succeeds. A failed update preserves the last readable snapshot.
 
 - Fixed premature stopping with `ConsecutiveStopping` when lower fitness scores improve a minimizing search.

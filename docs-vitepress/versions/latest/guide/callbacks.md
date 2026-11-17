@@ -160,7 +160,7 @@ print(logbook)
 
 ### ModelCheckpoint
 
-Saves the search configuration, generation history and runtime state, including cached candidate scores. Each successful write replaces the previous snapshot. See the [checkpoint recipe](../recipes/advanced/checkpointing) to resume a search.
+Saves the search configuration, generation history and runtime state, including cached candidate scores, archived elites and random generator states. Each successful write replaces the previous snapshot. See the [checkpoint recipe](../recipes/advanced/checkpointing) to resume a search.
 
 ```python
 from sklearn_genetic.callbacks import ModelCheckpoint

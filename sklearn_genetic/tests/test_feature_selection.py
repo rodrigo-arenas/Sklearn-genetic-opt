@@ -1616,6 +1616,7 @@ def test_timed_feature_search_evaluates_dense_initial_anchor(
 
 
 def test_timed_feature_resume_preserves_initial_candidate_order(tmp_path):
+    import shutil
     from pathlib import Path
     from ..callbacks import ModelCheckpoint
 
@@ -1637,13 +1638,19 @@ def test_timed_feature_resume_preserves_initial_candidate_order(tmp_path):
     masks = original.cv_results_["features"]
     assert np.sum(masks[0]) == 1
 
+    reference_path = tmp_path / "untimed.pkl"
+    shutil.copyfile(path, reference_path)
+    reference = GAFeatureSelectionCV(DecisionTreeClassifier(random_state=0), **settings)
+    reference.fit(values, labels, callbacks=ModelCheckpoint(reference_path))
     resumed = GAFeatureSelectionCV(DecisionTreeClassifier(random_state=0), **settings)
     resumed.fit(values, labels, callbacks=[ModelCheckpoint(path), TimerStopping(60)])
     assert len(resumed.cv_results_["features"]) == 2 * len(masks)
-    np.testing.assert_array_equal(resumed.cv_results_["features"][len(masks) :], masks)
     np.testing.assert_array_equal(
-        resumed.cv_results_["mean_test_score"][len(masks) :],
-        original.cv_results_["mean_test_score"],
+        resumed.cv_results_["features"], reference.cv_results_["features"]
+    )
+    np.testing.assert_array_equal(
+        resumed.cv_results_["mean_test_score"],
+        reference.cv_results_["mean_test_score"],
     )
 
 

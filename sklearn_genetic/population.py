@@ -168,7 +168,8 @@ def smart_search_population(estimator, toolbox, individual_cls):
         # and otherwise fall back to the global ``random`` RNG so the documented
         # ``random.seed`` convention still controls it.
         random_state = getattr(estimator, "random_state", None)
-        if random_state is None:
+        # Resumed searches seed new strata from the continuing proposal stream.
+        if random_state is None or getattr(estimator, "_resume_generation_log", None):
             lhs_seed = random.randint(0, 2**31 - 1)
         else:
             lhs_seed = int(check_random_state(random_state).randint(0, 2**31 - 1))

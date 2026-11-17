@@ -72,11 +72,12 @@ print("Additional candidate CV calls", resumed.fit_stats_["cross_validate_calls"
 
 With caching enabled, the resumed search reuses saved candidate scores. Use
 the same training rows in the same order, CV splits and scoring rule so those
-scores remain comparable. A resume initializes a population and restores the
-recorded history, cache and supported schedule state. Its sequence of proposals
-can differ from a single uninterrupted run. With a fixed seed, repeating the
-same generation budget can replay only cached candidates. Compare the additional
-CV calls printed above with the generation index to check for new evaluations.
+scores remain comparable. A current checkpoint restores the Python and NumPy
+proposal streams and archived elites before evolution continues with a newly
+initialized population. Its proposals can differ from a single uninterrupted
+run. Warm-start candidates or an exhausted space can still yield cache hits.
+Use the additional CV calls above to measure new evaluations. Older checkpoints
+load the available state and initialize any missing search state on resume.
 
 Each successful checkpoint replaces the previous snapshot. If serialization
 fails, the callback logs a warning and the previous file remains available.

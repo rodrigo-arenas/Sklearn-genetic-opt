@@ -93,6 +93,21 @@ from .callbacks.early_stoppers import TimerStopping
 from .config import EvolutionConfig, OptimizationConfig, PopulationConfig, RuntimeConfig
 
 
+def _restore_search_rngs(state):
+    if state is not None:
+        python_state, numpy_state = state
+        random.setstate(python_state)
+        np.random.set_state(numpy_state)
+
+
+def _restore_search_elites(hall_of_fame, elites):
+    # DEAP inserts equal-fitness entries ahead of existing ties.
+    for genes, fitness in reversed(elites[: hall_of_fame.maxsize]):
+        individual = creator.Individual(genes)
+        individual.fitness.values = fitness
+        hall_of_fame.update([individual])
+
+
 def _seed_global_rngs(random_state):
     """Seed the global ``random`` and NumPy RNGs from a single ``random_state``.
 
@@ -1297,6 +1312,8 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
         restored_logbook = None
         restored_fit_stats = None
         restored_generation_log = None
+        restored_elites = ()
+        restored_rng_state = None
         restored_adapter_state = None
 
         # Load state if a checkpoint exists
@@ -1331,6 +1348,8 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
                         # numbering needs to continue from -- see
                         # ``_seed_logbook`` in ``algorithms.py``.
                         restored_generation_log = checkpoint_data.get("logbook")
+                        restored_elites = runtime_state.get("elites", ())
+                        restored_rng_state = runtime_state.get("rng_state")
                         restored_adapter_state = runtime_state.get("adapter_state")
                         checkpoint_loaded = True
                     break
@@ -1409,7 +1428,10 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
         self._cv_splits = self._search_splits(cv_orig, cv_groups_kwargs)
 
         # Set the DEAPs necessary methods
+        # Keep fold construction on its original seed before resuming proposal draws.
+        _restore_search_rngs(restored_rng_state)
         self._register()
+        _restore_search_elites(self._hof, restored_elites)
         # ``_register()`` always creates a fresh, empty ``self.logbook`` (it
         # also builds the toolbox/population/hof/stats, which are ``deap``
         # objects that cannot be checkpointed and are intentionally rebuilt on
@@ -2384,6 +2406,8 @@ class GAFeatureSelectionCV(
         restored_logbook = None
         restored_fit_stats = None
         restored_generation_log = None
+        restored_elites = ()
+        restored_rng_state = None
         restored_adapter_state = None
 
         # Load state if a checkpoint exists
@@ -2418,6 +2442,8 @@ class GAFeatureSelectionCV(
                         # numbering needs to continue from -- see
                         # ``_seed_logbook`` in ``algorithms.py``.
                         restored_generation_log = checkpoint_data.get("logbook")
+                        restored_elites = runtime_state.get("elites", ())
+                        restored_rng_state = runtime_state.get("rng_state")
                         restored_adapter_state = runtime_state.get("adapter_state")
                         checkpoint_loaded = True
                     break
@@ -2501,7 +2527,10 @@ class GAFeatureSelectionCV(
         self._cv_splits = self._search_splits(cv_orig, cv_groups_kwargs)
 
         # Set the DEAPs necessary methods
+        # Keep fold construction on its original seed before resuming proposal draws.
+        _restore_search_rngs(restored_rng_state)
         self._register()
+        _restore_search_elites(self._hof, restored_elites)
         # ``_register()`` always creates a fresh, empty ``self.logbook`` (it
         # also builds the toolbox/population/hof/stats, which are ``deap``
         # objects that cannot be checkpointed and are intentionally rebuilt on

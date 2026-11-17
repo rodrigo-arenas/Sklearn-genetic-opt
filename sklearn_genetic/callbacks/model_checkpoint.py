@@ -1,7 +1,10 @@
 import logging
 import pickle
+import random
 from pathlib import Path
 from tempfile import NamedTemporaryFile
+
+import numpy as np
 
 from .base import BaseCallback
 from copy import deepcopy
@@ -36,6 +39,11 @@ class ModelCheckpoint(BaseCallback):
             # below for backward compatibility) silently dropped every
             # already-evaluated candidate on resume.
             runtime_state = {
+                "elites": [
+                    (list(individual), individual.fitness.values)
+                    for individual in getattr(estimator, "_hof", ())
+                ],
+                "rng_state": (random.getstate(), np.random.get_state()),
                 "fitness_cache": getattr(estimator, "fitness_cache", {}),
                 "fit_stats_": deepcopy(getattr(estimator, "fit_stats_", None)),
                 "candidate_logbook": deepcopy(getattr(estimator, "logbook", None)),
