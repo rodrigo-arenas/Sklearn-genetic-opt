@@ -1436,3 +1436,51 @@ exploration per local step. These small cohorts show no average holdout gain.
 
 The [trajectories and reproduction script](results/performance-v2/local-variable-dimensions.json)
 include scores and proposal positions for every distinct configuration.
+
+## Feature selection when the informative columns are known
+
+Can the proposal mechanism discover an informative pair among noise columns?
+For each of four seeds (2101–2104), two of 16 independent Gaussian columns
+were chosen as the signal. The additive task used the sign of their sum.
+The interaction task used the exclusive OR of their signs, so each column
+alone has no population-level marginal association with the label. Five
+percent of labels were flipped in expectation. Each seed generated 300
+training and 1,000 independent test rows. Within a seed both tasks used the
+same columns, row values and noise draws.
+
+Genetic and random continuations started with the same six scored masks.
+Each method evaluated 24 distinct masks with one to four columns, using the
+same three stratified CV folds within a pair, a standardization pipeline and
+an RBF SVC with C=2. Random continuation drew the size uniformly and then
+sampled columns without replacement. Each winner maximized inner balanced
+accuracy, breaking ties in favor of fewer columns and then the earlier
+proposal. Reported scores use one refit of that mask on all training rows.
+
+| Method | Additive test balanced accuracy | Additive winners containing both signals | XOR test balanced accuracy | XOR winners containing both signals |
+| --- | ---: | ---: | ---: | ---: |
+| Genetic continuation | .8692 | 3/4 | .7580 | 3/4 |
+| Random continuation | .8750 | 3/4 | .7749 | 3/4 |
+| Univariate F-test, best two columns | .9343 | 4/4 | .4874 | 0/4 |
+| SVC on the known informative pair | .9343 | 4/4 | .8831 | 4/4 |
+
+The last two rows are diagnostic references. The univariate filter used the
+training data and was given the true feature count. The known-pair model
+was given the true indices. Neither reference consumed a wrapper-search
+budget. Recovery counts include masks containing extra noise variables.
+
+Every wrapper run that proposed both signals together ultimately selected
+a mask containing both. On each task the methods missed different seeds.
+For these cases, changing the final ranking alone could not recover the
+missing pair. Across the two label rules within each seed, the genetic runs
+shared 16, 17, 18 and 12 of their 18 distinct post-initialization masks.
+This overlap and the small cohort leave open whether a more varied proposal
+sequence would improve discovery on independent problems. The outer scores
+and true support were used only for reporting.
+
+The [per-mask CV scores and held-out winners](results/performance-v2/known-support.json)
+are reproducible using the [comparison script](results/performance-v2/known-support.py)
+from the repository root:
+
+```powershell
+.\.venv\Scripts\python.exe benchmarks/results/performance-v2/known-support.py known-support.json
+```
