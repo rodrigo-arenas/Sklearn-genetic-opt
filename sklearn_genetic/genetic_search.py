@@ -219,9 +219,10 @@ class _FinalSelectionMixin:
             # cutoff rank, without displacing a better score or adding CV calls.
             counts = self.cv_results_["n_features"]
             cutoff = indices[-1]
-            for index in reversed(order):
+            end = ranks.searchsorted(ranks[cutoff], side="right", sorter=order)
+            for index in reversed(order[:end]):
                 if ranks[index] != ranks[cutoff] or counts[index] <= counts[cutoff]:
-                    continue
+                    break
                 key = tuple(sorted(self._candidate_params_from_index(index).items()))
                 if key not in seen:
                     indices[-1] = index

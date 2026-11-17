@@ -1,0 +1,66 @@
+{
+  "baseline": "b7f8757327af225ef02ecbcc3cdf503b753fb5ea",
+  "python": "3.12.0",
+  "versions": {
+    "numpy": "2.5.3",
+    "scikit-learn": "1.9.1",
+    "deap": "1.4.4"
+  },
+  "rows": [
+    {
+      "size": 64,
+      "shape": "tied_leaders",
+      "baseline_us": 30.11,
+      "current_us": 19.85
+    },
+    {
+      "size": 64,
+      "shape": "all_tied",
+      "baseline_us": 17.58,
+      "current_us": 19.41
+    },
+    {
+      "size": 64,
+      "shape": "distinct_ranks",
+      "baseline_us": 15.4,
+      "current_us": 15.38
+    },
+    {
+      "size": 4096,
+      "shape": "tied_leaders",
+      "baseline_us": 1411.53,
+      "current_us": 395.67
+    },
+    {
+      "size": 4096,
+      "shape": "all_tied",
+      "baseline_us": 316.02,
+      "current_us": 318.55
+    },
+    {
+      "size": 4096,
+      "shape": "distinct_ranks",
+      "baseline_us": 375.95,
+      "current_us": 359.0
+    },
+    {
+      "size": 32768,
+      "shape": "tied_leaders",
+      "baseline_us": 10604.42,
+      "current_us": 3040.79
+    },
+    {
+      "size": 32768,
+      "shape": "all_tied",
+      "baseline_us": 2599.97,
+      "current_us": 2559.26
+    },
+    {
+      "size": 32768,
+      "shape": "distinct_ranks",
+      "baseline_us": 2905.19,
+      "current_us": 2960.03
+    }
+  ],
+  "reproduction_script": "\"\"\"Run from the repository root. Profile candidate ranking separately from fitting.\"\"\"\n\nimport ast\nimport json\nimport platform\nfrom importlib.metadata import version\nimport statistics\nimport subprocess\nimport sys\nimport time\nfrom pathlib import Path\n\nimport numpy as np\nfrom sklearn.datasets import load_breast_cancer\nfrom sklearn.tree import DecisionTreeClassifier\nfrom threadpoolctl import threadpool_limits\n\nsys.path.insert(0, str(Path.cwd()))\nfrom sklearn_genetic import GAFeatureSelectionCV\n\nbaseline = subprocess.check_output(\n    [\"git\", \"rev-parse\", \"b7f8757327af225ef02ecbcc3cdf503b753fb5ea\"], text=True\n).strip()\npath = \"sklearn_genetic/genetic_search.py\"\nsource = subprocess.check_output([\"git\", \"show\", f\"{baseline}:{path}\"], text=True)\nmethod = next(\n    fn\n    for cls in ast.parse(source).body\n    if getattr(cls, \"name\", \"\") == \"_FinalSelectionMixin\"\n    for fn in cls.body\n    if getattr(fn, \"name\", \"\") == \"_top_candidate_indices\"\n)\nexec(compile(ast.Module(body=[method], type_ignores=[]), path, \"exec\"), globals())\ncurrent = GAFeatureSelectionCV._top_candidate_indices\nrng = np.random.default_rng(1801)\nrows = []\nfor size in (64, 4096, 32768):\n    search = GAFeatureSelectionCV(DecisionTreeClassifier(), final_selection_top_k=3)\n    search.refit_metric = \"score\"\n    masks = rng.random((size, 12)) < 0.4\n    masks[~masks.any(axis=1), 0] = True\n    counts = list(masks.sum(axis=1))\n    for shape in (\"tied_leaders\", \"all_tied\", \"distinct_ranks\"):\n        ranks = np.arange(1, size + 1)\n        if shape == \"tied_leaders\":\n            ranks[:12] = 1\n        elif shape == \"all_tied\":\n            ranks[:] = 1\n        search.cv_results_ = {\"rank_test_score\": ranks, \"features\": masks, \"n_features\": counts}\n        assert list(current(search)) == list(_top_candidate_indices(search))\n        measurements = [[], []]\n        for repeat in range(9):\n            for i in ((0, 1) if repeat % 2 == 0 else (1, 0)):\n                fn = (_top_candidate_indices, current)[i]\n                start = time.perf_counter_ns()\n                for _ in range(10):\n                    fn(search)\n                measurements[i].append((time.perf_counter_ns() - start) / 10000)\n        rows.append(\n            dict(\n                size=size,\n                shape=shape,\n                baseline_us=statistics.median(measurements[0]),\n                current_us=statistics.median(measurements[1]),\n            )\n        )\n# Differential coverage of repeated masks, inconsistent ranks across repeats, ties and cutoff sizes.\nfor _ in range(500):\n    size = int(rng.integers(3, 130))\n    masks = rng.integers(0, 2, size=(size, 5), dtype=np.int8).astype(bool)\n    masks[~masks.any(axis=1), 0] = True\n    search.final_selection_top_k = int(rng.integers(1, 40))\n    search.cv_results_ = {\n        \"rank_test_score\": rng.integers(1, 10, size=size),\n        \"features\": masks,\n        \"n_features\": masks.sum(axis=1),\n    }\n    assert list(current(search)) == list(_top_candidate_indices(search))\nX, y = load_breast_cancer(return_X_y=True)\n\n\nclass ReferenceSearch(GAFeatureSelectionCV):\n    _top_candidate_indices = _top_candidate_indices\n\n\nwith threadpool_limits(1):\n    for criterion in (\"min\", \"max\"):\n        opts = dict(\n            criteria=criterion,\n            cv=2,\n            scoring=\"accuracy\",\n            population_size=6,\n            generations=2,\n            random_state=1801,\n            verbose=False,\n            n_jobs=1,\n            final_selection=True,\n        )\n        before, after = [\n            cls(DecisionTreeClassifier(max_depth=2, random_state=1801), **opts).fit(X, y)\n            for cls in (ReferenceSearch, GAFeatureSelectionCV)\n        ]\n        assert (\n            before.final_selection_results_[\"candidates\"]\n            == after.final_selection_results_[\"candidates\"]\n        )\n        assert before.best_index_ == after.best_index_\n        np.testing.assert_array_equal(before.predict(X), after.predict(X))\nprint(\n    json.dumps(\n        dict(\n            baseline=baseline,\n            python=platform.python_version(),\n            versions={p: version(p) for p in (\"numpy\", \"scikit-learn\", \"deap\")},\n            rows=rows,\n            reproduction_script=Path(__file__).read_text(encoding=\"utf-8\"),\n        ),\n        indent=2,\n    )\n)\n"
+}

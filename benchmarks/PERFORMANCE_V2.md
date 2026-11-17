@@ -1292,3 +1292,25 @@ indices, CV and holdout scores for each paired checkpoint. Run the
 ```powershell
 .\.venv\Scripts\python.exe benchmarks/results/performance-v2/feature-exchange.py feature-exchange.json
 ```
+
+## Ranking feature finalists at a tied cutoff
+
+When the last two finalist slots share a rank, feature selection checks
+whether a denser mask at that rank should occupy the final slot. Rows are
+already sorted by rank and then by feature count. A binary search now locates
+the end of the tied rank so that the reverse scan starts with eligible rows
+and stops as soon as the remaining masks cannot qualify.
+
+With 12 tied leaders, three finalist slots and 32,768 recorded masks, median
+ranking time fell from 10.60 to 3.04 ms. At 4,096 masks it fell from 1.41 to
+0.40 ms. The 64-row all-tied case rose from 17.58 to 19.41 microseconds.
+Distinct-rank controls ranged from 4.5% faster to 1.9% slower. These times
+cover finalist ranking only. The number of candidate evaluations is identical.
+
+Nine alternating measurement pairs per case each timed ten rankings on
+the same inputs. An additional 500 generated histories with duplicate masks
+and score ties returned identical finalist indices in the same order.
+Two complete feature searches on Breast Cancer checked finalist scores,
+the winning index and predictions for both criteria. The [raw timings and
+reproduction script](results/performance-v2/finalist-cutoff.json) record
+the baseline commit and library versions.
