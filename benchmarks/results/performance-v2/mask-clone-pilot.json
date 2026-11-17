@@ -1,0 +1,413 @@
+{
+  "baseline": "b1108b9710fc8a4a59789f1d611954430865188f",
+  "current_commit": "b1108b9710fc8a4a59789f1d611954430865188f",
+  "python": "3.12.0",
+  "versions": {
+    "numpy": "2.5.3",
+    "scikit-learn": "1.9.1",
+    "deap": "1.4.4"
+  },
+  "fits": [
+    {
+      "seed": 2301,
+      "block": 0,
+      "position": 0,
+      "method": "default",
+      "candidate_cv_ms": 164.70790014136583,
+      "total_ms": 258.58800002606586,
+      "other_ms": 93.88009988470003,
+      "cv_calls": 24
+    },
+    {
+      "seed": 2301,
+      "block": 0,
+      "position": 1,
+      "method": "experimental",
+      "candidate_cv_ms": 170.2469999436289,
+      "total_ms": 238.4905000217259,
+      "other_ms": 68.24350007809699,
+      "cv_calls": 24
+    },
+    {
+      "seed": 2301,
+      "block": 1,
+      "position": 0,
+      "method": "experimental",
+      "candidate_cv_ms": 166.73249989980832,
+      "total_ms": 234.52480003470555,
+      "other_ms": 67.79230013489723,
+      "cv_calls": 24
+    },
+    {
+      "seed": 2301,
+      "block": 1,
+      "position": 1,
+      "method": "default",
+      "candidate_cv_ms": 175.60679995222017,
+      "total_ms": 277.90520002599806,
+      "other_ms": 102.29840007377788,
+      "cv_calls": 24
+    },
+    {
+      "seed": 2301,
+      "block": 2,
+      "position": 0,
+      "method": "experimental",
+      "candidate_cv_ms": 165.12760007753968,
+      "total_ms": 232.44619998149574,
+      "other_ms": 67.31859990395606,
+      "cv_calls": 24
+    },
+    {
+      "seed": 2301,
+      "block": 2,
+      "position": 1,
+      "method": "default",
+      "candidate_cv_ms": 166.87029995955527,
+      "total_ms": 262.3555999598466,
+      "other_ms": 95.48530000029132,
+      "cv_calls": 24
+    },
+    {
+      "seed": 2301,
+      "block": 3,
+      "position": 0,
+      "method": "default",
+      "candidate_cv_ms": 165.9543000278063,
+      "total_ms": 261.1066999961622,
+      "other_ms": 95.1523999683559,
+      "cv_calls": 24
+    },
+    {
+      "seed": 2301,
+      "block": 3,
+      "position": 1,
+      "method": "experimental",
+      "candidate_cv_ms": 165.68140010349452,
+      "total_ms": 235.20960001042113,
+      "other_ms": 69.5281999069266,
+      "cv_calls": 24
+    },
+    {
+      "seed": 2302,
+      "block": 0,
+      "position": 0,
+      "method": "default",
+      "candidate_cv_ms": 170.07970006670803,
+      "total_ms": 272.97519997227937,
+      "other_ms": 102.89549990557134,
+      "cv_calls": 24
+    },
+    {
+      "seed": 2302,
+      "block": 0,
+      "position": 1,
+      "method": "experimental",
+      "candidate_cv_ms": 169.20800000661984,
+      "total_ms": 247.59919999632984,
+      "other_ms": 78.39119998971,
+      "cv_calls": 24
+    },
+    {
+      "seed": 2302,
+      "block": 1,
+      "position": 0,
+      "method": "experimental",
+      "candidate_cv_ms": 164.6901000640355,
+      "total_ms": 234.28989999229088,
+      "other_ms": 69.59979992825538,
+      "cv_calls": 24
+    },
+    {
+      "seed": 2302,
+      "block": 1,
+      "position": 1,
+      "method": "default",
+      "candidate_cv_ms": 177.27489990647882,
+      "total_ms": 278.6725999903865,
+      "other_ms": 101.3977000839077,
+      "cv_calls": 24
+    },
+    {
+      "seed": 2302,
+      "block": 2,
+      "position": 0,
+      "method": "experimental",
+      "candidate_cv_ms": 184.93030010722578,
+      "total_ms": 260.87490003556013,
+      "other_ms": 75.94459992833436,
+      "cv_calls": 24
+    },
+    {
+      "seed": 2302,
+      "block": 2,
+      "position": 1,
+      "method": "default",
+      "candidate_cv_ms": 167.04890003893524,
+      "total_ms": 266.08090003719553,
+      "other_ms": 99.03199999826029,
+      "cv_calls": 24
+    },
+    {
+      "seed": 2302,
+      "block": 3,
+      "position": 0,
+      "method": "default",
+      "candidate_cv_ms": 164.167900220491,
+      "total_ms": 262.6548999687657,
+      "other_ms": 98.48699974827468,
+      "cv_calls": 24
+    },
+    {
+      "seed": 2302,
+      "block": 3,
+      "position": 1,
+      "method": "experimental",
+      "candidate_cv_ms": 167.39069996401668,
+      "total_ms": 240.0641000131145,
+      "other_ms": 72.67340004909784,
+      "cv_calls": 24
+    },
+    {
+      "seed": 2303,
+      "block": 0,
+      "position": 0,
+      "method": "default",
+      "candidate_cv_ms": 167.92749997694045,
+      "total_ms": 273.74609996331856,
+      "other_ms": 105.8185999863781,
+      "cv_calls": 24
+    },
+    {
+      "seed": 2303,
+      "block": 0,
+      "position": 1,
+      "method": "experimental",
+      "candidate_cv_ms": 163.90760015929118,
+      "total_ms": 233.60909998882562,
+      "other_ms": 69.70149982953444,
+      "cv_calls": 24
+    },
+    {
+      "seed": 2303,
+      "block": 1,
+      "position": 0,
+      "method": "experimental",
+      "candidate_cv_ms": 174.72089995862916,
+      "total_ms": 246.7905999510549,
+      "other_ms": 72.06969999242574,
+      "cv_calls": 24
+    },
+    {
+      "seed": 2303,
+      "block": 1,
+      "position": 1,
+      "method": "default",
+      "candidate_cv_ms": 166.25529999146238,
+      "total_ms": 267.9074000334367,
+      "other_ms": 101.65210004197434,
+      "cv_calls": 24
+    },
+    {
+      "seed": 2303,
+      "block": 2,
+      "position": 0,
+      "method": "experimental",
+      "candidate_cv_ms": 176.6399000189267,
+      "total_ms": 254.97520004864782,
+      "other_ms": 78.33530002972111,
+      "cv_calls": 24
+    },
+    {
+      "seed": 2303,
+      "block": 2,
+      "position": 1,
+      "method": "default",
+      "candidate_cv_ms": 169.14189996896312,
+      "total_ms": 267.94069999596104,
+      "other_ms": 98.79880002699792,
+      "cv_calls": 24
+    },
+    {
+      "seed": 2303,
+      "block": 3,
+      "position": 0,
+      "method": "default",
+      "candidate_cv_ms": 170.64130009384826,
+      "total_ms": 273.2508000335656,
+      "other_ms": 102.60949993971735,
+      "cv_calls": 24
+    },
+    {
+      "seed": 2303,
+      "block": 3,
+      "position": 1,
+      "method": "experimental",
+      "candidate_cv_ms": 179.35369990300387,
+      "total_ms": 251.54169998131692,
+      "other_ms": 72.18800007831305,
+      "cv_calls": 24
+    },
+    {
+      "seed": 2304,
+      "block": 0,
+      "position": 0,
+      "method": "default",
+      "candidate_cv_ms": 181.08439981006086,
+      "total_ms": 304.00429997825995,
+      "other_ms": 122.91990016819909,
+      "cv_calls": 24
+    },
+    {
+      "seed": 2304,
+      "block": 0,
+      "position": 1,
+      "method": "experimental",
+      "candidate_cv_ms": 180.92320003779605,
+      "total_ms": 254.68440004624426,
+      "other_ms": 73.76120000844821,
+      "cv_calls": 24
+    },
+    {
+      "seed": 2304,
+      "block": 1,
+      "position": 0,
+      "method": "experimental",
+      "candidate_cv_ms": 192.52040004357696,
+      "total_ms": 269.493900006637,
+      "other_ms": 76.97349996306002,
+      "cv_calls": 24
+    },
+    {
+      "seed": 2304,
+      "block": 1,
+      "position": 1,
+      "method": "default",
+      "candidate_cv_ms": 193.23980004992336,
+      "total_ms": 313.9526000013575,
+      "other_ms": 120.71279995143414,
+      "cv_calls": 24
+    },
+    {
+      "seed": 2304,
+      "block": 2,
+      "position": 0,
+      "method": "experimental",
+      "candidate_cv_ms": 231.40690015861765,
+      "total_ms": 320.961499994155,
+      "other_ms": 89.55459983553737,
+      "cv_calls": 24
+    },
+    {
+      "seed": 2304,
+      "block": 2,
+      "position": 1,
+      "method": "default",
+      "candidate_cv_ms": 216.23240009648725,
+      "total_ms": 342.7477999939583,
+      "other_ms": 126.51539989747107,
+      "cv_calls": 24
+    },
+    {
+      "seed": 2304,
+      "block": 3,
+      "position": 0,
+      "method": "default",
+      "candidate_cv_ms": 207.98240002477542,
+      "total_ms": 319.76230000145733,
+      "other_ms": 111.77989997668192,
+      "cv_calls": 24
+    },
+    {
+      "seed": 2304,
+      "block": 3,
+      "position": 1,
+      "method": "experimental",
+      "candidate_cv_ms": 213.00159994279966,
+      "total_ms": 299.0703000104986,
+      "other_ms": 86.06870006769896,
+      "cv_calls": 24
+    },
+    {
+      "seed": 2305,
+      "block": 0,
+      "position": 0,
+      "method": "default",
+      "candidate_cv_ms": 189.47870016563684,
+      "total_ms": 302.3306999821216,
+      "other_ms": 112.85199981648475,
+      "cv_calls": 24
+    },
+    {
+      "seed": 2305,
+      "block": 0,
+      "position": 1,
+      "method": "experimental",
+      "candidate_cv_ms": 183.34840011084452,
+      "total_ms": 259.1460000257939,
+      "other_ms": 75.79759991494939,
+      "cv_calls": 24
+    },
+    {
+      "seed": 2305,
+      "block": 1,
+      "position": 0,
+      "method": "experimental",
+      "candidate_cv_ms": 179.63450000388548,
+      "total_ms": 256.8703999859281,
+      "other_ms": 77.23589998204261,
+      "cv_calls": 24
+    },
+    {
+      "seed": 2305,
+      "block": 1,
+      "position": 1,
+      "method": "default",
+      "candidate_cv_ms": 176.47979978937656,
+      "total_ms": 285.44639999745414,
+      "other_ms": 108.96660020807758,
+      "cv_calls": 24
+    },
+    {
+      "seed": 2305,
+      "block": 2,
+      "position": 0,
+      "method": "experimental",
+      "candidate_cv_ms": 178.499800094869,
+      "total_ms": 256.7832000204362,
+      "other_ms": 78.28339992556721,
+      "cv_calls": 24
+    },
+    {
+      "seed": 2305,
+      "block": 2,
+      "position": 1,
+      "method": "default",
+      "candidate_cv_ms": 173.23199997190386,
+      "total_ms": 287.6943000010215,
+      "other_ms": 114.46230002911761,
+      "cv_calls": 24
+    },
+    {
+      "seed": 2305,
+      "block": 3,
+      "position": 0,
+      "method": "default",
+      "candidate_cv_ms": 186.4730000961572,
+      "total_ms": 297.6343999616802,
+      "other_ms": 111.16139986552298,
+      "cv_calls": 24
+    },
+    {
+      "seed": 2305,
+      "block": 3,
+      "position": 1,
+      "method": "experimental",
+      "candidate_cv_ms": 181.15130002843216,
+      "total_ms": 257.8926999703981,
+      "other_ms": 76.74139994196594,
+      "cv_calls": 24
+    }
+  ],
+  "reproduction_script": "import json\nimport platform\nimport gc\nimport subprocess\nimport sys\nimport time\nfrom importlib.metadata import version\nfrom pathlib import Path\nfrom types import ModuleType\nfrom unittest.mock import patch\n\nimport numpy as np\nfrom sklearn.datasets import make_classification\nfrom sklearn.tree import DecisionTreeClassifier\nfrom threadpoolctl import threadpool_limits\n\nsys.path.insert(0, str(Path.cwd()))\nfrom sklearn_genetic import GAFeatureSelectionCV, genetic_search, population\n\nfrom copy import deepcopy\n\nbaseline = subprocess.check_output([\"git\", \"rev-parse\", \"HEAD\"], text=True).strip()\n\n\ndef clone_mask(parent):\n    child = type(parent)(parent)\n    child.__dict__.update(deepcopy(parent.__dict__, {id(parent): child}))\n    return child\n\n\nclass Experimental(GAFeatureSelectionCV):\n    def _register(self):\n        super()._register()\n        self.toolbox.register(\"clone\", clone_mask)\n\n\nmethods = (GAFeatureSelectionCV, Experimental)\noriginal_cv = genetic_search.cross_validate\n\n\ndef measure(X, y, seed, method):\n    stage = {\"candidate_cv_ms\": 0.0}\n\n    def validation(*args, **kwargs):\n        start = time.perf_counter()\n        result = original_cv(*args, **kwargs)\n        stage[\"candidate_cv_ms\"] += 1000 * (time.perf_counter() - start)\n        return result\n\n    search = method(\n        DecisionTreeClassifier(max_depth=3, random_state=seed),\n        population_size=8,\n        generations=1,\n        max_features=12,\n        scoring=\"balanced_accuracy\",\n        cv=3,\n        n_jobs=1,\n        random_state=seed,\n        error_score=\"raise\",\n        verbose=False,\n    )\n    gc.collect()\n    with patch.object(genetic_search, \"cross_validate\", validation):\n        start = time.perf_counter()\n        search.fit(X[:120], y[:120])\n        stage[\"total_ms\"] = 1000 * (time.perf_counter() - start)\n    stage[\"other_ms\"] = stage[\"total_ms\"] - stage[\"candidate_cv_ms\"]\n    stage[\"cv_calls\"] = search.fit_stats_[\"cross_validate_calls\"]\n    assert stage[\"cv_calls\"] == 24\n    outcome = (\n        np.asarray(search.cv_results_[\"features\"]),\n        search.cv_results_[\"mean_test_score\"],\n        search.support_,\n        search.predict(X[120:]),\n    )\n    return stage, outcome\n\n\nfits = []\nwith threadpool_limits(1):\n    for seed in range(2301, 2306):\n        X, y = make_classification(\n            n_samples=180, n_features=4096, n_informative=16, n_redundant=0, random_state=seed\n        )\n        if not fits:\n            for method in methods:\n                measure(X, y, seed, method)\n        reference = None\n        for block, order in enumerate([(0, 1), (1, 0), (1, 0), (0, 1)]):\n            for position, i in enumerate(order):\n                stage, outcome = measure(X, y, seed, methods[i])\n                if reference is None:\n                    reference = outcome\n                else:\n                    for before, after in zip(reference, outcome, strict=True):\n                        np.testing.assert_array_equal(before, after)\n                fits.append(\n                    dict(\n                        seed=seed,\n                        block=block,\n                        position=position,\n                        method=(\"default\", \"experimental\")[i],\n                        **stage,\n                    )\n                )\nprint(\n    json.dumps(\n        dict(\n            baseline=baseline,\n            current_commit=subprocess.check_output([\"git\", \"rev-parse\", \"HEAD\"], text=True).strip(),\n            python=platform.python_version(),\n            versions={p: version(p) for p in (\"numpy\", \"scikit-learn\", \"deap\")},\n            fits=fits,\n            reproduction_script=Path(__file__).read_text(),\n        ),\n        indent=2,\n    )\n)\n"
+}

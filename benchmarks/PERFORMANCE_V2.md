@@ -1576,3 +1576,41 @@ predictions. Median full-fit time was 285.7 ms previously and 306.8 ms with
 the compact representation on this machine. The measured benefit is confined
 to the initialization phase. See the [raw measurements and reproduction
 script](results/performance-v2/compact-mask-keys.json).
+
+### Repeated full-fit timings and feature chromosome copying
+
+The five-fit comparison above suggested a 21 ms increase in median full-fit
+time. A follow-up measured the same two initializer implementations over
+20 adjacent pairs on the same five datasets. Each seed used four pairs in
+AB, BA, BA, AB order after one warm-up per method on the first dataset.
+The timer covered the complete fit, with nested timers around smart
+initialization and candidate CV. Each fit used one worker, one native thread
+and 24 candidate CV calls. Each seed produced identical ordered masks,
+candidate scores, selected support and holdout predictions in every run.
+
+| Component | Tuple keys, median ms | Byte keys, median ms | Median paired change, ms |
+| --- | ---: | ---: | ---: |
+| Full fit | 271.788 | 270.578 | −1.313 |
+| Smart initialization | .334 | .201 | −.132 |
+| Candidate CV | 167.450 | 167.473 | −.670 |
+| Remaining fit work | 103.001 | 102.894 | −.147 |
+
+Medians are calculated independently and need not add up. Initialization was
+faster in all 20 pairs. Full fit was faster in 12, with paired differences
+from −34.771 to +18.150 ms. These repetitions did not reproduce the previous
+median slowdown. They concern one wide-feature workload on a shared machine.
+
+A separate cProfile run highlighted recursive copying of DEAP individuals.
+A benchmark-only subclass changed the toolbox clone operation to copy the
+list of binary genes directly and deep-copy the individual's attributes.
+Both arms used compact mask keys. In a second 20-pair crossover, median
+full-fit times were 275.83 ms for the default and 253.11 ms for the prototype.
+The median within-pair reduction was 27.24 ms, with all 20 pairs favoring
+the prototype. Time outside candidate CV fell by a median 31.08 ms per pair.
+The same outcome checks passed. Wider workload testing and validation of
+independent fitness and custom metadata are still needed before adopting
+this cloning behavior in the library.
+
+The [initializer timing records](results/performance-v2/mask-fit-stages.json)
+and [clone pilot records](results/performance-v2/mask-clone-pilot.json)
+include the per-run stage measurements, execution order and reproduction scripts.
