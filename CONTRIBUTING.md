@@ -203,6 +203,13 @@ such as diversity and stagnation, and model metrics. Prefer using the same
 machine, Python environment, random seed, and benchmark options when comparing
 results.
 
+Use `--final-selection --final-selection-top-k 2 --final-selection-cv-splits 3`
+to include a three-fold evaluation of up to two finalists for each estimator.
+`actual_cross_validate_calls_mean` counts candidate evaluations across search
+and finalist selection. `cv_fold_fits_mean` counts the individual folds in
+those evaluations. Elapsed fit time also includes the final full-data refit.
+Older benchmark reports can undercount CV work when finalist selection was enabled.
+
 If you have questions, you can open an issue (tag it as a question).
 
 We encourage you to follow these guidelines:
