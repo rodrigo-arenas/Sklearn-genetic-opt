@@ -4,6 +4,8 @@ Full release notes with code examples are in the [documentation](https://sklearn
 
 ## Unreleased
 
+- Both estimators support `final_selection="reuse_folds"` for deterministic searches with `error_score="raise"`. Finalists reuse scores from identical ordered splits of the current fit and report the number of reused folds.
+
 - Fixed integer candidate repair and local refinement in `GASearchCV` so adjacent large integers retain distinct parameter values and fitness-cache entries.
 - Fixed sampling of log-uniform continuous dimensions with equal bounds. Smart initialization now recognizes the same fixed value in warm-start and generated candidates, preserving room for distinct configurations.
 - Candidate score, ranking and fold plots now honor the search's minimization or maximization criterion and omit non-finite means. Horizontal charts show the best candidate at the top, and identical display labels retain separate bars.

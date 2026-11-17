@@ -1,3 +1,4 @@
+from copy import deepcopy
 import inspect
 from numbers import Integral
 import random
@@ -260,7 +261,53 @@ class _FinalSelectionMixin:
         cv_scores = cv_results[f"test_{self.refit_metric}"]
         return float(np.mean(cv_scores)), cv_scores
 
-    def _select_final_candidate(self):
+    def _search_splits(self, splitter, groups_kwargs):
+        splits = list(splitter.split(self.X_, self.y_, **groups_kwargs))
+        # User splitters may mutate their index buffers during final validation.
+        return deepcopy(splits) if self.final_selection == "reuse_folds" else splits
+
+    @staticmethod
+    def _same_fold(left, right):
+        left_train, left_test = left
+        right_train, right_test = right
+        for first, second in ((left_train, right_train), (left_test, right_test)):
+            first, second = np.asarray(first), np.asarray(second)
+            if (
+                first.ndim != 1
+                or first.dtype.kind not in "iu"
+                or second.dtype.kind not in "iu"
+                or not np.array_equal(first, second)
+            ):
+                return False
+        return True
+
+    def _score_final_folds(self, index, params, splits, reused, missing):
+        scores = [None] * len(splits)
+        for position, source in reused.items():
+            scores[position] = self.cv_results_[f"split{source}_test_{self.refit_metric}"][index]
+
+        # sklearn combines scores across folds, potentially promoting large
+        # integers to float. Recover exact values via fresh CV in that case.
+        if reused and all(abs(float(scores[i])) < 2**53 for i in reused):
+            fresh = self._score_final_candidate(params, missing)[1] if missing else ()
+            if all(abs(float(value)) < 2**53 for value in fresh):
+                remaining = iter(fresh)
+                ordered = np.asarray(
+                    [next(remaining) if score is None else score for score in scores]
+                )
+                return float(np.mean(ordered)), ordered, len(reused)
+
+        score, values = self._score_final_candidate(params, splits)
+        return score, values, 0
+
+    def _validate_final_selection_mode(self):
+        if isinstance(self.final_selection, str):
+            if self.final_selection != "reuse_folds":
+                raise ValueError("final_selection must be False, True, or 'reuse_folds'")
+            if self.error_score != "raise":
+                raise ValueError("final_selection='reuse_folds' requires error_score='raise'")
+
+    def _select_final_candidate(self, *, checkpoint_loaded=False):
         indices = self._top_candidate_indices() if self.final_selection else None
         original_best_index = int(
             indices[0]
@@ -293,10 +340,20 @@ class _FinalSelectionMixin:
         started_at = time.time()
         cv_splits = self._final_selection_splits()
         candidate_results = []
+        reused = {}
+        if self.final_selection == "reuse_folds" and not checkpoint_loaded:
+            for position, final_fold in enumerate(cv_splits):
+                for source, search_fold in enumerate(self._cv_splits):
+                    if self._same_fold(final_fold, search_fold):
+                        reused[position] = source
+                        break
+        missing = [fold for position, fold in enumerate(cv_splits) if position not in reused]
 
         for index in indices:
             params = self._candidate_params_from_index(index)
-            score, cv_scores = self._score_final_candidate(params, cv_splits)
+            score, cv_scores, reuse_count = self._score_final_folds(
+                index, params, cv_splits, reused, missing
+            )
             candidate_results.append(
                 {
                     "index": int(index),
@@ -305,6 +362,7 @@ class _FinalSelectionMixin:
                     ),
                     "score": score,
                     "cv_scores": cv_scores.tolist(),
+                    "reused_folds": reuse_count,
                     "params": params,
                 }
             )
@@ -527,10 +585,14 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
         Shape parameter that controls how quickly sharing pressure decreases
         with distance inside ``sharing_radius``.
 
-    final_selection : bool, default=False
+    final_selection : bool or {"reuse_folds"}, default=False
         If ``True``, re-evaluate the top ``final_selection_top_k`` candidates
         after the GA finishes and select ``best_params_`` from those robust
         final scores before refitting.
+
+        For deterministic estimators and scoring, set to ``"reuse_folds"`` with
+        ``error_score="raise"`` to reuse identical training and validation splits
+        from the same search. Resumed searches evaluate finalists afresh.
 
     final_selection_top_k : int, default=3
         Number of top candidates from the original GA ``cv_results_`` to
@@ -1285,6 +1347,7 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
         # pre-resume value instead (see #299).
         _seed_global_rngs(self.random_state)
 
+        self._validate_final_selection_mode()
         if checkpoint_loaded and restored_adapter_state is not None:
             # Restore the crossover/mutation adapter step counters so the
             # schedule continues from where the previous run left off
@@ -1344,7 +1407,7 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
         else:
             cv_orig = check_cv(self.cv, self.y_, classifier=_is_classifier(self.estimator))
             self.n_splits_ = cv_orig.get_n_splits(X, self.y_, **cv_groups_kwargs)
-        self._cv_splits = list(cv_orig.split(self.X_, self.y_, **cv_groups_kwargs))
+        self._cv_splits = self._search_splits(cv_orig, cv_groups_kwargs)
 
         # Set the DEAPs necessary methods
         self._register()
@@ -1398,7 +1461,9 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
 
         # Imitate the logic of scikit-learn refit parameter
         if self.refit:
-            self.best_index_, self.best_score_, self.best_params_ = self._select_final_candidate()
+            self.best_index_, self.best_score_, self.best_params_ = self._select_final_candidate(
+                checkpoint_loaded=checkpoint_loaded
+            )
 
             self.best_estimator_ = clone(self.estimator).set_params(
                 **clone(self.best_params_, safe=False)
@@ -1575,12 +1640,16 @@ class GAFeatureSelectionCV(
     elitism : bool, default=True
         If True takes the *tournament_size* best solution to the next generation.
 
-    final_selection : bool, default=False
+    final_selection : bool or {"reuse_folds"}, default=False
         With ``refit=True``, re-evaluate the best distinct feature masks after
         evolution and choose the refitted winner using these final scores.
         Equal final scores prefer fewer features. Search scores in
         ``cv_results_`` and ``history`` remain unchanged; final scores are
         available in ``final_selection_results_`` and ``best_score_``.
+
+        For deterministic estimators and scoring, set to ``"reuse_folds"`` with
+        ``error_score="raise"`` to reuse identical training and validation splits
+        from the same search. Resumed searches evaluate finalists afresh.
 
     final_selection_top_k : int, default=3
         Positive number of distinct masks to re-evaluate. This bounds extra
@@ -2342,6 +2411,7 @@ class GAFeatureSelectionCV(
         # pre-resume value instead (see #299).
         _seed_global_rngs(self.random_state)
 
+        self._validate_final_selection_mode()
         if checkpoint_loaded and restored_adapter_state is not None:
             # Restore the crossover/mutation adapter step counters so the
             # schedule continues from where the previous run left off
@@ -2400,7 +2470,7 @@ class GAFeatureSelectionCV(
         else:
             cv_orig = check_cv(self.cv, self.y_, classifier=_is_classifier(self.estimator))
             self.n_splits_ = cv_orig.get_n_splits(X, self.y_, **cv_groups_kwargs)
-        self._cv_splits = list(cv_orig.split(self.X_, self.y_, **cv_groups_kwargs))
+        self._cv_splits = self._search_splits(cv_orig, cv_groups_kwargs)
 
         # Set the DEAPs necessary methods
         self._register()
@@ -2466,7 +2536,9 @@ class GAFeatureSelectionCV(
 
         if self.refit:
             if self.final_selection:
-                self.best_index_, self.best_score_, selected = self._select_final_candidate()
+                self.best_index_, self.best_score_, selected = self._select_final_candidate(
+                    checkpoint_loaded=checkpoint_loaded
+                )
                 self.best_features_ = np.asarray(selected["features"], dtype=bool)
                 self.support_ = self.best_features_
             bool_individual = np.array(self.best_features_, dtype=bool)

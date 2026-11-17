@@ -1202,3 +1202,10 @@ A reuse experiment should match ordered training and validation indices
 inside the same fit, use deterministic estimators and scorers, and preserve
 fresh evaluation for stochastic searches. The outer holdout was excluded
 from the diagnostic. See the [reproduction script](results/performance-v2/fold-reuse-audit.py).
+
+A paired run of the implemented `final_selection="reuse_folds"` mode on these
+same four tasks reduced total CV fold fits from 45 to 42 per search (180 to
+168 overall, excluding the final refit). The twelve finalists had identical
+ordered scores, and the four searches selected the same winner and produced
+identical predictions on the reserved observations. The reproduction script
+above runs both modes and counts actual folds evaluated.

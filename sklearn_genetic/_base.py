@@ -96,6 +96,8 @@ class GeneticEstimatorMixin:
             state["param_grid"] = self.param_grid
         for key, default in self._checkpoint_optional_defaults.items():
             state[key] = getattr(self, key, default)
+        if state["final_selection"] == "reuse_folds":
+            state["error_score"] = self.error_score
         return state
 
     def save(self, filepath):

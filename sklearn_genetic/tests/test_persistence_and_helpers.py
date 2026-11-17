@@ -833,7 +833,7 @@ def test_checkpoint_reconstruction_preserves_finalist_validation(tmp_path, searc
 
     X, y = load_iris(return_X_y=True)
     full_cv = list(StratifiedKFold(3).split(X, y))
-    search_cv = subsample_cv(full_cv[:2], 0.5, stratify=y, random_state=2)
+    search_cv = [full_cv[0], *subsample_cv(full_cv[1:2], 0.5, stratify=y, random_state=2)]
     extra = {"param_grid": {"max_depth": Integer(1, 5)}} if search_class is GASearchCV else {}
     search = search_class(
         DecisionTreeClassifier(random_state=2),
@@ -844,7 +844,8 @@ def test_checkpoint_reconstruction_preserves_finalist_validation(tmp_path, searc
         random_state=2,
         n_jobs=1,
         verbose=False,
-        final_selection=True,
+        final_selection="reuse_folds",
+        error_score="raise",
         final_selection_top_k=2,
         final_selection_cv=full_cv,
         **extra,
@@ -858,3 +859,6 @@ def test_checkpoint_reconstruction_preserves_finalist_validation(tmp_path, searc
     assert len(results["candidates"]) == 2
     assert all(len(candidate["cv_scores"]) == 3 for candidate in results["candidates"])
     assert reconstructed.predict(X).shape == y.shape
+    assert all(candidate["reused_folds"] == 1 for candidate in results["candidates"])
+    reconstructed.fit(X, y, callbacks=callback)
+    assert all(c["reused_folds"] == 0 for c in reconstructed.final_selection_results_["candidates"])

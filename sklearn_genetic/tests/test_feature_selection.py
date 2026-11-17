@@ -1604,3 +1604,120 @@ def test_timed_feature_resume_preserves_initial_candidate_order(tmp_path):
         resumed.cv_results_["mean_test_score"][len(masks) :],
         original.cv_results_["mean_test_score"],
     )
+
+
+@pytest.mark.parametrize("features", [False, True])
+@pytest.mark.parametrize("complete_overlap", [False, True])
+def test_final_selection_reuse_trains_only_missing_folds(features, complete_overlap):
+    from sklearn.model_selection import KFold
+    from sklearn_genetic import GASearchCV
+    from sklearn_genetic.space import Integer
+
+    fit_sizes = []
+
+    class RecordedTree(DecisionTreeClassifier):
+        def fit(self, X, y):
+            fit_sizes.append(len(y))
+            self.first_row_ = X[0, 0] % 100
+            return super().fit(X, y)
+
+    def score(model, X, y):
+        return (
+            model.first_row_
+            + X[0, 0] % 100 / 100
+            + (model.max_depth or sum(X[0] // 100 + 1) ** 2 + X.shape[1])
+        )
+
+    rows = np.arange(36)
+    X = np.column_stack([rows + 100 * i for i in range(4)])
+    y = rows % 2
+    folds = list(KFold(3).split(X))
+    final = [
+        (train.astype("int32"), test.astype("int32"))
+        for train, test in [folds[2], folds[0], folds[1]]
+    ]
+    preliminary = (
+        folds
+        if complete_overlap
+        else [folds[0], (folds[1][0][::-1], folds[1][1]), (folds[2][0], folds[2][1][::-1])]
+    )
+    runs = []
+    for mode in [True, "reuse_folds"]:
+        options = dict(
+            cv=preliminary,
+            final_selection_cv=final,
+            scoring=score,
+            n_jobs=1,
+            error_score="raise",
+            random_state=7,
+            population_size=5,
+            generations=0,
+            verbose=False,
+            optimization_config=OptimizationConfig(final_selection=mode),
+        )
+        model = RecordedTree(random_state=0)
+        search = (
+            GAFeatureSelectionCV(model, **options)
+            if features
+            else GASearchCV(model, param_grid={"max_depth": Integer(1, 4)}, **options)
+        )
+        fit_sizes.clear()
+        search.fit(X, y)
+        runs.append((search, len(fit_sizes)))
+
+    (baseline, before), (optimized, after) = runs
+    candidates = optimized.final_selection_results_["candidates"]
+    reused = 3 if complete_overlap else 1
+    assert len({tuple(c["cv_scores"]) for c in candidates}) > 1
+    assert before - after == len(candidates) * reused > 0
+    assert [c["reused_folds"] for c in candidates] == [reused] * len(candidates)
+    assert [c["cv_scores"] for c in candidates] == [
+        c["cv_scores"] for c in baseline.final_selection_results_["candidates"]
+    ]
+    assert optimized.best_index_ == baseline.best_index_
+    np.testing.assert_array_equal(optimized.predict(X), baseline.predict(X))
+
+
+@pytest.mark.parametrize("case", ["mutated", "malformed", "large_integer", "error_score"])
+def test_final_selection_reuse_preserves_split_and_score_contracts(case):
+    train, test = np.arange(12), np.arange(12, 24)
+    search_folds = [(train, test), (test, train)]
+
+    class FinalSplit:
+        def split(self, X, y):
+            if case == "mutated":
+                test[:] = test[::-1]
+            yield (train, test, test) if case == "malformed" else (train, test)
+
+    def first_row_score(model, X, y):
+        if case == "large_integer":
+            return 2**53 + 1 if X[0, 0] else 0.5
+        return int(X[0, 0])
+
+    search = GAFeatureSelectionCV(
+        DecisionTreeClassifier(random_state=0),
+        cv=search_folds,
+        final_selection_cv=FinalSplit(),
+        final_selection="reuse_folds",
+        error_score=np.nan if case == "error_score" else "raise",
+        scoring=first_row_score,
+        population_size=3,
+        generations=0,
+        random_state=2,
+        n_jobs=1,
+        verbose=False,
+    )
+    rows = np.arange(24)
+    X = np.column_stack([rows, rows])
+    if case in ("malformed", "error_score"):
+        with pytest.raises(
+            ValueError, match="too many values to unpack" if case == "malformed" else "error_score"
+        ):
+            search.fit(X, rows % 2)
+    else:
+        search.fit(X, rows % 2)
+        candidates = search.final_selection_results_["candidates"]
+        expected = 2**53 + 1 if case == "large_integer" else 23
+        assert candidates and all(
+            c["cv_scores"] == [expected] and c["reused_folds"] == 0 for c in candidates
+        )

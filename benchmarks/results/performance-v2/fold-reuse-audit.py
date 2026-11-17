@@ -3,16 +3,18 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
+import numpy as np
+from sklearn.base import clone
 from sklearn.model_selection import train_test_split
 from threadpoolctl import threadpool_limits
-from benchmarks.benchmark_fit import SCENARIOS, make_cv
+from benchmarks.benchmark_fit import SCENARIOS, FitCounters, count_cross_validate_calls, make_cv
 from sklearn_genetic import GASearchCV, GAFeatureSelectionCV
 
 with threadpool_limits(1):
     for name in ("classification_lr", "regression_ridge"):
         scenario = SCENARIOS[name]
         X, y = scenario.loader()
-        X, _, y, _ = train_test_split(
+        X, X_holdout, y, _ = train_test_split(
             X,
             y,
             test_size=0.25,
@@ -43,11 +45,34 @@ with threadpool_limits(1):
                 if features
                 else GASearchCV(model, param_grid=scenario.param_grid_builder(), **options)
             )
-            search.fit(X, y)
+            optimized = clone(search).set_params(final_selection="reuse_folds")
+            before, after = FitCounters(), FitCounters()
+            with count_cross_validate_calls(before):
+                search.fit(X, y)
+            with count_cross_validate_calls(after):
+                optimized.fit(X, y)
+            assert search.best_index_ == optimized.best_index_
+            np.testing.assert_array_equal(search.predict(X_holdout), optimized.predict(X_holdout))
+            baseline_finalists = search.final_selection_results_["candidates"]
+            optimized_finalists = optimized.final_selection_results_["candidates"]
+            assert [(c["index"], c["cv_scores"]) for c in baseline_finalists] == [
+                (c["index"], c["cv_scores"]) for c in optimized_finalists
+            ]
+            assert before.cv_fold_fits - after.cv_fold_fits == sum(
+                c["reused_folds"] for c in optimized_finalists
+            )
             finalists = search.final_selection_results_["candidates"]
             equal = changed = 0
             for row in finalists:
                 idx = row["index"]
                 equal += search.cv_results_["split0_test_score"][idx] == row["cv_scores"][1]
                 changed += search.cv_results_["split1_test_score"][idx] != row["cv_scores"][2]
-            print(name, "features" if features else "hpo", len(finalists), int(equal), int(changed))
+            print(
+                name,
+                "features" if features else "hpo",
+                len(finalists),
+                int(equal),
+                int(changed),
+                before.cv_fold_fits,
+                after.cv_fold_fits,
+            )

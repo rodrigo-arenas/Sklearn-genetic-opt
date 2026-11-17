@@ -335,6 +335,14 @@ For models where each fold is expensive, another option is to replace the `subsa
 
 `cv_results_`, `history` and the hall of fame retain the original search scores and candidates. `final_selection_results_` records each promoted candidate's original and final scores, full-validation fold scores, the winner and validation time. `best_score_` describes the final-validation winner, so it need not equal a value in `cv_results_`. Feature selection breaks equal final scores by preferring fewer columns. Invalid NaN finalists cannot replace valid candidates; if every finalist score is NaN, fitting raises an error.
 
+For a deterministic estimator, preprocessing pipeline and scorer, use
+`final_selection="reuse_folds"` and `error_score="raise"` when the preliminary
+search uses a subset of the final folds. Both training and validation indices
+must match in order. Subsampling the training rows makes a fold a fresh fit.
+Each entry of `final_selection_results_["candidates"]` reports `reused_folds`.
+Checkpoint resumes evaluate all finalists afresh. Use `final_selection=True`
+when fresh scores are needed for stochastic models or scorers.
+
 Final selection runs with `refit=True`. Its extra CV evaluations and final refit are additional to the evolutionary budget; generation stopping callbacks do not cap those stages. Include them when timing a workflow. An explicit non-None `final_selection_cv` overrides the corresponding `OptimizationConfig` value. Both settings and explicit fold arrays survive cloning and checkpoints.
 
 Use `stratify=y_train` for classification, and omit it for regression. Sampling that drops a class raises an error; increase the fraction in that case. The discarded rows do not need to contain every class. A fraction of 1 keeps the original training folds. This is opt-in: ordinary searches still use full training folds. Smaller training sets can change candidate rankings, and full validation of finalists cannot recover a good candidate discarded earlier. Measure held-out quality and total time; small datasets or models with high fixed training cost may gain little.
