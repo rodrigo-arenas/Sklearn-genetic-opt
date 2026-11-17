@@ -237,15 +237,16 @@ def _candidate_frame(estimator, metric=None, top_k=None, sort=True):
     _validate_top_k(top_k)
 
     frame, score_column, scores = _score_values(estimator, metric=metric)
-    candidates = frame.copy()
-    candidates[score_column] = scores
-    candidates = candidates.dropna(subset=[score_column])
+    frame[score_column] = scores
+    candidates = frame.loc[np.isfinite(scores)]
 
     if candidates.empty:
         raise ValueError("No candidate scores were found in estimator.cv_results_")
 
     if sort:
-        candidates = candidates.sort_values(score_column, ascending=False)
+        candidates = candidates.sort_values(
+            score_column, ascending=getattr(estimator, "criteria", "max") == "min", kind="stable"
+        )
 
     if top_k is not None:
         candidates = candidates.head(top_k)
@@ -851,7 +852,9 @@ def plot_candidate_scores(
 
     sns.set_style("white")
     bar_color = color or sns.color_palette("crest", n_colors=1)[0]
-    ax.barh(labels[::-1], candidates[score_column].to_numpy()[::-1], color=bar_color, alpha=0.9)
+    positions = np.arange(len(candidates))[::-1]
+    ax.barh(positions, candidates[score_column], color=bar_color, alpha=0.9)
+    ax.set_yticks(positions, labels=labels)
     ax.set_xlabel(score_column)
     ax.set_ylabel("candidate")
     ax.set_title(title or f"Top {len(candidates)} candidate scores")
@@ -1423,16 +1426,16 @@ def plot_candidate_rankings(
     marker_color = color or sns.color_palette("crest", n_colors=1)[0]
     y_positions = np.arange(len(candidates))[::-1]
     ax.errorbar(
-        scores[::-1],
+        scores,
         y_positions,
-        xerr=errors[::-1] if errors is not None else None,
+        xerr=errors,
         fmt="o",
         color=marker_color,
         ecolor="0.55",
         capsize=3,
         markersize=7,
     )
-    ax.set_yticks(y_positions, labels=labels[::-1])
+    ax.set_yticks(y_positions, labels=labels)
     ax.set_xlabel(score_column)
     ax.set_ylabel("candidate")
     ax.set_title(title or f"Candidate ranking (top {len(candidates)})")

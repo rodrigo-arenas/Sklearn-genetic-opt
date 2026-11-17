@@ -2,6 +2,7 @@ import matplotlib
 import pytest
 import numpy as np
 import re
+from types import SimpleNamespace
 from sklearn.datasets import load_diabetes
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeRegressor
@@ -285,10 +286,62 @@ def test_candidate_plots_reject_invalid_top_k(plot_function, top_k):
         plot_candidate_rankings,
     ],
 )
+@pytest.mark.parametrize("criteria", ["min", "max"])
 @pytest.mark.parametrize("top_k", [1, None])
-def test_candidate_plots_accept_valid_top_k(plot_function, top_k):
-    plot = plot_function(evolved_estimator, top_k=top_k)
-    assert plot is not None
+def test_candidate_plots_show_best_finite_scores_first(plot_function, criteria, top_k):
+    from matplotlib import pyplot as plt
+
+    scores = [np.inf, np.nan, -np.inf] + [float(index % 3) for index in range(30)]
+    expected = sorted(range(3, len(scores)), key=scores.__getitem__, reverse=criteria == "max")
+    deviations = np.arange(len(scores)) / 10
+    estimator = SimpleNamespace(
+        criteria=criteria,
+        cv_results_={
+            "mean_test_loss": scores,
+            "std_test_loss": deviations,
+            "split0_test_loss": scores,
+        },
+    )
+    fig, ax = plt.subplots()
+    try:
+        plot_function(estimator, metric="loss", top_k=top_k, ax=ax)
+        if plot_function is plot_cv_scores:
+            labels = ax.get_xticklabels()
+        else:
+            labels = sorted(ax.get_yticklabels(), key=lambda t: -t.get_position()[1])
+        assert [int(label.get_text().split()[-1]) for label in labels] == expected[:top_k]
+        if plot_function is plot_candidate_rankings:
+            line, _, (error_bars,) = ax.containers[0].lines
+            indices = expected[:top_k]
+            np.testing.assert_array_equal(line.get_xdata(), np.asarray(scores)[indices])
+            for index, label, segment in zip(
+                indices, labels, error_bars.get_segments(), strict=True
+            ):
+                np.testing.assert_allclose(
+                    segment[:, 0], scores[index] + deviations[index] * np.array([-1, 1])
+                )
+                np.testing.assert_array_equal(segment[:, 1], [label.get_position()[1]] * 2)
+    finally:
+        plt.close(fig)
+
+
+def test_candidate_scores_keep_distinct_rows_with_identical_display_labels():
+    from matplotlib import pyplot as plt
+
+    estimator = SimpleNamespace(
+        cv_results_={
+            "params": [{"alpha": 1.0001}, {"alpha": 1.0002}],
+            "mean_test_score": [0.6, 0.8],
+        }
+    )
+    fig, ax = plt.subplots()
+    try:
+        plot_candidate_scores(estimator, sort=False, ax=ax)
+        bars = sorted(ax.patches, key=lambda bar: -bar.get_y())
+        assert bars[0].get_y() > bars[1].get_y()
+        assert [bar.get_width() for bar in bars] == [0.6, 0.8]
+    finally:
+        plt.close(fig)
 
 
 def test_plot_convergence_and_diversity():

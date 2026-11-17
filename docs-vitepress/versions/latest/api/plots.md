@@ -90,13 +90,13 @@ plotter.cv_scores(top_k=5)
 Plot the fitness score over generations.
 
 ```python
-plot_fitness_evolution(estimator, metric="fitness")
+plot_fitness_evolution(estimator, metric="fitness_best")
 ```
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `estimator` | fitted `GASearchCV` or `GAFeatureSelectionCV` | — | The fitted search estimator |
-| `metric` | str | `"fitness"` | Which fitness column to plot: `"fitness"`, `"fitness_best"`, `"fitness_std"` |
+| `metric` | str | `"fitness_best"` | Best score observed so far. Use `"fitness"` for the current population mean. |
 
 Returns a `matplotlib.axes.Axes`.
 
@@ -192,6 +192,13 @@ plot_score_landscape(search, x="max_depth", y="min_samples_split", kind="hexbin"
 ### plot_candidate_scores
 
 Show the top evaluated candidates from `cv_results_`.
+
+`plot_candidate_scores`, `plot_candidate_rankings` and `plot_cv_scores` order
+candidates by the selected metric. With `criteria="min"`, the lowest mean CV
+score appears first. With `criteria="max"`, the highest appears first. All
+three omit non-finite means and preserve evaluation order among exact ties.
+Use `plot_candidate_scores(search, sort=False)` to see the finite candidates
+in evaluation order.
 
 ```python
 plot_candidate_scores(search, top_k=10)

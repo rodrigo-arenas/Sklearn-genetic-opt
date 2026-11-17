@@ -4,6 +4,7 @@ Full release notes with code examples are in the [documentation](https://sklearn
 
 ## Unreleased
 
+- Candidate score, ranking and fold plots now honor the search's minimization or maximization criterion and omit non-finite means. Horizontal charts show the best candidate at the top, and identical display labels retain separate bars.
 - Fixed population growth in `eaSimple` when the initial population contains duplicates and the elite archive grows during evolution. Both search estimators now keep archived elites within the configured population budget.
 
 - Removed TensorFlow and TensorBoard from optional extras. Added Matplotlib-based live generation plots in `sklearn_genetic.plots`; the legacy `TensorBoard` callback remains available with a separate TensorFlow installation and no longer imports it at library startup.
