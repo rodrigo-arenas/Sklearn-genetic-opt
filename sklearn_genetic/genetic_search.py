@@ -997,8 +997,7 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
             if value is None:
                 return dimension.sample()
 
-            repaired = int(round(float(value)))
-            return int(np.clip(repaired, dimension.lower, dimension.upper))
+            return dimension._round_and_clip(value)
 
         if isinstance(dimension, Continuous):
             if value is None:

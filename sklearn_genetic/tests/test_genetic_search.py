@@ -191,6 +191,34 @@ def test_differential_evolution_rejects_small_population_before_evaluation(kind)
         search.fit(X_train[:40], y_train[:40])
 
 
+def test_local_search_preserves_adjacent_large_integer_candidates():
+    from sklearn.dummy import DummyClassifier
+
+    lower = 2**53
+    majority = lower + 1
+    labels = np.array([majority, majority, lower] * 8, dtype=np.int64)
+    search = GASearchCV(
+        DummyClassifier(strategy="constant"),
+        param_grid={"constant": Integer(lower, majority)},
+        warm_start_configs=[{"constant": np.int64(majority)}] * 2,
+        population_initializer="random",
+        population_size=2,
+        generations=0,
+        local_search=True,
+        local_search_steps=1,
+        random_state=2,
+        scoring="accuracy",
+        cv=2,
+        n_jobs=1,
+        verbose=False,
+    ).fit(np.arange(len(labels)).reshape(-1, 1), labels)
+
+    assert [p["constant"] for p in search.cv_results_["params"]] == [majority, majority, lower]
+    assert search.fit_stats_["cross_validate_calls"] == 2
+    assert search.best_params_ == {"constant": majority}
+    assert search.best_score_ == pytest.approx(2 / 3)
+
+
 def test_fixed_log_dimension_preserves_distinct_smart_candidates():
     search = GASearchCV(
         DecisionTreeClassifier(random_state=0),
@@ -914,6 +942,10 @@ def test_integer_search_space_fit_never_passes_float_to_estimator():
     estimator.fit(X_train, y_train)
 
     assert isinstance(estimator.best_params_["max_depth"], int)
+
+    for value in (1.5, 2.5, 0, 4):
+        estimator.evaluate([value])
+    assert estimator.logbook.chapters["parameters"].select("max_depth")[-4:] == [2, 2, 1, 3]
 
 
 @pytest.mark.parametrize("algorithm", ["eaSimple", "eaMuPlusLambda", "eaMuCommaLambda"])

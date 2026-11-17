@@ -115,6 +115,13 @@ class Integer(BaseDimension):
             random_state=self.rng if self.rng is not None else check_random_state(None),
         )
 
+    def _round_and_clip(self, value):
+        if isinstance(value, (int, np.integer)):
+            rounded = int(value)
+        else:
+            rounded = round(float(value))
+        return int(min(self.upper, max(self.lower, rounded)))
+
 
 class Continuous(BaseDimension):
     """class for hyperparameters search space of real values"""

@@ -27,6 +27,10 @@ Integer(lower, upper, distribution="uniform")
 | `upper` | int | — | Maximum value (inclusive) |
 | `distribution` | str | `"uniform"` | Sampling distribution: `"uniform"` |
 
+Candidate repair and local refinement preserve integer values exactly,
+including adjacent values above `2**53`. Pass large integer warm-start
+values as Python or NumPy integers to preserve their identity.
+
 **Example:**
 
 ```python

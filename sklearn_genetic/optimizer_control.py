@@ -268,8 +268,7 @@ def differential_offspring(population, toolbox, estimator, crossover, mutation):
 
 
 def _bounded_integer_neighbor(dimension, value, radius):
-    value = int(round(float(value)))
-    value = int(np.clip(value, dimension.lower, dimension.upper))
+    value = dimension._round_and_clip(value)
     step = max(1, int(np.ceil((dimension.upper - dimension.lower) * radius)))
     lower = max(dimension.lower, value - step)
     upper = min(dimension.upper, value + step)
