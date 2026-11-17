@@ -54,6 +54,12 @@ GASearchCV(
 | `runtime_config` | `RuntimeConfig` | `None` | Controls parallelism, caching, verbosity |
 | `optimization_config` | `OptimizationConfig` | `None` | Controls local search, fitness sharing |
 
+Standard mutation excludes numeric dimensions with equal bounds and
+single-choice categorical dimensions. `GASearchCV` chooses uniformly among
+the remaining dimensions and draws from the chosen distribution. A discrete draw may still
+repeat the parent value. With caching enabled, fewer repeated proposals can
+increase the number of distinct models fitted in a generation.
+
 ## Search correctness
 
 Each fresh `fit` recomputes candidate scores for the supplied data and scoring settings.

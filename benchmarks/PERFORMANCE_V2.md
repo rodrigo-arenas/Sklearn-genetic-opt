@@ -1314,3 +1314,34 @@ Two complete feature searches on Breast Cancer checked finalist scores,
 the winning index and predictions for both criteria. The [raw timings and
 reproduction script](results/performance-v2/finalist-cutoff.json) record
 the baseline commit and library versions.
+
+## Mutation in grids that mix fixed and variable dimensions
+
+The standard HPO mutation used to select from every configured parameter.
+Choosing an equal-bound numeric or single-choice categorical dimension
+spent the mutation on an exact copy of the parent. Mutation now selects
+among the remaining dimensions. A variable discrete dimension can still
+draw its current value.
+
+Each paired search had one log-uniform parameter (logistic regression C
+or Ridge alpha), three fixed dimensions, identical initial candidates,
+population six, three generations, three CV folds and one worker. Seeds
+1701–1703 selected the outer 25% holdout and search seed for each dataset.
+
+| Diversity control | Method | Mutation calls | Unchanged mutations | Duplicate replacements | Distinct candidate CV evaluations |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Enabled (default) | Previous | 34 | 28 | 210 | 252 |
+| Enabled (default) | Current | 39 | 0 | 177 | 252 |
+| Disabled | Previous | 28 | 24 | 0 | 40 |
+| Disabled | Current | 32 | 0 | 0 | 68 |
+
+Counts sum six searches per row. The default control already refilled
+duplicate slots and both methods produced the same holdout scores on all
+six splits. With diversity control disabled the new selector evaluated
+28 more distinct candidates, costing 84 more fold fits. Mean holdout R²
+on Diabetes went from .511399 to .514266, and mean Breast Cancer ROC AUC
+was .997205 for both methods. These are equal-generation comparisons.
+The control-disabled results include different evaluation budgets.
+
+The [paired counts, scores and reproduction script](results/performance-v2/fixed-dimension-mutation.json)
+record the baseline commit, environment and initial candidate values.

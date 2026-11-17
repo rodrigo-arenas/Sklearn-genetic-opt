@@ -1103,14 +1103,17 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
             Mutated individual
         """
 
-        # Randomly select one of the hyperparameters
-        gen = random.randrange(0, len(self.space))
-        parameter_idx = self.space.parameters[gen]
-        parameter = self.space[parameter_idx]
+        mutable = []
+        for index, dimension in enumerate(self.space.param_grid.values()):
+            if isinstance(dimension, (Integer, Continuous)) and dimension.lower == dimension.upper:
+                continue
+            if isinstance(dimension, Categorical) and len(dimension.choices) == 1:
+                continue
+            mutable.append((index, dimension))
 
-        # Using the defined distribution from the para_grid value
-        # Make a random sample of the parameter
-        individual[gen] = parameter.sample()
+        if mutable:
+            index, dimension = random.choice(mutable)
+            individual[index] = dimension.sample()
         self._repair_individual(individual)
 
         return [individual]

@@ -2766,3 +2766,43 @@ def test_timer_stops_candidate_batches_with_valid_results(
     expected_reuse = n_jobs if phase == "setup" else (2 if phase == "initial" else 4)
     assert len(observed) == expected_reuse
     assert search.fit_stats_["cross_validate_calls"] == expected_reuse
+
+
+def test_mutation_targets_variable_dimensions_in_a_mixed_grid(monkeypatch):
+    import random
+    from ..space.base import BaseDimension
+
+    class IncreasingDepth(BaseDimension):
+        depth = 2
+
+        def sample(self):
+            self.depth += 1
+            return self.depth
+
+    monkeypatch.setattr(genetic_search, "random", random.Random(71))
+    search = GASearchCV(
+        DecisionTreeClassifier(),
+        param_grid={
+            "min_samples_split": Integer(3, 3),
+            "ccp_alpha": Continuous(0.0, 0.1, random_state=71),
+            "criterion": Categorical(["gini"]),
+            "min_weight_fraction_leaf": Continuous(0.0, 0.0),
+            "max_depth": IncreasingDepth(),
+        },
+    )
+    individual = [3, 0.01, "gini", 0.0, 2]
+    changed = set()
+    for _ in range(12):
+        previous = individual.copy()
+        (individual,) = search.mutate(individual)
+        (position,) = [i for i, (old, new) in enumerate(zip(previous, individual)) if old != new]
+        changed.add(position)
+    assert changed == {1, 4}
+
+
+def test_mutation_preserves_an_entirely_fixed_grid():
+    search = GASearchCV(
+        DecisionTreeClassifier(),
+        param_grid={"max_depth": Integer(3, 3), "criterion": Categorical(["entropy"])},
+    )
+    assert search.mutate([3, "entropy"]) == [[3, "entropy"]]
