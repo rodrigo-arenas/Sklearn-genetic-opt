@@ -1209,3 +1209,47 @@ same four tasks reduced total CV fold fits from 45 to 42 per search (180 to
 ordered scores, and the four searches selected the same winner and produced
 identical predictions on the reserved observations. The reproduction script
 above runs both modes and counts actual folds evaluated.
+
+## Holdout quality at intermediate candidate budgets
+
+The shared-initialization comparison above also permits a comparison before
+the budget is exhausted. At each checkpoint, select the first distinct
+candidate with the highest inner CV mean so far, then refit it and score it
+on the outer holdout. The outer scores are computed after both trajectories
+are fixed. Both methods start with the same six candidates in each pair.
+The table reports mean ROC AUC on Breast Cancer and mean R² on Diabetes
+over three outer splits per task. Each additional candidate costs three
+fold fits. Full searches evaluated 29–30 distinct candidates.
+
+| Task | Search | Proposal method | 6 | 12 | 18 | 24 | Full |
+| --- | --- | --- | ---: | ---: | ---: | ---: | ---: |
+| Breast Cancer | HPO | Genetic | .995318 | .995318 | .995318 | .996157 | .996296 |
+| Breast Cancer | HPO | Random | .995318 | .995318 | .995318 | .995318 | .995528 |
+| Breast Cancer | Features | Genetic | .991684 | .991684 | .990217 | .990217 | .990287 |
+| Breast Cancer | Features | Random | .991684 | .991684 | .991684 | .990566 | .993920 |
+| Diabetes | HPO | Genetic | .491372 | .492728 | .492728 | .492728 | .492728 |
+| Diabetes | HPO | Random | .491372 | .491075 | .491075 | .492926 | .492926 |
+| Diabetes | Features | Genetic | .437615 | .477685 | .477685 | .469952 | .480064 |
+| Diabetes | Features | Random | .437615 | .447302 | .450243 | .425590 | .464764 |
+
+For Ridge feature selection, six additional genetic candidates raised mean
+holdout R² by .040070. The random continuation gained .009687 at the same
+cost. For logistic regression feature selection, the initial masks had higher
+mean holdout AUC than the final genetic winners. The comparison changes with
+the dataset, estimator and candidate budget.
+
+In 11 of 12 genetic runs, the CV winner was the same at budgets 12 and 18.
+Four of those runs later found a strictly better CV score. Comparing their
+final holdout to the holdout at budget 18 across all 11 runs gives two gains,
+seven ties and two losses. These overlapping splits provide little basis
+for a universal stopping rule. A timing comparison would additionally need
+to account for candidate-dependent fit costs.
+
+The [per-split records](results/performance-v2/holdout-by-budget.json) include
+each checkpoint's winner, CV score and holdout score. Reproduce the
+[paired experiment](results/performance-v2/holdout-by-budget.py) from the
+repository root with the benchmark dependencies installed:
+
+```powershell
+.\.venv\Scripts\python.exe benchmarks/results/performance-v2/holdout-by-budget.py holdout-by-budget.json
+```

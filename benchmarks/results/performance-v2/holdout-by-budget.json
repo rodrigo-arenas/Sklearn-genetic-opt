@@ -1,0 +1,2664 @@
+{
+  "source_commit": "9663325f6372710930381d03e65c2848536cac12",
+  "python": "3.12.0",
+  "versions": {
+    "scikit-learn": "1.9.1",
+    "numpy": "2.5.3",
+    "scipy": "1.18.1",
+    "deap": "1.4.4"
+  },
+  "rows": [
+    {
+      "task": "classification_lr",
+      "seed": 1201,
+      "search": "hpo",
+      "scoring": "roc_auc",
+      "folds": 3,
+      "genetic": [
+        {
+          "unique": 6,
+          "candidate": [
+            [
+              "clf__C",
+              0.07698243972888195
+            ],
+            [
+              "clf__class_weight",
+              null
+            ]
+          ],
+          "cv": 0.9947000211999152,
+          "holdout": 0.9916142557651992
+        },
+        {
+          "unique": 12,
+          "candidate": [
+            [
+              "clf__C",
+              0.07698243972888195
+            ],
+            [
+              "clf__class_weight",
+              null
+            ]
+          ],
+          "cv": 0.9947000211999152,
+          "holdout": 0.9916142557651992
+        },
+        {
+          "unique": 18,
+          "candidate": [
+            [
+              "clf__C",
+              0.07698243972888195
+            ],
+            [
+              "clf__class_weight",
+              null
+            ]
+          ],
+          "cv": 0.9947000211999152,
+          "holdout": 0.9916142557651992
+        },
+        {
+          "unique": 24,
+          "candidate": [
+            [
+              "clf__C",
+              0.4825825873622227
+            ],
+            [
+              "clf__class_weight",
+              null
+            ]
+          ],
+          "cv": 0.9949826867359196,
+          "holdout": 0.9941299790356395
+        },
+        {
+          "unique": 30,
+          "candidate": [
+            [
+              "clf__C",
+              0.36424415774985935
+            ],
+            [
+              "clf__class_weight",
+              null
+            ]
+          ],
+          "cv": 0.9951946858879231,
+          "holdout": 0.9945492662473795
+        }
+      ],
+      "random": [
+        {
+          "unique": 6,
+          "candidate": [
+            [
+              "clf__C",
+              0.07698243972888195
+            ],
+            [
+              "clf__class_weight",
+              null
+            ]
+          ],
+          "cv": 0.9947000211999152,
+          "holdout": 0.9916142557651992
+        },
+        {
+          "unique": 12,
+          "candidate": [
+            [
+              "clf__C",
+              0.07698243972888195
+            ],
+            [
+              "clf__class_weight",
+              null
+            ]
+          ],
+          "cv": 0.9947000211999152,
+          "holdout": 0.9916142557651992
+        },
+        {
+          "unique": 18,
+          "candidate": [
+            [
+              "clf__C",
+              0.07698243972888195
+            ],
+            [
+              "clf__class_weight",
+              null
+            ]
+          ],
+          "cv": 0.9947000211999152,
+          "holdout": 0.9916142557651992
+        },
+        {
+          "unique": 24,
+          "candidate": [
+            [
+              "clf__C",
+              0.07698243972888195
+            ],
+            [
+              "clf__class_weight",
+              null
+            ]
+          ],
+          "cv": 0.9947000211999152,
+          "holdout": 0.9916142557651992
+        },
+        {
+          "unique": 30,
+          "candidate": [
+            [
+              "clf__C",
+              0.10698526759670618
+            ],
+            [
+              "clf__class_weight",
+              "balanced"
+            ]
+          ],
+          "cv": 0.9947706875839164,
+          "holdout": 0.9922431865828092
+        }
+      ]
+    },
+    {
+      "task": "classification_lr",
+      "seed": 1201,
+      "search": "features",
+      "scoring": "roc_auc",
+      "folds": 3,
+      "genetic": [
+        {
+          "unique": 6,
+          "candidate": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            true,
+            false,
+            false,
+            true,
+            false,
+            true,
+            true,
+            false,
+            false,
+            true,
+            false,
+            true,
+            false,
+            true
+          ],
+          "cv": 0.9950533531199209,
+          "holdout": 0.9821802935010483
+        },
+        {
+          "unique": 12,
+          "candidate": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            true,
+            false,
+            false,
+            true,
+            false,
+            true,
+            true,
+            false,
+            false,
+            true,
+            false,
+            true,
+            false,
+            true
+          ],
+          "cv": 0.9950533531199209,
+          "holdout": 0.9821802935010483
+        },
+        {
+          "unique": 18,
+          "candidate": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            true,
+            false,
+            false,
+            true,
+            false,
+            true,
+            true,
+            false,
+            false,
+            true,
+            false,
+            true,
+            false,
+            true
+          ],
+          "cv": 0.9950533531199209,
+          "holdout": 0.9821802935010483
+        },
+        {
+          "unique": 24,
+          "candidate": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            true,
+            false,
+            false,
+            true,
+            false,
+            true,
+            true,
+            false,
+            false,
+            true,
+            false,
+            true,
+            false,
+            true
+          ],
+          "cv": 0.9950533531199209,
+          "holdout": 0.9821802935010483
+        },
+        {
+          "unique": 30,
+          "candidate": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            true,
+            false,
+            false,
+            true,
+            false,
+            true,
+            true,
+            false,
+            false,
+            true,
+            false,
+            true,
+            false,
+            true
+          ],
+          "cv": 0.9950533531199209,
+          "holdout": 0.9821802935010483
+        }
+      ],
+      "random": [
+        {
+          "unique": 6,
+          "candidate": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            true,
+            false,
+            false,
+            true,
+            false,
+            true,
+            true,
+            false,
+            false,
+            true,
+            false,
+            true,
+            false,
+            true
+          ],
+          "cv": 0.9950533531199209,
+          "holdout": 0.9821802935010483
+        },
+        {
+          "unique": 12,
+          "candidate": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            true,
+            false,
+            false,
+            true,
+            false,
+            true,
+            true,
+            false,
+            false,
+            true,
+            false,
+            true,
+            false,
+            true
+          ],
+          "cv": 0.9950533531199209,
+          "holdout": 0.9821802935010483
+        },
+        {
+          "unique": 18,
+          "candidate": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            true,
+            false,
+            false,
+            true,
+            false,
+            true,
+            true,
+            false,
+            false,
+            true,
+            false,
+            true,
+            false,
+            true
+          ],
+          "cv": 0.9950533531199209,
+          "holdout": 0.9821802935010483
+        },
+        {
+          "unique": 24,
+          "candidate": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            true,
+            false,
+            false,
+            true,
+            false,
+            true,
+            true,
+            false,
+            false,
+            true,
+            false,
+            true,
+            false,
+            true
+          ],
+          "cv": 0.9950533531199209,
+          "holdout": 0.9821802935010483
+        },
+        {
+          "unique": 30,
+          "candidate": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            true,
+            false,
+            true,
+            true,
+            true,
+            false,
+            true,
+            false,
+            false,
+            true,
+            true,
+            false,
+            false,
+            true,
+            false,
+            false,
+            true,
+            false,
+            false,
+            true,
+            true,
+            false
+          ],
+          "cv": 0.9954066850399266,
+          "holdout": 0.9922431865828092
+        }
+      ]
+    },
+    {
+      "task": "classification_lr",
+      "seed": 1202,
+      "search": "hpo",
+      "scoring": "roc_auc",
+      "folds": 3,
+      "genetic": [
+        {
+          "unique": 6,
+          "candidate": [
+            [
+              "clf__C",
+              0.18464136215587298
+            ],
+            [
+              "clf__class_weight",
+              "balanced"
+            ]
+          ],
+          "cv": 0.9964666807999434,
+          "holdout": 0.9943396226415094
+        },
+        {
+          "unique": 12,
+          "candidate": [
+            [
+              "clf__C",
+              0.18464136215587298
+            ],
+            [
+              "clf__class_weight",
+              "balanced"
+            ]
+          ],
+          "cv": 0.9964666807999434,
+          "holdout": 0.9943396226415094
+        },
+        {
+          "unique": 18,
+          "candidate": [
+            [
+              "clf__C",
+              0.18464136215587298
+            ],
+            [
+              "clf__class_weight",
+              "balanced"
+            ]
+          ],
+          "cv": 0.9964666807999434,
+          "holdout": 0.9943396226415094
+        },
+        {
+          "unique": 24,
+          "candidate": [
+            [
+              "clf__C",
+              0.18464136215587298
+            ],
+            [
+              "clf__class_weight",
+              "balanced"
+            ]
+          ],
+          "cv": 0.9964666807999434,
+          "holdout": 0.9943396226415094
+        },
+        {
+          "unique": 30,
+          "candidate": [
+            [
+              "clf__C",
+              0.18464136215587298
+            ],
+            [
+              "clf__class_weight",
+              "balanced"
+            ]
+          ],
+          "cv": 0.9964666807999434,
+          "holdout": 0.9943396226415094
+        }
+      ],
+      "random": [
+        {
+          "unique": 6,
+          "candidate": [
+            [
+              "clf__C",
+              0.18464136215587298
+            ],
+            [
+              "clf__class_weight",
+              "balanced"
+            ]
+          ],
+          "cv": 0.9964666807999434,
+          "holdout": 0.9943396226415094
+        },
+        {
+          "unique": 12,
+          "candidate": [
+            [
+              "clf__C",
+              0.18464136215587298
+            ],
+            [
+              "clf__class_weight",
+              "balanced"
+            ]
+          ],
+          "cv": 0.9964666807999434,
+          "holdout": 0.9943396226415094
+        },
+        {
+          "unique": 18,
+          "candidate": [
+            [
+              "clf__C",
+              0.18464136215587298
+            ],
+            [
+              "clf__class_weight",
+              "balanced"
+            ]
+          ],
+          "cv": 0.9964666807999434,
+          "holdout": 0.9943396226415094
+        },
+        {
+          "unique": 24,
+          "candidate": [
+            [
+              "clf__C",
+              0.18464136215587298
+            ],
+            [
+              "clf__class_weight",
+              "balanced"
+            ]
+          ],
+          "cv": 0.9964666807999434,
+          "holdout": 0.9943396226415094
+        },
+        {
+          "unique": 30,
+          "candidate": [
+            [
+              "clf__C",
+              0.18464136215587298
+            ],
+            [
+              "clf__class_weight",
+              "balanced"
+            ]
+          ],
+          "cv": 0.9964666807999434,
+          "holdout": 0.9943396226415094
+        }
+      ]
+    },
+    {
+      "task": "classification_lr",
+      "seed": 1202,
+      "search": "features",
+      "scoring": "roc_auc",
+      "folds": 3,
+      "genetic": [
+        {
+          "unique": 6,
+          "candidate": [
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            false,
+            true,
+            true,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          "cv": 0.9959720161119355,
+          "holdout": 0.9930817610062893
+        },
+        {
+          "unique": 12,
+          "candidate": [
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            false,
+            true,
+            true,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          "cv": 0.9959720161119355,
+          "holdout": 0.9930817610062893
+        },
+        {
+          "unique": 18,
+          "candidate": [
+            false,
+            true,
+            false,
+            true,
+            false,
+            false,
+            true,
+            true,
+            true,
+            false,
+            true,
+            false,
+            false,
+            true,
+            false,
+            false,
+            true,
+            false,
+            true,
+            true,
+            true,
+            false,
+            true,
+            true,
+            true,
+            false,
+            false,
+            false,
+            false,
+            true
+          ],
+          "cv": 0.9960426824959366,
+          "holdout": 0.9886792452830189
+        },
+        {
+          "unique": 24,
+          "candidate": [
+            false,
+            true,
+            false,
+            true,
+            false,
+            false,
+            true,
+            true,
+            true,
+            false,
+            true,
+            false,
+            false,
+            true,
+            false,
+            false,
+            true,
+            false,
+            true,
+            true,
+            true,
+            false,
+            true,
+            true,
+            true,
+            false,
+            false,
+            false,
+            false,
+            true
+          ],
+          "cv": 0.9960426824959366,
+          "holdout": 0.9886792452830189
+        },
+        {
+          "unique": 30,
+          "candidate": [
+            true,
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            true,
+            true,
+            false,
+            true,
+            true,
+            true,
+            false,
+            false,
+            false,
+            true,
+            false,
+            true,
+            true,
+            false,
+            false,
+            true,
+            false,
+            false
+          ],
+          "cv": 0.9961133488799377,
+          "holdout": 0.9888888888888889
+        }
+      ],
+      "random": [
+        {
+          "unique": 6,
+          "candidate": [
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            false,
+            true,
+            true,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          "cv": 0.9959720161119355,
+          "holdout": 0.9930817610062893
+        },
+        {
+          "unique": 12,
+          "candidate": [
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            false,
+            true,
+            true,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          "cv": 0.9959720161119355,
+          "holdout": 0.9930817610062893
+        },
+        {
+          "unique": 18,
+          "candidate": [
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            false,
+            true,
+            true,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          "cv": 0.9959720161119355,
+          "holdout": 0.9930817610062893
+        },
+        {
+          "unique": 24,
+          "candidate": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            true,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            true,
+            false,
+            false,
+            true,
+            false,
+            true,
+            false,
+            false
+          ],
+          "cv": 0.9960426824959366,
+          "holdout": 0.989727463312369
+        },
+        {
+          "unique": 30,
+          "candidate": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            true,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            true,
+            false,
+            false,
+            true,
+            false,
+            true,
+            false,
+            false
+          ],
+          "cv": 0.9960426824959366,
+          "holdout": 0.989727463312369
+        }
+      ]
+    },
+    {
+      "task": "classification_lr",
+      "seed": 1203,
+      "search": "hpo",
+      "scoring": "roc_auc",
+      "folds": 3,
+      "genetic": [
+        {
+          "unique": 6,
+          "candidate": [
+            [
+              "clf__C",
+              1.0
+            ],
+            [
+              "clf__class_weight",
+              null
+            ]
+          ],
+          "cv": 0.9931453607518903,
+          "holdout": 1.0
+        },
+        {
+          "unique": 12,
+          "candidate": [
+            [
+              "clf__C",
+              1.0
+            ],
+            [
+              "clf__class_weight",
+              null
+            ]
+          ],
+          "cv": 0.9931453607518903,
+          "holdout": 1.0
+        },
+        {
+          "unique": 18,
+          "candidate": [
+            [
+              "clf__C",
+              1.0
+            ],
+            [
+              "clf__class_weight",
+              null
+            ]
+          ],
+          "cv": 0.9931453607518903,
+          "holdout": 1.0
+        },
+        {
+          "unique": 24,
+          "candidate": [
+            [
+              "clf__C",
+              1.0
+            ],
+            [
+              "clf__class_weight",
+              null
+            ]
+          ],
+          "cv": 0.9931453607518903,
+          "holdout": 1.0
+        },
+        {
+          "unique": 29,
+          "candidate": [
+            [
+              "clf__C",
+              1.0
+            ],
+            [
+              "clf__class_weight",
+              null
+            ]
+          ],
+          "cv": 0.9931453607518903,
+          "holdout": 1.0
+        }
+      ],
+      "random": [
+        {
+          "unique": 6,
+          "candidate": [
+            [
+              "clf__C",
+              1.0
+            ],
+            [
+              "clf__class_weight",
+              null
+            ]
+          ],
+          "cv": 0.9931453607518903,
+          "holdout": 1.0
+        },
+        {
+          "unique": 12,
+          "candidate": [
+            [
+              "clf__C",
+              1.0
+            ],
+            [
+              "clf__class_weight",
+              null
+            ]
+          ],
+          "cv": 0.9931453607518903,
+          "holdout": 1.0
+        },
+        {
+          "unique": 18,
+          "candidate": [
+            [
+              "clf__C",
+              0.7029515387980821
+            ],
+            [
+              "clf__class_weight",
+              null
+            ]
+          ],
+          "cv": 0.9934280262878948,
+          "holdout": 1.0
+        },
+        {
+          "unique": 24,
+          "candidate": [
+            [
+              "clf__C",
+              0.7029515387980821
+            ],
+            [
+              "clf__class_weight",
+              null
+            ]
+          ],
+          "cv": 0.9934280262878948,
+          "holdout": 1.0
+        },
+        {
+          "unique": 29,
+          "candidate": [
+            [
+              "clf__C",
+              0.7029515387980821
+            ],
+            [
+              "clf__class_weight",
+              null
+            ]
+          ],
+          "cv": 0.9934280262878948,
+          "holdout": 1.0
+        }
+      ]
+    },
+    {
+      "task": "classification_lr",
+      "seed": 1203,
+      "search": "features",
+      "scoring": "roc_auc",
+      "folds": 3,
+      "genetic": [
+        {
+          "unique": 6,
+          "candidate": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            true,
+            false,
+            true,
+            true,
+            false,
+            true,
+            true,
+            false,
+            false,
+            false,
+            true,
+            false,
+            true,
+            true,
+            true,
+            false,
+            true,
+            false,
+            false,
+            true,
+            true,
+            false,
+            false,
+            true,
+            true
+          ],
+          "cv": 0.993993357359904,
+          "holdout": 0.9997903563941299
+        },
+        {
+          "unique": 12,
+          "candidate": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            true,
+            false,
+            true,
+            true,
+            false,
+            true,
+            true,
+            false,
+            false,
+            false,
+            true,
+            false,
+            true,
+            true,
+            true,
+            false,
+            true,
+            false,
+            false,
+            true,
+            true,
+            false,
+            false,
+            true,
+            true
+          ],
+          "cv": 0.993993357359904,
+          "holdout": 0.9997903563941299
+        },
+        {
+          "unique": 18,
+          "candidate": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            true,
+            false,
+            true,
+            true,
+            false,
+            true,
+            true,
+            false,
+            false,
+            false,
+            true,
+            false,
+            true,
+            true,
+            true,
+            false,
+            true,
+            false,
+            false,
+            true,
+            true,
+            false,
+            false,
+            true,
+            true
+          ],
+          "cv": 0.993993357359904,
+          "holdout": 0.9997903563941299
+        },
+        {
+          "unique": 24,
+          "candidate": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            true,
+            false,
+            true,
+            true,
+            false,
+            true,
+            true,
+            false,
+            false,
+            false,
+            true,
+            false,
+            true,
+            true,
+            true,
+            false,
+            true,
+            false,
+            false,
+            true,
+            true,
+            false,
+            false,
+            true,
+            true
+          ],
+          "cv": 0.993993357359904,
+          "holdout": 0.9997903563941299
+        },
+        {
+          "unique": 30,
+          "candidate": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            true,
+            false,
+            true,
+            true,
+            false,
+            true,
+            true,
+            false,
+            false,
+            false,
+            true,
+            false,
+            true,
+            true,
+            true,
+            false,
+            true,
+            false,
+            false,
+            true,
+            true,
+            false,
+            false,
+            true,
+            true
+          ],
+          "cv": 0.993993357359904,
+          "holdout": 0.9997903563941299
+        }
+      ],
+      "random": [
+        {
+          "unique": 6,
+          "candidate": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            true,
+            false,
+            true,
+            true,
+            false,
+            true,
+            true,
+            false,
+            false,
+            false,
+            true,
+            false,
+            true,
+            true,
+            true,
+            false,
+            true,
+            false,
+            false,
+            true,
+            true,
+            false,
+            false,
+            true,
+            true
+          ],
+          "cv": 0.993993357359904,
+          "holdout": 0.9997903563941299
+        },
+        {
+          "unique": 12,
+          "candidate": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            true,
+            false,
+            true,
+            true,
+            false,
+            true,
+            true,
+            false,
+            false,
+            false,
+            true,
+            false,
+            true,
+            true,
+            true,
+            false,
+            true,
+            false,
+            false,
+            true,
+            true,
+            false,
+            false,
+            true,
+            true
+          ],
+          "cv": 0.993993357359904,
+          "holdout": 0.9997903563941299
+        },
+        {
+          "unique": 18,
+          "candidate": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            true,
+            false,
+            true,
+            true,
+            false,
+            true,
+            true,
+            false,
+            false,
+            false,
+            true,
+            false,
+            true,
+            true,
+            true,
+            false,
+            true,
+            false,
+            false,
+            true,
+            true,
+            false,
+            false,
+            true,
+            true
+          ],
+          "cv": 0.993993357359904,
+          "holdout": 0.9997903563941299
+        },
+        {
+          "unique": 24,
+          "candidate": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            true,
+            false,
+            true,
+            true,
+            false,
+            true,
+            true,
+            false,
+            false,
+            false,
+            true,
+            false,
+            true,
+            true,
+            true,
+            false,
+            true,
+            false,
+            false,
+            true,
+            true,
+            false,
+            false,
+            true,
+            true
+          ],
+          "cv": 0.993993357359904,
+          "holdout": 0.9997903563941299
+        },
+        {
+          "unique": 30,
+          "candidate": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            true,
+            false,
+            true,
+            true,
+            false,
+            true,
+            true,
+            false,
+            false,
+            false,
+            true,
+            false,
+            true,
+            true,
+            true,
+            false,
+            true,
+            false,
+            false,
+            true,
+            true,
+            false,
+            false,
+            true,
+            true
+          ],
+          "cv": 0.993993357359904,
+          "holdout": 0.9997903563941299
+        }
+      ]
+    },
+    {
+      "task": "regression_ridge",
+      "seed": 1201,
+      "search": "hpo",
+      "scoring": "r2",
+      "folds": 3,
+      "genetic": [
+        {
+          "unique": 6,
+          "candidate": [
+            [
+              "ridge__alpha",
+              28.871384314623135
+            ],
+            [
+              "ridge__fit_intercept",
+              true
+            ]
+          ],
+          "cv": 0.48140867292421313,
+          "holdout": 0.478981901397324
+        },
+        {
+          "unique": 12,
+          "candidate": [
+            [
+              "ridge__alpha",
+              28.871384314623135
+            ],
+            [
+              "ridge__fit_intercept",
+              true
+            ]
+          ],
+          "cv": 0.48140867292421313,
+          "holdout": 0.478981901397324
+        },
+        {
+          "unique": 18,
+          "candidate": [
+            [
+              "ridge__alpha",
+              28.871384314623135
+            ],
+            [
+              "ridge__fit_intercept",
+              true
+            ]
+          ],
+          "cv": 0.48140867292421313,
+          "holdout": 0.478981901397324
+        },
+        {
+          "unique": 24,
+          "candidate": [
+            [
+              "ridge__alpha",
+              28.871384314623135
+            ],
+            [
+              "ridge__fit_intercept",
+              true
+            ]
+          ],
+          "cv": 0.48140867292421313,
+          "holdout": 0.478981901397324
+        },
+        {
+          "unique": 30,
+          "candidate": [
+            [
+              "ridge__alpha",
+              28.871384314623135
+            ],
+            [
+              "ridge__fit_intercept",
+              true
+            ]
+          ],
+          "cv": 0.48140867292421313,
+          "holdout": 0.478981901397324
+        }
+      ],
+      "random": [
+        {
+          "unique": 6,
+          "candidate": [
+            [
+              "ridge__alpha",
+              28.871384314623135
+            ],
+            [
+              "ridge__fit_intercept",
+              true
+            ]
+          ],
+          "cv": 0.48140867292421313,
+          "holdout": 0.478981901397324
+        },
+        {
+          "unique": 12,
+          "candidate": [
+            [
+              "ridge__alpha",
+              28.871384314623135
+            ],
+            [
+              "ridge__fit_intercept",
+              true
+            ]
+          ],
+          "cv": 0.48140867292421313,
+          "holdout": 0.478981901397324
+        },
+        {
+          "unique": 18,
+          "candidate": [
+            [
+              "ridge__alpha",
+              28.871384314623135
+            ],
+            [
+              "ridge__fit_intercept",
+              true
+            ]
+          ],
+          "cv": 0.48140867292421313,
+          "holdout": 0.478981901397324
+        },
+        {
+          "unique": 24,
+          "candidate": [
+            [
+              "ridge__alpha",
+              28.871384314623135
+            ],
+            [
+              "ridge__fit_intercept",
+              true
+            ]
+          ],
+          "cv": 0.48140867292421313,
+          "holdout": 0.478981901397324
+        },
+        {
+          "unique": 30,
+          "candidate": [
+            [
+              "ridge__alpha",
+              28.871384314623135
+            ],
+            [
+              "ridge__fit_intercept",
+              true
+            ]
+          ],
+          "cv": 0.48140867292421313,
+          "holdout": 0.478981901397324
+        }
+      ]
+    },
+    {
+      "task": "regression_ridge",
+      "seed": 1201,
+      "search": "features",
+      "scoring": "r2",
+      "folds": 3,
+      "genetic": [
+        {
+          "unique": 6,
+          "candidate": [
+            true,
+            false,
+            true,
+            false,
+            false,
+            true,
+            false,
+            true,
+            true,
+            false
+          ],
+          "cv": 0.4492729426119997,
+          "holdout": 0.43721644933876724
+        },
+        {
+          "unique": 12,
+          "candidate": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false,
+            false,
+            true,
+            true,
+            true
+          ],
+          "cv": 0.4533077807788164,
+          "holdout": 0.43622770978671777
+        },
+        {
+          "unique": 18,
+          "candidate": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false,
+            false,
+            true,
+            true,
+            true
+          ],
+          "cv": 0.4533077807788164,
+          "holdout": 0.43622770978671777
+        },
+        {
+          "unique": 24,
+          "candidate": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            true,
+            false,
+            false,
+            true,
+            true
+          ],
+          "cv": 0.46428694937784815,
+          "holdout": 0.42933461247496163
+        },
+        {
+          "unique": 30,
+          "candidate": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            true,
+            true,
+            false,
+            true,
+            false
+          ],
+          "cv": 0.4784305266913269,
+          "holdout": 0.4597325507201865
+        }
+      ],
+      "random": [
+        {
+          "unique": 6,
+          "candidate": [
+            true,
+            false,
+            true,
+            false,
+            false,
+            true,
+            false,
+            true,
+            true,
+            false
+          ],
+          "cv": 0.4492729426119997,
+          "holdout": 0.43721644933876724
+        },
+        {
+          "unique": 12,
+          "candidate": [
+            true,
+            false,
+            true,
+            false,
+            false,
+            true,
+            false,
+            true,
+            true,
+            false
+          ],
+          "cv": 0.4492729426119997,
+          "holdout": 0.43721644933876724
+        },
+        {
+          "unique": 18,
+          "candidate": [
+            false,
+            false,
+            true,
+            false,
+            true,
+            true,
+            false,
+            true,
+            true,
+            false
+          ],
+          "cv": 0.450725903419306,
+          "holdout": 0.44603808502665165
+        },
+        {
+          "unique": 24,
+          "candidate": [
+            false,
+            false,
+            true,
+            false,
+            true,
+            true,
+            false,
+            true,
+            true,
+            false
+          ],
+          "cv": 0.450725903419306,
+          "holdout": 0.44603808502665165
+        },
+        {
+          "unique": 30,
+          "candidate": [
+            true,
+            false,
+            true,
+            true,
+            false,
+            false,
+            false,
+            true,
+            true,
+            false
+          ],
+          "cv": 0.45917879444879456,
+          "holdout": 0.4461774078249148
+        }
+      ]
+    },
+    {
+      "task": "regression_ridge",
+      "seed": 1202,
+      "search": "hpo",
+      "scoring": "r2",
+      "folds": 3,
+      "genetic": [
+        {
+          "unique": 6,
+          "candidate": [
+            [
+              "ridge__alpha",
+              1.0
+            ],
+            [
+              "ridge__fit_intercept",
+              true
+            ]
+          ],
+          "cv": 0.45950469674510264,
+          "holdout": 0.5254932614747128
+        },
+        {
+          "unique": 12,
+          "candidate": [
+            [
+              "ridge__alpha",
+              53.303922757689456
+            ],
+            [
+              "ridge__fit_intercept",
+              true
+            ]
+          ],
+          "cv": 0.46674542482854475,
+          "holdout": 0.5285397369190483
+        },
+        {
+          "unique": 18,
+          "candidate": [
+            [
+              "ridge__alpha",
+              53.303922757689456
+            ],
+            [
+              "ridge__fit_intercept",
+              true
+            ]
+          ],
+          "cv": 0.46674542482854475,
+          "holdout": 0.5285397369190483
+        },
+        {
+          "unique": 24,
+          "candidate": [
+            [
+              "ridge__alpha",
+              53.303922757689456
+            ],
+            [
+              "ridge__fit_intercept",
+              true
+            ]
+          ],
+          "cv": 0.46674542482854475,
+          "holdout": 0.5285397369190483
+        },
+        {
+          "unique": 30,
+          "candidate": [
+            [
+              "ridge__alpha",
+              53.303922757689456
+            ],
+            [
+              "ridge__fit_intercept",
+              true
+            ]
+          ],
+          "cv": 0.46674542482854475,
+          "holdout": 0.5285397369190483
+        }
+      ],
+      "random": [
+        {
+          "unique": 6,
+          "candidate": [
+            [
+              "ridge__alpha",
+              1.0
+            ],
+            [
+              "ridge__fit_intercept",
+              true
+            ]
+          ],
+          "cv": 0.45950469674510264,
+          "holdout": 0.5254932614747128
+        },
+        {
+          "unique": 12,
+          "candidate": [
+            [
+              "ridge__alpha",
+              8.491900926609437
+            ],
+            [
+              "ridge__fit_intercept",
+              true
+            ]
+          ],
+          "cv": 0.46439770071640457,
+          "holdout": 0.5229354396236461
+        },
+        {
+          "unique": 18,
+          "candidate": [
+            [
+              "ridge__alpha",
+              8.491900926609437
+            ],
+            [
+              "ridge__fit_intercept",
+              true
+            ]
+          ],
+          "cv": 0.46439770071640457,
+          "holdout": 0.5229354396236461
+        },
+        {
+          "unique": 24,
+          "candidate": [
+            [
+              "ridge__alpha",
+              52.33389071388719
+            ],
+            [
+              "ridge__fit_intercept",
+              true
+            ]
+          ],
+          "cv": 0.4668623492973409,
+          "holdout": 0.5284884844936358
+        },
+        {
+          "unique": 30,
+          "candidate": [
+            [
+              "ridge__alpha",
+              52.33389071388719
+            ],
+            [
+              "ridge__fit_intercept",
+              true
+            ]
+          ],
+          "cv": 0.4668623492973409,
+          "holdout": 0.5284884844936358
+        }
+      ]
+    },
+    {
+      "task": "regression_ridge",
+      "seed": 1202,
+      "search": "features",
+      "scoring": "r2",
+      "folds": 3,
+      "genetic": [
+        {
+          "unique": 6,
+          "candidate": [
+            false,
+            false,
+            true,
+            false,
+            false,
+            true,
+            true,
+            false,
+            true,
+            false
+          ],
+          "cv": 0.43288782294719547,
+          "holdout": 0.5163338469372891
+        },
+        {
+          "unique": 12,
+          "candidate": [
+            true,
+            true,
+            true,
+            false,
+            false,
+            false,
+            true,
+            false,
+            true,
+            false
+          ],
+          "cv": 0.4333871169574768,
+          "holdout": 0.5337449730229182
+        },
+        {
+          "unique": 18,
+          "candidate": [
+            true,
+            true,
+            true,
+            false,
+            false,
+            false,
+            true,
+            false,
+            true,
+            false
+          ],
+          "cv": 0.4333871169574768,
+          "holdout": 0.5337449730229182
+        },
+        {
+          "unique": 24,
+          "candidate": [
+            true,
+            true,
+            true,
+            false,
+            false,
+            false,
+            true,
+            false,
+            true,
+            false
+          ],
+          "cv": 0.4333871169574768,
+          "holdout": 0.5337449730229182
+        },
+        {
+          "unique": 29,
+          "candidate": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            true,
+            true,
+            false,
+            true,
+            false
+          ],
+          "cv": 0.437387806670633,
+          "holdout": 0.5336829889063576
+        }
+      ],
+      "random": [
+        {
+          "unique": 6,
+          "candidate": [
+            false,
+            false,
+            true,
+            false,
+            false,
+            true,
+            true,
+            false,
+            true,
+            false
+          ],
+          "cv": 0.43288782294719547,
+          "holdout": 0.5163338469372891
+        },
+        {
+          "unique": 12,
+          "candidate": [
+            false,
+            false,
+            true,
+            false,
+            false,
+            true,
+            true,
+            false,
+            true,
+            false
+          ],
+          "cv": 0.43288782294719547,
+          "holdout": 0.5163338469372891
+        },
+        {
+          "unique": 18,
+          "candidate": [
+            false,
+            false,
+            true,
+            false,
+            false,
+            true,
+            true,
+            false,
+            true,
+            false
+          ],
+          "cv": 0.43288782294719547,
+          "holdout": 0.5163338469372891
+        },
+        {
+          "unique": 24,
+          "candidate": [
+            false,
+            false,
+            true,
+            true,
+            true,
+            true,
+            true,
+            false,
+            false,
+            false
+          ],
+          "cv": 0.4456288613952588,
+          "holdout": 0.4423760116742439
+        },
+        {
+          "unique": 29,
+          "candidate": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false,
+            true,
+            true,
+            true,
+            false
+          ],
+          "cv": 0.45835085593410013,
+          "holdout": 0.48705197174582426
+        }
+      ]
+    },
+    {
+      "task": "regression_ridge",
+      "seed": 1203,
+      "search": "hpo",
+      "scoring": "r2",
+      "folds": 3,
+      "genetic": [
+        {
+          "unique": 6,
+          "candidate": [
+            [
+              "ridge__alpha",
+              27.876784722810154
+            ],
+            [
+              "ridge__fit_intercept",
+              true
+            ]
+          ],
+          "cv": 0.49767885546025664,
+          "holdout": 0.4696395115025518
+        },
+        {
+          "unique": 12,
+          "candidate": [
+            [
+              "ridge__alpha",
+              19.126442338986852
+            ],
+            [
+              "ridge__fit_intercept",
+              true
+            ]
+          ],
+          "cv": 0.49835092347693166,
+          "holdout": 0.4706628200142243
+        },
+        {
+          "unique": 18,
+          "candidate": [
+            [
+              "ridge__alpha",
+              19.126442338986852
+            ],
+            [
+              "ridge__fit_intercept",
+              true
+            ]
+          ],
+          "cv": 0.49835092347693166,
+          "holdout": 0.4706628200142243
+        },
+        {
+          "unique": 24,
+          "candidate": [
+            [
+              "ridge__alpha",
+              19.126442338986852
+            ],
+            [
+              "ridge__fit_intercept",
+              true
+            ]
+          ],
+          "cv": 0.49835092347693166,
+          "holdout": 0.4706628200142243
+        },
+        {
+          "unique": 29,
+          "candidate": [
+            [
+              "ridge__alpha",
+              19.126442338986852
+            ],
+            [
+              "ridge__fit_intercept",
+              true
+            ]
+          ],
+          "cv": 0.49835092347693166,
+          "holdout": 0.4706628200142243
+        }
+      ],
+      "random": [
+        {
+          "unique": 6,
+          "candidate": [
+            [
+              "ridge__alpha",
+              27.876784722810154
+            ],
+            [
+              "ridge__fit_intercept",
+              true
+            ]
+          ],
+          "cv": 0.49767885546025664,
+          "holdout": 0.4696395115025518
+        },
+        {
+          "unique": 12,
+          "candidate": [
+            [
+              "ridge__alpha",
+              13.464451452470367
+            ],
+            [
+              "ridge__fit_intercept",
+              true
+            ]
+          ],
+          "cv": 0.4984696531408412,
+          "holdout": 0.4713074029381804
+        },
+        {
+          "unique": 18,
+          "candidate": [
+            [
+              "ridge__alpha",
+              13.464451452470367
+            ],
+            [
+              "ridge__fit_intercept",
+              true
+            ]
+          ],
+          "cv": 0.4984696531408412,
+          "holdout": 0.4713074029381804
+        },
+        {
+          "unique": 24,
+          "candidate": [
+            [
+              "ridge__alpha",
+              13.464451452470367
+            ],
+            [
+              "ridge__fit_intercept",
+              true
+            ]
+          ],
+          "cv": 0.4984696531408412,
+          "holdout": 0.4713074029381804
+        },
+        {
+          "unique": 29,
+          "candidate": [
+            [
+              "ridge__alpha",
+              13.464451452470367
+            ],
+            [
+              "ridge__fit_intercept",
+              true
+            ]
+          ],
+          "cv": 0.4984696531408412,
+          "holdout": 0.4713074029381804
+        }
+      ]
+    },
+    {
+      "task": "regression_ridge",
+      "seed": 1203,
+      "search": "features",
+      "scoring": "r2",
+      "folds": 3,
+      "genetic": [
+        {
+          "unique": 6,
+          "candidate": [
+            true,
+            true,
+            true,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ],
+          "cv": 0.3878506560709815,
+          "holdout": 0.35929595950589155
+        },
+        {
+          "unique": 12,
+          "candidate": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false,
+            false,
+            true,
+            true,
+            true
+          ],
+          "cv": 0.44423349590056294,
+          "holdout": 0.4630812399952934
+        },
+        {
+          "unique": 18,
+          "candidate": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false,
+            false,
+            true,
+            true,
+            true
+          ],
+          "cv": 0.44423349590056294,
+          "holdout": 0.4630812399952934
+        },
+        {
+          "unique": 24,
+          "candidate": [
+            true,
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            true,
+            true,
+            true
+          ],
+          "cv": 0.4468754133152964,
+          "holdout": 0.44677680728413427
+        },
+        {
+          "unique": 29,
+          "candidate": [
+            true,
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            true,
+            true,
+            true
+          ],
+          "cv": 0.4468754133152964,
+          "holdout": 0.44677680728413427
+        }
+      ],
+      "random": [
+        {
+          "unique": 6,
+          "candidate": [
+            true,
+            true,
+            true,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ],
+          "cv": 0.3878506560709815,
+          "holdout": 0.35929595950589155
+        },
+        {
+          "unique": 12,
+          "candidate": [
+            true,
+            true,
+            false,
+            true,
+            false,
+            false,
+            true,
+            false,
+            true,
+            false
+          ],
+          "cv": 0.43756853775910587,
+          "holdout": 0.38835588011464306
+        },
+        {
+          "unique": 18,
+          "candidate": [
+            true,
+            true,
+            false,
+            true,
+            false,
+            false,
+            true,
+            false,
+            true,
+            false
+          ],
+          "cv": 0.43756853775910587,
+          "holdout": 0.38835588011464306
+        },
+        {
+          "unique": 24,
+          "candidate": [
+            true,
+            true,
+            false,
+            true,
+            false,
+            false,
+            true,
+            false,
+            true,
+            false
+          ],
+          "cv": 0.43756853775910587,
+          "holdout": 0.38835588011464306
+        },
+        {
+          "unique": 29,
+          "candidate": [
+            true,
+            false,
+            true,
+            true,
+            false,
+            true,
+            false,
+            false,
+            true,
+            false
+          ],
+          "cv": 0.4677209666800513,
+          "holdout": 0.46106303666712656
+        }
+      ]
+    }
+  ]
+}
