@@ -1217,10 +1217,10 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
 
         # Convert hyperparameters to a tuple to use as a key in the cache
         self._repair_individual(individual)
-        individual_key = self._individual_key(individual)
+        individual_key = self._individual_key(individual) if self.use_cache else None
 
         # Check if the individual has already been evaluated
-        if individual_key in self.fitness_cache and self.use_cache:
+        if self.use_cache and individual_key in self.fitness_cache:
             # Retrieve cached result
             cached_result = self.fitness_cache[individual_key]
             # Ensure the logbook is updated even if the individual is cached
@@ -2307,10 +2307,10 @@ class GAFeatureSelectionCV(
 
         # Convert the individual to a tuple to use as a key in the cache
         self._repair_individual(individual)
-        individual_key = self._individual_key(individual)
+        individual_key = self._individual_key(individual) if self.use_cache else None
 
         # Check if the individual has already been evaluated
-        if individual_key in self.fitness_cache and self.use_cache:
+        if self.use_cache and individual_key in self.fitness_cache:
             cached_result = self.fitness_cache[individual_key]
             # Ensure the logbook is updated even if the individual is cached
             self.logbook.record(parameters=cached_result["current_generation_features"])

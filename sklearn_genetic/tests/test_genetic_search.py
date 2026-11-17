@@ -1150,6 +1150,7 @@ def test_evaluate_population_reuses_duplicate_individual_cache(monkeypatch, cont
 
 def test_evaluate_population_re_evaluates_duplicates_without_cache(monkeypatch):
     calls = []
+    constraints = [0] * X_train.shape[1]
 
     def fake_cross_validate(*args, **kwargs):
         calls.append(kwargs)
@@ -1169,7 +1170,7 @@ def test_evaluate_population_re_evaluates_duplicates_without_cache(monkeypatch):
         scoring="accuracy",
         population_size=2,
         generations=1,
-        param_grid={"max_depth": Integer(1, 3)},
+        param_grid={"monotonic_cst": Categorical([constraints])},
         verbose=False,
         use_cache=False,
     )
@@ -1186,7 +1187,7 @@ def test_evaluate_population_re_evaluates_duplicates_without_cache(monkeypatch):
     estimator._pop = []
     estimator.fit_stats_ = genetic_search._create_fit_stats()
 
-    fitnesses = estimator.evaluate_population([[2], [2]])
+    fitnesses = estimator.evaluate_population([[constraints], [constraints]])
 
     assert len(calls) == 2
     assert fitnesses[0] != fitnesses[1]
