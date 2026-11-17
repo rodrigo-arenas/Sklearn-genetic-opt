@@ -1637,3 +1637,30 @@ measure copying overhead. They do not establish search quality at larger
 budgets or transfer to other estimators and hardware. The
 [paired measurements and script](results/performance-v2/mask-clone-transfer.json)
 record the environment and execution order.
+
+## Cost of writing a generation checkpoint
+
+How much time does checkpointing add on cheap estimators? This comparison
+isolates the writer by running the previous callback (commit `7729bad`) and
+the atomic writer (`daecf16`) with the same search implementation. Each fit
+wrote four snapshots, from generation zero through three. Each workload used
+three dataset/search seeds, both execution orders, a six-member population,
+two CV folds and one worker. Both arms used the local Windows temporary
+directory and a decision tree. Hyperparameter tuning searched two integer
+parameters on 16 input columns. Feature selection searched up to 12 of 512
+columns. Each fit used 96 training rows and reserved 48 rows for predictions.
+
+| Search | Median time in writer, previous / atomic (ms) | Median full fit, previous / atomic (ms) | Median paired full-fit change (ms) | Faster full fits |
+| --- | ---: | ---: | ---: | ---: |
+| Hyperparameters | 23.31 / 9.76 | 202.98 / 188.44 | −15.46 | 6/6 |
+| Features | 27.50 / 10.60 | 226.06 / 212.08 | −19.65 | 4/6 |
+
+Writer time sums the four callback invocations per fit. All twelve pairs spent
+less time in the writer. Feature-selection full-fit differences ranged from
+−29.39 to +18.19 ms. In every pair, the two searches produced identical
+candidate sequences, mean CV scores and held-out predictions. Reloaded
+snapshots agreed on generation indices, best fitness, cached keys and fitness
+values, candidate scores and candidate CV counts. Final file sizes also matched
+within each pair. These measurements cover short runs on a local filesystem.
+The [raw timings and reproduction script](results/performance-v2/checkpoint-write.json)
+include each generation's write duration and file size.

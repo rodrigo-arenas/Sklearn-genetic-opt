@@ -1,0 +1,483 @@
+{
+  "reference": "7729bad",
+  "checkout": "daecf161358b9b1bf38102f5bfff38b9aa327dcc",
+  "platform": "Windows",
+  "python": "3.12.0",
+  "versions": {
+    "scikit-learn": "1.9.1",
+    "numpy": "2.5.3",
+    "deap": "1.4.4",
+    "joblib": "1.6.0"
+  },
+  "records": [
+    {
+      "kind": "hyperparameters",
+      "width": 16,
+      "seed": 2601,
+      "order": [
+        "previous",
+        "atomic"
+      ],
+      "previous": {
+        "fit_ms": 252.06029997207224,
+        "checkpoint_ms": [
+          3.3993000397458673,
+          5.4160000290721655,
+          7.593100017402321,
+          10.066299990285188
+        ],
+        "sizes": [
+          14983,
+          20266,
+          25804,
+          31313
+        ]
+      },
+      "atomic": {
+        "fit_ms": 225.7192999823019,
+        "checkpoint_ms": [
+          1.9597000209614635,
+          2.5402000173926353,
+          3.053200023714453,
+          2.7914000093005598
+        ],
+        "sizes": [
+          14983,
+          20266,
+          25804,
+          31313
+        ]
+      }
+    },
+    {
+      "kind": "hyperparameters",
+      "width": 16,
+      "seed": 2601,
+      "order": [
+        "atomic",
+        "previous"
+      ],
+      "atomic": {
+        "fit_ms": 200.21390001056716,
+        "checkpoint_ms": [
+          2.1362000261433423,
+          2.302900014910847,
+          2.6345999795012176,
+          2.634699980262667
+        ],
+        "sizes": [
+          14983,
+          20266,
+          25804,
+          31313
+        ]
+      },
+      "previous": {
+        "fit_ms": 205.97660000203177,
+        "checkpoint_ms": [
+          2.626400033477694,
+          5.405700008850545,
+          7.193900004494935,
+          8.54300003265962
+        ],
+        "sizes": [
+          14983,
+          20266,
+          25804,
+          31313
+        ]
+      }
+    },
+    {
+      "kind": "hyperparameters",
+      "width": 16,
+      "seed": 2602,
+      "order": [
+        "previous",
+        "atomic"
+      ],
+      "previous": {
+        "fit_ms": 204.86739999614656,
+        "checkpoint_ms": [
+          2.7679000049829483,
+          4.952399991452694,
+          6.735100003425032,
+          8.293699997011572
+        ],
+        "sizes": [
+          14983,
+          20635,
+          25781,
+          30927
+        ]
+      },
+      "atomic": {
+        "fit_ms": 194.6104999515228,
+        "checkpoint_ms": [
+          2.074000018183142,
+          2.638000005390495,
+          2.8416000423021615,
+          2.7977999998256564
+        ],
+        "sizes": [
+          14983,
+          20635,
+          25781,
+          30927
+        ]
+      }
+    },
+    {
+      "kind": "hyperparameters",
+      "width": 16,
+      "seed": 2602,
+      "order": [
+        "atomic",
+        "previous"
+      ],
+      "atomic": {
+        "fit_ms": 182.26380000123754,
+        "checkpoint_ms": [
+          1.8506000051274896,
+          2.0724000059999526,
+          2.655999967828393,
+          2.737100003287196
+        ],
+        "sizes": [
+          14983,
+          20635,
+          25781,
+          30927
+        ]
+      },
+      "previous": {
+        "fit_ms": 196.05309999315068,
+        "checkpoint_ms": [
+          2.7664999943226576,
+          4.377799981739372,
+          6.612900004256517,
+          8.309800003189594
+        ],
+        "sizes": [
+          14983,
+          20635,
+          25781,
+          30927
+        ]
+      }
+    },
+    {
+      "kind": "hyperparameters",
+      "width": 16,
+      "seed": 2603,
+      "order": [
+        "previous",
+        "atomic"
+      ],
+      "previous": {
+        "fit_ms": 193.22319998173043,
+        "checkpoint_ms": [
+          2.5374999968335032,
+          4.324299981817603,
+          6.685199972707778,
+          9.309499990195036
+        ],
+        "sizes": [
+          14983,
+          20266,
+          24674,
+          30206
+        ]
+      },
+      "atomic": {
+        "fit_ms": 176.10060004517436,
+        "checkpoint_ms": [
+          1.9440000178292394,
+          2.311200019903481,
+          2.7584999916143715,
+          2.7968999929726124
+        ],
+        "sizes": [
+          14983,
+          20266,
+          24674,
+          30206
+        ]
+      }
+    },
+    {
+      "kind": "hyperparameters",
+      "width": 16,
+      "seed": 2603,
+      "order": [
+        "atomic",
+        "previous"
+      ],
+      "atomic": {
+        "fit_ms": 175.63189996872097,
+        "checkpoint_ms": [
+          1.7723999917507172,
+          2.0395999890752137,
+          2.9247000347822905,
+          2.890200004912913
+        ],
+        "sizes": [
+          14983,
+          20266,
+          24674,
+          30206
+        ]
+      },
+      "previous": {
+        "fit_ms": 201.08430000254884,
+        "checkpoint_ms": [
+          2.999999967869371,
+          6.727500003762543,
+          6.602499983273447,
+          8.560399990528822
+        ],
+        "sizes": [
+          14983,
+          20266,
+          24674,
+          30206
+        ]
+      }
+    },
+    {
+      "kind": "features",
+      "width": 512,
+      "seed": 2601,
+      "order": [
+        "previous",
+        "atomic"
+      ],
+      "previous": {
+        "fit_ms": 224.04240001924336,
+        "checkpoint_ms": [
+          2.8350999928079545,
+          4.774899978656322,
+          7.97550001880154,
+          10.99789998261258
+        ],
+        "sizes": [
+          17614,
+          48110,
+          78591,
+          109069
+        ]
+      },
+      "atomic": {
+        "fit_ms": 225.28900002362207,
+        "checkpoint_ms": [
+          2.092299982905388,
+          2.428599982522428,
+          3.334400011226535,
+          4.085600026883185
+        ],
+        "sizes": [
+          17614,
+          48110,
+          78591,
+          109069
+        ]
+      }
+    },
+    {
+      "kind": "features",
+      "width": 512,
+      "seed": 2601,
+      "order": [
+        "atomic",
+        "previous"
+      ],
+      "atomic": {
+        "fit_ms": 216.19589999318123,
+        "checkpoint_ms": [
+          1.96159997722134,
+          2.3283999762497842,
+          2.8918999596498907,
+          3.3893000218085945
+        ],
+        "sizes": [
+          17614,
+          48110,
+          78591,
+          109069
+        ]
+      },
+      "previous": {
+        "fit_ms": 245.5869999830611,
+        "checkpoint_ms": [
+          2.902099979110062,
+          9.391199972014874,
+          7.965500000864267,
+          11.478800035547465
+        ],
+        "sizes": [
+          17614,
+          48110,
+          78591,
+          109069
+        ]
+      }
+    },
+    {
+      "kind": "features",
+      "width": 512,
+      "seed": 2602,
+      "order": [
+        "previous",
+        "atomic"
+      ],
+      "previous": {
+        "fit_ms": 233.54659997858107,
+        "checkpoint_ms": [
+          3.3278000191785395,
+          5.637700029183179,
+          8.06869997177273,
+          10.875899984966964
+        ],
+        "sizes": [
+          17614,
+          48110,
+          78591,
+          109086
+        ]
+      },
+      "atomic": {
+        "fit_ms": 207.96189998509362,
+        "checkpoint_ms": [
+          1.9494000007398427,
+          2.2360000293701887,
+          2.7122999890707433,
+          3.5109000164084136
+        ],
+        "sizes": [
+          17614,
+          48110,
+          78591,
+          109086
+        ]
+      }
+    },
+    {
+      "kind": "features",
+      "width": 512,
+      "seed": 2602,
+      "order": [
+        "atomic",
+        "previous"
+      ],
+      "atomic": {
+        "fit_ms": 201.47869997890666,
+        "checkpoint_ms": [
+          1.9857999868690968,
+          2.134400012437254,
+          2.9545999714173377,
+          3.1016000430099666
+        ],
+        "sizes": [
+          17614,
+          48110,
+          78591,
+          109086
+        ]
+      },
+      "previous": {
+        "fit_ms": 228.08640002040192,
+        "checkpoint_ms": [
+          3.021500015165657,
+          5.342299991752952,
+          8.189100015442818,
+          12.474399991333485
+        ],
+        "sizes": [
+          17614,
+          48110,
+          78591,
+          109086
+        ]
+      }
+    },
+    {
+      "kind": "features",
+      "width": 512,
+      "seed": 2603,
+      "order": [
+        "previous",
+        "atomic"
+      ],
+      "previous": {
+        "fit_ms": 215.58890002779663,
+        "checkpoint_ms": [
+          2.742100041359663,
+          4.899299994576722,
+          7.8909999574534595,
+          11.163800023496151
+        ],
+        "sizes": [
+          17614,
+          48093,
+          78574,
+          109052
+        ]
+      },
+      "atomic": {
+        "fit_ms": 201.86869997996837,
+        "checkpoint_ms": [
+          2.059499965980649,
+          2.3521999828517437,
+          2.8135000029578805,
+          3.403000009711832
+        ],
+        "sizes": [
+          17614,
+          48093,
+          78574,
+          109052
+        ]
+      }
+    },
+    {
+      "kind": "features",
+      "width": 512,
+      "seed": 2603,
+      "order": [
+        "atomic",
+        "previous"
+      ],
+      "atomic": {
+        "fit_ms": 239.01769996155053,
+        "checkpoint_ms": [
+          2.258299966342747,
+          2.5487999664619565,
+          3.244900028221309,
+          3.3002999844029546
+        ],
+        "sizes": [
+          17614,
+          48093,
+          78574,
+          109052
+        ]
+      },
+      "previous": {
+        "fit_ms": 220.83019994897768,
+        "checkpoint_ms": [
+          2.9463000246323645,
+          5.377900029998273,
+          7.856599986553192,
+          10.91499999165535
+        ],
+        "sizes": [
+          17614,
+          48093,
+          78574,
+          109052
+        ]
+      }
+    }
+  ],
+  "reproduction_script": "import json\nimport platform\nimport subprocess\nimport sys\nfrom importlib.metadata import version\nfrom pathlib import Path\nfrom tempfile import TemporaryDirectory\nfrom time import perf_counter\n\nimport numpy as np\nfrom sklearn.datasets import make_classification\nfrom sklearn.tree import DecisionTreeClassifier\nfrom threadpoolctl import threadpool_limits\n\nsys.path.insert(0, str(Path.cwd()))\nfrom sklearn_genetic import GAFeatureSelectionCV, GASearchCV\nfrom sklearn_genetic.callbacks import ModelCheckpoint\nfrom sklearn_genetic.space import Integer\n\nprior = \"7729bad\"\nsource = subprocess.check_output(\n    [\"git\", \"show\", f\"{prior}:sklearn_genetic/callbacks/model_checkpoint.py\"], text=True\n)\nnamespace = {\"__name__\": \"sklearn_genetic.callbacks.reference\"}\nexec(source, namespace)\nwriters = {\"previous\": namespace[\"ModelCheckpoint\"].on_step, \"atomic\": ModelCheckpoint.on_step}\n\n\nclass TimedCheckpoint(ModelCheckpoint):\n    def __init__(self, path, writer):\n        super().__init__(path)\n        self.writer = writer\n        self.ms = []\n        self.sizes = []\n\n    def on_step(self, record=None, logbook=None, estimator=None):\n        start = perf_counter()\n        self.writer(self, record, logbook, estimator)\n        self.ms.append(1000 * (perf_counter() - start))\n        self.sizes.append(self.checkpoint_path.stat().st_size)\n\n\ndef run(kind, arm, seed, X, y):\n    options = dict(\n        estimator=DecisionTreeClassifier(max_depth=4, random_state=seed),\n        cv=2, scoring=\"accuracy\", random_state=seed, population_size=6,\n        generations=3, n_jobs=1, verbose=False, error_score=\"raise\",\n    )\n    if kind == \"features\":\n        search = GAFeatureSelectionCV(max_features=12, **options)\n    else:\n        search = GASearchCV(param_grid={\n            \"max_depth\": Integer(2, 16), \"min_samples_leaf\": Integer(1, 12),\n        }, **options)\n    with TemporaryDirectory() as folder:\n        callback = TimedCheckpoint(Path(folder) / \"search.pkl\", writers[arm])\n        start = perf_counter()\n        search.fit(X[:96], y[:96], callbacks=[callback])\n        fit_ms = 1000 * (perf_counter() - start)\n        saved = callback.load()\n    state = saved[\"runtime_state\"]\n    key = \"features\" if kind == \"features\" else \"params\"\n    outcome = (\n        search.cv_results_[key], search.cv_results_[\"mean_test_score\"], search.predict(X[96:]),\n        saved[\"logbook\"].select(\"gen\"), saved[\"logbook\"].select(\"fitness_best\"),\n        state[\"fit_stats_\"][\"cross_validate_calls\"], list(state[\"fitness_cache\"]),\n        [v[\"fitness\"] for v in state[\"fitness_cache\"].values()],\n        state[\"candidate_logbook\"].chapters[\"parameters\"].select(\"score\"),\n    )\n    assert len(callback.ms) == 4\n    return dict(fit_ms=fit_ms, checkpoint_ms=callback.ms, sizes=callback.sizes), outcome\n\n\nrecords = []\nwith threadpool_limits(1):\n    for kind, width in [(\"hyperparameters\", 16), (\"features\", 512)]:\n        for seed in (2601, 2602, 2603):\n            X, y = make_classification(n_samples=144, n_features=width, n_informative=8,\n                                       random_state=seed)\n            if seed == 2601:\n                for arm in writers:\n                    run(kind, arm, seed, X, y)\n            for order in [list(writers), list(reversed(writers))]:\n                pair = dict(kind=kind, width=width, seed=seed, order=order)\n                expected = None\n                for arm in order:\n                    pair[arm], outcome = run(kind, arm, seed, X, y)\n                    if expected is not None:\n                        for left, right in zip(expected, outcome, strict=True):\n                            np.testing.assert_equal(left, right)\n                    expected = outcome\n                records.append(pair)\nprint(json.dumps(dict(\n    reference=prior, checkout=subprocess.check_output([\"git\",\"rev-parse\",\"HEAD\"],text=True).strip(),\n    platform=platform.system(), python=platform.python_version(),\n    versions={p: version(p) for p in (\"scikit-learn\",\"numpy\",\"deap\",\"joblib\")},\n    records=records, reproduction_script=Path(__file__).read_text(),\n), indent=2))\n"
+}
