@@ -232,11 +232,17 @@ def smart_feature_population(estimator, toolbox, individual_cls):
     selected_counts = np.linspace(1, max_selected, num=estimator.population_size)
     selected_counts = np.rint(selected_counts).astype(int)
 
+    space_size = finite_search_space_size(estimator, estimator.population_size)
+    padding_needed = estimator.population_size - space_size if space_size is not None else 0
+    padding = []
     for n_selected in selected_counts:
         values = _feature_mask(estimator.n_features, int(n_selected))
-        _append_unique_individual(population, seen_individuals, values, individual_cls)
+        added = _append_unique_individual(population, seen_individuals, values, individual_cls)
+        # A saturated space needs repeated masks to fill the population. Keep
+        # the first such draws while reserving room for every distinct mask.
+        if not added and len(padding) < padding_needed:
+            padding.append(values)
 
-    space_size = finite_search_space_size(estimator, estimator.population_size)
     attempts = 0
     max_attempts = max(100, estimator.population_size * 20)
     while (
@@ -248,6 +254,7 @@ def smart_feature_population(estimator, toolbox, individual_cls):
         _append_unique_individual(population, seen_individuals, values, individual_cls)
         attempts += 1
 
+    population.extend(individual_cls(values) for values in padding)
     while len(population) < estimator.population_size:
         values = _feature_mask(estimator.n_features, random.randint(1, max_selected))
         population.append(individual_cls(values))

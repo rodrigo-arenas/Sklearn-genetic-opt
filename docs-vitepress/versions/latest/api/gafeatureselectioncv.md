@@ -66,7 +66,9 @@ scorers normally use the default `criteria="max"`.
 Smart initialization spreads target mask sizes across the allowed range. It
 samples column indices without replacement, drawing the omitted columns for
 dense masks. This reduces initialization cost on wide data. Within the same
-version, set `random_state` to reproduce the initial masks.
+version, set `random_state` to reproduce the initial masks. If caching is enabled
+and the population exceeds the number of possible masks, smart initialization
+reuses duplicate draws to fill the remaining slots with independent individuals.
 
 `max_features` must be `None` or an integer from 1 through the number of input
 columns. Initialisation, crossover and mutation repair masks to keep at least one

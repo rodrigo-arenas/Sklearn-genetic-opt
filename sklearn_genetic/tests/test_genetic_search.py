@@ -2432,6 +2432,25 @@ def test_saturated_initial_population_avoids_impossible_unique_sampling(monkeypa
     assert search.predict(data).shape == (40,)
 
 
+def test_feature_population_stays_full_when_retries_only_draw_one_mask(monkeypatch):
+    import random
+
+    monkeypatch.setattr(random, "sample", lambda values, k: list(values)[:k])
+    search = genetic_search.GAFeatureSelectionCV(
+        DecisionTreeClassifier(random_state=0),
+        population_size=12,
+        max_features=1,
+        generations=0,
+        cv=2,
+        n_jobs=1,
+        random_state=17,
+        verbose=False,
+    ).fit(X_train[:40, :2], y_train[:40])
+    assert search.fit_stats_["cross_validate_calls"] == 1
+    assert search.history["population_size"] == [12]
+    assert search.history["unique_individuals"] == [1]
+
+
 @pytest.mark.parametrize("kind,seed", [("parameters", 1), ("features", 3)])
 def test_initial_population_keeps_sampling_until_finite_coverage(kind, seed):
     from sklearn.datasets import load_iris

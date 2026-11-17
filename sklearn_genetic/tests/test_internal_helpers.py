@@ -395,9 +395,9 @@ def test_smart_population_warm_start_early_return_and_feature_fallback(monkeypat
     )
     monkeypatch.setattr("sklearn_genetic.population.random", draws)
     masks = smart_feature_population(feature_estimator, toolbox, list)
-    assert masks == [[0, 1], [1, 0]] + [[1, 1]] * 8
-    masks[2][0] = 0
-    assert masks[3] == [1, 1]
+    assert masks == [[0, 1], [1, 0], [1, 1]] + [[0, 1], [1, 0], [0, 1]] + [[1, 1]] * 4
+    masks[0][0] = 1
+    assert masks[3] == [0, 1]
 
 
 def test_weighted_bool_individual_uses_weighted_and_unweighted_sampling(monkeypatch):
