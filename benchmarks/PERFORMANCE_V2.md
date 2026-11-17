@@ -1148,3 +1148,32 @@ New-Item -ItemType Directory -Force -Path .agent-runs | Out-Null
 .\.venv\Scripts\python.exe .agent-runs/profile_cv_results.py
 .\.venv\Scripts\python.exe .agent-runs/fit_cv_results.py
 ```
+
+## Log-scale crossover for one continuous parameter
+
+When the grid contains one numeric parameter, the standard GA uses bounded
+simulated binary crossover on the parameter value. A pilot applied the same
+operator in log coordinates for a log-uniform parameter and transformed its
+offspring back to the original units. The starting six candidates matched
+within each pair. Both methods used two generations, 30 distinct evaluations,
+three identical inner folds, one CPU thread and a final refit. Each metric
+below is the mean on three 25% outer holdouts (seeds 1301–1303).
+
+| Parameter and task | Holdout metric | Existing crossover | Log-scale crossover |
+| --- | --- | ---: | ---: |
+| Ridge alpha, Diabetes | MSE (lower is better) | 3298.309 | 3302.311 |
+| Logistic regression C, Wine | Accuracy | .970370 | .970370 |
+| SVC gamma, Breast Cancer | Balanced accuracy | .971139 | .971139 |
+
+Eight paired holdout scores tied. The log-scale variant increased Ridge MSE
+by 12.006 on the remaining split. These small overlapping cohorts provide
+little evidence for changing the operator. Multidimensional grids use a
+different crossover and were outside this pilot. The [18 fits and reproduction
+script](results/performance-v2/single-axis-log-crossover.json) include the
+winning parameters, inner scores, timings, environment and source commit.
+
+```powershell
+New-Item -ItemType Directory -Force -Path .agent-runs | Out-Null
+.\.venv\Scripts\python.exe -c "import json,pathlib; r=json.loads(pathlib.Path('benchmarks/results/performance-v2/single-axis-log-crossover.json').read_text()); pathlib.Path('.agent-runs/log-cross.py').write_text(r['reproduction_script'], encoding='utf-8')"
+.\.venv\Scripts\python.exe .agent-runs/log-cross.py .agent-runs/reproduced-log-cross.json
+```
