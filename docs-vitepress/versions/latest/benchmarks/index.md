@@ -2,6 +2,10 @@
 title: Genetic search benchmarks for scikit-learn
 description: Compare GASearchCV, Optuna TPE and random search by candidate evaluations, fold fits and runtime. See held-out feature selection results for GAFeatureSelectionCV.
 ---
+<script setup>
+import holdoutResultsUrl from '../../../../benchmarks/results/performance-v2/holdout-by-budget.json?url'
+</script>
+
 :::warning Development version
 This is the **latest (dev)** documentation. It may contain unreleased features or breaking changes. For the stable release, use [version 0.13](/versions/0.13/).
 :::
@@ -25,6 +29,16 @@ Each search started with the same six scored candidates. One continuation used t
 ![Per-split holdout score differences between evolution and random continuation. Ridge feature selection favored evolution on two splits and random search on one. Logistic feature selection favored random search on two splits and tied on one.](../../../../benchmarks/results/performance-v2/shared-initialization.svg)
 
 Each value is the mean score on three 25% outer holdouts. Higher is better within each row. On Diabetes, evolution selected masks with higher mean holdout R² even though random continuation scored higher in inner CV. The three outer partitions overlap. This experiment covers two datasets and measures quality per evaluation. Its reproduction script and all twelve pairs are in `benchmarks/results/performance-v2/shared-initialization.json` in the repository.
+
+### How much did another six candidates buy?
+
+With three CV folds, six additional distinct candidates cost 18 more fold fits. On Diabetes, the genetic feature selector improved mean held-out R² from 0.4376 at six candidates to 0.4777 at twelve. Random continuation reached 0.4473 at the same budget. On Breast Cancer, increasing the genetic feature search from six to eighteen candidates lowered mean held-out ROC AUC from 0.9917 to 0.9902.
+
+![Mean held-out score of the CV winner after 6, 12, 18 and 24 distinct candidates. Genetic feature selection gains most in the first six additional candidates on Diabetes. Breast Cancer feature selection shows a small decline.](../../../../benchmarks/results/performance-v2/holdout-by-budget.svg)
+
+Each point averages the same three outer partitions. Each panel has its own vertical scale. At each budget, inner CV chose the winner before the holdout was scored. In 11 of the 12 genetic runs the winner stayed the same between budgets 12 and 18. Four of those runs later found a higher inner CV score. The holdout score ultimately rose in two of the eleven runs, fell in two and tied in seven. A single flat interval gave little guidance on when to stop.
+
+<a :href="holdoutResultsUrl" download="holdout-by-budget.json">Download the per-split candidates, CV scores and holdout scores (JSON)</a>.
 
 ## Why Bayesmark?
 

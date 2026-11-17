@@ -1232,6 +1232,8 @@ fold fits. Full searches evaluated 29–30 distinct candidates.
 | Diabetes | Features | Genetic | .437615 | .477685 | .477685 | .469952 | .480064 |
 | Diabetes | Features | Random | .437615 | .447302 | .450243 | .425590 | .464764 |
 
+![Mean holdout score at four equal candidate budgets for genetic and random continuations, plotted separately for each dataset and search.](results/performance-v2/holdout-by-budget.svg)
+
 For Ridge feature selection, six additional genetic candidates raised mean
 holdout R² by .040070. The random continuation gained .009687 at the same
 cost. For logistic regression feature selection, the initial masks had higher
