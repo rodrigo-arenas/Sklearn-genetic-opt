@@ -556,6 +556,47 @@ def test_feature_selection_genetic_operations_respect_max_features():
         del genetic_search.creator.Individual
 
 
+def test_feature_toolbox_clone_preserves_mask_and_metadata_independence():
+    selector = GAFeatureSelectionCV(DecisionTreeClassifier(), population_size=4)
+    selector.n_features = 4
+    selector.features_proportion = 0.5
+    selector._register()
+    try:
+        parent = selector.toolbox.individual()
+        parent.fitness.values = (0.7, sum(parent))
+        canonical = selector.toolbox.clone(parent)
+        assert canonical == parent and canonical.fitness.values == parent.fitness.values
+        canonical[0] = 1 - canonical[0]
+        del canonical.fitness.values
+        assert canonical != parent and parent.fitness.valid
+        parent.notes = {"owner": parent, "scores": [0.7]}
+        parent.same_notes = parent.notes
+        child = selector.toolbox.clone(parent)
+        assert child == parent and type(child) is type(parent)
+        assert child.fitness.values == parent.fitness.values
+        assert child.notes is child.same_notes and child.notes["owner"] is child
+        child[0] = 1 - child[0]
+        del child.fitness.values
+        child.notes["scores"].append(0.8)
+        assert child != parent and parent.fitness.valid
+        assert parent.notes["scores"] == [0.7]
+
+        # DEAP's generic clone also supports memoized copies and mutable payloads.
+        sentinel = []
+        assert selector.toolbox.clone(parent, {id(parent): sentinel}) is sentinel
+        parent[0] = parent.notes["scores"]
+        unusual = selector.toolbox.clone(parent)
+        assert unusual[0] is unusual.notes["scores"] and unusual[0] is not parent[0]
+        canonical.__deepcopy__ = lambda memo: sentinel
+        assert selector.toolbox.clone(canonical) is sentinel
+        del canonical.__deepcopy__
+        type(canonical).__deepcopy__ = lambda self, memo: sentinel
+        assert selector.toolbox.clone(canonical) is sentinel
+    finally:
+        del genetic_search.creator.FitnessMax
+        del genetic_search.creator.Individual
+
+
 def test_expected_ga_results():
     clf = SGDClassifier(loss="modified_huber", fit_intercept=True)
     generations = 6

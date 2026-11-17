@@ -1614,3 +1614,26 @@ this cloning behavior in the library.
 The [initializer timing records](results/performance-v2/mask-fit-stages.json)
 and [clone pilot records](results/performance-v2/mask-clone-pilot.json)
 include the per-run stage measurements, execution order and reproduction scripts.
+
+### Native mask copying across feature widths
+
+The selector copies native integer genes in bulk and clones fitness separately.
+Candidates with custom metadata or copy behavior use the standard deep copy.
+The comparison below measures complete fits against DEAP's default clone.
+Each workload used three seeds, both execution orders, eight individuals, one
+generation and three CV folds. The 256-feature case used Ridge regression.
+The other cases used a depth-three classification tree.
+
+| Features | Algorithm | Default median (ms) | Optimized median (ms) | Median paired change (ms) | Faster pairs |
+| ---: | --- | ---: | ---: | ---: | ---: |
+| 16 | eaSimple | 110.14 | 109.63 | -0.11 | 3/6 |
+| 256 | eaMuCommaLambda | 120.78 | 119.11 | -1.88 | 4/6 |
+| 4096 | eaMuPlusLambda | 276.39 | 245.03 | -29.80 | 6/6 |
+| 4096 | eaDifferentialEvolution | 176.67 | 167.47 | -9.17 | 5/6 |
+
+All 24 pairs matched on candidate masks and order, mean CV scores, selected
+features, held-out predictions and CV call count. These short synthetic runs
+measure copying overhead. They do not establish search quality at larger
+budgets or transfer to other estimators and hardware. The
+[paired measurements and script](results/performance-v2/mask-clone-transfer.json)
+record the environment and execution order.

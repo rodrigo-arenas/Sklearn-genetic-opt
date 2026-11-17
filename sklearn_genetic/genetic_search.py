@@ -1,4 +1,5 @@
 from copy import deepcopy
+import copyreg
 import inspect
 from numbers import Integral
 import random
@@ -1498,6 +1499,28 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
         return self
 
 
+def _clone_feature_mask(x, memo=None, *, mask_type, native_attributes):
+    """Copy immutable integer genes in bulk and independently clone DEAP state."""
+    if (
+        memo is not None
+        or type(x) is not mask_type
+        or vars(x).keys() != {"fitness"}
+        or type(x.fitness) is not mask_type.fitness
+        or mask_type in copyreg.dispatch_table
+        or mask_type.__bases__ != (list,)
+        # Pickle may cache an empty slot-name list on this list subclass.
+        or vars(mask_type).get("__slotnames__")
+        or vars(mask_type).keys() - {"__slotnames__"} != native_attributes
+        or not all(type(bit) is int for bit in x)
+    ):
+        return deepcopy(x, memo)
+
+    child = list.__new__(mask_type)
+    child.fitness = deepcopy(x.fitness, {id(x): child})
+    child.extend(x)
+    return child
+
+
 class GAFeatureSelectionCV(
     _FinalSelectionMixin, GeneticEstimatorMixin, MetaEstimatorMixin, SelectorMixin, BaseEstimator
 ):
@@ -2053,6 +2076,13 @@ class GAFeatureSelectionCV(
         # And -1.0 as second weight to minimize number of features
         creator.create("FitnessMax", base.Fitness, weights=[self.criteria_sign, -1.0])
         creator.create("Individual", list, fitness=creator.FitnessMax)
+
+        self.toolbox.register(
+            "clone",
+            _clone_feature_mask,
+            mask_type=creator.Individual,
+            native_attributes=frozenset(vars(creator.Individual)),
+        )
 
         # Register the array to choose the features
         # Each binary value represents if the feature is selected or not
