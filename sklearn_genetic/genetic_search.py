@@ -1,7 +1,9 @@
 from copy import deepcopy
 import copyreg
 import inspect
+from itertools import repeat
 from numbers import Integral
+from operator import is_
 import random
 import time
 import warnings
@@ -1534,7 +1536,8 @@ def _clone_feature_mask(x, memo=None, *, mask_type, native_attributes):
         # Pickle may cache an empty slot-name list on this list subclass.
         or vars(mask_type).get("__slotnames__")
         or vars(mask_type).keys() - {"__slotnames__"} != native_attributes
-        or not all(type(bit) is int for bit in x)
+        # Stream exact type checks without resuming a Python generator for every column.
+        or not all(map(is_, map(type, x), repeat(int)))
     ):
         return deepcopy(x, memo)
 
