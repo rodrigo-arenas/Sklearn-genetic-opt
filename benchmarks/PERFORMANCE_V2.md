@@ -1694,3 +1694,24 @@ fit counts. The results diagnose replay on these fixed-seed workloads. They
 cannot establish a quality advantage at equal compute. The
 [per-seed results and reproduction script](results/performance-v2/resume-coverage.json)
 include held-out accuracy, candidate counts, cache hits and generation indices.
+
+### Coverage with restored proposal streams and archived elites
+
+Repeating the experiment at `8158ff3` added new candidates on all 16
+resumes. Each new checkpoint records the Python and NumPy RNG states and the
+ranked elite archive. The resumed population is initialized anew. Numeric
+smart initialization draws a fresh Latin hypercube from the continuing stream.
+
+| Search | New evaluations on first resume, per seed | New evaluations on second resume | Total distinct after three segments |
+| --- | --- | --- | --- |
+| Hyperparameters | 18, 17, 18, 17 | 15, 15, 17, 17 | 50, 50, 53, 51 |
+| Features | 18, 18, 18, 17 | 18, 18, 18, 18 | 54, 54, 54, 53 |
+
+The selected candidate attained the best recorded mean CV score in every
+segment. Compared with the old segmented runs, final held-out accuracy was
+unchanged on six of eight task/seed pairs, rose by 25/72 on one feature search
+and fell by 3/72 on one hyperparameter search. The resumed searches spent
+more fold fits because they evaluated new candidates. Equal-cost comparisons
+on independent tasks are needed to assess proposal quality. The
+[post-change trajectories and script](results/performance-v2/resume-coverage-restored.json)
+include cumulative evaluations and the selected candidate's CV score.

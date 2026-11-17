@@ -1,0 +1,412 @@
+{
+  "checkout": "8158ff3f73375d71bd445820385ed511a421e2e1",
+  "python": "3.12.0",
+  "versions": {
+    "scikit-learn": "1.9.1",
+    "numpy": "2.5.3",
+    "deap": "1.4.4"
+  },
+  "records": [
+    {
+      "kind": "hyperparameters",
+      "seed": 2701,
+      "segments": [
+        {
+          "evaluated": 18,
+          "distinct": 17,
+          "cv_calls": 17,
+          "cache_hits": 0,
+          "selected_cv": 0.8055555555555557,
+          "last_generation": 1,
+          "best_cv": 0.8055555555555557,
+          "holdout_accuracy": 0.8055555555555556,
+          "additional_distinct": 17
+        },
+        {
+          "evaluated": 36,
+          "distinct": 35,
+          "cv_calls": 35,
+          "cache_hits": 0,
+          "selected_cv": 0.8055555555555557,
+          "last_generation": 3,
+          "best_cv": 0.8055555555555557,
+          "holdout_accuracy": 0.8055555555555556,
+          "additional_distinct": 18
+        },
+        {
+          "evaluated": 54,
+          "distinct": 50,
+          "cv_calls": 50,
+          "cache_hits": 3,
+          "selected_cv": 0.8055555555555557,
+          "last_generation": 5,
+          "best_cv": 0.8055555555555557,
+          "holdout_accuracy": 0.8055555555555556,
+          "additional_distinct": 15
+        }
+      ],
+      "continuous": {
+        "evaluated": 42,
+        "distinct": 39,
+        "cv_calls": 39,
+        "cache_hits": 1,
+        "selected_cv": 0.8055555555555557,
+        "last_generation": 3,
+        "best_cv": 0.8055555555555557,
+        "holdout_accuracy": 0.8055555555555556
+      },
+      "common_distinct": 24
+    },
+    {
+      "kind": "features",
+      "seed": 2701,
+      "segments": [
+        {
+          "evaluated": 18,
+          "distinct": 18,
+          "cv_calls": 18,
+          "cache_hits": 0,
+          "selected_cv": 0.6527777777777777,
+          "last_generation": 1,
+          "best_cv": 0.6527777777777777,
+          "holdout_accuracy": 0.4722222222222222,
+          "additional_distinct": 18
+        },
+        {
+          "evaluated": 36,
+          "distinct": 36,
+          "cv_calls": 36,
+          "cache_hits": 0,
+          "selected_cv": 0.701388888888889,
+          "last_generation": 3,
+          "best_cv": 0.701388888888889,
+          "holdout_accuracy": 0.7916666666666666,
+          "additional_distinct": 18
+        },
+        {
+          "evaluated": 54,
+          "distinct": 54,
+          "cv_calls": 54,
+          "cache_hits": 0,
+          "selected_cv": 0.7708333333333334,
+          "last_generation": 5,
+          "best_cv": 0.7708333333333334,
+          "holdout_accuracy": 0.8194444444444444,
+          "additional_distinct": 18
+        }
+      ],
+      "continuous": {
+        "evaluated": 42,
+        "distinct": 41,
+        "cv_calls": 41,
+        "cache_hits": 1,
+        "selected_cv": 0.7708333333333334,
+        "last_generation": 3,
+        "best_cv": 0.7708333333333334,
+        "holdout_accuracy": 0.7222222222222222
+      },
+      "common_distinct": 18
+    },
+    {
+      "kind": "hyperparameters",
+      "seed": 2702,
+      "segments": [
+        {
+          "evaluated": 18,
+          "distinct": 18,
+          "cv_calls": 18,
+          "cache_hits": 0,
+          "selected_cv": 0.8402777777777778,
+          "last_generation": 1,
+          "best_cv": 0.8402777777777778,
+          "holdout_accuracy": 0.7916666666666666,
+          "additional_distinct": 18
+        },
+        {
+          "evaluated": 36,
+          "distinct": 35,
+          "cv_calls": 35,
+          "cache_hits": 0,
+          "selected_cv": 0.8402777777777778,
+          "last_generation": 3,
+          "best_cv": 0.8402777777777778,
+          "holdout_accuracy": 0.7916666666666666,
+          "additional_distinct": 17
+        },
+        {
+          "evaluated": 54,
+          "distinct": 50,
+          "cv_calls": 50,
+          "cache_hits": 3,
+          "selected_cv": 0.8402777777777778,
+          "last_generation": 5,
+          "best_cv": 0.8402777777777778,
+          "holdout_accuracy": 0.7916666666666666,
+          "additional_distinct": 15
+        }
+      ],
+      "continuous": {
+        "evaluated": 42,
+        "distinct": 38,
+        "cv_calls": 38,
+        "cache_hits": 4,
+        "selected_cv": 0.8402777777777778,
+        "last_generation": 3,
+        "best_cv": 0.8402777777777778,
+        "holdout_accuracy": 0.7916666666666666
+      },
+      "common_distinct": 26
+    },
+    {
+      "kind": "features",
+      "seed": 2702,
+      "segments": [
+        {
+          "evaluated": 18,
+          "distinct": 18,
+          "cv_calls": 18,
+          "cache_hits": 0,
+          "selected_cv": 0.8125,
+          "last_generation": 1,
+          "best_cv": 0.8125,
+          "holdout_accuracy": 0.7638888888888888,
+          "additional_distinct": 18
+        },
+        {
+          "evaluated": 36,
+          "distinct": 36,
+          "cv_calls": 36,
+          "cache_hits": 0,
+          "selected_cv": 0.8125,
+          "last_generation": 3,
+          "best_cv": 0.8125,
+          "holdout_accuracy": 0.7638888888888888,
+          "additional_distinct": 18
+        },
+        {
+          "evaluated": 54,
+          "distinct": 54,
+          "cv_calls": 54,
+          "cache_hits": 0,
+          "selected_cv": 0.8125,
+          "last_generation": 5,
+          "best_cv": 0.8125,
+          "holdout_accuracy": 0.7638888888888888,
+          "additional_distinct": 18
+        }
+      ],
+      "continuous": {
+        "evaluated": 42,
+        "distinct": 42,
+        "cv_calls": 42,
+        "cache_hits": 0,
+        "selected_cv": 0.8125,
+        "last_generation": 3,
+        "best_cv": 0.8125,
+        "holdout_accuracy": 0.7638888888888888
+      },
+      "common_distinct": 21
+    },
+    {
+      "kind": "hyperparameters",
+      "seed": 2703,
+      "segments": [
+        {
+          "evaluated": 18,
+          "distinct": 18,
+          "cv_calls": 18,
+          "cache_hits": 0,
+          "selected_cv": 0.7291666666666666,
+          "last_generation": 1,
+          "best_cv": 0.7291666666666666,
+          "holdout_accuracy": 0.7777777777777778,
+          "additional_distinct": 18
+        },
+        {
+          "evaluated": 36,
+          "distinct": 36,
+          "cv_calls": 36,
+          "cache_hits": 0,
+          "selected_cv": 0.736111111111111,
+          "last_generation": 3,
+          "best_cv": 0.736111111111111,
+          "holdout_accuracy": 0.7361111111111112,
+          "additional_distinct": 18
+        },
+        {
+          "evaluated": 54,
+          "distinct": 53,
+          "cv_calls": 53,
+          "cache_hits": 1,
+          "selected_cv": 0.736111111111111,
+          "last_generation": 5,
+          "best_cv": 0.736111111111111,
+          "holdout_accuracy": 0.7361111111111112,
+          "additional_distinct": 17
+        }
+      ],
+      "continuous": {
+        "evaluated": 42,
+        "distinct": 41,
+        "cv_calls": 41,
+        "cache_hits": 0,
+        "selected_cv": 0.736111111111111,
+        "last_generation": 3,
+        "best_cv": 0.736111111111111,
+        "holdout_accuracy": 0.7361111111111112
+      },
+      "common_distinct": 34
+    },
+    {
+      "kind": "features",
+      "seed": 2703,
+      "segments": [
+        {
+          "evaluated": 18,
+          "distinct": 18,
+          "cv_calls": 18,
+          "cache_hits": 0,
+          "selected_cv": 0.7152777777777777,
+          "last_generation": 1,
+          "best_cv": 0.7152777777777777,
+          "holdout_accuracy": 0.7777777777777778,
+          "additional_distinct": 18
+        },
+        {
+          "evaluated": 36,
+          "distinct": 36,
+          "cv_calls": 36,
+          "cache_hits": 0,
+          "selected_cv": 0.7152777777777777,
+          "last_generation": 3,
+          "best_cv": 0.7152777777777777,
+          "holdout_accuracy": 0.7777777777777778,
+          "additional_distinct": 18
+        },
+        {
+          "evaluated": 54,
+          "distinct": 54,
+          "cv_calls": 54,
+          "cache_hits": 0,
+          "selected_cv": 0.7152777777777777,
+          "last_generation": 5,
+          "best_cv": 0.7152777777777777,
+          "holdout_accuracy": 0.7777777777777778,
+          "additional_distinct": 18
+        }
+      ],
+      "continuous": {
+        "evaluated": 42,
+        "distinct": 42,
+        "cv_calls": 42,
+        "cache_hits": 0,
+        "selected_cv": 0.7152777777777777,
+        "last_generation": 3,
+        "best_cv": 0.7152777777777777,
+        "holdout_accuracy": 0.7777777777777778
+      },
+      "common_distinct": 20
+    },
+    {
+      "kind": "hyperparameters",
+      "seed": 2704,
+      "segments": [
+        {
+          "evaluated": 18,
+          "distinct": 17,
+          "cv_calls": 17,
+          "cache_hits": 1,
+          "selected_cv": 0.7083333333333334,
+          "last_generation": 1,
+          "best_cv": 0.7083333333333334,
+          "holdout_accuracy": 0.7083333333333334,
+          "additional_distinct": 17
+        },
+        {
+          "evaluated": 36,
+          "distinct": 34,
+          "cv_calls": 34,
+          "cache_hits": 2,
+          "selected_cv": 0.7083333333333334,
+          "last_generation": 3,
+          "best_cv": 0.7083333333333334,
+          "holdout_accuracy": 0.7083333333333334,
+          "additional_distinct": 17
+        },
+        {
+          "evaluated": 54,
+          "distinct": 51,
+          "cv_calls": 51,
+          "cache_hits": 3,
+          "selected_cv": 0.7083333333333334,
+          "last_generation": 5,
+          "best_cv": 0.7083333333333334,
+          "holdout_accuracy": 0.7083333333333334,
+          "additional_distinct": 17
+        }
+      ],
+      "continuous": {
+        "evaluated": 42,
+        "distinct": 38,
+        "cv_calls": 38,
+        "cache_hits": 3,
+        "selected_cv": 0.7083333333333334,
+        "last_generation": 3,
+        "best_cv": 0.7083333333333334,
+        "holdout_accuracy": 0.7083333333333334
+      },
+      "common_distinct": 27
+    },
+    {
+      "kind": "features",
+      "seed": 2704,
+      "segments": [
+        {
+          "evaluated": 18,
+          "distinct": 18,
+          "cv_calls": 18,
+          "cache_hits": 0,
+          "selected_cv": 0.6805555555555557,
+          "last_generation": 1,
+          "best_cv": 0.6805555555555557,
+          "holdout_accuracy": 0.6944444444444444,
+          "additional_distinct": 18
+        },
+        {
+          "evaluated": 36,
+          "distinct": 35,
+          "cv_calls": 35,
+          "cache_hits": 1,
+          "selected_cv": 0.6805555555555557,
+          "last_generation": 3,
+          "best_cv": 0.6805555555555557,
+          "holdout_accuracy": 0.6944444444444444,
+          "additional_distinct": 17
+        },
+        {
+          "evaluated": 54,
+          "distinct": 53,
+          "cv_calls": 53,
+          "cache_hits": 1,
+          "selected_cv": 0.6805555555555557,
+          "last_generation": 5,
+          "best_cv": 0.6805555555555557,
+          "holdout_accuracy": 0.6944444444444444,
+          "additional_distinct": 18
+        }
+      ],
+      "continuous": {
+        "evaluated": 42,
+        "distinct": 42,
+        "cv_calls": 42,
+        "cache_hits": 0,
+        "selected_cv": 0.6944444444444445,
+        "last_generation": 3,
+        "best_cv": 0.6944444444444445,
+        "holdout_accuracy": 0.6527777777777778
+      },
+      "common_distinct": 19
+    }
+  ],
+  "reproduction_script": "import json\nimport platform\nimport subprocess\nimport sys\nfrom importlib.metadata import version\nfrom pathlib import Path\nfrom tempfile import TemporaryDirectory\n\nfrom sklearn.datasets import make_classification\nfrom sklearn.tree import DecisionTreeClassifier\nfrom threadpoolctl import threadpool_limits\n\nsys.path.insert(0, str(Path.cwd()))\nfrom sklearn_genetic import GAFeatureSelectionCV, GASearchCV\nfrom sklearn_genetic.callbacks import ModelCheckpoint\nfrom sklearn_genetic.space import Integer\n\n\ndef fit(kind, seed, generations, X, y, path):\n    opts = dict(\n        estimator=DecisionTreeClassifier(random_state=seed), cv=3,\n        scoring=\"accuracy\", population_size=6, generations=generations,\n        n_jobs=1, verbose=False, error_score=\"raise\", random_state=seed,\n    )\n    if kind == \"features\":\n        search = GAFeatureSelectionCV(max_features=6, **opts)\n    else:\n        search = GASearchCV(param_grid={\n            \"max_depth\": Integer(2, 20), \"min_samples_leaf\": Integer(1, 16),\n        }, **opts)\n    checkpoint = ModelCheckpoint(path)\n    search.fit(X[:144], y[:144], callbacks=[checkpoint])\n    saved = checkpoint.load()[\"runtime_state\"]\n    keys = set(saved[\"fitness_cache\"])\n    stats = saved[\"fit_stats_\"]\n    assert stats[\"cross_validate_calls\"] == len(keys)\n    return dict(\n        evaluated=stats[\"evaluated_candidates\"], distinct=len(keys),\n        cv_calls=stats[\"cross_validate_calls\"], cache_hits=stats[\"cache_hits\"],\n        selected_cv=(search.best_score_ if kind != \"features\" else next(score for mask,score in zip(search.cv_results_[\"features\"],search.cv_results_[\"mean_test_score\"]) if list(mask)==list(search.support_))),\n        last_generation=search.history[\"gen\"][-1], best_cv=max(search.cv_results_[\"mean_test_score\"]),\n        holdout_accuracy=float((search.predict(X[144:]) == y[144:]).mean()),\n    ), keys\n\n\nrecords = []\nwith threadpool_limits(1), TemporaryDirectory() as folder:\n    for seed in (2701, 2702, 2703, 2704):\n        X, y = make_classification(n_samples=216, n_features=24, n_informative=8,\n                                   n_redundant=4, random_state=seed)\n        for kind in (\"hyperparameters\", \"features\"):\n            base = Path(folder) / f\"{kind}-{seed}\"\n            previous = set()\n            segments = []\n            for i in range(3):\n                stats, keys = fit(kind, seed, 1, X, y, base.with_suffix(\".pkl\"))\n                assert previous <= keys\n                stats[\"additional_distinct\"] = len(keys - previous)\n                segments.append(stats)\n                previous = keys\n            reference, full_keys = fit(kind, seed, 3, X, y, base.with_suffix(\".continuous\"))\n            records.append(dict(kind=kind, seed=seed, segments=segments, continuous=reference,\n                                common_distinct=len(previous & full_keys)))\nprint(json.dumps(dict(\n    checkout=subprocess.check_output([\"git\",\"rev-parse\",\"HEAD\"],text=True).strip(),\n    python=platform.python_version(), versions={p: version(p) for p in\n    (\"scikit-learn\",\"numpy\",\"deap\")}, records=records, reproduction_script=Path(__file__).read_text()\n),indent=2))\n\n"
+}
