@@ -298,6 +298,33 @@ def test_verbose_output_uses_compact_generation_summary(simple_toolbox, capsys):
     assert len({len(line) for line in table_lines}) == 1
 
 
+def test_easimple_growing_elite_archive_respects_population_budget(simple_toolbox):
+    population = [creator.IndividualAlgorithmTest([0]) for _ in range(4)]
+    mutations = iter(range(1, 20))
+
+    def mutate(individual):
+        individual[0] = next(mutations)
+        return (individual,)
+
+    simple_toolbox.register("mutate", mutate)
+    archive = tools.HallOfFame(3)
+    final, log, _ = eaSimple(
+        population,
+        simple_toolbox,
+        cxpb=ConstantAdapter(0, 0, 0),
+        mutpb=ConstantAdapter(1, 1, 0),
+        ngen=3,
+        halloffame=archive,
+        callbacks=[],
+        verbose=False,
+        estimator=SimpleNamespace(elitism=True),
+    )
+
+    assert log.select("population_size") == [4, 4, 4, 4]
+    assert log.select("nevals") == [4, 3, 1, 1]
+    assert max(ind[0] for ind in final) == archive[0][0] == 5
+
+
 def test_algorithm_records_monotonic_best_fitness(simple_toolbox):
     population = [
         creator.IndividualAlgorithmTest([1, 0, 0, 0]),

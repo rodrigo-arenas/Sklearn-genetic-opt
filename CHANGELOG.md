@@ -4,6 +4,8 @@ Full release notes with code examples are in the [documentation](https://sklearn
 
 ## Unreleased
 
+- Fixed population growth in `eaSimple` when the initial population contains duplicates and the elite archive grows during evolution. Both search estimators now keep archived elites within the configured population budget.
+
 - Removed TensorFlow and TensorBoard from optional extras. Added Matplotlib-based live generation plots in `sklearn_genetic.plots`; the legacy `TensorBoard` callback remains available with a separate TensorFlow installation and no longer imports it at library startup.
 - `GASearchCV` and `GAFeatureSelectionCV` now rank non-finite cross-validation scores last during evolution and final candidate selection, for both maximization and minimization. A candidate with one failed fold no longer receives a misleading average from its remaining folds. Raw fold scores remain visible in `cv_results_`; fitness sharing preserves valid ordering, and resumed checkpoints normalize older cached fitness values.
 

@@ -503,9 +503,6 @@ def eaSimple(
 
     if halloffame is not None:
         halloffame.update(population)
-    hof_size = (
-        len(halloffame) if halloffame is not None and getattr(estimator, "elitism", False) else 0
-    )
 
     exhausted = _update_search_coverage(estimator, population, space_size, seen_candidates)
     n_gen = gen = 0
@@ -547,8 +544,13 @@ def eaSimple(
             # Select the next generation individuals
             if estimator is not None:
                 estimator._last_generation_record = record
+            elites = (
+                halloffame.items[: len(population)]
+                if halloffame is not None and getattr(estimator, "elitism", False)
+                else []
+            )
             with shared_fitness(population, estimator) as sharing_record:
-                offspring = toolbox.select(population, len(population) - hof_size)
+                offspring = toolbox.select(population, len(population) - len(elites))
             selection_pressure = getattr(estimator, "_selection_pressure_", None)
 
             mutation_prob, diversity_triggered = mutation_probability(mutpb, estimator, record)
@@ -570,8 +572,7 @@ def eaSimple(
                 ind.fitness.values = fit
             offspring[:] = [individual for individual in offspring if individual.fitness.valid]
 
-            if halloffame is not None and getattr(estimator, "elitism", False):
-                offspring.extend(halloffame.items)
+            offspring.extend(elites)
 
             # Update the hall of fame with the generated individuals
             if halloffame is not None:

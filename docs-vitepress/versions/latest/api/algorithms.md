@@ -33,10 +33,13 @@ The (μ, λ) evolutionary strategy. The next generation is selected from offspri
 
 ## eaSimple
 
-A simple generational genetic algorithm. Each generation fully replaces the previous one.
-
-- **Pros:** Simple and fast.
-- **Cons:** Without `elitism=True`, generational replacement can lose the best individual.
+A generational genetic algorithm with a fixed population size. With
+`elitism=True`, each distinct archived elite occupies one population slot, up
+to `keep_top_k` and the size of the population. The remaining slots are available
+for offspring. For example, a population of six with four archived elites has
+room for two offspring. Choose `keep_top_k` below `population_size` to leave
+room for variation once the archive fills. With `elitism=False`, every slot is
+available for offspring.
 
 ## eaDifferentialEvolution
 
