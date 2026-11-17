@@ -1748,3 +1748,33 @@ the same trajectories, and splits within a dataset overlap. The small paired
 sample describes how the policies behave on these tasks. It cannot establish
 a general quality ranking. The [per-split results and script](results/performance-v2/resume-equal-cost.json)
 record the shared candidate counts, selected parameters or masks and scores.
+
+## Measuring population diversity on wide feature masks
+
+The selector estimates genotype diversity by computing, at each column, the
+probability that two distinct population members disagree. The general routine
+builds a frequency counter for every column. For binary masks, counting ones
+also gives the number of zeros. A benchmark-only implementation uses one byte
+per gene and sums columns with NumPy, retaining the same equal-pair formula and
+the count of unique masks. These runs use only native rectangular binary masks.
+
+Each fit used eight individuals, two generations, three CV folds and one worker.
+The four workloads used a depth-three classification tree or, at 256 columns,
+Ridge regression. For each of three new seeds, both implementations ran in both
+orders following a warm-up for each workload. Times below are milliseconds.
+
+| Columns | Algorithm | Median time measuring diversity, current / prototype | Median paired full-fit change | Faster full fits |
+| ---: | --- | ---: | ---: | ---: |
+| 16 | eaSimple | 0.16 / 0.13 | −0.06 | 3/6 |
+| 256 | eaMuCommaLambda | 1.45 / 0.18 | −2.52 | 4/6 |
+| 4096 | eaMuPlusLambda | 21.61 / 0.93 | −20.95 | 6/6 |
+| 4096 | eaDifferentialEvolution | 21.59 / 0.95 | −22.96 | 6/6 |
+
+All 24 comparisons matched exactly on every generation-history field,
+candidate masks and their order, mean CV scores, selected features, candidate
+CV call count and held-out predictions. The clearest runtime gain occurred on
+the two wide workloads. The current mixed-gene HPO implementation and library
+defaults were unchanged during this pilot. The prototype allocates a dense
+byte matrix; peak memory was not measured here. The
+[paired timings and script](results/performance-v2/binary-diversity-pilot.json)
+include time inside the diversity calculation and the full fit.
