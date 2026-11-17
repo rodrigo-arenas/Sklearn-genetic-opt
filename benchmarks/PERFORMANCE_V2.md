@@ -1345,3 +1345,32 @@ The control-disabled results include different evaluation budgets.
 
 The [paired counts, scores and reproduction script](results/performance-v2/fixed-dimension-mutation.json)
 record the baseline commit, environment and initial candidate values.
+
+## Differential crossover with fixed HPO coordinates
+
+The binomial crossover in `eaDifferentialEvolution` always takes at least
+one coordinate from the donor trial. Previously, the forced coordinate could
+be a fixed parameter. With a zero crossover probability this could spend the
+entire trial copying the target. The operator now chooses its forced
+coordinate among variable dimensions whenever the HPO grid contains any.
+
+The pilot used one log-uniform parameter (logistic regression C or Ridge
+alpha) and three fixed parameters. Each pair started with the same six
+candidates and generated 18 trials in three generations. Ordinary mutation
+and diversity control were disabled to isolate crossover. The table sums
+three seeds per dataset, with three-fold CV and a reserved 25% outer holdout.
+
+| Crossover probability | Target copies / 108 trials, previous | Target copies / 108 trials, current | Distinct CV evaluations, previous → current |
+| ---: | ---: | ---: | ---: |
+| 0 | 79 | 1 | 63 → 128 |
+| 0.8 | 21 | 1 | 112 → 128 |
+
+A donor can still coincide with the target after decoding. More distinct
+trials at the same generation count also meant more model fits. At zero
+crossover, mean Diabetes holdout R² increased from .514720 to .516095
+and mean Breast Cancer ROC AUC stayed at .993641. At .8, mean R² stayed
+at .516095 and mean AUC went from .993711 to .993641. This experiment
+isolates proposal behavior; it does not compare quality at equal fit cost.
+
+The [per-seed results and reproduction script](results/performance-v2/fixed-dimension-de.json)
+include the initial candidates, winners, target copies and actual CV calls.

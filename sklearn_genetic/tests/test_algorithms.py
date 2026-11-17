@@ -161,22 +161,30 @@ def test_differential_evolution_replaces_only_improved_targets(
         (Categorical([0.2, 0.4, 0.6, 0.8]), [0.2, 0.4, 0.6, 0.8], [0.4, 0.2, 0.2, 0.2]),
     ],
 )
+@pytest.mark.parametrize("fixed_columns", [False, True])
 def test_differential_evolution_uses_deferred_distinct_donors(
-    simple_toolbox, monkeypatch, dimension, parents, trials
+    simple_toolbox, monkeypatch, dimension, parents, trials, fixed_columns
 ):
-    # For a one-dimensional space, CR=0 must still force the donor coordinate.
+    # With one variable coordinate, CR=0 must still force that donor coordinate.
     # Excluding the target maps samples [0, 1, 2] to the three other parents.
-    population = [creator.IndividualAlgorithmTest([x]) for x in parents]
+    grid = {"x": dimension}
+    if fixed_columns:
+        grid = {"fixed": Categorical(["a"]), **grid, "constant": Continuous(2, 2)}
+    gene = list(grid).index("x")
+    population = [
+        creator.IndividualAlgorithmTest(["a", x, 2] if fixed_columns else [x]) for x in parents
+    ]
     evaluated = []
 
     def evaluate(individual):
-        evaluated.append(individual[0])
-        return (individual[0],)
+        evaluated.append(individual[gene])
+        return (individual[gene],)
 
     simple_toolbox.register("evaluate", evaluate)
     monkeypatch.setattr(random, "sample", lambda values, k: list(values)[:k])
+    monkeypatch.setattr(random, "randrange", lambda n: 0)
     estimator = SimpleNamespace(
-        space=Space({"x": dimension}),
+        space=Space(grid),
         _repair_individual=lambda individual: individual,
         elitism=False,
     )
@@ -192,7 +200,7 @@ def test_differential_evolution_uses_deferred_distinct_donors(
         estimator=estimator,
     )
     assert evaluated == pytest.approx(parents + trials)
-    assert [ind[0] for ind in result] == pytest.approx(
+    assert [ind[gene] for ind in result] == pytest.approx(
         [max(parent, trial) for parent, trial in zip(parents, trials)]
     )
 

@@ -82,6 +82,7 @@ from .population import (
 )
 from .optimizer_control import (
     adaptive_tournament_size,
+    mutable_dimensions,
     validate_optimizer_control as _validate_optimizer_control,
 )
 
@@ -1103,14 +1104,7 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
             Mutated individual
         """
 
-        mutable = []
-        for index, dimension in enumerate(self.space.param_grid.values()):
-            if isinstance(dimension, (Integer, Continuous)) and dimension.lower == dimension.upper:
-                continue
-            if isinstance(dimension, Categorical) and len(dimension.choices) == 1:
-                continue
-            mutable.append((index, dimension))
-
+        mutable = mutable_dimensions(self.space.param_grid.values())
         if mutable:
             index, dimension = random.choice(mutable)
             individual[index] = dimension.sample()

@@ -60,6 +60,12 @@ the remaining dimensions and draws from the chosen distribution. A discrete draw
 repeat the parent value. With caching enabled, fewer repeated proposals can
 increase the number of distinct models fitted in a generation.
 
+With `algorithm="eaDifferentialEvolution"`, binomial crossover always takes
+one coordinate from the donor trial, even when `crossover_probability=0`.
+If the grid has any variable dimensions, the algorithm chooses this coordinate
+among them. A trial can still match its parent after rounding, clipping, or
+drawing the same categorical value.
+
 ## Search correctness
 
 Each fresh `fit` recomputes candidate scores for the supplied data and scoring settings.
