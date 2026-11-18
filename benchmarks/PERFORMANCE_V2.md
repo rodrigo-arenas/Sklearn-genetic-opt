@@ -1110,6 +1110,32 @@ experiment gives no evidence that doing so improves predictive quality.
 [Experiment](results/performance-v2/finite-grid-tail.py) and
 [discovery positions and winners](results/performance-v2/finite-grid-tail.json).
 
+#### Does proposing the remaining configurations directly save time?
+
+In a benchmark-only variant, once at least 24 of 28 configurations had
+cached scores at the start of a candidate batch, we enumerated the grid.
+We kept every unseen proposal in that batch and replaced cached proposals
+with configurations still missing. Both arms used a limit of 40 generations
+and stopped at complete coverage. Run order alternated across ten splits.
+
+| Mean per Wine split | Ordinary evolution | Direct finish |
+| --- | ---: | ---: |
+| Recorded proposals | 92.8 | 70.4 |
+| Distinct candidates evaluated | 28 | 28 |
+| Fold fits | 84 | 84 |
+| Elapsed fit time | 189.8 ms | 187.8 ms |
+
+The direct finish reduced proposals on six splits and tied on four. Every
+configuration had identical mean CV accuracy across the two arms on each
+split, verified by hashing scores in canonical parameter order. Both arms
+also selected identical parameters and achieved identical held-out accuracy
+on all ten splits. Direct completion saved 24% of proposals but only about
+2 ms on average and was faster on six splits. The threshold was chosen after
+examining these same seeds, and this comparison covers only one small grid.
+The observed timing difference gives little basis for a default change.
+Reproduce with `python benchmarks/results/performance-v2/finite-grid-tail.py --direct-finish`.
+[Paired records and score hashes](results/performance-v2/direct-finite-finish.json).
+
 ## Removing unused train-fold scoring in HPO
 
 Profiling Digits/KNN exposed an avoidable scoring pass: `GASearchCV` declared `return_train_score=False` in its constructor but did not forward it to scikit-learn's `BaseSearchCV`, whose default on the measured version is `True`. Consequently, a 39-candidate, three-fold KNN fit called scoring for both train and validation folds. The 0.14.0 fix forwards the configured value. Users who need train-fold metrics can still request `return_train_score=True`.
