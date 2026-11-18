@@ -74,6 +74,22 @@ candidate cross-validations the search actually ran, inspect
 `search.fit_stats_["cross_validate_calls"]`. Repeated candidates can reuse a cached
 score, so successive generations can have different evaluation costs.
 
+To plot the best score against the cumulative number of candidate CV evaluations,
+use the aligned entries in the fitted history:
+
+```python
+import matplotlib.pyplot as plt
+
+plt.step(search.history["cross_validate_calls"], search.history["fitness_best"], where="post")
+plt.xlabel("Candidate cross-validations")
+plt.ylabel("Best search score")
+```
+
+Each call evaluates one candidate over its search folds. Cache hits add zero.
+The last generation includes local refinement. Finalist validation and the
+full-data refit happen after the search. When resuming an older checkpoint,
+generation records saved without this counter have `None` at those positions.
+
 ## Object-oriented API
 
 Use `SearchPlotter` when you want a compact, sklearn-style object around a fitted search.

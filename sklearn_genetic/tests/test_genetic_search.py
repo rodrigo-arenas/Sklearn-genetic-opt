@@ -374,8 +374,12 @@ def test_search_stops_after_evaluating_entire_finite_space(kind, algorithm, use_
     callback = Lifecycle()
     search.fit(X_small, y_small, callbacks=[callback])
     assert len(search.history["gen"]) == (1 if use_cache else 5)
+    cv_calls = search.history["cross_validate_calls"]
+    assert cv_calls == sorted(cv_calls)
+    assert cv_calls[-1] == search.fit_stats_["cross_validate_calls"]
     assert search.search_space_exhausted_ is use_cache
     space_size = 4 if kind == "parameters" else 2
+    assert cv_calls[0] == (space_size if use_cache else 12)
     if use_cache:
         assert search.fit_stats_["cross_validate_calls"] == space_size
     else:
@@ -2042,6 +2046,10 @@ def test_checkpoint_resume_restores_fitness_cache(tmp_path):
         checkpoint_data = pickle.load(f)
     assert "runtime_state" in checkpoint_data
     saved_cache = checkpoint_data["runtime_state"]["fitness_cache"]
+    saved_counts = checkpoint_data["logbook"].select("cross_validate_calls")
+    assert (
+        saved_counts[-1] == checkpoint_data["runtime_state"]["fit_stats_"]["cross_validate_calls"]
+    )
     assert isinstance(saved_cache, dict) and len(saved_cache) > 0
 
     # Inject a sentinel entry, then confirm a resumed run restores it. The
@@ -2055,6 +2063,10 @@ def test_checkpoint_resume_restores_fitness_cache(tmp_path):
     resumed = build()
     resumed.fit(X_train, y_train, callbacks=ModelCheckpoint(checkpoint_path=checkpoint_path))
     assert sentinel_key in resumed.fitness_cache
+    counts = resumed.history["cross_validate_calls"]
+    assert counts[: len(saved_counts)] == saved_counts
+    assert counts == sorted(counts)
+    assert counts[-1] == resumed.fit_stats_["cross_validate_calls"]
 
 
 def test_checkpoint_resume_without_runtime_state_is_backward_compatible(tmp_path):
@@ -2080,6 +2092,8 @@ def test_checkpoint_resume_without_runtime_state_is_backward_compatible(tmp_path
     with open(checkpoint_path, "rb") as f:
         checkpoint_data = pickle.load(f)
     checkpoint_data.pop("runtime_state", None)
+    for record in checkpoint_data["logbook"]:
+        del record["cross_validate_calls"]
     with open(checkpoint_path, "wb") as f:
         pickle.dump(checkpoint_data, f)
 
@@ -2088,6 +2102,9 @@ def test_checkpoint_resume_without_runtime_state_is_backward_compatible(tmp_path
     # Resume must not crash and the estimator remains fitted/usable.
     assert isinstance(resumed.fitness_cache, dict)
     assert resumed.best_params_ is not None
+    counts = resumed.history["cross_validate_calls"]
+    assert counts[: len(checkpoint_data["logbook"])] == [None] * len(checkpoint_data["logbook"])
+    assert counts[-1] == resumed.fit_stats_["cross_validate_calls"]
 
 
 def test_random_state_makes_gasearch_reproducible():
@@ -2828,6 +2845,7 @@ def test_timer_stops_candidate_batches_with_valid_results(
         else (2 if phase == "initial" else (6 if n_jobs == 2 and backend == "population" else 5))
     )
     assert len(observed) == expected
+    assert search.history["cross_validate_calls"][-1] == expected
     assert search.fit_stats_["cross_validate_calls"] == expected
     assert search.fit_stats_["unique_candidates"] == expected
     assert search.fit_stats_["evaluated_candidates"] == len(search.cv_results_["mean_test_score"])

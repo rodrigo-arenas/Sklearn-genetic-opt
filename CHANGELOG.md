@@ -10,6 +10,7 @@ Full release notes with code examples are in the [documentation](https://sklearn
 - Equal positive categorical priors now produce the same seeded smart-initialization draws as uniform sampling over the eligible choices, including when some choices have zero weight.
 - `GAFeatureSelectionCV` can now select columns from COO sparse inputs during supervised and target-free outlier searches.
 - Convergence, diversity and optimizer-event plots retain the recorded generation numbers when a history starts above zero or contains gaps.
+- Both estimators expose cumulative candidate CV evaluations per generation in `history["cross_validate_calls"]`, including the cost of local refinement in the final generation.
 
 - Feature selection computes generation diversity for wide binary masks one row at a time and stores packed masks to count unique candidates.
 

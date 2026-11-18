@@ -1459,6 +1459,7 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
 
         self.history = {
             "gen": log.select("gen"),
+            "cross_validate_calls": log.select("cross_validate_calls"),
             "fitness": log.select("fitness"),
             "fitness_std": log.select("fitness_std"),
             "fitness_best": log.select("fitness_best"),
@@ -2576,6 +2577,7 @@ class GAFeatureSelectionCV(
 
         self.history = {
             "gen": log.select("gen"),
+            "cross_validate_calls": log.select("cross_validate_calls"),
             "fitness": log.select("fitness"),
             "fitness_std": log.select("fitness_std"),
             "fitness_best": log.select("fitness_best"),
