@@ -1309,6 +1309,31 @@ ordered scores, and the four searches selected the same winner and produced
 identical predictions on the reserved observations. The reproduction script
 above runs both modes and counts actual folds evaluated.
 
+### Can a score ceiling reduce the cost of selecting finalists?
+
+In a separate replay, one preliminary fold ranked candidates and eight
+finalists advanced to five-fold CV. The first fold was already available
+through `final_selection="reuse_folds"`. Both ROC AUC and R² have an upper
+bound of one. After each observed fold we computed the best possible mean
+by assigning one to every remaining fold. A finalist could be discarded
+when this mean fell strictly below the best completed finalist's score.
+Equality kept the candidate eligible for the existing tie-break.
+
+| Task | Search | Fresh finalist folds required by the replay | Full fresh finalist folds |
+| --- | --- | ---: | ---: |
+| Breast Cancer, logistic regression, ROC AUC | Hyperparameters | 91 | 96 |
+| Breast Cancer, logistic regression, ROC AUC | Features | 89 | 96 |
+| Diabetes, Ridge, R² | Hyperparameters | 96 | 96 |
+| Diabetes, Ridge, R² | Features | 96 | 96 |
+
+Across three splits per row, the replay retained all twelve selected
+candidate indices and exact winning CV scores while requiring 12 fewer
+of 384 fresh finalist fold scores (3.1%). All fits actually ran to verify
+the replay. A live implementation would also have to define how to report
+incomplete finalist scores. This experiment measures potential fold
+savings only. [Reproduction script](results/performance-v2/bounded-finalists.py)
+and [per-finalist fold counts](results/performance-v2/bounded-finalists.json).
+
 ## Holdout quality at intermediate candidate budgets
 
 The shared-initialization comparison above also permits a comparison before

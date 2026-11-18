@@ -1,0 +1,218 @@
+[
+  {
+    "task": "classification_lr",
+    "features": false,
+    "seed": 8601,
+    "winner": 1,
+    "score": 0.9970339233786433,
+    "new_folds_read": [
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4
+    ],
+    "full_new_folds": 32
+  },
+  {
+    "task": "classification_lr",
+    "features": true,
+    "seed": 8601,
+    "winner": 18,
+    "score": 0.9950121587655824,
+    "new_folds_read": [
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4
+    ],
+    "full_new_folds": 32
+  },
+  {
+    "task": "classification_lr",
+    "features": false,
+    "seed": 8602,
+    "winner": 5,
+    "score": 0.9976589797344515,
+    "new_folds_read": [
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      1
+    ],
+    "full_new_folds": 32
+  },
+  {
+    "task": "classification_lr",
+    "features": true,
+    "seed": 8602,
+    "winner": 5,
+    "score": 0.9981197589098534,
+    "new_folds_read": [
+      4,
+      4,
+      4,
+      4,
+      3,
+      4,
+      4,
+      1
+    ],
+    "full_new_folds": 32
+  },
+  {
+    "task": "classification_lr",
+    "features": false,
+    "seed": 8603,
+    "winner": 7,
+    "score": 0.9946902966569734,
+    "new_folds_read": [
+      4,
+      4,
+      3,
+      4,
+      4,
+      4,
+      4,
+      3
+    ],
+    "full_new_folds": 32
+  },
+  {
+    "task": "classification_lr",
+    "features": true,
+    "seed": 8603,
+    "winner": 19,
+    "score": 0.9945646232050673,
+    "new_folds_read": [
+      4,
+      4,
+      3,
+      4,
+      4,
+      4,
+      3,
+      3
+    ],
+    "full_new_folds": 32
+  },
+  {
+    "task": "regression_ridge",
+    "features": false,
+    "seed": 8601,
+    "winner": 10,
+    "score": 0.4203079921833225,
+    "new_folds_read": [
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4
+    ],
+    "full_new_folds": 32
+  },
+  {
+    "task": "regression_ridge",
+    "features": true,
+    "seed": 8601,
+    "winner": 29,
+    "score": 0.3907906550783512,
+    "new_folds_read": [
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4
+    ],
+    "full_new_folds": 32
+  },
+  {
+    "task": "regression_ridge",
+    "features": false,
+    "seed": 8602,
+    "winner": 26,
+    "score": 0.46724934760747505,
+    "new_folds_read": [
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4
+    ],
+    "full_new_folds": 32
+  },
+  {
+    "task": "regression_ridge",
+    "features": true,
+    "seed": 8602,
+    "winner": 6,
+    "score": 0.45233496951524826,
+    "new_folds_read": [
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4
+    ],
+    "full_new_folds": 32
+  },
+  {
+    "task": "regression_ridge",
+    "features": false,
+    "seed": 8603,
+    "winner": 0,
+    "score": 0.4534159513452355,
+    "new_folds_read": [
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4
+    ],
+    "full_new_folds": 32
+  },
+  {
+    "task": "regression_ridge",
+    "features": true,
+    "seed": 8603,
+    "winner": 28,
+    "score": 0.4088227507717665,
+    "new_folds_read": [
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4
+    ],
+    "full_new_folds": 32
+  }
+]
