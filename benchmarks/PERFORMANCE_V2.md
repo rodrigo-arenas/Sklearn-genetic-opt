@@ -2387,6 +2387,31 @@ result rests on six runs and offers little evidence for a linear proposal as
 a general nonlinear selector. Run the same script with `--tree` for the
 [scores, selected features and timings](results/performance-v2/tree-residual.json).
 
+### Time to a prespecified CV target on diabetes
+
+The [diabetes timing experiment](results/performance-v2/diabetes-target.py)
+times complete fits on six new 75/25 splits. All policies use Ridge,
+at most four features, and the same three training folds within each split.
+The genetic baseline stops at a generation boundary when the maximum CV R²
+reaches 0.45, or after three generations. The other policies first evaluate
+one fold-local selector. If it misses 0.45, they run the identical genetic
+search and retain the higher CV score. This gives the fallback policies one
+extra candidate on a miss. Each of the six execution orders is used once.
+
+| First candidate | Runs reaching target | Runs using genetic search | Median time until model ready, all runs | Mean holdout R², all runs |
+| --- | ---: | ---: | ---: | ---: |
+| Genetic search directly | 2/6 | 6/6 | 323 ms | 0.4796 |
+| Univariate filter | 2/6 | 5/6 | 326 ms | 0.4785 |
+| Residual selector | 3/6 | 3/6 | 180 ms | 0.4818 |
+
+On three splits the residual proposal met the target in three fold fits
+and bypassed genetic search. On the other three all policies exhausted
+the genetic budget below target. The timing includes final refit and
+excludes holdout scoring. The median for residual-first spans two distinct
+outcomes, immediate success and budget exhaustion. The small holdout
+differences on repeated splits of one dataset cannot establish a general
+quality advantage. See the [per-split scores, times and fold counts](results/performance-v2/diabetes-target.json).
+
 ## Selecting masks using scores of previously evaluated subsets
 
 This pilot tested whether the columns in high-scoring masks are worth trying

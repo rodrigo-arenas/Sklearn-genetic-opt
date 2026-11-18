@@ -20,6 +20,14 @@ from threadpoolctl import threadpool_limits
 from sklearn_genetic import GAFeatureSelectionCV
 
 
+def residual_selector(cap):
+    return SelectFromModel(
+        make_pipeline(StandardScaler(), OrthogonalMatchingPursuit(n_nonzero_coefs=cap)),
+        importance_getter="named_steps.orthogonalmatchingpursuit.coef_",
+        threshold=1e-12,
+    )
+
+
 def compare(
     X,
     y,
@@ -75,12 +83,7 @@ def compare(
     if one_slot:
         policies.append(("one_filter", genetic[:23] + filters[-1:]))
     if residual:
-        selector = SelectFromModel(
-            make_pipeline(StandardScaler(), OrthogonalMatchingPursuit(n_nonzero_coefs=cap)),
-            importance_getter="named_steps.orthogonalmatchingpursuit.coef_",
-            threshold=1e-12,
-        )
-        residual_model = make_pipeline(selector, clone(model))
+        residual_model = make_pipeline(residual_selector(cap), clone(model))
         start = perf_counter()
         score = cross_val_score(
             residual_model, X, y, cv=cv, scoring=metric, n_jobs=1, error_score="raise"
