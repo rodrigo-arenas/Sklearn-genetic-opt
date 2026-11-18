@@ -27,6 +27,12 @@ Integer(lower, upper, distribution="uniform")
 | `upper` | int | — | Maximum value (inclusive) |
 | `distribution` | str | `"uniform"` | Sampling distribution: `"uniform"` |
 
+Candidate repair and local refinement preserve integer values exactly,
+including adjacent values above `2**53`. Pass large integer warm-start
+values as Python or NumPy integers to preserve their identity.
+Equal bounds hold an integer parameter fixed. Sampling that dimension returns
+the exact Python integer, including values outside the signed 64-bit range.
+
 **Example:**
 
 ```python
@@ -50,6 +56,11 @@ Continuous(lower, upper, distribution="uniform")
 | `upper` | float | — | Maximum value |
 | `distribution` | str | `"uniform"` | Sampling distribution: `"uniform"` or `"log-uniform"` |
 
+Equal bounds hold a continuous parameter fixed. For example,
+`Continuous(0.01, 0.01, distribution="log-uniform")` always proposes 0.01
+while other dimensions evolve. A fixed continuous value must be finite and
+exactly representable as a float. Log-uniform bounds must both be positive.
+
 Use `distribution="log-uniform"` for parameters that span orders of magnitude (learning rates, regularization strengths):
 
 ```python
@@ -64,12 +75,19 @@ Samples from a fixed list of choices.
 ```python
 from sklearn_genetic.space import Categorical
 
-Categorical(choices)
+Categorical(choices, priors=None, distribution="choice", random_state=None)
 ```
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `choices` | list | — | List of valid values. Can include `None` |
+| `priors` | list of floats | `None` | Sampling probabilities in the same order as `choices`. They must be nonnegative and sum to one. |
+| `distribution` | str | `"choice"` | Distribution used to sample this dimension. |
+| `random_state` | int or None | `None` | Seed for direct sampling of this dimension. |
+
+For example, `Categorical(["gini", "entropy"], priors=[0.75, 0.25])` assigns three quarters of the sampling probability to Gini. Smart initialization stratifies the weighted draws across the available population slots. With four slots this allocation gives three Gini draws and one entropy draw before duplicate removal. With fewer slots, the search seed controls which categories receive the fractional slots. Warm starts and estimator defaults are added separately.
+
+When all positive weights are equal, the stratified draws use the same seeded sample as `priors=None` over the eligible choices. If fewer slots remain than eligible choices, any subset of the requested size can be drawn.
 
 **Example:**
 

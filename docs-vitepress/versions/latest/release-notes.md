@@ -9,6 +9,96 @@ You are reading the **latest (dev)** docs. For the stable version, see [stable](
 
 # Release Notes
 
+## 0.15.0
+
+### Spending and measuring the search budget
+
+Both estimators record cumulative candidate CV evaluations per generation
+in `history["cross_validate_calls"]`, including final-generation local
+refinement. Each evaluation may train several folds. For deterministic
+searches with `error_score="raise"`, `final_selection="reuse_folds"` reuses
+current-fit scores for matching ordered train/test splits. Inspect
+`final_selection_results_["candidates"]` for each finalist's `reused_folds`
+when calculating fresh fold fits. See the [finalist budget example](./guide/advanced-optimizer-control).
+
+In mixed hyperparameter grids, mutation, local refinement and the mandatory
+differential-evolution donor coordinate now target variable dimensions.
+Fixed integers retain their exact values, including beyond signed 64-bit
+range; integer repair and refinement preserve adjacent large values.
+Variable integer sampling uses NumPy directly. Equal bounds on a log-uniform
+continuous dimension now produce one consistent value for initialization
+and warm starts. Smart categorical initialization spreads fractional prior
+allocations across seeds and samples equally weighted eligible categories
+uniformly, respecting zero weights. See the [search-space reference](./api/space).
+
+For wide feature spaces, smart initialization samples the smaller of the
+selected and excluded column sets, and reuses initial masks to pad a cached
+population once every possible mask is present. Diversity is computed one
+row at a time; distinct masks and finalist identities use packed bits.
+Feature search also reduces copying, validation and repeated scans of native
+masks. Both searches skip cache keys when caching is disabled and spend less
+time assembling CV results. Timings depend on the estimator and the cost of
+fitting each fold. See the [benchmarks](./benchmarks/).
+
+### Correctness and reproducibility
+
+- `GAFeatureSelectionCV` accepts COO sparse matrices for supervised search and
+  target-free outlier detection.
+- `eaSimple` keeps the configured population size when duplicate initial
+  candidates allow the elite archive to grow. `ConsecutiveStopping` recognizes
+  improving scores in a minimizing search.
+- `ModelCheckpoint` writes one snapshot per generation and preserves the
+  previous readable file if serialization fails. Seeded resumes restore the
+  Python and NumPy proposal streams and archived elites. Smart numeric
+  initialization draws new strata on resume, and updated initialization can
+  change which candidates an older seed produces. See [reproducibility](./guide/reproducibility)
+  and [checkpointing](./recipes/advanced/checkpointing).
+
+### Monitoring and upgrade notes
+
+Ranking, candidate-score and fold plots respect optimization direction, omit
+non-finite means and keep candidates with identical labels distinct. Horizontal
+rankings put the best candidate first. Convergence, diversity and event plots
+use the recorded generation numbers, including gaps. See the [plots API](./api/plots).
+
+TensorFlow and TensorBoard are no longer installed by any optional extra.
+`sklearn_genetic.plots.LivePlot` shows generation fitness during fitting and can
+update a PNG in headless runs; `plot_generation_metrics` draws from an in-progress
+logbook. The legacy `TensorBoard` callback remains importable and loads
+TensorFlow only when used, if users install it separately.
+
+Both search classes now rank candidates with non-finite cross-validation scores
+last during evolution and final selection, including when only one fold fails.
+The original fold scores remain visible in `cv_results_`. Fitness sharing and
+resumed checkpoints preserve valid candidate ordering in maximization and
+minimization searches.
+
+### Documentation and other contributions since 0.14.0
+
+The benchmark guide now explains how to compare held-out quality at matched
+evaluation budgets and how to count fresh finalist fits. New experiments
+cover sparse signals, feature interactions, filter proposals, exhaustive and
+forward selection, checkpoint resumes, memory use and finalist pruning.
+Their results describe measured workloads; the experimental selectors and
+pruning policies are benchmark code. Documentation updates also cover stable
+canonical URLs, search descriptions and post-deployment IndexNow submission.
+
+Community contributions in this release include the following changes.
+
+- Both fitted estimators provide `cv_results_dataframe()`. It returns a
+  rank-sorted pandas DataFrame, preserves tie order and includes the selected
+  mask in feature-search candidate parameters. [PR #393](https://github.com/rodrigo-arenas/Sklearn-genetic-opt/pull/393)
+- Updating `criteria` with `set_params` refreshes the optimization direction
+  on the next fit. Dictionary-valued categorical choices are supported across
+  candidate comparison and caching. [PR #391](https://github.com/rodrigo-arenas/Sklearn-genetic-opt/pull/391)
+  and [PR #388](https://github.com/rodrigo-arenas/Sklearn-genetic-opt/pull/388).
+- Community tutorials cover search spaces, callbacks and hyperparameter
+  search. Documentation distinguishes CV and holdout MAE, corrects warm-start
+  guidance and troubleshooting links, and fixes example-generation commands.
+  Contributor guidance includes a focused-test quickstart. The documentation
+  build updates Vite, Vue, its server renderer and source-map-js. The previous
+  release's frozen pages and conda recipe were refreshed after publication.
+
 ## 0.14.0
 
 The documentation sitemap lists released pages, `robots.txt` advertises it, and the homepage links to the current stable version. The homepage removes redundant sections and broken routes; the method guide states search trade-offs without universal performance claims.

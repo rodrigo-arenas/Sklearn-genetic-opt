@@ -54,6 +54,23 @@ GASearchCV(
 | `runtime_config` | `RuntimeConfig` | `None` | Controls parallelism, caching, verbosity |
 | `optimization_config` | `OptimizationConfig` | `None` | Controls local search, fitness sharing |
 
+Standard mutation excludes numeric dimensions with equal bounds and
+single-choice categorical dimensions. `GASearchCV` chooses uniformly among
+the remaining dimensions and draws from the chosen distribution. A discrete draw may still
+repeat the parent value. With caching enabled, fewer repeated proposals can
+increase the number of distinct models fitted in a generation.
+
+Local refinement (`local_search=True`) uses the same variable dimensions when
+choosing a neighbor of an elite candidate. Each step proposes one neighbor per
+selected elite. Clipping and previously visited configurations can reduce the
+number of distinct evaluations.
+
+With `algorithm="eaDifferentialEvolution"`, binomial crossover always takes
+one coordinate from the donor trial, even when `crossover_probability=0`.
+If the grid has any variable dimensions, the algorithm chooses this coordinate
+among them. A trial can still match its parent after rounding, clipping, or
+drawing the same categorical value.
+
 ## Search correctness
 
 Each fresh `fit` recomputes candidate scores for the supplied data and scoring settings.
@@ -73,10 +90,11 @@ candidate log contains repeated cache hits.
 | `best_score_` | Mean cross-validated score of the best estimator |
 | `best_estimator_` | Estimator fitted with `best_params_` on the full training data (if `refit=True`) |
 | `cv_results_` | Dict with per-candidate results, compatible with `pd.DataFrame` |
-| `history` | List of per-generation dicts with fitness and diversity telemetry |
-| `logbook` | DEAP logbook — same data as `history` in DEAP's format |
+| `history` | Dictionary of lists aligned by generation. At position `i`, `history["fitness_best"][i]` is the best search score after `history["cross_validate_calls"][i]` cumulative candidate evaluations. |
+| `logbook` | DEAP logbook with per-candidate evaluation records in `logbook.chapters["parameters"]` |
 | `fit_stats_` | Dict with evaluation counters (cache hits, skipped candidates, etc.) |
-| `support_` | *(Not applicable for GASearchCV — see GAFeatureSelectionCV)* |
+
+See [plotting score against evaluation cost](./plots#quick-diagnostic-overview) to compare runs with different cache-hit rates.
 
 ## Methods
 
@@ -100,26 +118,33 @@ unchanged and also works after a single-metric fit with `refit=False`.
 ## Example
 
 ```python
-from sklearn_genetic import EvolutionConfig, GASearchCV, PopulationConfig, RuntimeConfig
-from sklearn_genetic.space import Categorical, Continuous, Integer
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+from sklearn_genetic import EvolutionConfig, GASearchCV
+from sklearn_genetic.space import Categorical, Integer
+
+X, y = load_breast_cancer(return_X_y=True)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.25, stratify=y, random_state=42
+)
 
 search = GASearchCV(
-    estimator=your_estimator,
+    estimator=DecisionTreeClassifier(random_state=42),
     param_grid={
-        "param1": Integer(1, 100),
-        "param2": Continuous(0.01, 1.0, distribution="log-uniform"),
-        "param3": Categorical(["a", "b", "c"]),
+        "max_depth": Integer(2, 12),
+        "criterion": Categorical(["gini", "entropy"]),
     },
-    cv=5,
+    cv=3,
     scoring="roc_auc",
-    evolution_config=EvolutionConfig(population_size=20, generations=15),
-    population_config=PopulationConfig(initializer="smart"),
-    runtime_config=RuntimeConfig(n_jobs=-1, use_cache=True),
+    evolution_config=EvolutionConfig(population_size=6, generations=2),
+    random_state=42,
 )
 
 search.fit(X_train, y_train)
-print(search.best_params_)
-print(search.best_score_)
+print("Selected parameters", search.best_params_)
+print("Search CV evaluations", search.history["cross_validate_calls"])
+print("Held-out ROC AUC", search.score(X_test, y_test))
 print(search.cv_results_dataframe()[["params", "mean_test_score", "rank_test_score"]].head())
 ```
 

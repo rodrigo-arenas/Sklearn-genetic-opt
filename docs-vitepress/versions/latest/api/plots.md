@@ -11,6 +11,7 @@ You are reading the **latest (dev)** docs. For the stable version, see [stable](
 
 ```python
 from sklearn_genetic.plots import (
+    LivePlot,
     SearchPlotter,
     plot_candidate_rankings,
     plot_candidate_scores,
@@ -19,6 +20,7 @@ from sklearn_genetic.plots import (
     plot_diversity,
     plot_feature_selection,
     plot_fitness_evolution,
+    plot_generation_metrics,
     plot_history,
     plot_optimizer_events,
     plot_parameter_evolution,
@@ -29,7 +31,25 @@ from sklearn_genetic.plots import (
 )
 ```
 
-Requires seaborn: `pip install sklearn-genetic-opt[all]`.
+Requires the plotting extra: `pip install sklearn-genetic-opt[plot]`.
+
+## During fitting
+
+`LivePlot` is a callback for both search classes. It redraws best and average
+fitness after each generation. With a graphical Matplotlib backend the chart
+updates on screen; `save_path` also rewrites a PNG for headless monitoring.
+
+```python
+from sklearn_genetic.plots import LivePlot
+
+live_plot = LivePlot(save_path="training-progress.png")
+search.fit(X, y, callbacks=live_plot)
+```
+
+For a custom callback, `plot_generation_metrics(logbook)` draws directly from
+the in-progress generation logbook. Pass `metrics` to choose fitness fields or
+`ax` to reuse a Matplotlib axis. After fitting, use the diagnostics below to
+explore all evaluated candidates and the selected solution.
 
 ## Quick diagnostic overview
 
@@ -47,6 +67,28 @@ plot_search_overview(search)
 ```
 
 Returns a 2x2 array of `matplotlib.axes.Axes`.
+
+The convergence, diversity and optimizer-event panels use the generation numbers in
+`search.history["gen"]`, including gaps in a filtered history. To see how many
+candidate cross-validations the search actually ran, inspect
+`search.fit_stats_["cross_validate_calls"]`. Repeated candidates can reuse a cached
+score, so successive generations can have different evaluation costs.
+
+To plot the best score against the cumulative number of candidate CV evaluations,
+use the aligned entries in the fitted history:
+
+```python
+import matplotlib.pyplot as plt
+
+plt.step(search.history["cross_validate_calls"], search.history["fitness_best"], where="post")
+plt.xlabel("Candidate cross-validations")
+plt.ylabel("Best search score")
+```
+
+Each call evaluates one candidate over its search folds. Cache hits add zero.
+The last generation includes local refinement. Finalist validation and the
+full-data refit happen after the search. When resuming an older checkpoint,
+generation records saved without this counter have `None` at those positions.
 
 ## Object-oriented API
 
@@ -70,13 +112,13 @@ plotter.cv_scores(top_k=5)
 Plot the fitness score over generations.
 
 ```python
-plot_fitness_evolution(estimator, metric="fitness")
+plot_fitness_evolution(estimator, metric="fitness_best")
 ```
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `estimator` | fitted `GASearchCV` or `GAFeatureSelectionCV` | — | The fitted search estimator |
-| `metric` | str | `"fitness"` | Which fitness column to plot: `"fitness"`, `"fitness_best"`, `"fitness_std"` |
+| `metric` | str | `"fitness_best"` | Best score observed so far. Use `"fitness"` for the current population mean. |
 
 Returns a `matplotlib.axes.Axes`.
 
@@ -173,6 +215,13 @@ plot_score_landscape(search, x="max_depth", y="min_samples_split", kind="hexbin"
 
 Show the top evaluated candidates from `cv_results_`.
 
+`plot_candidate_scores`, `plot_candidate_rankings` and `plot_cv_scores` order
+candidates by the selected metric. With `criteria="min"`, the lowest mean CV
+score appears first. With `criteria="max"`, the highest appears first. All
+three omit non-finite means and preserve evaluation order among exact ties.
+Use `plot_candidate_scores(search, sort=False)` to see the finite candidates
+in evaluation order.
+
 ```python
 plot_candidate_scores(search, top_k=10)
 ```
@@ -216,6 +265,7 @@ plot_feature_selection(selector, feature_names=X.columns)
 | What space did the algorithm explore? | `plot_search_space`, `plot_parameter_evolution`, `plot_score_landscape` |
 | What decisions did it make? | `plot_optimizer_events`, `plot_search_decisions` |
 | How did it converge? | `plot_convergence`, `plot_fitness_evolution`, `plot_search_overview` |
+| What is happening during fitting? | `LivePlot`, `plot_generation_metrics` |
 | Did diversity collapse? | `plot_diversity`, `plot_search_overview` |
 | Are top solutions robust? | `plot_cv_scores`, `plot_candidate_rankings` |
 

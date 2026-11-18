@@ -1,0 +1,434 @@
+[
+  {
+    "seed": 9161,
+    "mode": "default",
+    "stages": {
+      "_initialize_population": {
+        "calls": 8,
+        "seconds": 0.001851299952249974,
+        "changed_values": 0,
+        "changed_types": 0
+      },
+      "evaluate_population": {
+        "calls": 56,
+        "seconds": 0.013309900066815317,
+        "changed_values": 0,
+        "changed_types": 0
+      },
+      "mate": {
+        "calls": 80,
+        "seconds": 0.021511799714062363,
+        "changed_values": 1,
+        "changed_types": 0
+      },
+      "mutate": {
+        "calls": 8,
+        "seconds": 0.0039369999431073666,
+        "changed_values": 8,
+        "changed_types": 0
+      },
+      "_new_feature_individual": {
+        "calls": 17,
+        "seconds": 0.004999700002372265,
+        "changed_values": 7,
+        "changed_types": 0
+      }
+    }
+  },
+  {
+    "seed": 9162,
+    "mode": "default",
+    "stages": {
+      "_initialize_population": {
+        "calls": 8,
+        "seconds": 0.0019199000089429319,
+        "changed_values": 0,
+        "changed_types": 0
+      },
+      "evaluate_population": {
+        "calls": 56,
+        "seconds": 0.013917799922637641,
+        "changed_values": 0,
+        "changed_types": 0
+      },
+      "mate": {
+        "calls": 80,
+        "seconds": 0.01938850001897663,
+        "changed_values": 1,
+        "changed_types": 0
+      },
+      "mutate": {
+        "calls": 8,
+        "seconds": 0.004135600000154227,
+        "changed_values": 8,
+        "changed_types": 0
+      },
+      "_new_feature_individual": {
+        "calls": 18,
+        "seconds": 0.005755699938163161,
+        "changed_values": 8,
+        "changed_types": 0
+      }
+    }
+  },
+  {
+    "seed": 9163,
+    "mode": "default",
+    "stages": {
+      "_initialize_population": {
+        "calls": 8,
+        "seconds": 0.0019736000103875995,
+        "changed_values": 0,
+        "changed_types": 0
+      },
+      "evaluate_population": {
+        "calls": 56,
+        "seconds": 0.014586600300390273,
+        "changed_values": 0,
+        "changed_types": 0
+      },
+      "mate": {
+        "calls": 70,
+        "seconds": 0.018131100048776716,
+        "changed_values": 5,
+        "changed_types": 0
+      },
+      "mutate": {
+        "calls": 13,
+        "seconds": 0.006779499992262572,
+        "changed_values": 13,
+        "changed_types": 0
+      },
+      "_new_feature_individual": {
+        "calls": 7,
+        "seconds": 0.0017985000740736723,
+        "changed_values": 0,
+        "changed_types": 0
+      }
+    }
+  },
+  {
+    "seed": 9161,
+    "mode": "random",
+    "stages": {
+      "_new_feature_individual": {
+        "calls": 16,
+        "seconds": 0.005481300002429634,
+        "changed_values": 7,
+        "changed_types": 0
+      },
+      "_initialize_population": {
+        "calls": 8,
+        "seconds": 0.002021899970714003,
+        "changed_values": 0,
+        "changed_types": 0
+      },
+      "evaluate_population": {
+        "calls": 56,
+        "seconds": 0.015149100101552904,
+        "changed_values": 0,
+        "changed_types": 0
+      },
+      "mate": {
+        "calls": 72,
+        "seconds": 0.020265700004529208,
+        "changed_values": 15,
+        "changed_types": 0
+      },
+      "mutate": {
+        "calls": 12,
+        "seconds": 0.006244299991521984,
+        "changed_values": 12,
+        "changed_types": 0
+      }
+    }
+  },
+  {
+    "seed": 9162,
+    "mode": "random",
+    "stages": {
+      "_new_feature_individual": {
+        "calls": 16,
+        "seconds": 0.005181699933018535,
+        "changed_values": 7,
+        "changed_types": 0
+      },
+      "_initialize_population": {
+        "calls": 8,
+        "seconds": 0.0018124999478459358,
+        "changed_values": 0,
+        "changed_types": 0
+      },
+      "evaluate_population": {
+        "calls": 56,
+        "seconds": 0.014358900079969317,
+        "changed_values": 0,
+        "changed_types": 0
+      },
+      "mutate": {
+        "calls": 8,
+        "seconds": 0.0040160000789910555,
+        "changed_values": 8,
+        "changed_types": 0
+      },
+      "mate": {
+        "calls": 80,
+        "seconds": 0.021767500147689134,
+        "changed_values": 16,
+        "changed_types": 0
+      }
+    }
+  },
+  {
+    "seed": 9163,
+    "mode": "random",
+    "stages": {
+      "_new_feature_individual": {
+        "calls": 15,
+        "seconds": 0.004564799950458109,
+        "changed_values": 6,
+        "changed_types": 0
+      },
+      "_initialize_population": {
+        "calls": 8,
+        "seconds": 0.001941300113685429,
+        "changed_values": 0,
+        "changed_types": 0
+      },
+      "evaluate_population": {
+        "calls": 56,
+        "seconds": 0.014339400106109679,
+        "changed_values": 0,
+        "changed_types": 0
+      },
+      "mate": {
+        "calls": 82,
+        "seconds": 0.0224766003084369,
+        "changed_values": 13,
+        "changed_types": 0
+      },
+      "mutate": {
+        "calls": 7,
+        "seconds": 0.0037107000243850052,
+        "changed_values": 7,
+        "changed_types": 0
+      }
+    }
+  },
+  {
+    "seed": 9161,
+    "mode": "differential",
+    "stages": {
+      "_initialize_population": {
+        "calls": 8,
+        "seconds": 0.002111600071657449,
+        "changed_values": 0,
+        "changed_types": 0
+      },
+      "evaluate_population": {
+        "calls": 32,
+        "seconds": 0.008210500061977655,
+        "changed_values": 0,
+        "changed_types": 0
+      },
+      "differential_offspring": {
+        "calls": 24,
+        "seconds": 0.0074721999117173254,
+        "changed_values": 9,
+        "changed_types": 0
+      },
+      "mutate": {
+        "calls": 7,
+        "seconds": 0.004023900022730231,
+        "changed_values": 7,
+        "changed_types": 0
+      },
+      "_new_feature_individual": {
+        "calls": 3,
+        "seconds": 0.0010716000106185675,
+        "changed_values": 2,
+        "changed_types": 0
+      }
+    }
+  },
+  {
+    "seed": 9162,
+    "mode": "differential",
+    "stages": {
+      "_initialize_population": {
+        "calls": 8,
+        "seconds": 0.0019035999430343509,
+        "changed_values": 0,
+        "changed_types": 0
+      },
+      "evaluate_population": {
+        "calls": 32,
+        "seconds": 0.0074366998742334545,
+        "changed_values": 0,
+        "changed_types": 0
+      },
+      "differential_offspring": {
+        "calls": 24,
+        "seconds": 0.00707200012402609,
+        "changed_values": 10,
+        "changed_types": 0
+      },
+      "_new_feature_individual": {
+        "calls": 3,
+        "seconds": 0.0006923999753780663,
+        "changed_values": 0,
+        "changed_types": 0
+      },
+      "mutate": {
+        "calls": 2,
+        "seconds": 0.0009674000320956111,
+        "changed_values": 2,
+        "changed_types": 0
+      }
+    }
+  },
+  {
+    "seed": 9163,
+    "mode": "differential",
+    "stages": {
+      "_initialize_population": {
+        "calls": 8,
+        "seconds": 0.002294600009918213,
+        "changed_values": 0,
+        "changed_types": 0
+      },
+      "evaluate_population": {
+        "calls": 32,
+        "seconds": 0.008080900239292532,
+        "changed_values": 0,
+        "changed_types": 0
+      },
+      "differential_offspring": {
+        "calls": 24,
+        "seconds": 0.00765369989676401,
+        "changed_values": 11,
+        "changed_types": 0
+      },
+      "_new_feature_individual": {
+        "calls": 3,
+        "seconds": 0.0011165000032633543,
+        "changed_values": 2,
+        "changed_types": 0
+      },
+      "mutate": {
+        "calls": 2,
+        "seconds": 0.00106380000943318,
+        "changed_values": 2,
+        "changed_types": 0
+      }
+    }
+  },
+  {
+    "seed": 9161,
+    "mode": "local",
+    "stages": {
+      "_initialize_population": {
+        "calls": 8,
+        "seconds": 0.002076699980534613,
+        "changed_values": 0,
+        "changed_types": 0
+      },
+      "evaluate_population": {
+        "calls": 57,
+        "seconds": 0.013802899862639606,
+        "changed_values": 0,
+        "changed_types": 0
+      },
+      "mate": {
+        "calls": 80,
+        "seconds": 0.019581699918489903,
+        "changed_values": 1,
+        "changed_types": 0
+      },
+      "mutate": {
+        "calls": 8,
+        "seconds": 0.004117100092116743,
+        "changed_values": 8,
+        "changed_types": 0
+      },
+      "_new_feature_individual": {
+        "calls": 17,
+        "seconds": 0.0052742999396286905,
+        "changed_values": 7,
+        "changed_types": 0
+      }
+    }
+  },
+  {
+    "seed": 9162,
+    "mode": "local",
+    "stages": {
+      "_initialize_population": {
+        "calls": 8,
+        "seconds": 0.001792200026102364,
+        "changed_values": 0,
+        "changed_types": 0
+      },
+      "evaluate_population": {
+        "calls": 57,
+        "seconds": 0.013732399966102093,
+        "changed_values": 0,
+        "changed_types": 0
+      },
+      "mate": {
+        "calls": 80,
+        "seconds": 0.020216899865772575,
+        "changed_values": 1,
+        "changed_types": 0
+      },
+      "mutate": {
+        "calls": 8,
+        "seconds": 0.004353700089268386,
+        "changed_values": 8,
+        "changed_types": 0
+      },
+      "_new_feature_individual": {
+        "calls": 18,
+        "seconds": 0.005686499993316829,
+        "changed_values": 8,
+        "changed_types": 0
+      }
+    }
+  },
+  {
+    "seed": 9163,
+    "mode": "local",
+    "stages": {
+      "_initialize_population": {
+        "calls": 8,
+        "seconds": 0.0021488998900167644,
+        "changed_values": 0,
+        "changed_types": 0
+      },
+      "evaluate_population": {
+        "calls": 57,
+        "seconds": 0.014017399866133928,
+        "changed_values": 0,
+        "changed_types": 0
+      },
+      "mate": {
+        "calls": 70,
+        "seconds": 0.01780389982741326,
+        "changed_values": 5,
+        "changed_types": 0
+      },
+      "mutate": {
+        "calls": 13,
+        "seconds": 0.006524900090880692,
+        "changed_values": 13,
+        "changed_types": 0
+      },
+      "_new_feature_individual": {
+        "calls": 7,
+        "seconds": 0.0017239999142475426,
+        "changed_values": 0,
+        "changed_types": 0
+      }
+    }
+  }
+]

@@ -1,0 +1,347 @@
+{
+  "python": "3.12.0",
+  "versions": {
+    "scikit-learn": "1.9.1",
+    "numpy": "2.5.3",
+    "deap": "1.4.4"
+  },
+  "records": [
+    {
+      "width": 16,
+      "algorithm": "eaSimple",
+      "seed": 2401,
+      "block": 0,
+      "default": {
+        "ms": 117.42909997701645,
+        "cv_calls": 15
+      },
+      "optimized": {
+        "ms": 111.51840002276003,
+        "cv_calls": 15
+      }
+    },
+    {
+      "width": 16,
+      "algorithm": "eaSimple",
+      "seed": 2401,
+      "block": 1,
+      "optimized": {
+        "ms": 108.36910002399236,
+        "cv_calls": 15
+      },
+      "default": {
+        "ms": 109.63459999766201,
+        "cv_calls": 15
+      }
+    },
+    {
+      "width": 16,
+      "algorithm": "eaSimple",
+      "seed": 2402,
+      "block": 0,
+      "default": {
+        "ms": 112.33610002091154,
+        "cv_calls": 15
+      },
+      "optimized": {
+        "ms": 105.8939000358805,
+        "cv_calls": 15
+      }
+    },
+    {
+      "width": 16,
+      "algorithm": "eaSimple",
+      "seed": 2402,
+      "block": 1,
+      "optimized": {
+        "ms": 112.01460001757368,
+        "cv_calls": 15
+      },
+      "default": {
+        "ms": 110.63559999456629,
+        "cv_calls": 15
+      }
+    },
+    {
+      "width": 16,
+      "algorithm": "eaSimple",
+      "seed": 2403,
+      "block": 0,
+      "default": {
+        "ms": 106.68510000687093,
+        "cv_calls": 15
+      },
+      "optimized": {
+        "ms": 107.7369999838993,
+        "cv_calls": 15
+      }
+    },
+    {
+      "width": 16,
+      "algorithm": "eaSimple",
+      "seed": 2403,
+      "block": 1,
+      "optimized": {
+        "ms": 110.88520003249869,
+        "cv_calls": 15
+      },
+      "default": {
+        "ms": 107.07139997975901,
+        "cv_calls": 15
+      }
+    },
+    {
+      "width": 256,
+      "algorithm": "eaMuCommaLambda",
+      "seed": 2401,
+      "block": 0,
+      "default": {
+        "ms": 119.18139999033883,
+        "cv_calls": 24
+      },
+      "optimized": {
+        "ms": 119.50560001423582,
+        "cv_calls": 24
+      }
+    },
+    {
+      "width": 256,
+      "algorithm": "eaMuCommaLambda",
+      "seed": 2401,
+      "block": 1,
+      "optimized": {
+        "ms": 117.82709998078644,
+        "cv_calls": 24
+      },
+      "default": {
+        "ms": 122.38000001525506,
+        "cv_calls": 24
+      }
+    },
+    {
+      "width": 256,
+      "algorithm": "eaMuCommaLambda",
+      "seed": 2402,
+      "block": 0,
+      "default": {
+        "ms": 118.8265000237152,
+        "cv_calls": 24
+      },
+      "optimized": {
+        "ms": 120.18970004282892,
+        "cv_calls": 24
+      }
+    },
+    {
+      "width": 256,
+      "algorithm": "eaMuCommaLambda",
+      "seed": 2402,
+      "block": 1,
+      "optimized": {
+        "ms": 125.28060004115105,
+        "cv_calls": 24
+      },
+      "default": {
+        "ms": 127.26039998233318,
+        "cv_calls": 24
+      }
+    },
+    {
+      "width": 256,
+      "algorithm": "eaMuCommaLambda",
+      "seed": 2403,
+      "block": 0,
+      "default": {
+        "ms": 118.72820003191009,
+        "cv_calls": 24
+      },
+      "optimized": {
+        "ms": 116.94729997543618,
+        "cv_calls": 24
+      }
+    },
+    {
+      "width": 256,
+      "algorithm": "eaMuCommaLambda",
+      "seed": 2403,
+      "block": 1,
+      "optimized": {
+        "ms": 118.70649998309091,
+        "cv_calls": 24
+      },
+      "default": {
+        "ms": 124.61369996890426,
+        "cv_calls": 24
+      }
+    },
+    {
+      "width": 4096,
+      "algorithm": "eaMuPlusLambda",
+      "seed": 2401,
+      "block": 0,
+      "default": {
+        "ms": 279.2909999843687,
+        "cv_calls": 24
+      },
+      "optimized": {
+        "ms": 244.8629999998957,
+        "cv_calls": 24
+      }
+    },
+    {
+      "width": 4096,
+      "algorithm": "eaMuPlusLambda",
+      "seed": 2401,
+      "block": 1,
+      "optimized": {
+        "ms": 258.5469999467023,
+        "cv_calls": 24
+      },
+      "default": {
+        "ms": 278.99690001504496,
+        "cv_calls": 24
+      }
+    },
+    {
+      "width": 4096,
+      "algorithm": "eaMuPlusLambda",
+      "seed": 2402,
+      "block": 0,
+      "default": {
+        "ms": 273.77540001180023,
+        "cv_calls": 24
+      },
+      "optimized": {
+        "ms": 258.9265000424348,
+        "cv_calls": 24
+      }
+    },
+    {
+      "width": 4096,
+      "algorithm": "eaMuPlusLambda",
+      "seed": 2402,
+      "block": 1,
+      "optimized": {
+        "ms": 245.1922000036575,
+        "cv_calls": 24
+      },
+      "default": {
+        "ms": 273.6195999896154,
+        "cv_calls": 24
+      }
+    },
+    {
+      "width": 4096,
+      "algorithm": "eaMuPlusLambda",
+      "seed": 2403,
+      "block": 0,
+      "default": {
+        "ms": 265.8328000106849,
+        "cv_calls": 24
+      },
+      "optimized": {
+        "ms": 234.65759999817237,
+        "cv_calls": 24
+      }
+    },
+    {
+      "width": 4096,
+      "algorithm": "eaMuPlusLambda",
+      "seed": 2403,
+      "block": 1,
+      "optimized": {
+        "ms": 238.77639998681843,
+        "cv_calls": 24
+      },
+      "default": {
+        "ms": 296.71879997476935,
+        "cv_calls": 24
+      }
+    },
+    {
+      "width": 4096,
+      "algorithm": "eaDifferentialEvolution",
+      "seed": 2401,
+      "block": 0,
+      "default": {
+        "ms": 175.0976000330411,
+        "cv_calls": 16
+      },
+      "optimized": {
+        "ms": 166.94100003223866,
+        "cv_calls": 16
+      }
+    },
+    {
+      "width": 4096,
+      "algorithm": "eaDifferentialEvolution",
+      "seed": 2401,
+      "block": 1,
+      "optimized": {
+        "ms": 178.4514000173658,
+        "cv_calls": 16
+      },
+      "default": {
+        "ms": 176.07059999136254,
+        "cv_calls": 16
+      }
+    },
+    {
+      "width": 4096,
+      "algorithm": "eaDifferentialEvolution",
+      "seed": 2402,
+      "block": 0,
+      "default": {
+        "ms": 173.03439998067915,
+        "cv_calls": 16
+      },
+      "optimized": {
+        "ms": 167.99349995562807,
+        "cv_calls": 16
+      }
+    },
+    {
+      "width": 4096,
+      "algorithm": "eaDifferentialEvolution",
+      "seed": 2402,
+      "block": 1,
+      "optimized": {
+        "ms": 170.82549998303875,
+        "cv_calls": 16
+      },
+      "default": {
+        "ms": 181.007299979683,
+        "cv_calls": 16
+      }
+    },
+    {
+      "width": 4096,
+      "algorithm": "eaDifferentialEvolution",
+      "seed": 2403,
+      "block": 0,
+      "default": {
+        "ms": 181.9079000269994,
+        "cv_calls": 16
+      },
+      "optimized": {
+        "ms": 164.52019999269396,
+        "cv_calls": 16
+      }
+    },
+    {
+      "width": 4096,
+      "algorithm": "eaDifferentialEvolution",
+      "seed": 2403,
+      "block": 1,
+      "optimized": {
+        "ms": 162.49479999532923,
+        "cv_calls": 16
+      },
+      "default": {
+        "ms": 177.26070003118366,
+        "cv_calls": 16
+      }
+    }
+  ],
+  "reproduction_script": "import gc\nimport json\nimport platform\nimport sys\nimport time\nfrom copy import deepcopy\nfrom importlib.metadata import version\nfrom pathlib import Path\n\nimport numpy as np\nfrom sklearn.datasets import make_classification, make_regression\nfrom sklearn.linear_model import Ridge\nfrom sklearn.tree import DecisionTreeClassifier\nfrom threadpoolctl import threadpool_limits\n\nsys.path.insert(0, str(Path.cwd()))\nfrom sklearn_genetic import GAFeatureSelectionCV\n\n\nclass Reference(GAFeatureSelectionCV):\n    def _register(self):\n        super()._register()\n        self.toolbox.register(\"clone\", deepcopy)\n\n\ndef fit(cls, X, y, width, algorithm, seed):\n    regression = width == 256\n    search = cls(\n        Ridge() if regression else DecisionTreeClassifier(max_depth=3, random_state=seed),\n        population_size=8,\n        generations=1,\n        max_features=min(width // 2, 12),\n        scoring=\"r2\" if regression else \"balanced_accuracy\",\n        cv=3,\n        n_jobs=1,\n        algorithm=algorithm,\n        random_state=seed,\n        error_score=\"raise\",\n        verbose=False,\n    )\n    gc.collect()\n    start = time.perf_counter()\n    search.fit(X[:120], y[:120])\n    elapsed = 1000 * (time.perf_counter() - start)\n    return (elapsed, search.fit_stats_[\"cross_validate_calls\"]), (\n        np.asarray(search.cv_results_[\"features\"]),\n        search.cv_results_[\"mean_test_score\"],\n        search.support_,\n        search.predict(X[120:]),\n    )\n\n\nrecords = []\nwith threadpool_limits(1):\n    for width, algorithm in [\n        (16, \"eaSimple\"),\n        (256, \"eaMuCommaLambda\"),\n        (4096, \"eaMuPlusLambda\"),\n        (4096, \"eaDifferentialEvolution\"),\n    ]:\n        for seed in (2401, 2402, 2403):\n            if width == 256:\n                X, y = make_regression(\n                    n_samples=180, n_features=width, n_informative=8, random_state=seed\n                )\n            else:\n                X, y = make_classification(\n                    n_samples=180,\n                    n_features=width,\n                    n_informative=min(width, 16),\n                    n_redundant=0,\n                    random_state=seed,\n                )\n            if seed == 2401:\n                for cls in (Reference, GAFeatureSelectionCV):\n                    fit(cls, X, y, width, algorithm, seed)\n            reference = None\n            for block, order in enumerate(\n                [(Reference, GAFeatureSelectionCV), (GAFeatureSelectionCV, Reference)]\n            ):\n                pair = {}\n                for cls in order:\n                    stats, outcome = fit(cls, X, y, width, algorithm, seed)\n                    if reference is None:\n                        reference = outcome\n                    else:\n                        for left, right in zip(reference, outcome, strict=True):\n                            np.testing.assert_array_equal(left, right)\n                    pair[\"default\" if cls == Reference else \"optimized\"] = dict(\n                        ms=stats[0], cv_calls=stats[1]\n                    )\n                assert pair[\"default\"][\"cv_calls\"] == pair[\"optimized\"][\"cv_calls\"]\n                records.append(\n                    dict(width=width, algorithm=algorithm, seed=seed, block=block, **pair)\n                )\nprint(\n    json.dumps(\n        dict(\n            python=platform.python_version(),\n            versions={p: version(p) for p in (\"scikit-learn\", \"numpy\", \"deap\")},\n            records=records,\n            reproduction_script=Path(__file__).read_text(),\n        ),\n        indent=2,\n    )\n)\n"
+}

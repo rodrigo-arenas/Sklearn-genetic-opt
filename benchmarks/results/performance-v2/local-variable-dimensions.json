@@ -1,0 +1,1380 @@
+{
+  "baseline_commit": "cae9eb7d213f7a3bda301694552458d2c7330333",
+  "python": "3.12.0",
+  "versions": {
+    "scikit-learn": "1.9.1",
+    "numpy": "2.5.3",
+    "deap": "1.4.4"
+  },
+  "rows": [
+    {
+      "task": "classification_lr",
+      "scoring": "roc_auc",
+      "seed": 2001,
+      "baseline": {
+        "equal_steps": {
+          "unique": 8,
+          "winner": 0.14541471350729376,
+          "cv": 0.9950533531199209,
+          "holdout": 0.9991614255765199
+        },
+        "equal_fits": {
+          "unique": 8,
+          "winner": 0.14541471350729376,
+          "cv": 0.9950533531199209,
+          "holdout": 0.9991614255765199
+        },
+        "trajectory": [
+          {
+            "value": 1.0,
+            "proposal": 1,
+            "cv": 0.9949826867359198
+          },
+          {
+            "value": 0.023128762294417963,
+            "proposal": 2,
+            "cv": 0.9923680305278779
+          },
+          {
+            "value": 0.0001631632583321808,
+            "proposal": 3,
+            "cv": 0.9777400890396439
+          },
+          {
+            "value": 33.35447288070848,
+            "proposal": 4,
+            "cv": 0.9867853861917886
+          },
+          {
+            "value": 0.14541471350729376,
+            "proposal": 5,
+            "cv": 0.9950533531199209
+          },
+          {
+            "value": 5.01354888319646,
+            "proposal": 6,
+            "cv": 0.9925800296798813
+          },
+          {
+            "value": 0.15104553238433618,
+            "proposal": 9,
+            "cv": 0.9950533531199209
+          },
+          {
+            "value": 0.057407837524107344,
+            "proposal": 10,
+            "cv": 0.9939933573599039
+          }
+        ]
+      },
+      "current": {
+        "equal_steps": {
+          "unique": 14,
+          "winner": 0.5103515013283875,
+          "cv": 0.9953360186559254,
+          "holdout": 0.9970649895178197
+        },
+        "equal_fits": {
+          "unique": 8,
+          "winner": 0.14541471350729376,
+          "cv": 0.9950533531199209,
+          "holdout": 0.9991614255765199
+        },
+        "trajectory": [
+          {
+            "value": 1.0,
+            "proposal": 1,
+            "cv": 0.9949826867359198
+          },
+          {
+            "value": 0.023128762294417963,
+            "proposal": 2,
+            "cv": 0.9923680305278779
+          },
+          {
+            "value": 0.0001631632583321808,
+            "proposal": 3,
+            "cv": 0.9777400890396439
+          },
+          {
+            "value": 33.35447288070848,
+            "proposal": 4,
+            "cv": 0.9867853861917886
+          },
+          {
+            "value": 0.14541471350729376,
+            "proposal": 5,
+            "cv": 0.9950533531199209
+          },
+          {
+            "value": 5.01354888319646,
+            "proposal": 6,
+            "cv": 0.9925800296798813
+          },
+          {
+            "value": 0.13213215390606348,
+            "proposal": 7,
+            "cv": 0.9950533531199209
+          },
+          {
+            "value": 0.15104553238433618,
+            "proposal": 8,
+            "cv": 0.9950533531199209
+          },
+          {
+            "value": 0.057407837524107344,
+            "proposal": 9,
+            "cv": 0.9939933573599039
+          },
+          {
+            "value": 0.4619641399371835,
+            "proposal": 10,
+            "cv": 0.9952653522719243
+          },
+          {
+            "value": 0.16664779830938967,
+            "proposal": 11,
+            "cv": 0.995124019503922
+          },
+          {
+            "value": 0.5103515013283875,
+            "proposal": 12,
+            "cv": 0.9953360186559254
+          },
+          {
+            "value": 1.646248655033242,
+            "proposal": 13,
+            "cv": 0.9947000211999152
+          },
+          {
+            "value": 0.32500810955428583,
+            "proposal": 14,
+            "cv": 0.995124019503922
+          }
+        ]
+      }
+    },
+    {
+      "task": "classification_lr",
+      "scoring": "roc_auc",
+      "seed": 2002,
+      "baseline": {
+        "equal_steps": {
+          "unique": 10,
+          "winner": 1.0,
+          "cv": 0.996184015263939,
+          "holdout": 0.9872117400419288
+        },
+        "equal_fits": {
+          "unique": 10,
+          "winner": 1.0,
+          "cv": 0.996184015263939,
+          "holdout": 0.9872117400419288
+        },
+        "trajectory": [
+          {
+            "value": 1.0,
+            "proposal": 1,
+            "cv": 0.996184015263939
+          },
+          {
+            "value": 0.03497554128856053,
+            "proposal": 2,
+            "cv": 0.9944880220479119
+          },
+          {
+            "value": 0.4985207351710624,
+            "proposal": 3,
+            "cv": 0.996113348879938
+          },
+          {
+            "value": 0.0006747386672457908,
+            "proposal": 4,
+            "cv": 0.9850893929757615
+          },
+          {
+            "value": 0.005877358141607526,
+            "proposal": 5,
+            "cv": 0.9918733658398701
+          },
+          {
+            "value": 8.190018090438562,
+            "proposal": 6,
+            "cv": 0.9938520245919017
+          },
+          {
+            "value": 1.2243141419437602,
+            "proposal": 9,
+            "cv": 0.9960426824959367
+          },
+          {
+            "value": 1.820175562320298,
+            "proposal": 11,
+            "cv": 0.9956893505759311
+          },
+          {
+            "value": 0.5989000988509665,
+            "proposal": 13,
+            "cv": 0.996113348879938
+          },
+          {
+            "value": 1.2722305153721358,
+            "proposal": 14,
+            "cv": 0.9960426824959367
+          }
+        ]
+      },
+      "current": {
+        "equal_steps": {
+          "unique": 14,
+          "winner": 1.0,
+          "cv": 0.996184015263939,
+          "holdout": 0.9872117400419288
+        },
+        "equal_fits": {
+          "unique": 10,
+          "winner": 1.0,
+          "cv": 0.996184015263939,
+          "holdout": 0.9872117400419288
+        },
+        "trajectory": [
+          {
+            "value": 1.0,
+            "proposal": 1,
+            "cv": 0.996184015263939
+          },
+          {
+            "value": 0.03497554128856053,
+            "proposal": 2,
+            "cv": 0.9944880220479119
+          },
+          {
+            "value": 0.4985207351710624,
+            "proposal": 3,
+            "cv": 0.996113348879938
+          },
+          {
+            "value": 0.0006747386672457908,
+            "proposal": 4,
+            "cv": 0.9850893929757615
+          },
+          {
+            "value": 0.005877358141607526,
+            "proposal": 5,
+            "cv": 0.9918733658398701
+          },
+          {
+            "value": 8.190018090438562,
+            "proposal": 6,
+            "cv": 0.9938520245919017
+          },
+          {
+            "value": 1.489410275240286,
+            "proposal": 7,
+            "cv": 0.9959720161119355
+          },
+          {
+            "value": 3.7545660555717584,
+            "proposal": 8,
+            "cv": 0.9947000211999152
+          },
+          {
+            "value": 0.4196991801127938,
+            "proposal": 9,
+            "cv": 0.996113348879938
+          },
+          {
+            "value": 2.2755842033848297,
+            "proposal": 10,
+            "cv": 0.995194685887923
+          },
+          {
+            "value": 0.5989000988509665,
+            "proposal": 11,
+            "cv": 0.996113348879938
+          },
+          {
+            "value": 1.2722305153721358,
+            "proposal": 12,
+            "cv": 0.9960426824959367
+          },
+          {
+            "value": 1.8958464978140552,
+            "proposal": 13,
+            "cv": 0.99561868419193
+          },
+          {
+            "value": 0.7908929941131506,
+            "proposal": 14,
+            "cv": 0.9960426824959366
+          }
+        ]
+      }
+    },
+    {
+      "task": "classification_lr",
+      "scoring": "roc_auc",
+      "seed": 2003,
+      "baseline": {
+        "equal_steps": {
+          "unique": 10,
+          "winner": 0.0781334200139075,
+          "cv": 0.9932866935198926,
+          "holdout": 0.9991614255765199
+        },
+        "equal_fits": {
+          "unique": 10,
+          "winner": 0.0781334200139075,
+          "cv": 0.9932866935198926,
+          "holdout": 0.9991614255765199
+        },
+        "trajectory": [
+          {
+            "value": 1.0,
+            "proposal": 1,
+            "cv": 0.9932160271358915
+          },
+          {
+            "value": 0.0001010047679314111,
+            "proposal": 2,
+            "cv": 0.9821214048477139
+          },
+          {
+            "value": 0.0047783972625490825,
+            "proposal": 3,
+            "cv": 0.9895413751678327
+          },
+          {
+            "value": 0.15105352271623357,
+            "proposal": 4,
+            "cv": 0.9932866935198925
+          },
+          {
+            "value": 3.9404397268633624,
+            "proposal": 5,
+            "cv": 0.9922973641438767
+          },
+          {
+            "value": 93.70456589245225,
+            "proposal": 6,
+            "cv": 0.9868560525757898
+          },
+          {
+            "value": 0.1541970376575733,
+            "proposal": 9,
+            "cv": 0.9932866935198925
+          },
+          {
+            "value": 0.12134759369341083,
+            "proposal": 11,
+            "cv": 0.9932866935198925
+          },
+          {
+            "value": 0.0781334200139075,
+            "proposal": 12,
+            "cv": 0.9932866935198926
+          },
+          {
+            "value": 0.027190883985111537,
+            "proposal": 14,
+            "cv": 0.9926506960638825
+          }
+        ]
+      },
+      "current": {
+        "equal_steps": {
+          "unique": 14,
+          "winner": 0.2373342000748828,
+          "cv": 0.993498692671896,
+          "holdout": 0.9989517819706499
+        },
+        "equal_fits": {
+          "unique": 10,
+          "winner": 0.2954336867439432,
+          "cv": 0.9934280262878948,
+          "holdout": 0.9991614255765199
+        },
+        "trajectory": [
+          {
+            "value": 1.0,
+            "proposal": 1,
+            "cv": 0.9932160271358915
+          },
+          {
+            "value": 0.0001010047679314111,
+            "proposal": 2,
+            "cv": 0.9821214048477139
+          },
+          {
+            "value": 0.0047783972625490825,
+            "proposal": 3,
+            "cv": 0.9895413751678327
+          },
+          {
+            "value": 0.15105352271623357,
+            "proposal": 4,
+            "cv": 0.9932866935198925
+          },
+          {
+            "value": 3.9404397268633624,
+            "proposal": 5,
+            "cv": 0.9922973641438767
+          },
+          {
+            "value": 93.70456589245225,
+            "proposal": 6,
+            "cv": 0.9868560525757898
+          },
+          {
+            "value": 0.2954336867439432,
+            "proposal": 7,
+            "cv": 0.9934280262878948
+          },
+          {
+            "value": 0.73394433797783,
+            "proposal": 8,
+            "cv": 0.9932160271358915
+          },
+          {
+            "value": 0.3015818400061436,
+            "proposal": 9,
+            "cv": 0.9934280262878948
+          },
+          {
+            "value": 1.1101387489619956,
+            "proposal": 10,
+            "cv": 0.9932160271358915
+          },
+          {
+            "value": 0.2373342000748828,
+            "proposal": 11,
+            "cv": 0.993498692671896
+          },
+          {
+            "value": 0.1227626632246869,
+            "proposal": 12,
+            "cv": 0.9933573599038937
+          },
+          {
+            "value": 0.06150760800642689,
+            "proposal": 13,
+            "cv": 0.9930040279838881
+          },
+          {
+            "value": 0.08259368012800049,
+            "proposal": 14,
+            "cv": 0.9932866935198926
+          }
+        ]
+      }
+    },
+    {
+      "task": "regression_ridge",
+      "scoring": "r2",
+      "seed": 2001,
+      "baseline": {
+        "equal_steps": {
+          "unique": 8,
+          "winner": 5.809682418495883,
+          "cv": 0.4868107127706492,
+          "holdout": 0.444135849888903
+        },
+        "equal_fits": {
+          "unique": 8,
+          "winner": 5.809682418495883,
+          "cv": 0.4868107127706492,
+          "holdout": 0.444135849888903
+        },
+        "trajectory": [
+          {
+            "value": 1.0,
+            "proposal": 1,
+            "cv": 0.4829261920221981
+          },
+          {
+            "value": 5.809682418495883,
+            "proposal": 2,
+            "cv": 0.4868107127706492
+          },
+          {
+            "value": 0.20052787310901957,
+            "proposal": 3,
+            "cv": 0.4812712367928161
+          },
+          {
+            "value": 80.80905529279869,
+            "proposal": 4,
+            "cv": 0.48674708355648494
+          },
+          {
+            "value": 0.0005286327700676377,
+            "proposal": 5,
+            "cv": 0.48063683629257153
+          },
+          {
+            "value": 0.01547656589966306,
+            "proposal": 6,
+            "cv": 0.48068929678274513
+          },
+          {
+            "value": 2.293587053905283,
+            "proposal": 7,
+            "cv": 0.4844398613917747
+          },
+          {
+            "value": 3.6997910166451202,
+            "proposal": 12,
+            "cv": 0.48554927374085316
+          }
+        ]
+      },
+      "current": {
+        "equal_steps": {
+          "unique": 14,
+          "winner": 20.389822137027366,
+          "cv": 0.4913191444745666,
+          "holdout": 0.44263384565829156
+        },
+        "equal_fits": {
+          "unique": 8,
+          "winner": 18.456625722637128,
+          "cv": 0.49096923853529395,
+          "holdout": 0.4427513437507793
+        },
+        "trajectory": [
+          {
+            "value": 1.0,
+            "proposal": 1,
+            "cv": 0.4829261920221981
+          },
+          {
+            "value": 5.809682418495883,
+            "proposal": 2,
+            "cv": 0.4868107127706492
+          },
+          {
+            "value": 0.20052787310901957,
+            "proposal": 3,
+            "cv": 0.4812712367928161
+          },
+          {
+            "value": 80.80905529279869,
+            "proposal": 4,
+            "cv": 0.48674708355648494
+          },
+          {
+            "value": 0.0005286327700676377,
+            "proposal": 5,
+            "cv": 0.48063683629257153
+          },
+          {
+            "value": 0.01547656589966306,
+            "proposal": 6,
+            "cv": 0.48068929678274513
+          },
+          {
+            "value": 2.293587053905283,
+            "proposal": 7,
+            "cv": 0.4844398613917747
+          },
+          {
+            "value": 18.456625722637128,
+            "proposal": 8,
+            "cv": 0.49096923853529395
+          },
+          {
+            "value": 6.657997396326385,
+            "proposal": 9,
+            "cv": 0.4872396169662296
+          },
+          {
+            "value": 20.389822137027366,
+            "proposal": 10,
+            "cv": 0.4913191444745666
+          },
+          {
+            "value": 65.77176158408064,
+            "proposal": 11,
+            "cv": 0.4896323073537701
+          },
+          {
+            "value": 12.984888904322666,
+            "proposal": 12,
+            "cv": 0.4896390239895081
+          },
+          {
+            "value": 13.73070118705406,
+            "proposal": 13,
+            "cv": 0.48985375391657415
+          },
+          {
+            "value": 15.518380151665829,
+            "proposal": 14,
+            "cv": 0.4903229864299508
+          }
+        ]
+      }
+    },
+    {
+      "task": "regression_ridge",
+      "scoring": "r2",
+      "seed": 2002,
+      "baseline": {
+        "equal_steps": {
+          "unique": 9,
+          "winner": 0.0001,
+          "cv": 0.4732301067467712,
+          "holdout": 0.5121765278396462
+        },
+        "equal_fits": {
+          "unique": 9,
+          "winner": 0.0001,
+          "cv": 0.4732301067467712,
+          "holdout": 0.5121765278396462
+        },
+        "trajectory": [
+          {
+            "value": 1.0,
+            "proposal": 1,
+            "cv": 0.46930586725369644
+          },
+          {
+            "value": 0.03497554128856053,
+            "proposal": 2,
+            "cv": 0.4730469142559328
+          },
+          {
+            "value": 0.0022443036605027658,
+            "proposal": 3,
+            "cv": 0.47321878306859905
+          },
+          {
+            "value": 0.00010418043163807693,
+            "proposal": 4,
+            "cv": 0.47323008466378963
+          },
+          {
+            "value": 2.686183016802593,
+            "proposal": 5,
+            "cv": 0.46655402192529855
+          },
+          {
+            "value": 49.18556896845103,
+            "proposal": 6,
+            "cv": 0.4630846933942239
+          },
+          {
+            "value": 0.00018962667573960813,
+            "proposal": 7,
+            "cv": 0.4732296333028893
+          },
+          {
+            "value": 0.0001,
+            "proposal": 9,
+            "cv": 0.4732301067467712
+          },
+          {
+            "value": 0.0001272230515372137,
+            "proposal": 10,
+            "cv": 0.4732299629424476
+          }
+        ]
+      },
+      "current": {
+        "equal_steps": {
+          "unique": 12,
+          "winner": 0.0001,
+          "cv": 0.4732301067467712,
+          "holdout": 0.5121765278396462
+        },
+        "equal_fits": {
+          "unique": 9,
+          "winner": 0.0001,
+          "cv": 0.4732301067467712,
+          "holdout": 0.5121765278396462
+        },
+        "trajectory": [
+          {
+            "value": 1.0,
+            "proposal": 1,
+            "cv": 0.46930586725369644
+          },
+          {
+            "value": 0.03497554128856053,
+            "proposal": 2,
+            "cv": 0.4730469142559328
+          },
+          {
+            "value": 0.0022443036605027658,
+            "proposal": 3,
+            "cv": 0.47321878306859905
+          },
+          {
+            "value": 0.00010418043163807693,
+            "proposal": 4,
+            "cv": 0.47323008466378963
+          },
+          {
+            "value": 2.686183016802593,
+            "proposal": 5,
+            "cv": 0.46655402192529855
+          },
+          {
+            "value": 49.18556896845103,
+            "proposal": 6,
+            "cv": 0.4630846933942239
+          },
+          {
+            "value": 0.00018962667573960813,
+            "proposal": 7,
+            "cv": 0.4732296333028893
+          },
+          {
+            "value": 0.0002370713445374209,
+            "proposal": 8,
+            "cv": 0.4732293826861759
+          },
+          {
+            "value": 0.0001,
+            "proposal": 9,
+            "cv": 0.4732301067467712
+          },
+          {
+            "value": 0.0001272230515372137,
+            "proposal": 10,
+            "cv": 0.4732299629424476
+          },
+          {
+            "value": 0.0001895846497814057,
+            "proposal": 11,
+            "cv": 0.4732296335248844
+          },
+          {
+            "value": 0.0002253185072089754,
+            "proposal": 14,
+            "cv": 0.4732294447678033
+          }
+        ]
+      }
+    },
+    {
+      "task": "regression_ridge",
+      "scoring": "r2",
+      "seed": 2003,
+      "baseline": {
+        "equal_steps": {
+          "unique": 10,
+          "winner": 25.91710202800464,
+          "cv": 0.45461484039139705,
+          "holdout": 0.566421883892372
+        },
+        "equal_fits": {
+          "unique": 10,
+          "winner": 25.91710202800464,
+          "cv": 0.45461484039139705,
+          "holdout": 0.566421883892372
+        },
+        "trajectory": [
+          {
+            "value": 1.0,
+            "proposal": 1,
+            "cv": 0.452881066785584
+          },
+          {
+            "value": 0.02537125060846853,
+            "proposal": 2,
+            "cv": 0.4521641600442842
+          },
+          {
+            "value": 0.006920472953132207,
+            "proposal": 3,
+            "cv": 0.45213258002520623
+          },
+          {
+            "value": 2.2758886753267884,
+            "proposal": 4,
+            "cv": 0.45314054381864816
+          },
+          {
+            "value": 0.0006013549053069816,
+            "proposal": 5,
+            "cv": 0.45212144242126806
+          },
+          {
+            "value": 32.26161673891289,
+            "proposal": 6,
+            "cv": 0.45417847158401914
+          },
+          {
+            "value": 25.91710202800464,
+            "proposal": 8,
+            "cv": 0.45461484039139705
+          },
+          {
+            "value": 13.405790092704382,
+            "proposal": 9,
+            "cv": 0.4545042397269092
+          },
+          {
+            "value": 9.01930203936212,
+            "proposal": 11,
+            "cv": 0.45409602087602013
+          },
+          {
+            "value": 37.48845429465425,
+            "proposal": 12,
+            "cv": 0.45362143541504585
+          }
+        ]
+      },
+      "current": {
+        "equal_steps": {
+          "unique": 14,
+          "winner": 25.91710202800464,
+          "cv": 0.45461484039139705,
+          "holdout": 0.566421883892372
+        },
+        "equal_fits": {
+          "unique": 10,
+          "winner": 25.91710202800464,
+          "cv": 0.45461484039139705,
+          "holdout": 0.566421883892372
+        },
+        "trajectory": [
+          {
+            "value": 1.0,
+            "proposal": 1,
+            "cv": 0.452881066785584
+          },
+          {
+            "value": 0.02537125060846853,
+            "proposal": 2,
+            "cv": 0.4521641600442842
+          },
+          {
+            "value": 0.006920472953132207,
+            "proposal": 3,
+            "cv": 0.45213258002520623
+          },
+          {
+            "value": 2.2758886753267884,
+            "proposal": 4,
+            "cv": 0.45314054381864816
+          },
+          {
+            "value": 0.0006013549053069816,
+            "proposal": 5,
+            "cv": 0.45212144242126806
+          },
+          {
+            "value": 32.26161673891289,
+            "proposal": 6,
+            "cv": 0.45417847158401914
+          },
+          {
+            "value": 100.0,
+            "proposal": 7,
+            "cv": 0.43950865757386587
+          },
+          {
+            "value": 25.91710202800464,
+            "proposal": 8,
+            "cv": 0.45461484039139705
+          },
+          {
+            "value": 13.405790092704382,
+            "proposal": 9,
+            "cv": 0.4545042397269092
+          },
+          {
+            "value": 6.716684538924926,
+            "proposal": 10,
+            "cv": 0.45380208947152356
+          },
+          {
+            "value": 9.01930203936212,
+            "proposal": 11,
+            "cv": 0.45409602087602013
+          },
+          {
+            "value": 37.48845429465425,
+            "proposal": 12,
+            "cv": 0.45362143541504585
+          },
+          {
+            "value": 28.15909282807827,
+            "proposal": 13,
+            "cv": 0.45449343038101925
+          },
+          {
+            "value": 11.719042083820577,
+            "proposal": 14,
+            "cv": 0.454371712656161
+          }
+        ]
+      }
+    },
+    {
+      "task": "wine_lr",
+      "scoring": "balanced_accuracy",
+      "seed": 2001,
+      "baseline": {
+        "equal_steps": {
+          "unique": 8,
+          "winner": 0.023128762294417963,
+          "cv": 0.9807552650689906,
+          "holdout": 1.0
+        },
+        "equal_fits": {
+          "unique": 8,
+          "winner": 0.023128762294417963,
+          "cv": 0.9807552650689906,
+          "holdout": 1.0
+        },
+        "trajectory": [
+          {
+            "value": 1.0,
+            "proposal": 1,
+            "cv": 0.9742193173565722
+          },
+          {
+            "value": 0.023128762294417963,
+            "proposal": 2,
+            "cv": 0.9807552650689906
+          },
+          {
+            "value": 0.0001631632583321808,
+            "proposal": 3,
+            "cv": 0.3333333333333333
+          },
+          {
+            "value": 33.35447288070848,
+            "proposal": 4,
+            "cv": 0.9807552650689906
+          },
+          {
+            "value": 0.14541471350729376,
+            "proposal": 5,
+            "cv": 0.9807552650689906
+          },
+          {
+            "value": 5.01354888319646,
+            "proposal": 6,
+            "cv": 0.9807552650689906
+          },
+          {
+            "value": 0.024024365415923978,
+            "proposal": 9,
+            "cv": 0.9807552650689906
+          },
+          {
+            "value": 0.00913093452448364,
+            "proposal": 10,
+            "cv": 0.9807552650689906
+          }
+        ]
+      },
+      "current": {
+        "equal_steps": {
+          "unique": 14,
+          "winner": 0.023128762294417963,
+          "cv": 0.9807552650689906,
+          "holdout": 1.0
+        },
+        "equal_fits": {
+          "unique": 8,
+          "winner": 0.023128762294417963,
+          "cv": 0.9807552650689906,
+          "holdout": 1.0
+        },
+        "trajectory": [
+          {
+            "value": 1.0,
+            "proposal": 1,
+            "cv": 0.9742193173565722
+          },
+          {
+            "value": 0.023128762294417963,
+            "proposal": 2,
+            "cv": 0.9807552650689906
+          },
+          {
+            "value": 0.0001631632583321808,
+            "proposal": 3,
+            "cv": 0.3333333333333333
+          },
+          {
+            "value": 33.35447288070848,
+            "proposal": 4,
+            "cv": 0.9807552650689906
+          },
+          {
+            "value": 0.14541471350729376,
+            "proposal": 5,
+            "cv": 0.9807552650689906
+          },
+          {
+            "value": 5.01354888319646,
+            "proposal": 6,
+            "cv": 0.9807552650689906
+          },
+          {
+            "value": 0.02101612075857444,
+            "proposal": 7,
+            "cv": 0.9807552650689906
+          },
+          {
+            "value": 0.024024365415923978,
+            "proposal": 8,
+            "cv": 0.9807552650689906
+          },
+          {
+            "value": 0.00913093452448364,
+            "proposal": 9,
+            "cv": 0.9807552650689906
+          },
+          {
+            "value": 0.07347715044403968,
+            "proposal": 10,
+            "cv": 0.9807552650689906
+          },
+          {
+            "value": 0.008343412357742932,
+            "proposal": 11,
+            "cv": 0.9807552650689906
+          },
+          {
+            "value": 0.02555133080768704,
+            "proposal": 12,
+            "cv": 0.9807552650689906
+          },
+          {
+            "value": 0.07460680280289642,
+            "proposal": 13,
+            "cv": 0.9807552650689906
+          },
+          {
+            "value": 0.014729133332758363,
+            "proposal": 14,
+            "cv": 0.9807552650689906
+          }
+        ]
+      }
+    },
+    {
+      "task": "wine_lr",
+      "scoring": "balanced_accuracy",
+      "seed": 2002,
+      "baseline": {
+        "equal_steps": {
+          "unique": 10,
+          "winner": 0.06366162553236246,
+          "cv": 0.9807552650689906,
+          "holdout": 1.0
+        },
+        "equal_fits": {
+          "unique": 10,
+          "winner": 0.06366162553236246,
+          "cv": 0.9807552650689906,
+          "holdout": 1.0
+        },
+        "trajectory": [
+          {
+            "value": 1.0,
+            "proposal": 1,
+            "cv": 0.9714960058097314
+          },
+          {
+            "value": 0.03497554128856053,
+            "proposal": 2,
+            "cv": 0.9742193173565722
+          },
+          {
+            "value": 0.4985207351710624,
+            "proposal": 3,
+            "cv": 0.9714960058097314
+          },
+          {
+            "value": 0.0006747386672457908,
+            "proposal": 4,
+            "cv": 0.4396825396825397
+          },
+          {
+            "value": 0.005877358141607526,
+            "proposal": 5,
+            "cv": 0.9548293391430646
+          },
+          {
+            "value": 8.190018090438562,
+            "proposal": 6,
+            "cv": 0.9714960058097314
+          },
+          {
+            "value": 0.04282104982172253,
+            "proposal": 9,
+            "cv": 0.9742193173565722
+          },
+          {
+            "value": 0.06366162553236246,
+            "proposal": 11,
+            "cv": 0.9807552650689906
+          },
+          {
+            "value": 0.03812695382434508,
+            "proposal": 13,
+            "cv": 0.9742193173565722
+          },
+          {
+            "value": 0.08099226266046541,
+            "proposal": 14,
+            "cv": 0.9807552650689906
+          }
+        ]
+      },
+      "current": {
+        "equal_steps": {
+          "unique": 14,
+          "winner": 0.05209293057727291,
+          "cv": 0.9807552650689906,
+          "holdout": 1.0
+        },
+        "equal_fits": {
+          "unique": 10,
+          "winner": 0.05209293057727291,
+          "cv": 0.9807552650689906,
+          "holdout": 1.0
+        },
+        "trajectory": [
+          {
+            "value": 1.0,
+            "proposal": 1,
+            "cv": 0.9714960058097314
+          },
+          {
+            "value": 0.03497554128856053,
+            "proposal": 2,
+            "cv": 0.9742193173565722
+          },
+          {
+            "value": 0.4985207351710624,
+            "proposal": 3,
+            "cv": 0.9714960058097314
+          },
+          {
+            "value": 0.0006747386672457908,
+            "proposal": 4,
+            "cv": 0.4396825396825397
+          },
+          {
+            "value": 0.005877358141607526,
+            "proposal": 5,
+            "cv": 0.9548293391430646
+          },
+          {
+            "value": 8.190018090438562,
+            "proposal": 6,
+            "cv": 0.9714960058097314
+          },
+          {
+            "value": 0.05209293057727291,
+            "proposal": 7,
+            "cv": 0.9807552650689906
+          },
+          {
+            "value": 0.195586348880685,
+            "proposal": 8,
+            "cv": 0.9807552650689906
+          },
+          {
+            "value": 0.021863360252954125,
+            "proposal": 9,
+            "cv": 0.9668119099491648
+          },
+          {
+            "value": 0.11854184992966482,
+            "proposal": 10,
+            "cv": 0.9807552650689906
+          },
+          {
+            "value": 0.031198461272165277,
+            "proposal": 11,
+            "cv": 0.9742193173565722
+          },
+          {
+            "value": 0.06627421591556881,
+            "proposal": 12,
+            "cv": 0.9807552650689906
+          },
+          {
+            "value": 0.09876019999579355,
+            "proposal": 13,
+            "cv": 0.9807552650689906
+          },
+          {
+            "value": 0.04119993383638787,
+            "proposal": 14,
+            "cv": 0.9742193173565722
+          }
+        ]
+      }
+    },
+    {
+      "task": "wine_lr",
+      "scoring": "balanced_accuracy",
+      "seed": 2003,
+      "baseline": {
+        "equal_steps": {
+          "unique": 10,
+          "winner": 1.0,
+          "cv": 0.9938271604938271,
+          "holdout": 0.9814814814814815
+        },
+        "equal_fits": {
+          "unique": 10,
+          "winner": 1.0,
+          "cv": 0.9938271604938271,
+          "holdout": 0.9814814814814815
+        },
+        "trajectory": [
+          {
+            "value": 1.0,
+            "proposal": 1,
+            "cv": 0.9938271604938271
+          },
+          {
+            "value": 0.0001010047679314111,
+            "proposal": 2,
+            "cv": 0.3333333333333333
+          },
+          {
+            "value": 0.0047783972625490825,
+            "proposal": 3,
+            "cv": 0.9445326278659613
+          },
+          {
+            "value": 0.15105352271623357,
+            "proposal": 4,
+            "cv": 0.9749455337690632
+          },
+          {
+            "value": 3.9404397268633624,
+            "proposal": 5,
+            "cv": 0.9938271604938271
+          },
+          {
+            "value": 93.70456589245225,
+            "proposal": 6,
+            "cv": 0.9876543209876543
+          },
+          {
+            "value": 1.0208106033200237,
+            "proposal": 9,
+            "cv": 0.9938271604938271
+          },
+          {
+            "value": 0.8033416997587818,
+            "proposal": 11,
+            "cv": 0.981118373275236
+          },
+          {
+            "value": 0.5172565234422738,
+            "proposal": 12,
+            "cv": 0.981118373275236
+          },
+          {
+            "value": 0.34800580827348454,
+            "proposal": 14,
+            "cv": 0.981118373275236
+          }
+        ]
+      },
+      "current": {
+        "equal_steps": {
+          "unique": 14,
+          "winner": 1.0,
+          "cv": 0.9938271604938271,
+          "holdout": 0.9814814814814815
+        },
+        "equal_fits": {
+          "unique": 10,
+          "winner": 1.0,
+          "cv": 0.9938271604938271,
+          "holdout": 0.9814814814814815
+        },
+        "trajectory": [
+          {
+            "value": 1.0,
+            "proposal": 1,
+            "cv": 0.9938271604938271
+          },
+          {
+            "value": 0.0001010047679314111,
+            "proposal": 2,
+            "cv": 0.3333333333333333
+          },
+          {
+            "value": 0.0047783972625490825,
+            "proposal": 3,
+            "cv": 0.9445326278659613
+          },
+          {
+            "value": 0.15105352271623357,
+            "proposal": 4,
+            "cv": 0.9749455337690632
+          },
+          {
+            "value": 3.9404397268633624,
+            "proposal": 5,
+            "cv": 0.9938271604938271
+          },
+          {
+            "value": 93.70456589245225,
+            "proposal": 6,
+            "cv": 0.9876543209876543
+          },
+          {
+            "value": 1.9558212309880358,
+            "proposal": 7,
+            "cv": 0.9938271604938271
+          },
+          {
+            "value": 2.484294685778168,
+            "proposal": 8,
+            "cv": 0.9938271604938271
+          },
+          {
+            "value": 1.0208106033200237,
+            "proposal": 9,
+            "cv": 0.9938271604938271
+          },
+          {
+            "value": 3.7576579746106256,
+            "proposal": 10,
+            "cv": 0.9938271604938271
+          },
+          {
+            "value": 0.8033416997587818,
+            "proposal": 11,
+            "cv": 0.981118373275236
+          },
+          {
+            "value": 0.5172565234422738,
+            "proposal": 12,
+            "cv": 0.981118373275236
+          },
+          {
+            "value": 0.2591603232362644,
+            "proposal": 13,
+            "cv": 0.9749455337690632
+          },
+          {
+            "value": 0.34800580827348454,
+            "proposal": 14,
+            "cv": 0.981118373275236
+          }
+        ]
+      }
+    }
+  ],
+  "reproduction_script": "import ast\nimport json\nimport platform\nimport subprocess\nimport sys\nfrom importlib.metadata import version\nfrom pathlib import Path\nfrom unittest.mock import patch\n\nfrom sklearn.base import clone\nfrom sklearn.datasets import load_wine\nfrom sklearn.metrics import get_scorer\nfrom sklearn.model_selection import train_test_split\nfrom threadpoolctl import threadpool_limits\n\nsys.path.insert(0, str(Path.cwd()))\nfrom benchmarks.benchmark_fit import SCENARIOS, make_cv\nfrom sklearn_genetic import GASearchCV, optimizer_control\nfrom sklearn_genetic.space import Categorical, Continuous, Integer\n\nbaseline = subprocess.check_output([\"git\", \"rev-parse\", \"cae9eb7\"], text=True).strip()\npath = \"sklearn_genetic/optimizer_control.py\"\nsource = subprocess.check_output([\"git\", \"show\", f\"{baseline}:{path}\"], text=True)\nmethod = next(\n    node for node in ast.parse(source).body if getattr(node, \"name\", \"\") == \"_search_space_neighbor\"\n)\nexec(\n    compile(ast.Module(body=[method], type_ignores=[]), path, \"exec\"),\n    {**vars(optimizer_control)},\n    old := {},\n)\n\n\ndef paired(task, seed):\n    sc = SCENARIOS[\"classification_lr\" if task == \"wine_lr\" else task]\n    classification = sc.task == \"classification\"\n    X, y = load_wine(return_X_y=True) if task == \"wine_lr\" else sc.loader()\n    Xtr, Xte, ytr, yte = train_test_split(\n        X, y, test_size=0.25, random_state=seed, stratify=y if classification else None\n    )\n    folds = list(make_cv(sc, 3, seed).split(Xtr, ytr))\n    prefix = \"clf__\" if classification else \"ridge__\"\n    variable = prefix + (\"C\" if classification else \"alpha\")\n    scoring = \"balanced_accuracy\" if task == \"wine_lr\" else sc.scoring\n    model = sc.estimator_builder(seed)\n    if task == \"wine_lr\":\n        model.set_params(clf__solver=\"lbfgs\")\n    rows = []\n    for operator in (old[\"_search_space_neighbor\"], optimizer_control._search_space_neighbor):\n        params = model.get_params()\n        grid = {\n            prefix + \"fit_intercept\": Categorical([True]),\n            variable: Continuous(1e-4, 100, distribution=\"log-uniform\"),\n            prefix + \"tol\": Continuous(params[prefix + \"tol\"], params[prefix + \"tol\"]),\n        }\n        if classification:\n            grid[prefix + \"max_iter\"] = Integer(\n                params[prefix + \"max_iter\"], params[prefix + \"max_iter\"]\n            )\n        else:\n            grid[prefix + \"solver\"] = Categorical([params[prefix + \"solver\"]])\n        search = GASearchCV(\n            model,\n            param_grid=grid,\n            local_search=True,\n            local_search_steps=8,\n            local_search_radius=0.1,\n            cv=folds,\n            scoring=scoring,\n            population_size=6,\n            refit=False,\n            generations=0,\n            mutation_probability=0,\n            random_state=seed,\n            n_jobs=1,\n            error_score=\"raise\",\n            verbose=False,\n            diversity_control=False,\n        )\n        with patch.object(optimizer_control, \"_search_space_neighbor\", operator):\n            search.fit(Xtr, ytr)\n        table = search.cv_results_\n        unique = {}\n        for proposal, (param, score) in enumerate(\n            zip(table[\"params\"], table[\"mean_test_score\"], strict=True), start=1\n        ):\n            unique.setdefault(param[variable], (proposal, float(score)))\n        assert len(unique) == search.fit_stats_[\"cross_validate_calls\"]\n        assert len(table[\"params\"]) == search.fit_stats_[\"evaluated_candidates\"]\n        assert len(table[\"params\"]) == 14\n        rows.append(unique)\n    assert list(rows[0].items())[:6] == list(rows[1].items())[:6]\n    budget = min(len(h) for h in rows)\n    measurements = []\n    for history in rows:\n        record = {}\n        for key, limit in [(\"equal_steps\", len(history)), (\"equal_fits\", budget)]:\n            items = list(history.items())[:limit]\n            winner, (_, score) = max(items, key=lambda item: item[1][1])\n            fitted = clone(model).set_params(**{variable: winner}).fit(Xtr, ytr)\n            record[key] = dict(\n                unique=limit,\n                winner=winner,\n                cv=score,\n                holdout=float(get_scorer(scoring)(fitted, Xte, yte)),\n            )\n        record[\"trajectory\"] = [dict(value=v, proposal=p, cv=s) for v, (p, s) in history.items()]\n        measurements.append(record)\n    return dict(\n        task=task, scoring=scoring, seed=seed, baseline=measurements[0], current=measurements[1]\n    )\n\n\nwith threadpool_limits(1):\n    rows = [\n        paired(task, seed)\n        for task in (\"classification_lr\", \"regression_ridge\", \"wine_lr\")\n        for seed in (2001, 2002, 2003)\n    ]\nprint(\n    json.dumps(\n        dict(\n            baseline_commit=baseline,\n            python=platform.python_version(),\n            versions={p: version(p) for p in (\"scikit-learn\", \"numpy\", \"deap\")},\n            rows=rows,\n            reproduction_script=Path(__file__).read_text(encoding=\"utf-8\"),\n        ),\n        indent=2,\n    )\n)\n"
+}

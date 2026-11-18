@@ -39,10 +39,6 @@ plot = [
 mlflow = [
     "mlflow>=3.14.0",
 ]
-tensorflow = [
-    "tensorflow>=2.21.0; python_version < '3.14'",
-    "tensorboard>=2.20.0,<2.21.0; python_version < '3.14'",
-]
 test = [
     "pytest>=9.1.0",
     "pytest-cov>=7.1.0",
@@ -67,8 +63,6 @@ benchmark = [
 all = [
     "seaborn>=0.13.2",
     "mlflow>=3.14.0",
-    "tensorflow>=2.21.0; python_version < '3.14'",
-    "tensorboard>=2.20.0,<2.21.0; python_version < '3.14'",
 ]
 dev = [
     "pytest>=9.1.0",
@@ -77,8 +71,6 @@ dev = [
     "seaborn>=0.13.2",
     "scipy>=1.11.0",
     "mlflow>=3.14.0",
-    "tensorflow>=2.21.0; python_version < '3.14'",
-    "tensorboard>=2.20.0,<2.21.0; python_version < '3.14'",
     "build>=1.3.0",
     "twine>=6.2.0",
     "black>=26.5.1",

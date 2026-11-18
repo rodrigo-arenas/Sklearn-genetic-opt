@@ -1,5 +1,7 @@
 import sys
+from itertools import groupby
 from pathlib import Path
+from runpy import run_path
 
 import pytest
 
@@ -11,6 +13,22 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "benchmarks"))
 
 from benchmarks.benchmark_search_methods import comparison_key, print_comparison_table  # noqa: E402
+
+
+def test_forward_feature_benchmark_compares_distinct_extensions_at_equal_budget():
+    runner = (
+        Path(__file__).resolve().parents[2] / "benchmarks/results/performance-v2/known-support.py"
+    )
+    result = run_path(str(runner))["run_pair"](2101, interaction=True, forward=True)
+    history = result["forward"]["proposals"]
+    assert len({tuple(p["columns"]) for p in history}) == len(result["genetic"]["proposals"]) == 24
+    parent = set()
+    for size, candidates in groupby(history, key=lambda p: len(p["columns"])):
+        candidates = list(candidates)
+        assert size == len(parent) + 1
+        assert all(parent < set(p["columns"]) for p in candidates)
+        parent = set(max(candidates, key=lambda p: p["cv"])["columns"])
+    assert [len(p["columns"]) for p in history] == [1] * 16 + [2] * 8
 
 
 def _summary(*, scenario="scenario_a", method="ga", n_jobs=1, fit_seconds_mean=1.0):

@@ -95,20 +95,20 @@ def evaluate_population(estimator, individuals, cache_record_key):
     pending_lookup_keys = []
     seen_pending_keys = set()
 
-    for individual in individuals:
-        individual_key = estimator._individual_key(individual)
-        if estimator.use_cache and individual_key in estimator.fitness_cache:
-            pending_lookup_keys.append(None)
-            continue
+    for position, individual in enumerate(individuals):
+        lookup_key = position
+        if estimator.use_cache:
+            lookup_key = estimator._individual_key(individual)
+            if lookup_key in estimator.fitness_cache:
+                pending_lookup_keys.append(None)
+                continue
+            if lookup_key in seen_pending_keys:
+                pending_lookup_keys.append(lookup_key)
+                continue
+            seen_pending_keys.add(lookup_key)
 
-        if estimator.use_cache and individual_key in seen_pending_keys:
-            pending_lookup_keys.append(individual_key)
-            continue
-
-        lookup_key = individual_key if estimator.use_cache else (individual_key, len(pending_items))
         pending_items.append((lookup_key, list(individual)))
         pending_lookup_keys.append(lookup_key)
-        seen_pending_keys.add(individual_key)
 
     pending_results = {}
 
@@ -159,7 +159,7 @@ def evaluate_population(estimator, individuals, cache_record_key):
     batch_skipped = 0
 
     for individual, lookup_key in zip(individuals, pending_lookup_keys):
-        individual_key = estimator._individual_key(individual)
+        individual_key = estimator._individual_key(individual) if estimator.use_cache else None
 
         if estimator.use_cache and individual_key in estimator.fitness_cache:
             cached_result = estimator.fitness_cache[individual_key]

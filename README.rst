@@ -132,7 +132,7 @@ Quick Start
 .. code-block:: bash
 
    pip install sklearn-genetic-opt
-   # With optional plotting, MLflow, and TensorBoard extras:
+   # With optional plotting and MLflow extras:
    # pip install sklearn-genetic-opt[all]
 
 **Hyperparameter search**
@@ -306,7 +306,7 @@ Recommended citation:
 
    Arenas, R. (2026). sklearn-genetic-opt: Hyperparameter tuning and feature
    selection using genetic algorithms, built on top of scikit-learn (Version
-   0.14.0) [Computer software].
+   0.15.0) [Computer software].
    https://github.com/rodrigo-arenas/Sklearn-genetic-opt
 
 BibTeX:
@@ -318,7 +318,7 @@ BibTeX:
      title = {{sklearn-genetic-opt}: Hyperparameter tuning and feature selection
        using genetic algorithms, built on top of scikit-learn},
      year = {2026},
-     version = {0.14.0},
+     version = {0.15.0},
      url = {https://github.com/rodrigo-arenas/Sklearn-genetic-opt}
    }
 
@@ -369,7 +369,7 @@ Installation
    # Core package
    pip install sklearn-genetic-opt
 
-   # With plotting, MLflow, and TensorBoard:
+   # With plotting and MLflow:
    pip install sklearn-genetic-opt[all]
 
    # conda

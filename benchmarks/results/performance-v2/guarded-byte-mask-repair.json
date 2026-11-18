@@ -1,0 +1,362 @@
+[
+  {
+    "width": 16,
+    "seed": 9181,
+    "cv_calls": 31,
+    "runs": {
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.1109075000276789,
+        "ranking_seconds": 2.1066671858231228e-05
+      },
+      "GuardedByteRepair": {
+        "fit_seconds": 0.11434239998925477,
+        "ranking_seconds": 2.3899987960855167e-05
+      }
+    }
+  },
+  {
+    "width": 16,
+    "seed": 9182,
+    "cv_calls": 34,
+    "runs": {
+      "GuardedByteRepair": {
+        "fit_seconds": 0.11930210003629327,
+        "ranking_seconds": 2.06333352252841e-05
+      },
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.11664510000264272,
+        "ranking_seconds": 2.1166672619680565e-05
+      }
+    }
+  },
+  {
+    "width": 16,
+    "seed": 9183,
+    "cv_calls": 26,
+    "runs": {
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.1026603999780491,
+        "ranking_seconds": 4.699998923266927e-05
+      },
+      "GuardedByteRepair": {
+        "fit_seconds": 0.1010353000019677,
+        "ranking_seconds": 5.0433348709096513e-05
+      }
+    }
+  },
+  {
+    "width": 16,
+    "seed": 9184,
+    "cv_calls": 22,
+    "runs": {
+      "GuardedByteRepair": {
+        "fit_seconds": 0.09234460000880063,
+        "ranking_seconds": 5.6166667491197586e-05
+      },
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.09305030002724379,
+        "ranking_seconds": 7.700000423938036e-05
+      }
+    }
+  },
+  {
+    "width": 16,
+    "seed": 9185,
+    "cv_calls": 33,
+    "runs": {
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.16862950002541766,
+        "ranking_seconds": 2.2266680995623272e-05
+      },
+      "GuardedByteRepair": {
+        "fit_seconds": 0.13044630002696067,
+        "ranking_seconds": 2.620000547418992e-05
+      }
+    }
+  },
+  {
+    "width": 16,
+    "seed": 9186,
+    "cv_calls": 37,
+    "runs": {
+      "GuardedByteRepair": {
+        "fit_seconds": 0.1479780999943614,
+        "ranking_seconds": 1.8466652060548466e-05
+      },
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.13837530004093423,
+        "ranking_seconds": 1.8466652060548466e-05
+      }
+    }
+  },
+  {
+    "width": 16,
+    "seed": 9187,
+    "cv_calls": 33,
+    "runs": {
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.11787339998409152,
+        "ranking_seconds": 3.50333284586668e-05
+      },
+      "GuardedByteRepair": {
+        "fit_seconds": 0.11572810000507161,
+        "ranking_seconds": 2.1766677188376587e-05
+      }
+    }
+  },
+  {
+    "width": 16,
+    "seed": 9188,
+    "cv_calls": 34,
+    "runs": {
+      "GuardedByteRepair": {
+        "fit_seconds": 0.12412609998136759,
+        "ranking_seconds": 2.0700002399583656e-05
+      },
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.11764449998736382,
+        "ranking_seconds": 2.036666652808587e-05
+      }
+    }
+  },
+  {
+    "width": 256,
+    "seed": 9181,
+    "cv_calls": 56,
+    "runs": {
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.19060269999317825,
+        "ranking_seconds": 2.0533334463834763e-05
+      },
+      "GuardedByteRepair": {
+        "fit_seconds": 0.2048990000039339,
+        "ranking_seconds": 2.060000163813432e-05
+      }
+    }
+  },
+  {
+    "width": 256,
+    "seed": 9182,
+    "cv_calls": 56,
+    "runs": {
+      "GuardedByteRepair": {
+        "fit_seconds": 0.17956760001834482,
+        "ranking_seconds": 2.0566668050984543e-05
+      },
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.20425820001401007,
+        "ranking_seconds": 2.8600004346420366e-05
+      }
+    }
+  },
+  {
+    "width": 256,
+    "seed": 9183,
+    "cv_calls": 56,
+    "runs": {
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.20736209995811805,
+        "ranking_seconds": 2.5399999382595222e-05
+      },
+      "GuardedByteRepair": {
+        "fit_seconds": 0.20983740000519902,
+        "ranking_seconds": 2.6166671887040138e-05
+      }
+    }
+  },
+  {
+    "width": 256,
+    "seed": 9184,
+    "cv_calls": 56,
+    "runs": {
+      "GuardedByteRepair": {
+        "fit_seconds": 0.19159780000336468,
+        "ranking_seconds": 2.5533333731194336e-05
+      },
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.18830460001481697,
+        "ranking_seconds": 2.130000696827968e-05
+      }
+    }
+  },
+  {
+    "width": 256,
+    "seed": 9185,
+    "cv_calls": 56,
+    "runs": {
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.17934879998210818,
+        "ranking_seconds": 1.6400008462369442e-05
+      },
+      "GuardedByteRepair": {
+        "fit_seconds": 0.18559059995459393,
+        "ranking_seconds": 1.8266669940203428e-05
+      }
+    }
+  },
+  {
+    "width": 256,
+    "seed": 9186,
+    "cv_calls": 56,
+    "runs": {
+      "GuardedByteRepair": {
+        "fit_seconds": 0.18754720001015812,
+        "ranking_seconds": 3.166665555909276e-05
+      },
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.17946139996638522,
+        "ranking_seconds": 2.2266661593069632e-05
+      }
+    }
+  },
+  {
+    "width": 256,
+    "seed": 9187,
+    "cv_calls": 56,
+    "runs": {
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.17519229999743402,
+        "ranking_seconds": 3.520001579696933e-05
+      },
+      "GuardedByteRepair": {
+        "fit_seconds": 0.1984715000144206,
+        "ranking_seconds": 2.1866658547272284e-05
+      }
+    }
+  },
+  {
+    "width": 256,
+    "seed": 9188,
+    "cv_calls": 56,
+    "runs": {
+      "GuardedByteRepair": {
+        "fit_seconds": 0.18907899997429922,
+        "ranking_seconds": 1.8433337875952322e-05
+      },
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.18477410002378747,
+        "ranking_seconds": 1.8800007334599893e-05
+      }
+    }
+  },
+  {
+    "width": 4096,
+    "seed": 9181,
+    "cv_calls": 56,
+    "runs": {
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.29617099999450147,
+        "ranking_seconds": 2.1866677949825924e-05
+      },
+      "GuardedByteRepair": {
+        "fit_seconds": 0.295145699987188,
+        "ranking_seconds": 2.5933336776991684e-05
+      }
+    }
+  },
+  {
+    "width": 4096,
+    "seed": 9182,
+    "cv_calls": 56,
+    "runs": {
+      "GuardedByteRepair": {
+        "fit_seconds": 0.34932320000370964,
+        "ranking_seconds": 3.173332273339232e-05
+      },
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.29574530001264066,
+        "ranking_seconds": 2.5966670364141464e-05
+      }
+    }
+  },
+  {
+    "width": 4096,
+    "seed": 9183,
+    "cv_calls": 56,
+    "runs": {
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.29047110001556575,
+        "ranking_seconds": 2.6300006235639255e-05
+      },
+      "GuardedByteRepair": {
+        "fit_seconds": 0.3019510000012815,
+        "ranking_seconds": 3.450001046682397e-05
+      }
+    }
+  },
+  {
+    "width": 4096,
+    "seed": 9184,
+    "cv_calls": 56,
+    "runs": {
+      "GuardedByteRepair": {
+        "fit_seconds": 0.3086619999958202,
+        "ranking_seconds": 2.656665553028385e-05
+      },
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.3133442999678664,
+        "ranking_seconds": 2.613331889733672e-05
+      }
+    }
+  },
+  {
+    "width": 4096,
+    "seed": 9185,
+    "cv_calls": 56,
+    "runs": {
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.302262699988205,
+        "ranking_seconds": 2.4333343996355932e-05
+      },
+      "GuardedByteRepair": {
+        "fit_seconds": 0.30331510002724826,
+        "ranking_seconds": 2.8900006630768377e-05
+      }
+    }
+  },
+  {
+    "width": 4096,
+    "seed": 9186,
+    "cv_calls": 56,
+    "runs": {
+      "GuardedByteRepair": {
+        "fit_seconds": 0.2965412000194192,
+        "ranking_seconds": 2.2033345885574818e-05
+      },
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.30148510000435635,
+        "ranking_seconds": 2.163334283977747e-05
+      }
+    }
+  },
+  {
+    "width": 4096,
+    "seed": 9187,
+    "cv_calls": 56,
+    "runs": {
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.327252299990505,
+        "ranking_seconds": 2.610000471274058e-05
+      },
+      "GuardedByteRepair": {
+        "fit_seconds": 0.3064188999705948,
+        "ranking_seconds": 2.7000011565784614e-05
+      }
+    }
+  },
+  {
+    "width": 4096,
+    "seed": 9188,
+    "cv_calls": 55,
+    "runs": {
+      "GuardedByteRepair": {
+        "fit_seconds": 0.3109000999829732,
+        "ranking_seconds": 2.0700002399583656e-05
+      },
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.299855999997817,
+        "ranking_seconds": 2.163334283977747e-05
+      }
+    }
+  }
+]

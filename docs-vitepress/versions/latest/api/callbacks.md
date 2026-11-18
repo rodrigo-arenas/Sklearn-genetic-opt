@@ -1,6 +1,6 @@
 ---
 title: Callbacks API
-description: API reference for all built-in callbacks — ThresholdStopping, ConsecutiveStopping, DeltaThreshold, TimerStopping, ProgressBar, LogbookSaver, ModelCheckpoint, TensorBoard, and BaseCallback.
+description: API reference for stopping, progress, checkpoint, and legacy TensorBoard callbacks.
 ---
 
 :::warning Development version
@@ -61,7 +61,7 @@ ThresholdStopping(threshold=0.98, metric="fitness_max")
 
 ## ConsecutiveStopping
 
-Stops if the metric fails to improve for `N` consecutive generations.
+Compares the current value with each of the previous `N` values and stops if it improves on none of them. Score metrics follow the search criterion: lower values improve a minimizing search and higher values improve a maximizing search. For `fitness_std`, an increase in dispersion counts as improvement in either direction.
 
 ```python
 ConsecutiveStopping(generations, metric="fitness")
@@ -135,7 +135,7 @@ logbook = load("./logbook.pkl")
 
 ## ModelCheckpoint
 
-Saves the full estimator state (logbook + model state) to a pickle file after each generation.
+Saves the search configuration, generation history and runtime state, including cached candidate scores, archived elites and random generator states. Each successful write replaces the previous snapshot. See the [checkpoint recipe](../recipes/advanced/checkpointing) to resume a search.
 
 ```python
 ModelCheckpoint(checkpoint_path)
@@ -145,7 +145,7 @@ ModelCheckpoint(checkpoint_path)
 |-----------|------|-------------|
 | `checkpoint_path` | str or Path | File path for the checkpoint |
 
-Restore with:
+Inspect the saved state:
 
 ```python
 import pickle
@@ -157,27 +157,24 @@ estimator_state = checkpoint["estimator_state"]
 logbook = checkpoint["logbook"]
 ```
 
-## TensorBoard
+## Legacy TensorBoard callback
 
-Logs per-generation fitness metrics to TensorBoard.
+`TensorBoard` remains available for existing integrations. It writes the five
+generation fitness metrics as TensorFlow scalars and requires a separate
+TensorFlow installation. Importing `sklearn_genetic.callbacks` does not import
+TensorFlow.
 
 ```python
-TensorBoard(writer)
+TensorBoard(log_dir="./logs", run_id=None)
 ```
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `writer` | `tf.summary.FileWriter` | TensorFlow summary writer |
+| `log_dir` | str | Parent directory for summary files |
+| `run_id` | str or None | Subdirectory; defaults to a timestamp |
 
-Requires TensorFlow: `pip install sklearn-genetic-opt[all]`.
-
-```python
-import tensorflow as tf
-from sklearn_genetic.callbacks import TensorBoard
-
-writer = tf.summary.create_file_writer("./logs")
-callback = TensorBoard(writer=writer)
-```
+For current workflows, use [`LivePlot`](./plots) and
+[`plot_search_overview`](./plots) with `sklearn-genetic-opt[plot]` instead.
 
 ## See Also
 

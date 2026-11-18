@@ -1,4 +1,5 @@
 import random
+from sys import float_info
 from typing import Any, List, Optional, Union
 
 import numpy as np
@@ -105,9 +106,6 @@ class Integer(BaseDimension):
             np.random.default_rng(self.random_state) if self.random_state is not None else None
         )
 
-        if self.distribution == IntegerDistributions.uniform.value:
-            self.rvs = stats.randint.rvs
-
     def __repr__(self) -> str:
         return (
             f"{self.__class__.__name__}(lower={self.lower}, upper={self.upper}, "
@@ -117,11 +115,19 @@ class Integer(BaseDimension):
     def sample(self) -> int:
         """Sample a random value from the assigned distribution"""
 
-        return self.rvs(
-            self.lower,
-            self.upper + 1,
-            random_state=self.rng if self.rng is not None else check_random_state(None),
-        )
+        if self.lower == self.upper:
+            return int(self.lower)
+        # Match SciPy's int64 draws even on platforms where randint defaults to int32.
+        if self.rng is None:
+            return int(np.random.randint(self.lower, self.upper + 1, dtype=np.int64))
+        return int(self.rng.integers(self.lower, self.upper + 1, dtype=np.int64))
+
+    def _round_and_clip(self, value):
+        if isinstance(value, (int, np.integer)):
+            rounded = int(value)
+        else:
+            rounded = round(float(value))
+        return int(min(self.upper, max(self.lower, rounded)))
 
 
 class Continuous(BaseDimension):
@@ -163,6 +169,13 @@ class Continuous(BaseDimension):
                 f"distribution must be one of {ContinuousDistributions.list()}, got {distribution} instead"
             )
 
+        if lower == upper and not (
+            -float_info.max <= lower <= float_info.max and float(lower) == lower
+        ):
+            raise ValueError(
+                "A fixed continuous bound must be a finite, exactly representable float"
+            )
+
         if distribution == ContinuousDistributions.log_uniform.value and lower <= 0:
             raise ValueError(
                 f"lower bound must be greater than zero for the log-uniform distribution, got {lower} instead"
@@ -192,6 +205,8 @@ class Continuous(BaseDimension):
     def sample(self) -> float:
         """Sample a random value from the assigned distribution"""
 
+        if self.lower == self.upper:
+            return float(self.lower)
         return self.rvs(
             self.lower,
             self.shifted_upper,

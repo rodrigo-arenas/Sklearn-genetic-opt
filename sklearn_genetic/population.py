@@ -49,6 +49,8 @@ def _sample_dimension_from_unit(dimension, value):
         return int(np.clip(sampled, dimension.lower, dimension.upper))
 
     if isinstance(dimension, Continuous):
+        if dimension.lower == dimension.upper:
+            return dimension.sample()
         if dimension.distribution == "log-uniform" and dimension.lower > 0:
             log_lower = np.log(dimension.lower)
             log_upper = np.log(dimension.upper)
@@ -59,19 +61,13 @@ def _sample_dimension_from_unit(dimension, value):
     raise TypeError("Latin hypercube sampling only supports numeric dimensions")
 
 
-def _stratified_categorical_value(dimension, index, population_size):
-    if dimension.priors is not None:
-        midpoint = (index + 0.5) / population_size
-        cumulative_priors = np.cumsum(dimension.priors)
-        choice_index = int(np.searchsorted(cumulative_priors, midpoint, side="right"))
-        choice_index = min(choice_index, len(dimension.choices) - 1)
-        return dimension.choices[choice_index]
-
-    return dimension.choices[index % len(dimension.choices)]
-
-
 def _append_unique_individual(population, seen_individuals, individual_values, individual_cls):
-    individual_key = _hashable_key(tuple(individual_values))
+    # Feature masks are already immutable binary keys. HPO values can be mixed types.
+    individual_key = (
+        individual_values
+        if isinstance(individual_values, bytes)
+        else _hashable_key(tuple(individual_values))
+    )
     if individual_key in seen_individuals:
         return False
 
@@ -80,15 +76,14 @@ def _append_unique_individual(population, seen_individuals, individual_values, i
     return True
 
 
-def _bounded_feature_mask(n_features, max_selected):
-    n_selected = random.randint(1, max_selected)
-    selected_features = random.sample(range(n_features), k=n_selected)
-    values = [0] * n_features
-
-    for feature_index in selected_features:
-        values[feature_index] = 1
-
-    return values
+def _feature_mask(n_features, n_selected):
+    # Sampling the excluded columns gives the same uniform mask distribution.
+    dense = n_selected > n_features // 2
+    count = n_features - n_selected if dense else n_selected
+    values = bytearray([dense]) * n_features
+    for index in random.sample(range(n_features), k=count):
+        values[index] = not dense
+    return bytes(values)
 
 
 def random_search_population(estimator, toolbox, individual_cls):
@@ -138,14 +133,27 @@ def smart_search_population(estimator, toolbox, individual_cls):
     categorical_indices = {}
     for parameter, dimension in estimator.space.param_grid.items():
         if isinstance(dimension, Categorical):
-            indices = list(range(remaining))
-            if dimension.priors is None and remaining:
-                # Sample from the entire domain even when the population is
-                # smaller than it; retain balanced counts for larger batches.
-                choices = random.sample(
-                    range(len(dimension.choices)), k=min(remaining, len(dimension.choices))
-                )
-                indices = [choices[index % len(choices)] for index in indices]
+            if not remaining:
+                continue
+            eligible = range(len(dimension.choices))
+            weights = None
+            if dimension.priors is not None:
+                priors = np.asarray(dimension.priors, dtype=float)
+                eligible = np.flatnonzero(priors).tolist()
+                weights = priors[eligible]
+            if weights is None or np.all(weights == weights[0]):
+                # Sample equal-weight choices uniformly without replacement per cycle.
+                choices = random.sample(eligible, k=min(remaining, len(eligible)))
+                indices = [choices[index % len(choices)] for index in range(remaining)]
+            else:
+                # Systematic sampling gives each stratum the same random offset.
+                cumulative = np.cumsum(weights)
+                boundaries = cumulative / cumulative[-1] * remaining
+                ends = np.floor(boundaries).astype(int)
+                fractions = boundaries - ends
+                if np.any(fractions):
+                    ends += random.random() < fractions
+                indices = np.repeat(eligible, np.diff(ends, prepend=0)).tolist()
             # Independent strata prevent unrelated categorical genes from
             # being locked into the same repeating combinations.
             random.shuffle(indices)
@@ -165,7 +173,8 @@ def smart_search_population(estimator, toolbox, individual_cls):
         # and otherwise fall back to the global ``random`` RNG so the documented
         # ``random.seed`` convention still controls it.
         random_state = getattr(estimator, "random_state", None)
-        if random_state is None:
+        # Resumed searches seed new strata from the continuing proposal stream.
+        if random_state is None or getattr(estimator, "_resume_generation_log", None):
             lhs_seed = random.randint(0, 2**31 - 1)
         else:
             lhs_seed = int(check_random_state(random_state).randint(0, 2**31 - 1))
@@ -187,9 +196,7 @@ def smart_search_population(estimator, toolbox, individual_cls):
                 )
                 numeric_index += 1
             elif isinstance(dimension, Categorical):
-                value = _stratified_categorical_value(
-                    dimension, categorical_indices[parameter][sample_index], remaining
-                )
+                value = dimension.choices[categorical_indices[parameter][sample_index]]
             else:  # pragma: no cover
                 value = dimension.sample()
 
@@ -231,19 +238,17 @@ def smart_feature_population(estimator, toolbox, individual_cls):
     selected_counts = np.linspace(1, max_selected, num=estimator.population_size)
     selected_counts = np.rint(selected_counts).astype(int)
 
-    for sample_index, n_selected in enumerate(selected_counts):
-        offset = sample_index % estimator.n_features
-        feature_order = list(range(estimator.n_features))
-        random.shuffle(feature_order)
-        feature_order = feature_order[offset:] + feature_order[:offset]
-
-        values = [0] * estimator.n_features
-        for feature_index in feature_order[:n_selected]:
-            values[feature_index] = 1
-
-        _append_unique_individual(population, seen_individuals, values, individual_cls)
-
     space_size = finite_search_space_size(estimator, estimator.population_size)
+    padding_needed = estimator.population_size - space_size if space_size is not None else 0
+    padding = []
+    for n_selected in selected_counts:
+        values = _feature_mask(estimator.n_features, int(n_selected))
+        added = _append_unique_individual(population, seen_individuals, values, individual_cls)
+        # A saturated space needs repeated masks to fill the population. Keep
+        # the first such draws while reserving room for every distinct mask.
+        if not added and len(padding) < padding_needed:
+            padding.append(values)
+
     attempts = 0
     max_attempts = max(100, estimator.population_size * 20)
     while (
@@ -251,12 +256,13 @@ def smart_feature_population(estimator, toolbox, individual_cls):
         and attempts < max_attempts
         and (space_size is None or len(seen_individuals) < space_size)
     ):
-        values = _bounded_feature_mask(estimator.n_features, max_selected)
+        values = _feature_mask(estimator.n_features, random.randint(1, max_selected))
         _append_unique_individual(population, seen_individuals, values, individual_cls)
         attempts += 1
 
+    population.extend(individual_cls(values) for values in padding)
     while len(population) < estimator.population_size:
-        values = _bounded_feature_mask(estimator.n_features, max_selected)
+        values = _feature_mask(estimator.n_features, random.randint(1, max_selected))
         population.append(individual_cls(values))
 
     return population

@@ -44,7 +44,7 @@ Optuna and sklearn-genetic-opt are both popular choices for hyperparameter optim
 | Already using scikit-learn API (GridSearchCV pattern) | | ✓ |
 | Want parallel evaluation of multiple configs per round | | ✓ |
 | Need diagnostic plots (convergence, search space, diversity) | | ✓ |
-| MLflow / TensorBoard integration out of the box | | ✓ |
+| MLflow logging and lightweight live plots | | ✓ |
 | Feature selection alongside hyperparameter search | | ✓ |
 | Callbacks for early stopping in sklearn style | | ✓ |
 | Budget of 50–500 evaluations, mixed numeric parameter types | Tie | Tie |

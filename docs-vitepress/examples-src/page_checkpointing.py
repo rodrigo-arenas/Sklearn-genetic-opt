@@ -1,8 +1,7 @@
 """Generator for examples/checkpointing.md.
 
 Demonstrates the two persistence mechanisms with REAL execution: the
-``ModelCheckpoint`` callback (which writes a checkpoint every generation and
-also saves the logbook via ``LogbookSaver``) and ``GASearchCV.save`` /
+``ModelCheckpoint`` callback (which writes a checkpoint every generation) and ``GASearchCV.save`` /
 ``.load`` for round-tripping a fully fitted search. All artifacts are written
 to a temporary directory outside the repo and removed at the end.
 """
@@ -80,12 +79,11 @@ nb.code("""
     )
     cv = StratifiedKFold(n_splits=3, shuffle=True, random_state=42)
 
-    artifact_dir = Path(tempfile.gettempdir()) / "ga_artifacts_docs"
-    artifact_dir.mkdir(exist_ok=True)
+    artifacts = tempfile.TemporaryDirectory()
+    artifact_dir = Path(artifacts.name)
     checkpoint_path = artifact_dir / "rf_checkpoint.pkl"
     logbook_path = artifact_dir / "rf_logbook.pkl"
     saved_search_path = artifact_dir / "rf_search.pkl"
-    print("Writing artifacts under:", artifact_dir)
     """)
 
 nb.md("""
@@ -138,8 +136,8 @@ nb.code("""
 nb.md("""
     ## Fit With Checkpointing
 
-    The `ModelCheckpoint` callback prints a confirmation line each generation as it
-    writes the checkpoint file.
+    Each generation updates the checkpoint. After fitting, inspect the selected
+    parameters and their cross-validation score.
     """)
 
 nb.code("""
@@ -165,9 +163,9 @@ nb.code("""
 nb.md("""
     ## Inspect the Checkpoint Contents
 
-    `ModelCheckpoint.load()` returns a dictionary with two keys: a lightweight
-    `estimator_state` (the search *configuration*, not the fitted model) and the
-    `logbook` captured up to the last completed generation.
+    `ModelCheckpoint.load()` returns the search configuration, generation log and
+    runtime state. The runtime state includes candidate records, evaluation
+    counters and cached scores used when resuming.
     """)
 
 nb.code("""
@@ -175,7 +173,7 @@ nb.code("""
 
     print("checkpoint keys      :", sorted(checkpoint.keys()))
     print("generations in logbook:", len(checkpoint["logbook"]))
-    print("estimator_state keys  :", sorted(checkpoint["estimator_state"].keys()))
+    print("Candidate CV calls:", checkpoint["runtime_state"]["fit_stats_"]["cross_validate_calls"])
     """)
 
 nb.md("""
@@ -227,19 +225,15 @@ nb.code("""
 nb.md("The restored search reproduces the original predictions exactly.")
 
 nb.code("""
-    import shutil
-
-    shutil.rmtree(artifact_dir, ignore_errors=True)
+    artifacts.cleanup()
     print("Cleaned up:", not artifact_dir.exists())
     """)
 
 nb.md("""
     ## Practical Notes
 
-    - Use `ModelCheckpoint` for progress recovery and audit trails during a fit; it
-      writes after every generation, so a crashed run loses at most one generation.
-    - Reach for `LogbookSaver` when you only need the per-generation parameter
-      records (it is what `ModelCheckpoint` uses internally for the logbook).
+    - Resume from the most recent successful write using the [checkpoint recipe](../recipes/advanced/checkpointing).
+    - Reach for `LogbookSaver` when you only need the per-candidate parameter records.
     - Use `save` / `load` for fitted search objects that need to be reused for
       prediction or later analysis — they carry the fitted estimator, not just the
       configuration.

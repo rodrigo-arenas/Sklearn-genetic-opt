@@ -1,0 +1,353 @@
+{
+  "baseline": "5367c2716658026d14ecda88dae38e1d4b7082a3",
+  "python": "3.12.0",
+  "versions": {
+    "scikit-learn": "1.9.1",
+    "numpy": "2.5.3",
+    "scipy": "1.18.1",
+    "deap": "1.4.4"
+  },
+  "protocol": "Paired fits substitute only GAFeatureSelectionCV._evaluate_individual from baseline. CSR scipy.sparse.random(128,columns,density=.01,random_state=42), target arange(128)%2. DummyClassifier defaults or DecisionTreeClassifier(max_depth=3,random_state=7). Population 8, generations 2, max_features 8, CV 2, n_jobs=1, threadpool_limits(1). Assert identical ordered masks, mean CV scores, selected mask and fit_stats_. Timings in milliseconds. Memory records an isolated, warmed 8192-column count with existing bool array and list, not whole-fit memory.",
+  "count_peak_bytes": {
+    "np.sum(list)": 66088,
+    "np.count_nonzero(bool_array)": 24
+  },
+  "rows": [
+    {
+      "estimator": "DummyClassifier",
+      "columns": 32,
+      "seed": 9,
+      "order": [
+        "previous",
+        "updated"
+      ],
+      "ms": {
+        "previous": 120.0107000186108,
+        "updated": 107.83059999812394
+      },
+      "cv_calls": 39
+    },
+    {
+      "estimator": "DummyClassifier",
+      "columns": 32,
+      "seed": 9,
+      "order": [
+        "updated",
+        "previous"
+      ],
+      "ms": {
+        "updated": 110.2744999807328,
+        "previous": 106.33719997713342
+      },
+      "cv_calls": 39
+    },
+    {
+      "estimator": "DummyClassifier",
+      "columns": 32,
+      "seed": 13,
+      "order": [
+        "previous",
+        "updated"
+      ],
+      "ms": {
+        "previous": 109.19909999938682,
+        "updated": 108.05789998266846
+      },
+      "cv_calls": 40
+    },
+    {
+      "estimator": "DummyClassifier",
+      "columns": 32,
+      "seed": 13,
+      "order": [
+        "updated",
+        "previous"
+      ],
+      "ms": {
+        "updated": 106.12750001018867,
+        "previous": 123.61890001920983
+      },
+      "cv_calls": 40
+    },
+    {
+      "estimator": "DummyClassifier",
+      "columns": 32,
+      "seed": 21,
+      "order": [
+        "previous",
+        "updated"
+      ],
+      "ms": {
+        "previous": 123.61730000702664,
+        "updated": 118.43460000818595
+      },
+      "cv_calls": 39
+    },
+    {
+      "estimator": "DummyClassifier",
+      "columns": 32,
+      "seed": 21,
+      "order": [
+        "updated",
+        "previous"
+      ],
+      "ms": {
+        "updated": 121.22759997146204,
+        "previous": 120.90589996660128
+      },
+      "cv_calls": 39
+    },
+    {
+      "estimator": "DummyClassifier",
+      "columns": 8192,
+      "seed": 9,
+      "order": [
+        "previous",
+        "updated"
+      ],
+      "ms": {
+        "previous": 304.2063000029884,
+        "updated": 265.4231999767944
+      },
+      "cv_calls": 40
+    },
+    {
+      "estimator": "DummyClassifier",
+      "columns": 8192,
+      "seed": 9,
+      "order": [
+        "updated",
+        "previous"
+      ],
+      "ms": {
+        "updated": 270.93100000638515,
+        "previous": 316.1084000021219
+      },
+      "cv_calls": 40
+    },
+    {
+      "estimator": "DummyClassifier",
+      "columns": 8192,
+      "seed": 13,
+      "order": [
+        "previous",
+        "updated"
+      ],
+      "ms": {
+        "previous": 325.8444999810308,
+        "updated": 278.92130002146587
+      },
+      "cv_calls": 40
+    },
+    {
+      "estimator": "DummyClassifier",
+      "columns": 8192,
+      "seed": 13,
+      "order": [
+        "updated",
+        "previous"
+      ],
+      "ms": {
+        "updated": 263.47679999889806,
+        "previous": 295.14950001612306
+      },
+      "cv_calls": 40
+    },
+    {
+      "estimator": "DummyClassifier",
+      "columns": 8192,
+      "seed": 21,
+      "order": [
+        "previous",
+        "updated"
+      ],
+      "ms": {
+        "previous": 304.9283000291325,
+        "updated": 276.84820001013577
+      },
+      "cv_calls": 40
+    },
+    {
+      "estimator": "DummyClassifier",
+      "columns": 8192,
+      "seed": 21,
+      "order": [
+        "updated",
+        "previous"
+      ],
+      "ms": {
+        "updated": 285.9955999883823,
+        "previous": 316.601799975615
+      },
+      "cv_calls": 40
+    },
+    {
+      "estimator": "DecisionTreeClassifier",
+      "columns": 32,
+      "seed": 9,
+      "order": [
+        "previous",
+        "updated"
+      ],
+      "ms": {
+        "previous": 182.13500001002103,
+        "updated": 176.2359999702312
+      },
+      "cv_calls": 40
+    },
+    {
+      "estimator": "DecisionTreeClassifier",
+      "columns": 32,
+      "seed": 9,
+      "order": [
+        "updated",
+        "previous"
+      ],
+      "ms": {
+        "updated": 180.5764000164345,
+        "previous": 184.40880003618076
+      },
+      "cv_calls": 40
+    },
+    {
+      "estimator": "DecisionTreeClassifier",
+      "columns": 32,
+      "seed": 13,
+      "order": [
+        "previous",
+        "updated"
+      ],
+      "ms": {
+        "previous": 175.3612000029534,
+        "updated": 187.54009995609522
+      },
+      "cv_calls": 40
+    },
+    {
+      "estimator": "DecisionTreeClassifier",
+      "columns": 32,
+      "seed": 13,
+      "order": [
+        "updated",
+        "previous"
+      ],
+      "ms": {
+        "updated": 178.0871000373736,
+        "previous": 222.2355999983847
+      },
+      "cv_calls": 40
+    },
+    {
+      "estimator": "DecisionTreeClassifier",
+      "columns": 32,
+      "seed": 21,
+      "order": [
+        "previous",
+        "updated"
+      ],
+      "ms": {
+        "previous": 191.98850000975654,
+        "updated": 175.63830001745373
+      },
+      "cv_calls": 40
+    },
+    {
+      "estimator": "DecisionTreeClassifier",
+      "columns": 32,
+      "seed": 21,
+      "order": [
+        "updated",
+        "previous"
+      ],
+      "ms": {
+        "updated": 178.6065999767743,
+        "previous": 189.70059999264777
+      },
+      "cv_calls": 40
+    },
+    {
+      "estimator": "DecisionTreeClassifier",
+      "columns": 8192,
+      "seed": 9,
+      "order": [
+        "previous",
+        "updated"
+      ],
+      "ms": {
+        "previous": 372.689799987711,
+        "updated": 353.89119997853413
+      },
+      "cv_calls": 40
+    },
+    {
+      "estimator": "DecisionTreeClassifier",
+      "columns": 8192,
+      "seed": 9,
+      "order": [
+        "updated",
+        "previous"
+      ],
+      "ms": {
+        "updated": 366.3474999484606,
+        "previous": 385.07150002988055
+      },
+      "cv_calls": 40
+    },
+    {
+      "estimator": "DecisionTreeClassifier",
+      "columns": 8192,
+      "seed": 13,
+      "order": [
+        "previous",
+        "updated"
+      ],
+      "ms": {
+        "previous": 381.76990003557876,
+        "updated": 365.0258999550715
+      },
+      "cv_calls": 40
+    },
+    {
+      "estimator": "DecisionTreeClassifier",
+      "columns": 8192,
+      "seed": 13,
+      "order": [
+        "updated",
+        "previous"
+      ],
+      "ms": {
+        "updated": 371.82279996341094,
+        "previous": 386.1235000076704
+      },
+      "cv_calls": 40
+    },
+    {
+      "estimator": "DecisionTreeClassifier",
+      "columns": 8192,
+      "seed": 21,
+      "order": [
+        "previous",
+        "updated"
+      ],
+      "ms": {
+        "previous": 399.48439999716356,
+        "updated": 352.35630004899576
+      },
+      "cv_calls": 40
+    },
+    {
+      "estimator": "DecisionTreeClassifier",
+      "columns": 8192,
+      "seed": 21,
+      "order": [
+        "updated",
+        "previous"
+      ],
+      "ms": {
+        "updated": 356.80070001399145,
+        "previous": 387.49479997204617
+      },
+      "cv_calls": 40
+    }
+  ]
+}

@@ -97,6 +97,8 @@ class GeneticEstimatorMixin:
             state["param_grid"] = self.param_grid
         for key, default in self._checkpoint_optional_defaults.items():
             state[key] = getattr(self, key, default)
+        if state["final_selection"] == "reuse_folds":
+            state["error_score"] = self.error_score
         return state
 
     def save(self, filepath):
@@ -167,6 +169,8 @@ class GeneticEstimatorMixin:
     def _select_algorithm(self, pop, stats, hof):
         selected_algorithm = algorithms_factory.get(self.algorithm, None)
         if selected_algorithm:
+            fit_stats = self.fit_stats_
+            stats.register("cross_validate_calls", lambda _: fit_stats["cross_validate_calls"])
             self._evaluation_timers = [
                 callback for callback in self.callbacks if isinstance(callback, TimerStopping)
             ]

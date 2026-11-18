@@ -1,0 +1,127 @@
+{
+  "baseline": "1a9caa6c67222d9899081f5db9bacf630cfab10b",
+  "python": "3.12.0",
+  "versions": {
+    "numpy": "2.5.3",
+    "scikit-learn": "1.9.1",
+    "deap": "1.4.4"
+  },
+  "micro": [
+    {
+      "width": 32,
+      "cap": 32,
+      "median_ms": [
+        0.08019997039809823,
+        0.053499999921768904
+      ],
+      "peak_bytes": [
+        6947,
+        6531
+      ]
+    },
+    {
+      "width": 4096,
+      "cap": 12,
+      "median_ms": [
+        10.03060000948608,
+        0.3645999822765589
+      ],
+      "peak_bytes": [
+        804968,
+        559067
+      ]
+    },
+    {
+      "width": 50000,
+      "cap": 12,
+      "median_ms": [
+        130.52409997908399,
+        4.2922000284306705
+      ],
+      "peak_bytes": [
+        9985768,
+        6802011
+      ]
+    },
+    {
+      "width": 4096,
+      "cap": 4096,
+      "median_ms": [
+        9.808500006329268,
+        3.1177999917417765
+      ],
+      "peak_bytes": [
+        804968,
+        621416
+      ]
+    }
+  ],
+  "fits": [
+    {
+      "seed": 2301,
+      "previous": {
+        "seconds": 0.28428729996085167,
+        "cv_calls": 24,
+        "holdout": 0.5350389321468298
+      },
+      "current": {
+        "seconds": 0.25822339998558164,
+        "cv_calls": 24,
+        "holdout": 0.5166852057842046
+      }
+    },
+    {
+      "seed": 2302,
+      "current": {
+        "seconds": 0.28375270002288744,
+        "cv_calls": 24,
+        "holdout": 0.48333333333333334
+      },
+      "previous": {
+        "seconds": 0.2821546000195667,
+        "cv_calls": 24,
+        "holdout": 0.4666666666666667
+      }
+    },
+    {
+      "seed": 2303,
+      "previous": {
+        "seconds": 0.2752154999761842,
+        "cv_calls": 24,
+        "holdout": 0.5372636262513905
+      },
+      "current": {
+        "seconds": 0.2818603999912739,
+        "cv_calls": 24,
+        "holdout": 0.5038932146829811
+      }
+    },
+    {
+      "seed": 2304,
+      "current": {
+        "seconds": 0.31007140001747757,
+        "cv_calls": 24,
+        "holdout": 0.5558035714285714
+      },
+      "previous": {
+        "seconds": 0.28662159998202696,
+        "cv_calls": 24,
+        "holdout": 0.4419642857142857
+      }
+    },
+    {
+      "seed": 2305,
+      "previous": {
+        "seconds": 0.27552450000075623,
+        "cv_calls": 24,
+        "holdout": 0.4888392857142857
+      },
+      "current": {
+        "seconds": 0.27945239999098703,
+        "cv_calls": 24,
+        "holdout": 0.5245535714285714
+      }
+    }
+  ],
+  "reproduction_script": "import json\nimport platform\nimport random\nimport statistics\nimport subprocess\nimport sys\nimport time\nimport tracemalloc\nfrom importlib.metadata import version\nfrom pathlib import Path\nfrom types import ModuleType, SimpleNamespace\nfrom unittest.mock import patch\n\nimport numpy as np\nfrom sklearn.datasets import make_classification\nfrom sklearn.tree import DecisionTreeClassifier\nfrom threadpoolctl import threadpool_limits\n\nsys.path.insert(0, str(Path.cwd()))\nfrom sklearn_genetic import GAFeatureSelectionCV, population\n\nbaseline = subprocess.check_output([\"git\", \"rev-parse\", \"1a9caa6\"], text=True).strip()\nprevious = ModuleType(\"sklearn_genetic.population_baseline\")\nexec(\n    subprocess.check_output([\"git\", \"show\", baseline + \":sklearn_genetic/population.py\"]),\n    previous.__dict__,\n)\nmethods = (previous.smart_feature_population, population.smart_feature_population)\nmicro = []\nfor width, cap in ((32, 32), (4096, 12), (50000, 12), (4096, 4096)):\n    cfg = SimpleNamespace(n_features=width, max_features=cap, population_size=8, use_cache=True)\n    times = [[], []]\n    peaks = []\n    for repeat in range(5):\n        for i in ((0, 1) if repeat % 2 == 0 else (1, 0)):\n            random.seed(2301 + repeat)\n            start = time.perf_counter()\n            masks = methods[i](cfg, None, list)\n            times[i].append(1000 * (time.perf_counter() - start))\n            assert [sum(m) for m in masks] == np.rint(np.linspace(1, cap, 8)).astype(int).tolist()\n    for method in methods:\n        random.seed(2301)\n        tracemalloc.start()\n        try:\n            masks = method(cfg, None, list)\n            peaks.append(tracemalloc.get_traced_memory()[1])\n        finally:\n            tracemalloc.stop()\n    micro.append(\n        dict(width=width, cap=cap, median_ms=list(map(statistics.median, times)), peak_bytes=peaks)\n    )\n\nfits = []\nwith threadpool_limits(1):\n    for seed in range(2301, 2306):\n        X, y = make_classification(\n            n_samples=180, n_features=4096, n_informative=16, n_redundant=0, random_state=seed\n        )\n        rows = {}\n        for i in ((0, 1) if seed % 2 else (1, 0)):\n            search = GAFeatureSelectionCV(\n                DecisionTreeClassifier(max_depth=3, random_state=seed),\n                population_size=8,\n                generations=1,\n                max_features=12,\n                scoring=\"balanced_accuracy\",\n                cv=3,\n                n_jobs=1,\n                random_state=seed,\n                error_score=\"raise\",\n                verbose=False,\n            )\n            with patch.object(population, \"smart_feature_population\", methods[i]):\n                start = time.perf_counter()\n                search.fit(X[:120], y[:120])\n                elapsed = time.perf_counter() - start\n            from sklearn.metrics import balanced_accuracy_score\n\n            rows[(\"previous\", \"current\")[i]] = dict(\n                seconds=elapsed,\n                cv_calls=search.fit_stats_[\"cross_validate_calls\"],\n                holdout=float(balanced_accuracy_score(y[120:], search.predict(X[120:]))),\n            )\n        fits.append(dict(seed=seed, **rows))\nprint(\n    json.dumps(\n        dict(\n            baseline=baseline,\n            python=platform.python_version(),\n            versions={p: version(p) for p in (\"numpy\", \"scikit-learn\", \"deap\")},\n            micro=micro,\n            fits=fits,\n            reproduction_script=Path(__file__).read_text(),\n        ),\n        indent=2,\n    )\n)\n"
+}

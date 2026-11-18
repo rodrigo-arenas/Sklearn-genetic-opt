@@ -63,6 +63,13 @@ saved evaluations. Both elitist and non-elitist searches use tournament selectio
 negative scores and `criteria="min"` remain meaningful. Scikit-learn's negative loss
 scorers normally use the default `criteria="max"`.
 
+Smart initialization spreads target mask sizes across the allowed range. It
+samples column indices without replacement, drawing the omitted columns for
+dense masks. This reduces initialization cost on wide data. Within the same
+version, set `random_state` to reproduce the initial masks. If caching is enabled
+and the population exceeds the number of possible masks, smart initialization
+reuses duplicate draws to fill the remaining slots with independent individuals.
+
 `max_features` must be `None` or an integer from 1 through the number of input
 columns. Initialisation, crossover and mutation repair masks to keep at least one
 feature and respect that upper bound.
@@ -75,11 +82,13 @@ feature and respect that upper bound.
 | `best_score_` | Winning finalist CV score, available when `final_selection=True` and `refit=True` |
 | `best_estimator_` | Estimator fitted with the selected features on the full training data |
 | `cv_results_` | Dict with per-candidate results |
-| `history` | List of per-generation dicts |
-| `logbook` | DEAP logbook |
+| `history` | Dictionary of lists aligned by generation. Pair `history["cross_validate_calls"]` with `history["fitness_best"]` to track the best search score against the number of mask evaluations. |
+| `logbook` | DEAP logbook with per-candidate evaluation records in `logbook.chapters["parameters"]` |
 | `fit_stats_` | Evaluation counters |
 | `n_features_` | Number of selected features |
 | `feature_names_in_` | Feature names seen during `fit` when `X` has string column names |
+
+See [plotting score against evaluation cost](./plots#quick-diagnostic-overview) to compare runs with different cache-hit rates.
 
 ## Methods
 
@@ -92,6 +101,10 @@ feature and respect that upper bound.
 | `predict(X)` | Predict using `best_estimator_` on selected features |
 | `predict_proba(X)` | Predict class probabilities |
 | `score(X, y)` | Score the selected features with the configured scorer, or the `refit` metric for multi-metric scoring |
+
+With a sparse-compatible estimator, you can pass a SciPy sparse matrix directly to
+`fit`. The selector keeps CSR and CSC training matrices in their original formats
+and converts other sparse formats, including COO, to CSC before selecting columns.
 
 `score(X, y)` evaluates the refitted estimator on new data, so it can differ from
 the candidate CV scores in `cv_results_` and from `best_score_` when finalist
@@ -112,7 +125,7 @@ from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
 
-from sklearn_genetic import EvolutionConfig, GAFeatureSelectionCV, PopulationConfig, RuntimeConfig
+from sklearn_genetic import EvolutionConfig, GAFeatureSelectionCV
 
 X, y = load_iris(return_X_y=True)
 rng = np.random.default_rng(42)
@@ -125,14 +138,14 @@ selector = GAFeatureSelectionCV(
     estimator=SVC(gamma="auto"),
     cv=3,
     scoring="accuracy",
-    evolution_config=EvolutionConfig(population_size=30, generations=20, keep_top_k=2, elitism=True),
-    population_config=PopulationConfig(initializer="smart"),
-    runtime_config=RuntimeConfig(n_jobs=-1),
+    evolution_config=EvolutionConfig(population_size=6, generations=2),
+    random_state=42,
 )
 
 selector.fit(X_train, y_train)
 
 print("Selected features:", selector.support_)
+print("Search CV evaluations:", selector.history["cross_validate_calls"])
 print("Best search CV accuracy:", round(np.nanmax(selector.cv_results_["mean_test_score"]), 4))
 print("Test accuracy:", round(selector.score(X_test, y_test), 4))
 print(selector.cv_results_dataframe()[["n_features", "mean_test_score", "rank_test_score"]].head())

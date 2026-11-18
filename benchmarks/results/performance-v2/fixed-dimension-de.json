@@ -1,0 +1,432 @@
+{
+  "baseline_commit": "e62e1e8b280615919e02a25d61723c90a7349e67",
+  "python": "3.12.0",
+  "versions": {
+    "scikit-learn": "1.9.1",
+    "numpy": "2.5.3",
+    "deap": "1.4.4"
+  },
+  "rows": [
+    {
+      "task": "classification_lr",
+      "seed": 1801,
+      "crossover": 0,
+      "baseline": {
+        "initial": [
+          1.0,
+          15.341837414117885,
+          0.011170284132031671,
+          0.00034681335400418395,
+          0.4428258624388054,
+          0.0540194323221051
+        ],
+        "trials": 18,
+        "copies": 12,
+        "distinct": 11,
+        "best": 0.4428258624388054,
+        "holdout": 0.9972746331236898
+      },
+      "current": {
+        "initial": [
+          1.0,
+          15.341837414117885,
+          0.011170284132031671,
+          0.00034681335400418395,
+          0.4428258624388054,
+          0.0540194323221051
+        ],
+        "trials": 18,
+        "copies": 0,
+        "distinct": 22,
+        "best": 0.10364864627507904,
+        "holdout": 0.9974842767295597
+      }
+    },
+    {
+      "task": "classification_lr",
+      "seed": 1801,
+      "crossover": 0.8,
+      "baseline": {
+        "initial": [
+          1.0,
+          15.341837414117885,
+          0.011170284132031671,
+          0.00034681335400418395,
+          0.4428258624388054,
+          0.0540194323221051
+        ],
+        "trials": 18,
+        "copies": 3,
+        "distinct": 19,
+        "best": 0.10364864627507904,
+        "holdout": 0.9974842767295597
+      },
+      "current": {
+        "initial": [
+          1.0,
+          15.341837414117885,
+          0.011170284132031671,
+          0.00034681335400418395,
+          0.4428258624388054,
+          0.0540194323221051
+        ],
+        "trials": 18,
+        "copies": 0,
+        "distinct": 22,
+        "best": 0.10364864627507904,
+        "holdout": 0.9974842767295597
+      }
+    },
+    {
+      "task": "classification_lr",
+      "seed": 1802,
+      "crossover": 0,
+      "baseline": {
+        "initial": [
+          1.0,
+          0.0006695993327714175,
+          0.1917814551688205,
+          0.011233340026248944,
+          1.2034797659709064,
+          40.15608335364341
+        ],
+        "trials": 18,
+        "copies": 13,
+        "distinct": 11,
+        "best": 0.1917814551688205,
+        "holdout": 0.9955974842767296
+      },
+      "current": {
+        "initial": [
+          1.0,
+          0.0006695993327714175,
+          0.1917814551688205,
+          0.011233340026248944,
+          1.2034797659709064,
+          40.15608335364341
+        ],
+        "trials": 18,
+        "copies": 0,
+        "distinct": 22,
+        "best": 0.1917814551688205,
+        "holdout": 0.9955974842767296
+      }
+    },
+    {
+      "task": "classification_lr",
+      "seed": 1802,
+      "crossover": 0.8,
+      "baseline": {
+        "initial": [
+          1.0,
+          0.0006695993327714175,
+          0.1917814551688205,
+          0.011233340026248944,
+          1.2034797659709064,
+          40.15608335364341
+        ],
+        "trials": 18,
+        "copies": 6,
+        "distinct": 17,
+        "best": 0.1917814551688205,
+        "holdout": 0.9955974842767296
+      },
+      "current": {
+        "initial": [
+          1.0,
+          0.0006695993327714175,
+          0.1917814551688205,
+          0.011233340026248944,
+          1.2034797659709064,
+          40.15608335364341
+        ],
+        "trials": 18,
+        "copies": 0,
+        "distinct": 22,
+        "best": 0.1917814551688205,
+        "holdout": 0.9955974842767296
+      }
+    },
+    {
+      "task": "classification_lr",
+      "seed": 1803,
+      "crossover": 0,
+      "baseline": {
+        "initial": [
+          1.0,
+          0.0003505688345512627,
+          5.879599345885314,
+          77.56197751927768,
+          0.012769943476681426,
+          0.0476475917574499
+        ],
+        "trials": 18,
+        "copies": 13,
+        "distinct": 11,
+        "best": 1.0,
+        "holdout": 0.9880503144654088
+      },
+      "current": {
+        "initial": [
+          1.0,
+          0.0003505688345512627,
+          5.879599345885314,
+          77.56197751927768,
+          0.012769943476681426,
+          0.0476475917574499
+        ],
+        "trials": 18,
+        "copies": 0,
+        "distinct": 23,
+        "best": 0.6014982902928928,
+        "holdout": 0.9878406708595389
+      }
+    },
+    {
+      "task": "classification_lr",
+      "seed": 1803,
+      "crossover": 0.8,
+      "baseline": {
+        "initial": [
+          1.0,
+          0.0003505688345512627,
+          5.879599345885314,
+          77.56197751927768,
+          0.012769943476681426,
+          0.0476475917574499
+        ],
+        "trials": 18,
+        "copies": 2,
+        "distinct": 21,
+        "best": 1.0,
+        "holdout": 0.9880503144654088
+      },
+      "current": {
+        "initial": [
+          1.0,
+          0.0003505688345512627,
+          5.879599345885314,
+          77.56197751927768,
+          0.012769943476681426,
+          0.0476475917574499
+        ],
+        "trials": 18,
+        "copies": 0,
+        "distinct": 23,
+        "best": 0.6014982902928928,
+        "holdout": 0.9878406708595389
+      }
+    },
+    {
+      "task": "regression_ridge",
+      "seed": 1801,
+      "crossover": 0,
+      "baseline": {
+        "initial": [
+          1.0,
+          0.0002431517367748064,
+          1.827611880228079,
+          0.0024342227495171478,
+          21.882443287274917,
+          0.15392549590477309
+        ],
+        "trials": 18,
+        "copies": 14,
+        "distinct": 10,
+        "best": 21.882443287274917,
+        "holdout": 0.5113731661353189
+      },
+      "current": {
+        "initial": [
+          1.0,
+          0.0002431517367748064,
+          1.827611880228079,
+          0.0024342227495171478,
+          21.882443287274917,
+          0.15392549590477309
+        ],
+        "trials": 18,
+        "copies": 0,
+        "distinct": 21,
+        "best": 31.126980251003637,
+        "holdout": 0.5095808202892372
+      }
+    },
+    {
+      "task": "regression_ridge",
+      "seed": 1801,
+      "crossover": 0.8,
+      "baseline": {
+        "initial": [
+          1.0,
+          0.0002431517367748064,
+          1.827611880228079,
+          0.0024342227495171478,
+          21.882443287274917,
+          0.15392549590477309
+        ],
+        "trials": 18,
+        "copies": 2,
+        "distinct": 20,
+        "best": 31.126980251003637,
+        "holdout": 0.5095808202892372
+      },
+      "current": {
+        "initial": [
+          1.0,
+          0.0002431517367748064,
+          1.827611880228079,
+          0.0024342227495171478,
+          21.882443287274917,
+          0.15392549590477309
+        ],
+        "trials": 18,
+        "copies": 0,
+        "distinct": 21,
+        "best": 31.126980251003637,
+        "holdout": 0.5095808202892372
+      }
+    },
+    {
+      "task": "regression_ridge",
+      "seed": 1802,
+      "crossover": 0,
+      "baseline": {
+        "initial": [
+          1.0,
+          2.6657229577413872,
+          0.0007525701772354371,
+          0.008212408700810546,
+          44.72073213715313,
+          0.2180508155748804
+        ],
+        "trials": 18,
+        "copies": 13,
+        "distinct": 11,
+        "best": 44.72073213715313,
+        "holdout": 0.4975040679862742
+      },
+      "current": {
+        "initial": [
+          1.0,
+          2.6657229577413872,
+          0.0007525701772354371,
+          0.008212408700810546,
+          44.72073213715313,
+          0.2180508155748804
+        ],
+        "trials": 18,
+        "copies": 0,
+        "distinct": 22,
+        "best": 44.72073213715313,
+        "holdout": 0.4975040679862742
+      }
+    },
+    {
+      "task": "regression_ridge",
+      "seed": 1802,
+      "crossover": 0.8,
+      "baseline": {
+        "initial": [
+          1.0,
+          2.6657229577413872,
+          0.0007525701772354371,
+          0.008212408700810546,
+          44.72073213715313,
+          0.2180508155748804
+        ],
+        "trials": 18,
+        "copies": 5,
+        "distinct": 18,
+        "best": 44.72073213715313,
+        "holdout": 0.4975040679862742
+      },
+      "current": {
+        "initial": [
+          1.0,
+          2.6657229577413872,
+          0.0007525701772354371,
+          0.008212408700810546,
+          44.72073213715313,
+          0.2180508155748804
+        ],
+        "trials": 18,
+        "copies": 0,
+        "distinct": 22,
+        "best": 44.72073213715313,
+        "holdout": 0.4975040679862742
+      }
+    },
+    {
+      "task": "regression_ridge",
+      "seed": 1803,
+      "crossover": 0,
+      "baseline": {
+        "initial": [
+          1.0,
+          0.0003505688345512627,
+          62.21218742730999,
+          0.022638846395394544,
+          4.893829936819585,
+          0.029083767908713358
+        ],
+        "trials": 18,
+        "copies": 14,
+        "distinct": 9,
+        "best": 62.21218742730999,
+        "holdout": 0.5352826590505839
+      },
+      "current": {
+        "initial": [
+          1.0,
+          0.0003505688345512627,
+          62.21218742730999,
+          0.022638846395394544,
+          4.893829936819585,
+          0.029083767908713358
+        ],
+        "trials": 18,
+        "copies": 1,
+        "distinct": 18,
+        "best": 7.153992753937238,
+        "holdout": 0.5411998874201787
+      }
+    },
+    {
+      "task": "regression_ridge",
+      "seed": 1803,
+      "crossover": 0.8,
+      "baseline": {
+        "initial": [
+          1.0,
+          0.0003505688345512627,
+          62.21218742730999,
+          0.022638846395394544,
+          4.893829936819585,
+          0.029083767908713358
+        ],
+        "trials": 18,
+        "copies": 3,
+        "distinct": 17,
+        "best": 7.153992753937238,
+        "holdout": 0.5411998874201787
+      },
+      "current": {
+        "initial": [
+          1.0,
+          0.0003505688345512627,
+          62.21218742730999,
+          0.022638846395394544,
+          4.893829936819585,
+          0.029083767908713358
+        ],
+        "trials": 18,
+        "copies": 1,
+        "distinct": 18,
+        "best": 7.153992753937238,
+        "holdout": 0.5411998874201787
+      }
+    }
+  ],
+  "reproduction_script": "import ast\nimport json\nimport platform\nimport random\nimport subprocess\nimport sys\nfrom importlib.metadata import version\nfrom pathlib import Path\nfrom unittest.mock import patch\n\nimport numpy as np\nfrom sklearn.metrics import get_scorer\nfrom sklearn.model_selection import train_test_split\nfrom threadpoolctl import threadpool_limits\n\nsys.path.insert(0, str(Path.cwd()))\nfrom benchmarks.benchmark_fit import SCENARIOS, make_cv\nfrom sklearn_genetic import GASearchCV, algorithms, optimizer_control\nfrom sklearn_genetic.space import Categorical, Continuous, Integer\n\nbaseline = subprocess.check_output([\"git\", \"rev-parse\", \"e62e1e8\"], text=True).strip()\npath = \"sklearn_genetic/optimizer_control.py\"\nsource = subprocess.check_output([\"git\", \"show\", f\"{baseline}:{path}\"], text=True)\nmethod = next(\n    node for node in ast.parse(source).body if getattr(node, \"name\", \"\") == \"differential_offspring\"\n)\nexec(compile(ast.Module(body=[method], type_ignores=[]), path, \"exec\"), globals())\n\n\ndef paired(task, seed, crossover):\n    sc = SCENARIOS[task]\n    classification = sc.task == \"classification\"\n    X, y = sc.loader()\n    Xtr, Xte, ytr, yte = train_test_split(\n        X, y, test_size=0.25, random_state=seed, stratify=y if classification else None\n    )\n    folds = list(make_cv(sc, 3, seed).split(Xtr, ytr))\n    prefix = \"clf__\" if classification else \"ridge__\"\n    variable = prefix + (\"C\" if classification else \"alpha\")\n    rows = []\n    for operator in (differential_offspring, optimizer_control.differential_offspring):\n        model = sc.estimator_builder(seed)\n        params = model.get_params()\n        grid = {\n            prefix + \"fit_intercept\": Categorical([True]),\n            variable: Continuous(1e-4, 100, distribution=\"log-uniform\"),\n            prefix + \"tol\": Continuous(params[prefix + \"tol\"], params[prefix + \"tol\"]),\n        }\n        if classification:\n            grid[prefix + \"max_iter\"] = Integer(\n                params[prefix + \"max_iter\"], params[prefix + \"max_iter\"]\n            )\n        else:\n            grid[prefix + \"solver\"] = Categorical([params[prefix + \"solver\"]])\n        parent_copies = []\n\n        def observed(population, *args):\n            trials = operator(population, *args)\n            parent_copies.extend(\n                trial == target for trial, target in zip(trials, population, strict=True)\n            )\n            return trials\n\n        search = GASearchCV(\n            model,\n            param_grid=grid,\n            algorithm=\"eaDifferentialEvolution\",\n            cv=folds,\n            scoring=sc.scoring,\n            population_size=6,\n            generations=3,\n            mutation_probability=0,\n            crossover_probability=crossover,\n            random_state=seed,\n            n_jobs=1,\n            error_score=\"raise\",\n            verbose=False,\n            diversity_control=False,\n        )\n        with patch.object(algorithms, \"differential_offspring\", observed):\n            search.fit(Xtr, ytr)\n        rows.append(\n            dict(\n                initial=[p[variable] for p in search.cv_results_[\"params\"][:6]],\n                trials=len(parent_copies),\n                copies=sum(parent_copies),\n                distinct=search.fit_stats_[\"cross_validate_calls\"],\n                best=search.best_params_[variable],\n                holdout=float(get_scorer(sc.scoring)(search.best_estimator_, Xte, yte)),\n            )\n        )\n    assert rows[0][\"initial\"] == rows[1][\"initial\"] and rows[0][\"trials\"] == rows[1][\"trials\"] == 18\n    return dict(task=task, seed=seed, crossover=crossover, baseline=rows[0], current=rows[1])\n\n\nwith threadpool_limits(1):\n    rows = [\n        paired(task, seed, crossover)\n        for task in (\"classification_lr\", \"regression_ridge\")\n        for seed in (1801, 1802, 1803)\n        for crossover in (0, 0.8)\n    ]\nprint(\n    json.dumps(\n        dict(\n            baseline_commit=baseline,\n            python=platform.python_version(),\n            versions={p: version(p) for p in (\"scikit-learn\", \"numpy\", \"deap\")},\n            rows=rows,\n            reproduction_script=Path(__file__).read_text(encoding=\"utf-8\"),\n        ),\n        indent=2,\n    )\n)\n"
+}

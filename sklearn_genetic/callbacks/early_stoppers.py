@@ -1,5 +1,6 @@
 from datetime import datetime
 from numbers import Integral, Real
+from operator import ge, le
 
 from .validations import check_stats
 from .base import BaseCallback
@@ -67,7 +68,9 @@ class ThresholdStopping(BaseCallback):
 
 class ConsecutiveStopping(BaseCallback):
     """
-    Stop the optimization if the current metric value is no greater that at least one metric from the last N generations
+    Stop when none of the last N values is worse than the current value.
+    Score metrics follow the search criterion. For fitness_std, larger values
+    retain their historical meaning of improvement.
     """
 
     def __init__(self, generations, metric="fitness"):
@@ -99,7 +102,11 @@ class ConsecutiveStopping(BaseCallback):
             # Compare the current metric with the last |generations| metrics
             stats = logbook.select(self.metric)[(-self.generations - 1) : -1]
 
-            if all(stat >= current_stat for stat in stats):
+            minimize = (
+                self.metric != "fitness_std" and getattr(estimator, "criteria", "max") == "min"
+            )
+            at_least_as_good = le if minimize else ge
+            if all(at_least_as_good(stat, current_stat) for stat in stats):
                 print(f"INFO: {self.__class__.__name__} callback met its criteria")
                 return True
             return False

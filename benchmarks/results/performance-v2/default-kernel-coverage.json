@@ -1,0 +1,2141 @@
+{
+  "commit": "6591073600d62b4f932573794584ca8c5b494e04",
+  "python": "3.12.0",
+  "versions": {
+    "scikit-learn": "1.9.1",
+    "scipy": "1.18.1",
+    "numpy": "2.5.3",
+    "deap": "1.4.4"
+  },
+  "protocol": {
+    "model": "StandardScaler followed by SVC; sklearn defaults",
+    "digits_subset": "450 stratified observations selected with train_test_split(train_size=450, random_state=93)",
+    "split": "stratified 25% holdout",
+    "cv": "3 stratified shuffled folds seeded with outer split",
+    "metric": "balanced_accuracy",
+    "space": {
+      "svc__kernel": [
+        "linear",
+        "rbf",
+        "poly",
+        "sigmoid"
+      ],
+      "priors": [
+        0.25,
+        0.25,
+        0.25,
+        0.25
+      ],
+      "svc__C": "log-uniform [0.125, 8]"
+    },
+    "population_size": 3,
+    "generations": 0,
+    "alternative": "Only when a nondefault slot repeats rbf, replace its kernel at fixed C. Evaluate each unused kernel as a separate three-candidate counterfactual and average their holdout scores with equal weights. Select by highest mean CV, ties in proposal order. No selection on holdout."
+  },
+  "rows": [
+    {
+      "dataset": "load_iris",
+      "split": 11,
+      "seed": 0,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "sigmoid",
+          0.5471467084917491
+        ],
+        [
+          "poly",
+          4.932125402949416
+        ]
+      ],
+      "cv_scores": [
+        0.9451566951566952,
+        0.9373219373219372,
+        0.9166666666666666
+      ],
+      "winner": 0,
+      "holdout": 0.9743589743589745,
+      "alternatives": [],
+      "expected_holdout": 0.9743589743589745
+    },
+    {
+      "dataset": "load_iris",
+      "split": 11,
+      "seed": 1,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "linear",
+          0.628237894753639
+        ],
+        [
+          "sigmoid",
+          1.7922279669210395
+        ]
+      ],
+      "cv_scores": [
+        0.9451566951566952,
+        0.9444444444444445,
+        0.9280626780626781
+      ],
+      "winner": 0,
+      "holdout": 0.9743589743589745,
+      "alternatives": [],
+      "expected_holdout": 0.9743589743589745
+    },
+    {
+      "dataset": "load_iris",
+      "split": 11,
+      "seed": 2,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "poly",
+          0.27270665194380245
+        ],
+        [
+          "rbf",
+          3.652069037508595
+        ]
+      ],
+      "cv_scores": [
+        0.9451566951566952,
+        0.8532763532763532,
+        0.9280626780626782
+      ],
+      "winner": 0,
+      "holdout": 0.9743589743589745,
+      "alternatives": [
+        {
+          "kernel": "linear",
+          "cv": 0.9266381766381766,
+          "winner": 0,
+          "holdout": 0.9743589743589745
+        },
+        {
+          "kernel": "sigmoid",
+          "cv": 0.9380341880341879,
+          "winner": 0,
+          "holdout": 0.9743589743589745
+        }
+      ],
+      "expected_holdout": 0.9743589743589745
+    },
+    {
+      "dataset": "load_iris",
+      "split": 11,
+      "seed": 3,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "sigmoid",
+          0.139642229384206
+        ],
+        [
+          "poly",
+          1.5314627307470323
+        ]
+      ],
+      "cv_scores": [
+        0.9451566951566952,
+        0.8646723646723647,
+        0.8888888888888888
+      ],
+      "winner": 0,
+      "holdout": 0.9743589743589745,
+      "alternatives": [],
+      "expected_holdout": 0.9743589743589745
+    },
+    {
+      "dataset": "load_iris",
+      "split": 11,
+      "seed": 4,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "linear",
+          0.12646634106472326
+        ],
+        [
+          "rbf",
+          1.4797196718841543
+        ]
+      ],
+      "cv_scores": [
+        0.9451566951566952,
+        0.9451566951566952,
+        0.9458689458689459
+      ],
+      "winner": 2,
+      "holdout": 0.9743589743589745,
+      "alternatives": [
+        {
+          "kernel": "poly",
+          "cv": 0.8888888888888888,
+          "winner": 0,
+          "holdout": 0.9743589743589745
+        },
+        {
+          "kernel": "sigmoid",
+          "cv": 0.9458689458689459,
+          "winner": 2,
+          "holdout": 0.923076923076923
+        }
+      ],
+      "expected_holdout": 0.9487179487179487
+    },
+    {
+      "dataset": "load_iris",
+      "split": 11,
+      "seed": 5,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "sigmoid",
+          0.3667168268064514
+        ],
+        [
+          "rbf",
+          1.9143988651353416
+        ]
+      ],
+      "cv_scores": [
+        0.9451566951566952,
+        0.9188034188034188,
+        0.9451566951566952
+      ],
+      "winner": 0,
+      "holdout": 0.9743589743589745,
+      "alternatives": [
+        {
+          "kernel": "linear",
+          "cv": 0.9444444444444445,
+          "winner": 0,
+          "holdout": 0.9743589743589745
+        },
+        {
+          "kernel": "poly",
+          "cv": 0.898148148148148,
+          "winner": 0,
+          "holdout": 0.9743589743589745
+        }
+      ],
+      "expected_holdout": 0.9743589743589745
+    },
+    {
+      "dataset": "load_iris",
+      "split": 11,
+      "seed": 6,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "poly",
+          0.6574750769363673
+        ],
+        [
+          "linear",
+          1.5202131378983486
+        ]
+      ],
+      "cv_scores": [
+        0.9451566951566952,
+        0.8981481481481483,
+        0.9444444444444445
+      ],
+      "winner": 0,
+      "holdout": 0.9743589743589745,
+      "alternatives": [],
+      "expected_holdout": 0.9743589743589745
+    },
+    {
+      "dataset": "load_iris",
+      "split": 11,
+      "seed": 7,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "poly",
+          0.5668103213876431
+        ],
+        [
+          "linear",
+          3.1302498442374924
+        ]
+      ],
+      "cv_scores": [
+        0.9451566951566952,
+        0.8981481481481483,
+        0.9351851851851851
+      ],
+      "winner": 0,
+      "holdout": 0.9743589743589745,
+      "alternatives": [],
+      "expected_holdout": 0.9743589743589745
+    },
+    {
+      "dataset": "load_iris",
+      "split": 29,
+      "seed": 0,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "sigmoid",
+          0.5471467084917491
+        ],
+        [
+          "poly",
+          4.932125402949416
+        ]
+      ],
+      "cv_scores": [
+        0.9451566951566952,
+        0.8917378917378916,
+        0.9266381766381766
+      ],
+      "winner": 0,
+      "holdout": 0.9487179487179488,
+      "alternatives": [],
+      "expected_holdout": 0.9487179487179488
+    },
+    {
+      "dataset": "load_iris",
+      "split": 29,
+      "seed": 1,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "linear",
+          0.628237894753639
+        ],
+        [
+          "sigmoid",
+          1.7922279669210395
+        ]
+      ],
+      "cv_scores": [
+        0.9451566951566952,
+        0.9636752136752137,
+        0.8917378917378919
+      ],
+      "winner": 1,
+      "holdout": 0.9743589743589745,
+      "alternatives": [],
+      "expected_holdout": 0.9743589743589745
+    },
+    {
+      "dataset": "load_iris",
+      "split": 29,
+      "seed": 2,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "poly",
+          0.27270665194380245
+        ],
+        [
+          "rbf",
+          3.652069037508595
+        ]
+      ],
+      "cv_scores": [
+        0.9451566951566952,
+        0.8625356125356126,
+        0.9451566951566952
+      ],
+      "winner": 0,
+      "holdout": 0.9487179487179488,
+      "alternatives": [
+        {
+          "kernel": "linear",
+          "cv": 0.9636752136752138,
+          "winner": 2,
+          "holdout": 0.9743589743589745
+        },
+        {
+          "kernel": "sigmoid",
+          "cv": 0.8924501424501424,
+          "winner": 0,
+          "holdout": 0.9487179487179488
+        }
+      ],
+      "expected_holdout": 0.9615384615384617
+    },
+    {
+      "dataset": "load_iris",
+      "split": 29,
+      "seed": 3,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "sigmoid",
+          0.139642229384206
+        ],
+        [
+          "poly",
+          1.5314627307470323
+        ]
+      ],
+      "cv_scores": [
+        0.9451566951566952,
+        0.8746438746438746,
+        0.8995726495726496
+      ],
+      "winner": 0,
+      "holdout": 0.9487179487179488,
+      "alternatives": [],
+      "expected_holdout": 0.9487179487179488
+    },
+    {
+      "dataset": "load_iris",
+      "split": 29,
+      "seed": 4,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "linear",
+          0.12646634106472326
+        ],
+        [
+          "rbf",
+          1.4797196718841543
+        ]
+      ],
+      "cv_scores": [
+        0.9451566951566952,
+        0.972934472934473,
+        0.9544159544159544
+      ],
+      "winner": 1,
+      "holdout": 0.9487179487179488,
+      "alternatives": [
+        {
+          "kernel": "poly",
+          "cv": 0.8995726495726496,
+          "winner": 1,
+          "holdout": 0.9487179487179488
+        },
+        {
+          "kernel": "sigmoid",
+          "cv": 0.9009971509971509,
+          "winner": 1,
+          "holdout": 0.9487179487179488
+        }
+      ],
+      "expected_holdout": 0.9487179487179488
+    },
+    {
+      "dataset": "load_iris",
+      "split": 29,
+      "seed": 5,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "sigmoid",
+          0.3667168268064514
+        ],
+        [
+          "rbf",
+          1.9143988651353416
+        ]
+      ],
+      "cv_scores": [
+        0.9451566951566952,
+        0.8917378917378916,
+        0.9544159544159544
+      ],
+      "winner": 2,
+      "holdout": 0.9487179487179488,
+      "alternatives": [
+        {
+          "kernel": "linear",
+          "cv": 0.972934472934473,
+          "winner": 2,
+          "holdout": 0.9743589743589745
+        },
+        {
+          "kernel": "poly",
+          "cv": 0.8995726495726496,
+          "winner": 0,
+          "holdout": 0.9487179487179488
+        }
+      ],
+      "expected_holdout": 0.9615384615384617
+    },
+    {
+      "dataset": "load_iris",
+      "split": 29,
+      "seed": 6,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "poly",
+          0.6574750769363673
+        ],
+        [
+          "linear",
+          1.5202131378983486
+        ]
+      ],
+      "cv_scores": [
+        0.9451566951566952,
+        0.8903133903133903,
+        0.972934472934473
+      ],
+      "winner": 2,
+      "holdout": 0.9487179487179488,
+      "alternatives": [],
+      "expected_holdout": 0.9487179487179488
+    },
+    {
+      "dataset": "load_iris",
+      "split": 29,
+      "seed": 7,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "poly",
+          0.5668103213876431
+        ],
+        [
+          "linear",
+          3.1302498442374924
+        ]
+      ],
+      "cv_scores": [
+        0.9451566951566952,
+        0.881054131054131,
+        0.9636752136752138
+      ],
+      "winner": 2,
+      "holdout": 0.9743589743589745,
+      "alternatives": [],
+      "expected_holdout": 0.9743589743589745
+    },
+    {
+      "dataset": "load_wine",
+      "split": 11,
+      "seed": 0,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "sigmoid",
+          0.5471467084917491
+        ],
+        [
+          "poly",
+          4.932125402949416
+        ]
+      ],
+      "cv_scores": [
+        0.9845679012345679,
+        0.9807552650689906,
+        0.9714960058097314
+      ],
+      "winner": 0,
+      "holdout": 0.9500000000000001,
+      "alternatives": [],
+      "expected_holdout": 0.9500000000000001
+    },
+    {
+      "dataset": "load_wine",
+      "split": 11,
+      "seed": 1,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "linear",
+          0.628237894753639
+        ],
+        [
+          "sigmoid",
+          1.7922279669210395
+        ]
+      ],
+      "cv_scores": [
+        0.9845679012345679,
+        0.9876543209876543,
+        0.9814814814814815
+      ],
+      "winner": 1,
+      "holdout": 0.9444444444444445,
+      "alternatives": [],
+      "expected_holdout": 0.9444444444444445
+    },
+    {
+      "dataset": "load_wine",
+      "split": 11,
+      "seed": 2,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "poly",
+          0.27270665194380245
+        ],
+        [
+          "rbf",
+          3.652069037508595
+        ]
+      ],
+      "cv_scores": [
+        0.9845679012345679,
+        0.8539682539682539,
+        0.9845679012345679
+      ],
+      "winner": 0,
+      "holdout": 0.9500000000000001,
+      "alternatives": [
+        {
+          "kernel": "linear",
+          "cv": 0.981118373275236,
+          "winner": 0,
+          "holdout": 0.9500000000000001
+        },
+        {
+          "kernel": "sigmoid",
+          "cv": 0.9749455337690631,
+          "winner": 0,
+          "holdout": 0.9500000000000001
+        }
+      ],
+      "expected_holdout": 0.9500000000000001
+    },
+    {
+      "dataset": "load_wine",
+      "split": 11,
+      "seed": 3,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "sigmoid",
+          0.139642229384206
+        ],
+        [
+          "poly",
+          1.5314627307470323
+        ]
+      ],
+      "cv_scores": [
+        0.9845679012345679,
+        0.9731818653387281,
+        0.9401027077497667
+      ],
+      "winner": 0,
+      "holdout": 0.9500000000000001,
+      "alternatives": [],
+      "expected_holdout": 0.9500000000000001
+    },
+    {
+      "dataset": "load_wine",
+      "split": 11,
+      "seed": 4,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "linear",
+          0.12646634106472326
+        ],
+        [
+          "rbf",
+          1.4797196718841543
+        ]
+      ],
+      "cv_scores": [
+        0.9845679012345679,
+        0.9876543209876543,
+        0.9845679012345679
+      ],
+      "winner": 1,
+      "holdout": 0.9444444444444445,
+      "alternatives": [
+        {
+          "kernel": "poly",
+          "cv": 0.9401027077497667,
+          "winner": 1,
+          "holdout": 0.9444444444444445
+        },
+        {
+          "kernel": "sigmoid",
+          "cv": 0.9938271604938271,
+          "winner": 2,
+          "holdout": 1.0
+        }
+      ],
+      "expected_holdout": 0.9722222222222223
+    },
+    {
+      "dataset": "load_wine",
+      "split": 11,
+      "seed": 5,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "sigmoid",
+          0.3667168268064514
+        ],
+        [
+          "rbf",
+          1.9143988651353416
+        ]
+      ],
+      "cv_scores": [
+        0.9845679012345679,
+        0.9807552650689906,
+        0.9845679012345679
+      ],
+      "winner": 0,
+      "holdout": 0.9500000000000001,
+      "alternatives": [
+        {
+          "kernel": "linear",
+          "cv": 0.981118373275236,
+          "winner": 0,
+          "holdout": 0.9500000000000001
+        },
+        {
+          "kernel": "poly",
+          "cv": 0.947510115157174,
+          "winner": 0,
+          "holdout": 0.9500000000000001
+        }
+      ],
+      "expected_holdout": 0.9500000000000001
+    },
+    {
+      "dataset": "load_wine",
+      "split": 11,
+      "seed": 6,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "poly",
+          0.6574750769363673
+        ],
+        [
+          "linear",
+          1.5202131378983486
+        ]
+      ],
+      "cv_scores": [
+        0.9845679012345679,
+        0.9001556178026767,
+        0.981118373275236
+      ],
+      "winner": 0,
+      "holdout": 0.9500000000000001,
+      "alternatives": [],
+      "expected_holdout": 0.9500000000000001
+    },
+    {
+      "dataset": "load_wine",
+      "split": 11,
+      "seed": 7,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "poly",
+          0.5668103213876431
+        ],
+        [
+          "linear",
+          3.1302498442374924
+        ]
+      ],
+      "cv_scores": [
+        0.9845679012345679,
+        0.8992841581076876,
+        0.981118373275236
+      ],
+      "winner": 0,
+      "holdout": 0.9500000000000001,
+      "alternatives": [],
+      "expected_holdout": 0.9500000000000001
+    },
+    {
+      "dataset": "load_wine",
+      "split": 29,
+      "seed": 0,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "sigmoid",
+          0.5471467084917491
+        ],
+        [
+          "poly",
+          4.932125402949416
+        ]
+      ],
+      "cv_scores": [
+        0.9771604938271605,
+        0.95878721859114,
+        0.9604730781201369
+      ],
+      "winner": 0,
+      "holdout": 1.0,
+      "alternatives": [],
+      "expected_holdout": 1.0
+    },
+    {
+      "dataset": "load_wine",
+      "split": 29,
+      "seed": 1,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "linear",
+          0.628237894753639
+        ],
+        [
+          "sigmoid",
+          1.7922279669210395
+        ]
+      ],
+      "cv_scores": [
+        0.9771604938271605,
+        0.9526143790849672,
+        0.9526143790849672
+      ],
+      "winner": 0,
+      "holdout": 1.0,
+      "alternatives": [],
+      "expected_holdout": 1.0
+    },
+    {
+      "dataset": "load_wine",
+      "split": 29,
+      "seed": 2,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "poly",
+          0.27270665194380245
+        ],
+        [
+          "rbf",
+          3.652069037508595
+        ]
+      ],
+      "cv_scores": [
+        0.9771604938271605,
+        0.8240636995538956,
+        0.9753086419753086
+      ],
+      "winner": 0,
+      "holdout": 1.0,
+      "alternatives": [
+        {
+          "kernel": "linear",
+          "cv": 0.9526143790849672,
+          "winner": 0,
+          "holdout": 1.0
+        },
+        {
+          "kernel": "sigmoid",
+          "cv": 0.9495279593318808,
+          "winner": 0,
+          "holdout": 1.0
+        }
+      ],
+      "expected_holdout": 1.0
+    },
+    {
+      "dataset": "load_wine",
+      "split": 29,
+      "seed": 3,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "sigmoid",
+          0.139642229384206
+        ],
+        [
+          "poly",
+          1.5314627307470323
+        ]
+      ],
+      "cv_scores": [
+        0.9771604938271605,
+        0.9606390704429919,
+        0.9516651104886399
+      ],
+      "winner": 0,
+      "holdout": 1.0,
+      "alternatives": [],
+      "expected_holdout": 1.0
+    },
+    {
+      "dataset": "load_wine",
+      "split": 29,
+      "seed": 4,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "linear",
+          0.12646634106472326
+        ],
+        [
+          "rbf",
+          1.4797196718841543
+        ]
+      ],
+      "cv_scores": [
+        0.9771604938271605,
+        0.95878721859114,
+        0.9753086419753086
+      ],
+      "winner": 0,
+      "holdout": 1.0,
+      "alternatives": [
+        {
+          "kernel": "poly",
+          "cv": 0.9516651104886399,
+          "winner": 0,
+          "holdout": 1.0
+        },
+        {
+          "kernel": "sigmoid",
+          "cv": 0.9526143790849672,
+          "winner": 0,
+          "holdout": 1.0
+        }
+      ],
+      "expected_holdout": 1.0
+    },
+    {
+      "dataset": "load_wine",
+      "split": 29,
+      "seed": 5,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "sigmoid",
+          0.3667168268064514
+        ],
+        [
+          "rbf",
+          1.9143988651353416
+        ]
+      ],
+      "cv_scores": [
+        0.9771604938271605,
+        0.9745824255628177,
+        0.9753086419753086
+      ],
+      "winner": 0,
+      "holdout": 1.0,
+      "alternatives": [
+        {
+          "kernel": "linear",
+          "cv": 0.9526143790849672,
+          "winner": 0,
+          "holdout": 1.0
+        },
+        {
+          "kernel": "poly",
+          "cv": 0.9590725178960473,
+          "winner": 0,
+          "holdout": 1.0
+        }
+      ],
+      "expected_holdout": 1.0
+    },
+    {
+      "dataset": "load_wine",
+      "split": 29,
+      "seed": 6,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "poly",
+          0.6574750769363673
+        ],
+        [
+          "linear",
+          1.5202131378983486
+        ]
+      ],
+      "cv_scores": [
+        0.9771604938271605,
+        0.9079261334163294,
+        0.9526143790849672
+      ],
+      "winner": 0,
+      "holdout": 1.0,
+      "alternatives": [],
+      "expected_holdout": 1.0
+    },
+    {
+      "dataset": "load_wine",
+      "split": 29,
+      "seed": 7,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "poly",
+          0.5668103213876431
+        ],
+        [
+          "linear",
+          3.1302498442374924
+        ]
+      ],
+      "cv_scores": [
+        0.9771604938271605,
+        0.892582218072414,
+        0.9526143790849672
+      ],
+      "winner": 0,
+      "holdout": 1.0,
+      "alternatives": [],
+      "expected_holdout": 1.0
+    },
+    {
+      "dataset": "load_breast_cancer",
+      "split": 11,
+      "seed": 0,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "sigmoid",
+          0.5471467084917491
+        ],
+        [
+          "poly",
+          4.932125402949416
+        ]
+      ],
+      "cv_scores": [
+        0.9704967846795279,
+        0.9660801356794573,
+        0.9195109886227121
+      ],
+      "winner": 0,
+      "holdout": 0.9472746331236898,
+      "alternatives": [],
+      "expected_holdout": 0.9472746331236898
+    },
+    {
+      "dataset": "load_breast_cancer",
+      "split": 11,
+      "seed": 1,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "linear",
+          0.628237894753639
+        ],
+        [
+          "sigmoid",
+          1.7922279669210395
+        ]
+      ],
+      "cv_scores": [
+        0.9704967846795279,
+        0.9818034061197088,
+        0.9560455091512967
+      ],
+      "winner": 1,
+      "holdout": 0.9567085953878407,
+      "alternatives": [],
+      "expected_holdout": 0.9567085953878407
+    },
+    {
+      "dataset": "load_breast_cancer",
+      "split": 11,
+      "seed": 2,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "poly",
+          0.27270665194380245
+        ],
+        [
+          "rbf",
+          3.652069037508595
+        ]
+      ],
+      "cv_scores": [
+        0.9704967846795279,
+        0.8050314465408804,
+        0.9767860928556287
+      ],
+      "winner": 2,
+      "holdout": 0.9567085953878407,
+      "alternatives": [
+        {
+          "kernel": "linear",
+          "cv": 0.9767860928556286,
+          "winner": 2,
+          "holdout": 0.9511530398322852
+        },
+        {
+          "kernel": "sigmoid",
+          "cv": 0.9454102183591265,
+          "winner": 0,
+          "holdout": 0.9472746331236898
+        }
+      ],
+      "expected_holdout": 0.9492138364779874
+    },
+    {
+      "dataset": "load_breast_cancer",
+      "split": 11,
+      "seed": 3,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "sigmoid",
+          0.139642229384206
+        ],
+        [
+          "poly",
+          1.5314627307470323
+        ]
+      ],
+      "cv_scores": [
+        0.9704967846795279,
+        0.9490848703271854,
+        0.8773584905660377
+      ],
+      "winner": 0,
+      "holdout": 0.9472746331236898,
+      "alternatives": [],
+      "expected_holdout": 0.9472746331236898
+    },
+    {
+      "dataset": "load_breast_cancer",
+      "split": 11,
+      "seed": 4,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "linear",
+          0.12646634106472326
+        ],
+        [
+          "rbf",
+          1.4797196718841543
+        ]
+      ],
+      "cv_scores": [
+        0.9704967846795279,
+        0.9742421030315879,
+        0.9723694438555578
+      ],
+      "winner": 1,
+      "holdout": 0.9472746331236898,
+      "alternatives": [
+        {
+          "kernel": "poly",
+          "cv": 0.8773584905660377,
+          "winner": 1,
+          "holdout": 0.9472746331236898
+        },
+        {
+          "kernel": "sigmoid",
+          "cv": 0.9610628224153769,
+          "winner": 1,
+          "holdout": 0.9472746331236898
+        }
+      ],
+      "expected_holdout": 0.9472746331236898
+    },
+    {
+      "dataset": "load_breast_cancer",
+      "split": 11,
+      "seed": 5,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "sigmoid",
+          0.3667168268064514
+        ],
+        [
+          "rbf",
+          1.9143988651353416
+        ]
+      ],
+      "cv_scores": [
+        0.9704967846795279,
+        0.9597908275033568,
+        0.9723694438555578
+      ],
+      "winner": 2,
+      "holdout": 0.9417190775681341,
+      "alternatives": [
+        {
+          "kernel": "linear",
+          "cv": 0.9749134336795985,
+          "winner": 2,
+          "holdout": 0.9511530398322852
+        },
+        {
+          "kernel": "poly",
+          "cv": 0.8867924528301887,
+          "winner": 0,
+          "holdout": 0.9472746331236898
+        }
+      ],
+      "expected_holdout": 0.9492138364779874
+    },
+    {
+      "dataset": "load_breast_cancer",
+      "split": 11,
+      "seed": 6,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "poly",
+          0.6574750769363673
+        ],
+        [
+          "linear",
+          1.5202131378983486
+        ]
+      ],
+      "cv_scores": [
+        0.9704967846795279,
+        0.8459119496855347,
+        0.9830754010317292
+      ],
+      "winner": 2,
+      "holdout": 0.9511530398322852,
+      "alternatives": [],
+      "expected_holdout": 0.9511530398322852
+    },
+    {
+      "dataset": "load_breast_cancer",
+      "split": 11,
+      "seed": 7,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "poly",
+          0.5668103213876431
+        ],
+        [
+          "linear",
+          3.1302498442374924
+        ]
+      ],
+      "cv_scores": [
+        0.9704967846795279,
+        0.8427672955974842,
+        0.9767860928556286
+      ],
+      "winner": 2,
+      "holdout": 0.9511530398322852,
+      "alternatives": [],
+      "expected_holdout": 0.9511530398322852
+    },
+    {
+      "dataset": "load_breast_cancer",
+      "split": 29,
+      "seed": 0,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "sigmoid",
+          0.5471467084917491
+        ],
+        [
+          "poly",
+          4.932125402949416
+        ]
+      ],
+      "cv_scores": [
+        0.9636068122394178,
+        0.9560455091512967,
+        0.9063317080065012
+      ],
+      "winner": 0,
+      "holdout": 0.9905660377358491,
+      "alternatives": [],
+      "expected_holdout": 0.9905660377358491
+    },
+    {
+      "dataset": "load_breast_cancer",
+      "split": 29,
+      "seed": 1,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "linear",
+          0.628237894753639
+        ],
+        [
+          "sigmoid",
+          1.7922279669210395
+        ]
+      ],
+      "cv_scores": [
+        0.9636068122394178,
+        0.9548441806232776,
+        0.9472828775351565
+      ],
+      "winner": 0,
+      "holdout": 0.9905660377358491,
+      "alternatives": [],
+      "expected_holdout": 0.9905660377358491
+    },
+    {
+      "dataset": "load_breast_cancer",
+      "split": 29,
+      "seed": 2,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "poly",
+          0.27270665194380245
+        ],
+        [
+          "rbf",
+          3.652069037508595
+        ]
+      ],
+      "cv_scores": [
+        0.9636068122394178,
+        0.7924528301886792,
+        0.968624125503498
+      ],
+      "winner": 2,
+      "holdout": 0.9905660377358491,
+      "alternatives": [
+        {
+          "kernel": "linear",
+          "cv": 0.9535721857112572,
+          "winner": 0,
+          "holdout": 0.9905660377358491
+        },
+        {
+          "kernel": "sigmoid",
+          "cv": 0.9354462582149671,
+          "winner": 0,
+          "holdout": 0.9905660377358491
+        }
+      ],
+      "expected_holdout": 0.9905660377358491
+    },
+    {
+      "dataset": "load_breast_cancer",
+      "split": 29,
+      "seed": 3,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "sigmoid",
+          0.139642229384206
+        ],
+        [
+          "poly",
+          1.5314627307470323
+        ]
+      ],
+      "cv_scores": [
+        0.9636068122394178,
+        0.947812875415165,
+        0.8754858313900078
+      ],
+      "winner": 0,
+      "holdout": 0.9905660377358491,
+      "alternatives": [],
+      "expected_holdout": 0.9905660377358491
+    },
+    {
+      "dataset": "load_breast_cancer",
+      "split": 29,
+      "seed": 4,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "linear",
+          0.12646634106472326
+        ],
+        [
+          "rbf",
+          1.4797196718841543
+        ]
+      ],
+      "cv_scores": [
+        0.9636068122394178,
+        0.9504275316232068,
+        0.966751466327468
+      ],
+      "winner": 2,
+      "holdout": 0.9811320754716981,
+      "alternatives": [
+        {
+          "kernel": "poly",
+          "cv": 0.8754858313900078,
+          "winner": 0,
+          "holdout": 0.9905660377358491
+        },
+        {
+          "kernel": "sigmoid",
+          "cv": 0.9435375591830967,
+          "winner": 0,
+          "holdout": 0.9905660377358491
+        }
+      ],
+      "expected_holdout": 0.9905660377358491
+    },
+    {
+      "dataset": "load_breast_cancer",
+      "split": 29,
+      "seed": 5,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "sigmoid",
+          0.3667168268064514
+        ],
+        [
+          "rbf",
+          1.9143988651353416
+        ]
+      ],
+      "cv_scores": [
+        0.9636068122394178,
+        0.9491555367111865,
+        0.9648788071514381
+      ],
+      "winner": 2,
+      "holdout": 0.9811320754716981,
+      "alternatives": [
+        {
+          "kernel": "linear",
+          "cv": 0.9535721857112572,
+          "winner": 0,
+          "holdout": 0.9905660377358491
+        },
+        {
+          "kernel": "poly",
+          "cv": 0.8849197936541587,
+          "winner": 0,
+          "holdout": 0.9905660377358491
+        }
+      ],
+      "expected_holdout": 0.9905660377358491
+    },
+    {
+      "dataset": "load_breast_cancer",
+      "split": 29,
+      "seed": 6,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "poly",
+          0.6574750769363673
+        ],
+        [
+          "linear",
+          1.5202131378983486
+        ]
+      ],
+      "cv_scores": [
+        0.9636068122394178,
+        0.839622641509434,
+        0.9585894989753374
+      ],
+      "winner": 0,
+      "holdout": 0.9905660377358491,
+      "alternatives": [],
+      "expected_holdout": 0.9905660377358491
+    },
+    {
+      "dataset": "load_breast_cancer",
+      "split": 29,
+      "seed": 7,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "poly",
+          0.5668103213876431
+        ],
+        [
+          "linear",
+          3.1302498442374924
+        ]
+      ],
+      "cv_scores": [
+        0.9636068122394178,
+        0.8364779874213836,
+        0.9535721857112572
+      ],
+      "winner": 0,
+      "holdout": 0.9905660377358491,
+      "alternatives": [],
+      "expected_holdout": 0.9905660377358491
+    },
+    {
+      "dataset": "load_digits",
+      "split": 11,
+      "seed": 0,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "sigmoid",
+          0.5471467084917491
+        ],
+        [
+          "poly",
+          4.932125402949416
+        ]
+      ],
+      "cv_scores": [
+        0.9218686868686868,
+        0.9129797979797979,
+        0.8901515151515152
+      ],
+      "winner": 0,
+      "holdout": 0.9553030303030303,
+      "alternatives": [],
+      "expected_holdout": 0.9553030303030303
+    },
+    {
+      "dataset": "load_digits",
+      "split": 11,
+      "seed": 1,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "linear",
+          0.628237894753639
+        ],
+        [
+          "sigmoid",
+          1.7922279669210395
+        ]
+      ],
+      "cv_scores": [
+        0.9218686868686868,
+        0.9307070707070707,
+        0.9102525252525252
+      ],
+      "winner": 1,
+      "holdout": 0.956060606060606,
+      "alternatives": [],
+      "expected_holdout": 0.956060606060606
+    },
+    {
+      "dataset": "load_digits",
+      "split": 11,
+      "seed": 2,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "poly",
+          0.27270665194380245
+        ],
+        [
+          "rbf",
+          3.652069037508595
+        ]
+      ],
+      "cv_scores": [
+        0.9218686868686868,
+        0.5022727272727273,
+        0.9188383838383839
+      ],
+      "winner": 0,
+      "holdout": 0.9553030303030303,
+      "alternatives": [
+        {
+          "kernel": "linear",
+          "cv": 0.9307070707070707,
+          "winner": 2,
+          "holdout": 0.956060606060606
+        },
+        {
+          "kernel": "sigmoid",
+          "cv": 0.8897979797979798,
+          "winner": 0,
+          "holdout": 0.9553030303030303
+        }
+      ],
+      "expected_holdout": 0.9556818181818182
+    },
+    {
+      "dataset": "load_digits",
+      "split": 11,
+      "seed": 3,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "sigmoid",
+          0.139642229384206
+        ],
+        [
+          "poly",
+          1.5314627307470323
+        ]
+      ],
+      "cv_scores": [
+        0.9218686868686868,
+        0.8309595959595959,
+        0.8244949494949495
+      ],
+      "winner": 0,
+      "holdout": 0.9553030303030303,
+      "alternatives": [],
+      "expected_holdout": 0.9553030303030303
+    },
+    {
+      "dataset": "load_digits",
+      "split": 11,
+      "seed": 4,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "linear",
+          0.12646634106472326
+        ],
+        [
+          "rbf",
+          1.4797196718841543
+        ]
+      ],
+      "cv_scores": [
+        0.9218686868686868,
+        0.9307070707070707,
+        0.9218686868686868
+      ],
+      "winner": 1,
+      "holdout": 0.956060606060606,
+      "alternatives": [
+        {
+          "kernel": "poly",
+          "cv": 0.8156565656565657,
+          "winner": 1,
+          "holdout": 0.956060606060606
+        },
+        {
+          "kernel": "sigmoid",
+          "cv": 0.9193434343434342,
+          "winner": 1,
+          "holdout": 0.956060606060606
+        }
+      ],
+      "expected_holdout": 0.956060606060606
+    },
+    {
+      "dataset": "load_digits",
+      "split": 11,
+      "seed": 5,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "sigmoid",
+          0.3667168268064514
+        ],
+        [
+          "rbf",
+          1.9143988651353416
+        ]
+      ],
+      "cv_scores": [
+        0.9218686868686868,
+        0.9021717171717171,
+        0.9218686868686868
+      ],
+      "winner": 0,
+      "holdout": 0.9553030303030303,
+      "alternatives": [
+        {
+          "kernel": "linear",
+          "cv": 0.9307070707070707,
+          "winner": 2,
+          "holdout": 0.956060606060606
+        },
+        {
+          "kernel": "poly",
+          "cv": 0.8515151515151516,
+          "winner": 0,
+          "holdout": 0.9553030303030303
+        }
+      ],
+      "expected_holdout": 0.9556818181818182
+    },
+    {
+      "dataset": "load_digits",
+      "split": 11,
+      "seed": 6,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "poly",
+          0.6574750769363673
+        ],
+        [
+          "linear",
+          1.5202131378983486
+        ]
+      ],
+      "cv_scores": [
+        0.9218686868686868,
+        0.7439393939393938,
+        0.9307070707070707
+      ],
+      "winner": 2,
+      "holdout": 0.956060606060606,
+      "alternatives": [],
+      "expected_holdout": 0.956060606060606
+    },
+    {
+      "dataset": "load_digits",
+      "split": 11,
+      "seed": 7,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "poly",
+          0.5668103213876431
+        ],
+        [
+          "linear",
+          3.1302498442374924
+        ]
+      ],
+      "cv_scores": [
+        0.9218686868686868,
+        0.708080808080808,
+        0.9307070707070707
+      ],
+      "winner": 2,
+      "holdout": 0.956060606060606,
+      "alternatives": [],
+      "expected_holdout": 0.956060606060606
+    },
+    {
+      "dataset": "load_digits",
+      "split": 29,
+      "seed": 0,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "sigmoid",
+          0.5471467084917491
+        ],
+        [
+          "poly",
+          4.932125402949416
+        ]
+      ],
+      "cv_scores": [
+        0.9408080808080808,
+        0.9204040404040402,
+        0.8797979797979799
+      ],
+      "winner": 0,
+      "holdout": 0.9666666666666666,
+      "alternatives": [],
+      "expected_holdout": 0.9666666666666666
+    },
+    {
+      "dataset": "load_digits",
+      "split": 29,
+      "seed": 1,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "linear",
+          0.628237894753639
+        ],
+        [
+          "sigmoid",
+          1.7922279669210395
+        ]
+      ],
+      "cv_scores": [
+        0.9408080808080808,
+        0.9117676767676768,
+        0.9021717171717172
+      ],
+      "winner": 0,
+      "holdout": 0.9666666666666666,
+      "alternatives": [],
+      "expected_holdout": 0.9666666666666666
+    },
+    {
+      "dataset": "load_digits",
+      "split": 29,
+      "seed": 2,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "poly",
+          0.27270665194380245
+        ],
+        [
+          "rbf",
+          3.652069037508595
+        ]
+      ],
+      "cv_scores": [
+        0.9408080808080808,
+        0.3962121212121212,
+        0.938030303030303
+      ],
+      "winner": 0,
+      "holdout": 0.9666666666666666,
+      "alternatives": [
+        {
+          "kernel": "linear",
+          "cv": 0.9117676767676768,
+          "winner": 0,
+          "holdout": 0.9666666666666666
+        },
+        {
+          "kernel": "sigmoid",
+          "cv": 0.8961111111111112,
+          "winner": 0,
+          "holdout": 0.9666666666666666
+        }
+      ],
+      "expected_holdout": 0.9666666666666666
+    },
+    {
+      "dataset": "load_digits",
+      "split": 29,
+      "seed": 3,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "sigmoid",
+          0.139642229384206
+        ],
+        [
+          "poly",
+          1.5314627307470323
+        ]
+      ],
+      "cv_scores": [
+        0.9408080808080808,
+        0.8173737373737374,
+        0.8088383838383839
+      ],
+      "winner": 0,
+      "holdout": 0.9666666666666666,
+      "alternatives": [],
+      "expected_holdout": 0.9666666666666666
+    },
+    {
+      "dataset": "load_digits",
+      "split": 29,
+      "seed": 4,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "linear",
+          0.12646634106472326
+        ],
+        [
+          "rbf",
+          1.4797196718841543
+        ]
+      ],
+      "cv_scores": [
+        0.9408080808080808,
+        0.9178282828282828,
+        0.9408080808080808
+      ],
+      "winner": 0,
+      "holdout": 0.9666666666666666,
+      "alternatives": [
+        {
+          "kernel": "poly",
+          "cv": 0.8088383838383839,
+          "winner": 0,
+          "holdout": 0.9666666666666666
+        },
+        {
+          "kernel": "sigmoid",
+          "cv": 0.9052020202020201,
+          "winner": 0,
+          "holdout": 0.9666666666666666
+        }
+      ],
+      "expected_holdout": 0.9666666666666666
+    },
+    {
+      "dataset": "load_digits",
+      "split": 29,
+      "seed": 5,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "sigmoid",
+          0.3667168268064514
+        ],
+        [
+          "rbf",
+          1.9143988651353416
+        ]
+      ],
+      "cv_scores": [
+        0.9408080808080808,
+        0.9082323232323232,
+        0.9440909090909092
+      ],
+      "winner": 2,
+      "holdout": 0.9666666666666666,
+      "alternatives": [
+        {
+          "kernel": "linear",
+          "cv": 0.9117676767676768,
+          "winner": 0,
+          "holdout": 0.9666666666666666
+        },
+        {
+          "kernel": "poly",
+          "cv": 0.8328282828282828,
+          "winner": 0,
+          "holdout": 0.9666666666666666
+        }
+      ],
+      "expected_holdout": 0.9666666666666666
+    },
+    {
+      "dataset": "load_digits",
+      "split": 29,
+      "seed": 6,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "poly",
+          0.6574750769363673
+        ],
+        [
+          "linear",
+          1.5202131378983486
+        ]
+      ],
+      "cv_scores": [
+        0.9408080808080808,
+        0.7121212121212123,
+        0.9117676767676768
+      ],
+      "winner": 0,
+      "holdout": 0.9666666666666666,
+      "alternatives": [],
+      "expected_holdout": 0.9666666666666666
+    },
+    {
+      "dataset": "load_digits",
+      "split": 29,
+      "seed": 7,
+      "params": [
+        [
+          "rbf",
+          1.0
+        ],
+        [
+          "poly",
+          0.5668103213876431
+        ],
+        [
+          "linear",
+          3.1302498442374924
+        ]
+      ],
+      "cv_scores": [
+        0.9408080808080808,
+        0.6406565656565656,
+        0.9117676767676768
+      ],
+      "winner": 0,
+      "holdout": 0.9666666666666666,
+      "alternatives": [],
+      "expected_holdout": 0.9666666666666666
+    }
+  ]
+}

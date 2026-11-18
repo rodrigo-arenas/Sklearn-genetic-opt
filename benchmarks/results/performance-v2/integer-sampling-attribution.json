@@ -1,0 +1,542 @@
+{
+  "previous": "63696a6fe750a6a092653220c0d5c8466aad9d41",
+  "current": "4ccbbd43910537a8e44790d42f5b0356de8dbaaf",
+  "python": "3.12.0",
+  "versions": {
+    "numpy": "2.5.3",
+    "scipy": "1.18.1",
+    "scikit-learn": "1.9.1"
+  },
+  "protocol": "Timed Integer.sample calls inside paired fits; initial warmup per mode and method excluded. One thread. Fit timings include timer overhead. Both orders per seed.",
+  "reproduction_script": "import json\nimport platform\nimport subprocess\nfrom importlib.metadata import version\nfrom pathlib import Path\nfrom statistics import median\nfrom time import perf_counter_ns\nfrom unittest.mock import patch\n\nimport numpy as np\nfrom sklearn.datasets import load_iris\nfrom sklearn.tree import DecisionTreeClassifier\nfrom sklearn_genetic import GASearchCV\nfrom sklearn_genetic.space import Integer\nfrom sklearn_genetic.space import space as space_module\nfrom threadpoolctl import threadpool_limits\n\nbaseline = \"63696a6fe750a6a092653220c0d5c8466aad9d41\"\nns = dict(vars(space_module))\nexec(subprocess.check_output([\"git\", \"show\", baseline + \":sklearn_genetic/space/space.py\"]), ns)\nversions = {\"previous\": (ns[\"Integer\"].__init__,ns[\"Integer\"].sample),\n            \"current\": (Integer.__init__,Integer.sample)}\n\ndef run(mode, seed, label, X, y):\n    init, draw = versions[label]\n    elapsed_ns = calls = 0\n    def measured(dim):\n        nonlocal elapsed_ns, calls\n        start = perf_counter_ns()\n        value = draw(dim)\n        elapsed_ns += perf_counter_ns() - start\n        calls += 1\n        return value\n    with patch.object(Integer,\"__init__\",init), patch.object(Integer,\"sample\",measured):\n        grid = {name:Integer(lo,hi) for name,lo,hi in (\n            (\"max_depth\",1,20),(\"min_samples_leaf\",1,16),\n            (\"min_samples_split\",2,20),(\"max_leaf_nodes\",2,40))}\n        search = GASearchCV(DecisionTreeClassifier(random_state=11),param_grid=grid,\n            cv=2,scoring=\"balanced_accuracy\",population_size=8,generations=2,\n            population_initializer=mode,n_jobs=1,random_state=seed,verbose=False)\n        start = perf_counter_ns()\n        search.fit(X,y)\n        total_ns = perf_counter_ns() - start\n    return search,dict(fit_ms=total_ns/1e6,sample_ms=elapsed_ns/1e6,draws=calls,\n                       cv_calls=search.fit_stats_[\"cross_validate_calls\"])\n\nX,y = load_iris(return_X_y=True)\nrows = []\nwith threadpool_limits(1):\n    for mode in (\"smart\",\"random\"):\n        for label in versions:\n            run(mode,7,label,X,y)\n        for seed in (3,19,41,53,67,79):\n            for order in ((\"previous\",\"current\"),(\"current\",\"previous\")):\n                fits = {}; stats = {}\n                for label in order:\n                    fits[label],stats[label] = run(mode,seed,label,X,y)\n                a,b = fits.values()\n                assert a.cv_results_[\"params\"] == b.cv_results_[\"params\"]\n                np.testing.assert_array_equal(a.cv_results_[\"mean_test_score\"],b.cv_results_[\"mean_test_score\"])\n                assert a.fit_stats_ == b.fit_stats_\n                assert stats[\"current\"][\"draws\"] == stats[\"previous\"][\"draws\"]\n                rows.append(dict(mode=mode,seed=seed,order=order,results=stats))\n        group=[r[\"results\"] for r in rows if r[\"mode\"]==mode]\n        print(mode,\"median % change in fit time\", round(median(100*(r[\"current\"][\"fit_ms\"]/r[\"previous\"][\"fit_ms\"]-1) for r in group),2),\n              \"faster\",sum(r[\"current\"][\"fit_ms\"]<r[\"previous\"][\"fit_ms\"] for r in group),\n              \"median draws\",median(r[\"current\"][\"draws\"] for r in group),\n              \"median sampler ms\",[round(median(r[k][\"sample_ms\"] for r in group),3) for k in versions],flush=True)\npath=Path(\"benchmarks/results/performance-v2/integer-sampling-attribution.json\")\npath.write_text(json.dumps(dict(previous=baseline,current=subprocess.check_output([\"git\",\"rev-parse\",\"HEAD\"],text=True).strip(),\n    python=platform.python_version(),versions={p:version(p) for p in (\"numpy\",\"scipy\",\"scikit-learn\")},\n    protocol=\"Timed Integer.sample calls inside paired fits; initial warmup per mode and method excluded. One thread. Fit timings include timer overhead. Both orders per seed.\",reproduction_script=Path(__file__).read_text(encoding='utf8'),rows=rows),indent=2)+\"\\n\",encoding=\"utf8\")\n",
+  "rows": [
+    {
+      "mode": "smart",
+      "seed": 3,
+      "order": [
+        "previous",
+        "current"
+      ],
+      "results": {
+        "previous": {
+          "fit_ms": 213.4909,
+          "sample_ms": 2.1584,
+          "draws": 51,
+          "cv_calls": 40
+        },
+        "current": {
+          "fit_ms": 212.0255,
+          "sample_ms": 0.148,
+          "draws": 51,
+          "cv_calls": 40
+        }
+      }
+    },
+    {
+      "mode": "smart",
+      "seed": 3,
+      "order": [
+        "current",
+        "previous"
+      ],
+      "results": {
+        "current": {
+          "fit_ms": 195.9229,
+          "sample_ms": 0.1398,
+          "draws": 51,
+          "cv_calls": 40
+        },
+        "previous": {
+          "fit_ms": 193.8907,
+          "sample_ms": 2.1249,
+          "draws": 51,
+          "cv_calls": 40
+        }
+      }
+    },
+    {
+      "mode": "smart",
+      "seed": 19,
+      "order": [
+        "previous",
+        "current"
+      ],
+      "results": {
+        "previous": {
+          "fit_ms": 196.1188,
+          "sample_ms": 1.9158,
+          "draws": 43,
+          "cv_calls": 40
+        },
+        "current": {
+          "fit_ms": 205.1393,
+          "sample_ms": 0.1574,
+          "draws": 43,
+          "cv_calls": 40
+        }
+      }
+    },
+    {
+      "mode": "smart",
+      "seed": 19,
+      "order": [
+        "current",
+        "previous"
+      ],
+      "results": {
+        "current": {
+          "fit_ms": 200.2677,
+          "sample_ms": 0.1198,
+          "draws": 43,
+          "cv_calls": 40
+        },
+        "previous": {
+          "fit_ms": 199.0188,
+          "sample_ms": 1.8338,
+          "draws": 43,
+          "cv_calls": 40
+        }
+      }
+    },
+    {
+      "mode": "smart",
+      "seed": 41,
+      "order": [
+        "previous",
+        "current"
+      ],
+      "results": {
+        "previous": {
+          "fit_ms": 202.6575,
+          "sample_ms": 1.6258,
+          "draws": 37,
+          "cv_calls": 40
+        },
+        "current": {
+          "fit_ms": 204.3143,
+          "sample_ms": 0.1154,
+          "draws": 37,
+          "cv_calls": 40
+        }
+      }
+    },
+    {
+      "mode": "smart",
+      "seed": 41,
+      "order": [
+        "current",
+        "previous"
+      ],
+      "results": {
+        "current": {
+          "fit_ms": 202.2714,
+          "sample_ms": 0.1201,
+          "draws": 37,
+          "cv_calls": 40
+        },
+        "previous": {
+          "fit_ms": 194.6647,
+          "sample_ms": 1.5653,
+          "draws": 37,
+          "cv_calls": 40
+        }
+      }
+    },
+    {
+      "mode": "smart",
+      "seed": 53,
+      "order": [
+        "previous",
+        "current"
+      ],
+      "results": {
+        "previous": {
+          "fit_ms": 202.2763,
+          "sample_ms": 2.6127,
+          "draws": 50,
+          "cv_calls": 40
+        },
+        "current": {
+          "fit_ms": 194.2536,
+          "sample_ms": 0.1438,
+          "draws": 50,
+          "cv_calls": 40
+        }
+      }
+    },
+    {
+      "mode": "smart",
+      "seed": 53,
+      "order": [
+        "current",
+        "previous"
+      ],
+      "results": {
+        "current": {
+          "fit_ms": 195.3615,
+          "sample_ms": 0.1413,
+          "draws": 50,
+          "cv_calls": 40
+        },
+        "previous": {
+          "fit_ms": 199.3695,
+          "sample_ms": 2.1191,
+          "draws": 50,
+          "cv_calls": 40
+        }
+      }
+    },
+    {
+      "mode": "smart",
+      "seed": 67,
+      "order": [
+        "previous",
+        "current"
+      ],
+      "results": {
+        "previous": {
+          "fit_ms": 203.1294,
+          "sample_ms": 2.4277,
+          "draws": 56,
+          "cv_calls": 40
+        },
+        "current": {
+          "fit_ms": 193.3789,
+          "sample_ms": 0.1543,
+          "draws": 56,
+          "cv_calls": 40
+        }
+      }
+    },
+    {
+      "mode": "smart",
+      "seed": 67,
+      "order": [
+        "current",
+        "previous"
+      ],
+      "results": {
+        "current": {
+          "fit_ms": 194.4344,
+          "sample_ms": 0.1551,
+          "draws": 56,
+          "cv_calls": 40
+        },
+        "previous": {
+          "fit_ms": 199.0706,
+          "sample_ms": 2.4004,
+          "draws": 56,
+          "cv_calls": 40
+        }
+      }
+    },
+    {
+      "mode": "smart",
+      "seed": 79,
+      "order": [
+        "previous",
+        "current"
+      ],
+      "results": {
+        "previous": {
+          "fit_ms": 212.9224,
+          "sample_ms": 1.3346,
+          "draws": 30,
+          "cv_calls": 40
+        },
+        "current": {
+          "fit_ms": 221.8617,
+          "sample_ms": 0.1062,
+          "draws": 30,
+          "cv_calls": 40
+        }
+      }
+    },
+    {
+      "mode": "smart",
+      "seed": 79,
+      "order": [
+        "current",
+        "previous"
+      ],
+      "results": {
+        "current": {
+          "fit_ms": 191.5866,
+          "sample_ms": 0.0893,
+          "draws": 30,
+          "cv_calls": 40
+        },
+        "previous": {
+          "fit_ms": 196.9645,
+          "sample_ms": 1.3629,
+          "draws": 30,
+          "cv_calls": 40
+        }
+      }
+    },
+    {
+      "mode": "random",
+      "seed": 3,
+      "order": [
+        "previous",
+        "current"
+      ],
+      "results": {
+        "previous": {
+          "fit_ms": 196.83,
+          "sample_ms": 3.5952,
+          "draws": 79,
+          "cv_calls": 40
+        },
+        "current": {
+          "fit_ms": 191.9921,
+          "sample_ms": 0.2119,
+          "draws": 79,
+          "cv_calls": 40
+        }
+      }
+    },
+    {
+      "mode": "random",
+      "seed": 3,
+      "order": [
+        "current",
+        "previous"
+      ],
+      "results": {
+        "current": {
+          "fit_ms": 191.0628,
+          "sample_ms": 0.2127,
+          "draws": 79,
+          "cv_calls": 40
+        },
+        "previous": {
+          "fit_ms": 197.8225,
+          "sample_ms": 3.4561,
+          "draws": 79,
+          "cv_calls": 40
+        }
+      }
+    },
+    {
+      "mode": "random",
+      "seed": 19,
+      "order": [
+        "previous",
+        "current"
+      ],
+      "results": {
+        "previous": {
+          "fit_ms": 245.8543,
+          "sample_ms": 4.5838,
+          "draws": 79,
+          "cv_calls": 40
+        },
+        "current": {
+          "fit_ms": 192.2758,
+          "sample_ms": 0.2193,
+          "draws": 79,
+          "cv_calls": 40
+        }
+      }
+    },
+    {
+      "mode": "random",
+      "seed": 19,
+      "order": [
+        "current",
+        "previous"
+      ],
+      "results": {
+        "current": {
+          "fit_ms": 192.4305,
+          "sample_ms": 0.2035,
+          "draws": 79,
+          "cv_calls": 40
+        },
+        "previous": {
+          "fit_ms": 195.2751,
+          "sample_ms": 3.4512,
+          "draws": 79,
+          "cv_calls": 40
+        }
+      }
+    },
+    {
+      "mode": "random",
+      "seed": 41,
+      "order": [
+        "previous",
+        "current"
+      ],
+      "results": {
+        "previous": {
+          "fit_ms": 198.9848,
+          "sample_ms": 3.0991,
+          "draws": 73,
+          "cv_calls": 40
+        },
+        "current": {
+          "fit_ms": 200.9961,
+          "sample_ms": 0.2161,
+          "draws": 73,
+          "cv_calls": 40
+        }
+      }
+    },
+    {
+      "mode": "random",
+      "seed": 41,
+      "order": [
+        "current",
+        "previous"
+      ],
+      "results": {
+        "current": {
+          "fit_ms": 203.138,
+          "sample_ms": 0.2117,
+          "draws": 73,
+          "cv_calls": 40
+        },
+        "previous": {
+          "fit_ms": 198.125,
+          "sample_ms": 3.1194,
+          "draws": 73,
+          "cv_calls": 40
+        }
+      }
+    },
+    {
+      "mode": "random",
+      "seed": 53,
+      "order": [
+        "previous",
+        "current"
+      ],
+      "results": {
+        "previous": {
+          "fit_ms": 189.3904,
+          "sample_ms": 3.2227,
+          "draws": 74,
+          "cv_calls": 39
+        },
+        "current": {
+          "fit_ms": 195.6414,
+          "sample_ms": 0.2041,
+          "draws": 74,
+          "cv_calls": 39
+        }
+      }
+    },
+    {
+      "mode": "random",
+      "seed": 53,
+      "order": [
+        "current",
+        "previous"
+      ],
+      "results": {
+        "current": {
+          "fit_ms": 188.2731,
+          "sample_ms": 0.2071,
+          "draws": 74,
+          "cv_calls": 39
+        },
+        "previous": {
+          "fit_ms": 197.533,
+          "sample_ms": 3.3238,
+          "draws": 74,
+          "cv_calls": 39
+        }
+      }
+    },
+    {
+      "mode": "random",
+      "seed": 67,
+      "order": [
+        "previous",
+        "current"
+      ],
+      "results": {
+        "previous": {
+          "fit_ms": 201.9752,
+          "sample_ms": 3.9493,
+          "draws": 88,
+          "cv_calls": 40
+        },
+        "current": {
+          "fit_ms": 189.3774,
+          "sample_ms": 0.2267,
+          "draws": 88,
+          "cv_calls": 40
+        }
+      }
+    },
+    {
+      "mode": "random",
+      "seed": 67,
+      "order": [
+        "current",
+        "previous"
+      ],
+      "results": {
+        "current": {
+          "fit_ms": 196.001,
+          "sample_ms": 0.2635,
+          "draws": 88,
+          "cv_calls": 40
+        },
+        "previous": {
+          "fit_ms": 196.2231,
+          "sample_ms": 4.0673,
+          "draws": 88,
+          "cv_calls": 40
+        }
+      }
+    },
+    {
+      "mode": "random",
+      "seed": 79,
+      "order": [
+        "previous",
+        "current"
+      ],
+      "results": {
+        "previous": {
+          "fit_ms": 197.8758,
+          "sample_ms": 2.4979,
+          "draws": 58,
+          "cv_calls": 40
+        },
+        "current": {
+          "fit_ms": 200.6059,
+          "sample_ms": 0.1627,
+          "draws": 58,
+          "cv_calls": 40
+        }
+      }
+    },
+    {
+      "mode": "random",
+      "seed": 79,
+      "order": [
+        "current",
+        "previous"
+      ],
+      "results": {
+        "current": {
+          "fit_ms": 196.5207,
+          "sample_ms": 0.164,
+          "draws": 58,
+          "cv_calls": 40
+        },
+        "previous": {
+          "fit_ms": 197.7944,
+          "sample_ms": 2.6688,
+          "draws": 58,
+          "cv_calls": 40
+        }
+      }
+    }
+  ]
+}

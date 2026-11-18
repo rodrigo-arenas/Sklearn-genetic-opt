@@ -17,7 +17,8 @@ This page covers the most common problems, organized by symptom.
 |---------|--------------|-----|
 | `... is not a valid Sklearn classifier, regressor, or outlier detector` | An unsupported estimator was passed to `GASearchCV` | Use `GASearchCV` with a classifier, regressor, or outlier detector; for feature selection use `GAFeatureSelectionCV` |
 | `Invalid param_grid entry for '...'` (value is not a space object) | A raw `list`/`tuple`/`range` was used instead of a space object | Wrap choices in `Categorical([...])` and ranges in `Integer(...)` / `Continuous(...)` |
-| `ImportError` for `mlflow`, `tensorflow`, or `seaborn` | An optional dependency is not installed | `pip install "sklearn-genetic-opt[all]"` (or the specific extra) |
+| `ImportError` for `mlflow` or `seaborn` | An optional dependency is not installed | `pip install "sklearn-genetic-opt[all]"` (or the specific extra) |
+| `TensorBoard` asks for TensorFlow | A legacy callback is in use | Use `LivePlot` from `sklearn_genetic.plots`, or install TensorFlow separately for the old callback |
 | `InvalidParameterError` mentioning `'max_error'` | recent scikit-learn no longer accepts `max_error` as a scoring string | Use `scoring="neg_max_error"` |
 | Fit is much slower than expected | CPU oversubscription from nested parallelism | See [Search Is Slow](#search-is-slow) and the `parallel_backend` table |
 
@@ -257,13 +258,12 @@ selector.fit(X, y)
 
 ## Optional Dependencies
 
-**`ImportError` / `ModuleNotFoundError` for `mlflow`, `tensorflow`, or `seaborn`**
+**`ImportError` / `ModuleNotFoundError` for `mlflow` or `seaborn`**
 
-These power optional features (experiment logging, the TensorBoard callback, and
-plots). Install the extra you need:
+These power optional experiment logging and plots. Install the extra you need:
 
 ```bash
-pip install "sklearn-genetic-opt[all]"   # everything
+pip install "sklearn-genetic-opt[all]"   # plotting and MLflow
 pip install "sklearn-genetic-opt[mlflow]" # MLflow logging only
 pip install seaborn                        # plotting only
 ```

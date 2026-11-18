@@ -1,3 +1,6 @@
+import json
+import sys
+
 import pytest
 
 from benchmarks.benchmark_fit import (
@@ -5,9 +8,52 @@ from benchmarks.benchmark_fit import (
     aggregate_results,
     build_baseline_lookup,
     comparison_key,
+    main,
     print_comparison_table,
 )
 from sklearn_genetic.space import Categorical, Integer
+
+
+@pytest.mark.parametrize("top_k,folds", [(0, 3), (2, 3), (1, 4)])
+def test_fit_benchmark_counts_finalist_work_for_both_searches(monkeypatch, tmp_path, top_k, folds):
+    report = tmp_path / "fit.json"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "benchmark_fit.py",
+            "--quick",
+            "--scenarios",
+            "classification_lr_collisions",
+            "--cv-splits",
+            "2",
+            "--n-jobs",
+            "1",
+            *(["--final-selection"] if top_k else []),
+            "--final-selection-top-k",
+            str(top_k or 1),
+            "--final-selection-cv-splits",
+            str(folds),
+            "--output-json",
+            str(report),
+        ],
+    )
+    main()
+    payload = json.loads(report.read_text())
+    assert len(payload["results"]) == 2
+    summaries = {row["estimator"]: row for row in payload["summaries"]}
+    assert set(summaries) == {"GASearchCV", "GAFeatureSelectionCV"}
+    for result in payload["results"]:
+        assert result.get("final_selection_enabled", False) == bool(top_k)
+        cv_calls = result["cross_validate_calls"] + top_k
+        fold_fits = 2 * result["cross_validate_calls"] + top_k * folds
+        summary = summaries[result["estimator"]]
+        assert (
+            result["actual_cross_validate_calls"]
+            == summary["actual_cross_validate_calls_mean"]
+            == cv_calls
+        )
+        assert result["cv_fold_fits"] == summary["cv_fold_fits_mean"] == fold_fits
 
 
 def _benchmark_result(*, use_cache, cache_hits, duplicate_candidates, cv_calls):

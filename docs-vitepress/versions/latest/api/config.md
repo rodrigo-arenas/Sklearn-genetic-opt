@@ -178,7 +178,7 @@ OptimizationConfig(
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `final_selection` | bool | `False` | Re-evaluate the top `final_selection_top_k` candidates after the GA and select the best before refitting |
+| `final_selection` | bool or `"reuse_folds"` | `False` | Re-evaluate the top `final_selection_top_k` candidates after the GA and select the best before refitting. For deterministic runs, `"reuse_folds"` with `error_score="raise"` reuses matching folds from the current fit |
 | `final_selection_top_k` | int | `3` | Number of top candidates to re-evaluate |
 | `final_selection_cv` | CV splitter or None | `None` | Cross-validation strategy for final selection. `None` reuses the main `cv` |
 

@@ -1,0 +1,194 @@
+[
+  {
+    "dataset": "load_iris",
+    "seed": 10131,
+    "bounded": {
+      "winner": 16,
+      "accuracy": 0.9466666666666667,
+      "fits": 35,
+      "seconds": 0.08606609998969361
+    },
+    "full": {
+      "winner": 16,
+      "accuracy": 0.9466666666666667,
+      "fits": 40,
+      "seconds": 0.07487320003565401
+    }
+  },
+  {
+    "dataset": "load_iris",
+    "seed": 10132,
+    "full": {
+      "winner": 32,
+      "accuracy": 0.9666666666666668,
+      "fits": 40,
+      "seconds": 0.07559399999445304
+    },
+    "bounded": {
+      "winner": 32,
+      "accuracy": 0.9666666666666668,
+      "fits": 40,
+      "seconds": 0.0995450999471359
+    }
+  },
+  {
+    "dataset": "load_iris",
+    "seed": 10133,
+    "bounded": {
+      "winner": 29,
+      "accuracy": 0.9533333333333334,
+      "fits": 40,
+      "seconds": 0.0947930000256747
+    },
+    "full": {
+      "winner": 29,
+      "accuracy": 0.9533333333333334,
+      "fits": 40,
+      "seconds": 0.0738495999830775
+    }
+  },
+  {
+    "dataset": "load_iris",
+    "seed": 10134,
+    "full": {
+      "winner": 0,
+      "accuracy": 0.9400000000000001,
+      "fits": 40,
+      "seconds": 0.08065369998803362
+    },
+    "bounded": {
+      "winner": 0,
+      "accuracy": 0.9400000000000001,
+      "fits": 40,
+      "seconds": 0.10014320001937449
+    }
+  },
+  {
+    "dataset": "load_wine",
+    "seed": 10131,
+    "bounded": {
+      "winner": 16,
+      "accuracy": 0.881904761904762,
+      "fits": 37,
+      "seconds": 0.0947427999926731
+    },
+    "full": {
+      "winner": 16,
+      "accuracy": 0.881904761904762,
+      "fits": 40,
+      "seconds": 0.08298219996504486
+    }
+  },
+  {
+    "dataset": "load_wine",
+    "seed": 10132,
+    "full": {
+      "winner": 25,
+      "accuracy": 0.886984126984127,
+      "fits": 40,
+      "seconds": 0.08280579996062443
+    },
+    "bounded": {
+      "winner": 25,
+      "accuracy": 0.886984126984127,
+      "fits": 33,
+      "seconds": 0.08453940000617877
+    }
+  },
+  {
+    "dataset": "load_wine",
+    "seed": 10133,
+    "bounded": {
+      "winner": 2,
+      "accuracy": 0.8995238095238095,
+      "fits": 36,
+      "seconds": 0.09088540001539513
+    },
+    "full": {
+      "winner": 2,
+      "accuracy": 0.8995238095238095,
+      "fits": 40,
+      "seconds": 0.08865350001724437
+    }
+  },
+  {
+    "dataset": "load_wine",
+    "seed": 10134,
+    "full": {
+      "winner": 36,
+      "accuracy": 0.887936507936508,
+      "fits": 40,
+      "seconds": 0.08614270004909486
+    },
+    "bounded": {
+      "winner": 36,
+      "accuracy": 0.887936507936508,
+      "fits": 40,
+      "seconds": 0.10660930001176894
+    }
+  },
+  {
+    "dataset": "load_breast_cancer",
+    "seed": 10131,
+    "bounded": {
+      "winner": 4,
+      "accuracy": 0.9244216736531594,
+      "fits": 40,
+      "seconds": 0.18480809999164194
+    },
+    "full": {
+      "winner": 4,
+      "accuracy": 0.9244216736531594,
+      "fits": 40,
+      "seconds": 0.1880341999931261
+    }
+  },
+  {
+    "dataset": "load_breast_cancer",
+    "seed": 10132,
+    "full": {
+      "winner": 22,
+      "accuracy": 0.9314392175128084,
+      "fits": 40,
+      "seconds": 0.19533130002673715
+    },
+    "bounded": {
+      "winner": 22,
+      "accuracy": 0.9314392175128084,
+      "fits": 40,
+      "seconds": 0.21787900000344962
+    }
+  },
+  {
+    "dataset": "load_breast_cancer",
+    "seed": 10133,
+    "bounded": {
+      "winner": 31,
+      "accuracy": 0.9313771153547584,
+      "fits": 40,
+      "seconds": 0.21029170003021136
+    },
+    "full": {
+      "winner": 31,
+      "accuracy": 0.9313771153547584,
+      "fits": 40,
+      "seconds": 0.18917879997752607
+    }
+  },
+  {
+    "dataset": "load_breast_cancer",
+    "seed": 10134,
+    "full": {
+      "winner": 38,
+      "accuracy": 0.9367489520260829,
+      "fits": 40,
+      "seconds": 0.17212130001280457
+    },
+    "bounded": {
+      "winner": 38,
+      "accuracy": 0.9367489520260829,
+      "fits": 35,
+      "seconds": 0.1719304000143893
+    }
+  }
+]

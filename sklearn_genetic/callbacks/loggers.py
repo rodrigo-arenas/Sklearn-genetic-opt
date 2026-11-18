@@ -12,11 +12,6 @@ from ..parameters import Metrics
 
 logger = logging.getLogger(__name__)  # noqa
 
-try:
-    import tensorflow as tf
-except ModuleNotFoundError:  # noqa
-    tf = None  # noqa
-
 
 class ProgressBar(BaseCallback):
     """Displays a tqdm progress bar with the training progress."""
@@ -90,11 +85,6 @@ class TensorBoard(BaseCallback):
             Subfolder where the data will be log, if None it will create a folder
             with the current datetime with format time.strftime("%Y_%m_%d-%H_%M_%S")
         """
-        if tf is None:
-            logger.error(
-                "Tensorflow not found, pip install tensorflow to use TensorBoard callback"
-            )  # noqa
-
         self.log_dir = log_dir
 
         if run_id is None:
@@ -105,6 +95,16 @@ class TensorBoard(BaseCallback):
         self.path = os.path.join(log_dir, self.run_id)
 
     def on_step(self, record=None, logbook=None, estimator=None):
+        try:
+            import tensorflow as tf
+        except ModuleNotFoundError as exc:
+            if exc.name != "tensorflow":
+                raise
+            raise ImportError(
+                "The legacy TensorBoard callback requires TensorFlow installed separately. "
+                "Use sklearn_genetic.plots.LivePlot for lightweight live charts."
+            ) from exc
+
         # Get the last metric value
         stats = logbook[-1]
 
