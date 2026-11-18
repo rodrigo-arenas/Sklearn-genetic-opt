@@ -19,9 +19,10 @@ from sklearn.preprocessing import StandardScaler
 from threadpoolctl import threadpool_limits
 
 run = run_path(str(Path(__file__).with_name("diabetes-target.py")))["run"]
+forward_history = run_path(str(Path(__file__).with_name("known-support.py")))["forward_history"]
 
 
-def exhaustive(X, y, test, labels, cv, seed, genetic):
+def exhaustive(X, y, test, labels, cv, seed, genetic, trajectory):
     model = make_pipeline(StandardScaler(), Ridge())
     scores = {}
     for k in range(1, 5):
@@ -46,6 +47,19 @@ def exhaustive(X, y, test, labels, cv, seed, genetic):
             expected_holdout += weight * model.score(test[:, mask], labels)
             if scores[mask] >= genetic["cv"] - 1e-12:
                 match += weight
+    forward = forward_history(X.shape[1], draws, seed, scores.__getitem__)
+    prefix = dict(list(trajectory.items())[: len(forward)])
+    assert all(abs(scores[mask] - score) <= 1e-12 for mask, score in prefix.items())
+    matched = {}
+    for policy, history in [("forward", forward), ("genetic", prefix)]:
+        winner = max(history, key=lambda mask: (history[mask], -len(mask)))
+        model.fit(X[:, winner], y)
+        matched[policy] = dict(
+            features=winner,
+            cv=history[winner],
+            holdout=model.score(test[:, winner], labels),
+            draws=len(history),
+        )
     model.fit(X[:, best], y)
     return dict(
         policy="exhaustive",
@@ -54,6 +68,7 @@ def exhaustive(X, y, test, labels, cv, seed, genetic):
         cv=scores[best],
         folds=len(scores) * len(cv),
         holdout=model.score(test[:, best], labels),
+        matched_forward_budget=matched,
         random_at_genetic_budget=dict(
             draws=draws,
             expected_cv=expected_cv,
@@ -81,8 +96,9 @@ def compare(name, archive, member, group_columns, reference=False):
             assert not np.intersect1d(groups[train[a]], groups[train[b]]).size
         args = X[train], y[train], X[test], y[test], cv, seed
         if reference:
-            genetic = run("genetic", *args, 1.0)
-            baseline = exhaustive(*args, genetic)
+            trajectory = {}
+            genetic = run("genetic", *args, 1.0, trajectory=trajectory)
+            baseline = exhaustive(*args, genetic, trajectory)
             assert not genetic["reached"] and genetic["cv"] <= baseline["cv"] + 1e-12
             rows.extend([baseline, genetic])
         else:

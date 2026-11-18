@@ -17,6 +17,30 @@
         "cv": 0.4626899700271711,
         "folds": 90,
         "holdout": 0.4654569863534349,
+        "matched_forward_budget": {
+          "forward": {
+            "features": [
+              0,
+              2,
+              3,
+              4
+            ],
+            "cv": 0.45319293777888664,
+            "holdout": 0.47364546533551355,
+            "draws": 14
+          },
+          "genetic": {
+            "features": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "cv": 0.4626899700271711,
+            "holdout": 0.4654569863534349,
+            "draws": 14
+          }
+        },
         "random_at_genetic_budget": {
           "draws": 19,
           "expected_cv": 0.45682945032003497,
@@ -31,7 +55,7 @@
         "folds": 57,
         "cv": 0.4626899700271711,
         "reached": false,
-        "seconds": 0.19070719997398555,
+        "seconds": 0.15639469999587163,
         "holdout": 0.4654569863534349
       },
       {
@@ -46,6 +70,30 @@
         "cv": 0.45251957859105785,
         "folds": 90,
         "holdout": 0.5527372381716582,
+        "matched_forward_budget": {
+          "forward": {
+            "features": [
+              0,
+              2,
+              3,
+              4
+            ],
+            "cv": 0.4446332736960577,
+            "holdout": 0.532228056977161,
+            "draws": 14
+          },
+          "genetic": {
+            "features": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "cv": 0.45251957859105785,
+            "holdout": 0.5527372381716582,
+            "draws": 14
+          }
+        },
         "random_at_genetic_budget": {
           "draws": 21,
           "expected_cv": 0.44913591329835323,
@@ -60,7 +108,7 @@
         "folds": 63,
         "cv": 0.45251957859105785,
         "reached": false,
-        "seconds": 0.16957829997409135,
+        "seconds": 0.18999280000571162,
         "holdout": 0.5527372381716582
       },
       {
@@ -75,6 +123,30 @@
         "cv": 0.4962094551599769,
         "folds": 90,
         "holdout": 0.3503876329948745,
+        "matched_forward_budget": {
+          "forward": {
+            "features": [
+              0,
+              2,
+              3,
+              4
+            ],
+            "cv": 0.4962094551599769,
+            "holdout": 0.3503876329948745,
+            "draws": 14
+          },
+          "genetic": {
+            "features": [
+              0,
+              1,
+              2,
+              4
+            ],
+            "cv": 0.47744259022048147,
+            "holdout": 0.36929483235292426,
+            "draws": 14
+          }
+        },
         "random_at_genetic_budget": {
           "draws": 21,
           "expected_cv": 0.48943179739410303,
@@ -89,7 +161,7 @@
         "folds": 63,
         "cv": 0.4962094551599769,
         "reached": false,
-        "seconds": 0.17226750002009794,
+        "seconds": 0.17399029998341575,
         "holdout": 0.3503876329948745
       },
       {
@@ -104,6 +176,30 @@
         "cv": 0.46375161379701485,
         "folds": 90,
         "holdout": 0.48183774782374866,
+        "matched_forward_budget": {
+          "forward": {
+            "features": [
+              0,
+              1,
+              2,
+              4
+            ],
+            "cv": 0.4401528406109958,
+            "holdout": 0.45964712074781844,
+            "draws": 14
+          },
+          "genetic": {
+            "features": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "cv": 0.46375161379701485,
+            "holdout": 0.48183774782374866,
+            "draws": 14
+          }
+        },
         "random_at_genetic_budget": {
           "draws": 20,
           "expected_cv": 0.4540203699471992,
@@ -118,7 +214,7 @@
         "folds": 60,
         "cv": 0.46375161379701485,
         "reached": false,
-        "seconds": 0.163635200005956,
+        "seconds": 0.17070389998843893,
         "holdout": 0.48183774782374866
       },
       {
@@ -133,6 +229,30 @@
         "cv": 0.46765209951484216,
         "folds": 90,
         "holdout": 0.4798252956475998,
+        "matched_forward_budget": {
+          "forward": {
+            "features": [
+              0,
+              2,
+              3,
+              4
+            ],
+            "cv": 0.4568578362139271,
+            "holdout": 0.4461098562244339,
+            "draws": 14
+          },
+          "genetic": {
+            "features": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "cv": 0.46765209951484216,
+            "holdout": 0.4798252956475998,
+            "draws": 14
+          }
+        },
         "random_at_genetic_budget": {
           "draws": 19,
           "expected_cv": 0.45932546689756903,
@@ -147,7 +267,7 @@
         "folds": 57,
         "cv": 0.46765209951484216,
         "reached": false,
-        "seconds": 0.15444760001264513,
+        "seconds": 0.15721030003624037,
         "holdout": 0.4798252956475998
       },
       {
@@ -162,6 +282,30 @@
         "cv": 0.4894317256920551,
         "folds": 90,
         "holdout": 0.3659388157433239,
+        "matched_forward_budget": {
+          "forward": {
+            "features": [
+              0,
+              2,
+              3,
+              4
+            ],
+            "cv": 0.48904442005604487,
+            "holdout": 0.3342390180942989,
+            "draws": 14
+          },
+          "genetic": {
+            "features": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "cv": 0.4894317256920551,
+            "holdout": 0.3659388157433239,
+            "draws": 14
+          }
+        },
         "random_at_genetic_budget": {
           "draws": 17,
           "expected_cv": 0.48291155682980874,
@@ -176,7 +320,7 @@
         "folds": 51,
         "cv": 0.4894317256920551,
         "reached": false,
-        "seconds": 0.14121200004592538,
+        "seconds": 0.1402939999825321,
         "holdout": 0.3659388157433239
       }
     ]
@@ -199,6 +343,30 @@
         "cv": 0.6598385629876019,
         "folds": 168,
         "holdout": 0.6491245129293974,
+        "matched_forward_budget": {
+          "forward": {
+            "features": [
+              0,
+              1,
+              3,
+              5
+            ],
+            "cv": 0.6598385629876019,
+            "holdout": 0.6491245129293974,
+            "draws": 18
+          },
+          "genetic": {
+            "features": [
+              0,
+              1,
+              2,
+              5
+            ],
+            "cv": 0.6595655921748885,
+            "holdout": 0.6491708822085707,
+            "draws": 18
+          }
+        },
         "random_at_genetic_budget": {
           "draws": 28,
           "expected_cv": 0.6597641157005627,
@@ -213,7 +381,7 @@
         "folds": 84,
         "cv": 0.6598385629876019,
         "reached": false,
-        "seconds": 0.23736460000509396,
+        "seconds": 0.22828600002685562,
         "holdout": 0.6491245129293974
       },
       {
@@ -228,6 +396,30 @@
         "cv": 0.6545965642707159,
         "folds": 168,
         "holdout": 0.6613038949180267,
+        "matched_forward_budget": {
+          "forward": {
+            "features": [
+              0,
+              1,
+              3,
+              5
+            ],
+            "cv": 0.6545063445779243,
+            "holdout": 0.6615653880260478,
+            "draws": 18
+          },
+          "genetic": {
+            "features": [
+              0,
+              1,
+              2,
+              5
+            ],
+            "cv": 0.6545965642707159,
+            "holdout": 0.6613038949180267,
+            "draws": 18
+          }
+        },
         "random_at_genetic_budget": {
           "draws": 28,
           "expected_cv": 0.6544899170483347,
@@ -242,7 +434,7 @@
         "folds": 84,
         "cv": 0.6545965642707159,
         "reached": false,
-        "seconds": 0.2174110999912955,
+        "seconds": 0.21950300002936274,
         "holdout": 0.6613038949180267
       },
       {
@@ -256,6 +448,28 @@
         "cv": 0.6542994805336404,
         "folds": 168,
         "holdout": 0.6643093790406285,
+        "matched_forward_budget": {
+          "forward": {
+            "features": [
+              0,
+              1,
+              5
+            ],
+            "cv": 0.6542994805336404,
+            "holdout": 0.6643093790406285,
+            "draws": 18
+          },
+          "genetic": {
+            "features": [
+              0,
+              1,
+              5
+            ],
+            "cv": 0.6542994805336404,
+            "holdout": 0.6643093790406285,
+            "draws": 18
+          }
+        },
         "random_at_genetic_budget": {
           "draws": 27,
           "expected_cv": 0.6541566452336254,
@@ -270,7 +484,7 @@
         "folds": 81,
         "cv": 0.6542994805336404,
         "reached": false,
-        "seconds": 0.21093420003307983,
+        "seconds": 0.22241070005111396,
         "holdout": 0.6643093790406285
       },
       {
@@ -284,6 +498,27 @@
         "cv": 0.6566835242202961,
         "folds": 168,
         "holdout": 0.6574920970605609,
+        "matched_forward_budget": {
+          "forward": {
+            "features": [
+              0,
+              1,
+              5
+            ],
+            "cv": 0.6566835242202961,
+            "holdout": 0.6574920970605609,
+            "draws": 18
+          },
+          "genetic": {
+            "features": [
+              1,
+              5
+            ],
+            "cv": 0.656530643983842,
+            "holdout": 0.6567693659026534,
+            "draws": 18
+          }
+        },
         "random_at_genetic_budget": {
           "draws": 28,
           "expected_cv": 0.6565994147446137,
@@ -298,7 +533,7 @@
         "folds": 84,
         "cv": 0.6566043785676121,
         "reached": false,
-        "seconds": 0.21861729997908697,
+        "seconds": 0.22588899999391288,
         "holdout": 0.6575035675717518
       },
       {
@@ -313,6 +548,30 @@
         "cv": 0.6565639255409823,
         "folds": 168,
         "holdout": 0.6580641416953221,
+        "matched_forward_budget": {
+          "forward": {
+            "features": [
+              0,
+              1,
+              2,
+              5
+            ],
+            "cv": 0.6565639255409823,
+            "holdout": 0.6580641416953221,
+            "draws": 18
+          },
+          "genetic": {
+            "features": [
+              0,
+              1,
+              4,
+              5
+            ],
+            "cv": 0.6565077289595406,
+            "holdout": 0.6583042850390672,
+            "draws": 18
+          }
+        },
         "random_at_genetic_budget": {
           "draws": 25,
           "expected_cv": 0.65647968528407,
@@ -327,7 +586,7 @@
         "folds": 75,
         "cv": 0.6565077289595406,
         "reached": false,
-        "seconds": 0.19558850000612438,
+        "seconds": 0.22333639999851584,
         "holdout": 0.6583042850390672
       },
       {
@@ -341,6 +600,28 @@
         "cv": 0.6564250038453239,
         "folds": 168,
         "holdout": 0.6575155578553409,
+        "matched_forward_budget": {
+          "forward": {
+            "features": [
+              3,
+              5
+            ],
+            "cv": 0.65614883209474,
+            "holdout": 0.6553182304659626,
+            "draws": 18
+          },
+          "genetic": {
+            "features": [
+              0,
+              1,
+              4,
+              5
+            ],
+            "cv": 0.6563506765178878,
+            "holdout": 0.6574907867418238,
+            "draws": 18
+          }
+        },
         "random_at_genetic_budget": {
           "draws": 29,
           "expected_cv": 0.6563617924833896,
@@ -355,7 +636,7 @@
         "folds": 87,
         "cv": 0.6564250038453239,
         "reached": false,
-        "seconds": 0.24098190001677722,
+        "seconds": 0.2267989999963902,
         "holdout": 0.6575155578553409
       }
     ]

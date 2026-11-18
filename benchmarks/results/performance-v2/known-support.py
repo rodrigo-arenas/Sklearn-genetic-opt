@@ -24,6 +24,23 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from sklearn_genetic import GAFeatureSelectionCV
 
 
+def forward_history(width, budget, seed, cv_score):
+    history = {}
+    parent = ()
+    order_rng = np.random.default_rng(seed)
+    while len(history) < budget and len(parent) < min(4, width):
+        extensions = {}
+        for column in order_rng.permutation(width).tolist():
+            if column in parent:
+                continue
+            mask = tuple(sorted((*parent, column)))
+            extensions[mask] = history[mask] = cv_score(mask)
+            if len(history) == budget:
+                break
+        parent = max(extensions, key=extensions.get)
+    return history
+
+
 def run_pair(seed, interaction, pair_coverage=False, score_guided=False, forward=False):
     rng = np.random.default_rng(seed)
     signal = sorted(rng.choice(16, size=2, replace=False).tolist())
@@ -151,19 +168,7 @@ def compare(
 
     result = dict(seed=seed, genetic=summary(genetic), random=summary(control))
     if forward:
-        history = {}
-        parent = ()
-        order_rng = np.random.default_rng(seed)
-        while len(history) < len(genetic) and len(parent) < 4:
-            extensions = {}
-            for column in order_rng.permutation(X.shape[1]).tolist():
-                if column in parent:
-                    continue
-                mask = tuple(sorted((*parent, column)))
-                extensions[mask] = history[mask] = cv_score(mask)
-                if len(history) == len(genetic):
-                    break
-            parent = max(extensions, key=extensions.get)
+        history = forward_history(X.shape[1], len(genetic), seed, cv_score)
         assert len(history) == len(genetic)
         result["forward"] = summary(history)
     if signal is not None:

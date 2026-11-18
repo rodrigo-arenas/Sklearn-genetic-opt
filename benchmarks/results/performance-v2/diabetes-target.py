@@ -26,7 +26,7 @@ residual_selector = run_path(str(Path(__file__).with_name("filter-portfolio.py")
 ]
 
 
-def run(policy, X, y, test, labels, cv, seed, target):
+def run(policy, X, y, test, labels, cv, seed, target, *, trajectory=None):
     start = perf_counter()
     model = make_pipeline(StandardScaler(), Ridge())
     winner = None
@@ -57,6 +57,12 @@ def run(policy, X, y, test, labels, cv, seed, target):
         mask = np.all(np.asarray(ga.cv_results_["features"]) == ga.best_features_, axis=1)
         ga_score = ga.cv_results_["mean_test_score"][np.flatnonzero(mask)[0]]
         calls += ga.fit_stats_["cross_validate_calls"]
+        if trajectory is not None:
+            for features, value in zip(
+                ga.cv_results_["features"], ga.cv_results_["mean_test_score"], strict=True
+            ):
+                trajectory.setdefault(tuple(np.flatnonzero(features).tolist()), value)
+            assert len(trajectory) == ga.fit_stats_["cross_validate_calls"]
         if ga_score >= score:
             score, winner = ga_score, ga
     if not isinstance(winner, GAFeatureSelectionCV):

@@ -2514,6 +2514,30 @@ CV fit counts and samples uniformly over masks, so subset sizes appear in
 proportion to their number of admissible masks. The results cover one
 genetic seed per split and two small spaces.
 
+#### Forward selection at the same number of evaluated masks
+
+Forward selection scores all single columns, then all one-column extensions
+of each round's winner, through four columns. It returns the highest CV score
+seen at any round. This costs 14 masks per airfoil split and 18 per yacht
+split. Compare the genetic search's first 14 or 18 distinct masks on the
+same training folds. Both arms prefer fewer columns on a CV tie. The
+exhaustive score table supplies the forward scores and verifies the scores
+recorded by genetic search. This replay measures quality per evaluation.
+
+| Dataset | Policy | Fits per split | Exact CV optimum | Mean CV R² | Mean holdout R² |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Airfoil | Forward | 42 | 1/6 | 0.46335 | 0.43271 |
+| Airfoil | Genetic | 42 | 5/6 | 0.46891 | 0.45252 |
+| Yacht | Forward | 54 | 4/6 | 0.65634 | 0.65765 |
+| Yacht | Genetic | 54 | 2/6 | 0.65631 | 0.65789 |
+
+On airfoil the genetic prefix improved mean holdout R² by 0.01981 over
+forward selection. On yacht the two mean holdout scores differed by less
+than 0.00025 even though forward selection found the exact CV optimum more
+often. These splits support retaining a genetic baseline when testing
+greedy proposals. The [per-split records](results/performance-v2/physical-reference.json)
+include the selected columns for both arms.
+
 ## Selecting masks using scores of previously evaluated subsets
 
 This pilot tested whether the columns in high-scoring masks are worth trying
