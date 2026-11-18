@@ -2038,6 +2038,34 @@ pair-coverage cohort the dedicated policy visited 61.2 of 120 possible pairs
 on average and found the signal twice, while genetic search visited 52 on
 average and found it four times.
 
+### Does partitioning columns into groups of four improve early exploration?
+
+We shuffled the columns and evaluated consecutive disjoint groups of four,
+reshuffling after each pass and dropping any partial group. The size-matched
+random control drew four columns from a fresh shuffle for every candidate.
+Both skipped duplicate masks and started with the same mask. The genetic
+baseline could select one to four columns. Each comparison used the first
+24 distinct masks and the same three CV folds. The table reports the mean
+held-out score of each policy's CV winner.
+
+| Task | Metric | Genetic | Random groups of four | Partitioned groups of four |
+| --- | --- | ---: | ---: | ---: |
+| Additive signal | Balanced accuracy | 0.879 | 0.751 | 0.908 |
+| XOR interaction | Balanced accuracy | 0.774 | 0.570 | 0.845 |
+| Wine | Balanced accuracy | 0.918 | 0.919 | 0.927 |
+| Diabetes | R² | 0.465 | 0.443 | 0.474 |
+
+On XOR, the partitioned policy proposed both informative columns together in
+four of four runs, versus one for random groups and three for genetic search.
+Every method selected a mask containing both whenever it proposed one. Mean
+pair coverage was 91.5, 86.75 and 49.5 of 120 respectively. The additive and
+XOR tasks share column placements and proposal seeds, so the two fixed-size
+policies saw the same masks on both tasks. Wine and Diabetes each used two
+outer splits and two search seeds per split. This pilot measures quality at a
+fixed candidate budget. It does not measure wall time or establish that four
+is a good group size across dimensions or sparsity levels. The production
+search policy is unchanged. [Recorded trajectories and reproduction script](results/performance-v2/partition-four-pilot.json)
+
 ## How much fit time goes into integer sampling?
 
 Drawing 2,000 variable integers directly with NumPy took 3.6–3.8 ms on the
