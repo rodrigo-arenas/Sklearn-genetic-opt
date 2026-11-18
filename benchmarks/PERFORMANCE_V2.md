@@ -2438,6 +2438,33 @@ of early stopping on diabetes and provide no basis for a universal threshold.
 Pass `--sensitivity` to the timing script to reproduce the
 [per-run results](results/performance-v2/diabetes-target-sensitivity.json).
 
+### Transfer to held-out experimental conditions
+
+The [transfer experiment](results/performance-v2/physical-target.py) kept
+the diabetes target of 0.45, the four-feature limit, Ridge and the genetic
+budget. It used [Airfoil Self-Noise (Brooks, Pope and Marcolini)](https://doi.org/10.24432/C5VW2C)
+and [Yacht Hydrodynamics (Gerritsma, Onnink and Versluis)](https://doi.org/10.24432/C5XG7R).
+Airfoil frequency sweeps stayed together by matching the four other predictors
+(106 groups). Yacht measurements stayed together by the five hull geometry
+coefficients (22 groups). Each of six seeds held out 25% of groups, with
+group-disjoint three-fold CV on the remaining groups.
+
+| Dataset | Policy | Bypassed genetic search | Total downstream CV fits | Median time to fitted model | Mean holdout R² |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Airfoil | Genetic | 0/6 | 231 | 119 ms | 0.4441 |
+| Airfoil | Univariate first | 2/6 | 183 | 121 ms | 0.4513 |
+| Airfoil | Residual first | 4/6 | 105 | 22 ms | 0.4398 |
+| Yacht | Genetic | 0/6 | 108 | 51 ms | 0.6571 |
+| Yacht | Univariate first | 6/6 | 18 | 14 ms | 0.6581 |
+| Yacht | Residual first | 6/6 | 18 | 20 ms | 0.6579 |
+
+All policies reached the CV target on all splits. On airfoil the residual
+proposal saved the most fits but had the lowest mean holdout score. On yacht
+the univariate filter reached the target as often and took less time. Both
+datasets have small selection spaces (five and six input columns), limiting
+what this says about high-dimensional search. The [per-run results](results/performance-v2/physical-target.json)
+include input file hashes and all holdout scores.
+
 ## Selecting masks using scores of previously evaluated subsets
 
 This pilot tested whether the columns in high-scoring masks are worth trying
