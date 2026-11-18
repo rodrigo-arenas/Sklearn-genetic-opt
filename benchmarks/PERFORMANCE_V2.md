@@ -1387,6 +1387,29 @@ therefore gives a different quality comparison for this task.
 Reproduce with `python benchmarks/results/performance-v2/bounded-finalists.py --time-shortlists`.
 [Timings, fold counts, finalist indices and scores](results/performance-v2/shortlist-fit-times.json).
 
+#### Does the shortlist timing result transfer to other estimators?
+
+We repeated the public five-versus-eight comparison with six fresh split
+seeds, the benchmark suite's standardized KNN on Wine and decision tree
+on Diabetes. Both settings scored candidates on one preliminary fold and
+reused it during five-fold finalist validation. The table reports mean
+end-to-end fit time and outer holdout performance. Lower MSE is better.
+
+| Dataset and metric | Search | Fit seconds, 8 / 5 | Held-out score, 8 / 5 | Same winner |
+| --- | --- | ---: | ---: | ---: |
+| Wine, accuracy | Hyperparameters | 0.253 / 0.204 | 0.9593 / 0.9630 | 4/6 |
+| Wine, accuracy | Features | 0.241 / 0.203 | 0.9370 / 0.9519 | 4/6 |
+| Diabetes, MSE | Hyperparameters | 0.110 / 0.094 | 4201.7 / 4247.6 | 5/6 |
+| Diabetes, MSE | Features | 0.124 / 0.105 | 6806.5 / 6646.6 | 4/6 |
+
+Five finalists saved 12 fold fits and finished faster in all 24 pairs. On
+Diabetes the change raised mean prediction error for hyperparameter search
+and lowered it for feature selection. Only one of six hyperparameter runs
+changed winner, so the mean difference for that task came from one split.
+These timings cover one worker and six overlapping holdouts per dataset.
+[Reproduction script](results/performance-v2/shortlist-transfer.py) and
+[per-split results](results/performance-v2/shortlist-transfer.json).
+
 ## Holdout quality at intermediate candidate budgets
 
 The shared-initialization comparison above also permits a comparison before
