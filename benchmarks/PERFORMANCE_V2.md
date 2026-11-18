@@ -2118,6 +2118,33 @@ separately from column coverage before changing the default.
 [Experiment](results/performance-v2/partition-initialization.py) and
 [per-run measurements](results/performance-v2/partition-initialization.json).
 
+#### How does initial mask size affect sparse regression?
+
+We generated two equally weighted informative Gaussian features with additive
+Gaussian noise (standard deviation 0.5) and shuffled their positions among 16
+or 64 columns. Within each seed both widths shared the labels, informative
+features, training rows (240), held-out rows (860), and three CV folds. The
+search used Ridge, a four-feature cap, and the same evolution settings as
+above. We fixed the inner-CV R² target at 0.75 before running the search.
+The table lists the first distinct candidate to reach it, in seed order.
+A dash means all 24 candidates missed. Each candidate cost three fold fits.
+
+| Columns | Initial masks | Candidate reaching target (four seeds) | Mean held-out R² at 24 |
+| ---: | --- | --- | ---: |
+| 16 | Current smart | 9, —, 21, 6 | 0.765 |
+| 16 | Random size two | 15, 13, 23, — | 0.775 |
+| 16 | Random size four | 4, —, —, 6 | 0.658 |
+| 64 | Current smart | —, —, —, — | 0.190 |
+| 64 | Random size two | —, —, —, — | 0.418 |
+| 64 | Random size four | —, —, 22, 23 | 0.639 |
+
+Starting with larger masks helped at width 64, but reached the target less
+often at width 16. Even the two successes at width 64 required 66 and 69
+fold fits. Four seeds and one linear signal model give little basis for a
+universal initial mask size. Reproduce with
+`python benchmarks/results/performance-v2/partition-initialization.py --sparse-regression`.
+[Per-run measurements](results/performance-v2/sparse-initialization.json).
+
 ## How much fit time goes into integer sampling?
 
 Drawing 2,000 variable integers directly with NumPy took 3.6–3.8 ms on the

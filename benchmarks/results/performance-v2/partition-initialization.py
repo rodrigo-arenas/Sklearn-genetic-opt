@@ -1,5 +1,6 @@
 """Compare initial feature masks with the same downstream genetic algorithm."""
 
+import argparse
 import json
 from pathlib import Path
 from random import Random
@@ -8,7 +9,9 @@ from time import perf_counter
 
 import numpy as np
 from sklearn.base import clone
+from sklearn.linear_model import Ridge
 from sklearn.metrics import get_scorer
+from sklearn.model_selection import KFold
 from threadpoolctl import threadpool_limits
 
 from sklearn_genetic import GAFeatureSelectionCV
@@ -16,6 +19,7 @@ from sklearn_genetic import GAFeatureSelectionCV
 
 class FourColumnStart(GAFeatureSelectionCV):
     partitioned = False
+    mask_size = 4
 
     def _initialize_population(self):
         population = super()._initialize_population()
@@ -25,8 +29,9 @@ class FourColumnStart(GAFeatureSelectionCV):
         masks = {}
         while len(masks) < len(population):
             perm = rng.sample(range(width), width)
-            for offset in range(0, width - 3 if self.partitioned else 1, 4):
-                masks[tuple(sorted(perm[offset : offset + 4]))] = None
+            stop = width - self.mask_size + 1 if self.partitioned else 1
+            for offset in range(0, stop, self.mask_size):
+                masks[tuple(sorted(perm[offset : offset + self.mask_size]))] = None
         for individual, columns in zip(population, masks):
             individual[:] = [int(i in columns) for i in range(width)]
         return population
@@ -36,9 +41,17 @@ class PartitionStart(FourColumnStart):
     partitioned = True
 
 
-def compare(X, y, test, labels, cv, model, metric, seed, *args, **kwargs):
+class TwoColumnStart(FourColumnStart):
+    mask_size = 2
+
+
+def compare(X, y, test, labels, cv, model, metric, seed, *args, target=None, **kwargs):
     rows = {}
-    methods = [GAFeatureSelectionCV, FourColumnStart, PartitionStart]
+    methods = [
+        GAFeatureSelectionCV,
+        FourColumnStart,
+        PartitionStart if target is None else TwoColumnStart,
+    ]
     Random(seed).shuffle(methods)
     for cls in methods:
         search = cls(
@@ -70,18 +83,40 @@ def compare(X, y, test, labels, cv, model, metric, seed, *args, **kwargs):
         rows[cls.__name__] = dict(
             candidates=len(observed), full_fit_seconds=elapsed, holdout=scores
         )
+        if target is not None:
+            rows[cls.__name__]["first_target_by_24"] = next(
+                (i for i, score in enumerate(list(observed.values())[:24], 1) if score >= target),
+                None,
+            )
     return dict(seed=seed, methods=rows)
 
 
+def sparse_regression(width, seed):
+    rng = np.random.default_rng(seed)
+    features = rng.normal(size=(1100, 64))
+    y = features[:, 0] + features[:, 1] + 0.5 * rng.normal(size=len(features))
+    X = features[:, rng.permutation(width)]
+    folds = list(KFold(3, shuffle=True, random_state=seed).split(X[:240]))
+    result = compare(X[:240], y[:240], X[240:], y[240:], folds, Ridge(), "r2", seed, target=0.75)
+    return dict(width=width, **result)
+
+
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--sparse-regression", action="store_true")
+    args = parser.parse_args()
     here = Path(__file__).resolve().parent
     run_real = run_path(str(here / "known-support.py"))["run_real"]
     run_real.__globals__["compare"] = compare
     with threadpool_limits(1):
-        rows = [
-            run_real(task, split, seed)
-            for task in ("wine", "diabetes")
-            for split in (8231, 8232)
-            for seed in (8241, 8242)
-        ]
+        rows = (
+            [sparse_regression(width, seed) for width in (16, 64) for seed in range(8301, 8305)]
+            if args.sparse_regression
+            else [
+                run_real(task, split, seed)
+                for task in ("wine", "diabetes")
+                for split in (8231, 8232)
+                for seed in (8241, 8242)
+            ]
+        )
     print(json.dumps(rows, indent=2, allow_nan=False))
