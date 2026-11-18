@@ -1973,6 +1973,43 @@ can be regenerated from the repository root with the same benchmark runner:
 .\.venv\Scripts\python.exe benchmarks/results/performance-v2/known-support.py --real-transfer benchmarks/results/performance-v2/score-guided-transfer.json
 ```
 
+### Greedy forward selection at 24 distinct masks
+
+Forward selection starts with an empty mask, scores each possible one-column
+extension, and keeps the extension with the highest inner CV score as the next
+parent. Each round visits columns in seeded random order. When the budget ends
+mid-round, all evaluated extensions remain eligible to win. All methods choose
+the highest CV score among their first 24 distinct masks, breaking ties by
+preferring fewer columns. Each prefix costs 72 inner fold fits. The genetic
+search ran beyond the prefix to collect its trajectory. The random continuation
+shares its first six masks with the genetic search. Forward selection spends
+its own budget from the first singleton.
+All three arms were rerun on the same library revision (`1128251`).
+
+| Task | Holdout metric | Genetic | Random continuation | Forward |
+| --- | --- | ---: | ---: | ---: |
+| Additive signal | Balanced accuracy | .86690 | .82422 | .82782 |
+| XOR interaction | Balanced accuracy | .58950 | .69206 | .49989 |
+| Wine, logistic regression | Balanced accuracy | .91204 | .95432 | .93148 |
+| Diabetes, Ridge | R² | .51223 | .49173 | .48568 |
+
+On XOR, forward selection used 16 of its 24 evaluations on single columns and
+recovered both informative columns in zero of four winning masks. Genetic
+search recovered both once and random continuation twice. On Wine, forward
+selection exceeded genetic search on four of six paired runs. The synthetic
+means cover four dataset seeds. Each real dataset has only two outer splits
+with three search seeds per split. These comparisons measure quality at a
+fixed evaluation budget, with the holdout reserved for scoring each CV winner.
+
+The [synthetic trajectories](results/performance-v2/forward-synthetic.json) and
+[real-data trajectories](results/performance-v2/forward-real.json) can be
+regenerated from the repository root:
+
+```powershell
+.\.venv\Scripts\python.exe benchmarks/results/performance-v2/known-support.py --forward benchmarks/results/performance-v2/forward-synthetic.json
+.\.venv\Scripts\python.exe benchmarks/results/performance-v2/known-support.py --forward --real-transfer benchmarks/results/performance-v2/forward-real.json
+```
+
 ## How much fit time goes into integer sampling?
 
 Drawing 2,000 variable integers directly with NumPy took 3.6–3.8 ms on the

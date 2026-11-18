@@ -24,7 +24,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from sklearn_genetic import GAFeatureSelectionCV
 
 
-def run_pair(seed, interaction, pair_coverage=False, score_guided=False):
+def run_pair(seed, interaction, pair_coverage=False, score_guided=False, forward=False):
     rng = np.random.default_rng(seed)
     signal = sorted(rng.choice(16, size=2, replace=False).tolist())
 
@@ -50,11 +50,12 @@ def run_pair(seed, interaction, pair_coverage=False, score_guided=False):
         pair_coverage,
         score_guided,
         signal,
+        forward=forward,
     )
     return dict(task="xor" if interaction else "additive", signal=signal, **result)
 
 
-def run_real(task, split_seed, seed):
+def run_real(task, split_seed, seed, forward=False):
     classification = task == "wine"
     X, y = (load_wine if classification else load_diabetes)(return_X_y=True)
     X, test, y, labels = train_test_split(
@@ -70,11 +71,24 @@ def run_real(task, split_seed, seed):
         task=task,
         split_seed=split_seed,
         metric=metric,
-        **compare(X, y, test, labels, cv, model, metric, seed, False, True),
+        **compare(X, y, test, labels, cv, model, metric, seed, False, not forward, forward=forward),
     )
 
 
-def compare(X, y, test, labels, cv, model, metric, seed, pair_coverage, score_guided, signal=None):
+def compare(
+    X,
+    y,
+    test,
+    labels,
+    cv,
+    model,
+    metric,
+    seed,
+    pair_coverage,
+    score_guided,
+    signal=None,
+    forward=False,
+):
     search = GAFeatureSelectionCV(
         model,
         cv=cv,
@@ -136,6 +150,22 @@ def compare(X, y, test, labels, cv, model, metric, seed, pair_coverage, score_gu
         )
 
     result = dict(seed=seed, genetic=summary(genetic), random=summary(control))
+    if forward:
+        history = {}
+        parent = ()
+        order_rng = np.random.default_rng(seed)
+        while len(history) < len(genetic) and len(parent) < 4:
+            extensions = {}
+            for column in order_rng.permutation(X.shape[1]).tolist():
+                if column in parent:
+                    continue
+                mask = tuple(sorted((*parent, column)))
+                extensions[mask] = history[mask] = cv_score(mask)
+                if len(history) == len(genetic):
+                    break
+            parent = max(extensions, key=extensions.get)
+        assert len(history) == len(genetic)
+        result["forward"] = summary(history)
     if signal is not None:
         univariate = SelectKBest(f_classif, k=2).fit(X, y).get_support(indices=True).tolist()
         result.update(filter=evaluate(univariate), known_support=evaluate(signal))
@@ -184,8 +214,9 @@ if __name__ == "__main__":
     policies.add_argument(
         "--real-transfer",
         action="store_true",
-        help="Test the score-guided rule on Wine and Diabetes.",
+        help="Use Wine and Diabetes. Compare score-guided proposals unless --forward is set.",
     )
+    parser.add_argument("--forward", action="store_true", help="Compare greedy forward selection.")
     args = parser.parse_args()
     seeds = range(2201, 2207) if args.pair_coverage else range(2101, 2105)
     if args.score_guided:
@@ -193,14 +224,14 @@ if __name__ == "__main__":
     with threadpool_limits(1):
         if args.real_transfer:
             rows = [
-                run_real(task, split_seed, seed)
+                run_real(task, split_seed, seed, forward=args.forward)
                 for task in ("wine", "diabetes")
                 for split_seed in (3301, 3302)
                 for seed in (3311, 3312, 3313)
             ]
         else:
             rows = [
-                run_pair(seed, interaction, args.pair_coverage, args.score_guided)
+                run_pair(seed, interaction, args.pair_coverage, args.score_guided, args.forward)
                 for seed in seeds
                 for interaction in (False, True)
             ]
