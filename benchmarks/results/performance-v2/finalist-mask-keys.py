@@ -51,12 +51,11 @@ def measure(width, copies):
     )
 
 
-def paired_fit(width, seed):
+def paired_fit(width, seed, methods=(TupleRanking, GAFeatureSelectionCV)):
     rng = np.random.default_rng(seed)
     X = rng.standard_normal((240, width))
     y = (X[:, 0] + X[:, 1] > 0).astype(int)
     folds = list(StratifiedKFold(3, shuffle=True, random_state=seed).split(X[:160], y[:160]))
-    methods = (TupleRanking, GAFeatureSelectionCV)
     rows = {}
     outcomes = []
     for cls in methods if seed % 2 else reversed(methods):

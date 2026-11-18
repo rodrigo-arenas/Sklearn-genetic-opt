@@ -1599,6 +1599,30 @@ same ordered finalist indices, fold scores, winning mask, predictions on
 `python benchmarks/results/performance-v2/finalist-mask-keys.py --full-fit`.
 [Per-seed measurements](results/performance-v2/finalist-mask-fit-times.json).
 
+### Does changing mask repair reduce complete fit time?
+
+Feature search repairs masks after variation and before evaluation. A
+benchmark-only implementation normalized all entries with a list
+comprehension and slice assignment, then counted the selected columns once.
+It preserved the shuffle used to trim oversized masks and the random draw
+that repairs an empty mask. We repeated the complete decision-tree search
+above on six new seeds at each width, alternating execution order.
+
+| Columns | Median current fit (ms) | Median experimental fit (ms) | Faster experimental fits |
+| ---: | ---: | ---: | ---: |
+| 16 | 126.11 | 131.73 | 1/6 |
+| 256 | 183.29 | 183.21 | 2/6 |
+| 4,096 | 296.80 | 285.53 | 6/6 |
+
+Every pair matched on candidate CV count, ordered finalists, their fold
+scores, winning mask and holdout predictions. At 4,096 columns the
+difference between medians was 11.27 ms (3.8%). At 16 columns the median
+increased by 5.62 ms. Bulk assignment also allocates a temporary list as
+wide as the input. These results favor investigating fewer repair passes
+before replacing the default loop across widths.
+[Reproduction script](results/performance-v2/feature-repair-fit.py) and
+[per-seed timings](results/performance-v2/feature-repair-fit.json).
+
 ## Mutation in grids that mix fixed and variable dimensions
 
 The standard HPO mutation used to select from every configured parameter.
