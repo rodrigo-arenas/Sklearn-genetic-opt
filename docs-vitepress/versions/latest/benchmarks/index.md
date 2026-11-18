@@ -4,6 +4,7 @@ description: Compare GASearchCV, Optuna TPE and random search by candidate evalu
 ---
 <script setup>
 import holdoutResultsUrl from '../../../../benchmarks/results/performance-v2/holdout-by-budget.json?url'
+import randomSearchResultsUrl from '../../../../benchmarks/results/performance-v2/hpo-random-transfer-post-fix.json?url'
 import kernelResultsUrl from '../../../../benchmarks/results/performance-v2/default-kernel-coverage.json?url'
 import resumeResultsUrl from '../../../../benchmarks/results/performance-v2/resume-equal-cost.json?url'
 </script>
@@ -16,6 +17,21 @@ This is the **latest (dev)** documentation. It may contain unreleased features o
 # Genetic search benchmarks for scikit-learn
 
 How quickly does genetic search find a useful model? The Bayesmark comparisons below report the best inner cross-validation score reached under a candidate budget. A separate paired experiment measures how well the selected hyperparameters and feature masks perform on held-out data.
+
+## When does GASearchCV save time over random search?
+
+On Digits with K-nearest neighbors, `GASearchCV` evaluated about 40 of 50 configurations and took 81% of the time of `RandomizedSearchCV`, with similar mean held-out accuracy. On Wine with a decision tree, both explored almost the entire 28-configuration space and genetic search took 144% of the random-search time. A smaller evaluation count alone cannot tell you how much time you will save.
+
+| Dataset and estimator | Mean held-out score (genetic / random) | Mean candidates evaluated (genetic / random) | Genetic time as % of random time |
+| --- | ---: | ---: | ---: |
+| Wine, decision tree | 0.8800 / 0.8844 accuracy | 27.8 / 28 | 144% |
+| Digits, K-nearest neighbors | 0.9756 / 0.9751 accuracy | 39.8 / 50 | 81% |
+| Diabetes, ElasticNet | 3463 / 3479 mean squared error | 70.6 / 72 | 105% |
+| Synthetic classification, random forest | 0.8733 / 0.8653 accuracy | 65.6 / 72 | 93% |
+
+Each row averages five paired runs on overlapping outer splits. Lower mean squared error and higher accuracy indicate better predictions. Each pair used the same estimator, search ranges, training data, three CV folds and one CPU worker. Genetic search used eight initial candidates and four generations. Random search tried up to 72 configurations, exhausting the two smaller finite spaces. The timing column averages the five within-split ratios.
+
+To compare optimizers on your workload, set aside the outer test data before tuning and give both methods identical inner folds. Record the elapsed time around `fit` and the number of distinct candidate evaluations. Score each method's CV winner on the outer data after selection. When elapsed time is your constraint, see [Stop after a time budget](../recipes/advanced/time-budget). <a :href="randomSearchResultsUrl" download="hpo-random-transfer-post-fix.json">Download the 40 runs and reproduction script (JSON)</a>.
 
 ## Does evolution improve on the initial population?
 
