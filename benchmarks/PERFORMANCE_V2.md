@@ -1334,6 +1334,34 @@ incomplete finalist scores. This experiment measures potential fold
 savings only. [Reproduction script](results/performance-v2/bounded-finalists.py)
 and [per-finalist fold counts](results/performance-v2/bounded-finalists.json).
 
+### Is a second screening fold worth its cost?
+
+On six fresh outer splits per task we compared three ways to select a
+winner from the same eight finalists. Full validation required 32 new fold
+fits because the first of five folds was already scored. Screening all eight
+on a second fold and completing the top four would require 20 new fits
+(8 + 4 × 3). A simpler equal-cost control fully validated the first five
+from the preliminary ranking (5 × 4). All final decisions used five-fold
+means. Ties followed the original finalist order after the existing
+preference for fewer features. We refitted each selected model before
+scoring it on the outer holdout.
+
+| Task and metric | Search | Full eight | Screen eight, complete four | Complete first five |
+| --- | --- | ---: | ---: | ---: |
+| Breast Cancer, ROC AUC | Hyperparameters | 0.995458 | 0.995318 | 0.995528 |
+| Breast Cancer, ROC AUC | Features | 0.993501 | 0.993711 | 0.994514 |
+| Diabetes, R² | Hyperparameters | 0.527600 | 0.526846 | 0.527351 |
+| Diabetes, R² | Features | 0.481996 | 0.481996 | 0.481996 |
+
+Screening retained the full winner in 17 of 24 searches, versus 15 for the
+first-five control. The first-five control nevertheless achieved at least
+as high a mean held-out score in every row. Reducing the existing
+`final_selection_top_k` is a competitive baseline at this budget. The
+37.5% potential reduction applies only to new finalist folds. The replay
+actually computed every fold and does not establish a wall-time saving.
+Reproduce with `python benchmarks/results/performance-v2/bounded-finalists.py --promote`.
+[Per-split winners and scores](results/performance-v2/two-fold-promotion.json).
+
 ## Holdout quality at intermediate candidate budgets
 
 The shared-initialization comparison above also permits a comparison before
