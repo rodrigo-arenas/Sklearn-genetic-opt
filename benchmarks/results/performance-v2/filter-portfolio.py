@@ -1,6 +1,8 @@
 """Trade four fixed-mask CV evaluations for fold-local univariate filters."""
 
+import argparse
 import json
+from functools import partial
 from pathlib import Path
 from runpy import run_path
 from time import perf_counter
@@ -16,7 +18,7 @@ from threadpoolctl import threadpool_limits
 from sklearn_genetic import GAFeatureSelectionCV
 
 
-def compare(X, y, test, labels, cv, model, metric, seed, *args, **kwargs):
+def compare(X, y, test, labels, cv, model, metric, seed, *args, one_slot=False, **kwargs):
     ga = GAFeatureSelectionCV(
         clone(model),
         cv=cv,
@@ -48,11 +50,14 @@ def compare(X, y, test, labels, cv, model, metric, seed, *args, **kwargs):
         filters.append((float(score), k, None))
     filter_cv_seconds = perf_counter() - start
     arms = {}
-    for name, candidates in (
+    policies = [
         ("genetic", genetic),
         ("filters", filters),
         ("portfolio", genetic[:20] + filters),
-    ):
+    ]
+    if one_slot:
+        policies.append(("one_filter", genetic[:23] + filters[-1:]))
+    for name, candidates in policies:
         score, k, mask = max(candidates, key=lambda c: (c[0], -c[1]))
         if mask is None:
             fitted = make_pipeline(SelectKBest(scorer, k=k), clone(model)).fit(X, y)
@@ -78,14 +83,20 @@ def compare(X, y, test, labels, cv, model, metric, seed, *args, **kwargs):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--one-slot", action="store_true")
+    args = parser.parse_args()
+    seeds = range(9351, 9357) if args.one_slot else range(9241, 9245)
     here = Path(__file__).resolve().parent
     known = run_path(str(here / "known-support.py"))
     sparse = run_path(str(here / "partition-initialization.py"))["sparse_regression"]
     pair, real = known["run_pair"], known["run_real"]
     for builder in (sparse, pair, real):
-        builder.__globals__["compare"] = compare
+        builder.__globals__["compare"] = partial(compare, one_slot=args.one_slot)
     with threadpool_limits(1):
-        rows = [dict(task="sparse", **sparse(64, s)) for s in range(9241, 9245)]
-        rows += [pair(s, True) for s in range(9241, 9245)]
-        rows += [real(task, s, s + 10) for task in ("wine", "diabetes") for s in range(9241, 9245)]
+        rows = [dict(task="sparse", **sparse(64, s)) for s in seeds]
+        rows += [pair(s, True) for s in seeds]
+        rows += [real(task, s, s + 10) for task in ("wine", "diabetes") for s in seeds]
+        if args.one_slot:
+            rows += [pair(s, False) for s in seeds]
     print(json.dumps(rows, indent=2, allow_nan=False))

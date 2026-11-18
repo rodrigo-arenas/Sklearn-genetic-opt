@@ -2283,6 +2283,33 @@ search time and four-filter CV time cover different amounts of work.
 [Experiment](results/performance-v2/filter-portfolio.py) and
 [winners, selected columns and scores](results/performance-v2/filter-portfolio.json).
 
+### What if only one slot is reserved for a filter?
+
+On six fresh seeds per task we compared 24 genetic masks, 23 masks plus one
+fold-local F-test filter, and 20 masks plus four filters. The single filter
+always selected the maximum allowed size (four columns), chosen before this
+run without consulting the known signal size. The table gives mean held-out
+scores. All three portfolios used 72 fold fits per prefix.
+
+| Task | Metric | Genetic only | One filter slot | Four filter slots | Single filter selected |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Sparse regression, 64 columns | R² | 0.43068 | 0.88414 | 0.88489 | 6/6 |
+| Additive classification, 16 columns | Balanced accuracy | 0.84281 | 0.90391 | 0.92106 | 3/6 |
+| XOR classification, 16 columns | Balanced accuracy | 0.68572 | 0.68572 | 0.68437 | 0/6 |
+| Wine | Balanced accuracy | 0.94012 | 0.94691 | 0.94012 | 2/6 |
+| Diabetes | R² | 0.44654 | 0.46246 | 0.46193 | 3/6 |
+
+One filter slot improved held-out R² on every sparse-regression seed. On XOR
+it preserved the genetic score on every seed. The mean Wine gain came from
+one split, with five ties. On additive classification four slots did better
+than one on average. These paired results support testing a single filter
+candidate on new problem families, especially correlated predictors and
+larger feature caps. The two real datasets also appeared in the first pilot.
+As above, the benchmark scores fixed prefixes and does not measure runtime
+at an enforced 24-candidate limit.
+Reproduce with `python benchmarks/results/performance-v2/filter-portfolio.py --one-slot`.
+[Per-split winners, selected columns and scores](results/performance-v2/one-filter-slot.json).
+
 ## Selecting masks using scores of previously evaluated subsets
 
 This pilot tested whether the columns in high-scoring masks are worth trying
