@@ -1579,6 +1579,26 @@ timings cover ranking only, using nine alternating measurement pairs of ten
 rankings. [Reproduction script](results/performance-v2/finalist-mask-keys.py)
 and [per-case measurements](results/performance-v2/finalist-mask-keys.json).
 
+Six paired seeds at each of two widths tested whether the ranking savings
+also showed up in complete fits. Each search used 160 training rows, a
+depth-three decision tree, an upper limit of 16 selected features, three
+generations and eight finalists. The preliminary fold was reused during
+three-fold finalist validation. Run order alternated by seed. After timing
+each fit we separately timed ranking on its recorded history.
+
+| Columns | Median ranking, tuple / packed (ms) | Median full fit, tuple / packed (ms) | Faster full fits with packed keys |
+| ---: | ---: | ---: | ---: |
+| 256 | 0.174 / 0.021 | 179.89 / 179.97 | 4/6 |
+| 4,096 | 2.263 / 0.025 | 297.52 / 298.84 | 3/6 |
+
+At 4,096 columns the old ranking took less than 1% of total fit time in
+this workload. Packing accelerated ranking on fitted histories, while total
+fit time showed no consistent improvement. All twelve pairs returned the
+same ordered finalist indices, fold scores, winning mask, predictions on
+80 held-out rows and candidate CV count. Reproduce with
+`python benchmarks/results/performance-v2/finalist-mask-keys.py --full-fit`.
+[Per-seed measurements](results/performance-v2/finalist-mask-fit-times.json).
+
 ## Mutation in grids that mix fixed and variable dimensions
 
 The standard HPO mutation used to select from every configured parameter.

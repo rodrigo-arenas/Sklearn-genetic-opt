@@ -1,0 +1,182 @@
+[
+  {
+    "width": 256,
+    "seed": 9141,
+    "cv_calls": 56,
+    "runs": {
+      "TupleRanking": {
+        "fit_seconds": 0.18020629999227822,
+        "ranking_seconds": 0.00015006666459764043
+      },
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.17928540002321824,
+        "ranking_seconds": 1.9366678316146135e-05
+      }
+    }
+  },
+  {
+    "width": 256,
+    "seed": 9142,
+    "cv_calls": 56,
+    "runs": {
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.1998293999931775,
+        "ranking_seconds": 2.066666881243388e-05
+      },
+      "TupleRanking": {
+        "fit_seconds": 0.17816060001496226,
+        "ranking_seconds": 0.00016566666696841517
+      }
+    }
+  },
+  {
+    "width": 256,
+    "seed": 9143,
+    "cv_calls": 56,
+    "runs": {
+      "TupleRanking": {
+        "fit_seconds": 0.1795766999712214,
+        "ranking_seconds": 0.00019623333355411887
+      },
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.1794264999916777,
+        "ranking_seconds": 2.236666235451897e-05
+      }
+    }
+  },
+  {
+    "width": 256,
+    "seed": 9144,
+    "cv_calls": 56,
+    "runs": {
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.1805185999837704,
+        "ranking_seconds": 2.0833336748182774e-05
+      },
+      "TupleRanking": {
+        "fit_seconds": 0.17674269998678938,
+        "ranking_seconds": 0.00018323333157847324
+      }
+    }
+  },
+  {
+    "width": 256,
+    "seed": 9145,
+    "cv_calls": 56,
+    "runs": {
+      "TupleRanking": {
+        "fit_seconds": 0.18824150000000373,
+        "ranking_seconds": 0.00019303334799284735
+      },
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.18248529999982566,
+        "ranking_seconds": 2.2599997464567423e-05
+      }
+    }
+  },
+  {
+    "width": 256,
+    "seed": 9146,
+    "cv_calls": 56,
+    "runs": {
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.1784285999601707,
+        "ranking_seconds": 2.1133339032530785e-05
+      },
+      "TupleRanking": {
+        "fit_seconds": 0.18213630001991987,
+        "ranking_seconds": 0.00016216665972024202
+      }
+    }
+  },
+  {
+    "width": 4096,
+    "seed": 9141,
+    "cv_calls": 56,
+    "runs": {
+      "TupleRanking": {
+        "fit_seconds": 0.29521939996629953,
+        "ranking_seconds": 0.0025522666595255337
+      },
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.3001927000004798,
+        "ranking_seconds": 2.5366665795445442e-05
+      }
+    }
+  },
+  {
+    "width": 4096,
+    "seed": 9142,
+    "cv_calls": 56,
+    "runs": {
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.29757240001345053,
+        "ranking_seconds": 2.0800003161032993e-05
+      },
+      "TupleRanking": {
+        "fit_seconds": 0.29768380004679784,
+        "ranking_seconds": 0.0020688666651646295
+      }
+    }
+  },
+  {
+    "width": 4096,
+    "seed": 9143,
+    "cv_calls": 56,
+    "runs": {
+      "TupleRanking": {
+        "fit_seconds": 0.29961059999186546,
+        "ranking_seconds": 0.002175033325329423
+      },
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.30257820000406355,
+        "ranking_seconds": 2.3300002794712782e-05
+      }
+    }
+  },
+  {
+    "width": 4096,
+    "seed": 9144,
+    "cv_calls": 56,
+    "runs": {
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.3001114000217058,
+        "ranking_seconds": 2.5700001666943233e-05
+      },
+      "TupleRanking": {
+        "fit_seconds": 0.2940635000122711,
+        "ranking_seconds": 0.0023987000070822737
+      }
+    }
+  },
+  {
+    "width": 4096,
+    "seed": 9145,
+    "cv_calls": 56,
+    "runs": {
+      "TupleRanking": {
+        "fit_seconds": 0.3067995999590494,
+        "ranking_seconds": 0.0020509999982702234
+      },
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.29653350001899526,
+        "ranking_seconds": 2.4899995575348537e-05
+      }
+    }
+  },
+  {
+    "width": 4096,
+    "seed": 9146,
+    "cv_calls": 56,
+    "runs": {
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.29036400001496077,
+        "ranking_seconds": 2.476666122674942e-05
+      },
+      "TupleRanking": {
+        "fit_seconds": 0.29735900001833215,
+        "ranking_seconds": 0.0023504000079507628
+      }
+    }
+  }
+]
