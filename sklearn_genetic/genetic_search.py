@@ -1342,7 +1342,7 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
                         cached = runtime_state.get("fitness_cache")
                         if cached is not None:
                             self.fitness_cache = _normalize_cached_fitness(
-                                cached, self.criteria_sign
+                                cached, _get_criteria_sign(self.criteria)
                             )
                         restored_fit_stats = runtime_state.get("fit_stats_")
                         # ``checkpoint_data["logbook"]`` is the per-*generation*
@@ -2441,7 +2441,7 @@ class GAFeatureSelectionCV(
                         cached = runtime_state.get("fitness_cache")
                         if cached is not None:
                             self.fitness_cache = _normalize_cached_fitness(
-                                cached, self.criteria_sign
+                                cached, _get_criteria_sign(self.criteria)
                             )
                         restored_fit_stats = runtime_state.get("fit_stats_")
                         # ``checkpoint_data["logbook"]`` is the per-*generation*

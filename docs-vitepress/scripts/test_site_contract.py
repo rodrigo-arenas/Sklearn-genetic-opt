@@ -4,6 +4,7 @@ from pathlib import Path
 import importlib.util
 import io
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -128,7 +129,7 @@ def test_freeze_points_homepage_at_new_stable_version(tmp_path):
 
 @pytest.mark.parametrize("script", ["examples:generate", "examples:check"])
 def test_example_npm_scripts_reach_the_generator_cli(script):
-    npm = shutil.which("npm")
+    npm = shutil.which("npm.cmd" if os.name == "nt" else "npm")
     if npm is None:
         pytest.skip("npm is not installed")
 

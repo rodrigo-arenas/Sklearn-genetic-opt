@@ -458,7 +458,9 @@ def test_resume_normalizes_legacy_nonfinite_cached_fitness(kind, criteria, nonfi
     with open(path, "wb") as file:
         pickle.dump(checkpoint, file)
 
-    resumed = build().fit(values[:60], labels[:60], callbacks=ModelCheckpoint(path))
+    common["criteria"] = "min" if criteria == "max" else "max"
+    resumed = build().set_params(criteria=criteria)
+    resumed.fit(values[:60], labels[:60], callbacks=ModelCheckpoint(path))
     assert resumed.fit_stats_["cache_hits"] > original.fit_stats_["cache_hits"]
     assert np.isfinite(resumed.history["fitness_best"][-1])
     assert any(

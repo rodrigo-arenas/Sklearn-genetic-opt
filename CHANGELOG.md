@@ -26,6 +26,8 @@ for upgrade guidance and links to the API examples.
 
 - `ModelCheckpoint` writes one snapshot per generation and replaces the previous checkpoint only after serialization succeeds. A failed update preserves the last readable snapshot.
 
+- Resuming either search after updating `criteria` with `set_params` penalizes cached non-finite scores in the active optimization direction.
+
 - Fixed premature stopping with `ConsecutiveStopping` when lower fitness scores improve a minimizing search.
 
 - Smart feature-selection initialization samples the smaller of the selected and excluded column sets. This reduces temporary memory for wide inputs. Seeded runs remain reproducible, but the masks for a given seed can differ from earlier versions.
