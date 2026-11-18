@@ -3,6 +3,10 @@ title: "Advanced Optimizer Control: Diversity, Fitness Sharing, and Local Search
 description: Control population diversity, enable fitness sharing and local search refinement, and interpret optimizer telemetry to improve genetic algorithm hyperparameter search.
 ---
 
+<script setup>
+import shortlistTimingsUrl from '../../../../benchmarks/results/performance-v2/shortlist-fit-times.json?url'
+</script>
+
 :::warning Development version
 You are reading the **latest (dev)** docs. For the stable version, see [stable](/stable/).
 :::
@@ -346,3 +350,26 @@ when fresh scores are needed for stochastic models or scorers.
 Final selection runs with `refit=True`. Its extra CV evaluations and final refit are additional to the evolutionary budget; generation stopping callbacks do not cap those stages. Include them when timing a workflow. An explicit non-None `final_selection_cv` overrides the corresponding `OptimizationConfig` value. Both settings and explicit fold arrays survive cloning and checkpoints.
 
 Use `stratify=y_train` for classification, and omit it for regression. Sampling that drops a class raises an error; increase the fraction in that case. The discarded rows do not need to contain every class. A fraction of 1 keeps the original training folds. This is opt-in: ordinary searches still use full training folds. Smaller training sets can change candidate rankings, and full validation of finalists cannot recover a good candidate discarded earlier. Measure held-out quality and total time; small datasets or models with high fixed training cost may gain little.
+
+### How many finalists fit my compute budget?
+
+With five final folds and one reusable preliminary fold, each distinct finalist costs four additional fits. Five finalists cost 20 fits and eight cost 32, plus the search and final refit. To try a budget of 20 with the deterministic SVC example above, reuse its unfitted configuration and training split:
+
+```python
+folds = list(StratifiedKFold(5, shuffle=True, random_state=42).split(X_train, y_train))
+budgeted = clone(hpo).set_params(
+    cv=folds[:1],
+    final_selection="reuse_folds",
+    final_selection_cv=folds,
+    final_selection_top_k=5,
+    error_score="raise",
+).fit(X_train, y_train)
+
+finalists = budgeted.final_selection_results_["candidates"]
+fresh_fits = sum(len(row["cv_scores"]) - row["reused_folds"] for row in finalists)
+print(len(finalists), fresh_fits)
+```
+
+The same calculation works for `GAFeatureSelectionCV` and for searches that produce fewer distinct finalists than requested. At a tied preliminary cutoff, the feature selector can include a denser mask. Changing the shortlist size can therefore change which masks qualify.
+
+In 24 paired comparisons on Breast Cancer (logistic regression) and Diabetes (Ridge), reducing the shortlist from eight to five saved 12 fold fits in every pair. Mean end-to-end time fell by 15–23% across the four dataset/search combinations. Mean held-out ROC AUC for feature selection on Breast Cancer stayed at 0.993501, while mean held-out R² for Diabetes hyperparameter search went from 0.527600 to 0.527351. Each comparison used six outer splits per dataset and a single worker. <a :href="shortlistTimingsUrl" download="shortlist-fit-times.json">Download per-split timings, finalist lists and holdout scores (JSON)</a>.
