@@ -213,6 +213,12 @@ class _FinalSelectionMixin:
             return self.cv_results_["params"][index]
         return {"features": tuple(bool(value) for value in self.cv_results_["features"][index])}
 
+    def _finalist_key(self, index):
+        if hasattr(self, "space"):
+            return tuple(sorted(self.cv_results_["params"][index].items()))
+        mask = np.asarray(self.cv_results_["features"][index], dtype=bool)
+        return mask.size, np.packbits(mask).tobytes()
+
     def _top_candidate_indices(self):
         ranks = np.asarray(self.cv_results_[f"rank_test_{self.refit_metric}"])
         indices = []
@@ -223,7 +229,7 @@ class _FinalSelectionMixin:
             else np.argsort(ranks, kind="stable")
         )
         for index in order:
-            key = tuple(sorted(self._candidate_params_from_index(index).items()))
+            key = self._finalist_key(index)
             if key not in seen:
                 seen.add(key)
                 indices.append(index)
@@ -243,7 +249,7 @@ class _FinalSelectionMixin:
             for index in reversed(order[:end]):
                 if ranks[index] != ranks[cutoff] or counts[index] <= counts[cutoff]:
                     break
-                key = tuple(sorted(self._candidate_params_from_index(index).items()))
+                key = self._finalist_key(index)
                 if key not in seen:
                     indices[-1] = index
                     break

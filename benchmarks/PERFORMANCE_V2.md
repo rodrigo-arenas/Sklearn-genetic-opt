@@ -1565,6 +1565,20 @@ the winning index and predictions for both criteria. The [raw timings and
 reproduction script](results/performance-v2/finalist-cutoff.json) record
 the baseline commit and library versions.
 
+### How does mask width affect finalist ranking?
+
+The selector packs Boolean masks into bytes when checking whether a finalist
+was already selected. Each bit represents a column; the key includes the
+number of columns. The exported finalist parameters still use Boolean tuples.
+With 64 generated masks, eight finalist slots and eight recorded copies of
+each mask, median ranking time fell from 160 to 79 µs at 16 columns, from
+1.10 ms to 0.085 ms at 256 columns and from 15.00 ms to 0.122 ms at 4,096
+columns. With one copy per mask, the 4,096-column case fell from 2.33 ms
+to 0.023 ms. All six paired cases returned the same ordered indices. These
+timings cover ranking only, using nine alternating measurement pairs of ten
+rankings. [Reproduction script](results/performance-v2/finalist-mask-keys.py)
+and [per-case measurements](results/performance-v2/finalist-mask-keys.json).
+
 ## Mutation in grids that mix fixed and variable dimensions
 
 The standard HPO mutation used to select from every configured parameter.
