@@ -1,0 +1,258 @@
+[
+  {
+    "task": "wine",
+    "split_seed": 8231,
+    "metric": "balanced_accuracy",
+    "seed": 8241,
+    "methods": {
+      "GAFeatureSelectionCV": {
+        "candidates": 41,
+        "full_fit_seconds": 0.644062000035774,
+        "holdout": {
+          "6": 0.8481481481481481,
+          "24": 0.9074074074074074
+        }
+      },
+      "PartitionStart": {
+        "candidates": 42,
+        "full_fit_seconds": 0.6712599000311457,
+        "holdout": {
+          "6": 0.9185185185185185,
+          "24": 0.9259259259259259
+        }
+      },
+      "FourColumnStart": {
+        "candidates": 41,
+        "full_fit_seconds": 0.6510429999907501,
+        "holdout": {
+          "6": 0.8814814814814814,
+          "24": 0.9314814814814815
+        }
+      }
+    }
+  },
+  {
+    "task": "wine",
+    "split_seed": 8231,
+    "metric": "balanced_accuracy",
+    "seed": 8242,
+    "methods": {
+      "FourColumnStart": {
+        "candidates": 39,
+        "full_fit_seconds": 0.6267823000089265,
+        "holdout": {
+          "6": 0.9222222222222222,
+          "24": 0.9407407407407407
+        }
+      },
+      "PartitionStart": {
+        "candidates": 41,
+        "full_fit_seconds": 0.6560476999729872,
+        "holdout": {
+          "6": 0.9222222222222222,
+          "24": 0.9407407407407407
+        }
+      },
+      "GAFeatureSelectionCV": {
+        "candidates": 40,
+        "full_fit_seconds": 0.6399113000370562,
+        "holdout": {
+          "6": 0.8777777777777778,
+          "24": 0.898148148148148
+        }
+      }
+    }
+  },
+  {
+    "task": "wine",
+    "split_seed": 8232,
+    "metric": "balanced_accuracy",
+    "seed": 8241,
+    "methods": {
+      "GAFeatureSelectionCV": {
+        "candidates": 42,
+        "full_fit_seconds": 0.6974626000155695,
+        "holdout": {
+          "6": 0.8944444444444444,
+          "24": 0.9444444444444445
+        }
+      },
+      "PartitionStart": {
+        "candidates": 41,
+        "full_fit_seconds": 0.6696109999902546,
+        "holdout": {
+          "6": 0.912962962962963,
+          "24": 0.9314814814814815
+        }
+      },
+      "FourColumnStart": {
+        "candidates": 41,
+        "full_fit_seconds": 0.6592262999620289,
+        "holdout": {
+          "6": 0.912962962962963,
+          "24": 0.9037037037037038
+        }
+      }
+    }
+  },
+  {
+    "task": "wine",
+    "split_seed": 8232,
+    "metric": "balanced_accuracy",
+    "seed": 8242,
+    "methods": {
+      "FourColumnStart": {
+        "candidates": 40,
+        "full_fit_seconds": 0.651826000015717,
+        "holdout": {
+          "6": 0.9037037037037038,
+          "24": 0.9814814814814815
+        }
+      },
+      "PartitionStart": {
+        "candidates": 40,
+        "full_fit_seconds": 0.6287024999619462,
+        "holdout": {
+          "6": 0.9166666666666666,
+          "24": 0.9814814814814815
+        }
+      },
+      "GAFeatureSelectionCV": {
+        "candidates": 42,
+        "full_fit_seconds": 0.6917520000133663,
+        "holdout": {
+          "6": 0.8907407407407407,
+          "24": 0.9629629629629629
+        }
+      }
+    }
+  },
+  {
+    "task": "diabetes",
+    "split_seed": 8231,
+    "metric": "r2",
+    "seed": 8241,
+    "methods": {
+      "GAFeatureSelectionCV": {
+        "candidates": 42,
+        "full_fit_seconds": 0.32945120002841577,
+        "holdout": {
+          "6": 0.40287919486863466,
+          "24": 0.4035590832854651
+        }
+      },
+      "PartitionStart": {
+        "candidates": 40,
+        "full_fit_seconds": 0.34430739999515936,
+        "holdout": {
+          "6": 0.4160875409236451,
+          "24": 0.4348515875766549
+        }
+      },
+      "FourColumnStart": {
+        "candidates": 41,
+        "full_fit_seconds": 0.32985520001966506,
+        "holdout": {
+          "6": 0.4160875409236451,
+          "24": 0.4348515875766549
+        }
+      }
+    }
+  },
+  {
+    "task": "diabetes",
+    "split_seed": 8231,
+    "metric": "r2",
+    "seed": 8242,
+    "methods": {
+      "FourColumnStart": {
+        "candidates": 41,
+        "full_fit_seconds": 0.32960860000457615,
+        "holdout": {
+          "6": 0.41919819759999843,
+          "24": 0.41575816146749955
+        }
+      },
+      "PartitionStart": {
+        "candidates": 41,
+        "full_fit_seconds": 0.31949009996606037,
+        "holdout": {
+          "6": 0.40472342163640274,
+          "24": 0.39242673492304825
+        }
+      },
+      "GAFeatureSelectionCV": {
+        "candidates": 38,
+        "full_fit_seconds": 0.2951312000514008,
+        "holdout": {
+          "6": 0.40043007277631326,
+          "24": 0.4035590832854651
+        }
+      }
+    }
+  },
+  {
+    "task": "diabetes",
+    "split_seed": 8232,
+    "metric": "r2",
+    "seed": 8241,
+    "methods": {
+      "GAFeatureSelectionCV": {
+        "candidates": 42,
+        "full_fit_seconds": 0.3498474000371061,
+        "holdout": {
+          "6": 0.40065365682413023,
+          "24": 0.4010963143343548
+        }
+      },
+      "PartitionStart": {
+        "candidates": 40,
+        "full_fit_seconds": 0.30980369995813817,
+        "holdout": {
+          "6": 0.39698746696024356,
+          "24": 0.40628870750651713
+        }
+      },
+      "FourColumnStart": {
+        "candidates": 41,
+        "full_fit_seconds": 0.31522049999330193,
+        "holdout": {
+          "6": 0.39698746696024356,
+          "24": 0.40628870750651713
+        }
+      }
+    }
+  },
+  {
+    "task": "diabetes",
+    "split_seed": 8232,
+    "metric": "r2",
+    "seed": 8242,
+    "methods": {
+      "FourColumnStart": {
+        "candidates": 40,
+        "full_fit_seconds": 0.327749699994456,
+        "holdout": {
+          "6": 0.4285075031805152,
+          "24": 0.42320956573054047
+        }
+      },
+      "PartitionStart": {
+        "candidates": 41,
+        "full_fit_seconds": 0.32507070002611727,
+        "holdout": {
+          "6": 0.40183244303918086,
+          "24": 0.4041494210525284
+        }
+      },
+      "GAFeatureSelectionCV": {
+        "candidates": 39,
+        "full_fit_seconds": 0.3040753999957815,
+        "holdout": {
+          "6": 0.39687922913663887,
+          "24": 0.4180847971890941
+        }
+      }
+    }
+  }
+]

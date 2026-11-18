@@ -2091,6 +2091,33 @@ opportunity to evaluate a signal. Predictive quality also depends on how the
 estimator scores that signal in the presence of the other selected columns.
 [Reproduce the coverage calculation](results/performance-v2/partition-coverage.py)
 
+#### Does the initialization advantage survive evolution?
+
+We replaced just the first six masks, then ran the ordinary genetic search
+with a four-feature cap and three generations. Each dataset used two fresh
+outer splits, two search seeds per split and the same three CV folds for all
+methods. Each score below uses the held-out performance of the CV winner up
+to the indicated number of distinct candidates. Time and candidate counts
+cover the complete fit, including the original initializer's work in the
+experimental methods. Runs used one worker and one numerical-library thread.
+
+| Dataset and metric | Initial population | Score at 6 | Score at 24 | Mean full-fit candidates | Mean full-fit seconds |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Wine, balanced accuracy | Current smart | 0.878 | 0.928 | 41.25 | 0.668 |
+| Wine | Random four-column masks | 0.905 | 0.939 | 40.25 | 0.647 |
+| Wine | Partitioned four-column masks | 0.918 | 0.945 | 41.00 | 0.656 |
+| Diabetes, R² | Current smart | 0.400 | 0.407 | 40.25 | 0.320 |
+| Diabetes | Random four-column masks | 0.415 | 0.420 | 40.75 | 0.326 |
+| Diabetes | Partitioned four-column masks | 0.405 | 0.409 | 40.50 | 0.325 |
+
+Both fixed-size starts retained a mean advantage over the smart initializer
+at 24 candidates. Partitioning led on Wine, while independently drawn masks
+led on Diabetes. The small differences in full-fit times went in opposite
+directions across datasets. This pilot supports testing initial mask size
+separately from column coverage before changing the default.
+[Experiment](results/performance-v2/partition-initialization.py) and
+[per-run measurements](results/performance-v2/partition-initialization.json).
+
 ## How much fit time goes into integer sampling?
 
 Drawing 2,000 variable integers directly with NumPy took 3.6–3.8 ms on the
