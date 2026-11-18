@@ -2010,6 +2010,34 @@ regenerated from the repository root:
 .\.venv\Scripts\python.exe benchmarks/results/performance-v2/known-support.py --forward --real-transfer benchmarks/results/performance-v2/forward-real.json
 ```
 
+### Did the search miss the interaction during proposal or selection?
+
+For each XOR trajectory, we checked whether any of the first 24 distinct masks
+contained both informative columns, then whether its CV winner contained both.
+The known signal identifies successful masks after the run. None of the policies
+received the signal during search.
+
+| XOR cohort | Dataset seeds | Genetic: proposed / selected | Random continuation: proposed / selected | Alternative: proposed / selected |
+| --- | ---: | ---: | ---: | --- |
+| [Forward selection](results/performance-v2/forward-synthetic.json) | 4 | 1 / 1 | 2 / 2 | Forward 0 / 0 |
+| [Pair coverage](results/performance-v2/pair-coverage.json) | 6 | 4 / 4 | 2 / 2 | Pair coverage 2 / 2 |
+| [Score-guided proposals](results/performance-v2/score-guided-masks.json) | 6 | 2 / 2 | 2 / 2 | Score-guided 2 / 2 |
+
+Of 16 genetic runs, seven proposed both signal columns together and all seven
+selected such a mask. In eight of the other nine runs the search visited each
+signal column separately but never evaluated them together. The best complete
+mask exceeded the best incomplete mask by at least 0.23 in inner balanced
+accuracy in each of the seven successes. Reranking the evaluated candidates
+could not recover the pair in the nine misses.
+
+These historical cohorts use different seeds and span library revisions;
+compare policies within a row. The pattern identifies a proposal problem on
+this two-column interaction with this model and budget. Maximizing the number
+of distinct column pairs covered did not consistently solve it: in the
+pair-coverage cohort the dedicated policy visited 61.2 of 120 possible pairs
+on average and found the signal twice, while genetic search visited 52 on
+average and found it four times.
+
 ## How much fit time goes into integer sampling?
 
 Drawing 2,000 variable integers directly with NumPy took 3.6–3.8 ms on the
