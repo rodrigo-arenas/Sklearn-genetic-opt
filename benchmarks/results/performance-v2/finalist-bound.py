@@ -1,5 +1,6 @@
 """Compare complete and bounded five-fold accuracy on fixed HPO shortlists."""
 
+import argparse
 import json
 from pathlib import Path
 from runpy import run_path
@@ -8,6 +9,7 @@ from time import perf_counter
 import numpy as np
 from sklearn.base import clone
 from sklearn.datasets import load_breast_cancer, load_iris, load_wine
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import StratifiedKFold, cross_val_score
 from sklearn.tree import DecisionTreeClassifier
 from threadpoolctl import threadpool_limits
@@ -17,38 +19,43 @@ from sklearn_genetic import GASearchCV
 tree_grid = run_path(str(Path(__file__).with_name("hpo-repair-pass.py")))["tree_grid"]
 
 
-def score_shortlist(search, indices, X, y, splits, bounded):
+def score_shortlist(search, indices, X, y, splits, batch_size):
     start = perf_counter()
     best = -np.inf
     winner = None
     fits = 0
     for index in indices:
         model = clone(search.estimator).set_params(**search.cv_results_["params"][index])
-        if bounded:
-            scores = []
-            for fold in splits:
-                scores.extend(
-                    cross_val_score(
-                        model, X, y, scoring="accuracy", cv=[fold], n_jobs=1, error_score="raise"
-                    )
+        scores = []
+        for offset in range(0, len(splits), batch_size):
+            scores.extend(
+                cross_val_score(
+                    model,
+                    X,
+                    y,
+                    scoring="accuracy",
+                    cv=splits[offset : offset + batch_size],
+                    n_jobs=1,
+                    error_score="raise",
                 )
-                remaining = len(splits) - len(scores)
-                if remaining and (sum(scores) + remaining) / len(splits) < best - 1e-12:
-                    break
-        else:
-            scores = cross_val_score(
-                model, X, y, scoring="accuracy", cv=splits, n_jobs=1, error_score="raise"
             )
+            remaining = len(splits) - len(scores)
+            if remaining and (sum(scores) + remaining) / len(splits) < best - 1e-12:
+                break
         fits += len(scores)
         if len(scores) == len(splits) and np.mean(scores) > best:
             best, winner = float(np.mean(scores)), int(index)
     return dict(winner=winner, accuracy=best, fits=fits, seconds=perf_counter() - start)
 
 
-def compare(load, seed):
+def compare(load, seed, forest=False):
     X, y = load(return_X_y=True)
     search = GASearchCV(
-        DecisionTreeClassifier(random_state=seed),
+        (
+            RandomForestClassifier(n_estimators=12, n_jobs=1, random_state=seed)
+            if forest
+            else DecisionTreeClassifier(random_state=seed)
+        ),
         param_grid=tree_grid(),
         population_size=8,
         generations=2,
@@ -62,20 +69,30 @@ def compare(load, seed):
     indices = search._top_candidate_indices()
     splits = list(StratifiedKFold(5, shuffle=True, random_state=seed).split(X, y))
     arms = {}
-    for bounded in ((True, False) if seed % 2 else (False, True)):
-        arms["bounded" if bounded else "full"] = score_shortlist(
-            search, indices, X, y, splits, bounded
-        )
+    policies = [("full", 5), ("bounded", 1)]
+    if forest:
+        policies.append(("block", 3))
+        offset = seed % 3
+        policies = policies[offset:] + policies[:offset]
+    elif seed % 2:
+        policies.reverse()
+    for name, size in policies:
+        arms[name] = score_shortlist(search, indices, X, y, splits, size)
     assert len(indices) == 8 and arms["full"]["fits"] == 40
-    assert all(arms["full"][key] == arms["bounded"][key] for key in ("accuracy", "winner"))
+    assert all(
+        arms["full"][key] == arm[key] for arm in arms.values() for key in ("accuracy", "winner")
+    )
     return dict(dataset=load.__name__, seed=seed, **arms)
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--forest", action="store_true")
+    forest = parser.parse_args().forest
     with threadpool_limits(1):
         rows = [
-            compare(load, seed)
+            compare(load, seed, forest)
             for load in (load_iris, load_wine, load_breast_cancer)
-            for seed in (10131, 10132, 10133, 10134)
+            for seed in (range(10251, 10254) if forest else range(10131, 10135))
         ]
     print(json.dumps(rows, indent=2, allow_nan=False))

@@ -2934,3 +2934,25 @@ fold scores, so a production implementation would also need to account for
 the finalist reporting contract. The comparison measures finalist validation
 only. See the [script](results/performance-v2/finalist-bound.py) and
 [per-shortlist results](results/performance-v2/finalist-bound.json).
+
+With 12-tree random forests, three fresh seeds per dataset and the same
+four-dimensional search space, compare the full five-fold call, single-fold
+checks and one check after the first three folds. The last variant scores
+the remaining two folds together when the finalist survives. Rotate timing
+order so each arm runs first, second and third once per dataset.
+
+| Dataset | Full fits | Single-fold fits | Median paired time change | Three-fold block fits | Median paired time change |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Iris | 120 | 115 | +4.0% | 120 | +2.7% |
+| Wine | 120 | 102 | −9.9% | 110 | −1.0% |
+| Breast cancer | 120 | 117 | +4.7% | 120 | +2.7% |
+
+All three arms selected the same winner with identical accuracy on each
+of nine shortlists. Single-fold checks saved 26 of 360 fits; 18 of those
+savings occurred on wine. On iris and breast cancer the three-fold block
+could not eliminate a single finalist at its checkpoint. Across all nine
+lists, finalist evaluation took 5.94 s in full, 5.79 s with single-fold
+checks and 5.97 s with blocks. The timings cover serial execution on one
+machine and three seeds per dataset. They support no uniform speedup from
+raising the estimator cost alone. Pass `--forest` to the same script to
+reproduce the [forest results](results/performance-v2/finalist-bound-forest.json).
