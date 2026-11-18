@@ -1972,3 +1972,29 @@ can be regenerated from the repository root with the same benchmark runner:
 ```powershell
 .\.venv\Scripts\python.exe benchmarks/results/performance-v2/known-support.py --real-transfer benchmarks/results/performance-v2/score-guided-transfer.json
 ```
+
+## How much fit time goes into integer sampling?
+
+Drawing 2,000 variable integers directly with NumPy took 3.6–3.8 ms on the
+test machine. The earlier SciPy path took 74–79 ms. The first six paired
+Iris fits per initializer showed a 3.74% median reduction with random
+initialization and a 4.61% median increase with smart initialization.
+See the [initial timing results](results/performance-v2/integer-sampling-cost.json).
+
+A follow-up measured time inside `Integer.sample()` during the fit. It used
+the same four tree parameters, six search seeds and both execution orders
+per seed. Each initializer and sampler had one warm-up fit. All 24 pairs
+produced identical ordered candidates, mean CV scores and evaluation counters.
+
+| Initializer | Draws per fit | Median time saved inside sampler per pair | Median change in fit time | Pairs with faster fit |
+| --- | ---: | ---: | ---: | ---: |
+| Smart | 30–56 | 1.87 ms | −0.03% | 6/12 |
+| Random | 58–88 | 3.18 ms | −1.05% | 8/12 |
+
+Smart initialization draws its initial numeric strata with a Latin hypercube,
+so fewer proposals pass through the scalar integer sampler. The earlier
+slowdown did not recur across the follow-up pairs. At roughly 200 ms per fit,
+the saving inside the sampler was small enough for the overall timing to
+vary in either direction. These measurements cover one tree workload on one
+machine. The [individual timings and reproduction script](results/performance-v2/integer-sampling-attribution.json)
+include the number of draws and candidate evaluations for each run.
