@@ -2194,6 +2194,31 @@ candidate-combination problem, while most width-64 misses arose before
 both columns had even been exposed. The four width-64 runs that missed
 both signals describe these particular placements and seeds.
 
+#### Does taking the union of parent masks improve crossover?
+
+We kept the current initialization, parent choice, mutation and three-fold
+scoring. When the union included columns unique to each parent and fit
+within the four-feature cap, we put it in the first child's place after
+ordinary crossover. All other children followed ordinary crossover. Both
+arms had identical held-out scores at candidate six in every paired run.
+The table reports the held-out score of the inner-CV winner at candidate 24.
+
+| Task | Paired runs | Current crossover | Feasible union |
+| --- | ---: | ---: | ---: |
+| Sparse regression, 16 columns (R²) | 8 | 0.8352 | 0.7218 |
+| Sparse regression, 64 columns (R²) | 8 | 0.4416 | 0.4505 |
+| Wine (balanced accuracy) | 4 | 0.9185 | 0.8949 |
+| Diabetes (R²) | 4 | 0.3820 | 0.3820 |
+
+The union operator fired at least twice in every complete experimental fit.
+At width 16, ordinary crossover reached the prespecified CV R² target of 0.75
+in seven runs versus five with the union. At width 64 both missed it in all
+eight runs. Wine and Diabetes each used two new outer splits and two search
+seeds per split. This pilot gives no basis for replacing ordinary crossover
+with a feasible union whenever the opportunity arises.
+[Reproduction script](results/performance-v2/union-crossover.py) and
+[individual runs](results/performance-v2/union-crossover.json).
+
 ## How much fit time goes into integer sampling?
 
 Drawing 2,000 variable integers directly with NumPy took 3.6–3.8 ms on the

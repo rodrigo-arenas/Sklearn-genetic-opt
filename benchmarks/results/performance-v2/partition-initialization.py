@@ -75,16 +75,19 @@ def compare(
     target=None,
     balanced=False,
     signal=None,
+    methods=None,
     **kwargs,
 ):
     rows = {}
-    methods = [
-        GAFeatureSelectionCV,
-        FourColumnStart,
-        PartitionStart if target is None else TwoColumnStart,
-    ]
-    if balanced:
-        methods = [GAFeatureSelectionCV, BalancedSmartStart]
+    if methods is None:
+        methods = [
+            GAFeatureSelectionCV,
+            FourColumnStart,
+            PartitionStart if target is None else TwoColumnStart,
+        ]
+        if balanced:
+            methods = [GAFeatureSelectionCV, BalancedSmartStart]
+    methods = list(methods)
     Random(seed).shuffle(methods)
     for cls in methods:
         search = cls(
@@ -116,6 +119,8 @@ def compare(
         rows[cls.__name__] = dict(
             candidates=len(observed), full_fit_seconds=elapsed, holdout=scores
         )
+        if hasattr(search, "union_count_"):
+            rows[cls.__name__]["full_fit_unions"] = search.union_count_
         if balanced:
             initial = list(observed)[:6]
             rows[cls.__name__]["initial_sizes"] = [len(mask) for mask in initial]
@@ -134,7 +139,7 @@ def compare(
     return dict(seed=seed, methods=rows)
 
 
-def sparse_regression(width, seed, balanced=False):
+def sparse_regression(width, seed, balanced=False, methods=None):
     rng = np.random.default_rng(seed)
     features = rng.normal(size=(1100, 64))
     y = features[:, 0] + features[:, 1] + 0.5 * rng.normal(size=len(features))
@@ -152,6 +157,7 @@ def sparse_regression(width, seed, balanced=False):
         seed,
         target=0.75,
         balanced=balanced,
+        methods=methods,
         signal=np.flatnonzero(order < 2).tolist(),
     )
     return dict(width=width, **result)
