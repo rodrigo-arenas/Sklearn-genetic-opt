@@ -2168,6 +2168,32 @@ mutation contribute to finding useful combinations.
 Reproduce with `python benchmarks/results/performance-v2/partition-initialization.py --balanced-coverage`.
 [Per-run measurements](results/performance-v2/balanced-smart-start.json).
 
+#### Where did the two informative columns get lost?
+
+We replayed the same 32 searches and recorded which of the two known signal
+columns appeared in each of the first 24 distinct candidates. The signal
+labels were used only after fitting. Each row partitions eight runs into
+mutually exclusive outcomes.
+
+| Columns | Start | Neither signal seen | Only one seen | Both seen separately only | Both proposed together |
+| ---: | --- | ---: | ---: | ---: | ---: |
+| 16 | Current smart | 0 | 0 | 3 | 5 |
+| 16 | Balanced coverage | 0 | 0 | 5 | 3 |
+| 64 | Current smart | 0 | 6 | 2 | 0 |
+| 64 | Balanced coverage | 4 | 2 | 2 | 0 |
+
+At width 16 every search visited both informative columns. In all eight
+runs that evaluated them together, the first such candidate reached the CV
+target and the winner at 24 retained both. At width 64 the smart initializer
+visited an average of 33.875 columns by candidate 24. Six of its eight runs
+had yet to visit the second informative column. The balanced initializer
+visited 37 on average, but missed both signals in four runs. The CV winner
+at 24 retained one informative column in every run that saw at least one
+but never evaluated both together. Thus the width-16 misses point to a
+candidate-combination problem, while most width-64 misses arose before
+both columns had even been exposed. The four width-64 runs that missed
+both signals describe these particular placements and seeds.
+
 ## How much fit time goes into integer sampling?
 
 Drawing 2,000 variable integers directly with NumPy took 3.6–3.8 ms on the

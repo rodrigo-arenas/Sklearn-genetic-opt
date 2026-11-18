@@ -63,7 +63,19 @@ class BalancedSmartStart(GAFeatureSelectionCV):
 
 
 def compare(
-    X, y, test, labels, cv, model, metric, seed, *args, target=None, balanced=False, **kwargs
+    X,
+    y,
+    test,
+    labels,
+    cv,
+    model,
+    metric,
+    seed,
+    *args,
+    target=None,
+    balanced=False,
+    signal=None,
+    **kwargs,
 ):
     rows = {}
     methods = [
@@ -108,6 +120,12 @@ def compare(
             initial = list(observed)[:6]
             rows[cls.__name__]["initial_sizes"] = [len(mask) for mask in initial]
             rows[cls.__name__]["initial_coverage"] = len(set().union(*initial))
+            prefix = list(observed)[:24]
+            rows[cls.__name__]["signal_trace"] = [
+                [col for col in signal if col in mask] for mask in prefix
+            ]
+            rows[cls.__name__]["columns_seen_by_24"] = len(set().union(*prefix))
+            rows[cls.__name__]["winning_signals_at_24"] = sorted(set(winner).intersection(signal))
         if target is not None:
             rows[cls.__name__]["first_target_by_24"] = next(
                 (i for i, score in enumerate(list(observed.values())[:24], 1) if score >= target),
@@ -120,7 +138,8 @@ def sparse_regression(width, seed, balanced=False):
     rng = np.random.default_rng(seed)
     features = rng.normal(size=(1100, 64))
     y = features[:, 0] + features[:, 1] + 0.5 * rng.normal(size=len(features))
-    X = features[:, rng.permutation(width)]
+    order = rng.permutation(width)
+    X = features[:, order]
     folds = list(KFold(3, shuffle=True, random_state=seed).split(X[:240]))
     result = compare(
         X[:240],
@@ -133,6 +152,7 @@ def sparse_regression(width, seed, balanced=False):
         seed,
         target=0.75,
         balanced=balanced,
+        signal=np.flatnonzero(order < 2).tolist(),
     )
     return dict(width=width, **result)
 
