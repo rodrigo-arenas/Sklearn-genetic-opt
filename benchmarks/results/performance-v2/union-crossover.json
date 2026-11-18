@@ -1,0 +1,602 @@
+[
+  {
+    "width": 16,
+    "seed": 8511,
+    "methods": {
+      "FeasibleUnion": {
+        "candidates": 40,
+        "full_fit_seconds": 0.19644899998093024,
+        "holdout": {
+          "6": 0.4540158498917768,
+          "24": 0.4549616253564236
+        },
+        "full_fit_unions": 6,
+        "first_target_by_24": null
+      },
+      "GAFeatureSelectionCV": {
+        "candidates": 42,
+        "full_fit_seconds": 0.19393350003520027,
+        "holdout": {
+          "6": 0.4540158498917768,
+          "24": 0.4549616253564236
+        },
+        "first_target_by_24": null
+      }
+    }
+  },
+  {
+    "width": 16,
+    "seed": 8512,
+    "methods": {
+      "GAFeatureSelectionCV": {
+        "candidates": 42,
+        "full_fit_seconds": 0.20214449998456985,
+        "holdout": {
+          "6": 0.5193740749437175,
+          "24": 0.8945577690680684
+        },
+        "first_target_by_24": 14
+      },
+      "FeasibleUnion": {
+        "candidates": 40,
+        "full_fit_seconds": 0.19867910002358258,
+        "holdout": {
+          "6": 0.5193740749437175,
+          "24": 0.8946569245923698
+        },
+        "full_fit_unions": 3,
+        "first_target_by_24": 10
+      }
+    }
+  },
+  {
+    "width": 16,
+    "seed": 8513,
+    "methods": {
+      "GAFeatureSelectionCV": {
+        "candidates": 42,
+        "full_fit_seconds": 0.19315750000532717,
+        "holdout": {
+          "6": 0.45131347672352673,
+          "24": 0.8800356642671807
+        },
+        "first_target_by_24": 7
+      },
+      "FeasibleUnion": {
+        "candidates": 42,
+        "full_fit_seconds": 0.1994385999860242,
+        "holdout": {
+          "6": 0.45131347672352673,
+          "24": 0.8800356642671807
+        },
+        "full_fit_unions": 2,
+        "first_target_by_24": 7
+      }
+    }
+  },
+  {
+    "width": 16,
+    "seed": 8514,
+    "methods": {
+      "GAFeatureSelectionCV": {
+        "candidates": 41,
+        "full_fit_seconds": 0.19172070000786334,
+        "holdout": {
+          "6": 0.8997913541296189,
+          "24": 0.90090721716801
+        },
+        "first_target_by_24": 6
+      },
+      "FeasibleUnion": {
+        "candidates": 42,
+        "full_fit_seconds": 0.1991734000039287,
+        "holdout": {
+          "6": 0.8997913541296189,
+          "24": 0.90090721716801
+        },
+        "full_fit_unions": 6,
+        "first_target_by_24": 6
+      }
+    }
+  },
+  {
+    "width": 16,
+    "seed": 8515,
+    "methods": {
+      "FeasibleUnion": {
+        "candidates": 40,
+        "full_fit_seconds": 0.20143309998093173,
+        "holdout": {
+          "6": 0.4448414361031966,
+          "24": 0.8904647844335838
+        },
+        "full_fit_unions": 4,
+        "first_target_by_24": 7
+      },
+      "GAFeatureSelectionCV": {
+        "candidates": 42,
+        "full_fit_seconds": 0.19671899999957532,
+        "holdout": {
+          "6": 0.4448414361031966,
+          "24": 0.8904647844335838
+        },
+        "first_target_by_24": 7
+      }
+    }
+  },
+  {
+    "width": 16,
+    "seed": 8516,
+    "methods": {
+      "FeasibleUnion": {
+        "candidates": 42,
+        "full_fit_seconds": 0.2017597000231035,
+        "holdout": {
+          "6": 0.44484911453046005,
+          "24": 0.40401390961834216
+        },
+        "full_fit_unions": 2,
+        "first_target_by_24": null
+      },
+      "GAFeatureSelectionCV": {
+        "candidates": 39,
+        "full_fit_seconds": 0.17766929999925196,
+        "holdout": {
+          "6": 0.44484911453046005,
+          "24": 0.8824692553710591
+        },
+        "first_target_by_24": 24
+      }
+    }
+  },
+  {
+    "width": 16,
+    "seed": 8517,
+    "methods": {
+      "GAFeatureSelectionCV": {
+        "candidates": 41,
+        "full_fit_seconds": 0.19023539999034256,
+        "holdout": {
+          "6": 0.40816080394073706,
+          "24": 0.8841203047759777
+        },
+        "first_target_by_24": 7
+      },
+      "FeasibleUnion": {
+        "candidates": 41,
+        "full_fit_seconds": 0.1904285000055097,
+        "holdout": {
+          "6": 0.40816080394073706,
+          "24": 0.8841203047759777
+        },
+        "full_fit_unions": 5,
+        "first_target_by_24": 12
+      }
+    }
+  },
+  {
+    "width": 16,
+    "seed": 8518,
+    "methods": {
+      "GAFeatureSelectionCV": {
+        "candidates": 42,
+        "full_fit_seconds": 0.2160942000336945,
+        "holdout": {
+          "6": -0.06502791977757427,
+          "24": 0.8944174990379169
+        },
+        "first_target_by_24": 17
+      },
+      "FeasibleUnion": {
+        "candidates": 42,
+        "full_fit_seconds": 0.19771690003108233,
+        "holdout": {
+          "6": -0.06502791977757427,
+          "24": 0.4653864503818075
+        },
+        "full_fit_unions": 6,
+        "first_target_by_24": null
+      }
+    }
+  },
+  {
+    "width": 64,
+    "seed": 8511,
+    "methods": {
+      "FeasibleUnion": {
+        "candidates": 41,
+        "full_fit_seconds": 0.1912841000012122,
+        "holdout": {
+          "6": 0.4659897801614703,
+          "24": 0.46563510965064725
+        },
+        "full_fit_unions": 5,
+        "first_target_by_24": null
+      },
+      "GAFeatureSelectionCV": {
+        "candidates": 42,
+        "full_fit_seconds": 0.19726320001063868,
+        "holdout": {
+          "6": 0.4659897801614703,
+          "24": 0.45330486469859665
+        },
+        "first_target_by_24": null
+      }
+    }
+  },
+  {
+    "width": 64,
+    "seed": 8512,
+    "methods": {
+      "GAFeatureSelectionCV": {
+        "candidates": 42,
+        "full_fit_seconds": 0.20609649998368695,
+        "holdout": {
+          "6": 0.5059967738665896,
+          "24": 0.45729372050028183
+        },
+        "first_target_by_24": null
+      },
+      "FeasibleUnion": {
+        "candidates": 42,
+        "full_fit_seconds": 0.19473679998191074,
+        "holdout": {
+          "6": 0.5059967738665896,
+          "24": 0.5059967738665896
+        },
+        "full_fit_unions": 4,
+        "first_target_by_24": null
+      }
+    }
+  },
+  {
+    "width": 64,
+    "seed": 8513,
+    "methods": {
+      "GAFeatureSelectionCV": {
+        "candidates": 42,
+        "full_fit_seconds": 0.2071198999765329,
+        "holdout": {
+          "6": -0.025413476780112187,
+          "24": 0.4504998563794578
+        },
+        "first_target_by_24": null
+      },
+      "FeasibleUnion": {
+        "candidates": 42,
+        "full_fit_seconds": 0.19377040001563728,
+        "holdout": {
+          "6": -0.025413476780112187,
+          "24": 0.4504998563794578
+        },
+        "full_fit_unions": 9,
+        "first_target_by_24": null
+      }
+    }
+  },
+  {
+    "width": 64,
+    "seed": 8514,
+    "methods": {
+      "GAFeatureSelectionCV": {
+        "candidates": 42,
+        "full_fit_seconds": 0.1960937000112608,
+        "holdout": {
+          "6": 0.4924684302646575,
+          "24": 0.4924684302646575
+        },
+        "first_target_by_24": null
+      },
+      "FeasibleUnion": {
+        "candidates": 40,
+        "full_fit_seconds": 0.1825348999700509,
+        "holdout": {
+          "6": 0.4924684302646575,
+          "24": 0.4924684302646575
+        },
+        "full_fit_unions": 14,
+        "first_target_by_24": null
+      }
+    }
+  },
+  {
+    "width": 64,
+    "seed": 8515,
+    "methods": {
+      "FeasibleUnion": {
+        "candidates": 41,
+        "full_fit_seconds": 0.19958359998418018,
+        "holdout": {
+          "6": -0.004531200338363739,
+          "24": 0.3858609421566258
+        },
+        "full_fit_unions": 2,
+        "first_target_by_24": null
+      },
+      "GAFeatureSelectionCV": {
+        "candidates": 42,
+        "full_fit_seconds": 0.1906833000248298,
+        "holdout": {
+          "6": -0.004531200338363739,
+          "24": 0.3860514130066882
+        },
+        "first_target_by_24": null
+      }
+    }
+  },
+  {
+    "width": 64,
+    "seed": 8516,
+    "methods": {
+      "FeasibleUnion": {
+        "candidates": 42,
+        "full_fit_seconds": 0.20463410002412274,
+        "holdout": {
+          "6": 0.42843491264044675,
+          "24": 0.42225187606657055
+        },
+        "full_fit_unions": 4,
+        "first_target_by_24": null
+      },
+      "GAFeatureSelectionCV": {
+        "candidates": 41,
+        "full_fit_seconds": 0.19235399999888614,
+        "holdout": {
+          "6": 0.42843491264044675,
+          "24": 0.4261986369666635
+        },
+        "first_target_by_24": null
+      }
+    }
+  },
+  {
+    "width": 64,
+    "seed": 8517,
+    "methods": {
+      "GAFeatureSelectionCV": {
+        "candidates": 42,
+        "full_fit_seconds": 0.19453500001691282,
+        "holdout": {
+          "6": 0.41550206892566244,
+          "24": 0.3986397233388913
+        },
+        "first_target_by_24": null
+      },
+      "FeasibleUnion": {
+        "candidates": 41,
+        "full_fit_seconds": 0.19494710001163185,
+        "holdout": {
+          "6": 0.41550206892566244,
+          "24": 0.41241885934515254
+        },
+        "full_fit_unions": 12,
+        "first_target_by_24": null
+      }
+    }
+  },
+  {
+    "width": 64,
+    "seed": 8518,
+    "methods": {
+      "GAFeatureSelectionCV": {
+        "candidates": 40,
+        "full_fit_seconds": 0.2135450000059791,
+        "holdout": {
+          "6": 0.4703080719833316,
+          "24": 0.46869822001628747
+        },
+        "first_target_by_24": null
+      },
+      "FeasibleUnion": {
+        "candidates": 41,
+        "full_fit_seconds": 0.19370200001867488,
+        "holdout": {
+          "6": 0.4703080719833316,
+          "24": 0.46869822001628747
+        },
+        "full_fit_unions": 9,
+        "first_target_by_24": null
+      }
+    }
+  },
+  {
+    "task": "wine",
+    "split_seed": 8521,
+    "metric": "balanced_accuracy",
+    "seed": 8531,
+    "methods": {
+      "GAFeatureSelectionCV": {
+        "candidates": 42,
+        "full_fit_seconds": 0.6978006000281312,
+        "holdout": {
+          "6": 0.9092592592592593,
+          "24": 0.9537037037037037
+        }
+      },
+      "FeasibleUnion": {
+        "candidates": 40,
+        "full_fit_seconds": 0.6966944999876432,
+        "holdout": {
+          "6": 0.9092592592592593,
+          "24": 0.8592592592592593
+        },
+        "full_fit_unions": 6
+      }
+    }
+  },
+  {
+    "task": "wine",
+    "split_seed": 8521,
+    "metric": "balanced_accuracy",
+    "seed": 8532,
+    "methods": {
+      "GAFeatureSelectionCV": {
+        "candidates": 40,
+        "full_fit_seconds": 0.6335305999964476,
+        "holdout": {
+          "6": 0.9259259259259259,
+          "24": 0.9407407407407407
+        }
+      },
+      "FeasibleUnion": {
+        "candidates": 40,
+        "full_fit_seconds": 0.6382900000317022,
+        "holdout": {
+          "6": 0.9259259259259259,
+          "24": 0.9407407407407407
+        },
+        "full_fit_unions": 6
+      }
+    }
+  },
+  {
+    "task": "wine",
+    "split_seed": 8522,
+    "metric": "balanced_accuracy",
+    "seed": 8531,
+    "methods": {
+      "GAFeatureSelectionCV": {
+        "candidates": 41,
+        "full_fit_seconds": 0.6593652000301518,
+        "holdout": {
+          "6": 0.8666666666666667,
+          "24": 0.8944444444444444
+        }
+      },
+      "FeasibleUnion": {
+        "candidates": 40,
+        "full_fit_seconds": 0.6590097000007518,
+        "holdout": {
+          "6": 0.8666666666666667,
+          "24": 0.8944444444444444
+        },
+        "full_fit_unions": 6
+      }
+    }
+  },
+  {
+    "task": "wine",
+    "split_seed": 8522,
+    "metric": "balanced_accuracy",
+    "seed": 8532,
+    "methods": {
+      "GAFeatureSelectionCV": {
+        "candidates": 41,
+        "full_fit_seconds": 0.6456463999929838,
+        "holdout": {
+          "6": 0.9166666666666666,
+          "24": 0.8851851851851852
+        }
+      },
+      "FeasibleUnion": {
+        "candidates": 41,
+        "full_fit_seconds": 0.6694210999994539,
+        "holdout": {
+          "6": 0.9166666666666666,
+          "24": 0.8851851851851852
+        },
+        "full_fit_unions": 4
+      }
+    }
+  },
+  {
+    "task": "diabetes",
+    "split_seed": 8521,
+    "metric": "r2",
+    "seed": 8531,
+    "methods": {
+      "GAFeatureSelectionCV": {
+        "candidates": 39,
+        "full_fit_seconds": 0.3073759999824688,
+        "holdout": {
+          "6": 0.4573526491578599,
+          "24": 0.46047010041380476
+        }
+      },
+      "FeasibleUnion": {
+        "candidates": 41,
+        "full_fit_seconds": 0.3261380000039935,
+        "holdout": {
+          "6": 0.4573526491578599,
+          "24": 0.46047010041380476
+        },
+        "full_fit_unions": 7
+      }
+    }
+  },
+  {
+    "task": "diabetes",
+    "split_seed": 8521,
+    "metric": "r2",
+    "seed": 8532,
+    "methods": {
+      "GAFeatureSelectionCV": {
+        "candidates": 40,
+        "full_fit_seconds": 0.31764730002032593,
+        "holdout": {
+          "6": 0.39294179319072886,
+          "24": 0.42900285499911384
+        }
+      },
+      "FeasibleUnion": {
+        "candidates": 39,
+        "full_fit_seconds": 0.30439030000707135,
+        "holdout": {
+          "6": 0.39294179319072886,
+          "24": 0.42900285499911384
+        },
+        "full_fit_unions": 2
+      }
+    }
+  },
+  {
+    "task": "diabetes",
+    "split_seed": 8522,
+    "metric": "r2",
+    "seed": 8531,
+    "methods": {
+      "GAFeatureSelectionCV": {
+        "candidates": 39,
+        "full_fit_seconds": 0.313965100038331,
+        "holdout": {
+          "6": 0.31588855192510423,
+          "24": 0.339289744301284
+        }
+      },
+      "FeasibleUnion": {
+        "candidates": 42,
+        "full_fit_seconds": 0.335657799965702,
+        "holdout": {
+          "6": 0.31588855192510423,
+          "24": 0.339289744301284
+        },
+        "full_fit_unions": 6
+      }
+    }
+  },
+  {
+    "task": "diabetes",
+    "split_seed": 8522,
+    "metric": "r2",
+    "seed": 8532,
+    "methods": {
+      "GAFeatureSelectionCV": {
+        "candidates": 40,
+        "full_fit_seconds": 0.31418340001255274,
+        "holdout": {
+          "6": 0.2389609136719174,
+          "24": 0.29907850264849223
+        }
+      },
+      "FeasibleUnion": {
+        "candidates": 40,
+        "full_fit_seconds": 0.32619659998454154,
+        "holdout": {
+          "6": 0.2389609136719174,
+          "24": 0.29907850264849223
+        },
+        "full_fit_unions": 2
+      }
+    }
+  }
+]

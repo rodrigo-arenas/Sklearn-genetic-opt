@@ -1,0 +1,1706 @@
+[
+  {
+    "task": "sparse",
+    "width": 64,
+    "seed": 9351,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          1,
+          7
+        ],
+        "cv": 0.3865908464834984,
+        "holdout": 0.45863025168690297
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          1,
+          5
+        ],
+        "cv": 0.8740650182994711,
+        "holdout": 0.8838155190751391
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          1,
+          5
+        ],
+        "cv": 0.8740650182994711,
+        "holdout": 0.8838155190751391
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          1,
+          5,
+          27,
+          59
+        ],
+        "cv": 0.8667718673644057,
+        "holdout": 0.8832446252812625
+      }
+    },
+    "full_ga_candidates": 42,
+    "full_ga_seconds": 0.20262260001618415,
+    "filter_cv_seconds": 0.03345779998926446
+  },
+  {
+    "task": "sparse",
+    "width": 64,
+    "seed": 9352,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          21,
+          40,
+          46,
+          59
+        ],
+        "cv": 0.4283420401718852,
+        "holdout": 0.40238753459518695
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          6,
+          21
+        ],
+        "cv": 0.8918539006951901,
+        "holdout": 0.8783928447611773
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          6,
+          21
+        ],
+        "cv": 0.8918539006951901,
+        "holdout": 0.8783928447611773
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          6,
+          18,
+          21,
+          22
+        ],
+        "cv": 0.8871375885313371,
+        "holdout": 0.8747117042688131
+      }
+    },
+    "full_ga_candidates": 42,
+    "full_ga_seconds": 0.19774360000155866,
+    "filter_cv_seconds": 0.0361955999978818
+  },
+  {
+    "task": "sparse",
+    "width": 64,
+    "seed": 9353,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          3,
+          4,
+          35,
+          53
+        ],
+        "cv": 0.41629642916537596,
+        "holdout": 0.42750828827251663
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          4,
+          6
+        ],
+        "cv": 0.8959425304665304,
+        "holdout": 0.8918460511262316
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          4,
+          6
+        ],
+        "cv": 0.8959425304665304,
+        "holdout": 0.8918460511262316
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          4,
+          5,
+          6,
+          21
+        ],
+        "cv": 0.8950249236413033,
+        "holdout": 0.8921419529433806
+      }
+    },
+    "full_ga_candidates": 42,
+    "full_ga_seconds": 0.204954800021369,
+    "filter_cv_seconds": 0.03842730005271733
+  },
+  {
+    "task": "sparse",
+    "width": 64,
+    "seed": 9354,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          40,
+          50,
+          54,
+          61
+        ],
+        "cv": 0.49822166464235346,
+        "holdout": 0.4667193704686017
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          7,
+          61
+        ],
+        "cv": 0.8981337188379683,
+        "holdout": 0.8933764419739909
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          7,
+          61
+        ],
+        "cv": 0.8981337188379683,
+        "holdout": 0.8933764419739909
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          7,
+          60,
+          61,
+          63
+        ],
+        "cv": 0.8970469578299486,
+        "holdout": 0.8928709976822613
+      }
+    },
+    "full_ga_candidates": 42,
+    "full_ga_seconds": 0.19760120002320036,
+    "filter_cv_seconds": 0.033822900033555925
+  },
+  {
+    "task": "sparse",
+    "width": 64,
+    "seed": 9355,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          1,
+          31,
+          41
+        ],
+        "cv": 0.5634392526410409,
+        "holdout": 0.4022975576838046
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          5,
+          41,
+          61,
+          62
+        ],
+        "cv": 0.8799242946777793,
+        "holdout": 0.8824487967068617
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          5,
+          41,
+          61,
+          62
+        ],
+        "cv": 0.8799242946777793,
+        "holdout": 0.8824487967068617
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          5,
+          41,
+          61,
+          62
+        ],
+        "cv": 0.8799242946777793,
+        "holdout": 0.8824487967068617
+      }
+    },
+    "full_ga_candidates": 41,
+    "full_ga_seconds": 0.18755979998968542,
+    "filter_cv_seconds": 0.033797800017055124
+  },
+  {
+    "task": "sparse",
+    "width": 64,
+    "seed": 9356,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          1,
+          5,
+          15,
+          59
+        ],
+        "cv": 0.47225016382581675,
+        "holdout": 0.4265618991230482
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          1,
+          54,
+          56,
+          60
+        ],
+        "cv": 0.9038293528431914,
+        "holdout": 0.8794455758857695
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          1,
+          54,
+          56,
+          60
+        ],
+        "cv": 0.9038293528431914,
+        "holdout": 0.8794455758857695
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          1,
+          54,
+          56,
+          60
+        ],
+        "cv": 0.9038293528431914,
+        "holdout": 0.8794455758857695
+      }
+    },
+    "full_ga_candidates": 42,
+    "full_ga_seconds": 0.196535800001584,
+    "filter_cv_seconds": 0.034473100036848336
+  },
+  {
+    "task": "xor",
+    "signal": [
+      8,
+      11
+    ],
+    "seed": 9351,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          1,
+          4
+        ],
+        "cv": 0.5271544515241994,
+        "holdout": 0.510820483258875
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          2,
+          4,
+          9,
+          12
+        ],
+        "cv": 0.48790702178307227,
+        "holdout": 0.49483995452434704
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          1,
+          4
+        ],
+        "cv": 0.5271544515241994,
+        "holdout": 0.510820483258875
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          1,
+          4
+        ],
+        "cv": 0.5271544515241994,
+        "holdout": 0.510820483258875
+      }
+    },
+    "full_ga_candidates": 40,
+    "full_ga_seconds": 0.6843334000441246,
+    "filter_cv_seconds": 0.0823448000010103
+  },
+  {
+    "task": "xor",
+    "signal": [
+      5,
+      6
+    ],
+    "seed": 9352,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          7,
+          10,
+          13,
+          15
+        ],
+        "cv": 0.5771875975734867,
+        "holdout": 0.5247460177097379
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          5,
+          8,
+          12,
+          13
+        ],
+        "cv": 0.5464669605451421,
+        "holdout": 0.5044054273584642
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          6,
+          10,
+          13
+        ],
+        "cv": 0.5719532625142821,
+        "holdout": 0.500604195759426
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          7,
+          10,
+          13,
+          15
+        ],
+        "cv": 0.5771875975734867,
+        "holdout": 0.5247460177097379
+      }
+    },
+    "full_ga_candidates": 42,
+    "full_ga_seconds": 0.6978286000085063,
+    "filter_cv_seconds": 0.09097399999154732
+  },
+  {
+    "task": "xor",
+    "signal": [
+      4,
+      10
+    ],
+    "seed": 9353,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          4,
+          10,
+          13
+        ],
+        "cv": 0.8661858974358974,
+        "holdout": 0.8523147333215984
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          6,
+          7,
+          8
+        ],
+        "cv": 0.5950854700854701,
+        "holdout": 0.5065049367108864
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          4,
+          10,
+          13
+        ],
+        "cv": 0.8661858974358974,
+        "holdout": 0.8523147333215984
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          4,
+          10,
+          13
+        ],
+        "cv": 0.8661858974358974,
+        "holdout": 0.8523147333215984
+      }
+    },
+    "full_ga_candidates": 40,
+    "full_ga_seconds": 0.6479150000377558,
+    "filter_cv_seconds": 0.07939000002807006
+  },
+  {
+    "task": "xor",
+    "signal": [
+      1,
+      14
+    ],
+    "seed": 9354,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          1,
+          2,
+          11,
+          14
+        ],
+        "cv": 0.8125993962881758,
+        "holdout": 0.8507882679750352
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          0,
+          3,
+          7,
+          11
+        ],
+        "cv": 0.5426371475774326,
+        "holdout": 0.544095305666791
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          1,
+          9,
+          13,
+          14
+        ],
+        "cv": 0.7889810368609044,
+        "holdout": 0.8668562678627977
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          1,
+          2,
+          11,
+          14
+        ],
+        "cv": 0.8125993962881758,
+        "holdout": 0.8507882679750352
+      }
+    },
+    "full_ga_candidates": 42,
+    "full_ga_seconds": 0.6973104000207968,
+    "filter_cv_seconds": 0.08244339999509975
+  },
+  {
+    "task": "xor",
+    "signal": [
+      3,
+      13
+    ],
+    "seed": 9355,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          3,
+          10,
+          13
+        ],
+        "cv": 0.7960655153424122,
+        "holdout": 0.8658463385354142
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          6,
+          8
+        ],
+        "cv": 0.5122194172525365,
+        "holdout": 0.48607442977190873
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          3,
+          10,
+          13
+        ],
+        "cv": 0.7960655153424122,
+        "holdout": 0.8658463385354142
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          3,
+          10,
+          13
+        ],
+        "cv": 0.7960655153424122,
+        "holdout": 0.8658463385354142
+      }
+    },
+    "full_ga_candidates": 41,
+    "full_ga_seconds": 0.680265800037887,
+    "filter_cv_seconds": 0.07991019997280091
+  },
+  {
+    "task": "xor",
+    "signal": [
+      4,
+      14
+    ],
+    "seed": 9356,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          0,
+          3,
+          4,
+          11
+        ],
+        "cv": 0.54408398414647,
+        "holdout": 0.5097839135654262
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          2
+        ],
+        "cv": 0.46803252848203075,
+        "holdout": 0.5167066826730692
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          0,
+          3,
+          4,
+          11
+        ],
+        "cv": 0.54408398414647,
+        "holdout": 0.5097839135654262
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          0,
+          3,
+          4,
+          11
+        ],
+        "cv": 0.54408398414647,
+        "holdout": 0.5097839135654262
+      }
+    },
+    "full_ga_candidates": 41,
+    "full_ga_seconds": 0.6731251999735832,
+    "filter_cv_seconds": 0.0830773999914527
+  },
+  {
+    "task": "wine",
+    "split_seed": 9351,
+    "metric": "balanced_accuracy",
+    "seed": 9361,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          6,
+          7,
+          9,
+          12
+        ],
+        "cv": 0.950705467372134,
+        "holdout": 0.9222222222222222
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          0,
+          6,
+          11,
+          12
+        ],
+        "cv": 0.9709876543209877,
+        "holdout": 0.9629629629629629
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          0,
+          6,
+          11,
+          12
+        ],
+        "cv": 0.9709876543209877,
+        "holdout": 0.9629629629629629
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          0,
+          6,
+          11,
+          12
+        ],
+        "cv": 0.9709876543209877,
+        "holdout": 0.9629629629629629
+      }
+    },
+    "full_ga_candidates": 39,
+    "full_ga_seconds": 0.625428200000897,
+    "filter_cv_seconds": 0.08447559998603538
+  },
+  {
+    "task": "wine",
+    "split_seed": 9352,
+    "metric": "balanced_accuracy",
+    "seed": 9362,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          0,
+          6,
+          9,
+          12
+        ],
+        "cv": 0.9621589376491338,
+        "holdout": 0.9777777777777779
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          0,
+          6,
+          11,
+          12
+        ],
+        "cv": 0.9436404191306152,
+        "holdout": 0.937037037037037
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          0,
+          6,
+          11,
+          12
+        ],
+        "cv": 0.9436404191306152,
+        "holdout": 0.937037037037037
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          0,
+          6,
+          9,
+          12
+        ],
+        "cv": 0.9621589376491338,
+        "holdout": 0.9777777777777779
+      }
+    },
+    "full_ga_candidates": 41,
+    "full_ga_seconds": 0.6751874000183307,
+    "filter_cv_seconds": 0.08224270003847778
+  },
+  {
+    "task": "wine",
+    "split_seed": 9353,
+    "metric": "balanced_accuracy",
+    "seed": 9363,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          0,
+          6,
+          10
+        ],
+        "cv": 0.9385932150638032,
+        "holdout": 0.937037037037037
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          0,
+          6,
+          11,
+          12
+        ],
+        "cv": 0.9376335719472975,
+        "holdout": 0.9259259259259259
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          0,
+          6,
+          10
+        ],
+        "cv": 0.9385932150638032,
+        "holdout": 0.937037037037037
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          0,
+          6,
+          10
+        ],
+        "cv": 0.9385932150638032,
+        "holdout": 0.937037037037037
+      }
+    },
+    "full_ga_candidates": 41,
+    "full_ga_seconds": 0.6447811999823898,
+    "filter_cv_seconds": 0.08150220004608855
+  },
+  {
+    "task": "wine",
+    "split_seed": 9354,
+    "metric": "balanced_accuracy",
+    "seed": 9364,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          2,
+          10,
+          11,
+          12
+        ],
+        "cv": 0.9617283950617285,
+        "holdout": 0.9351851851851851
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          0,
+          6,
+          11,
+          12
+        ],
+        "cv": 0.9512345679012345,
+        "holdout": 0.9444444444444445
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          2,
+          10,
+          11,
+          12
+        ],
+        "cv": 0.9617283950617285,
+        "holdout": 0.9351851851851851
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          2,
+          10,
+          11,
+          12
+        ],
+        "cv": 0.9617283950617285,
+        "holdout": 0.9351851851851851
+      }
+    },
+    "full_ga_candidates": 39,
+    "full_ga_seconds": 0.6585709999781102,
+    "filter_cv_seconds": 0.08054739999352023
+  },
+  {
+    "task": "wine",
+    "split_seed": 9355,
+    "metric": "balanced_accuracy",
+    "seed": 9365,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          0,
+          3,
+          9,
+          11
+        ],
+        "cv": 0.939760348583878,
+        "holdout": 0.9092592592592593
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          6,
+          11,
+          12
+        ],
+        "cv": 0.9209669052806307,
+        "holdout": 0.9814814814814815
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          0,
+          3,
+          9,
+          11
+        ],
+        "cv": 0.939760348583878,
+        "holdout": 0.9092592592592593
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          0,
+          3,
+          9,
+          11
+        ],
+        "cv": 0.939760348583878,
+        "holdout": 0.9092592592592593
+      }
+    },
+    "full_ga_candidates": 42,
+    "full_ga_seconds": 0.694988600036595,
+    "filter_cv_seconds": 0.08184340002480894
+  },
+  {
+    "task": "wine",
+    "split_seed": 9356,
+    "metric": "balanced_accuracy",
+    "seed": 9366,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          0,
+          2,
+          9,
+          11
+        ],
+        "cv": 0.9372912127814087,
+        "holdout": 0.9592592592592593
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          0,
+          6,
+          11,
+          12
+        ],
+        "cv": 0.9740740740740742,
+        "holdout": 0.9592592592592593
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          0,
+          6,
+          11,
+          12
+        ],
+        "cv": 0.9740740740740742,
+        "holdout": 0.9592592592592593
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          0,
+          6,
+          11,
+          12
+        ],
+        "cv": 0.9740740740740742,
+        "holdout": 0.9592592592592593
+      }
+    },
+    "full_ga_candidates": 41,
+    "full_ga_seconds": 0.6563091999851167,
+    "filter_cv_seconds": 0.08228640002198517
+  },
+  {
+    "task": "diabetes",
+    "split_seed": 9351,
+    "metric": "r2",
+    "seed": 9361,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          2,
+          3,
+          5,
+          7
+        ],
+        "cv": 0.43216578372200826,
+        "holdout": 0.4190456576968532
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          2,
+          3,
+          8
+        ],
+        "cv": 0.4617719645429883,
+        "holdout": 0.47108057697667827
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          2,
+          3,
+          8
+        ],
+        "cv": 0.4617719645429883,
+        "holdout": 0.47108057697667827
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          2,
+          3,
+          7,
+          8
+        ],
+        "cv": 0.45856977992438797,
+        "holdout": 0.4682000622843543
+      }
+    },
+    "full_ga_candidates": 39,
+    "full_ga_seconds": 0.3250269000418484,
+    "filter_cv_seconds": 0.047135100001469254
+  },
+  {
+    "task": "diabetes",
+    "split_seed": 9352,
+    "metric": "r2",
+    "seed": 9362,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          2,
+          3,
+          5,
+          8
+        ],
+        "cv": 0.4585180226627261,
+        "holdout": 0.5017319449659396
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          2,
+          3,
+          8
+        ],
+        "cv": 0.4454620366446271,
+        "holdout": 0.4950784927948565
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          2,
+          3,
+          5,
+          8
+        ],
+        "cv": 0.4585180226627261,
+        "holdout": 0.5017319449659396
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          2,
+          3,
+          5,
+          8
+        ],
+        "cv": 0.4585180226627261,
+        "holdout": 0.5017319449659396
+      }
+    },
+    "full_ga_candidates": 38,
+    "full_ga_seconds": 0.2982924999669194,
+    "filter_cv_seconds": 0.04939970001578331
+  },
+  {
+    "task": "diabetes",
+    "split_seed": 9353,
+    "metric": "r2",
+    "seed": 9363,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          2,
+          8
+        ],
+        "cv": 0.4325511504447532,
+        "holdout": 0.49166436009120407
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          2,
+          8
+        ],
+        "cv": 0.43255115044475323,
+        "holdout": 0.49166436009120407
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          2,
+          8
+        ],
+        "cv": 0.43255115044475323,
+        "holdout": 0.49166436009120407
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          2,
+          8
+        ],
+        "cv": 0.4325511504447532,
+        "holdout": 0.49166436009120407
+      }
+    },
+    "full_ga_candidates": 42,
+    "full_ga_seconds": 0.3361183000379242,
+    "filter_cv_seconds": 0.0484881000011228
+  },
+  {
+    "task": "diabetes",
+    "split_seed": 9354,
+    "metric": "r2",
+    "seed": 9364,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          2,
+          3,
+          7,
+          9
+        ],
+        "cv": 0.40951780643216834,
+        "holdout": 0.44585234174974353
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          2,
+          3,
+          7,
+          8
+        ],
+        "cv": 0.4698212781789904,
+        "holdout": 0.4617609230670422
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          2,
+          3,
+          7,
+          8
+        ],
+        "cv": 0.4698212781789904,
+        "holdout": 0.4617609230670422
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          2,
+          3,
+          7,
+          8
+        ],
+        "cv": 0.4698212781789904,
+        "holdout": 0.4617609230670422
+      }
+    },
+    "full_ga_candidates": 40,
+    "full_ga_seconds": 0.32803279999643564,
+    "filter_cv_seconds": 0.04595480003627017
+  },
+  {
+    "task": "diabetes",
+    "split_seed": 9355,
+    "metric": "r2",
+    "seed": 9365,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          2,
+          3,
+          4,
+          8
+        ],
+        "cv": 0.5031925313616303,
+        "holdout": 0.4174505257826657
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          2,
+          7,
+          8
+        ],
+        "cv": 0.48188241407858895,
+        "holdout": 0.37729761297640496
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          0,
+          2,
+          3,
+          8
+        ],
+        "cv": 0.4865603639896195,
+        "holdout": 0.4113843060009367
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          2,
+          3,
+          4,
+          8
+        ],
+        "cv": 0.5031925313616303,
+        "holdout": 0.4174505257826657
+      }
+    },
+    "full_ga_candidates": 42,
+    "full_ga_seconds": 0.3331233999924734,
+    "filter_cv_seconds": 0.04743069998221472
+  },
+  {
+    "task": "diabetes",
+    "split_seed": 9356,
+    "metric": "r2",
+    "seed": 9366,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          2,
+          5,
+          8
+        ],
+        "cv": 0.4675678498878673,
+        "holdout": 0.40352376695373504
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          2,
+          3,
+          7,
+          8
+        ],
+        "cv": 0.47747612865346634,
+        "holdout": 0.4339804325500709
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          2,
+          3,
+          7,
+          8
+        ],
+        "cv": 0.47747612865346634,
+        "holdout": 0.4339804325500709
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          2,
+          3,
+          7,
+          8
+        ],
+        "cv": 0.47747612865346634,
+        "holdout": 0.4339804325500709
+      }
+    },
+    "full_ga_candidates": 39,
+    "full_ga_seconds": 0.3019238999695517,
+    "filter_cv_seconds": 0.04677990003256127
+  },
+  {
+    "task": "additive",
+    "signal": [
+      8,
+      11
+    ],
+    "seed": 9351,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          1,
+          8,
+          10
+        ],
+        "cv": 0.7526334251649377,
+        "holdout": 0.7499239987839805
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          8,
+          11
+        ],
+        "cv": 0.9271153974410277,
+        "holdout": 0.9121185938975024
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          8,
+          11
+        ],
+        "cv": 0.9271153974410277,
+        "holdout": 0.9121185938975024
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          8,
+          11,
+          13,
+          15
+        ],
+        "cv": 0.882543722617252,
+        "holdout": 0.8940463047408759
+      }
+    },
+    "full_ga_candidates": 41,
+    "full_ga_seconds": 0.6701353999669664,
+    "filter_cv_seconds": 0.0711856999550946
+  },
+  {
+    "task": "additive",
+    "signal": [
+      5,
+      6
+    ],
+    "seed": 9352,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          5,
+          6,
+          10,
+          13
+        ],
+        "cv": 0.8826864078964919,
+        "holdout": 0.9210821082108211
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          5,
+          6
+        ],
+        "cv": 0.932906495931706,
+        "holdout": 0.9430843084308431
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          5,
+          6
+        ],
+        "cv": 0.932906495931706,
+        "holdout": 0.9430843084308431
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          3,
+          5,
+          6,
+          14
+        ],
+        "cv": 0.9130318794184339,
+        "holdout": 0.915951595159516
+      }
+    },
+    "full_ga_candidates": 41,
+    "full_ga_seconds": 0.6647233000257984,
+    "filter_cv_seconds": 0.0740055000060238
+  },
+  {
+    "task": "additive",
+    "signal": [
+      4,
+      10
+    ],
+    "seed": 9353,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          4,
+          5,
+          10,
+          13
+        ],
+        "cv": 0.8888888888888888,
+        "holdout": 0.8971597159715972
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          4,
+          10
+        ],
+        "cv": 0.9262820512820512,
+        "holdout": 0.9302330233023303
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          4,
+          10
+        ],
+        "cv": 0.9262820512820512,
+        "holdout": 0.9302330233023303
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          4,
+          10,
+          13
+        ],
+        "cv": 0.8864850427350427,
+        "holdout": 0.9131613161316132
+      }
+    },
+    "full_ga_candidates": 41,
+    "full_ga_seconds": 0.6483795999665745,
+    "filter_cv_seconds": 0.0718835000297986
+  },
+  {
+    "task": "additive",
+    "signal": [
+      1,
+      14
+    ],
+    "seed": 9354,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          1,
+          9,
+          13,
+          14
+        ],
+        "cv": 0.9133333333333334,
+        "holdout": 0.906067624270497
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          1,
+          14
+        ],
+        "cv": 0.9366666666666665,
+        "holdout": 0.9290417161668647
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          1,
+          14
+        ],
+        "cv": 0.9366666666666665,
+        "holdout": 0.9290417161668647
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          1,
+          9,
+          13,
+          14
+        ],
+        "cv": 0.9133333333333334,
+        "holdout": 0.906067624270497
+      }
+    },
+    "full_ga_candidates": 42,
+    "full_ga_seconds": 0.6698259999975562,
+    "filter_cv_seconds": 0.0706285999622196
+  },
+  {
+    "task": "additive",
+    "signal": [
+      3,
+      13
+    ],
+    "seed": 9355,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          3,
+          10,
+          13
+        ],
+        "cv": 0.8870214752567693,
+        "holdout": 0.8923219774590163
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          3,
+          13
+        ],
+        "cv": 0.9233693477390957,
+        "holdout": 0.9059938524590163
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          3,
+          13
+        ],
+        "cv": 0.9233693477390957,
+        "holdout": 0.9059938524590163
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          3,
+          10,
+          13
+        ],
+        "cv": 0.8870214752567693,
+        "holdout": 0.8923219774590163
+      }
+    },
+    "full_ga_candidates": 40,
+    "full_ga_seconds": 0.6349847000092268,
+    "filter_cv_seconds": 0.07262270001228899
+  },
+  {
+    "task": "additive",
+    "signal": [
+      4,
+      14
+    ],
+    "seed": 9356,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          0,
+          11,
+          14
+        ],
+        "cv": 0.7388346364186701,
+        "holdout": 0.690280095566254
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          4,
+          14
+        ],
+        "cv": 0.93325855983419,
+        "holdout": 0.9059104606629609
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          4,
+          14
+        ],
+        "cv": 0.93325855983419,
+        "holdout": 0.9059104606629609
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          1,
+          4,
+          10,
+          14
+        ],
+        "cv": 0.8796050471470639,
+        "holdout": 0.9019085237254831
+      }
+    },
+    "full_ga_candidates": 40,
+    "full_ga_seconds": 0.6498138000024483,
+    "filter_cv_seconds": 0.07214679999742657
+  }
+]

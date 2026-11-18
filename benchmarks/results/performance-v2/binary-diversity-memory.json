@@ -1,0 +1,392 @@
+{
+  "checkout": "ffb30f9637b89b16469156cf3b6e5042392a59a7",
+  "python": "3.12.0",
+  "numpy": "2.5.3",
+  "records": [
+    {
+      "n": 8,
+      "width": 16,
+      "unique": 8,
+      "times_ms": {
+        "_population_diversity": [
+          0.04870002157986164,
+          0.045199994929134846,
+          0.04499999340623617,
+          0.04369998350739479,
+          0.040300015825778246,
+          0.043199979700148106
+        ],
+        "stacked": [
+          0.03459997242316604,
+          0.02759997732937336,
+          0.024100008886307478,
+          0.02659996971487999,
+          0.026699970476329327,
+          0.024100008886307478
+        ],
+        "streamed": [
+          0.04810001701116562,
+          0.04569999873638153,
+          0.04579999949783087,
+          0.04220003029331565,
+          0.04339998122304678,
+          0.04279997665435076
+        ]
+      },
+      "peak_bytes": {
+        "_population_diversity": [
+          3736,
+          3736,
+          3736
+        ],
+        "stacked": [
+          3321,
+          3321,
+          3321
+        ],
+        "streamed": [
+          7088,
+          7088,
+          7088
+        ]
+      }
+    },
+    {
+      "n": 8,
+      "width": 16,
+      "unique": 2,
+      "times_ms": {
+        "_population_diversity": [
+          0.05059997783973813,
+          0.04179996903985739,
+          0.042000028770416975,
+          0.04020001506432891,
+          0.03860000288113952,
+          0.039300008211284876
+        ],
+        "stacked": [
+          0.03220001235604286,
+          0.02619996666908264,
+          0.023200002033263445,
+          0.024300010409206152,
+          0.025800021830946207,
+          0.023100001271814108
+        ],
+        "streamed": [
+          0.04329998046159744,
+          0.042300031054764986,
+          0.042899977415800095,
+          0.03979995381087065,
+          0.04249997437000275,
+          0.0399000127799809
+        ]
+      },
+      "peak_bytes": {
+        "_population_diversity": [
+          2896,
+          2896,
+          2896
+        ],
+        "stacked": [
+          3321,
+          3321,
+          3321
+        ],
+        "streamed": [
+          6401,
+          6401,
+          6401
+        ]
+      }
+    },
+    {
+      "n": 8,
+      "width": 4096,
+      "unique": 8,
+      "times_ms": {
+        "_population_diversity": [
+          7.825099979527295,
+          8.151100017130375,
+          7.764699985273182,
+          7.922800024971366,
+          7.9150000237859786,
+          7.82880000770092
+        ],
+        "stacked": [
+          0.2576999831944704,
+          0.24610001128166914,
+          0.2259000320918858,
+          0.3263999824412167,
+          0.3005000180564821,
+          0.21169998217374086
+        ],
+        "streamed": [
+          0.26020000223070383,
+          0.2950999769382179,
+          0.3367000026628375,
+          0.25429995730519295,
+          0.3809999907389283,
+          0.23909995798021555
+        ]
+      },
+      "peak_bytes": {
+        "_population_diversity": [
+          263240,
+          263240,
+          263240
+        ],
+        "stacked": [
+          231021,
+          231021,
+          231021
+        ],
+        "streamed": [
+          141285,
+          141285,
+          141285
+        ]
+      }
+    },
+    {
+      "n": 8,
+      "width": 4096,
+      "unique": 2,
+      "times_ms": {
+        "_population_diversity": [
+          6.9821999641135335,
+          7.105599972419441,
+          7.321900047827512,
+          7.556199969258159,
+          7.506699999794364,
+          7.624100020620972
+        ],
+        "stacked": [
+          0.2373000024817884,
+          0.23659999715164304,
+          0.22989994613453746,
+          0.24689995916560292,
+          0.26349996915087104,
+          0.24279998615384102
+        ],
+        "streamed": [
+          0.2440999960526824,
+          0.26290002278983593,
+          0.27860002592206,
+          0.264100031927228,
+          0.2775000175461173,
+          0.26790000265464187
+        ]
+      },
+      "peak_bytes": {
+        "_population_diversity": [
+          165816,
+          165816,
+          165816
+        ],
+        "stacked": [
+          231021,
+          231021,
+          231021
+        ],
+        "streamed": [
+          137503,
+          137503,
+          137503
+        ]
+      }
+    },
+    {
+      "n": 32,
+      "width": 4096,
+      "unique": 32,
+      "times_ms": {
+        "_population_diversity": [
+          10.939600004348904,
+          10.88680000975728,
+          10.840399947483093,
+          10.847500001545995,
+          11.056699964683503,
+          10.986499954015017
+        ],
+        "stacked": [
+          0.7993999752216041,
+          0.7684000302106142,
+          0.7465000380761921,
+          0.7738000131212175,
+          0.7747000199742615,
+          0.7579000084660947
+        ],
+        "streamed": [
+          0.9039000142365694,
+          1.0113000171259046,
+          0.901699997484684,
+          0.8892999612726271,
+          0.8974000229500234,
+          0.9121000184677541
+        ]
+      },
+      "peak_bytes": {
+        "_population_diversity": [
+          1052168,
+          1052168,
+          1052168
+        ],
+        "stacked": [
+          428645,
+          428645,
+          428645
+        ],
+        "streamed": [
+          155933,
+          155933,
+          155933
+        ]
+      }
+    },
+    {
+      "n": 32,
+      "width": 4096,
+      "unique": 4,
+      "times_ms": {
+        "_population_diversity": [
+          11.455299973022193,
+          11.866900022141635,
+          10.606100026052445,
+          10.936399979982525,
+          11.023500002920628,
+          10.856499953661114
+        ],
+        "stacked": [
+          0.7411999977193773,
+          0.7323000463657081,
+          0.7117000059224665,
+          0.7750000222586095,
+          0.7763000321574509,
+          0.7640999974682927
+        ],
+        "streamed": [
+          0.8283999632112682,
+          0.8787999977357686,
+          0.8968999609351158,
+          0.8844999829307199,
+          0.8760999771766365,
+          0.9139000321738422
+        ]
+      },
+      "peak_bytes": {
+        "_population_diversity": [
+          165828,
+          165828,
+          165828
+        ],
+        "stacked": [
+          428645,
+          428645,
+          428645
+        ],
+        "streamed": [
+          138625,
+          138625,
+          138625
+        ]
+      }
+    },
+    {
+      "n": 64,
+      "width": 8192,
+      "unique": 64,
+      "times_ms": {
+        "_population_diversity": [
+          37.039299961179495,
+          34.214000042993575,
+          35.31150001799688,
+          34.71430001081899,
+          34.39849999267608,
+          34.760599955916405
+        ],
+        "stacked": [
+          3.0247000395320356,
+          3.5099000087939203,
+          2.9175999807193875,
+          3.112000005785376,
+          3.2621000427752733,
+          3.3837000373750925
+        ],
+        "streamed": [
+          3.3071000361815095,
+          3.7128000403754413,
+          3.6397999501787126,
+          3.5106000141240656,
+          4.259500012267381,
+          3.307800041511655
+        ]
+      },
+      "peak_bytes": {
+        "_population_diversity": [
+          4199176,
+          4199176,
+          4199176
+        ],
+        "stacked": [
+          1380229,
+          1380229,
+          1380229
+        ],
+        "streamed": [
+          341309,
+          341309,
+          341309
+        ]
+      }
+    },
+    {
+      "n": 64,
+      "width": 8192,
+      "unique": 8,
+      "times_ms": {
+        "_population_diversity": [
+          34.456800029147416,
+          32.886500004678965,
+          31.412500014994293,
+          34.30669999215752,
+          34.02210003696382,
+          31.364800001028925
+        ],
+        "stacked": [
+          3.0727999983355403,
+          2.896399993915111,
+          3.0727999983355403,
+          2.897900005336851,
+          3.171200049109757,
+          3.0038999975658953
+        ],
+        "streamed": [
+          3.141300054267049,
+          3.138899977784604,
+          3.3180000027641654,
+          2.960100013297051,
+          3.4000000450760126,
+          3.229200025089085
+        ]
+      },
+      "peak_bytes": {
+        "_population_diversity": [
+          590960,
+          590960,
+          590960
+        ],
+        "stacked": [
+          1380229,
+          1380229,
+          1380229
+        ],
+        "streamed": [
+          280581,
+          280581,
+          280581
+        ]
+      }
+    }
+  ],
+  "reproduction_script": "import gc\nimport itertools\nimport json\nimport platform\nimport random\nimport statistics\nimport subprocess\nimport sys\nimport time\nimport tracemalloc\nfrom pathlib import Path\n\nimport numpy as np\n\nsys.path.insert(0, str(Path.cwd()))\nfrom sklearn_genetic.algorithms import _population_diversity as baseline\n\n\ndef stacked(population):\n    n = len(population)\n    rows = [bytes(mask) for mask in population]\n    width = len(rows[0])\n    if width == 0 or any(len(row) != width for row in rows):\n        return baseline(population)\n    matrix = np.frombuffer(b\"\".join(rows), dtype=np.uint8).reshape(n, width)\n    if matrix.max() > 1:\n        return baseline(population)\n    ones = matrix.sum(axis=0, dtype=np.int64)\n    zeros = n - ones\n    equal_pairs = ones * (ones - 1) + zeros * (zeros - 1)\n    unique = len(set(rows))\n    return dict(population_size=n, unique_individuals=unique, unique_individual_ratio=unique/n,\n                genotype_diversity=float(np.mean(1 - equal_pairs / (n * (n - 1)))))\n\n\ndef streamed(population):\n    n = len(population)\n    width = len(population[0])\n    counts = np.zeros(width, dtype=np.int64)\n    keys = set()\n    for mask in population:\n        row = np.frombuffer(bytes(mask), dtype=np.uint8)\n        if len(row) != width or not width or row.max() > 1:\n            return baseline(population)\n        counts += row\n        keys.add(np.packbits(row).tobytes())\n    # Keep the same order of floating-point operations as the baseline.\n    equal_pairs = n * (n - 1) - 2 * counts * (n - counts)\n    return dict(population_size=n, unique_individuals=len(keys), unique_individual_ratio=len(keys)/n,\n                genotype_diversity=float(np.mean(1 - equal_pairs / (n * (n - 1)))))\n\n\nmethods = [baseline, stacked, streamed]\nrecords = []\nfor n, width in [(8, 16), (8, 4096), (32, 4096), (64, 8192)]:\n    for template_count in (n, max(2, n // 8)):\n        rng = random.Random(3001)\n        templates = [[rng.randrange(2) for _ in range(width)] for _ in range(template_count)]\n        population = [templates[i % template_count].copy() for i in range(n)]\n        expected = baseline(population)\n        for method in methods:\n            assert method(population) == expected\n        times = {m.__name__: [] for m in methods}\n        peaks = {m.__name__: [] for m in methods}\n        for order in itertools.permutations(methods):\n            for method in order:\n                start = time.perf_counter()\n                result = method(population)\n                times[method.__name__].append(1000 * (time.perf_counter() - start))\n                assert result == expected\n        for method in methods:\n            for _ in range(3):\n                gc.collect()\n                tracemalloc.start()\n                try:\n                    assert method(population) == expected\n                    peaks[method.__name__].append(tracemalloc.get_traced_memory()[1])\n                finally:\n                    tracemalloc.stop()\n        records.append(dict(n=n,width=width,unique=expected[\"unique_individuals\"],\n                            times_ms=times,peak_bytes=peaks))\nprint(json.dumps(dict(checkout=subprocess.check_output([\"git\",\"rev-parse\",\"HEAD\"],text=True).strip(),\n                      python=platform.python_version(),numpy=np.__version__,records=records,\n                      reproduction_script=Path(__file__).read_text()),indent=2))\n"
+}

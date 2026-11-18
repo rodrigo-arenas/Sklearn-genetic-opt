@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from typing import Literal
 
 import numpy as np
 
@@ -59,6 +60,6 @@ class OptimizationConfig:
     fitness_sharing: bool = False
     sharing_radius: float = 0.2
     sharing_alpha: float = 1.0
-    final_selection: bool = False
+    final_selection: bool | Literal["reuse_folds"] = False
     final_selection_top_k: int = 3
     final_selection_cv: object = None

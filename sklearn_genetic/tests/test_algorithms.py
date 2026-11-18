@@ -161,22 +161,30 @@ def test_differential_evolution_replaces_only_improved_targets(
         (Categorical([0.2, 0.4, 0.6, 0.8]), [0.2, 0.4, 0.6, 0.8], [0.4, 0.2, 0.2, 0.2]),
     ],
 )
+@pytest.mark.parametrize("fixed_columns", [False, True])
 def test_differential_evolution_uses_deferred_distinct_donors(
-    simple_toolbox, monkeypatch, dimension, parents, trials
+    simple_toolbox, monkeypatch, dimension, parents, trials, fixed_columns
 ):
-    # For a one-dimensional space, CR=0 must still force the donor coordinate.
+    # With one variable coordinate, CR=0 must still force that donor coordinate.
     # Excluding the target maps samples [0, 1, 2] to the three other parents.
-    population = [creator.IndividualAlgorithmTest([x]) for x in parents]
+    grid = {"x": dimension}
+    if fixed_columns:
+        grid = {"fixed": Categorical(["a"]), **grid, "constant": Continuous(2, 2)}
+    gene = list(grid).index("x")
+    population = [
+        creator.IndividualAlgorithmTest(["a", x, 2] if fixed_columns else [x]) for x in parents
+    ]
     evaluated = []
 
     def evaluate(individual):
-        evaluated.append(individual[0])
-        return (individual[0],)
+        evaluated.append(individual[gene])
+        return (individual[gene],)
 
     simple_toolbox.register("evaluate", evaluate)
     monkeypatch.setattr(random, "sample", lambda values, k: list(values)[:k])
+    monkeypatch.setattr(random, "randrange", lambda n: 0)
     estimator = SimpleNamespace(
-        space=Space({"x": dimension}),
+        space=Space(grid),
         _repair_individual=lambda individual: individual,
         elitism=False,
     )
@@ -192,7 +200,7 @@ def test_differential_evolution_uses_deferred_distinct_donors(
         estimator=estimator,
     )
     assert evaluated == pytest.approx(parents + trials)
-    assert [ind[0] for ind in result] == pytest.approx(
+    assert [ind[gene] for ind in result] == pytest.approx(
         [max(parent, trial) for parent, trial in zip(parents, trials)]
     )
 
@@ -296,6 +304,33 @@ def test_verbose_output_uses_compact_generation_summary(simple_toolbox, capsys):
 
     table_lines = [line for line in output.splitlines() if line.strip()]
     assert len({len(line) for line in table_lines}) == 1
+
+
+def test_easimple_growing_elite_archive_respects_population_budget(simple_toolbox):
+    population = [creator.IndividualAlgorithmTest([0]) for _ in range(4)]
+    mutations = iter(range(1, 20))
+
+    def mutate(individual):
+        individual[0] = next(mutations)
+        return (individual,)
+
+    simple_toolbox.register("mutate", mutate)
+    archive = tools.HallOfFame(3)
+    final, log, _ = eaSimple(
+        population,
+        simple_toolbox,
+        cxpb=ConstantAdapter(0, 0, 0),
+        mutpb=ConstantAdapter(1, 1, 0),
+        ngen=3,
+        halloffame=archive,
+        callbacks=[],
+        verbose=False,
+        estimator=SimpleNamespace(elitism=True),
+    )
+
+    assert log.select("population_size") == [4, 4, 4, 4]
+    assert log.select("nevals") == [4, 3, 1, 1]
+    assert max(ind[0] for ind in final) == archive[0][0] == 5
 
 
 def test_algorithm_records_monotonic_best_fitness(simple_toolbox):
@@ -477,6 +512,33 @@ def test_shared_fitness_temporarily_penalizes_crowded_niches(simple_toolbox):
     assert crowded_a.fitness.values == (10,)
     assert crowded_b.fitness.values == (10,)
     assert isolated.fitness.values == (10,)
+
+
+@pytest.mark.parametrize("weight", [1.0, -1.0])
+def test_shared_fitness_keeps_nonfinite_candidate_below_finite_candidates(weight):
+    fitness_type = type("Fitness", (base.Fitness,), {"weights": (weight,)})
+
+    class Individual(list):
+        def __init__(self, genes):
+            super().__init__(genes)
+            self.fitness = fitness_type()
+
+    population = []
+    for value, score in [(0, -weight * np.inf), (1, weight * -1e15), (2, weight * 1.0)]:
+        individual = Individual([value, value, value, value])
+        individual.fitness.values = (score,)
+        population.append(individual)
+
+    estimator = SimpleNamespace(
+        fitness_sharing=True,
+        sharing_radius=0.25,
+        sharing_alpha=1.0,
+    )
+    original = [item.fitness.values for item in population]
+    with shared_fitness(population, estimator):
+        assert all(not np.isnan(item.fitness.values[0]) for item in population)
+        assert tools.selBest(population, 1)[0] is population[2]
+    assert [item.fitness.values for item in population] == original
 
 
 @pytest.mark.parametrize("mixed", [False, True])

@@ -1,6 +1,87 @@
 # Changelog
 
-Full release notes with code examples are in the [documentation](https://sklearngeneticopt.rodrigo-arenas.com/).
+Read the [development release notes](docs-vitepress/versions/latest/release-notes.md)
+for upgrade guidance and links to the API examples.
+
+## Unreleased
+
+## 0.15.0
+
+### Search, performance and compatibility
+
+- `GAFeatureSelectionCV` compares packed feature masks when selecting distinct finalists, reducing ranking time on wide inputs.
+
+- Smart feature selection reuses initial mask draws for padding when the population exceeds the entire cached search space. Seeded populations in this case can differ from earlier versions.
+
+- Smart initialization in `GASearchCV` varies fractional categorical allocations across search seeds while retaining exact stratified counts when the configured priors fit the available slots.
+- Equal positive categorical priors now produce the same seeded smart-initialization draws as uniform sampling over the eligible choices, including when some choices have zero weight.
+- `GAFeatureSelectionCV` can now select columns from COO sparse inputs during supervised and target-free outlier searches.
+- Convergence, diversity and optimizer-event plots retain the recorded generation numbers when a history starts above zero or contains gaps.
+- Both estimators expose cumulative candidate CV evaluations per generation in `history["cross_validate_calls"]`, including the cost of local refinement in the final generation.
+- Fixed integer dimensions now return their exact value directly, including Python integers beyond the signed 64-bit range.
+
+- Feature selection computes generation diversity for wide binary masks one row at a time and stores packed masks to count unique candidates.
+
+- Seeded checkpoint resumes in both estimators continue the Python and NumPy proposal streams and retain the archived elites. Smart numeric hyperparameter initialization draws new strata on resume.
+
+- `ModelCheckpoint` writes one snapshot per generation and replaces the previous checkpoint only after serialization succeeds. A failed update preserves the last readable snapshot.
+
+- Fixed premature stopping with `ConsecutiveStopping` when lower fitness scores improve a minimizing search.
+
+- Smart feature-selection initialization samples the smaller of the selected and excluded column sets. This reduces temporary memory for wide inputs. Seeded runs remain reproducible, but the masks for a given seed can differ from earlier versions.
+
+- Local refinement in `GASearchCV` now chooses variable dimensions when proposing neighbors in mixed fixed/variable grids.
+
+- Differential evolution in `GASearchCV` directs its mandatory donor coordinate to a variable hyperparameter when a grid also contains fixed dimensions.
+
+- Standard `GASearchCV` mutation skips numeric dimensions with equal bounds and single-choice categories, focusing proposals on variable dimensions in mixed grids.
+
+- Both estimators support `final_selection="reuse_folds"` for deterministic searches with `error_score="raise"`. Finalists reuse scores from identical ordered splits of the current fit and report the number of reused folds.
+
+- Fixed integer candidate repair and local refinement in `GASearchCV` so adjacent large integers retain distinct parameter values and fitness-cache entries.
+- Fixed sampling of log-uniform continuous dimensions with equal bounds. Smart initialization now recognizes the same fixed value in warm-start and generated candidates, preserving room for distinct configurations.
+- Candidate score, ranking and fold plots now honor the search's minimization or maximization criterion and omit non-finite means. Horizontal charts show the best candidate at the top, and identical display labels retain separate bars.
+- Fixed population growth in `eaSimple` when the initial population contains duplicates and the elite archive grows during evolution. Both search estimators now keep archived elites within the configured population budget.
+
+- Removed TensorFlow and TensorBoard from optional extras. Added Matplotlib-based live generation plots in `sklearn_genetic.plots`; the legacy `TensorBoard` callback remains available with a separate TensorFlow installation and no longer imports it at library startup.
+- `GASearchCV` and `GAFeatureSelectionCV` now rank non-finite cross-validation scores last during evolution and final candidate selection, for both maximization and minimization. A candidate with one failed fold no longer receives a misleading average from its remaining folds. Raw fold scores remain visible in `cv_results_`; fitness sharing preserves valid ordering, and resumed checkpoints normalize older cached fitness values.
+
+- Variable integer dimensions use NumPy sampling directly. Both searches build
+  CV result columns with less repeated work and skip cache-key construction when
+  caching is disabled. Feature selection avoids redundant mask scans, speeds up
+  copying and validation of native masks, and limits the scan for tied finalists.
+
+### Documentation, benchmarks and maintenance
+
+- Added guidance and runnable examples for counting candidate evaluations,
+  finalist fold fits, checkpoint resumes, live plotting and search budgets.
+  Benchmark coverage now includes held-out comparisons with random search,
+  exhaustive and greedy feature selection, search-space coverage, crossover,
+  initialization, filter proposals, finalist budgets, fold pruning, and
+  end-to-end time and memory attribution. Experimental policies are reported
+  in the [benchmark record](benchmarks/PERFORMANCE_V2.md).
+- Documentation pages use stable canonical URLs where a released counterpart
+  exists. Search titles and descriptions were revised. The Pages workflow
+  submits changed URLs to Bing through IndexNow after deployment. Added shared
+  contributor instructions and updated optional dependency and CI guidance.
+
+### Community contributions
+
+- Both fitted searches expose `cv_results_dataframe()`, sorted by the selected
+  metric's test rank with stable ties. Feature-selection rows include their
+  masks in `params` (#363, #393).
+- Both searches refresh optimization direction after `set_params(criteria=...)`
+  and validate replacement values. Dictionary-valued categorical candidates
+  work across search operations, including duplicate detection and caching
+  (#391, #388).
+- Added community resources on search spaces, callbacks and `GASearchCV`;
+  clarified CV versus held-out MAE, corrected warm-start advice and a
+  troubleshooting link, repaired the example-generation npm commands, and
+  documented focused test runs (#389, #400, #401, #402, #404).
+- Updated Vite, Vue, its server renderer and source-map-js for the docs build
+  (#385, #386, #392). The 0.14 docs freeze and conda recipe refresh completed
+  after publication; archive links, stable-page metadata and performance
+  documentation were also updated.
 
 ## 0.14.0
 
@@ -28,11 +109,7 @@ Full release notes with code examples are in the [documentation](https://sklearn
 - `GASearchCV` and `GAFeatureSelectionCV` now reject unsupported `fit` metadata up front with a clear error naming the parameter and the wrapped estimator, instead of failing deep inside cross-validation. Estimators whose `fit` takes `**kwargs` (e.g. `Pipeline`) are left to validate at fit time, so routed keys like `clf__sample_weight` keep working (#364).
 - Added `GAFeatureSelectionCV.get_feature_names_out()` support for DataFrame column names and generated NumPy feature names.
 
-- Added `cv_results_dataframe()` to both search estimators. It returns candidate results sorted by the selected metric's rank and leaves `cv_results_` unchanged (#363).
-
 ### Bug Fixes
-
-- Both searches refresh their optimization direction after `set_params(criteria=...)`, including when reusing a fitted search. Previously evolution, hall-of-fame selection, and best-fitness history could continue using the opposite direction captured at construction. Invalid replacement criteria now raise the same error as invalid constructor values.
 
 - `GASearchCV` now honors its documented `return_train_score=False` default when initializing scikit-learn's search base. Previously scikit-learn reset it to `True`, scoring every training fold and adding unwanted train-score fields to `cv_results_`. Explicit `return_train_score=True` still includes those fields. A paired four-family benchmark measured 1.23–1.84× lower elapsed time for cheap tree, KNN and ElasticNet searches with identical CV winners; random-forest timings showed no benefit.
 

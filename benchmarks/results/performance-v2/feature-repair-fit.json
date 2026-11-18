@@ -1,0 +1,272 @@
+[
+  {
+    "width": 16,
+    "seed": 9151,
+    "cv_calls": 33,
+    "runs": {
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.1185226000379771,
+        "ranking_seconds": 2.2766665400316317e-05
+      },
+      "BulkRepair": {
+        "fit_seconds": 0.11944139999104664,
+        "ranking_seconds": 2.2466663115968306e-05
+      }
+    }
+  },
+  {
+    "width": 16,
+    "seed": 9152,
+    "cv_calls": 34,
+    "runs": {
+      "BulkRepair": {
+        "fit_seconds": 0.13038960000267252,
+        "ranking_seconds": 2.0899984519928694e-05
+      },
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.11844659998314455,
+        "ranking_seconds": 2.1466655501474936e-05
+      }
+    }
+  },
+  {
+    "width": 16,
+    "seed": 9153,
+    "cv_calls": 33,
+    "runs": {
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.12798859999747947,
+        "ranking_seconds": 4.039999718467394e-05
+      },
+      "BulkRepair": {
+        "fit_seconds": 0.13661780004622415,
+        "ranking_seconds": 2.406665589660406e-05
+      }
+    }
+  },
+  {
+    "width": 16,
+    "seed": 9154,
+    "cv_calls": 38,
+    "runs": {
+      "BulkRepair": {
+        "fit_seconds": 0.1391038000001572,
+        "ranking_seconds": 2.136667414257924e-05
+      },
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.13230740005383268,
+        "ranking_seconds": 2.0133331418037415e-05
+      }
+    }
+  },
+  {
+    "width": 16,
+    "seed": 9155,
+    "cv_calls": 37,
+    "runs": {
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.12423329998273402,
+        "ranking_seconds": 2.5299998621145885e-05
+      },
+      "BulkRepair": {
+        "fit_seconds": 0.12430790002690628,
+        "ranking_seconds": 2.1199986804276705e-05
+      }
+    }
+  },
+  {
+    "width": 16,
+    "seed": 9156,
+    "cv_calls": 42,
+    "runs": {
+      "BulkRepair": {
+        "fit_seconds": 0.13307400001212955,
+        "ranking_seconds": 2.1700010014077027e-05
+      },
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.13734020001720637,
+        "ranking_seconds": 2.0500000876684982e-05
+      }
+    }
+  },
+  {
+    "width": 256,
+    "seed": 9151,
+    "cv_calls": 55,
+    "runs": {
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.17613979999441653,
+        "ranking_seconds": 1.8233336353053648e-05
+      },
+      "BulkRepair": {
+        "fit_seconds": 0.18544510001083836,
+        "ranking_seconds": 1.8033334830154974e-05
+      }
+    }
+  },
+  {
+    "width": 256,
+    "seed": 9152,
+    "cv_calls": 56,
+    "runs": {
+      "BulkRepair": {
+        "fit_seconds": 0.1859868000028655,
+        "ranking_seconds": 2.986666125555833e-05
+      },
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.1829322000266984,
+        "ranking_seconds": 2.0500000876684982e-05
+      }
+    }
+  },
+  {
+    "width": 256,
+    "seed": 9153,
+    "cv_calls": 56,
+    "runs": {
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.17747570003848523,
+        "ranking_seconds": 2.0466667289535206e-05
+      },
+      "BulkRepair": {
+        "fit_seconds": 0.18097239994676784,
+        "ranking_seconds": 2.1533322675774496e-05
+      }
+    }
+  },
+  {
+    "width": 256,
+    "seed": 9154,
+    "cv_calls": 56,
+    "runs": {
+      "BulkRepair": {
+        "fit_seconds": 0.1806322000338696,
+        "ranking_seconds": 2.2133346647024155e-05
+      },
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.18516420002561063,
+        "ranking_seconds": 1.9933349297692377e-05
+      }
+    }
+  },
+  {
+    "width": 256,
+    "seed": 9155,
+    "cv_calls": 55,
+    "runs": {
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.18773399997735396,
+        "ranking_seconds": 2.1100005445381004e-05
+      },
+      "BulkRepair": {
+        "fit_seconds": 0.17647390003548935,
+        "ranking_seconds": 2.223334740847349e-05
+      }
+    }
+  },
+  {
+    "width": 256,
+    "seed": 9156,
+    "cv_calls": 56,
+    "runs": {
+      "BulkRepair": {
+        "fit_seconds": 0.21910240000579506,
+        "ranking_seconds": 2.1166653217126925e-05
+      },
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.18365159997483715,
+        "ranking_seconds": 1.9833329133689404e-05
+      }
+    }
+  },
+  {
+    "width": 4096,
+    "seed": 9151,
+    "cv_calls": 56,
+    "runs": {
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.292133399983868,
+        "ranking_seconds": 2.509999709824721e-05
+      },
+      "BulkRepair": {
+        "fit_seconds": 0.2888336000032723,
+        "ranking_seconds": 2.720001308868329e-05
+      }
+    }
+  },
+  {
+    "width": 4096,
+    "seed": 9152,
+    "cv_calls": 56,
+    "runs": {
+      "BulkRepair": {
+        "fit_seconds": 0.26339350000489503,
+        "ranking_seconds": 2.6333339822789032e-05
+      },
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.2954341999720782,
+        "ranking_seconds": 2.580000242839257e-05
+      }
+    }
+  },
+  {
+    "width": 4096,
+    "seed": 9153,
+    "cv_calls": 56,
+    "runs": {
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.30235030001495034,
+        "ranking_seconds": 2.403332230945428e-05
+      },
+      "BulkRepair": {
+        "fit_seconds": 0.2884310999652371,
+        "ranking_seconds": 2.3633338666210573e-05
+      }
+    }
+  },
+  {
+    "width": 4096,
+    "seed": 9154,
+    "cv_calls": 56,
+    "runs": {
+      "BulkRepair": {
+        "fit_seconds": 0.2716412000008859,
+        "ranking_seconds": 2.3699986437956493e-05
+      },
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.3126985999988392,
+        "ranking_seconds": 2.7033325750380754e-05
+      }
+    }
+  },
+  {
+    "width": 4096,
+    "seed": 9155,
+    "cv_calls": 56,
+    "runs": {
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.2981636999757029,
+        "ranking_seconds": 2.709999292468031e-05
+      },
+      "BulkRepair": {
+        "fit_seconds": 0.2854267000220716,
+        "ranking_seconds": 2.7833351244529087e-05
+      }
+    }
+  },
+  {
+    "width": 4096,
+    "seed": 9156,
+    "cv_calls": 56,
+    "runs": {
+      "BulkRepair": {
+        "fit_seconds": 0.285634099971503,
+        "ranking_seconds": 2.2333328767369192e-05
+      },
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.2939355000271462,
+        "ranking_seconds": 2.2466663115968306e-05
+      }
+    }
+  }
+]

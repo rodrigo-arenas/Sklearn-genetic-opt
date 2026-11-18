@@ -15,6 +15,7 @@ except ModuleNotFoundError:  # noqa
     logger.error("seaborn not found, pip install seaborn to use plots functions")  # noqa
 
 from .genetic_search import GAFeatureSelectionCV
+from .callbacks.base import BaseCallback
 from .parameters import Metrics
 from .utils import logbook_to_pandas
 
@@ -76,7 +77,10 @@ def _history_frame(estimator, source="history", fields=None):
             raise ValueError(
                 f"fields not found in {source}: {missing}. Available fields include: {list(frame.columns)}"
             )
-        frame = frame.loc[:, list(fields)]
+        columns = list(fields)
+        if source == "history" and "gen" in frame and "gen" not in columns:
+            columns.append("gen")
+        frame = frame.loc[:, columns]
 
     return frame
 
@@ -236,15 +240,16 @@ def _candidate_frame(estimator, metric=None, top_k=None, sort=True):
     _validate_top_k(top_k)
 
     frame, score_column, scores = _score_values(estimator, metric=metric)
-    candidates = frame.copy()
-    candidates[score_column] = scores
-    candidates = candidates.dropna(subset=[score_column])
+    frame[score_column] = scores
+    candidates = frame.loc[np.isfinite(scores)]
 
     if candidates.empty:
         raise ValueError("No candidate scores were found in estimator.cv_results_")
 
     if sort:
-        candidates = candidates.sort_values(score_column, ascending=False)
+        candidates = candidates.sort_values(
+            score_column, ascending=getattr(estimator, "criteria", "max") == "min", kind="stable"
+        )
 
     if top_k is not None:
         candidates = candidates.head(top_k)
@@ -314,6 +319,57 @@ def _plot_single_series(ax, series, kind="line", label=None, alpha=0.9, color=No
         ax.step(series.index, series.values, where="post", label=label, alpha=alpha, color=color)
     else:
         ax.plot(series.index, series.values, label=label, alpha=alpha, color=color)
+
+
+def plot_generation_metrics(logbook, metrics=("fitness_best", "fitness"), *, ax=None):
+    """Plot generation-level fitness from a running or completed search logbook.
+
+    Unlike plots based on ``estimator.history``, this works during ``fit``.
+    Pass the logbook received by a callback to inspect the search in progress.
+    """
+    if not logbook:
+        raise ValueError("logbook has no generations to plot")
+
+    metrics = _as_list(metrics)
+    if not metrics:
+        raise ValueError("metrics must contain at least one field")
+    missing = [metric for metric in metrics if any(metric not in row for row in logbook)]
+    if missing:
+        raise ValueError(f"metrics missing from logbook: {missing}")
+
+    if ax is None:
+        _, ax = plt.subplots(figsize=(10, 5))
+    generations = [row["gen"] for row in logbook]
+    for metric in metrics:
+        ax.plot(generations, [row[metric] for row in logbook], label=metric)
+    ax.set(xlabel="generations", ylabel="fitness", title="Training progress")
+    if len(metrics) > 1:
+        ax.legend(title="metric")
+    return ax
+
+
+class LivePlot(BaseCallback):
+    """Update a Matplotlib fitness chart after every generation.
+
+    ``save_path`` also writes the current chart after each update, which is
+    useful in a headless run. The interactive display depends on the active
+    Matplotlib backend.
+    """
+
+    def __init__(self, metrics=("fitness_best", "fitness"), *, ax=None, save_path=None):
+        self.metrics = metrics
+        self.ax = ax
+        self.save_path = save_path
+
+    def on_step(self, record=None, logbook=None, estimator=None):
+        if self.ax is not None:
+            self.ax.clear()
+        self.ax = plot_generation_metrics(logbook, metrics=self.metrics, ax=self.ax)
+        self.ax.figure.canvas.draw_idle()
+        if self.save_path is not None:
+            self.ax.figure.savefig(self.save_path)
+        plt.pause(0.001)
+        return False
 
 
 def plot_fitness_evolution(
@@ -799,7 +855,9 @@ def plot_candidate_scores(
 
     sns.set_style("white")
     bar_color = color or sns.color_palette("crest", n_colors=1)[0]
-    ax.barh(labels[::-1], candidates[score_column].to_numpy()[::-1], color=bar_color, alpha=0.9)
+    positions = np.arange(len(candidates))[::-1]
+    ax.barh(positions, candidates[score_column], color=bar_color, alpha=0.9)
+    ax.set_yticks(positions, labels=labels)
     ax.set_xlabel(score_column)
     ax.set_ylabel("candidate")
     ax.set_title(title or f"Top {len(candidates)} candidate scores")
@@ -1371,16 +1429,16 @@ def plot_candidate_rankings(
     marker_color = color or sns.color_palette("crest", n_colors=1)[0]
     y_positions = np.arange(len(candidates))[::-1]
     ax.errorbar(
-        scores[::-1],
+        scores,
         y_positions,
-        xerr=errors[::-1] if errors is not None else None,
+        xerr=errors,
         fmt="o",
         color=marker_color,
         ecolor="0.55",
         capsize=3,
         markersize=7,
     )
-    ax.set_yticks(y_positions, labels=labels[::-1])
+    ax.set_yticks(y_positions, labels=labels)
     ax.set_xlabel(score_column)
     ax.set_ylabel("candidate")
     ax.set_title(title or f"Candidate ranking (top {len(candidates)})")
@@ -1496,6 +1554,7 @@ class SearchPlotter:
 
 
 __all__ = [
+    "LivePlot",
     "SearchPlotter",
     "plot_candidate_scores",
     "plot_candidate_rankings",
@@ -1504,6 +1563,7 @@ __all__ = [
     "plot_diversity",
     "plot_feature_selection",
     "plot_fitness_evolution",
+    "plot_generation_metrics",
     "plot_history",
     "plot_optimizer_events",
     "plot_parameter_evolution",

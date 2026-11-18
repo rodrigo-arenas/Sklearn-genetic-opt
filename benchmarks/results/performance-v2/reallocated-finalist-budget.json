@@ -1,0 +1,1370 @@
+[
+  {
+    "dataset": "wine",
+    "family": "knn",
+    "metric": "accuracy",
+    "seed": 8921,
+    "features": false,
+    "runs": {
+      "3g_5k": {
+        "finalists": [
+          3,
+          5,
+          13,
+          19,
+          24
+        ],
+        "seconds": 0.24432190001243725,
+        "folds": 56,
+        "finalist_folds": 20,
+        "index": 5,
+        "cv": 0.9772079772079773,
+        "holdout": 0.9111111111111111
+      },
+      "2g_5k": {
+        "finalists": [
+          3,
+          5,
+          13,
+          19,
+          24
+        ],
+        "seconds": 0.19542709999950603,
+        "folds": 46,
+        "finalist_folds": 20,
+        "index": 5,
+        "cv": 0.9772079772079773,
+        "holdout": 0.9111111111111111
+      },
+      "2g_8k": {
+        "finalists": [
+          3,
+          5,
+          13,
+          19,
+          24,
+          29,
+          1,
+          6
+        ],
+        "seconds": 0.24811039998894557,
+        "folds": 58,
+        "finalist_folds": 32,
+        "index": 5,
+        "cv": 0.9772079772079773,
+        "holdout": 0.9111111111111111
+      }
+    }
+  },
+  {
+    "dataset": "wine",
+    "family": "knn",
+    "metric": "accuracy",
+    "seed": 8921,
+    "features": true,
+    "runs": {
+      "3g_5k": {
+        "finalists": [
+          14,
+          3,
+          32,
+          2,
+          40
+        ],
+        "seconds": 0.25379839999368414,
+        "folds": 62,
+        "finalist_folds": 20,
+        "index": 32,
+        "cv": 0.9772079772079773,
+        "holdout": 0.9777777777777777
+      },
+      "2g_5k": {
+        "finalists": [
+          14,
+          3,
+          2,
+          23,
+          9
+        ],
+        "seconds": 0.1940543000237085,
+        "folds": 50,
+        "finalist_folds": 20,
+        "index": 23,
+        "cv": 0.9618233618233617,
+        "holdout": 0.8888888888888888
+      },
+      "2g_8k": {
+        "finalists": [
+          14,
+          3,
+          2,
+          23,
+          9,
+          18,
+          19,
+          24
+        ],
+        "seconds": 0.24793299997691065,
+        "folds": 62,
+        "finalist_folds": 32,
+        "index": 24,
+        "cv": 0.97008547008547,
+        "holdout": 0.9555555555555556
+      }
+    }
+  },
+  {
+    "dataset": "wine",
+    "family": "knn",
+    "metric": "accuracy",
+    "seed": 8922,
+    "features": false,
+    "runs": {
+      "2g_5k": {
+        "finalists": [
+          0,
+          2,
+          10,
+          12,
+          27
+        ],
+        "seconds": 0.20550430001458153,
+        "folds": 47,
+        "finalist_folds": 20,
+        "index": 27,
+        "cv": 0.9703703703703702,
+        "holdout": 1.0
+      },
+      "2g_8k": {
+        "finalists": [
+          0,
+          2,
+          10,
+          12,
+          27,
+          29,
+          5,
+          9
+        ],
+        "seconds": 0.25005309999687597,
+        "folds": 59,
+        "finalist_folds": 32,
+        "index": 27,
+        "cv": 0.9703703703703702,
+        "holdout": 1.0
+      },
+      "3g_5k": {
+        "finalists": [
+          0,
+          2,
+          10,
+          12,
+          27
+        ],
+        "seconds": 0.24988569994457066,
+        "folds": 54,
+        "finalist_folds": 20,
+        "index": 27,
+        "cv": 0.9703703703703702,
+        "holdout": 1.0
+      }
+    }
+  },
+  {
+    "dataset": "wine",
+    "family": "knn",
+    "metric": "accuracy",
+    "seed": 8922,
+    "features": true,
+    "runs": {
+      "2g_5k": {
+        "finalists": [
+          22,
+          2,
+          24,
+          27,
+          28
+        ],
+        "seconds": 0.22034790000179783,
+        "folds": 50,
+        "finalist_folds": 20,
+        "index": 22,
+        "cv": 0.9396011396011396,
+        "holdout": 1.0
+      },
+      "2g_8k": {
+        "finalists": [
+          22,
+          2,
+          24,
+          27,
+          28,
+          6,
+          23,
+          11
+        ],
+        "seconds": 0.2657922000507824,
+        "folds": 62,
+        "finalist_folds": 32,
+        "index": 23,
+        "cv": 0.9404558404558404,
+        "holdout": 1.0
+      },
+      "3g_5k": {
+        "finalists": [
+          22,
+          39,
+          2,
+          24,
+          36
+        ],
+        "seconds": 0.2545723000075668,
+        "folds": 60,
+        "finalist_folds": 20,
+        "index": 36,
+        "cv": 0.97008547008547,
+        "holdout": 1.0
+      }
+    }
+  },
+  {
+    "dataset": "wine",
+    "family": "knn",
+    "metric": "accuracy",
+    "seed": 8923,
+    "features": false,
+    "runs": {
+      "2g_8k": {
+        "finalists": [
+          0,
+          10,
+          13,
+          22,
+          23,
+          24,
+          26,
+          3
+        ],
+        "seconds": 0.2621870000148192,
+        "folds": 61,
+        "finalist_folds": 32,
+        "index": 13,
+        "cv": 0.9552706552706554,
+        "holdout": 0.9777777777777777
+      },
+      "3g_5k": {
+        "finalists": [
+          0,
+          10,
+          13,
+          22,
+          23
+        ],
+        "seconds": 0.24140320002334192,
+        "folds": 56,
+        "finalist_folds": 20,
+        "index": 13,
+        "cv": 0.9552706552706554,
+        "holdout": 0.9777777777777777
+      },
+      "2g_5k": {
+        "finalists": [
+          0,
+          10,
+          13,
+          22,
+          23
+        ],
+        "seconds": 0.21481929998844862,
+        "folds": 49,
+        "finalist_folds": 20,
+        "index": 13,
+        "cv": 0.9552706552706554,
+        "holdout": 0.9777777777777777
+      }
+    }
+  },
+  {
+    "dataset": "wine",
+    "family": "knn",
+    "metric": "accuracy",
+    "seed": 8923,
+    "features": true,
+    "runs": {
+      "2g_8k": {
+        "finalists": [
+          16,
+          26,
+          4,
+          25,
+          5,
+          29,
+          27,
+          18
+        ],
+        "seconds": 0.24018449999857694,
+        "folds": 62,
+        "finalist_folds": 32,
+        "index": 18,
+        "cv": 0.9472934472934472,
+        "holdout": 1.0
+      },
+      "3g_5k": {
+        "finalists": [
+          30,
+          16,
+          26,
+          40,
+          39
+        ],
+        "seconds": 0.24368050001794472,
+        "folds": 62,
+        "finalist_folds": 20,
+        "index": 30,
+        "cv": 0.9544159544159545,
+        "holdout": 0.9555555555555556
+      },
+      "2g_5k": {
+        "finalists": [
+          16,
+          26,
+          4,
+          25,
+          5
+        ],
+        "seconds": 0.22047189995646477,
+        "folds": 50,
+        "finalist_folds": 20,
+        "index": 25,
+        "cv": 0.9396011396011396,
+        "holdout": 0.9333333333333333
+      }
+    }
+  },
+  {
+    "dataset": "wine",
+    "family": "knn",
+    "metric": "accuracy",
+    "seed": 8924,
+    "features": false,
+    "runs": {
+      "3g_5k": {
+        "finalists": [
+          9,
+          19,
+          31,
+          0,
+          1
+        ],
+        "seconds": 0.2538786000222899,
+        "folds": 58,
+        "finalist_folds": 20,
+        "index": 19,
+        "cv": 0.9849002849002849,
+        "holdout": 0.9555555555555556
+      },
+      "2g_5k": {
+        "finalists": [
+          9,
+          19,
+          0,
+          1,
+          2
+        ],
+        "seconds": 0.21176169998943806,
+        "folds": 48,
+        "finalist_folds": 20,
+        "index": 19,
+        "cv": 0.9849002849002849,
+        "holdout": 0.9555555555555556
+      },
+      "2g_8k": {
+        "finalists": [
+          9,
+          19,
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "seconds": 0.250127200037241,
+        "folds": 60,
+        "finalist_folds": 32,
+        "index": 19,
+        "cv": 0.9849002849002849,
+        "holdout": 0.9555555555555556
+      }
+    }
+  },
+  {
+    "dataset": "wine",
+    "family": "knn",
+    "metric": "accuracy",
+    "seed": 8924,
+    "features": true,
+    "runs": {
+      "3g_5k": {
+        "finalists": [
+          37,
+          18,
+          21,
+          17,
+          41
+        ],
+        "seconds": 0.23974459996679798,
+        "folds": 62,
+        "finalist_folds": 20,
+        "index": 17,
+        "cv": 0.9475783475783477,
+        "holdout": 0.8888888888888888
+      },
+      "2g_5k": {
+        "finalists": [
+          18,
+          21,
+          17,
+          19,
+          5
+        ],
+        "seconds": 0.21406369999749586,
+        "folds": 50,
+        "finalist_folds": 20,
+        "index": 17,
+        "cv": 0.9475783475783477,
+        "holdout": 0.8888888888888888
+      },
+      "2g_8k": {
+        "finalists": [
+          18,
+          21,
+          17,
+          19,
+          5,
+          11,
+          20,
+          15
+        ],
+        "seconds": 0.2378923000069335,
+        "folds": 62,
+        "finalist_folds": 32,
+        "index": 17,
+        "cv": 0.9475783475783477,
+        "holdout": 0.8888888888888888
+      }
+    }
+  },
+  {
+    "dataset": "wine",
+    "family": "knn",
+    "metric": "accuracy",
+    "seed": 8925,
+    "features": false,
+    "runs": {
+      "2g_5k": {
+        "finalists": [
+          13,
+          23,
+          25,
+          2,
+          4
+        ],
+        "seconds": 0.19870919996174052,
+        "folds": 44,
+        "finalist_folds": 20,
+        "index": 25,
+        "cv": 0.9703703703703702,
+        "holdout": 1.0
+      },
+      "2g_8k": {
+        "finalists": [
+          13,
+          23,
+          25,
+          2,
+          4,
+          6,
+          9,
+          19
+        ],
+        "seconds": 0.2386699999915436,
+        "folds": 56,
+        "finalist_folds": 32,
+        "index": 25,
+        "cv": 0.9703703703703702,
+        "holdout": 1.0
+      },
+      "3g_5k": {
+        "finalists": [
+          13,
+          23,
+          25,
+          2,
+          4
+        ],
+        "seconds": 0.24031750002177432,
+        "folds": 53,
+        "finalist_folds": 20,
+        "index": 25,
+        "cv": 0.9703703703703702,
+        "holdout": 1.0
+      }
+    }
+  },
+  {
+    "dataset": "wine",
+    "family": "knn",
+    "metric": "accuracy",
+    "seed": 8925,
+    "features": true,
+    "runs": {
+      "2g_5k": {
+        "finalists": [
+          10,
+          11,
+          16,
+          3,
+          29
+        ],
+        "seconds": 0.20209520001662895,
+        "folds": 50,
+        "finalist_folds": 20,
+        "index": 29,
+        "cv": 0.9552706552706554,
+        "holdout": 0.9555555555555556
+      },
+      "2g_8k": {
+        "finalists": [
+          10,
+          11,
+          16,
+          3,
+          24,
+          25,
+          21,
+          29
+        ],
+        "seconds": 0.24081250000745058,
+        "folds": 62,
+        "finalist_folds": 32,
+        "index": 29,
+        "cv": 0.9552706552706554,
+        "holdout": 0.9555555555555556
+      },
+      "3g_5k": {
+        "finalists": [
+          34,
+          10,
+          11,
+          16,
+          41
+        ],
+        "seconds": 0.25155240000458434,
+        "folds": 62,
+        "finalist_folds": 20,
+        "index": 41,
+        "cv": 0.9552706552706551,
+        "holdout": 0.9333333333333333
+      }
+    }
+  },
+  {
+    "dataset": "wine",
+    "family": "knn",
+    "metric": "accuracy",
+    "seed": 8926,
+    "features": false,
+    "runs": {
+      "2g_8k": {
+        "finalists": [
+          14,
+          1,
+          9,
+          10,
+          0,
+          2,
+          3,
+          5
+        ],
+        "seconds": 0.24938719999045134,
+        "folds": 61,
+        "finalist_folds": 32,
+        "index": 14,
+        "cv": 0.9774928774928775,
+        "holdout": 0.9555555555555556
+      },
+      "3g_5k": {
+        "finalists": [
+          14,
+          1,
+          9,
+          10,
+          35
+        ],
+        "seconds": 0.24700650002341717,
+        "folds": 57,
+        "finalist_folds": 20,
+        "index": 14,
+        "cv": 0.9774928774928775,
+        "holdout": 0.9555555555555556
+      },
+      "2g_5k": {
+        "finalists": [
+          14,
+          1,
+          9,
+          10,
+          0
+        ],
+        "seconds": 0.2200590000138618,
+        "folds": 49,
+        "finalist_folds": 20,
+        "index": 14,
+        "cv": 0.9774928774928775,
+        "holdout": 0.9555555555555556
+      }
+    }
+  },
+  {
+    "dataset": "wine",
+    "family": "knn",
+    "metric": "accuracy",
+    "seed": 8926,
+    "features": true,
+    "runs": {
+      "2g_8k": {
+        "finalists": [
+          27,
+          26,
+          4,
+          7,
+          18,
+          21,
+          10,
+          25
+        ],
+        "seconds": 0.23907800001325086,
+        "folds": 62,
+        "finalist_folds": 32,
+        "index": 4,
+        "cv": 0.9621082621082622,
+        "holdout": 0.8888888888888888
+      },
+      "3g_5k": {
+        "finalists": [
+          27,
+          26,
+          4,
+          7,
+          18
+        ],
+        "seconds": 0.24584329995559528,
+        "folds": 62,
+        "finalist_folds": 20,
+        "index": 4,
+        "cv": 0.9621082621082622,
+        "holdout": 0.8888888888888888
+      },
+      "2g_5k": {
+        "finalists": [
+          27,
+          26,
+          4,
+          7,
+          18
+        ],
+        "seconds": 0.19689250004012138,
+        "folds": 50,
+        "finalist_folds": 20,
+        "index": 4,
+        "cv": 0.9621082621082622,
+        "holdout": 0.8888888888888888
+      }
+    }
+  },
+  {
+    "dataset": "diabetes",
+    "family": "dt",
+    "metric": "neg_mean_squared_error",
+    "seed": 8921,
+    "features": false,
+    "runs": {
+      "3g_5k": {
+        "finalists": [
+          1,
+          12,
+          30,
+          41,
+          3
+        ],
+        "seconds": 0.12288039998384193,
+        "folds": 62,
+        "finalist_folds": 20,
+        "index": 1,
+        "cv": -4130.659179719852,
+        "holdout": -3493.9486931793435
+      },
+      "2g_5k": {
+        "finalists": [
+          1,
+          12,
+          3,
+          10,
+          17
+        ],
+        "seconds": 0.0931593999848701,
+        "folds": 50,
+        "finalist_folds": 20,
+        "index": 1,
+        "cv": -4130.659179719852,
+        "holdout": -3493.9486931793435
+      },
+      "2g_8k": {
+        "finalists": [
+          1,
+          12,
+          3,
+          10,
+          17,
+          21,
+          25,
+          9
+        ],
+        "seconds": 0.11012840003240854,
+        "folds": 62,
+        "finalist_folds": 32,
+        "index": 1,
+        "cv": -4130.659179719852,
+        "holdout": -3493.9486931793435
+      }
+    }
+  },
+  {
+    "dataset": "diabetes",
+    "family": "dt",
+    "metric": "neg_mean_squared_error",
+    "seed": 8921,
+    "features": true,
+    "runs": {
+      "3g_5k": {
+        "finalists": [
+          28,
+          20,
+          15,
+          21,
+          40
+        ],
+        "seconds": 0.1440922999754548,
+        "folds": 61,
+        "finalist_folds": 20,
+        "index": 40,
+        "cv": -6382.131169908035,
+        "holdout": -6446.041791791792
+      },
+      "2g_5k": {
+        "finalists": [
+          28,
+          20,
+          15,
+          21,
+          16
+        ],
+        "seconds": 0.10785259999101982,
+        "folds": 50,
+        "finalist_folds": 20,
+        "index": 15,
+        "cv": -6550.04677815468,
+        "holdout": -6402.701631631631
+      },
+      "2g_8k": {
+        "finalists": [
+          28,
+          20,
+          15,
+          21,
+          16,
+          22,
+          19,
+          0
+        ],
+        "seconds": 0.12476909998804331,
+        "folds": 62,
+        "finalist_folds": 32,
+        "index": 0,
+        "cv": -6460.808967777554,
+        "holdout": -6016.999622122122
+      }
+    }
+  },
+  {
+    "dataset": "diabetes",
+    "family": "dt",
+    "metric": "neg_mean_squared_error",
+    "seed": 8922,
+    "features": false,
+    "runs": {
+      "2g_5k": {
+        "finalists": [
+          2,
+          4,
+          7,
+          8,
+          9
+        ],
+        "seconds": 0.0920691000064835,
+        "folds": 50,
+        "finalist_folds": 20,
+        "index": 2,
+        "cv": -4582.612017726957,
+        "holdout": -4507.073205904285
+      },
+      "2g_8k": {
+        "finalists": [
+          2,
+          4,
+          7,
+          8,
+          9,
+          13,
+          18,
+          19
+        ],
+        "seconds": 0.11181550001492724,
+        "folds": 62,
+        "finalist_folds": 32,
+        "index": 2,
+        "cv": -4582.612017726957,
+        "holdout": -4507.073205904285
+      },
+      "3g_5k": {
+        "finalists": [
+          2,
+          4,
+          7,
+          8,
+          9
+        ],
+        "seconds": 0.11310979997506365,
+        "folds": 61,
+        "finalist_folds": 20,
+        "index": 2,
+        "cv": -4582.612017726957,
+        "holdout": -4507.073205904285
+      }
+    }
+  },
+  {
+    "dataset": "diabetes",
+    "family": "dt",
+    "metric": "neg_mean_squared_error",
+    "seed": 8922,
+    "features": true,
+    "runs": {
+      "2g_5k": {
+        "finalists": [
+          18,
+          22,
+          7,
+          20,
+          10
+        ],
+        "seconds": 0.10024080000584945,
+        "folds": 49,
+        "finalist_folds": 20,
+        "index": 7,
+        "cv": -5889.206286748077,
+        "holdout": -10719.36036036036
+      },
+      "2g_8k": {
+        "finalists": [
+          18,
+          22,
+          7,
+          20,
+          10,
+          5,
+          25,
+          8
+        ],
+        "seconds": 0.12340250000124797,
+        "folds": 61,
+        "finalist_folds": 32,
+        "index": 7,
+        "cv": -5889.206286748077,
+        "holdout": -10719.36036036036
+      },
+      "3g_5k": {
+        "finalists": [
+          38,
+          39,
+          18,
+          31,
+          22
+        ],
+        "seconds": 0.12719940004171804,
+        "folds": 61,
+        "finalist_folds": 20,
+        "index": 38,
+        "cv": -6226.026503844414,
+        "holdout": -5375.603603603604
+      }
+    }
+  },
+  {
+    "dataset": "diabetes",
+    "family": "dt",
+    "metric": "neg_mean_squared_error",
+    "seed": 8923,
+    "features": false,
+    "runs": {
+      "2g_8k": {
+        "finalists": [
+          23,
+          0,
+          1,
+          13,
+          18,
+          28,
+          21,
+          27
+        ],
+        "seconds": 0.10608939995290712,
+        "folds": 62,
+        "finalist_folds": 32,
+        "index": 23,
+        "cv": -4170.764750185057,
+        "holdout": -4300.031089104831
+      },
+      "3g_5k": {
+        "finalists": [
+          34,
+          23,
+          36,
+          0,
+          1
+        ],
+        "seconds": 0.12905740004498512,
+        "folds": 62,
+        "finalist_folds": 20,
+        "index": 34,
+        "cv": -4101.16344495004,
+        "holdout": -4121.2880777789605
+      },
+      "2g_5k": {
+        "finalists": [
+          23,
+          0,
+          1,
+          13,
+          18
+        ],
+        "seconds": 0.08990929997526109,
+        "folds": 50,
+        "finalist_folds": 20,
+        "index": 23,
+        "cv": -4170.764750185057,
+        "holdout": -4300.031089104831
+      }
+    }
+  },
+  {
+    "dataset": "diabetes",
+    "family": "dt",
+    "metric": "neg_mean_squared_error",
+    "seed": 8923,
+    "features": true,
+    "runs": {
+      "2g_8k": {
+        "finalists": [
+          13,
+          0,
+          12,
+          7,
+          2,
+          22,
+          19,
+          10
+        ],
+        "seconds": 0.12302720005391166,
+        "folds": 61,
+        "finalist_folds": 32,
+        "index": 0,
+        "cv": -5918.241933936881,
+        "holdout": -6150.2997325627975
+      },
+      "3g_5k": {
+        "finalists": [
+          35,
+          34,
+          33,
+          13,
+          37
+        ],
+        "seconds": 0.13141239999094978,
+        "folds": 60,
+        "finalist_folds": 20,
+        "index": 34,
+        "cv": -6502.245952057892,
+        "holdout": -6255.522522522522
+      },
+      "2g_5k": {
+        "finalists": [
+          13,
+          0,
+          12,
+          7,
+          2
+        ],
+        "seconds": 0.09646220004651695,
+        "folds": 49,
+        "finalist_folds": 20,
+        "index": 0,
+        "cv": -5918.241933936881,
+        "holdout": -6150.2997325627975
+      }
+    }
+  },
+  {
+    "dataset": "diabetes",
+    "family": "dt",
+    "metric": "neg_mean_squared_error",
+    "seed": 8924,
+    "features": false,
+    "runs": {
+      "3g_5k": {
+        "finalists": [
+          26,
+          16,
+          31,
+          0,
+          10
+        ],
+        "seconds": 0.12122670002281666,
+        "folds": 62,
+        "finalist_folds": 20,
+        "index": 26,
+        "cv": -3807.4956549349045,
+        "holdout": -4761.680898987796
+      },
+      "2g_5k": {
+        "finalists": [
+          26,
+          16,
+          0,
+          10,
+          1
+        ],
+        "seconds": 0.0951776999863796,
+        "folds": 50,
+        "finalist_folds": 20,
+        "index": 26,
+        "cv": -3807.4956549349045,
+        "holdout": -4761.680898987796
+      },
+      "2g_8k": {
+        "finalists": [
+          26,
+          16,
+          0,
+          10,
+          1,
+          22,
+          27,
+          17
+        ],
+        "seconds": 0.11299459997098893,
+        "folds": 62,
+        "finalist_folds": 32,
+        "index": 26,
+        "cv": -3807.4956549349045,
+        "holdout": -4761.680898987796
+      }
+    }
+  },
+  {
+    "dataset": "diabetes",
+    "family": "dt",
+    "metric": "neg_mean_squared_error",
+    "seed": 8924,
+    "features": true,
+    "runs": {
+      "3g_5k": {
+        "finalists": [
+          35,
+          39,
+          36,
+          38,
+          28
+        ],
+        "seconds": 0.12855239998316392,
+        "folds": 60,
+        "finalist_folds": 20,
+        "index": 35,
+        "cv": -5459.027905924921,
+        "holdout": -8284.387387387387
+      },
+      "2g_5k": {
+        "finalists": [
+          28,
+          5,
+          20,
+          25,
+          22
+        ],
+        "seconds": 0.10160959995118901,
+        "folds": 48,
+        "finalist_folds": 20,
+        "index": 5,
+        "cv": -5920.283401175939,
+        "holdout": -6169.261261261261
+      },
+      "2g_8k": {
+        "finalists": [
+          28,
+          5,
+          20,
+          25,
+          22,
+          18,
+          6,
+          0
+        ],
+        "seconds": 0.13686889997916296,
+        "folds": 60,
+        "finalist_folds": 32,
+        "index": 5,
+        "cv": -5920.283401175939,
+        "holdout": -6169.261261261261
+      }
+    }
+  },
+  {
+    "dataset": "diabetes",
+    "family": "dt",
+    "metric": "neg_mean_squared_error",
+    "seed": 8925,
+    "features": false,
+    "runs": {
+      "2g_5k": {
+        "finalists": [
+          13,
+          28,
+          3,
+          19,
+          21
+        ],
+        "seconds": 0.09299020003527403,
+        "folds": 50,
+        "finalist_folds": 20,
+        "index": 21,
+        "cv": -3908.4358083291736,
+        "holdout": -4268.873536923682
+      },
+      "2g_8k": {
+        "finalists": [
+          13,
+          28,
+          3,
+          19,
+          21,
+          29,
+          25,
+          6
+        ],
+        "seconds": 0.1104660999844782,
+        "folds": 62,
+        "finalist_folds": 32,
+        "index": 21,
+        "cv": -3908.4358083291736,
+        "holdout": -4268.873536923682
+      },
+      "3g_5k": {
+        "finalists": [
+          13,
+          28,
+          40,
+          3,
+          19
+        ],
+        "seconds": 0.11730799998622388,
+        "folds": 62,
+        "finalist_folds": 20,
+        "index": 3,
+        "cv": -4126.075028137382,
+        "holdout": -4596.592484183411
+      }
+    }
+  },
+  {
+    "dataset": "diabetes",
+    "family": "dt",
+    "metric": "neg_mean_squared_error",
+    "seed": 8925,
+    "features": true,
+    "runs": {
+      "2g_5k": {
+        "finalists": [
+          0,
+          11,
+          5,
+          26,
+          12
+        ],
+        "seconds": 0.09858109999913722,
+        "folds": 47,
+        "finalist_folds": 20,
+        "index": 0,
+        "cv": -5968.4985799124,
+        "holdout": -6947.789405579048
+      },
+      "2g_8k": {
+        "finalists": [
+          0,
+          11,
+          5,
+          26,
+          12,
+          24,
+          21,
+          17
+        ],
+        "seconds": 0.12065430002985522,
+        "folds": 59,
+        "finalist_folds": 32,
+        "index": 21,
+        "cv": -5946.436589778381,
+        "holdout": -7722.09009009009
+      },
+      "3g_5k": {
+        "finalists": [
+          0,
+          11,
+          30,
+          35,
+          5
+        ],
+        "seconds": 0.1194404999841936,
+        "folds": 56,
+        "finalist_folds": 20,
+        "index": 0,
+        "cv": -5968.4985799124,
+        "holdout": -6947.789405579048
+      }
+    }
+  },
+  {
+    "dataset": "diabetes",
+    "family": "dt",
+    "metric": "neg_mean_squared_error",
+    "seed": 8926,
+    "features": false,
+    "runs": {
+      "2g_8k": {
+        "finalists": [
+          14,
+          19,
+          24,
+          22,
+          25,
+          12,
+          27,
+          1
+        ],
+        "seconds": 0.11312009999528527,
+        "folds": 62,
+        "finalist_folds": 32,
+        "index": 14,
+        "cv": -3519.8319583860925,
+        "holdout": -4365.294749239036
+      },
+      "3g_5k": {
+        "finalists": [
+          14,
+          19,
+          24,
+          40,
+          22
+        ],
+        "seconds": 0.12092389998724684,
+        "folds": 62,
+        "finalist_folds": 20,
+        "index": 14,
+        "cv": -3519.8319583860925,
+        "holdout": -4365.294749239036
+      },
+      "2g_5k": {
+        "finalists": [
+          14,
+          19,
+          24,
+          22,
+          25
+        ],
+        "seconds": 0.08994490001350641,
+        "folds": 50,
+        "finalist_folds": 20,
+        "index": 14,
+        "cv": -3519.8319583860925,
+        "holdout": -4365.294749239036
+      }
+    }
+  },
+  {
+    "dataset": "diabetes",
+    "family": "dt",
+    "metric": "neg_mean_squared_error",
+    "seed": 8926,
+    "features": true,
+    "runs": {
+      "2g_8k": {
+        "finalists": [
+          25,
+          22,
+          21,
+          18,
+          23,
+          12,
+          14,
+          0
+        ],
+        "seconds": 0.12999410001793876,
+        "folds": 61,
+        "finalist_folds": 32,
+        "index": 25,
+        "cv": -5725.1188602442335,
+        "holdout": -8041.774774774774
+      },
+      "3g_5k": {
+        "finalists": [
+          32,
+          25,
+          36,
+          22,
+          30
+        ],
+        "seconds": 0.1334950999589637,
+        "folds": 60,
+        "finalist_folds": 20,
+        "index": 25,
+        "cv": -5725.1188602442335,
+        "holdout": -8041.774774774774
+      },
+      "2g_5k": {
+        "finalists": [
+          25,
+          22,
+          21,
+          18,
+          23
+        ],
+        "seconds": 0.1163807999691926,
+        "folds": 49,
+        "finalist_folds": 20,
+        "index": 25,
+        "cv": -5725.1188602442335,
+        "holdout": -8041.774774774774
+      }
+    }
+  }
+]

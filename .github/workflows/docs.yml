@@ -84,3 +84,49 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+  indexnow:
+    name: Notify Bing via IndexNow
+    needs: deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Download deployed Pages artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: github-pages
+          path: ${{ runner.temp }}/indexnow-site
+
+      - name: Extract deployed site
+        run: tar -xf "$RUNNER_TEMP/indexnow-site/artifact.tar" -C "$RUNNER_TEMP/indexnow-site"
+
+      - name: Restore last accepted URL hashes
+        id: indexnow-state
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ runner.temp }}/indexnow-state.json
+          key: indexnow-v1-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: indexnow-v1-
+
+      - name: Submit changed URLs
+        run: >-
+          python docs-vitepress/scripts/submit_indexnow.py
+          --site-dir "$RUNNER_TEMP/indexnow-site"
+          --state "$RUNNER_TEMP/indexnow-state.json"
+
+      - name: Save accepted URL hashes
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ runner.temp }}/indexnow-state.json
+          key: ${{ steps.indexnow-state.outputs.cache-primary-key }}

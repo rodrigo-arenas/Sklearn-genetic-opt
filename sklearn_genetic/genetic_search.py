@@ -1,5 +1,9 @@
+from copy import deepcopy
+import copyreg
 import inspect
+from itertools import repeat
 from numbers import Integral
+from operator import is_
 import random
 import time
 import warnings
@@ -57,6 +61,7 @@ from sklearn.metrics._scorer import _check_multimetric_scoring
 
 from .parameters import Criteria
 from .space import Categorical, Continuous, Integer, Space
+from .algorithms import feature_population_diversity
 from ._base import GeneticEstimatorMixin, reset_adapters as _reset_adapters
 from .callbacks.validations import check_callback
 from .schedules.validations import check_adapter
@@ -81,6 +86,7 @@ from .population import (
 )
 from .optimizer_control import (
     adaptive_tournament_size,
+    mutable_dimensions,
     validate_optimizer_control as _validate_optimizer_control,
 )
 
@@ -94,6 +100,21 @@ def _get_criteria_sign(criteria):
     if criteria not in Criteria.list():
         raise ValueError(f"Criteria must be one of {Criteria.list()}, got {criteria} instead")
     return 1.0 if criteria == Criteria.max.value else -1.0
+
+
+def _restore_search_rngs(state):
+    if state is not None:
+        python_state, numpy_state = state
+        random.setstate(python_state)
+        np.random.set_state(numpy_state)
+
+
+def _restore_search_elites(hall_of_fame, elites):
+    # DEAP inserts equal-fitness entries ahead of existing ties.
+    for genes, fitness in reversed(elites[: hall_of_fame.maxsize]):
+        individual = creator.Individual(genes)
+        individual.fitness.values = fitness
+        hall_of_fame.update([individual])
 
 
 def _seed_global_rngs(random_state):
@@ -120,6 +141,26 @@ def _resolve_config_value(config, field_name, fallback):
         return fallback
 
     return getattr(config, field_name, fallback)
+
+
+def _evolution_score(score, criteria_sign):
+    # DEAP does not order NaN reliably, and infinite scores do not describe
+    # usable fitness. Keep raw CV scores visible, but rank these candidates last.
+    if not np.isfinite(score):
+        return -np.inf if criteria_sign > 0 else np.inf
+    return score
+
+
+def _normalize_cached_fitness(cache, criteria_sign):
+    # Checkpoints made before non-finite fitness was penalized can still hold
+    # raw NaN/Inf values. Convert only the evolutionary fitness on restore;
+    # their recorded CV scores remain available in the candidate logbook.
+    for result in cache.values():
+        fitness = result["fitness"]
+        if not np.isfinite(fitness[0]):
+            normalized = _evolution_score(fitness[0], criteria_sign)
+            result["fitness"] = type(fitness)((normalized, *fitness[1:]))
+    return cache
 
 
 def _check_fit_params_supported(estimator, fit_params):
@@ -178,6 +219,12 @@ class _FinalSelectionMixin:
             return self.cv_results_["params"][index]
         return {"features": tuple(bool(value) for value in self.cv_results_["features"][index])}
 
+    def _finalist_key(self, index):
+        if hasattr(self, "space"):
+            return _hashable_key(tuple(sorted(self.cv_results_["params"][index].items())))
+        mask = np.asarray(self.cv_results_["features"][index], dtype=bool)
+        return mask.size, np.packbits(mask).tobytes()
+
     def _top_candidate_indices(self):
         ranks = np.asarray(self.cv_results_[f"rank_test_{self.refit_metric}"])
         indices = []
@@ -188,7 +235,7 @@ class _FinalSelectionMixin:
             else np.argsort(ranks, kind="stable")
         )
         for index in order:
-            key = _hashable_key(tuple(sorted(self._candidate_params_from_index(index).items())))
+            key = self._finalist_key(index)
             if key not in seen:
                 seen.add(key)
                 indices.append(index)
@@ -204,10 +251,11 @@ class _FinalSelectionMixin:
             # cutoff rank, without displacing a better score or adding CV calls.
             counts = self.cv_results_["n_features"]
             cutoff = indices[-1]
-            for index in reversed(order):
+            end = ranks.searchsorted(ranks[cutoff], side="right", sorter=order)
+            for index in reversed(order[:end]):
                 if ranks[index] != ranks[cutoff] or counts[index] <= counts[cutoff]:
-                    continue
-                key = _hashable_key(tuple(sorted(self._candidate_params_from_index(index).items())))
+                    break
+                key = self._finalist_key(index)
                 if key not in seen:
                     indices[-1] = index
                     break
@@ -246,7 +294,53 @@ class _FinalSelectionMixin:
         cv_scores = cv_results[f"test_{self.refit_metric}"]
         return float(np.mean(cv_scores)), cv_scores
 
-    def _select_final_candidate(self):
+    def _search_splits(self, splitter, groups_kwargs):
+        splits = list(splitter.split(self.X_, self.y_, **groups_kwargs))
+        # User splitters may mutate their index buffers during final validation.
+        return deepcopy(splits) if self.final_selection == "reuse_folds" else splits
+
+    @staticmethod
+    def _same_fold(left, right):
+        left_train, left_test = left
+        right_train, right_test = right
+        for first, second in ((left_train, right_train), (left_test, right_test)):
+            first, second = np.asarray(first), np.asarray(second)
+            if (
+                first.ndim != 1
+                or first.dtype.kind not in "iu"
+                or second.dtype.kind not in "iu"
+                or not np.array_equal(first, second)
+            ):
+                return False
+        return True
+
+    def _score_final_folds(self, index, params, splits, reused, missing):
+        scores = [None] * len(splits)
+        for position, source in reused.items():
+            scores[position] = self.cv_results_[f"split{source}_test_{self.refit_metric}"][index]
+
+        # sklearn combines scores across folds, potentially promoting large
+        # integers to float. Recover exact values via fresh CV in that case.
+        if reused and all(abs(float(scores[i])) < 2**53 for i in reused):
+            fresh = self._score_final_candidate(params, missing)[1] if missing else ()
+            if all(abs(float(value)) < 2**53 for value in fresh):
+                remaining = iter(fresh)
+                ordered = np.asarray(
+                    [next(remaining) if score is None else score for score in scores]
+                )
+                return float(np.mean(ordered)), ordered, len(reused)
+
+        score, values = self._score_final_candidate(params, splits)
+        return score, values, 0
+
+    def _validate_final_selection_mode(self):
+        if isinstance(self.final_selection, str):
+            if self.final_selection != "reuse_folds":
+                raise ValueError("final_selection must be False, True, or 'reuse_folds'")
+            if self.error_score != "raise":
+                raise ValueError("final_selection='reuse_folds' requires error_score='raise'")
+
+    def _select_final_candidate(self, *, checkpoint_loaded=False):
         indices = self._top_candidate_indices() if self.final_selection else None
         original_best_index = int(
             indices[0]
@@ -279,10 +373,20 @@ class _FinalSelectionMixin:
         started_at = time.time()
         cv_splits = self._final_selection_splits()
         candidate_results = []
+        reused = {}
+        if self.final_selection == "reuse_folds" and not checkpoint_loaded:
+            for position, final_fold in enumerate(cv_splits):
+                for source, search_fold in enumerate(self._cv_splits):
+                    if self._same_fold(final_fold, search_fold):
+                        reused[position] = source
+                        break
+        missing = [fold for position, fold in enumerate(cv_splits) if position not in reused]
 
         for index in indices:
             params = self._candidate_params_from_index(index)
-            score, cv_scores = self._score_final_candidate(params, cv_splits)
+            score, cv_scores, reuse_count = self._score_final_folds(
+                index, params, cv_splits, reused, missing
+            )
             candidate_results.append(
                 {
                     "index": int(index),
@@ -291,13 +395,14 @@ class _FinalSelectionMixin:
                     ),
                     "score": score,
                     "cv_scores": cv_scores.tolist(),
+                    "reused_folds": reuse_count,
                     "params": params,
                 }
             )
 
-        valid_results = [item for item in candidate_results if not np.isnan(item["score"])]
+        valid_results = [item for item in candidate_results if np.isfinite(item["score"])]
         if not valid_results:
-            raise ValueError("All final-selection candidates produced NaN scores")
+            raise ValueError("All final-selection candidates produced non-finite scores")
         direction = -1 if self.criteria == "min" else 1
         selected = max(
             valid_results,
@@ -513,10 +618,14 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
         Shape parameter that controls how quickly sharing pressure decreases
         with distance inside ``sharing_radius``.
 
-    final_selection : bool, default=False
+    final_selection : bool or {"reuse_folds"}, default=False
         If ``True``, re-evaluate the top ``final_selection_top_k`` candidates
         after the GA finishes and select ``best_params_`` from those robust
         final scores before refitting.
+
+        For deterministic estimators and scoring, set to ``"reuse_folds"`` with
+        ``error_score="raise"`` to reuse identical training and validation splits
+        from the same search. Resumed searches evaluate finalists afresh.
 
     final_selection_top_k : int, default=3
         Number of top candidates from the original GA ``cv_results_`` to
@@ -979,8 +1088,7 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
             if value is None:
                 return dimension.sample()
 
-            repaired = int(round(float(value)))
-            return int(np.clip(repaired, dimension.lower, dimension.upper))
+            return dimension._round_and_clip(value)
 
         if isinstance(dimension, Continuous):
             if value is None:
@@ -1023,14 +1131,10 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
             Mutated individual
         """
 
-        # Randomly select one of the hyperparameters
-        gen = random.randrange(0, len(self.space))
-        parameter_idx = self.space.parameters[gen]
-        parameter = self.space[parameter_idx]
-
-        # Using the defined distribution from the para_grid value
-        # Make a random sample of the parameter
-        individual[gen] = parameter.sample()
+        mutable = mutable_dimensions(self.space.param_grid.values())
+        if mutable:
+            index, dimension = random.choice(mutable)
+            individual[index] = dimension.sample()
         self._repair_individual(individual)
 
         return [individual]
@@ -1102,7 +1206,7 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
             if self.return_train_score:
                 current_generation_params[f"train_{metric}"] = cv_results[f"train_{metric}"]
 
-        fitness_result = (score,)
+        fitness_result = (_evolution_score(score, self.criteria_sign),)
 
         return fitness_result, current_generation_params, True, False
 
@@ -1121,10 +1225,10 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
 
         # Convert hyperparameters to a tuple to use as a key in the cache
         self._repair_individual(individual)
-        individual_key = self._individual_key(individual)
+        individual_key = self._individual_key(individual) if self.use_cache else None
 
         # Check if the individual has already been evaluated
-        if individual_key in self.fitness_cache and self.use_cache:
+        if self.use_cache and individual_key in self.fitness_cache:
             # Retrieve cached result
             cached_result = self.fitness_cache[individual_key]
             # Ensure the logbook is updated even if the individual is cached
@@ -1219,6 +1323,8 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
         restored_logbook = None
         restored_fit_stats = None
         restored_generation_log = None
+        restored_elites = ()
+        restored_rng_state = None
         restored_adapter_state = None
 
         # Load state if a checkpoint exists
@@ -1235,7 +1341,9 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
                         runtime_state = checkpoint_data.get("runtime_state") or {}
                         cached = runtime_state.get("fitness_cache")
                         if cached is not None:
-                            self.fitness_cache = cached
+                            self.fitness_cache = _normalize_cached_fitness(
+                                cached, self.criteria_sign
+                            )
                         restored_fit_stats = runtime_state.get("fit_stats_")
                         # ``checkpoint_data["logbook"]`` is the per-*generation*
                         # summary log (see ModelCheckpoint.on_step), not
@@ -1251,6 +1359,8 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
                         # numbering needs to continue from -- see
                         # ``_seed_logbook`` in ``algorithms.py``.
                         restored_generation_log = checkpoint_data.get("logbook")
+                        restored_elites = runtime_state.get("elites", ())
+                        restored_rng_state = runtime_state.get("rng_state")
                         restored_adapter_state = runtime_state.get("adapter_state")
                         checkpoint_loaded = True
                     break
@@ -1266,6 +1376,7 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
         # pre-resume value instead (see #299).
         _seed_global_rngs(self.random_state)
 
+        self._validate_final_selection_mode()
         if checkpoint_loaded and restored_adapter_state is not None:
             # Restore the crossover/mutation adapter step counters so the
             # schedule continues from where the previous run left off
@@ -1325,10 +1436,13 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
         else:
             cv_orig = check_cv(self.cv, self.y_, classifier=_is_classifier(self.estimator))
             self.n_splits_ = cv_orig.get_n_splits(X, self.y_, **cv_groups_kwargs)
-        self._cv_splits = list(cv_orig.split(self.X_, self.y_, **cv_groups_kwargs))
+        self._cv_splits = self._search_splits(cv_orig, cv_groups_kwargs)
 
         # Set the DEAPs necessary methods
+        # Keep fold construction on its original seed before resuming proposal draws.
+        _restore_search_rngs(restored_rng_state)
         self._register()
+        _restore_search_elites(self._hof, restored_elites)
         # ``_register()`` always creates a fresh, empty ``self.logbook`` (it
         # also builds the toolbox/population/hof/stats, which are ``deap``
         # objects that cannot be checkpointed and are intentionally rebuilt on
@@ -1353,6 +1467,7 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
 
         self.history = {
             "gen": log.select("gen"),
+            "cross_validate_calls": log.select("cross_validate_calls"),
             "fitness": log.select("fitness"),
             "fitness_std": log.select("fitness_std"),
             "fitness_best": log.select("fitness_best"),
@@ -1379,7 +1494,9 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
 
         # Imitate the logic of scikit-learn refit parameter
         if self.refit:
-            self.best_index_, self.best_score_, self.best_params_ = self._select_final_candidate()
+            self.best_index_, self.best_score_, self.best_params_ = self._select_final_candidate(
+                checkpoint_loaded=checkpoint_loaded
+            )
 
             self.best_estimator_ = clone(self.estimator).set_params(
                 **clone(self.best_params_, safe=False)
@@ -1414,6 +1531,29 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
         del creator.Individual
 
         return self
+
+
+def _clone_feature_mask(x, memo=None, *, mask_type, native_attributes):
+    """Copy immutable integer genes in bulk and independently clone DEAP state."""
+    if (
+        memo is not None
+        or type(x) is not mask_type
+        or vars(x).keys() != {"fitness"}
+        or type(x.fitness) is not mask_type.fitness
+        or mask_type in copyreg.dispatch_table
+        or mask_type.__bases__ != (list,)
+        # Pickle may cache an empty slot-name list on this list subclass.
+        or vars(mask_type).get("__slotnames__")
+        or vars(mask_type).keys() - {"__slotnames__"} != native_attributes
+        # Stream exact type checks without resuming a Python generator for every column.
+        or not all(map(is_, map(type, x), repeat(int)))
+    ):
+        return deepcopy(x, memo)
+
+    child = list.__new__(mask_type)
+    child.fitness = deepcopy(x.fitness, {id(x): child})
+    child.extend(x)
+    return child
 
 
 class GAFeatureSelectionCV(
@@ -1556,12 +1696,16 @@ class GAFeatureSelectionCV(
     elitism : bool, default=True
         If True takes the *tournament_size* best solution to the next generation.
 
-    final_selection : bool, default=False
+    final_selection : bool or {"reuse_folds"}, default=False
         With ``refit=True``, re-evaluate the best distinct feature masks after
         evolution and choose the refitted winner using these final scores.
         Equal final scores prefer fewer features. Search scores in
         ``cv_results_`` and ``history`` remain unchanged; final scores are
         available in ``final_selection_results_`` and ``best_score_``.
+
+        For deterministic estimators and scoring, set to ``"reuse_folds"`` with
+        ``error_score="raise"`` to reuse identical training and validation splits
+        from the same search. Resumed searches evaluate finalists afresh.
 
     final_selection_top_k : int, default=3
         Positive number of distinct masks to re-evaluate. This bounds extra
@@ -1964,6 +2108,13 @@ class GAFeatureSelectionCV(
         creator.create("FitnessMax", base.Fitness, weights=[self.criteria_sign, -1.0])
         creator.create("Individual", list, fitness=creator.FitnessMax)
 
+        self.toolbox.register(
+            "clone",
+            _clone_feature_mask,
+            mask_type=creator.Individual,
+            native_attributes=frozenset(vars(creator.Individual)),
+        )
+
         # Register the array to choose the features
         # Each binary value represents if the feature is selected or not
 
@@ -1994,6 +2145,7 @@ class GAFeatureSelectionCV(
         # Stats among axis 0 to get two values:
         # One based on the score and the other in the number of features
         self._stats = tools.Statistics(ind_fitness_values)
+        self._stats.population_diversity = feature_population_diversity
         self._stats.register("fitness", np.mean, axis=0)
         self._stats.register("fitness_std", np.std, axis=0)
         self._stats.register("fitness_max", np.max, axis=0)
@@ -2087,12 +2239,12 @@ class GAFeatureSelectionCV(
         return cv_results
 
     def _evaluate_individual(self, individual, n_jobs=None):
-        self._repair_individual(individual)
+        # Both evaluation entry points repair the mask before cache lookup.
         bool_individual = np.array(individual, dtype=bool)
 
         current_generation_params = {"features": bool_individual}
 
-        n_selected_features = np.sum(individual)
+        n_selected_features = np.count_nonzero(bool_individual)
 
         max_features = getattr(self, "max_features", None)
 
@@ -2137,7 +2289,7 @@ class GAFeatureSelectionCV(
                 estimator=local_estimator,
             )
 
-        fitness_result = [score, n_selected_features]
+        fitness_result = [_evolution_score(score, self.criteria_sign), n_selected_features]
 
         return fitness_result, current_generation_params, True, False
 
@@ -2160,10 +2312,10 @@ class GAFeatureSelectionCV(
 
         # Convert the individual to a tuple to use as a key in the cache
         self._repair_individual(individual)
-        individual_key = self._individual_key(individual)
+        individual_key = self._individual_key(individual) if self.use_cache else None
 
         # Check if the individual has already been evaluated
-        if individual_key in self.fitness_cache and self.use_cache:
+        if self.use_cache and individual_key in self.fitness_cache:
             cached_result = self.fitness_cache[individual_key]
             # Ensure the logbook is updated even if the individual is cached
             _logbook_record(
@@ -2238,7 +2390,11 @@ class GAFeatureSelectionCV(
             self.__dict__.pop(attribute, None)
 
         _check_feature_names(self, X, reset=True)
-        self.X_, self.y_ = check_X_y(X, y, accept_sparse=True) if y is not None else (X, None)
+        # Keep compressed inputs in place; other sparse formats need column slicing.
+        sparse_formats = ("csc", "csr")
+        self.X_, self.y_ = (
+            check_X_y(X, y, accept_sparse=sparse_formats) if y is not None else (X, None)
+        )
         self.groups_ = groups
         self._fit_params = fit_params
         _check_fit_params_supported(self.estimator, fit_params)
@@ -2251,7 +2407,7 @@ class GAFeatureSelectionCV(
                 if "ensure_all_finite" in inspect.signature(check_array).parameters
                 else "force_all_finite"
             )
-            self.X_ = check_array(X, accept_sparse=True, **{finite_arg: False})
+            self.X_ = check_array(X, accept_sparse=sparse_formats, **{finite_arg: False})
             self.y_ = np.zeros(self.X_.shape[0])
 
         self.n_features = self.X_.shape[1]
@@ -2266,6 +2422,8 @@ class GAFeatureSelectionCV(
         restored_logbook = None
         restored_fit_stats = None
         restored_generation_log = None
+        restored_elites = ()
+        restored_rng_state = None
         restored_adapter_state = None
 
         # Load state if a checkpoint exists
@@ -2282,7 +2440,9 @@ class GAFeatureSelectionCV(
                         runtime_state = checkpoint_data.get("runtime_state") or {}
                         cached = runtime_state.get("fitness_cache")
                         if cached is not None:
-                            self.fitness_cache = cached
+                            self.fitness_cache = _normalize_cached_fitness(
+                                cached, self.criteria_sign
+                            )
                         restored_fit_stats = runtime_state.get("fit_stats_")
                         # ``checkpoint_data["logbook"]`` is the per-*generation*
                         # summary log (see ModelCheckpoint.on_step), not
@@ -2298,6 +2458,8 @@ class GAFeatureSelectionCV(
                         # numbering needs to continue from -- see
                         # ``_seed_logbook`` in ``algorithms.py``.
                         restored_generation_log = checkpoint_data.get("logbook")
+                        restored_elites = runtime_state.get("elites", ())
+                        restored_rng_state = runtime_state.get("rng_state")
                         restored_adapter_state = runtime_state.get("adapter_state")
                         checkpoint_loaded = True
                     break
@@ -2319,6 +2481,7 @@ class GAFeatureSelectionCV(
         # pre-resume value instead (see #299).
         _seed_global_rngs(self.random_state)
 
+        self._validate_final_selection_mode()
         if checkpoint_loaded and restored_adapter_state is not None:
             # Restore the crossover/mutation adapter step counters so the
             # schedule continues from where the previous run left off
@@ -2377,10 +2540,13 @@ class GAFeatureSelectionCV(
         else:
             cv_orig = check_cv(self.cv, self.y_, classifier=_is_classifier(self.estimator))
             self.n_splits_ = cv_orig.get_n_splits(X, self.y_, **cv_groups_kwargs)
-        self._cv_splits = list(cv_orig.split(self.X_, self.y_, **cv_groups_kwargs))
+        self._cv_splits = self._search_splits(cv_orig, cv_groups_kwargs)
 
         # Set the DEAPs necessary methods
+        # Keep fold construction on its original seed before resuming proposal draws.
+        _restore_search_rngs(restored_rng_state)
         self._register()
+        _restore_search_elites(self._hof, restored_elites)
         # ``_register()`` always creates a fresh, empty ``self.logbook`` (it
         # also builds the toolbox/population/hof/stats, which are ``deap``
         # objects that cannot be checkpointed and are intentionally rebuilt on
@@ -2417,6 +2583,7 @@ class GAFeatureSelectionCV(
 
         self.history = {
             "gen": log.select("gen"),
+            "cross_validate_calls": log.select("cross_validate_calls"),
             "fitness": log.select("fitness"),
             "fitness_std": log.select("fitness_std"),
             "fitness_best": log.select("fitness_best"),
@@ -2443,7 +2610,9 @@ class GAFeatureSelectionCV(
 
         if self.refit:
             if self.final_selection:
-                self.best_index_, self.best_score_, selected = self._select_final_candidate()
+                self.best_index_, self.best_score_, selected = self._select_final_candidate(
+                    checkpoint_loaded=checkpoint_loaded
+                )
                 self.best_features_ = np.asarray(selected["features"], dtype=bool)
                 self.support_ = self.best_features_
             bool_individual = np.array(self.best_features_, dtype=bool)

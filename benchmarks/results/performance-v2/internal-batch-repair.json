@@ -1,0 +1,362 @@
+[
+  {
+    "width": 16,
+    "seed": 9171,
+    "cv_calls": 39,
+    "runs": {
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.12652950000483543,
+        "ranking_seconds": 2.1866677949825924e-05
+      },
+      "InternalBatch": {
+        "fit_seconds": 0.12841939995996654,
+        "ranking_seconds": 2.4900014977902174e-05
+      }
+    }
+  },
+  {
+    "width": 16,
+    "seed": 9172,
+    "cv_calls": 38,
+    "runs": {
+      "InternalBatch": {
+        "fit_seconds": 0.1283087999909185,
+        "ranking_seconds": 2.090000392248233e-05
+      },
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.13424250000389293,
+        "ranking_seconds": 2.1733343601226807e-05
+      }
+    }
+  },
+  {
+    "width": 16,
+    "seed": 9173,
+    "cv_calls": 32,
+    "runs": {
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.11272999999346212,
+        "ranking_seconds": 4.296666399265329e-05
+      },
+      "InternalBatch": {
+        "fit_seconds": 0.11014639999484643,
+        "ranking_seconds": 4.3533334974199533e-05
+      }
+    }
+  },
+  {
+    "width": 16,
+    "seed": 9174,
+    "cv_calls": 28,
+    "runs": {
+      "InternalBatch": {
+        "fit_seconds": 0.11123009998118505,
+        "ranking_seconds": 5.269999383017421e-05
+      },
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.10501409997232258,
+        "ranking_seconds": 5.0033326260745525e-05
+      }
+    }
+  },
+  {
+    "width": 16,
+    "seed": 9175,
+    "cv_calls": 32,
+    "runs": {
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.10986760002560914,
+        "ranking_seconds": 2.269999822601676e-05
+      },
+      "InternalBatch": {
+        "fit_seconds": 0.1129988000029698,
+        "ranking_seconds": 2.3166668446113665e-05
+      }
+    }
+  },
+  {
+    "width": 16,
+    "seed": 9176,
+    "cv_calls": 41,
+    "runs": {
+      "InternalBatch": {
+        "fit_seconds": 0.13085580000188202,
+        "ranking_seconds": 2.0833317345629137e-05
+      },
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.13043839996680617,
+        "ranking_seconds": 2.1099986042827368e-05
+      }
+    }
+  },
+  {
+    "width": 16,
+    "seed": 9177,
+    "cv_calls": 37,
+    "runs": {
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.1254340999876149,
+        "ranking_seconds": 3.1533321210493646e-05
+      },
+      "InternalBatch": {
+        "fit_seconds": 0.13469500001519918,
+        "ranking_seconds": 2.1499989088624716e-05
+      }
+    }
+  },
+  {
+    "width": 16,
+    "seed": 9178,
+    "cv_calls": 42,
+    "runs": {
+      "InternalBatch": {
+        "fit_seconds": 0.14129949995549396,
+        "ranking_seconds": 2.3200002033263445e-05
+      },
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.13969270000234246,
+        "ranking_seconds": 2.19999928958714e-05
+      }
+    }
+  },
+  {
+    "width": 256,
+    "seed": 9171,
+    "cv_calls": 56,
+    "runs": {
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.1755284999962896,
+        "ranking_seconds": 1.996666348228852e-05
+      },
+      "InternalBatch": {
+        "fit_seconds": 0.17357779998565093,
+        "ranking_seconds": 1.6999993628511827e-05
+      }
+    }
+  },
+  {
+    "width": 256,
+    "seed": 9172,
+    "cv_calls": 56,
+    "runs": {
+      "InternalBatch": {
+        "fit_seconds": 0.175507000007201,
+        "ranking_seconds": 2.033333294093609e-05
+      },
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.17970229999627918,
+        "ranking_seconds": 2.1566675665477913e-05
+      }
+    }
+  },
+  {
+    "width": 256,
+    "seed": 9173,
+    "cv_calls": 56,
+    "runs": {
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.18876049999380484,
+        "ranking_seconds": 4.8700002177308e-05
+      },
+      "InternalBatch": {
+        "fit_seconds": 0.1792905000038445,
+        "ranking_seconds": 2.166665702437361e-05
+      }
+    }
+  },
+  {
+    "width": 256,
+    "seed": 9174,
+    "cv_calls": 56,
+    "runs": {
+      "InternalBatch": {
+        "fit_seconds": 0.18148350005503744,
+        "ranking_seconds": 2.160000925262769e-05
+      },
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.1748778999899514,
+        "ranking_seconds": 2.0400000115235645e-05
+      }
+    }
+  },
+  {
+    "width": 256,
+    "seed": 9175,
+    "cv_calls": 56,
+    "runs": {
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.17874730000039563,
+        "ranking_seconds": 2.029999935378631e-05
+      },
+      "InternalBatch": {
+        "fit_seconds": 0.20967080001719296,
+        "ranking_seconds": 2.126665397857626e-05
+      }
+    }
+  },
+  {
+    "width": 256,
+    "seed": 9176,
+    "cv_calls": 56,
+    "runs": {
+      "InternalBatch": {
+        "fit_seconds": 0.21226759999990463,
+        "ranking_seconds": 2.1599989850074053e-05
+      },
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.1876662999857217,
+        "ranking_seconds": 2.163334283977747e-05
+      }
+    }
+  },
+  {
+    "width": 256,
+    "seed": 9177,
+    "cv_calls": 56,
+    "runs": {
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.1761697999900207,
+        "ranking_seconds": 2.2233328005919855e-05
+      },
+      "InternalBatch": {
+        "fit_seconds": 0.1789913999964483,
+        "ranking_seconds": 2.3566652089357376e-05
+      }
+    }
+  },
+  {
+    "width": 256,
+    "seed": 9178,
+    "cv_calls": 56,
+    "runs": {
+      "InternalBatch": {
+        "fit_seconds": 0.18116599996574223,
+        "ranking_seconds": 2.133334055542946e-05
+      },
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.18835809995653108,
+        "ranking_seconds": 2.5966670364141464e-05
+      }
+    }
+  },
+  {
+    "width": 4096,
+    "seed": 9171,
+    "cv_calls": 55,
+    "runs": {
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.3217975999577902,
+        "ranking_seconds": 2.1766657785822947e-05
+      },
+      "InternalBatch": {
+        "fit_seconds": 0.2688260999857448,
+        "ranking_seconds": 2.1833324960122507e-05
+      }
+    }
+  },
+  {
+    "width": 4096,
+    "seed": 9172,
+    "cv_calls": 56,
+    "runs": {
+      "InternalBatch": {
+        "fit_seconds": 0.2747893999912776,
+        "ranking_seconds": 2.169999061152339e-05
+      },
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.29800650000106543,
+        "ranking_seconds": 4.019999566177527e-05
+      }
+    }
+  },
+  {
+    "width": 4096,
+    "seed": 9173,
+    "cv_calls": 56,
+    "runs": {
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.300713500007987,
+        "ranking_seconds": 3.796666472529372e-05
+      },
+      "InternalBatch": {
+        "fit_seconds": 0.27903959999093786,
+        "ranking_seconds": 2.683332422748208e-05
+      }
+    }
+  },
+  {
+    "width": 4096,
+    "seed": 9174,
+    "cv_calls": 56,
+    "runs": {
+      "InternalBatch": {
+        "fit_seconds": 0.2857615000102669,
+        "ranking_seconds": 2.933332386116187e-05
+      },
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.2932884999900125,
+        "ranking_seconds": 2.880000586931904e-05
+      }
+    }
+  },
+  {
+    "width": 4096,
+    "seed": 9175,
+    "cv_calls": 56,
+    "runs": {
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.30012540001189336,
+        "ranking_seconds": 2.709999292468031e-05
+      },
+      "InternalBatch": {
+        "fit_seconds": 0.27746539999498054,
+        "ranking_seconds": 2.236666235451897e-05
+      }
+    }
+  },
+  {
+    "width": 4096,
+    "seed": 9176,
+    "cv_calls": 56,
+    "runs": {
+      "InternalBatch": {
+        "fit_seconds": 0.28573629999300465,
+        "ranking_seconds": 2.720001308868329e-05
+      },
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.29086030001053587,
+        "ranking_seconds": 2.810000053917368e-05
+      }
+    }
+  },
+  {
+    "width": 4096,
+    "seed": 9177,
+    "cv_calls": 56,
+    "runs": {
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.3020412999903783,
+        "ranking_seconds": 2.5133330685396988e-05
+      },
+      "InternalBatch": {
+        "fit_seconds": 0.2782393000088632,
+        "ranking_seconds": 2.5666668079793453e-05
+      }
+    }
+  },
+  {
+    "width": 4096,
+    "seed": 9178,
+    "cv_calls": 56,
+    "runs": {
+      "InternalBatch": {
+        "fit_seconds": 0.2821770000155084,
+        "ranking_seconds": 2.2866666161765654e-05
+      },
+      "GAFeatureSelectionCV": {
+        "fit_seconds": 0.29865750001044944,
+        "ranking_seconds": 2.3300002794712782e-05
+      }
+    }
+  }
+]

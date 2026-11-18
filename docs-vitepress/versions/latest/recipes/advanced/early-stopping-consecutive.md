@@ -56,7 +56,7 @@ callback = ConsecutiveStopping(
 
 ga.fit(X_train, y_train, callbacks=[callback])
 
-print(f"Stopped after {ga.history[-1]['gen']} generations (max was 50)")
+print(f"Stopped after {ga.history['gen'][-1]} generations (max was 50)")
 print(f"Best CV ROC AUC: {ga.best_score_:.4f}")
 ```
 
@@ -64,7 +64,7 @@ print(f"Best CV ROC AUC: {ga.best_score_:.4f}")
 
 | `metric=` | What it tracks |
 |-----------|---------------|
-| `"fitness_best"` | Best score seen so far (monotonically non-decreasing) |
+| `"fitness_best"` | Best score seen so far (highest ROC AUC in this example) |
 | `"fitness"` | Current generation mean score |
 | `"fitness_std"` | Standard deviation of current generation scores |
 
@@ -85,7 +85,7 @@ ga.fit(
 ## Key Points
 
 - **`generations=50` as upper limit**: Set a generous max — early stopping will end it sooner in practice.
-- **`"fitness_best"` vs `"fitness"`**: `"fitness_best"` only increases; the search stops when the *best-ever* score stalls. `"fitness"` tracks the current generation mean, which can oscillate.
+- **`"fitness_best"` vs `"fitness"`**: `"fitness_best"` tracks the highest score for maximization and the lowest score for minimization; the search stops when the *best-ever* score stalls. `"fitness"` tracks the current generation mean, which can oscillate.
 - **Multiple callbacks**: Both are checked after each generation. The search stops when any callback signals completion.
 
 ## See Also

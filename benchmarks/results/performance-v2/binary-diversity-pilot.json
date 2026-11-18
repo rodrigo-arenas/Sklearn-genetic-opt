@@ -1,0 +1,444 @@
+{
+  "checkout": "f5e930420e47051f83753359ec1974b2376b34fb",
+  "python": "3.12.0",
+  "versions": {
+    "scikit-learn": "1.9.1",
+    "numpy": "2.5.3",
+    "deap": "1.4.4"
+  },
+  "records": [
+    {
+      "width": 16,
+      "algorithm": "eaSimple",
+      "seed": 2901,
+      "block": 0,
+      "default": {
+        "ms": 181.2124999705702,
+        "cv_calls": 22,
+        "diversity_ms": 0.2044000430032611,
+        "diversity_calls": 3
+      },
+      "optimized": {
+        "ms": 180.11199997272342,
+        "cv_calls": 22,
+        "diversity_ms": 0.12969999806955457,
+        "diversity_calls": 3
+      }
+    },
+    {
+      "width": 16,
+      "algorithm": "eaSimple",
+      "seed": 2901,
+      "block": 1,
+      "optimized": {
+        "ms": 161.52750002220273,
+        "cv_calls": 22,
+        "diversity_ms": 0.1227000611834228,
+        "diversity_calls": 3
+      },
+      "default": {
+        "ms": 160.55200004484504,
+        "cv_calls": 22,
+        "diversity_ms": 0.1645000302232802,
+        "diversity_calls": 3
+      }
+    },
+    {
+      "width": 16,
+      "algorithm": "eaSimple",
+      "seed": 2902,
+      "block": 0,
+      "default": {
+        "ms": 165.75230000307783,
+        "cv_calls": 22,
+        "diversity_ms": 0.15810003969818354,
+        "diversity_calls": 3
+      },
+      "optimized": {
+        "ms": 154.7543000197038,
+        "cv_calls": 22,
+        "diversity_ms": 0.19429996609687805,
+        "diversity_calls": 3
+      }
+    },
+    {
+      "width": 16,
+      "algorithm": "eaSimple",
+      "seed": 2902,
+      "block": 1,
+      "optimized": {
+        "ms": 170.1922999927774,
+        "cv_calls": 22,
+        "diversity_ms": 0.15330000314861536,
+        "diversity_calls": 3
+      },
+      "default": {
+        "ms": 160.31130001647398,
+        "cv_calls": 22,
+        "diversity_ms": 0.16029999824240804,
+        "diversity_calls": 3
+      }
+    },
+    {
+      "width": 16,
+      "algorithm": "eaSimple",
+      "seed": 2903,
+      "block": 0,
+      "default": {
+        "ms": 160.8231000136584,
+        "cv_calls": 22,
+        "diversity_ms": 0.15499995788559318,
+        "diversity_calls": 3
+      },
+      "optimized": {
+        "ms": 164.9815000128001,
+        "cv_calls": 22,
+        "diversity_ms": 0.1218999968841672,
+        "diversity_calls": 3
+      }
+    },
+    {
+      "width": 16,
+      "algorithm": "eaSimple",
+      "seed": 2903,
+      "block": 1,
+      "optimized": {
+        "ms": 160.67400004249066,
+        "cv_calls": 22,
+        "diversity_ms": 0.14020001981407404,
+        "diversity_calls": 3
+      },
+      "default": {
+        "ms": 162.10580000188202,
+        "cv_calls": 22,
+        "diversity_ms": 0.15460001304745674,
+        "diversity_calls": 3
+      }
+    },
+    {
+      "width": 256,
+      "algorithm": "eaMuCommaLambda",
+      "seed": 2901,
+      "block": 0,
+      "default": {
+        "ms": 194.8959000292234,
+        "cv_calls": 40,
+        "diversity_ms": 1.2998999445699155,
+        "diversity_calls": 3
+      },
+      "optimized": {
+        "ms": 197.56430003326386,
+        "cv_calls": 40,
+        "diversity_ms": 0.19669998437166214,
+        "diversity_calls": 3
+      }
+    },
+    {
+      "width": 256,
+      "algorithm": "eaMuCommaLambda",
+      "seed": 2901,
+      "block": 1,
+      "optimized": {
+        "ms": 191.4579999865964,
+        "cv_calls": 40,
+        "diversity_ms": 0.17169996863231063,
+        "diversity_calls": 3
+      },
+      "default": {
+        "ms": 198.93219997175038,
+        "cv_calls": 40,
+        "diversity_ms": 1.4453999465331435,
+        "diversity_calls": 3
+      }
+    },
+    {
+      "width": 256,
+      "algorithm": "eaMuCommaLambda",
+      "seed": 2902,
+      "block": 0,
+      "default": {
+        "ms": 206.4313999726437,
+        "cv_calls": 40,
+        "diversity_ms": 1.3418999733403325,
+        "diversity_calls": 3
+      },
+      "optimized": {
+        "ms": 203.01549998112023,
+        "cv_calls": 40,
+        "diversity_ms": 0.22929999977350235,
+        "diversity_calls": 3
+      }
+    },
+    {
+      "width": 256,
+      "algorithm": "eaMuCommaLambda",
+      "seed": 2902,
+      "block": 1,
+      "optimized": {
+        "ms": 194.48850001208484,
+        "cv_calls": 40,
+        "diversity_ms": 0.17220008885487914,
+        "diversity_calls": 3
+      },
+      "default": {
+        "ms": 208.5662999888882,
+        "cv_calls": 40,
+        "diversity_ms": 1.457699981983751,
+        "diversity_calls": 3
+      }
+    },
+    {
+      "width": 256,
+      "algorithm": "eaMuCommaLambda",
+      "seed": 2903,
+      "block": 0,
+      "default": {
+        "ms": 204.596399969887,
+        "cv_calls": 40,
+        "diversity_ms": 1.8109999364241958,
+        "diversity_calls": 3
+      },
+      "optimized": {
+        "ms": 202.97290000598878,
+        "cv_calls": 40,
+        "diversity_ms": 0.18150004325434566,
+        "diversity_calls": 3
+      }
+    },
+    {
+      "width": 256,
+      "algorithm": "eaMuCommaLambda",
+      "seed": 2903,
+      "block": 1,
+      "optimized": {
+        "ms": 196.3429999887012,
+        "cv_calls": 40,
+        "diversity_ms": 0.1784000196494162,
+        "diversity_calls": 3
+      },
+      "default": {
+        "ms": 194.09649999579415,
+        "cv_calls": 40,
+        "diversity_ms": 1.5844000154174864,
+        "diversity_calls": 3
+      }
+    },
+    {
+      "width": 4096,
+      "algorithm": "eaMuPlusLambda",
+      "seed": 2901,
+      "block": 0,
+      "default": {
+        "ms": 417.0880999881774,
+        "cv_calls": 40,
+        "diversity_ms": 20.284200028982013,
+        "diversity_calls": 3
+      },
+      "optimized": {
+        "ms": 401.0541000170633,
+        "cv_calls": 40,
+        "diversity_ms": 0.943700026255101,
+        "diversity_calls": 3
+      }
+    },
+    {
+      "width": 4096,
+      "algorithm": "eaMuPlusLambda",
+      "seed": 2901,
+      "block": 1,
+      "optimized": {
+        "ms": 420.75390001991764,
+        "cv_calls": 40,
+        "diversity_ms": 0.9046000195667148,
+        "diversity_calls": 3
+      },
+      "default": {
+        "ms": 427.16220003785565,
+        "cv_calls": 40,
+        "diversity_ms": 21.531599981244653,
+        "diversity_calls": 3
+      }
+    },
+    {
+      "width": 4096,
+      "algorithm": "eaMuPlusLambda",
+      "seed": 2902,
+      "block": 0,
+      "default": {
+        "ms": 413.5783000383526,
+        "cv_calls": 40,
+        "diversity_ms": 21.448699990287423,
+        "diversity_calls": 3
+      },
+      "optimized": {
+        "ms": 386.35560002876446,
+        "cv_calls": 40,
+        "diversity_ms": 1.0692000505514443,
+        "diversity_calls": 3
+      }
+    },
+    {
+      "width": 4096,
+      "algorithm": "eaMuPlusLambda",
+      "seed": 2902,
+      "block": 1,
+      "optimized": {
+        "ms": 388.15819995943457,
+        "cv_calls": 40,
+        "diversity_ms": 0.9155000443570316,
+        "diversity_calls": 3
+      },
+      "default": {
+        "ms": 413.67719997651875,
+        "cv_calls": 40,
+        "diversity_ms": 21.694399998523295,
+        "diversity_calls": 3
+      }
+    },
+    {
+      "width": 4096,
+      "algorithm": "eaMuPlusLambda",
+      "seed": 2903,
+      "block": 0,
+      "default": {
+        "ms": 411.53330000815913,
+        "cv_calls": 40,
+        "diversity_ms": 22.104800038505346,
+        "diversity_calls": 3
+      },
+      "optimized": {
+        "ms": 395.1574999955483,
+        "cv_calls": 40,
+        "diversity_ms": 1.010799955110997,
+        "diversity_calls": 3
+      }
+    },
+    {
+      "width": 4096,
+      "algorithm": "eaMuPlusLambda",
+      "seed": 2903,
+      "block": 1,
+      "optimized": {
+        "ms": 388.82690004538745,
+        "cv_calls": 40,
+        "diversity_ms": 0.8734000148251653,
+        "diversity_calls": 3
+      },
+      "default": {
+        "ms": 414.4383000093512,
+        "cv_calls": 40,
+        "diversity_ms": 22.786900051869452,
+        "diversity_calls": 3
+      }
+    },
+    {
+      "width": 4096,
+      "algorithm": "eaDifferentialEvolution",
+      "seed": 2901,
+      "block": 0,
+      "default": {
+        "ms": 247.57599999429658,
+        "cv_calls": 23,
+        "diversity_ms": 21.97209995938465,
+        "diversity_calls": 3
+      },
+      "optimized": {
+        "ms": 239.36659999890253,
+        "cv_calls": 23,
+        "diversity_ms": 1.0195999639108777,
+        "diversity_calls": 3
+      }
+    },
+    {
+      "width": 4096,
+      "algorithm": "eaDifferentialEvolution",
+      "seed": 2901,
+      "block": 1,
+      "optimized": {
+        "ms": 252.83850001869723,
+        "cv_calls": 23,
+        "diversity_ms": 0.9936000569723547,
+        "diversity_calls": 3
+      },
+      "default": {
+        "ms": 260.8827999792993,
+        "cv_calls": 23,
+        "diversity_ms": 22.995400009676814,
+        "diversity_calls": 3
+      }
+    },
+    {
+      "width": 4096,
+      "algorithm": "eaDifferentialEvolution",
+      "seed": 2902,
+      "block": 0,
+      "default": {
+        "ms": 257.26849999045953,
+        "cv_calls": 24,
+        "diversity_ms": 21.77059999667108,
+        "diversity_calls": 3
+      },
+      "optimized": {
+        "ms": 231.78070003632456,
+        "cv_calls": 24,
+        "diversity_ms": 1.1767000542022288,
+        "diversity_calls": 3
+      }
+    },
+    {
+      "width": 4096,
+      "algorithm": "eaDifferentialEvolution",
+      "seed": 2902,
+      "block": 1,
+      "optimized": {
+        "ms": 230.8935999753885,
+        "cv_calls": 24,
+        "diversity_ms": 0.8993999799713492,
+        "diversity_calls": 3
+      },
+      "default": {
+        "ms": 263.48759996471927,
+        "cv_calls": 24,
+        "diversity_ms": 21.401299978606403,
+        "diversity_calls": 3
+      }
+    },
+    {
+      "width": 4096,
+      "algorithm": "eaDifferentialEvolution",
+      "seed": 2903,
+      "block": 0,
+      "default": {
+        "ms": 252.88519996684045,
+        "cv_calls": 24,
+        "diversity_ms": 21.166599995922297,
+        "diversity_calls": 3
+      },
+      "optimized": {
+        "ms": 232.01490001520142,
+        "cv_calls": 24,
+        "diversity_ms": 0.9031000663526356,
+        "diversity_calls": 3
+      }
+    },
+    {
+      "width": 4096,
+      "algorithm": "eaDifferentialEvolution",
+      "seed": 2903,
+      "block": 1,
+      "optimized": {
+        "ms": 236.71940003987402,
+        "cv_calls": 24,
+        "diversity_ms": 0.8847000426612794,
+        "diversity_calls": 3
+      },
+      "default": {
+        "ms": 261.76210003905,
+        "cv_calls": 24,
+        "diversity_ms": 21.25629998045042,
+        "diversity_calls": 3
+      }
+    }
+  ],
+  "reproduction_script": "import gc\nimport json\nimport platform\nimport sys\nimport time\nfrom unittest.mock import patch\nimport subprocess\nfrom importlib.metadata import version\nfrom pathlib import Path\n\nimport numpy as np\nfrom sklearn.datasets import make_classification, make_regression\nfrom sklearn.linear_model import Ridge\nfrom sklearn.tree import DecisionTreeClassifier\nfrom threadpoolctl import threadpool_limits\n\nsys.path.insert(0, str(Path.cwd()))\nfrom sklearn_genetic import GAFeatureSelectionCV\n\n\nimport sklearn_genetic.algorithms as algorithms\n\nbaseline = algorithms._population_diversity\n\n\ndef binary_diversity(population):\n    n = len(population)\n    if n < 2:\n        return baseline(population)\n    rows = [bytes(mask) for mask in population]\n    width = len(rows[0])\n    if width == 0 or any(len(row) != width for row in rows):\n        return baseline(population)\n    matrix = np.frombuffer(b\"\".join(rows), dtype=np.uint8).reshape(n, width)\n    if matrix.max() > 1:\n        return baseline(population)\n    ones = matrix.sum(axis=0, dtype=np.int64)\n    zeros = n - ones\n    equal_pairs = ones * (ones - 1) + zeros * (zeros - 1)\n    unique = len(set(rows))\n    return dict(population_size=n, unique_individuals=unique,\n                unique_individual_ratio=unique/n,\n                genotype_diversity=float(np.mean(1 - equal_pairs / (n * (n - 1)))))\n\n\ndef fit(method, X, y, width, algorithm, seed):\n    regression = width == 256\n    search = GAFeatureSelectionCV(\n        Ridge() if regression else DecisionTreeClassifier(max_depth=3, random_state=seed),\n        population_size=8,\n        generations=2,\n        max_features=min(width // 2, 12),\n        scoring=\"r2\" if regression else \"balanced_accuracy\",\n        cv=3,\n        n_jobs=1,\n        algorithm=algorithm,\n        random_state=seed,\n        error_score=\"raise\",\n        verbose=False,\n    )\n    gc.collect()\n    diversity_ms = []\n    def timed(population):\n        start = time.perf_counter()\n        result = method(population)\n        diversity_ms.append(1000 * (time.perf_counter() - start))\n        return result\n    with patch.object(algorithms, \"_population_diversity\", timed):\n        start = time.perf_counter()\n        search.fit(X[:120], y[:120])\n        elapsed = 1000 * (time.perf_counter() - start)\n    assert diversity_ms\n    return (elapsed, search.fit_stats_[\"cross_validate_calls\"], sum(diversity_ms), len(diversity_ms)), (\n        np.asarray(search.cv_results_[\"features\"]),\n        search.cv_results_[\"mean_test_score\"],\n        search.support_,\n        *search.history.values(),\n        search.predict(X[120:]),\n    )\n\n\nrecords = []\nwith threadpool_limits(1):\n    for width, algorithm in [\n        (16, \"eaSimple\"),\n        (256, \"eaMuCommaLambda\"),\n        (4096, \"eaMuPlusLambda\"),\n        (4096, \"eaDifferentialEvolution\"),\n    ]:\n        for seed in (2901, 2902, 2903):\n            if width == 256:\n                X, y = make_regression(\n                    n_samples=180, n_features=width, n_informative=8, random_state=seed\n                )\n            else:\n                X, y = make_classification(\n                    n_samples=180,\n                    n_features=width,\n                    n_informative=min(width, 16),\n                    n_redundant=0,\n                    random_state=seed,\n                )\n            if seed == 2901:\n                for cls in (baseline, binary_diversity):\n                    fit(cls, X, y, width, algorithm, seed)\n            reference = None\n            for block, order in enumerate(\n                [(baseline, binary_diversity), (binary_diversity, baseline)]\n            ):\n                pair = {}\n                for cls in order:\n                    stats, outcome = fit(cls, X, y, width, algorithm, seed)\n                    if reference is None:\n                        reference = outcome\n                    else:\n                        for left, right in zip(reference, outcome, strict=True):\n                            np.testing.assert_array_equal(left, right)\n                    pair[\"default\" if cls == baseline else \"optimized\"] = dict(\n                        ms=stats[0], cv_calls=stats[1], diversity_ms=stats[2], diversity_calls=stats[3]\n                    )\n                assert pair[\"default\"][\"cv_calls\"] == pair[\"optimized\"][\"cv_calls\"]\n                records.append(\n                    dict(width=width, algorithm=algorithm, seed=seed, block=block, **pair)\n                )\nprint(\n    json.dumps(\n        dict(\n            checkout=subprocess.check_output([\"git\",\"rev-parse\",\"HEAD\"],text=True).strip(),\n            python=platform.python_version(),\n            versions={p: version(p) for p in (\"scikit-learn\", \"numpy\", \"deap\")},\n            records=records,\n            reproduction_script=Path(__file__).read_text(),\n        ),\n        indent=2,\n    )\n)\n"
+}

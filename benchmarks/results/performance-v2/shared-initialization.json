@@ -1,0 +1,1153 @@
+{
+  "source_commit": "b2fc51d503da762db4862ba6b26796b662c7fb3d",
+  "python": "3.12.0",
+  "versions": {
+    "scikit-learn": "1.9.1",
+    "numpy": "2.5.3",
+    "scipy": "1.18.1",
+    "deap": "1.4.4"
+  },
+  "rows": [
+    {
+      "task": "classification_lr",
+      "seed": 1201,
+      "search": "hpo",
+      "scoring": "roc_auc",
+      "unique": 30,
+      "folds": 3,
+      "initial": {
+        "candidate": [
+          [
+            "clf__C",
+            0.07698243972888195
+          ],
+          [
+            "clf__class_weight",
+            null
+          ]
+        ],
+        "cv": 0.9947000211999152,
+        "holdout": 0.9916142557651992
+      },
+      "genetic": {
+        "candidate": [
+          [
+            "clf__C",
+            0.36424415774985935
+          ],
+          [
+            "clf__class_weight",
+            null
+          ]
+        ],
+        "cv": 0.9951946858879231,
+        "holdout": 0.9945492662473795
+      },
+      "random": {
+        "candidate": [
+          [
+            "clf__C",
+            0.10698526759670618
+          ],
+          [
+            "clf__class_weight",
+            "balanced"
+          ]
+        ],
+        "cv": 0.9947706875839164,
+        "holdout": 0.9922431865828092
+      },
+      "cv_progress": [
+        {
+          "unique": 6,
+          "genetic": 0.9947000211999152,
+          "random": 0.9947000211999152
+        },
+        {
+          "unique": 12,
+          "genetic": 0.9947000211999152,
+          "random": 0.9947000211999152
+        },
+        {
+          "unique": 18,
+          "genetic": 0.9947000211999152,
+          "random": 0.9947000211999152
+        },
+        {
+          "unique": 24,
+          "genetic": 0.9949826867359196,
+          "random": 0.9947000211999152
+        },
+        {
+          "unique": 30,
+          "genetic": 0.9951946858879231,
+          "random": 0.9947706875839164
+        }
+      ]
+    },
+    {
+      "task": "classification_lr",
+      "seed": 1201,
+      "search": "features",
+      "scoring": "roc_auc",
+      "unique": 30,
+      "folds": 3,
+      "initial": {
+        "candidate": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          true,
+          false,
+          true,
+          false,
+          false,
+          true,
+          false,
+          true,
+          true,
+          false,
+          false,
+          true,
+          false,
+          true,
+          false,
+          true
+        ],
+        "cv": 0.9950533531199209,
+        "holdout": 0.9821802935010483
+      },
+      "genetic": {
+        "candidate": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          true,
+          false,
+          true,
+          false,
+          false,
+          true,
+          false,
+          true,
+          true,
+          false,
+          false,
+          true,
+          false,
+          true,
+          false,
+          true
+        ],
+        "cv": 0.9950533531199209,
+        "holdout": 0.9821802935010483
+      },
+      "random": {
+        "candidate": [
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          true,
+          true,
+          false,
+          true,
+          true,
+          true,
+          false,
+          true,
+          false,
+          false,
+          true,
+          true,
+          false,
+          false,
+          true,
+          false,
+          false,
+          true,
+          false,
+          false,
+          true,
+          true,
+          false
+        ],
+        "cv": 0.9954066850399266,
+        "holdout": 0.9922431865828092
+      },
+      "cv_progress": [
+        {
+          "unique": 6,
+          "genetic": 0.9950533531199209,
+          "random": 0.9950533531199209
+        },
+        {
+          "unique": 12,
+          "genetic": 0.9950533531199209,
+          "random": 0.9950533531199209
+        },
+        {
+          "unique": 18,
+          "genetic": 0.9950533531199209,
+          "random": 0.9950533531199209
+        },
+        {
+          "unique": 24,
+          "genetic": 0.9950533531199209,
+          "random": 0.9950533531199209
+        },
+        {
+          "unique": 30,
+          "genetic": 0.9950533531199209,
+          "random": 0.9954066850399266
+        }
+      ]
+    },
+    {
+      "task": "classification_lr",
+      "seed": 1202,
+      "search": "hpo",
+      "scoring": "roc_auc",
+      "unique": 30,
+      "folds": 3,
+      "initial": {
+        "candidate": [
+          [
+            "clf__C",
+            0.18464136215587298
+          ],
+          [
+            "clf__class_weight",
+            "balanced"
+          ]
+        ],
+        "cv": 0.9964666807999434,
+        "holdout": 0.9943396226415094
+      },
+      "genetic": {
+        "candidate": [
+          [
+            "clf__C",
+            0.18464136215587298
+          ],
+          [
+            "clf__class_weight",
+            "balanced"
+          ]
+        ],
+        "cv": 0.9964666807999434,
+        "holdout": 0.9943396226415094
+      },
+      "random": {
+        "candidate": [
+          [
+            "clf__C",
+            0.18464136215587298
+          ],
+          [
+            "clf__class_weight",
+            "balanced"
+          ]
+        ],
+        "cv": 0.9964666807999434,
+        "holdout": 0.9943396226415094
+      },
+      "cv_progress": [
+        {
+          "unique": 6,
+          "genetic": 0.9964666807999434,
+          "random": 0.9964666807999434
+        },
+        {
+          "unique": 12,
+          "genetic": 0.9964666807999434,
+          "random": 0.9964666807999434
+        },
+        {
+          "unique": 18,
+          "genetic": 0.9964666807999434,
+          "random": 0.9964666807999434
+        },
+        {
+          "unique": 24,
+          "genetic": 0.9964666807999434,
+          "random": 0.9964666807999434
+        },
+        {
+          "unique": 30,
+          "genetic": 0.9964666807999434,
+          "random": 0.9964666807999434
+        }
+      ]
+    },
+    {
+      "task": "classification_lr",
+      "seed": 1202,
+      "search": "features",
+      "scoring": "roc_auc",
+      "unique": 30,
+      "folds": 3,
+      "initial": {
+        "candidate": [
+          false,
+          false,
+          false,
+          false,
+          true,
+          false,
+          false,
+          true,
+          true,
+          false,
+          false,
+          false,
+          false,
+          true,
+          false,
+          true,
+          false,
+          false,
+          false,
+          false,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "cv": 0.9959720161119355,
+        "holdout": 0.9930817610062893
+      },
+      "genetic": {
+        "candidate": [
+          true,
+          false,
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          true,
+          true,
+          true,
+          false,
+          true,
+          true,
+          true,
+          false,
+          false,
+          false,
+          true,
+          false,
+          true,
+          true,
+          false,
+          false,
+          true,
+          false,
+          false
+        ],
+        "cv": 0.9961133488799377,
+        "holdout": 0.9888888888888889
+      },
+      "random": {
+        "candidate": [
+          true,
+          false,
+          false,
+          false,
+          false,
+          true,
+          false,
+          true,
+          false,
+          false,
+          false,
+          false,
+          true,
+          false,
+          true,
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          true,
+          true,
+          false,
+          false,
+          true,
+          false,
+          true,
+          false,
+          false
+        ],
+        "cv": 0.9960426824959366,
+        "holdout": 0.989727463312369
+      },
+      "cv_progress": [
+        {
+          "unique": 6,
+          "genetic": 0.9959720161119355,
+          "random": 0.9959720161119355
+        },
+        {
+          "unique": 12,
+          "genetic": 0.9959720161119355,
+          "random": 0.9959720161119355
+        },
+        {
+          "unique": 18,
+          "genetic": 0.9960426824959366,
+          "random": 0.9959720161119355
+        },
+        {
+          "unique": 24,
+          "genetic": 0.9960426824959366,
+          "random": 0.9960426824959366
+        },
+        {
+          "unique": 30,
+          "genetic": 0.9961133488799377,
+          "random": 0.9960426824959366
+        }
+      ]
+    },
+    {
+      "task": "classification_lr",
+      "seed": 1203,
+      "search": "hpo",
+      "scoring": "roc_auc",
+      "unique": 29,
+      "folds": 3,
+      "initial": {
+        "candidate": [
+          [
+            "clf__C",
+            1.0
+          ],
+          [
+            "clf__class_weight",
+            null
+          ]
+        ],
+        "cv": 0.9931453607518903,
+        "holdout": 1.0
+      },
+      "genetic": {
+        "candidate": [
+          [
+            "clf__C",
+            1.0
+          ],
+          [
+            "clf__class_weight",
+            null
+          ]
+        ],
+        "cv": 0.9931453607518903,
+        "holdout": 1.0
+      },
+      "random": {
+        "candidate": [
+          [
+            "clf__C",
+            0.7029515387980821
+          ],
+          [
+            "clf__class_weight",
+            null
+          ]
+        ],
+        "cv": 0.9934280262878948,
+        "holdout": 1.0
+      },
+      "cv_progress": [
+        {
+          "unique": 6,
+          "genetic": 0.9931453607518903,
+          "random": 0.9931453607518903
+        },
+        {
+          "unique": 12,
+          "genetic": 0.9931453607518903,
+          "random": 0.9931453607518903
+        },
+        {
+          "unique": 18,
+          "genetic": 0.9931453607518903,
+          "random": 0.9934280262878948
+        },
+        {
+          "unique": 24,
+          "genetic": 0.9931453607518903,
+          "random": 0.9934280262878948
+        },
+        {
+          "unique": 29,
+          "genetic": 0.9931453607518903,
+          "random": 0.9934280262878948
+        }
+      ]
+    },
+    {
+      "task": "classification_lr",
+      "seed": 1203,
+      "search": "features",
+      "scoring": "roc_auc",
+      "unique": 30,
+      "folds": 3,
+      "initial": {
+        "candidate": [
+          false,
+          false,
+          false,
+          true,
+          false,
+          true,
+          false,
+          true,
+          true,
+          false,
+          true,
+          true,
+          false,
+          false,
+          false,
+          true,
+          false,
+          true,
+          true,
+          true,
+          false,
+          true,
+          false,
+          false,
+          true,
+          true,
+          false,
+          false,
+          true,
+          true
+        ],
+        "cv": 0.993993357359904,
+        "holdout": 0.9997903563941299
+      },
+      "genetic": {
+        "candidate": [
+          false,
+          false,
+          false,
+          true,
+          false,
+          true,
+          false,
+          true,
+          true,
+          false,
+          true,
+          true,
+          false,
+          false,
+          false,
+          true,
+          false,
+          true,
+          true,
+          true,
+          false,
+          true,
+          false,
+          false,
+          true,
+          true,
+          false,
+          false,
+          true,
+          true
+        ],
+        "cv": 0.993993357359904,
+        "holdout": 0.9997903563941299
+      },
+      "random": {
+        "candidate": [
+          false,
+          false,
+          false,
+          true,
+          false,
+          true,
+          false,
+          true,
+          true,
+          false,
+          true,
+          true,
+          false,
+          false,
+          false,
+          true,
+          false,
+          true,
+          true,
+          true,
+          false,
+          true,
+          false,
+          false,
+          true,
+          true,
+          false,
+          false,
+          true,
+          true
+        ],
+        "cv": 0.993993357359904,
+        "holdout": 0.9997903563941299
+      },
+      "cv_progress": [
+        {
+          "unique": 6,
+          "genetic": 0.993993357359904,
+          "random": 0.993993357359904
+        },
+        {
+          "unique": 12,
+          "genetic": 0.993993357359904,
+          "random": 0.993993357359904
+        },
+        {
+          "unique": 18,
+          "genetic": 0.993993357359904,
+          "random": 0.993993357359904
+        },
+        {
+          "unique": 24,
+          "genetic": 0.993993357359904,
+          "random": 0.993993357359904
+        },
+        {
+          "unique": 30,
+          "genetic": 0.993993357359904,
+          "random": 0.993993357359904
+        }
+      ]
+    },
+    {
+      "task": "regression_ridge",
+      "seed": 1201,
+      "search": "hpo",
+      "scoring": "r2",
+      "unique": 30,
+      "folds": 3,
+      "initial": {
+        "candidate": [
+          [
+            "ridge__alpha",
+            28.871384314623135
+          ],
+          [
+            "ridge__fit_intercept",
+            true
+          ]
+        ],
+        "cv": 0.48140867292421313,
+        "holdout": 0.478981901397324
+      },
+      "genetic": {
+        "candidate": [
+          [
+            "ridge__alpha",
+            28.871384314623135
+          ],
+          [
+            "ridge__fit_intercept",
+            true
+          ]
+        ],
+        "cv": 0.48140867292421313,
+        "holdout": 0.478981901397324
+      },
+      "random": {
+        "candidate": [
+          [
+            "ridge__alpha",
+            28.871384314623135
+          ],
+          [
+            "ridge__fit_intercept",
+            true
+          ]
+        ],
+        "cv": 0.48140867292421313,
+        "holdout": 0.478981901397324
+      },
+      "cv_progress": [
+        {
+          "unique": 6,
+          "genetic": 0.48140867292421313,
+          "random": 0.48140867292421313
+        },
+        {
+          "unique": 12,
+          "genetic": 0.48140867292421313,
+          "random": 0.48140867292421313
+        },
+        {
+          "unique": 18,
+          "genetic": 0.48140867292421313,
+          "random": 0.48140867292421313
+        },
+        {
+          "unique": 24,
+          "genetic": 0.48140867292421313,
+          "random": 0.48140867292421313
+        },
+        {
+          "unique": 30,
+          "genetic": 0.48140867292421313,
+          "random": 0.48140867292421313
+        }
+      ]
+    },
+    {
+      "task": "regression_ridge",
+      "seed": 1201,
+      "search": "features",
+      "scoring": "r2",
+      "unique": 30,
+      "folds": 3,
+      "initial": {
+        "candidate": [
+          true,
+          false,
+          true,
+          false,
+          false,
+          true,
+          false,
+          true,
+          true,
+          false
+        ],
+        "cv": 0.4492729426119997,
+        "holdout": 0.43721644933876724
+      },
+      "genetic": {
+        "candidate": [
+          false,
+          false,
+          true,
+          true,
+          false,
+          true,
+          true,
+          false,
+          true,
+          false
+        ],
+        "cv": 0.4784305266913269,
+        "holdout": 0.4597325507201865
+      },
+      "random": {
+        "candidate": [
+          true,
+          false,
+          true,
+          true,
+          false,
+          false,
+          false,
+          true,
+          true,
+          false
+        ],
+        "cv": 0.45917879444879456,
+        "holdout": 0.4461774078249148
+      },
+      "cv_progress": [
+        {
+          "unique": 6,
+          "genetic": 0.4492729426119997,
+          "random": 0.4492729426119997
+        },
+        {
+          "unique": 12,
+          "genetic": 0.4533077807788164,
+          "random": 0.4492729426119997
+        },
+        {
+          "unique": 18,
+          "genetic": 0.4533077807788164,
+          "random": 0.450725903419306
+        },
+        {
+          "unique": 24,
+          "genetic": 0.46428694937784815,
+          "random": 0.450725903419306
+        },
+        {
+          "unique": 30,
+          "genetic": 0.4784305266913269,
+          "random": 0.45917879444879456
+        }
+      ]
+    },
+    {
+      "task": "regression_ridge",
+      "seed": 1202,
+      "search": "hpo",
+      "scoring": "r2",
+      "unique": 30,
+      "folds": 3,
+      "initial": {
+        "candidate": [
+          [
+            "ridge__alpha",
+            1.0
+          ],
+          [
+            "ridge__fit_intercept",
+            true
+          ]
+        ],
+        "cv": 0.45950469674510264,
+        "holdout": 0.5254932614747128
+      },
+      "genetic": {
+        "candidate": [
+          [
+            "ridge__alpha",
+            53.303922757689456
+          ],
+          [
+            "ridge__fit_intercept",
+            true
+          ]
+        ],
+        "cv": 0.46674542482854475,
+        "holdout": 0.5285397369190483
+      },
+      "random": {
+        "candidate": [
+          [
+            "ridge__alpha",
+            52.33389071388719
+          ],
+          [
+            "ridge__fit_intercept",
+            true
+          ]
+        ],
+        "cv": 0.4668623492973409,
+        "holdout": 0.5284884844936358
+      },
+      "cv_progress": [
+        {
+          "unique": 6,
+          "genetic": 0.45950469674510264,
+          "random": 0.45950469674510264
+        },
+        {
+          "unique": 12,
+          "genetic": 0.46674542482854475,
+          "random": 0.46439770071640457
+        },
+        {
+          "unique": 18,
+          "genetic": 0.46674542482854475,
+          "random": 0.46439770071640457
+        },
+        {
+          "unique": 24,
+          "genetic": 0.46674542482854475,
+          "random": 0.4668623492973409
+        },
+        {
+          "unique": 30,
+          "genetic": 0.46674542482854475,
+          "random": 0.4668623492973409
+        }
+      ]
+    },
+    {
+      "task": "regression_ridge",
+      "seed": 1202,
+      "search": "features",
+      "scoring": "r2",
+      "unique": 29,
+      "folds": 3,
+      "initial": {
+        "candidate": [
+          false,
+          false,
+          true,
+          false,
+          false,
+          true,
+          true,
+          false,
+          true,
+          false
+        ],
+        "cv": 0.43288782294719547,
+        "holdout": 0.5163338469372891
+      },
+      "genetic": {
+        "candidate": [
+          false,
+          true,
+          true,
+          false,
+          false,
+          true,
+          true,
+          false,
+          true,
+          false
+        ],
+        "cv": 0.437387806670633,
+        "holdout": 0.5336829889063576
+      },
+      "random": {
+        "candidate": [
+          false,
+          false,
+          true,
+          true,
+          false,
+          false,
+          true,
+          true,
+          true,
+          false
+        ],
+        "cv": 0.45835085593410013,
+        "holdout": 0.48705197174582426
+      },
+      "cv_progress": [
+        {
+          "unique": 6,
+          "genetic": 0.43288782294719547,
+          "random": 0.43288782294719547
+        },
+        {
+          "unique": 12,
+          "genetic": 0.4333871169574768,
+          "random": 0.43288782294719547
+        },
+        {
+          "unique": 18,
+          "genetic": 0.4333871169574768,
+          "random": 0.43288782294719547
+        },
+        {
+          "unique": 24,
+          "genetic": 0.4333871169574768,
+          "random": 0.4456288613952588
+        },
+        {
+          "unique": 29,
+          "genetic": 0.437387806670633,
+          "random": 0.45835085593410013
+        }
+      ]
+    },
+    {
+      "task": "regression_ridge",
+      "seed": 1203,
+      "search": "hpo",
+      "scoring": "r2",
+      "unique": 29,
+      "folds": 3,
+      "initial": {
+        "candidate": [
+          [
+            "ridge__alpha",
+            27.876784722810154
+          ],
+          [
+            "ridge__fit_intercept",
+            true
+          ]
+        ],
+        "cv": 0.49767885546025664,
+        "holdout": 0.4696395115025518
+      },
+      "genetic": {
+        "candidate": [
+          [
+            "ridge__alpha",
+            19.126442338986852
+          ],
+          [
+            "ridge__fit_intercept",
+            true
+          ]
+        ],
+        "cv": 0.49835092347693166,
+        "holdout": 0.4706628200142243
+      },
+      "random": {
+        "candidate": [
+          [
+            "ridge__alpha",
+            13.464451452470367
+          ],
+          [
+            "ridge__fit_intercept",
+            true
+          ]
+        ],
+        "cv": 0.4984696531408412,
+        "holdout": 0.4713074029381804
+      },
+      "cv_progress": [
+        {
+          "unique": 6,
+          "genetic": 0.49767885546025664,
+          "random": 0.49767885546025664
+        },
+        {
+          "unique": 12,
+          "genetic": 0.49835092347693166,
+          "random": 0.4984696531408412
+        },
+        {
+          "unique": 18,
+          "genetic": 0.49835092347693166,
+          "random": 0.4984696531408412
+        },
+        {
+          "unique": 24,
+          "genetic": 0.49835092347693166,
+          "random": 0.4984696531408412
+        },
+        {
+          "unique": 29,
+          "genetic": 0.49835092347693166,
+          "random": 0.4984696531408412
+        }
+      ]
+    },
+    {
+      "task": "regression_ridge",
+      "seed": 1203,
+      "search": "features",
+      "scoring": "r2",
+      "unique": 29,
+      "folds": 3,
+      "initial": {
+        "candidate": [
+          true,
+          true,
+          true,
+          false,
+          false,
+          false,
+          false,
+          true,
+          false,
+          false
+        ],
+        "cv": 0.3878506560709815,
+        "holdout": 0.35929595950589155
+      },
+      "genetic": {
+        "candidate": [
+          true,
+          false,
+          true,
+          false,
+          false,
+          false,
+          false,
+          true,
+          true,
+          true
+        ],
+        "cv": 0.4468754133152964,
+        "holdout": 0.44677680728413427
+      },
+      "random": {
+        "candidate": [
+          true,
+          false,
+          true,
+          true,
+          false,
+          true,
+          false,
+          false,
+          true,
+          false
+        ],
+        "cv": 0.4677209666800513,
+        "holdout": 0.46106303666712656
+      },
+      "cv_progress": [
+        {
+          "unique": 6,
+          "genetic": 0.3878506560709815,
+          "random": 0.3878506560709815
+        },
+        {
+          "unique": 12,
+          "genetic": 0.44423349590056294,
+          "random": 0.43756853775910587
+        },
+        {
+          "unique": 18,
+          "genetic": 0.44423349590056294,
+          "random": 0.43756853775910587
+        },
+        {
+          "unique": 24,
+          "genetic": 0.4468754133152964,
+          "random": 0.43756853775910587
+        },
+        {
+          "unique": 29,
+          "genetic": 0.4468754133152964,
+          "random": 0.4677209666800513
+        }
+      ]
+    }
+  ],
+  "reproduction_script": "\"\"\"Run from the repository root with the package installed editable.\"\"\"\nimport json\nimport platform\nimport random\nimport subprocess\nimport sys\nfrom importlib.metadata import version\nfrom pathlib import Path\n\nimport numpy as np\nfrom sklearn.base import clone\nfrom sklearn.metrics import get_scorer\nfrom sklearn.model_selection import cross_val_score, train_test_split\nfrom threadpoolctl import threadpool_limits\n\nsys.path.insert(0, str(Path.cwd()))\nfrom benchmarks.benchmark_fit import SCENARIOS, make_cv\nfrom sklearn_genetic import GASearchCV, GAFeatureSelectionCV\n\n\ndef paired_run(task, seed, features):\n    sc = SCENARIOS[task]\n    X, y = sc.loader()\n    Xtr, Xte, ytr, yte = train_test_split(\n        X, y, test_size=.25, random_state=seed,\n        stratify=y if sc.task == \"classification\" else None,\n    )\n    folds = list(make_cv(sc, 3, seed).split(Xtr, ytr))\n    model = sc.estimator_builder(seed)\n    space = sc.param_grid_builder()\n    columns = X.shape[1]\n    limit = columns // 2\n    options = dict(cv=folds, scoring=sc.scoring, population_size=6, generations=2,\n                   n_jobs=1, random_state=seed, error_score=\"raise\", verbose=False)\n    if features:\n        search = GAFeatureSelectionCV(model, max_features=limit, **options)\n    else:\n        search = GASearchCV(model, param_grid=space, **options)\n    search.fit(Xtr, ytr)\n    results = search.cv_results_\n    candidates = results[\"features\" if features else \"params\"]\n    archive = {}\n    for candidate, score in zip(candidates, results[\"mean_test_score\"]):\n        key = tuple(map(bool, candidate)) if features else tuple(sorted(candidate.items()))\n        archive.setdefault(key, float(score))\n    assert len(archive) == search.fit_stats_[\"cross_validate_calls\"]\n    initial = dict(list(archive.items())[:6])\n    assert len(set(tuple(map(bool,c)) if features else tuple(sorted(c.items()))\n                   for c in candidates[:6])) == len(initial) == 6\n    assert max(initial.values()) == search.history[\"fitness_best\"][0]\n\n    def prepare(key, data):\n        if features:\n            return clone(model), data[:, np.asarray(key)]\n        return clone(model).set_params(**dict(key)), data\n\n    control = initial.copy()\n    random.seed(seed + 10000)\n    np.random.seed(seed + 10000)\n    while len(control) < len(archive):\n        if features:\n            selected = set(random.sample(range(columns), random.randint(1, limit)))\n            key = tuple(i in selected for i in range(columns))\n        else:\n            key = tuple(sorted((name, dim.sample()) for name, dim in space.items()))\n        if key in control:\n            continue\n        est, data = prepare(key, Xtr)\n        control[key] = float(cross_val_score(est, data, ytr, cv=folds, scoring=sc.scoring,\n                                            n_jobs=1, error_score=\"raise\").mean())\n\n    def incumbent(pool):\n        best = max(pool, key=pool.get)\n        est, train = prepare(best, Xtr)\n        _, test = prepare(best, Xte)\n        est.fit(train, ytr)\n        return dict(candidate=best, cv=pool[best],\n                    holdout=float(get_scorer(sc.scoring)(est, test, yte)))\n\n    assert max(archive.values()) == max(search.history[\"fitness_best\"])\n    return dict(task=task, seed=seed, search=\"features\" if features else \"hpo\",\n                scoring=sc.scoring, unique=len(archive), folds=len(folds),\n                initial=incumbent(initial), genetic=incumbent(archive), random=incumbent(control),\n                cv_progress=[dict(unique=n, genetic=max(list(archive.values())[:n]),\n                                  random=max(list(control.values())[:n]))\n                             for n in (6, 12, 18, 24, len(archive))])\n\n\nwith threadpool_limits(1):\n    rows = [paired_run(task, seed, features)\n            for task in (\"classification_lr\", \"regression_ridge\")\n            for seed in (1201, 1202, 1203) for features in (False, True)]\nresult = dict(source_commit=subprocess.check_output([\"git\",\"rev-parse\",\"HEAD\"],text=True).strip(),\n              python=platform.python_version(),\n              versions={p:version(p) for p in [\"scikit-learn\",\"numpy\",\"scipy\",\"deap\"]},\n              rows=rows, reproduction_script=Path(__file__).read_text(encoding=\"utf-8\"))\npath = Path(sys.argv[1])\npath.write_text(json.dumps(result, indent=2, allow_nan=False)+\"\\n\", encoding=\"utf-8\")\n"
+}

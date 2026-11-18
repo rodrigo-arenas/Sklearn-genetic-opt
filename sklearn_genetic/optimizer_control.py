@@ -221,22 +221,32 @@ def finite_search_space_size(estimator, limit):
     return None
 
 
+def mutable_dimensions(dimensions):
+    """Return positions and dimensions eligible for HPO variation."""
+    mutable = []
+    for index, dimension in enumerate(dimensions):
+        if isinstance(dimension, (Integer, Continuous)) and dimension.lower == dimension.upper:
+            continue
+        if isinstance(dimension, Categorical) and len(dimension.choices) == 1:
+            continue
+        mutable.append((index, dimension))
+    return mutable
+
+
 def differential_offspring(population, toolbox, estimator, crossover, mutation):
     """Deferred rand/1/bin trials, with mixed-domain and binary decoding."""
+    dimensions = tuple(estimator.space.param_grid.values()) if hasattr(estimator, "space") else ()
+    variable = [index for index, _ in mutable_dimensions(dimensions)]
     offspring = []
     for index, target in enumerate(population):
         donors = random.sample(range(len(population) - 1), 3)
         a, b, c = [population[j + (j >= index)] for j in donors]
         trial = toolbox.clone(target)
-        forced = random.randrange(len(target))
+        forced = random.choice(variable) if variable else random.randrange(len(target))
         for gene in range(len(target)):
             if gene != forced and random.random() >= crossover:
                 continue
-            dimension = (
-                estimator.space[estimator.space.parameters[gene]]
-                if hasattr(estimator, "space")
-                else None
-            )
+            dimension = dimensions[gene] if dimensions else None
             if dimension is None:
                 trial[gene] = int(a[gene] + 0.8 * (b[gene] - c[gene]) >= 0.5)
             elif isinstance(dimension, Categorical):
@@ -270,8 +280,7 @@ def differential_offspring(population, toolbox, estimator, crossover, mutation):
 
 
 def _bounded_integer_neighbor(dimension, value, radius):
-    value = int(round(float(value)))
-    value = int(np.clip(value, dimension.lower, dimension.upper))
+    value = dimension._round_and_clip(value)
     step = max(1, int(np.ceil((dimension.upper - dimension.lower) * radius)))
     lower = max(dimension.lower, value - step)
     upper = min(dimension.upper, value + step)
@@ -309,9 +318,10 @@ def _categorical_neighbor(dimension, value):
 
 def _search_space_neighbor(estimator, parent):
     values = list(parent)
-    index = random.randrange(0, len(estimator.space))
-    parameter_name = estimator.space.parameters[index]
-    dimension = estimator.space[parameter_name]
+    mutable = mutable_dimensions(estimator.space.param_grid.values())
+    if not mutable:
+        return values
+    index, dimension = mutable[random.randrange(len(mutable))]
     value = values[index]
 
     if isinstance(dimension, Integer):
@@ -464,13 +474,21 @@ def _shared_primary_fitness(population, counts):
     primary_weight = population[0].fitness.weights[0]
     sign = 1.0 if primary_weight >= 0 else -1.0
     utilities = [value * sign for value in primary_values]
-    minimum_utility = min(utilities)
+    finite_utilities = [utility for utility in utilities if np.isfinite(utility)]
+    if not finite_utilities:
+        return [individual.fitness.values for individual in population]
+    minimum_utility = min(finite_utilities)
     shift = -minimum_utility + 1e-12 if minimum_utility <= 0 else 0.0
 
     shared_values = []
     for individual, utility, count in zip(population, utilities, counts):
-        shared_utility = (utility + shift) / count
-        shared_primary = (shared_utility - shift) * sign
+        if np.isfinite(utility):
+            shared_utility = (utility + shift) / count
+            shared_primary = (shared_utility - shift) * sign
+        else:
+            # Preserve the worst sentinel; including it in the shift would
+            # turn every otherwise valid candidate's shared fitness into NaN.
+            shared_primary = individual.fitness.values[0]
         shared_values.append((shared_primary, *individual.fitness.values[1:]))
 
     return shared_values

@@ -1,0 +1,2004 @@
+[
+  {
+    "width": 16,
+    "seed": 8421,
+    "methods": {
+      "BalancedSmartStart": {
+        "candidates": 41,
+        "full_fit_seconds": 0.19968550000339746,
+        "holdout": {
+          "6": 0.4182294822379501,
+          "24": 0.41121156439804196
+        },
+        "initial_sizes": [
+          1,
+          2,
+          2,
+          3,
+          3,
+          4
+        ],
+        "initial_coverage": 15,
+        "signal_trace": [
+          [],
+          [],
+          [
+            11
+          ],
+          [],
+          [],
+          [
+            2
+          ],
+          [],
+          [],
+          [
+            11
+          ],
+          [],
+          [],
+          [
+            11
+          ],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [
+            2
+          ],
+          [
+            11
+          ],
+          [
+            11
+          ],
+          [
+            2
+          ],
+          [
+            11
+          ],
+          []
+        ],
+        "columns_seen_by_24": 16,
+        "winning_signals_at_24": [
+          2
+        ],
+        "first_target_by_24": null
+      },
+      "GAFeatureSelectionCV": {
+        "candidates": 40,
+        "full_fit_seconds": 0.18181959999492392,
+        "holdout": {
+          "6": 0.42612092562220283,
+          "24": 0.8879134926091372
+        },
+        "initial_sizes": [
+          1,
+          2,
+          2,
+          3,
+          3,
+          4
+        ],
+        "initial_coverage": 10,
+        "signal_trace": [
+          [
+            2
+          ],
+          [],
+          [],
+          [
+            11
+          ],
+          [],
+          [],
+          [],
+          [],
+          [
+            11
+          ],
+          [],
+          [],
+          [],
+          [
+            11
+          ],
+          [],
+          [],
+          [],
+          [
+            11
+          ],
+          [],
+          [],
+          [
+            2
+          ],
+          [
+            2,
+            11
+          ],
+          [],
+          [
+            2
+          ],
+          [
+            2,
+            11
+          ]
+        ],
+        "columns_seen_by_24": 16,
+        "winning_signals_at_24": [
+          2,
+          11
+        ],
+        "first_target_by_24": 21
+      }
+    }
+  },
+  {
+    "width": 16,
+    "seed": 8422,
+    "methods": {
+      "BalancedSmartStart": {
+        "candidates": 42,
+        "full_fit_seconds": 0.1974713000236079,
+        "holdout": {
+          "6": 0.40376241355204967,
+          "24": 0.39880535421416097
+        },
+        "initial_sizes": [
+          1,
+          2,
+          2,
+          3,
+          3,
+          4
+        ],
+        "initial_coverage": 15,
+        "signal_trace": [
+          [
+            4
+          ],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [
+            5
+          ],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [
+            5
+          ],
+          [
+            4
+          ],
+          [],
+          [],
+          [
+            4
+          ]
+        ],
+        "columns_seen_by_24": 16,
+        "winning_signals_at_24": [
+          4
+        ],
+        "first_target_by_24": null
+      },
+      "GAFeatureSelectionCV": {
+        "candidates": 37,
+        "full_fit_seconds": 0.16969609999796376,
+        "holdout": {
+          "6": 0.39880535421416097,
+          "24": 0.39880535421416097
+        },
+        "initial_sizes": [
+          1,
+          2,
+          2,
+          3,
+          3,
+          4
+        ],
+        "initial_coverage": 10,
+        "signal_trace": [
+          [],
+          [],
+          [
+            4
+          ],
+          [],
+          [],
+          [
+            5
+          ],
+          [
+            5
+          ],
+          [],
+          [],
+          [
+            5
+          ],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [
+            5
+          ],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [
+            5
+          ]
+        ],
+        "columns_seen_by_24": 16,
+        "winning_signals_at_24": [
+          4
+        ],
+        "first_target_by_24": null
+      }
+    }
+  },
+  {
+    "width": 16,
+    "seed": 8423,
+    "methods": {
+      "GAFeatureSelectionCV": {
+        "candidates": 42,
+        "full_fit_seconds": 0.19280740001704544,
+        "holdout": {
+          "6": 0.46037220926876565,
+          "24": 0.8821393637835252
+        },
+        "initial_sizes": [
+          1,
+          2,
+          2,
+          3,
+          3,
+          4
+        ],
+        "initial_coverage": 11,
+        "signal_trace": [
+          [],
+          [],
+          [],
+          [
+            13
+          ],
+          [
+            13
+          ],
+          [],
+          [],
+          [
+            13
+          ],
+          [],
+          [
+            13
+          ],
+          [],
+          [],
+          [],
+          [
+            3
+          ],
+          [
+            13
+          ],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [
+            13
+          ],
+          [
+            13
+          ],
+          [
+            3,
+            13
+          ],
+          []
+        ],
+        "columns_seen_by_24": 16,
+        "winning_signals_at_24": [
+          3,
+          13
+        ],
+        "first_target_by_24": 23
+      },
+      "BalancedSmartStart": {
+        "candidates": 40,
+        "full_fit_seconds": 0.18899539997801185,
+        "holdout": {
+          "6": 0.8830166699559856,
+          "24": 0.8830166699559856
+        },
+        "initial_sizes": [
+          1,
+          2,
+          2,
+          3,
+          3,
+          4
+        ],
+        "initial_coverage": 15,
+        "signal_trace": [
+          [],
+          [],
+          [],
+          [],
+          [
+            3,
+            13
+          ],
+          [],
+          [
+            3,
+            13
+          ],
+          [
+            13
+          ],
+          [],
+          [
+            13
+          ],
+          [],
+          [],
+          [],
+          [],
+          [
+            3,
+            13
+          ],
+          [],
+          [
+            3
+          ],
+          [],
+          [
+            13
+          ],
+          [
+            13
+          ],
+          [
+            13
+          ],
+          [],
+          [
+            13
+          ],
+          [
+            13
+          ]
+        ],
+        "columns_seen_by_24": 15,
+        "winning_signals_at_24": [
+          3,
+          13
+        ],
+        "first_target_by_24": 5
+      }
+    }
+  },
+  {
+    "width": 16,
+    "seed": 8424,
+    "methods": {
+      "BalancedSmartStart": {
+        "candidates": 40,
+        "full_fit_seconds": 0.19318280002335086,
+        "holdout": {
+          "6": 0.38504553812682185,
+          "24": 0.3854992677598176
+        },
+        "initial_sizes": [
+          1,
+          2,
+          2,
+          3,
+          3,
+          4
+        ],
+        "initial_coverage": 15,
+        "signal_trace": [
+          [],
+          [],
+          [],
+          [
+            8
+          ],
+          [
+            6
+          ],
+          [],
+          [
+            8
+          ],
+          [
+            8
+          ],
+          [
+            8
+          ],
+          [],
+          [
+            8
+          ],
+          [],
+          [
+            6
+          ],
+          [],
+          [
+            8
+          ],
+          [],
+          [
+            6
+          ],
+          [
+            6
+          ],
+          [],
+          [],
+          [
+            8
+          ],
+          [],
+          [
+            8
+          ],
+          []
+        ],
+        "columns_seen_by_24": 16,
+        "winning_signals_at_24": [
+          8
+        ],
+        "first_target_by_24": null
+      },
+      "GAFeatureSelectionCV": {
+        "candidates": 40,
+        "full_fit_seconds": 0.18575229996349663,
+        "holdout": {
+          "6": 0.38648128442975316,
+          "24": 0.3885745524912838
+        },
+        "initial_sizes": [
+          1,
+          2,
+          2,
+          3,
+          3,
+          4
+        ],
+        "initial_coverage": 11,
+        "signal_trace": [
+          [],
+          [
+            6
+          ],
+          [
+            6
+          ],
+          [],
+          [
+            8
+          ],
+          [],
+          [
+            6
+          ],
+          [],
+          [],
+          [],
+          [],
+          [
+            6
+          ],
+          [],
+          [],
+          [],
+          [],
+          [
+            6
+          ],
+          [
+            6
+          ],
+          [
+            6
+          ],
+          [
+            6
+          ],
+          [],
+          [],
+          [],
+          [
+            8
+          ]
+        ],
+        "columns_seen_by_24": 16,
+        "winning_signals_at_24": [
+          8
+        ],
+        "first_target_by_24": null
+      }
+    }
+  },
+  {
+    "width": 16,
+    "seed": 8425,
+    "methods": {
+      "GAFeatureSelectionCV": {
+        "candidates": 41,
+        "full_fit_seconds": 0.18624469998758286,
+        "holdout": {
+          "6": 0.3814056531950931,
+          "24": 0.41021798780503094
+        },
+        "initial_sizes": [
+          1,
+          2,
+          2,
+          3,
+          3,
+          4
+        ],
+        "initial_coverage": 9,
+        "signal_trace": [
+          [],
+          [
+            6
+          ],
+          [],
+          [
+            6
+          ],
+          [],
+          [
+            6
+          ],
+          [],
+          [],
+          [
+            6
+          ],
+          [
+            6
+          ],
+          [],
+          [
+            6
+          ],
+          [
+            6
+          ],
+          [
+            6
+          ],
+          [
+            6
+          ],
+          [],
+          [],
+          [],
+          [],
+          [
+            6
+          ],
+          [],
+          [],
+          [
+            12
+          ],
+          [
+            6
+          ]
+        ],
+        "columns_seen_by_24": 16,
+        "winning_signals_at_24": [
+          12
+        ],
+        "first_target_by_24": null
+      },
+      "BalancedSmartStart": {
+        "candidates": 40,
+        "full_fit_seconds": 0.18338760000187904,
+        "holdout": {
+          "6": 0.41087879080830225,
+          "24": 0.8806836906980747
+        },
+        "initial_sizes": [
+          1,
+          2,
+          2,
+          3,
+          3,
+          4
+        ],
+        "initial_coverage": 15,
+        "signal_trace": [
+          [],
+          [],
+          [
+            12
+          ],
+          [],
+          [
+            6
+          ],
+          [],
+          [
+            12
+          ],
+          [
+            6
+          ],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [
+            6
+          ],
+          [
+            6,
+            12
+          ],
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "columns_seen_by_24": 16,
+        "winning_signals_at_24": [
+          6,
+          12
+        ],
+        "first_target_by_24": 22
+      }
+    }
+  },
+  {
+    "width": 16,
+    "seed": 8426,
+    "methods": {
+      "BalancedSmartStart": {
+        "candidates": 42,
+        "full_fit_seconds": 0.19697419996373355,
+        "holdout": {
+          "6": 0.41759178606407565,
+          "24": 0.41759178606407565
+        },
+        "initial_sizes": [
+          1,
+          2,
+          2,
+          3,
+          3,
+          4
+        ],
+        "initial_coverage": 15,
+        "signal_trace": [
+          [],
+          [],
+          [],
+          [],
+          [
+            13
+          ],
+          [
+            6
+          ],
+          [],
+          [],
+          [],
+          [],
+          [
+            13
+          ],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [
+            13
+          ],
+          [],
+          [],
+          [],
+          [
+            6
+          ]
+        ],
+        "columns_seen_by_24": 16,
+        "winning_signals_at_24": [
+          6
+        ],
+        "first_target_by_24": null
+      },
+      "GAFeatureSelectionCV": {
+        "candidates": 42,
+        "full_fit_seconds": 0.19714080000994727,
+        "holdout": {
+          "6": 0.43160293833484,
+          "24": 0.8784668268102359
+        },
+        "initial_sizes": [
+          1,
+          2,
+          2,
+          3,
+          3,
+          4
+        ],
+        "initial_coverage": 10,
+        "signal_trace": [
+          [],
+          [],
+          [
+            13
+          ],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [
+            6,
+            13
+          ],
+          [],
+          [
+            13
+          ],
+          [
+            13
+          ],
+          [
+            13
+          ],
+          [],
+          [],
+          [
+            13
+          ],
+          [
+            6
+          ]
+        ],
+        "columns_seen_by_24": 15,
+        "winning_signals_at_24": [
+          6,
+          13
+        ],
+        "first_target_by_24": 16
+      }
+    }
+  },
+  {
+    "width": 16,
+    "seed": 8427,
+    "methods": {
+      "BalancedSmartStart": {
+        "candidates": 42,
+        "full_fit_seconds": 0.19248610001523048,
+        "holdout": {
+          "6": 0.4510363059696716,
+          "24": 0.4558132877987723
+        },
+        "initial_sizes": [
+          1,
+          2,
+          2,
+          3,
+          3,
+          4
+        ],
+        "initial_coverage": 15,
+        "signal_trace": [
+          [],
+          [
+            13
+          ],
+          [],
+          [
+            7
+          ],
+          [],
+          [],
+          [
+            13
+          ],
+          [],
+          [],
+          [
+            7
+          ],
+          [],
+          [],
+          [],
+          [],
+          [
+            7
+          ],
+          [],
+          [
+            7
+          ],
+          [],
+          [
+            13
+          ],
+          [],
+          [],
+          [
+            7
+          ],
+          [],
+          [
+            7
+          ]
+        ],
+        "columns_seen_by_24": 16,
+        "winning_signals_at_24": [
+          7
+        ],
+        "first_target_by_24": null
+      },
+      "GAFeatureSelectionCV": {
+        "candidates": 41,
+        "full_fit_seconds": 0.18716669996501878,
+        "holdout": {
+          "6": 0.4558132877987723,
+          "24": 0.8858618584450985
+        },
+        "initial_sizes": [
+          1,
+          2,
+          2,
+          3,
+          3,
+          4
+        ],
+        "initial_coverage": 12,
+        "signal_trace": [
+          [
+            7
+          ],
+          [],
+          [],
+          [],
+          [
+            13
+          ],
+          [],
+          [],
+          [
+            13
+          ],
+          [
+            7
+          ],
+          [],
+          [
+            7
+          ],
+          [],
+          [
+            7
+          ],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [
+            7,
+            13
+          ],
+          [
+            13
+          ],
+          [],
+          [],
+          [
+            7
+          ]
+        ],
+        "columns_seen_by_24": 15,
+        "winning_signals_at_24": [
+          7,
+          13
+        ],
+        "first_target_by_24": 20
+      }
+    }
+  },
+  {
+    "width": 16,
+    "seed": 8428,
+    "methods": {
+      "BalancedSmartStart": {
+        "candidates": 41,
+        "full_fit_seconds": 0.187625200022012,
+        "holdout": {
+          "6": 0.417915595662985,
+          "24": 0.8879208803237314
+        },
+        "initial_sizes": [
+          1,
+          2,
+          2,
+          3,
+          3,
+          4
+        ],
+        "initial_coverage": 15,
+        "signal_trace": [
+          [],
+          [],
+          [],
+          [],
+          [
+            7
+          ],
+          [
+            3
+          ],
+          [],
+          [],
+          [],
+          [
+            3
+          ],
+          [],
+          [],
+          [],
+          [
+            7
+          ],
+          [
+            7
+          ],
+          [
+            7
+          ],
+          [],
+          [
+            7
+          ],
+          [],
+          [
+            3,
+            7
+          ],
+          [
+            3,
+            7
+          ],
+          [],
+          [
+            3
+          ],
+          []
+        ],
+        "columns_seen_by_24": 16,
+        "winning_signals_at_24": [
+          3,
+          7
+        ],
+        "first_target_by_24": 20
+      },
+      "GAFeatureSelectionCV": {
+        "candidates": 42,
+        "full_fit_seconds": 0.1983800000161864,
+        "holdout": {
+          "6": 0.4090949840844347,
+          "24": 0.8879208803237314
+        },
+        "initial_sizes": [
+          1,
+          2,
+          2,
+          3,
+          3,
+          4
+        ],
+        "initial_coverage": 11,
+        "signal_trace": [
+          [
+            7
+          ],
+          [],
+          [],
+          [],
+          [
+            7
+          ],
+          [],
+          [],
+          [],
+          [
+            7
+          ],
+          [
+            7
+          ],
+          [],
+          [],
+          [
+            3
+          ],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [
+            7
+          ],
+          [],
+          [
+            3
+          ],
+          [
+            3,
+            7
+          ],
+          [],
+          [
+            7
+          ]
+        ],
+        "columns_seen_by_24": 16,
+        "winning_signals_at_24": [
+          3,
+          7
+        ],
+        "first_target_by_24": 22
+      }
+    }
+  },
+  {
+    "width": 64,
+    "seed": 8421,
+    "methods": {
+      "BalancedSmartStart": {
+        "candidates": 42,
+        "full_fit_seconds": 0.1950899999937974,
+        "holdout": {
+          "6": -0.0016299459126516425,
+          "24": -0.040159776741965025
+        },
+        "initial_sizes": [
+          1,
+          2,
+          2,
+          3,
+          3,
+          4
+        ],
+        "initial_coverage": 15,
+        "signal_trace": [
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          []
+        ],
+        "columns_seen_by_24": 33,
+        "winning_signals_at_24": [],
+        "first_target_by_24": null
+      },
+      "GAFeatureSelectionCV": {
+        "candidates": 42,
+        "full_fit_seconds": 0.201548199984245,
+        "holdout": {
+          "6": 0.41246382693846595,
+          "24": 0.40308925300711806
+        },
+        "initial_sizes": [
+          1,
+          2,
+          2,
+          3,
+          3,
+          4
+        ],
+        "initial_coverage": 13,
+        "signal_trace": [
+          [],
+          [],
+          [],
+          [],
+          [],
+          [
+            2
+          ],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [
+            2
+          ],
+          [],
+          [
+            2
+          ],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [
+            2
+          ],
+          []
+        ],
+        "columns_seen_by_24": 34,
+        "winning_signals_at_24": [
+          2
+        ],
+        "first_target_by_24": null
+      }
+    }
+  },
+  {
+    "width": 64,
+    "seed": 8422,
+    "methods": {
+      "BalancedSmartStart": {
+        "candidates": 41,
+        "full_fit_seconds": 0.19401079998351634,
+        "holdout": {
+          "6": 0.47230057303609874,
+          "24": 0.4507701440804692
+        },
+        "initial_sizes": [
+          1,
+          2,
+          2,
+          3,
+          3,
+          4
+        ],
+        "initial_coverage": 15,
+        "signal_trace": [
+          [],
+          [],
+          [],
+          [
+            34
+          ],
+          [],
+          [],
+          [],
+          [
+            34
+          ],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          []
+        ],
+        "columns_seen_by_24": 31,
+        "winning_signals_at_24": [
+          34
+        ],
+        "first_target_by_24": null
+      },
+      "GAFeatureSelectionCV": {
+        "candidates": 42,
+        "full_fit_seconds": 0.19273499998962507,
+        "holdout": {
+          "6": -0.021001133930647287,
+          "24": 0.39143556802829993
+        },
+        "initial_sizes": [
+          1,
+          2,
+          2,
+          3,
+          3,
+          4
+        ],
+        "initial_coverage": 13,
+        "signal_trace": [
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [
+            34
+          ],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [
+            12
+          ],
+          [
+            34
+          ],
+          [
+            34
+          ]
+        ],
+        "columns_seen_by_24": 43,
+        "winning_signals_at_24": [
+          12
+        ],
+        "first_target_by_24": null
+      }
+    }
+  },
+  {
+    "width": 64,
+    "seed": 8423,
+    "methods": {
+      "GAFeatureSelectionCV": {
+        "candidates": 42,
+        "full_fit_seconds": 0.22184469999046996,
+        "holdout": {
+          "6": -0.036812172077745675,
+          "24": 0.4101971698355714
+        },
+        "initial_sizes": [
+          1,
+          2,
+          2,
+          3,
+          3,
+          4
+        ],
+        "initial_coverage": 13,
+        "signal_trace": [
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [
+            31
+          ],
+          [],
+          [],
+          []
+        ],
+        "columns_seen_by_24": 34,
+        "winning_signals_at_24": [
+          31
+        ],
+        "first_target_by_24": null
+      },
+      "BalancedSmartStart": {
+        "candidates": 42,
+        "full_fit_seconds": 0.19862929999362677,
+        "holdout": {
+          "6": 0.004860288591760242,
+          "24": 0.004860288591760242
+        },
+        "initial_sizes": [
+          1,
+          2,
+          2,
+          3,
+          3,
+          4
+        ],
+        "initial_coverage": 15,
+        "signal_trace": [
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          []
+        ],
+        "columns_seen_by_24": 37,
+        "winning_signals_at_24": [],
+        "first_target_by_24": null
+      }
+    }
+  },
+  {
+    "width": 64,
+    "seed": 8424,
+    "methods": {
+      "BalancedSmartStart": {
+        "candidates": 41,
+        "full_fit_seconds": 0.19067580002592877,
+        "holdout": {
+          "6": -0.01328491442268609,
+          "24": -0.03070019844294891
+        },
+        "initial_sizes": [
+          1,
+          2,
+          2,
+          3,
+          3,
+          4
+        ],
+        "initial_coverage": 15,
+        "signal_trace": [
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          []
+        ],
+        "columns_seen_by_24": 35,
+        "winning_signals_at_24": [],
+        "first_target_by_24": null
+      },
+      "GAFeatureSelectionCV": {
+        "candidates": 41,
+        "full_fit_seconds": 0.2017780999885872,
+        "holdout": {
+          "6": -0.014319061333617933,
+          "24": 0.4317420303564732
+        },
+        "initial_sizes": [
+          1,
+          2,
+          2,
+          3,
+          3,
+          4
+        ],
+        "initial_coverage": 14,
+        "signal_trace": [
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [
+            23
+          ],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [
+            23
+          ],
+          []
+        ],
+        "columns_seen_by_24": 33,
+        "winning_signals_at_24": [
+          23
+        ],
+        "first_target_by_24": null
+      }
+    }
+  },
+  {
+    "width": 64,
+    "seed": 8425,
+    "methods": {
+      "GAFeatureSelectionCV": {
+        "candidates": 42,
+        "full_fit_seconds": 0.19348850002279505,
+        "holdout": {
+          "6": 0.41388162038775,
+          "24": 0.413016525225944
+        },
+        "initial_sizes": [
+          1,
+          2,
+          2,
+          3,
+          3,
+          4
+        ],
+        "initial_coverage": 11,
+        "signal_trace": [
+          [],
+          [],
+          [],
+          [
+            49
+          ],
+          [],
+          [
+            49
+          ],
+          [
+            49
+          ],
+          [
+            16
+          ],
+          [
+            49
+          ],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [
+            49
+          ],
+          [
+            16
+          ]
+        ],
+        "columns_seen_by_24": 39,
+        "winning_signals_at_24": [
+          49
+        ],
+        "first_target_by_24": null
+      },
+      "BalancedSmartStart": {
+        "candidates": 42,
+        "full_fit_seconds": 0.19751510000787675,
+        "holdout": {
+          "6": 0.4123442240307136,
+          "24": 0.4123442240307136
+        },
+        "initial_sizes": [
+          1,
+          2,
+          2,
+          3,
+          3,
+          4
+        ],
+        "initial_coverage": 15,
+        "signal_trace": [
+          [],
+          [],
+          [],
+          [],
+          [
+            49
+          ],
+          [],
+          [],
+          [
+            16
+          ],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [
+            49
+          ],
+          [
+            16
+          ],
+          []
+        ],
+        "columns_seen_by_24": 43,
+        "winning_signals_at_24": [
+          49
+        ],
+        "first_target_by_24": null
+      }
+    }
+  },
+  {
+    "width": 64,
+    "seed": 8426,
+    "methods": {
+      "BalancedSmartStart": {
+        "candidates": 42,
+        "full_fit_seconds": 0.19282350002322346,
+        "holdout": {
+          "6": 0.42508594179515724,
+          "24": 0.42508594179515724
+        },
+        "initial_sizes": [
+          1,
+          2,
+          2,
+          3,
+          3,
+          4
+        ],
+        "initial_coverage": 15,
+        "signal_trace": [
+          [],
+          [
+            34
+          ],
+          [],
+          [
+            58
+          ],
+          [],
+          [],
+          [],
+          [
+            34
+          ],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [
+            34
+          ],
+          [],
+          [],
+          [],
+          [],
+          []
+        ],
+        "columns_seen_by_24": 45,
+        "winning_signals_at_24": [
+          34
+        ],
+        "first_target_by_24": null
+      },
+      "GAFeatureSelectionCV": {
+        "candidates": 42,
+        "full_fit_seconds": 0.19412659999215975,
+        "holdout": {
+          "6": 0.41577590824138844,
+          "24": 0.4218066588585303
+        },
+        "initial_sizes": [
+          1,
+          2,
+          2,
+          3,
+          3,
+          4
+        ],
+        "initial_coverage": 14,
+        "signal_trace": [
+          [],
+          [],
+          [],
+          [],
+          [],
+          [
+            34
+          ],
+          [],
+          [],
+          [],
+          [],
+          [
+            34
+          ],
+          [],
+          [],
+          [
+            34
+          ],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [
+            34
+          ],
+          [],
+          [],
+          [],
+          []
+        ],
+        "columns_seen_by_24": 31,
+        "winning_signals_at_24": [
+          34
+        ],
+        "first_target_by_24": null
+      }
+    }
+  },
+  {
+    "width": 64,
+    "seed": 8427,
+    "methods": {
+      "BalancedSmartStart": {
+        "candidates": 42,
+        "full_fit_seconds": 0.1936503000324592,
+        "holdout": {
+          "6": -0.028461669382228605,
+          "24": -0.03835298288735878
+        },
+        "initial_sizes": [
+          1,
+          2,
+          2,
+          3,
+          3,
+          4
+        ],
+        "initial_coverage": 15,
+        "signal_trace": [
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          []
+        ],
+        "columns_seen_by_24": 32,
+        "winning_signals_at_24": [],
+        "first_target_by_24": null
+      },
+      "GAFeatureSelectionCV": {
+        "candidates": 41,
+        "full_fit_seconds": 0.22646929998882115,
+        "holdout": {
+          "6": 0.44389377831992216,
+          "24": 0.44218028608264315
+        },
+        "initial_sizes": [
+          1,
+          2,
+          2,
+          3,
+          3,
+          4
+        ],
+        "initial_coverage": 14,
+        "signal_trace": [
+          [],
+          [],
+          [],
+          [],
+          [],
+          [
+            52
+          ],
+          [
+            52
+          ],
+          [],
+          [],
+          [],
+          [
+            52
+          ],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          []
+        ],
+        "columns_seen_by_24": 26,
+        "winning_signals_at_24": [
+          52
+        ],
+        "first_target_by_24": null
+      }
+    }
+  },
+  {
+    "width": 64,
+    "seed": 8428,
+    "methods": {
+      "BalancedSmartStart": {
+        "candidates": 42,
+        "full_fit_seconds": 0.20091829996090382,
+        "holdout": {
+          "6": -0.03373097419242033,
+          "24": 0.39842839419431686
+        },
+        "initial_sizes": [
+          1,
+          2,
+          2,
+          3,
+          3,
+          4
+        ],
+        "initial_coverage": 15,
+        "signal_trace": [
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [
+            24
+          ],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          []
+        ],
+        "columns_seen_by_24": 40,
+        "winning_signals_at_24": [
+          24
+        ],
+        "first_target_by_24": null
+      },
+      "GAFeatureSelectionCV": {
+        "candidates": 42,
+        "full_fit_seconds": 0.19443089998094365,
+        "holdout": {
+          "6": -0.0453535831462788,
+          "24": 0.38641235100768045
+        },
+        "initial_sizes": [
+          1,
+          2,
+          2,
+          3,
+          3,
+          4
+        ],
+        "initial_coverage": 13,
+        "signal_trace": [
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [
+            24
+          ],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [
+            24
+          ],
+          [],
+          [],
+          [
+            24
+          ],
+          []
+        ],
+        "columns_seen_by_24": 31,
+        "winning_signals_at_24": [
+          24
+        ],
+        "first_target_by_24": null
+      }
+    }
+  }
+]

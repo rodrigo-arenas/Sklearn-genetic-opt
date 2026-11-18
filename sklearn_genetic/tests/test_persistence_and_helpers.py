@@ -479,6 +479,107 @@ def test_checkpoint_resume_continues_generation_numbering(tmp_path):
     assert len(resumed_gens) == len(set(resumed_gens))
 
 
+@pytest.mark.parametrize(
+    "kind, initializer",
+    [("hyperparameters", "random"), ("hyperparameters", "smart"), ("features", "random")],
+)
+def test_resume_explores_new_candidates_reproducibly(tmp_path, kind, initializer):
+    from sklearn.datasets import make_classification
+
+    X, y = make_classification(n_samples=64, n_features=24, random_state=42)
+
+    def run(path):
+        options = dict(
+            estimator=DecisionTreeClassifier(random_state=42),
+            random_state=42,
+            n_jobs=1,
+            cv=2,
+            population_size=6,
+            population_initializer=initializer,
+            generations=0 if kind == "hyperparameters" else 1,
+            verbose=False,
+        )
+        if kind == "features":
+            search = GAFeatureSelectionCV(max_features=6, **options)
+        else:
+            search = GASearchCV(
+                param_grid={"max_depth": Integer(2, 20), "min_samples_leaf": Integer(1, 16)},
+                **options,
+            )
+        search.fit(X, y, callbacks=[ModelCheckpoint(path)])
+        return list(search.fitness_cache)
+
+    first_path = tmp_path / "first.pkl"
+    duplicate = tmp_path / "duplicate.pkl"
+    first = run(first_path)
+    shutil.copyfile(first_path, duplicate)
+    second = run(first_path)
+    assert second[: len(first)] == first and len(second) > len(first)
+    assert run(duplicate) == second
+    assert len(run(first_path)) > len(second)
+
+
+@pytest.mark.parametrize("kind", ["hyperparameters", "features"])
+@pytest.mark.parametrize("resumed_size", [1, 3])
+def test_resume_keeps_tied_elites_in_order(tmp_path, kind, resumed_size):
+    from sklearn.dummy import DummyClassifier
+
+    X, y = load_iris(return_X_y=True)
+    path = tmp_path / "ties.pkl"
+
+    def archive(size):
+        options = dict(
+            estimator=DummyClassifier(),
+            random_state=42,
+            generations=0,
+            population_size=6,
+            keep_top_k=size,
+            scoring="accuracy",
+            refit=False,
+            cv=2,
+            n_jobs=1,
+            verbose=False,
+        )
+        if kind == "features":
+            search = GAFeatureSelectionCV(max_features=1, **options)
+        else:
+            search = GASearchCV(param_grid={"random_state": Integer(0, 999)}, **options)
+        search.fit(X, y, callbacks=[ModelCheckpoint(path)])
+        return list(map(tuple, search.hof)) if kind == "features" else list(search.hof.values())
+
+    original = archive(3)
+    assert len(original) == 3
+    assert archive(resumed_size) == original[:resumed_size]
+
+
+def test_resumed_selector_retains_earlier_elite(tmp_path):
+    from sklearn.datasets import make_classification
+
+    X, y = make_classification(
+        n_samples=216, n_features=24, n_informative=8, n_redundant=4, random_state=2702
+    )
+    path = tmp_path / "elite.pkl"
+    for _ in range(2):
+        selector = GAFeatureSelectionCV(
+            DecisionTreeClassifier(random_state=2702),
+            max_features=6,
+            scoring="accuracy",
+            cv=3,
+            population_size=6,
+            generations=1,
+            random_state=2702,
+            n_jobs=1,
+            verbose=False,
+        )
+        selector.fit(X[:144], y[:144], callbacks=[ModelCheckpoint(path)])
+        masks = selector.cv_results_["features"]
+        scores = selector.cv_results_["mean_test_score"]
+        selected = next(
+            score for mask, score in zip(masks, scores) if np.array_equal(mask, selector.support_)
+        )
+        assert selected == max(scores)
+
+
 def test_checkpoint_resume_preserves_random_state(tmp_path):
     """#299: random_state must survive checkpoint resume and actually seed it.
 
@@ -653,23 +754,49 @@ def test_checkpoint_on_step_warns_on_oserror(tmp_path, caplog):
 
 def test_checkpoint_on_step_warns_on_non_serializable_state(tmp_path, caplog):
     import logging
-    import pickle
-    from unittest.mock import patch
 
     caplog.set_level(logging.WARNING)
-    estimator = GASearchCV(
-        estimator=DecisionTreeClassifier(),
-        param_grid={"max_depth": Integer(1, 2), "min_samples_split": Integer(2, 5)},
-        cv=2,
-        scoring="accuracy",
-        population_size=4,
-        generations=2,
-    )
-    good_path = tmp_path / "checkpoint.pkl"
-    checkpoint = ModelCheckpoint(good_path)
-    with patch.object(pickle, "dump", side_effect=AttributeError("cannot pickle lambda")):
-        checkpoint.on_step(logbook=None, estimator=estimator)
+    estimator = _checkpoint_estimator()
+    estimator.fit(*load_iris(return_X_y=True))
+    path = tmp_path / "checkpoint.pkl"
+    checkpoint = ModelCheckpoint(path)
+    log = [{"gen": 0}]
+    checkpoint.on_step(logbook=log, estimator=estimator)
+    saved = path.read_bytes()
+    estimator.scoring = lambda model, X, y: 0
+    log.append({"gen": 1})
+    checkpoint.on_step(logbook=log, estimator=estimator)
     assert "Error saving checkpoint" in caplog.text
+    assert path.read_bytes() == saved
+    assert checkpoint.load()["logbook"] == [{"gen": 0}]
+    assert list(tmp_path.iterdir()) == [path]
+
+
+@pytest.mark.parametrize("cleanup_locked", [False, True])
+def test_checkpoint_preserves_snapshot_on_publish_failure(
+    tmp_path, caplog, monkeypatch, cleanup_locked
+):
+    from pathlib import Path
+
+    checkpoint = ModelCheckpoint(tmp_path / "checkpoint.pkl")
+    estimator = _checkpoint_estimator()
+    checkpoint.on_step(logbook=[{"gen": 0}], estimator=estimator)
+
+    def denied(*args, **kwargs):
+        raise PermissionError("file is locked")
+
+    with monkeypatch.context() as patch:
+        patch.setattr(Path, "replace", denied)
+        if cleanup_locked:
+            patch.setattr(Path, "unlink", denied)
+        checkpoint.on_step(logbook=[{"gen": 1}], estimator=estimator)
+
+    assert checkpoint.load()["logbook"] == [{"gen": 0}]
+    assert "Error saving checkpoint" in caplog.text
+    if cleanup_locked:
+        assert "Error removing temporary checkpoint" in caplog.text
+    else:
+        assert list(tmp_path.iterdir()) == [checkpoint.checkpoint_path]
 
 
 def test_load_raises_on_oserror(tmp_path, caplog):
@@ -833,7 +960,7 @@ def test_checkpoint_reconstruction_preserves_finalist_validation(tmp_path, searc
 
     X, y = load_iris(return_X_y=True)
     full_cv = list(StratifiedKFold(3).split(X, y))
-    search_cv = subsample_cv(full_cv[:2], 0.5, stratify=y, random_state=2)
+    search_cv = [full_cv[0], *subsample_cv(full_cv[1:2], 0.5, stratify=y, random_state=2)]
     extra = {"param_grid": {"max_depth": Integer(1, 5)}} if search_class is GASearchCV else {}
     search = search_class(
         DecisionTreeClassifier(random_state=2),
@@ -844,7 +971,8 @@ def test_checkpoint_reconstruction_preserves_finalist_validation(tmp_path, searc
         random_state=2,
         n_jobs=1,
         verbose=False,
-        final_selection=True,
+        final_selection="reuse_folds",
+        error_score="raise",
         final_selection_top_k=2,
         final_selection_cv=full_cv,
         **extra,
@@ -858,3 +986,6 @@ def test_checkpoint_reconstruction_preserves_finalist_validation(tmp_path, searc
     assert len(results["candidates"]) == 2
     assert all(len(candidate["cv_scores"]) == 3 for candidate in results["candidates"])
     assert reconstructed.predict(X).shape == y.shape
+    assert all(candidate["reused_folds"] == 1 for candidate in results["candidates"])
+    reconstructed.fit(X, y, callbacks=callback)
+    assert all(c["reused_folds"] == 0 for c in reconstructed.final_selection_results_["candidates"])

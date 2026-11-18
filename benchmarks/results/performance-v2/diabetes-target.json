@@ -1,0 +1,182 @@
+[
+  {
+    "policy": "genetic",
+    "seed": 9791,
+    "ran_genetic": true,
+    "folds": 123,
+    "cv": 0.4237004248975313,
+    "reached": false,
+    "seconds": 0.3488842000369914,
+    "holdout": 0.4629429708298055
+  },
+  {
+    "policy": "univariate",
+    "seed": 9791,
+    "ran_genetic": true,
+    "folds": 126,
+    "cv": 0.4237004248975313,
+    "reached": false,
+    "seconds": 0.35838589997729287,
+    "holdout": 0.4629429708298055
+  },
+  {
+    "policy": "residual",
+    "seed": 9791,
+    "ran_genetic": true,
+    "folds": 126,
+    "cv": 0.4237004248975313,
+    "reached": false,
+    "seconds": 0.3625563000096008,
+    "holdout": 0.4629429708298055
+  },
+  {
+    "policy": "genetic",
+    "seed": 9792,
+    "ran_genetic": true,
+    "folds": 120,
+    "cv": 0.4312433121378481,
+    "reached": false,
+    "seconds": 0.3307249000063166,
+    "holdout": 0.5074705170872369
+  },
+  {
+    "policy": "residual",
+    "seed": 9792,
+    "ran_genetic": true,
+    "folds": 123,
+    "cv": 0.4312433121378481,
+    "reached": false,
+    "seconds": 0.35383769997861236,
+    "holdout": 0.5074705170872369
+  },
+  {
+    "policy": "univariate",
+    "seed": 9792,
+    "ran_genetic": true,
+    "folds": 123,
+    "cv": 0.4312433121378481,
+    "reached": false,
+    "seconds": 0.33442460000514984,
+    "holdout": 0.5074705170872369
+  },
+  {
+    "policy": "univariate",
+    "seed": 9793,
+    "ran_genetic": false,
+    "folds": 3,
+    "cv": 0.46454201306423215,
+    "reached": true,
+    "seconds": 0.014182200015056878,
+    "holdout": 0.4812515509523919
+  },
+  {
+    "policy": "genetic",
+    "seed": 9793,
+    "ran_genetic": true,
+    "folds": 123,
+    "cv": 0.46257429528548905,
+    "reached": true,
+    "seconds": 0.33689590002177283,
+    "holdout": 0.48109432023390963
+  },
+  {
+    "policy": "residual",
+    "seed": 9793,
+    "ran_genetic": false,
+    "folds": 3,
+    "cv": 0.465680238539546,
+    "reached": true,
+    "seconds": 0.020508100045844913,
+    "holdout": 0.48267344056951633
+  },
+  {
+    "policy": "univariate",
+    "seed": 9794,
+    "ran_genetic": true,
+    "folds": 54,
+    "cv": 0.46000044630224113,
+    "reached": true,
+    "seconds": 0.15022700000554323,
+    "holdout": 0.4229015762556114
+  },
+  {
+    "policy": "residual",
+    "seed": 9794,
+    "ran_genetic": false,
+    "folds": 3,
+    "cv": 0.45376738576043435,
+    "reached": true,
+    "seconds": 0.021332399977836758,
+    "holdout": 0.45148077109065454
+  },
+  {
+    "policy": "genetic",
+    "seed": 9794,
+    "ran_genetic": true,
+    "folds": 51,
+    "cv": 0.46000044630224113,
+    "reached": true,
+    "seconds": 0.15085020003607497,
+    "holdout": 0.4229015762556114
+  },
+  {
+    "policy": "residual",
+    "seed": 9795,
+    "ran_genetic": true,
+    "folds": 120,
+    "cv": 0.44619693050856307,
+    "reached": false,
+    "seconds": 0.3373553999699652,
+    "holdout": 0.5039000631419772
+  },
+  {
+    "policy": "genetic",
+    "seed": 9795,
+    "ran_genetic": true,
+    "folds": 117,
+    "cv": 0.43722309577131585,
+    "reached": false,
+    "seconds": 0.3156178999925032,
+    "holdout": 0.49948325472881516
+  },
+  {
+    "policy": "univariate",
+    "seed": 9795,
+    "ran_genetic": true,
+    "folds": 120,
+    "cv": 0.43722309577131585,
+    "reached": false,
+    "seconds": 0.32464920001802966,
+    "holdout": 0.49948325472881516
+  },
+  {
+    "policy": "residual",
+    "seed": 9796,
+    "ran_genetic": false,
+    "folds": 3,
+    "cv": 0.4560548194102312,
+    "reached": true,
+    "seconds": 0.022499400016386062,
+    "holdout": 0.4823215984700837
+  },
+  {
+    "policy": "univariate",
+    "seed": 9796,
+    "ran_genetic": true,
+    "folds": 114,
+    "cv": 0.44748143374449184,
+    "reached": false,
+    "seconds": 0.32743280002614483,
+    "holdout": 0.4968787457160886
+  },
+  {
+    "policy": "genetic",
+    "seed": 9796,
+    "ran_genetic": true,
+    "folds": 111,
+    "cv": 0.43165061916286157,
+    "reached": false,
+    "seconds": 0.29960549995303154,
+    "holdout": 0.5037212049991933
+  }
+]

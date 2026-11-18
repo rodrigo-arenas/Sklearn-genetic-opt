@@ -1,0 +1,962 @@
+[
+  {
+    "task": "classification_lr",
+    "features": false,
+    "seed": 8711,
+    "runs": {
+      "5": {
+        "finalists": [
+          11,
+          6,
+          3,
+          22,
+          26
+        ],
+        "seconds": 0.3086251999484375,
+        "folds": 50,
+        "finalist_folds": 20,
+        "index": 6,
+        "cv": 0.9978976465814566,
+        "holdout": 0.989098532494759
+      },
+      "8": {
+        "finalists": [
+          11,
+          6,
+          3,
+          22,
+          26,
+          27,
+          2,
+          9
+        ],
+        "seconds": 0.34763969999039546,
+        "folds": 62,
+        "finalist_folds": 32,
+        "index": 6,
+        "cv": 0.9978976465814566,
+        "holdout": 0.989098532494759
+      }
+    }
+  },
+  {
+    "task": "classification_lr",
+    "features": true,
+    "seed": 8711,
+    "runs": {
+      "5": {
+        "finalists": [
+          16,
+          25,
+          18,
+          5,
+          8
+        ],
+        "seconds": 0.2594475999940187,
+        "folds": 50,
+        "finalist_folds": 20,
+        "index": 8,
+        "cv": 0.9982398672257162,
+        "holdout": 0.9859538784067087
+      },
+      "8": {
+        "finalists": [
+          16,
+          25,
+          18,
+          5,
+          8,
+          12,
+          3,
+          27
+        ],
+        "seconds": 0.2987796000088565,
+        "folds": 62,
+        "finalist_folds": 32,
+        "index": 8,
+        "cv": 0.9982398672257162,
+        "holdout": 0.9859538784067087
+      }
+    }
+  },
+  {
+    "task": "classification_lr",
+    "features": false,
+    "seed": 8712,
+    "runs": {
+      "8": {
+        "finalists": [
+          0,
+          1,
+          3,
+          7,
+          9,
+          12,
+          14,
+          15
+        ],
+        "seconds": 0.3681156999664381,
+        "folds": 62,
+        "finalist_folds": 32,
+        "index": 12,
+        "cv": 0.9936165776244901,
+        "holdout": 0.9985324947589098
+      },
+      "5": {
+        "finalists": [
+          0,
+          1,
+          3,
+          7,
+          9
+        ],
+        "seconds": 0.2929549000109546,
+        "folds": 50,
+        "finalist_folds": 20,
+        "index": 9,
+        "cv": 0.9931448795112825,
+        "holdout": 0.9983228511530399
+      }
+    }
+  },
+  {
+    "task": "classification_lr",
+    "features": true,
+    "seed": 8712,
+    "runs": {
+      "8": {
+        "finalists": [
+          11,
+          23,
+          20,
+          3,
+          24,
+          25,
+          14,
+          19
+        ],
+        "seconds": 0.32078919996274635,
+        "folds": 62,
+        "finalist_folds": 32,
+        "index": 19,
+        "cv": 0.9912611866278939,
+        "holdout": 0.9972746331236897
+      },
+      "5": {
+        "finalists": [
+          11,
+          23,
+          20,
+          3,
+          19
+        ],
+        "seconds": 0.24642130004940554,
+        "folds": 50,
+        "finalist_folds": 20,
+        "index": 19,
+        "cv": 0.9912611866278939,
+        "holdout": 0.9972746331236897
+      }
+    }
+  },
+  {
+    "task": "classification_lr",
+    "features": false,
+    "seed": 8713,
+    "runs": {
+      "5": {
+        "finalists": [
+          5,
+          12,
+          28,
+          0,
+          10
+        ],
+        "seconds": 0.31096019997494295,
+        "folds": 49,
+        "finalist_folds": 20,
+        "index": 0,
+        "cv": 0.9933866459277294,
+        "holdout": 1.0
+      },
+      "8": {
+        "finalists": [
+          5,
+          12,
+          28,
+          0,
+          10,
+          11,
+          13,
+          20
+        ],
+        "seconds": 0.36884970002574846,
+        "folds": 61,
+        "finalist_folds": 32,
+        "index": 0,
+        "cv": 0.9933866459277294,
+        "holdout": 1.0
+      }
+    }
+  },
+  {
+    "task": "classification_lr",
+    "features": true,
+    "seed": 8713,
+    "runs": {
+      "5": {
+        "finalists": [
+          20,
+          23,
+          29,
+          28,
+          25
+        ],
+        "seconds": 0.25249310000799596,
+        "folds": 50,
+        "finalist_folds": 20,
+        "index": 20,
+        "cv": 0.9951557956312979,
+        "holdout": 1.0
+      },
+      "8": {
+        "finalists": [
+          20,
+          23,
+          29,
+          28,
+          25,
+          4,
+          19,
+          14
+        ],
+        "seconds": 0.3133679999737069,
+        "folds": 62,
+        "finalist_folds": 32,
+        "index": 20,
+        "cv": 0.9951557956312979,
+        "holdout": 1.0
+      }
+    }
+  },
+  {
+    "task": "classification_lr",
+    "features": false,
+    "seed": 8714,
+    "runs": {
+      "8": {
+        "finalists": [
+          1,
+          2,
+          7,
+          8,
+          9,
+          12,
+          15,
+          20
+        ],
+        "seconds": 0.3441220999811776,
+        "folds": 62,
+        "finalist_folds": 32,
+        "index": 8,
+        "cv": 0.9942000011271162,
+        "holdout": 0.9970649895178197
+      },
+      "5": {
+        "finalists": [
+          1,
+          2,
+          7,
+          8,
+          9
+        ],
+        "seconds": 0.284207199991215,
+        "folds": 50,
+        "finalist_folds": 20,
+        "index": 8,
+        "cv": 0.9942000011271162,
+        "holdout": 0.9970649895178197
+      }
+    }
+  },
+  {
+    "task": "classification_lr",
+    "features": true,
+    "seed": 8714,
+    "runs": {
+      "8": {
+        "finalists": [
+          24,
+          19,
+          26,
+          8,
+          14,
+          27,
+          7,
+          22
+        ],
+        "seconds": 0.3039596999878995,
+        "folds": 62,
+        "finalist_folds": 32,
+        "index": 22,
+        "cv": 0.9937267532291877,
+        "holdout": 0.989517819706499
+      },
+      "5": {
+        "finalists": [
+          24,
+          19,
+          26,
+          8,
+          22
+        ],
+        "seconds": 0.2849220999632962,
+        "folds": 50,
+        "finalist_folds": 20,
+        "index": 22,
+        "cv": 0.9937267532291877,
+        "holdout": 0.989517819706499
+      }
+    }
+  },
+  {
+    "task": "classification_lr",
+    "features": false,
+    "seed": 8715,
+    "runs": {
+      "5": {
+        "finalists": [
+          4,
+          7,
+          16,
+          21,
+          23
+        ],
+        "seconds": 0.2938383999862708,
+        "folds": 50,
+        "finalist_folds": 20,
+        "index": 21,
+        "cv": 0.9948004722616712,
+        "holdout": 0.9918238993710692
+      },
+      "8": {
+        "finalists": [
+          4,
+          7,
+          16,
+          21,
+          23,
+          27,
+          28,
+          29
+        ],
+        "seconds": 0.3593718000338413,
+        "folds": 62,
+        "finalist_folds": 32,
+        "index": 27,
+        "cv": 0.9951573454160186,
+        "holdout": 0.9911949685534591
+      }
+    }
+  },
+  {
+    "task": "classification_lr",
+    "features": true,
+    "seed": 8715,
+    "runs": {
+      "5": {
+        "finalists": [
+          16,
+          22,
+          20,
+          29,
+          19
+        ],
+        "seconds": 0.24523060000501573,
+        "folds": 50,
+        "finalist_folds": 20,
+        "index": 22,
+        "cv": 0.9949168470052523,
+        "holdout": 0.9924528301886792
+      },
+      "8": {
+        "finalists": [
+          16,
+          22,
+          20,
+          29,
+          4,
+          6,
+          21,
+          19
+        ],
+        "seconds": 0.3176208999939263,
+        "folds": 62,
+        "finalist_folds": 32,
+        "index": 22,
+        "cv": 0.9949168470052523,
+        "holdout": 0.9924528301886792
+      }
+    }
+  },
+  {
+    "task": "classification_lr",
+    "features": false,
+    "seed": 8716,
+    "runs": {
+      "8": {
+        "finalists": [
+          0,
+          2,
+          10,
+          25,
+          4,
+          29,
+          1,
+          8
+        ],
+        "seconds": 0.3513070000335574,
+        "folds": 62,
+        "finalist_folds": 32,
+        "index": 10,
+        "cv": 0.9935578266946192,
+        "holdout": 0.9968553459119497
+      },
+      "5": {
+        "finalists": [
+          0,
+          2,
+          10,
+          25,
+          4
+        ],
+        "seconds": 0.28651130001526326,
+        "folds": 50,
+        "finalist_folds": 20,
+        "index": 10,
+        "cv": 0.9935578266946192,
+        "holdout": 0.9968553459119497
+      }
+    }
+  },
+  {
+    "task": "classification_lr",
+    "features": true,
+    "seed": 8716,
+    "runs": {
+      "8": {
+        "finalists": [
+          25,
+          23,
+          14,
+          20,
+          22,
+          28,
+          5,
+          13
+        ],
+        "seconds": 0.3318598000332713,
+        "folds": 62,
+        "finalist_folds": 32,
+        "index": 22,
+        "cv": 0.9940220576632628,
+        "holdout": 0.9958071278825996
+      },
+      "5": {
+        "finalists": [
+          25,
+          23,
+          14,
+          20,
+          22
+        ],
+        "seconds": 0.30692760000238195,
+        "folds": 50,
+        "finalist_folds": 20,
+        "index": 22,
+        "cv": 0.9940220576632628,
+        "holdout": 0.9958071278825996
+      }
+    }
+  },
+  {
+    "task": "regression_ridge",
+    "features": false,
+    "seed": 8711,
+    "runs": {
+      "5": {
+        "finalists": [
+          7,
+          8,
+          19,
+          6,
+          0
+        ],
+        "seconds": 0.17274709994671866,
+        "folds": 49,
+        "finalist_folds": 20,
+        "index": 8,
+        "cv": 0.4609262694107116,
+        "holdout": 0.4666231617778659
+      },
+      "8": {
+        "finalists": [
+          7,
+          8,
+          19,
+          6,
+          0,
+          2,
+          11,
+          9
+        ],
+        "seconds": 0.18397319997893646,
+        "folds": 61,
+        "finalist_folds": 32,
+        "index": 8,
+        "cv": 0.4609262694107116,
+        "holdout": 0.4666231617778659
+      }
+    }
+  },
+  {
+    "task": "regression_ridge",
+    "features": true,
+    "seed": 8711,
+    "runs": {
+      "5": {
+        "finalists": [
+          24,
+          17,
+          19,
+          25,
+          8
+        ],
+        "seconds": 0.15493740001693368,
+        "folds": 50,
+        "finalist_folds": 20,
+        "index": 25,
+        "cv": 0.45323751324256245,
+        "holdout": 0.4335127700708926
+      },
+      "8": {
+        "finalists": [
+          24,
+          17,
+          19,
+          25,
+          8,
+          4,
+          21,
+          13
+        ],
+        "seconds": 0.22228619997622445,
+        "folds": 62,
+        "finalist_folds": 32,
+        "index": 25,
+        "cv": 0.45323751324256245,
+        "holdout": 0.4335127700708926
+      }
+    }
+  },
+  {
+    "task": "regression_ridge",
+    "features": false,
+    "seed": 8712,
+    "runs": {
+      "8": {
+        "finalists": [
+          4,
+          8,
+          16,
+          5,
+          10,
+          18,
+          21,
+          27
+        ],
+        "seconds": 0.1929287000093609,
+        "folds": 62,
+        "finalist_folds": 32,
+        "index": 27,
+        "cv": 0.4507294067031763,
+        "holdout": 0.5231849189625231
+      },
+      "5": {
+        "finalists": [
+          4,
+          8,
+          16,
+          5,
+          10
+        ],
+        "seconds": 0.15749809995759279,
+        "folds": 50,
+        "finalist_folds": 20,
+        "index": 10,
+        "cv": 0.4506883523051252,
+        "holdout": 0.5231835579252982
+      }
+    }
+  },
+  {
+    "task": "regression_ridge",
+    "features": true,
+    "seed": 8712,
+    "runs": {
+      "8": {
+        "finalists": [
+          19,
+          22,
+          20,
+          18,
+          7,
+          11,
+          29,
+          28
+        ],
+        "seconds": 0.17909739998867735,
+        "folds": 61,
+        "finalist_folds": 32,
+        "index": 19,
+        "cv": 0.4220444145037775,
+        "holdout": 0.42392759662921287
+      },
+      "5": {
+        "finalists": [
+          19,
+          22,
+          20,
+          18,
+          7
+        ],
+        "seconds": 0.147643500007689,
+        "folds": 49,
+        "finalist_folds": 20,
+        "index": 19,
+        "cv": 0.4220444145037775,
+        "holdout": 0.42392759662921287
+      }
+    }
+  },
+  {
+    "task": "regression_ridge",
+    "features": false,
+    "seed": 8713,
+    "runs": {
+      "5": {
+        "finalists": [
+          25,
+          4,
+          28,
+          14,
+          9
+        ],
+        "seconds": 0.15605629998026416,
+        "folds": 50,
+        "finalist_folds": 20,
+        "index": 9,
+        "cv": 0.464657921480874,
+        "holdout": 0.5017311413138781
+      },
+      "8": {
+        "finalists": [
+          25,
+          4,
+          28,
+          14,
+          9,
+          20,
+          29,
+          15
+        ],
+        "seconds": 0.18524150003213435,
+        "folds": 62,
+        "finalist_folds": 32,
+        "index": 15,
+        "cv": 0.46469575999760704,
+        "holdout": 0.5018209069500303
+      }
+    }
+  },
+  {
+    "task": "regression_ridge",
+    "features": true,
+    "seed": 8713,
+    "runs": {
+      "5": {
+        "finalists": [
+          11,
+          8,
+          18,
+          29,
+          10
+        ],
+        "seconds": 0.13974930002586916,
+        "folds": 50,
+        "finalist_folds": 20,
+        "index": 11,
+        "cv": 0.44104836103825135,
+        "holdout": 0.4671002664178914
+      },
+      "8": {
+        "finalists": [
+          11,
+          8,
+          18,
+          29,
+          10,
+          1,
+          15,
+          20
+        ],
+        "seconds": 0.18682049994822592,
+        "folds": 62,
+        "finalist_folds": 32,
+        "index": 11,
+        "cv": 0.44104836103825135,
+        "holdout": 0.4671002664178914
+      }
+    }
+  },
+  {
+    "task": "regression_ridge",
+    "features": false,
+    "seed": 8714,
+    "runs": {
+      "8": {
+        "finalists": [
+          13,
+          16,
+          4,
+          29,
+          7,
+          1,
+          9,
+          15
+        ],
+        "seconds": 0.20056500000646338,
+        "folds": 62,
+        "finalist_folds": 32,
+        "index": 15,
+        "cv": 0.44001685674959745,
+        "holdout": 0.5580802918398515
+      },
+      "5": {
+        "finalists": [
+          13,
+          16,
+          4,
+          29,
+          7
+        ],
+        "seconds": 0.15035800001351163,
+        "folds": 50,
+        "finalist_folds": 20,
+        "index": 7,
+        "cv": 0.43990305506664046,
+        "holdout": 0.5568395681414643
+      }
+    }
+  },
+  {
+    "task": "regression_ridge",
+    "features": true,
+    "seed": 8714,
+    "runs": {
+      "8": {
+        "finalists": [
+          17,
+          13,
+          11,
+          15,
+          25,
+          23,
+          24,
+          5
+        ],
+        "seconds": 0.18047250004019588,
+        "folds": 62,
+        "finalist_folds": 32,
+        "index": 17,
+        "cv": 0.4187311450312981,
+        "holdout": 0.5585681438223591
+      },
+      "5": {
+        "finalists": [
+          17,
+          13,
+          11,
+          15,
+          25
+        ],
+        "seconds": 0.14593349996721372,
+        "folds": 50,
+        "finalist_folds": 20,
+        "index": 17,
+        "cv": 0.4187311450312981,
+        "holdout": 0.5585681438223591
+      }
+    }
+  },
+  {
+    "task": "regression_ridge",
+    "features": false,
+    "seed": 8715,
+    "runs": {
+      "5": {
+        "finalists": [
+          29,
+          27,
+          10,
+          5,
+          28
+        ],
+        "seconds": 0.1459412999683991,
+        "folds": 49,
+        "finalist_folds": 20,
+        "index": 28,
+        "cv": 0.4437571883342727,
+        "holdout": 0.5772883680039864
+      },
+      "8": {
+        "finalists": [
+          29,
+          27,
+          10,
+          5,
+          28,
+          8,
+          20,
+          6
+        ],
+        "seconds": 0.1757837999612093,
+        "folds": 61,
+        "finalist_folds": 32,
+        "index": 6,
+        "cv": 0.44376025564340804,
+        "holdout": 0.5772810261101786
+      }
+    }
+  },
+  {
+    "task": "regression_ridge",
+    "features": true,
+    "seed": 8715,
+    "runs": {
+      "5": {
+        "finalists": [
+          14,
+          18,
+          27,
+          2,
+          7
+        ],
+        "seconds": 0.14439920004224405,
+        "folds": 50,
+        "finalist_folds": 20,
+        "index": 14,
+        "cv": 0.4216687819412616,
+        "holdout": 0.5382225464306172
+      },
+      "8": {
+        "finalists": [
+          14,
+          18,
+          27,
+          2,
+          7,
+          15,
+          5,
+          23
+        ],
+        "seconds": 0.19637600000714883,
+        "folds": 62,
+        "finalist_folds": 32,
+        "index": 14,
+        "cv": 0.4216687819412616,
+        "holdout": 0.5382225464306172
+      }
+    }
+  },
+  {
+    "task": "regression_ridge",
+    "features": false,
+    "seed": 8716,
+    "runs": {
+      "8": {
+        "finalists": [
+          10,
+          0,
+          2,
+          4,
+          24,
+          28,
+          16,
+          1
+        ],
+        "seconds": 0.185062000004109,
+        "folds": 62,
+        "finalist_folds": 32,
+        "index": 1,
+        "cv": 0.45121546205556984,
+        "holdout": 0.53860838453981
+      },
+      "5": {
+        "finalists": [
+          10,
+          0,
+          2,
+          4,
+          24
+        ],
+        "seconds": 0.16022920003160834,
+        "folds": 50,
+        "finalist_folds": 20,
+        "index": 24,
+        "cv": 0.45109808372055016,
+        "holdout": 0.5384401704163903
+      }
+    }
+  },
+  {
+    "task": "regression_ridge",
+    "features": true,
+    "seed": 8716,
+    "runs": {
+      "8": {
+        "finalists": [
+          17,
+          13,
+          16,
+          26,
+          21,
+          7,
+          19,
+          3
+        ],
+        "seconds": 0.17668790003517643,
+        "folds": 62,
+        "finalist_folds": 32,
+        "index": 16,
+        "cv": 0.42963633901213355,
+        "holdout": 0.4706430333078194
+      },
+      "5": {
+        "finalists": [
+          17,
+          13,
+          16,
+          26,
+          21
+        ],
+        "seconds": 0.1435391999548301,
+        "folds": 50,
+        "finalist_folds": 20,
+        "index": 16,
+        "cv": 0.42963633901213355,
+        "holdout": 0.4706430333078194
+      }
+    }
+  }
+]

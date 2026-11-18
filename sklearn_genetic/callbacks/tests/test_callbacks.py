@@ -3,13 +3,15 @@ import os
 import shutil
 import logging
 import importlib.util
+import subprocess
+import sys
 
 from deap.tools import Logbook
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.datasets import load_digits
 from sklearn.model_selection import train_test_split
 
-from ... import GASearchCV
+from ... import GAFeatureSelectionCV, GASearchCV
 from ...space import Integer, Continuous
 from .. import (
     ProgressBar,
@@ -24,6 +26,33 @@ from ..validations import check_stats, check_callback, eval_callbacks
 from ..base import BaseCallback
 
 tensorflow_available = importlib.util.find_spec("tensorflow") is not None
+
+
+def test_callbacks_import_does_not_attempt_tensorflow():
+    script = """
+import builtins
+original_import = builtins.__import__
+def guarded_import(name, *args, **kwargs):
+    if name == 'tensorflow' or name.startswith('tensorflow.'):
+        raise AssertionError('TensorFlow was imported by callbacks')
+    return original_import(name, *args, **kwargs)
+builtins.__import__ = guarded_import
+import sklearn_genetic.callbacks
+"""
+    result = subprocess.run(
+        [sys.executable, "-c", script], capture_output=True, text=True, timeout=30
+    )
+    assert result.returncode == 0, result.stderr
+
+
+def test_legacy_tensorboard_requires_explicit_tensorflow(monkeypatch):
+    monkeypatch.setitem(sys.modules, "tensorflow", None)
+    callback = TensorBoard()
+    logbook = Logbook()
+    logbook.record(gen=0, fitness_best=0.5)
+    with pytest.raises(ImportError, match="TensorFlow"):
+        callback.on_step(logbook=logbook)
+
 
 data = load_digits()
 label_names = data["target_names"]
@@ -156,6 +185,28 @@ def test_consecutive_callback():
     with pytest.raises(Exception) as excinfo:
         callback()
     assert str(excinfo.value) == "logbook parameter must be provided"
+
+
+@pytest.mark.parametrize("criteria", ["min", "max"])
+@pytest.mark.parametrize(
+    "metric", ["fitness", "fitness_best", "fitness_min", "fitness_max", "fitness_std"]
+)
+def test_consecutive_callback_uses_search_direction(criteria, metric):
+    callback = ConsecutiveStopping(generations=2, metric=metric)
+    searches = [
+        GASearchCV(
+            DecisionTreeClassifier(), param_grid={"max_depth": Integer(1, 3)}, criteria=criteria
+        ),
+        GAFeatureSelectionCV(DecisionTreeClassifier(), criteria=criteria),
+    ]
+    for current in (1, 2, 3, 4):
+        logbook = Logbook()
+        for value in (2, 3, current):
+            logbook.record(**{metric: value})
+        expected = current >= 3 if criteria == "min" and metric != "fitness_std" else current <= 2
+        for search in searches:
+            assert callback(logbook=logbook, estimator=search) == expected
+            assert callback(record=logbook[-1], logbook=logbook, estimator=search) == expected
 
 
 @pytest.mark.parametrize("generations", ["3", None, object()])
