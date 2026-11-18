@@ -1,8 +1,15 @@
 # Changelog
 
-Full release notes with code examples are in the [documentation](https://sklearngeneticopt.rodrigo-arenas.com/).
+Read the [development release notes](docs-vitepress/versions/latest/release-notes.md)
+for upgrade guidance and links to the API examples.
 
 ## Unreleased
+
+Changes since the published 0.14.0 package. The release candidate must combine
+the development changes below with the contributions already merged into
+`master` listed at the end of this section.
+
+### Search, performance and compatibility
 
 - `GAFeatureSelectionCV` compares packed feature masks when selecting distinct finalists, reducing ranking time on wide inputs.
 
@@ -40,6 +47,43 @@ Full release notes with code examples are in the [documentation](https://sklearn
 
 - Removed TensorFlow and TensorBoard from optional extras. Added Matplotlib-based live generation plots in `sklearn_genetic.plots`; the legacy `TensorBoard` callback remains available with a separate TensorFlow installation and no longer imports it at library startup.
 - `GASearchCV` and `GAFeatureSelectionCV` now rank non-finite cross-validation scores last during evolution and final candidate selection, for both maximization and minimization. A candidate with one failed fold no longer receives a misleading average from its remaining folds. Raw fold scores remain visible in `cv_results_`; fitness sharing preserves valid ordering, and resumed checkpoints normalize older cached fitness values.
+
+- Variable integer dimensions use NumPy sampling directly. Both searches build
+  CV result columns with less repeated work and skip cache-key construction when
+  caching is disabled. Feature selection avoids redundant mask scans, speeds up
+  copying and validation of native masks, and limits the scan for tied finalists.
+
+### Documentation, benchmarks and maintenance
+
+- Added guidance and runnable examples for counting candidate evaluations,
+  finalist fold fits, checkpoint resumes, live plotting and search budgets.
+  Benchmark coverage now includes held-out comparisons with random search,
+  exhaustive and greedy feature selection, search-space coverage, crossover,
+  initialization, filter proposals, finalist budgets, fold pruning, and
+  end-to-end time and memory attribution. Experimental policies are reported
+  in the [benchmark record](benchmarks/PERFORMANCE_V2.md).
+- Documentation pages use stable canonical URLs where a released counterpart
+  exists. Search titles and descriptions were revised. The Pages workflow
+  submits changed URLs to Bing through IndexNow after deployment. Added shared
+  contributor instructions and updated optional dependency and CI guidance.
+
+### Contributions on master awaiting integration into this branch
+
+- Both fitted searches expose `cv_results_dataframe()`, sorted by the selected
+  metric's test rank with stable ties. Feature-selection rows include their
+  masks in `params` (#363, #393).
+- Both searches refresh optimization direction after `set_params(criteria=...)`
+  and validate replacement values. Dictionary-valued categorical candidates
+  work across search operations, including duplicate detection and caching
+  (#391, #388).
+- Added community resources on search spaces, callbacks and `GASearchCV`;
+  clarified CV versus held-out MAE, corrected warm-start advice and a
+  troubleshooting link, repaired the example-generation npm commands, and
+  documented focused test runs (#389, #400, #401, #402, #404).
+- Updated Vite, Vue, its server renderer and source-map-js for the docs build
+  (#385, #386, #392). The 0.14 docs freeze and conda recipe refresh completed
+  after publication; archive links, stable-page metadata and performance
+  documentation were also updated.
 
 ## 0.14.0
 

@@ -7,6 +7,8 @@ import holdoutResultsUrl from '../../../../benchmarks/results/performance-v2/hol
 import randomSearchResultsUrl from '../../../../benchmarks/results/performance-v2/hpo-random-transfer-post-fix.json?url'
 import kernelResultsUrl from '../../../../benchmarks/results/performance-v2/default-kernel-coverage.json?url'
 import resumeResultsUrl from '../../../../benchmarks/results/performance-v2/resume-equal-cost.json?url'
+import subsetResultsUrl from '../../../../benchmarks/results/performance-v2/physical-reference.json?url'
+import forestFinalistsUrl from '../../../../benchmarks/results/performance-v2/finalist-bound-forest.json?url'
 </script>
 
 :::warning Development version
@@ -32,6 +34,24 @@ On Digits with K-nearest neighbors, `GASearchCV` evaluated about 40 of 50 config
 Each row averages five paired runs on overlapping outer splits. Lower mean squared error and higher accuracy indicate better predictions. Each pair used the same estimator, search ranges, training data, three CV folds and one CPU worker. Genetic search used eight initial candidates and four generations. Random search tried up to 72 configurations, exhausting the two smaller finite spaces. The timing column averages the five within-split ratios.
 
 To compare optimizers on your workload, set aside the outer test data before tuning and give both methods identical inner folds. Record the elapsed time around `fit` and the number of distinct candidate evaluations. Score each method's CV winner on the outer data after selection. When elapsed time is your constraint, see [Stop after a time budget](../recipes/advanced/time-budget). <a :href="randomSearchResultsUrl" download="hpo-random-transfer-post-fix.json">Download the 40 runs and reproduction script (JSON)</a>.
+
+## How much does the feature search gain per evaluation?
+
+On six group splits of Airfoil, the first 14 distinct genetic masks reached
+the best fixed-subset CV score on five splits. Forward selection reached it
+on one split at the same cost. Mean held-out R² was 0.4525 for genetic search
+and 0.4327 for forward selection. On Yacht, 18 masks per method gave nearly
+identical held-out R² (0.6579 and 0.6576). Both experiments used Ridge,
+three training folds and at most four features. Exhaustive evaluation was
+feasible because the datasets had only five and six input columns.
+<a :href="subsetResultsUrl" download="physical-reference.json">Download the grouped subset comparisons (JSON)</a>.
+
+Count elapsed time as well as avoided fits. In a separate experiment with
+12-tree random forests, dropping a finalist once its best possible accuracy
+fell below the leader saved 26 of 360 validation fits. Median finalist time
+fell on Wine and rose on Iris and breast cancer. This experiment used a
+fixed shortlist after evolution and measured only finalist validation.
+<a :href="forestFinalistsUrl" download="finalist-bound-forest.json">Download the finalist timings (JSON)</a>.
 
 ## Does evolution improve on the initial population?
 
