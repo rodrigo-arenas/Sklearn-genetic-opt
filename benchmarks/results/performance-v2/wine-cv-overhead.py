@@ -1,5 +1,6 @@
 """Measure where sequential searches spend time in the finite Wine tree grid."""
 
+import argparse
 import json
 from contextlib import ExitStack
 from functools import wraps
@@ -27,7 +28,7 @@ def instrument(function, samples):
     return timed
 
 
-def run(seed, genetic, X, y, folds):
+def run(seed, genetic, X, y, folds, breakdown=False):
     common = dict(cv=folds, scoring="accuracy", n_jobs=1, random_state=seed, error_score="raise")
     tree = DecisionTreeClassifier(random_state=0)
     if genetic:
@@ -47,12 +48,31 @@ def run(seed, genetic, X, y, folds):
             **common,
         )
     fold_times, candidate_times = [], []
+    stages = {}
     with ExitStack() as stack:
         module = _validation if genetic else _search
         stack.enter_context(
             patch.object(module, "_fit_and_score", instrument(module._fit_and_score, fold_times))
         )
         if genetic:
+            if breakdown:
+                for name in (
+                    "indexable",
+                    "is_classifier",
+                    "check_cv",
+                    "check_scoring",
+                    "_manual_routing",
+                    "clone",
+                    "Parallel",
+                    "_aggregate_score_dicts",
+                    "_normalize_score_results",
+                ):
+                    stages[name] = []
+                    stack.enter_context(
+                        patch.object(
+                            _validation, name, instrument(getattr(_validation, name), stages[name])
+                        )
+                    )
             stack.enter_context(
                 patch.object(
                     genetic_search,
@@ -69,7 +89,7 @@ def run(seed, genetic, X, y, folds):
     assert len(fold_times) == 3 * candidates
     if genetic:
         assert len(candidate_times) == candidates
-    return dict(
+    result = dict(
         seed=seed,
         method="genetic" if genetic else "random",
         candidates=candidates,
@@ -77,9 +97,16 @@ def run(seed, genetic, X, y, folds):
         fold_seconds=sum(fold_times),
         candidate_cv_seconds=sum(candidate_times) if genetic else None,
     )
+    if stages:
+        assert len(stages["clone"]) == len(fold_times)
+        result["stages"] = {k: dict(calls=len(v), seconds=sum(v)) for k, v in stages.items()}
+    return result
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--breakdown", action="store_true")
+    args = parser.parse_args()
     X, y = load_wine(return_X_y=True)
     rows = []
     with threadpool_limits(1):
@@ -89,5 +116,5 @@ if __name__ == "__main__":
             )
             folds = list(StratifiedKFold(3, shuffle=True, random_state=seed).split(train, labels))
             for genetic in (bool(seed % 2), not bool(seed % 2)):
-                rows.append(run(seed, genetic, train, labels, folds))
+                rows.append(run(seed, genetic, train, labels, folds, args.breakdown))
     print(json.dumps(rows, indent=2))

@@ -1061,6 +1061,33 @@ be attributed to a specific code change from these runs.
 [Timing script](results/performance-v2/wine-cv-overhead.py) and
 [per-split measurements](results/performance-v2/wine-cv-overhead.json).
 
+On a second pass we timed individual scikit-learn operations inside genetic
+candidate evaluation. The five fits averaged 182.9 ms, including 23.2 ms
+inside candidate CV but outside fold workers. Times below are per complete
+search. Parallel construction measures creation of the dispatcher object
+only. Its execution includes the fold workers timed separately above.
+
+| Operation | Mean calls | Mean elapsed (ms) |
+| --- | ---: | ---: |
+| Clone estimator for an individual fold | 83.4 | 8.614 |
+| Validate scoring | 27.8 | 1.741 |
+| Construct parallel dispatcher | 27.8 | 1.016 |
+| Route fit and score arguments with metadata routing disabled | 27.8 | 0.369 |
+| Validate input indexability | 27.8 | 0.258 |
+| Aggregate fold result dictionaries | 27.8 | 0.190 |
+| Check estimator type | 27.8 | 0.140 |
+| Check CV splitter | 27.8 | 0.064 |
+| Normalize score results | 27.8 | 0.033 |
+
+Cloning accounted for about 37% of the measured time between candidate CV
+entry and exit outside fold workers. Each fold needs its own unfitted
+estimator. Scorer validation and splitter checking together took about 1%
+of total search time here, bounding the potential savings from caching
+those two checks on this workload. The remaining time includes dispatch
+and operations outside these probes. Reproduce with
+`python benchmarks/results/performance-v2/wine-cv-overhead.py --breakdown`.
+[Per-operation timings and call counts](results/performance-v2/wine-cv-stages.json).
+
 ## Removing unused train-fold scoring in HPO
 
 Profiling Digits/KNN exposed an avoidable scoring pass: `GASearchCV` declared `return_train_score=False` in its constructor but did not forward it to scikit-learn's `BaseSearchCV`, whose default on the measured version is `True`. Consequently, a 39-candidate, three-fold KNN fit called scoring for both train and validation folds. The 0.14.0 fix forwards the configured value. Users who need train-fold metrics can still request `return_train_score=True`.

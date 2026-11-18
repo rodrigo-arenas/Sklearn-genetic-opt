@@ -1,0 +1,272 @@
+[
+  {
+    "seed": 1091,
+    "method": "genetic",
+    "candidates": 28,
+    "fit_seconds": 0.1823945000069216,
+    "fold_seconds": 0.14566709974315017,
+    "candidate_cv_seconds": 0.1687384000979364,
+    "stages": {
+      "indexable": {
+        "calls": 28,
+        "seconds": 0.0002449000021442771
+      },
+      "is_classifier": {
+        "calls": 28,
+        "seconds": 0.00014890020247548819
+      },
+      "check_cv": {
+        "calls": 28,
+        "seconds": 5.909980973228812e-05
+      },
+      "check_scoring": {
+        "calls": 28,
+        "seconds": 0.001729300245642662
+      },
+      "_manual_routing": {
+        "calls": 28,
+        "seconds": 0.0003632001462392509
+      },
+      "clone": {
+        "calls": 84,
+        "seconds": 0.008664599852636456
+      },
+      "Parallel": {
+        "calls": 28,
+        "seconds": 0.0010190000757575035
+      },
+      "_aggregate_score_dicts": {
+        "calls": 28,
+        "seconds": 0.0001892001018859446
+      },
+      "_normalize_score_results": {
+        "calls": 28,
+        "seconds": 3.369979094713926e-05
+      }
+    }
+  },
+  {
+    "seed": 1091,
+    "method": "random",
+    "candidates": 28,
+    "fit_seconds": 0.17020380002213642,
+    "fold_seconds": 0.15342579991556704,
+    "candidate_cv_seconds": null
+  },
+  {
+    "seed": 1092,
+    "method": "random",
+    "candidates": 28,
+    "fit_seconds": 0.1695672000059858,
+    "fold_seconds": 0.1526816001860425,
+    "candidate_cv_seconds": null
+  },
+  {
+    "seed": 1092,
+    "method": "genetic",
+    "candidates": 28,
+    "fit_seconds": 0.18327399995177984,
+    "fold_seconds": 0.14710630028275773,
+    "candidate_cv_seconds": 0.1701440998003818,
+    "stages": {
+      "indexable": {
+        "calls": 28,
+        "seconds": 0.0002459000679664314
+      },
+      "is_classifier": {
+        "calls": 28,
+        "seconds": 0.0001366997603327036
+      },
+      "check_cv": {
+        "calls": 28,
+        "seconds": 6.1000173445791006e-05
+      },
+      "check_scoring": {
+        "calls": 28,
+        "seconds": 0.0017095999792218208
+      },
+      "_manual_routing": {
+        "calls": 28,
+        "seconds": 0.0003669997095130384
+      },
+      "clone": {
+        "calls": 84,
+        "seconds": 0.008587199728935957
+      },
+      "Parallel": {
+        "calls": 28,
+        "seconds": 0.0010145999840460718
+      },
+      "_aggregate_score_dicts": {
+        "calls": 28,
+        "seconds": 0.00017000018851831555
+      },
+      "_normalize_score_results": {
+        "calls": 28,
+        "seconds": 3.300007665529847e-05
+      }
+    }
+  },
+  {
+    "seed": 1093,
+    "method": "genetic",
+    "candidates": 28,
+    "fit_seconds": 0.19218209997052327,
+    "fold_seconds": 0.15490180032793432,
+    "candidate_cv_seconds": 0.17895820020930842,
+    "stages": {
+      "indexable": {
+        "calls": 28,
+        "seconds": 0.00027739984216168523
+      },
+      "is_classifier": {
+        "calls": 28,
+        "seconds": 0.00014330021804198623
+      },
+      "check_cv": {
+        "calls": 28,
+        "seconds": 6.569980178028345e-05
+      },
+      "check_scoring": {
+        "calls": 28,
+        "seconds": 0.0017979000112973154
+      },
+      "_manual_routing": {
+        "calls": 28,
+        "seconds": 0.0003858000854961574
+      },
+      "clone": {
+        "calls": 84,
+        "seconds": 0.008892799960449338
+      },
+      "Parallel": {
+        "calls": 28,
+        "seconds": 0.001065000134985894
+      },
+      "_aggregate_score_dicts": {
+        "calls": 28,
+        "seconds": 0.00022620003437623382
+      },
+      "_normalize_score_results": {
+        "calls": 28,
+        "seconds": 3.5700155422091484e-05
+      }
+    }
+  },
+  {
+    "seed": 1093,
+    "method": "random",
+    "candidates": 28,
+    "fit_seconds": 0.18461660004686564,
+    "fold_seconds": 0.16685830015921965,
+    "candidate_cv_seconds": null
+  },
+  {
+    "seed": 1094,
+    "method": "random",
+    "candidates": 28,
+    "fit_seconds": 0.16635860002133995,
+    "fold_seconds": 0.15017159964190796,
+    "candidate_cv_seconds": null
+  },
+  {
+    "seed": 1094,
+    "method": "genetic",
+    "candidates": 27,
+    "fit_seconds": 0.17187059996649623,
+    "fold_seconds": 0.13719349988969043,
+    "candidate_cv_seconds": 0.15972010005498305,
+    "stages": {
+      "indexable": {
+        "calls": 27,
+        "seconds": 0.00027330004377290606
+      },
+      "is_classifier": {
+        "calls": 27,
+        "seconds": 0.0001341000897809863
+      },
+      "check_cv": {
+        "calls": 27,
+        "seconds": 7.499981438741088e-05
+      },
+      "check_scoring": {
+        "calls": 27,
+        "seconds": 0.0017464000266045332
+      },
+      "_manual_routing": {
+        "calls": 27,
+        "seconds": 0.0003603000077418983
+      },
+      "clone": {
+        "calls": 81,
+        "seconds": 0.008205099671613425
+      },
+      "Parallel": {
+        "calls": 27,
+        "seconds": 0.0010072999284602702
+      },
+      "_aggregate_score_dicts": {
+        "calls": 27,
+        "seconds": 0.00019659980898723006
+      },
+      "_normalize_score_results": {
+        "calls": 27,
+        "seconds": 3.0399940442293882e-05
+      }
+    }
+  },
+  {
+    "seed": 1095,
+    "method": "genetic",
+    "candidates": 28,
+    "fit_seconds": 0.18471589998807758,
+    "fold_seconds": 0.14834569982485846,
+    "candidate_cv_seconds": 0.17161819990724325,
+    "stages": {
+      "indexable": {
+        "calls": 28,
+        "seconds": 0.00024750002194195986
+      },
+      "is_classifier": {
+        "calls": 28,
+        "seconds": 0.00013489974662661552
+      },
+      "check_cv": {
+        "calls": 28,
+        "seconds": 6.130023393779993e-05
+      },
+      "check_scoring": {
+        "calls": 28,
+        "seconds": 0.0017231999663636088
+      },
+      "_manual_routing": {
+        "calls": 28,
+        "seconds": 0.00036939996061846614
+      },
+      "clone": {
+        "calls": 84,
+        "seconds": 0.008722200233023614
+      },
+      "Parallel": {
+        "calls": 28,
+        "seconds": 0.0009756999788805842
+      },
+      "_aggregate_score_dicts": {
+        "calls": 28,
+        "seconds": 0.0001701001892797649
+      },
+      "_normalize_score_results": {
+        "calls": 28,
+        "seconds": 3.2099836971610785e-05
+      }
+    }
+  },
+  {
+    "seed": 1095,
+    "method": "random",
+    "candidates": 28,
+    "fit_seconds": 0.1944812999572605,
+    "fold_seconds": 0.17468230001395568,
+    "candidate_cv_seconds": null
+  }
+]
