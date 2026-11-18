@@ -499,6 +499,13 @@ def test_seeded_fixed_log_dimension_samples_its_only_value():
     assert Continuous(0.01, 0.01, distribution="log-uniform", random_state=0).sample() == 0.01
 
 
+@pytest.mark.parametrize("bound", [2**80 + 1, -(2**80 + 1)])
+def test_fixed_integer_samples_exact_python_integer(bound):
+    value = Integer(bound, bound).sample()
+    assert type(value) is int
+    assert value == bound
+
+
 @pytest.mark.parametrize("bound", [np.inf, -np.inf, 2**53 + 1, 10**400])
 def test_fixed_continuous_bound_requires_an_exact_finite_float(bound):
     with pytest.raises(ValueError, match="finite, exactly representable"):

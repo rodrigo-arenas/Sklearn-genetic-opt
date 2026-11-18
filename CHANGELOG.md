@@ -11,6 +11,7 @@ Full release notes with code examples are in the [documentation](https://sklearn
 - `GAFeatureSelectionCV` can now select columns from COO sparse inputs during supervised and target-free outlier searches.
 - Convergence, diversity and optimizer-event plots retain the recorded generation numbers when a history starts above zero or contains gaps.
 - Both estimators expose cumulative candidate CV evaluations per generation in `history["cross_validate_calls"]`, including the cost of local refinement in the final generation.
+- Fixed integer dimensions now return their exact value directly, including Python integers beyond the signed 64-bit range.
 
 - Feature selection computes generation diversity for wide binary masks one row at a time and stores packed masks to count unique candidates.
 

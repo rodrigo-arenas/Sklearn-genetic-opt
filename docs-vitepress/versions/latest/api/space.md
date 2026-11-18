@@ -30,6 +30,8 @@ Integer(lower, upper, distribution="uniform")
 Candidate repair and local refinement preserve integer values exactly,
 including adjacent values above `2**53`. Pass large integer warm-start
 values as Python or NumPy integers to preserve their identity.
+Equal bounds hold an integer parameter fixed. Sampling that dimension returns
+the exact Python integer, including values outside the signed 64-bit range.
 
 **Example:**
 

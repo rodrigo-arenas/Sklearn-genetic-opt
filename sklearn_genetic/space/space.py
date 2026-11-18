@@ -109,6 +109,8 @@ class Integer(BaseDimension):
     def sample(self) -> int:
         """Sample a random value from the assigned distribution"""
 
+        if self.lower == self.upper:
+            return int(self.lower)
         return self.rvs(
             self.lower,
             self.upper + 1,
