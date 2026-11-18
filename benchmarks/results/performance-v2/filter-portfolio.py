@@ -1,0 +1,91 @@
+"""Trade four fixed-mask CV evaluations for fold-local univariate filters."""
+
+import json
+from pathlib import Path
+from runpy import run_path
+from time import perf_counter
+
+import numpy as np
+from sklearn.base import clone, is_classifier
+from sklearn.feature_selection import SelectKBest, f_classif, f_regression
+from sklearn.metrics import get_scorer
+from sklearn.model_selection import cross_val_score
+from sklearn.pipeline import make_pipeline
+from threadpoolctl import threadpool_limits
+
+from sklearn_genetic import GAFeatureSelectionCV
+
+
+def compare(X, y, test, labels, cv, model, metric, seed, *args, **kwargs):
+    ga = GAFeatureSelectionCV(
+        clone(model),
+        cv=cv,
+        scoring=metric,
+        max_features=4,
+        population_size=6,
+        generations=3,
+        random_state=seed,
+        error_score="raise",
+        n_jobs=1,
+        verbose=False,
+    )
+    start = perf_counter()
+    ga.fit(X, y)
+    full_ga_seconds = perf_counter() - start
+    scores = {}
+    for mask, score in zip(ga.cv_results_["features"], ga.cv_results_["mean_test_score"]):
+        scores.setdefault(tuple(np.flatnonzero(mask).tolist()), float(score))
+    assert len(scores) == ga.fit_stats_["cross_validate_calls"] and len(scores) >= 24
+    genetic = [(v, len(m), m) for m, v in list(scores.items())[:24]]
+    filters = []
+    scorer = f_classif if is_classifier(model) else f_regression
+    start = perf_counter()
+    for k in range(1, 5):
+        candidate = make_pipeline(SelectKBest(scorer, k=k), clone(model))
+        score = cross_val_score(
+            candidate, X, y, cv=cv, scoring=metric, n_jobs=1, error_score="raise"
+        ).mean()
+        filters.append((float(score), k, None))
+    filter_cv_seconds = perf_counter() - start
+    arms = {}
+    for name, candidates in (
+        ("genetic", genetic),
+        ("filters", filters),
+        ("portfolio", genetic[:20] + filters),
+    ):
+        score, k, mask = max(candidates, key=lambda c: (c[0], -c[1]))
+        if mask is None:
+            fitted = make_pipeline(SelectKBest(scorer, k=k), clone(model)).fit(X, y)
+            selected = np.flatnonzero(fitted[0].get_support()).tolist()
+            held = get_scorer(metric)(fitted, test, labels)
+        else:
+            selected = list(mask)
+            held = get_scorer(metric)(clone(model).fit(X[:, mask], y), test[:, mask], labels)
+        arms[name] = dict(
+            folds=len(cv) * len(candidates),
+            filter=mask is None,
+            selected=selected,
+            cv=score,
+            holdout=held,
+        )
+    return dict(
+        seed=seed,
+        arms=arms,
+        full_ga_candidates=len(scores),
+        full_ga_seconds=full_ga_seconds,
+        filter_cv_seconds=filter_cv_seconds,
+    )
+
+
+if __name__ == "__main__":
+    here = Path(__file__).resolve().parent
+    known = run_path(str(here / "known-support.py"))
+    sparse = run_path(str(here / "partition-initialization.py"))["sparse_regression"]
+    pair, real = known["run_pair"], known["run_real"]
+    for builder in (sparse, pair, real):
+        builder.__globals__["compare"] = compare
+    with threadpool_limits(1):
+        rows = [dict(task="sparse", **sparse(64, s)) for s in range(9241, 9245)]
+        rows += [pair(s, True) for s in range(9241, 9245)]
+        rows += [real(task, s, s + 10) for task in ("wine", "diabetes") for s in range(9241, 9245)]
+    print(json.dumps(rows, indent=2, allow_nan=False))

@@ -2255,6 +2255,34 @@ The [final allocation measurements](results/performance-v2/binary-diversity-fina
 and [final full-fit records](results/performance-v2/binary-diversity-final-fits.json)
 include reproduction scripts and per-run measurements.
 
+## Should four candidate slots go to univariate feature selection?
+
+We compared the first 24 distinct genetic masks with a mixed search that
+used the same first 20 masks and four `SelectKBest` pipelines (one through
+four columns). Each filter learned its F-statistics on the training side
+of each CV fold. A filter candidate therefore represents a selection rule
+whose columns can differ across folds. The winner was chosen by mean
+three-fold CV, breaking ties toward fewer columns, then refitted before
+scoring on held-out data. Four filters alone served as a lower-cost control.
+
+| Task | Metric | 24 genetic masks | Four filters | 20 genetic masks + four filters |
+| --- | --- | ---: | ---: | ---: |
+| Sparse linear regression, 64 columns | R² | 0.30842 | 0.87994 | 0.87994 |
+| XOR classification, 16 columns | Balanced accuracy | 0.74364 | 0.50006 | 0.66641 |
+| Wine | Balanced accuracy | 0.92222 | 0.94769 | 0.94306 |
+| Diabetes | R² | 0.47426 | 0.47025 | 0.47640 |
+
+Each value averages four runs. The mixed search chose a filter in all four
+sparse linear runs, three Wine runs, two Diabetes runs and zero XOR runs.
+On XOR one genetic winner containing both informative columns arrived after
+candidate 20. Replacing those four slots lost that interaction on one seed.
+The pure filter control needed 12 fold fits, versus 72 for each compared
+24-candidate prefix. Prefixes were scored after running the full genetic
+search; this comparison measures quality per fold fit. The recorded full
+search time and four-filter CV time cover different amounts of work.
+[Experiment](results/performance-v2/filter-portfolio.py) and
+[winners, selected columns and scores](results/performance-v2/filter-portfolio.json).
+
 ## Selecting masks using scores of previously evaluated subsets
 
 This pilot tested whether the columns in high-scoring masks are worth trying
