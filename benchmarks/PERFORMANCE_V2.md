@@ -2366,6 +2366,27 @@ for nonlinear estimators. The diabetes rows use repeated splits of one dataset.
 Run [the benchmark](results/performance-v2/correlated-filters.py) with
 `--residual` to reproduce the [per-run results](results/performance-v2/correlated-residual.json).
 
+With a depth-five regression tree, six fresh seeds (9681–9686), and a cap of
+four features, the same three policies gave the following mean holdout R².
+The quadratic target depends on the square of a single predictor and has
+zero marginal linear correlation with that predictor in the population.
+
+| Target | 24 genetic masks | 23 + univariate | 23 + residual | Residual candidate selected |
+| --- | ---: | ---: | ---: | ---: |
+| Redundant predictors | 0.6685 | 0.6640 | 0.7935 | 3/6 |
+| Contrast between correlated predictors | −0.1854 | −0.1854 | −0.0891 | 3/6 |
+| Quadratic | 0.6407 | 0.7772 | 0.7750 | 1/6 |
+
+The contrast remained difficult for an axis-aligned tree even with the
+residual candidate. Across the 18 paired runs, the median three-fold CV
+evaluation took 14.8 ms for the residual pipeline and 5.1 ms for a replay
+of the displaced genetic mask. Each replay reproduced the original CV score.
+These are single-machine timings of the last candidate in a fixed execution
+order. They exclude candidate generation and final refit. The quadratic
+result rests on six runs and offers little evidence for a linear proposal as
+a general nonlinear selector. Run the same script with `--tree` for the
+[scores, selected features and timings](results/performance-v2/tree-residual.json).
+
 ## Selecting masks using scores of previously evaluated subsets
 
 This pilot tested whether the columns in high-scoring masks are worth trying

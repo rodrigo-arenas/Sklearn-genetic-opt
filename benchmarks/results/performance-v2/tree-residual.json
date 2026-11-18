@@ -1,0 +1,1786 @@
+[
+  {
+    "task": "redundant",
+    "cap": 4,
+    "column_order": [
+      29,
+      6,
+      7,
+      16,
+      9,
+      2,
+      30,
+      24,
+      1,
+      26,
+      14,
+      28,
+      4,
+      20,
+      25,
+      5,
+      10,
+      11,
+      12,
+      31,
+      3,
+      13,
+      15,
+      21,
+      0,
+      8,
+      19,
+      27,
+      22,
+      23,
+      17,
+      18
+    ],
+    "seed": 9681,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          8
+        ],
+        "cv": 0.5669059701749126,
+        "holdout": 0.5651458955906283
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          1,
+          5,
+          15,
+          20
+        ],
+        "cv": 0.5464815744967945,
+        "holdout": 0.5809412936123762
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          8,
+          17,
+          30
+        ],
+        "cv": 0.5492583721948034,
+        "holdout": 0.5542804184585006
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          8
+        ],
+        "cv": 0.5669059701749126,
+        "holdout": 0.5651458955906283
+      },
+      "one_residual": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          4,
+          5,
+          7,
+          25
+        ],
+        "cv": 0.7496980760034294,
+        "holdout": 0.7995113725047354
+      }
+    },
+    "full_ga_candidates": 41,
+    "full_ga_seconds": 0.2297779999789782,
+    "filter_cv_seconds": 0.048852099978830665,
+    "mask_seconds": 0.0055262999958358705,
+    "residual_seconds": 0.027121399994939566
+  },
+  {
+    "task": "contrast",
+    "cap": 4,
+    "column_order": [
+      29,
+      6,
+      7,
+      16,
+      9,
+      2,
+      30,
+      24,
+      1,
+      26,
+      14,
+      28,
+      4,
+      20,
+      25,
+      5,
+      10,
+      11,
+      12,
+      31,
+      3,
+      13,
+      15,
+      21,
+      0,
+      8,
+      19,
+      27,
+      22,
+      23,
+      17,
+      18
+    ],
+    "seed": 9681,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          8,
+          17,
+          30
+        ],
+        "cv": -0.15419990069314368,
+        "holdout": -0.1809257801665196
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          8
+        ],
+        "cv": -0.282296650259233,
+        "holdout": -0.11393440322804316
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          8,
+          17,
+          30
+        ],
+        "cv": -0.15419990069314368,
+        "holdout": -0.1809257801665196
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          8,
+          17,
+          30
+        ],
+        "cv": -0.15419990069314368,
+        "holdout": -0.1809257801665196
+      },
+      "one_residual": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          7,
+          8,
+          16,
+          24
+        ],
+        "cv": -0.1463918783298833,
+        "holdout": 0.08824801694630546
+      }
+    },
+    "full_ga_candidates": 42,
+    "full_ga_seconds": 0.22685699997236952,
+    "filter_cv_seconds": 0.03824640001403168,
+    "mask_seconds": 0.005492500029504299,
+    "residual_seconds": 0.01563680003164336
+  },
+  {
+    "task": "quadratic",
+    "cap": 4,
+    "column_order": [
+      29,
+      6,
+      7,
+      16,
+      9,
+      2,
+      30,
+      24,
+      1,
+      26,
+      14,
+      28,
+      4,
+      20,
+      25,
+      5,
+      10,
+      11,
+      12,
+      31,
+      3,
+      13,
+      15,
+      21,
+      0,
+      8,
+      19,
+      27,
+      22,
+      23,
+      17,
+      18
+    ],
+    "seed": 9681,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          21
+        ],
+        "cv": -0.1641918565075442,
+        "holdout": -0.08934393009747321
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          30
+        ],
+        "cv": 0.10470296642275079,
+        "holdout": -0.08535539227043132
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          30
+        ],
+        "cv": 0.10470296642275079,
+        "holdout": -0.08535539227043132
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          4,
+          19,
+          25,
+          30
+        ],
+        "cv": -0.04335207509871145,
+        "holdout": 0.7172865832707898
+      },
+      "one_residual": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          4,
+          19,
+          25,
+          30
+        ],
+        "cv": 0.19384655922710736,
+        "holdout": 0.7172865832707898
+      }
+    },
+    "full_ga_candidates": 42,
+    "full_ga_seconds": 0.2290365999797359,
+    "filter_cv_seconds": 0.04405660001793876,
+    "mask_seconds": 0.005344000004697591,
+    "residual_seconds": 0.016319399990607053
+  },
+  {
+    "task": "redundant",
+    "cap": 4,
+    "column_order": [
+      2,
+      17,
+      13,
+      18,
+      25,
+      11,
+      9,
+      24,
+      20,
+      28,
+      12,
+      30,
+      6,
+      31,
+      21,
+      0,
+      14,
+      1,
+      3,
+      5,
+      16,
+      15,
+      8,
+      7,
+      29,
+      26,
+      23,
+      4,
+      19,
+      27,
+      10,
+      22
+    ],
+    "seed": 9682,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          18,
+          21,
+          22
+        ],
+        "cv": 0.7609860165728474,
+        "holdout": 0.7886865127918793
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          15,
+          17,
+          18,
+          27
+        ],
+        "cv": 0.4709427155399391,
+        "holdout": 0.49212180579921705
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          18,
+          21,
+          22
+        ],
+        "cv": 0.7609860165728474,
+        "holdout": 0.7886865127918793
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          18,
+          21,
+          22
+        ],
+        "cv": 0.7609860165728474,
+        "holdout": 0.7886865127918793
+      },
+      "one_residual": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          18,
+          21,
+          22
+        ],
+        "cv": 0.7609860165728474,
+        "holdout": 0.7886865127918793
+      }
+    },
+    "full_ga_candidates": 42,
+    "full_ga_seconds": 0.22257310000713915,
+    "filter_cv_seconds": 0.038982999976724386,
+    "mask_seconds": 0.004945699998643249,
+    "residual_seconds": 0.014789100037887692
+  },
+  {
+    "task": "contrast",
+    "cap": 4,
+    "column_order": [
+      2,
+      17,
+      13,
+      18,
+      25,
+      11,
+      9,
+      24,
+      20,
+      28,
+      12,
+      30,
+      6,
+      31,
+      21,
+      0,
+      14,
+      1,
+      3,
+      5,
+      16,
+      15,
+      8,
+      7,
+      29,
+      26,
+      23,
+      4,
+      19,
+      27,
+      10,
+      22
+    ],
+    "seed": 9682,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          15,
+          27,
+          29
+        ],
+        "cv": -0.15503827086116093,
+        "holdout": -0.19587968031586156
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          29
+        ],
+        "cv": -0.28915508915214533,
+        "holdout": -0.2080749876211041
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          15,
+          27,
+          29
+        ],
+        "cv": -0.15503827086116093,
+        "holdout": -0.19587968031586156
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          15,
+          27,
+          29
+        ],
+        "cv": -0.15503827086116093,
+        "holdout": -0.19587968031586156
+      },
+      "one_residual": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          15,
+          27,
+          29
+        ],
+        "cv": -0.15503827086116093,
+        "holdout": -0.19587968031586156
+      }
+    },
+    "full_ga_candidates": 41,
+    "full_ga_seconds": 0.2083701000083238,
+    "filter_cv_seconds": 0.034624099964275956,
+    "mask_seconds": 0.004896899976301938,
+    "residual_seconds": 0.014915900013875216
+  },
+  {
+    "task": "quadratic",
+    "cap": 4,
+    "column_order": [
+      2,
+      17,
+      13,
+      18,
+      25,
+      11,
+      9,
+      24,
+      20,
+      28,
+      12,
+      30,
+      6,
+      31,
+      21,
+      0,
+      14,
+      1,
+      3,
+      5,
+      16,
+      15,
+      8,
+      7,
+      29,
+      26,
+      23,
+      4,
+      19,
+      27,
+      10,
+      22
+    ],
+    "seed": 9682,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          22
+        ],
+        "cv": 0.8344845900007055,
+        "holdout": 0.7970828008728432
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          3,
+          6,
+          26
+        ],
+        "cv": 0.12462489087242996,
+        "holdout": -0.5115805259968855
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          18,
+          21,
+          22
+        ],
+        "cv": 0.833498433701178,
+        "holdout": 0.7934204359501462
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          22
+        ],
+        "cv": 0.8344845900007055,
+        "holdout": 0.7970828008728432
+      },
+      "one_residual": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          22
+        ],
+        "cv": 0.8344845900007055,
+        "holdout": 0.7970828008728432
+      }
+    },
+    "full_ga_candidates": 42,
+    "full_ga_seconds": 0.2030949000036344,
+    "filter_cv_seconds": 0.03587520000291988,
+    "mask_seconds": 0.0047194999642670155,
+    "residual_seconds": 0.014630199992097914
+  },
+  {
+    "task": "redundant",
+    "cap": 4,
+    "column_order": [
+      13,
+      1,
+      19,
+      25,
+      22,
+      2,
+      10,
+      8,
+      28,
+      18,
+      0,
+      16,
+      4,
+      23,
+      31,
+      15,
+      9,
+      3,
+      17,
+      7,
+      30,
+      24,
+      5,
+      14,
+      26,
+      29,
+      20,
+      21,
+      11,
+      6,
+      27,
+      12
+    ],
+    "seed": 9683,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          7,
+          10,
+          20
+        ],
+        "cv": 0.7914805577932364,
+        "holdout": 0.8007669232480781
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          10
+        ],
+        "cv": 0.509333622619555,
+        "holdout": 0.5082266861364573
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          7,
+          10,
+          18,
+          20
+        ],
+        "cv": 0.787523075401861,
+        "holdout": 0.8007669232480781
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          7,
+          10,
+          20
+        ],
+        "cv": 0.7914805577932364,
+        "holdout": 0.8007669232480781
+      },
+      "one_residual": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          7,
+          10,
+          20
+        ],
+        "cv": 0.7914805577932364,
+        "holdout": 0.8007669232480781
+      }
+    },
+    "full_ga_candidates": 42,
+    "full_ga_seconds": 0.22390489996178076,
+    "filter_cv_seconds": 0.03876200004015118,
+    "mask_seconds": 0.004843599977903068,
+    "residual_seconds": 0.015692200046032667
+  },
+  {
+    "task": "contrast",
+    "cap": 4,
+    "column_order": [
+      13,
+      1,
+      19,
+      25,
+      22,
+      2,
+      10,
+      8,
+      28,
+      18,
+      0,
+      16,
+      4,
+      23,
+      31,
+      15,
+      9,
+      3,
+      17,
+      7,
+      30,
+      24,
+      5,
+      14,
+      26,
+      29,
+      20,
+      21,
+      11,
+      6,
+      27,
+      12
+    ],
+    "seed": 9683,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          26
+        ],
+        "cv": -0.031221755417991954,
+        "holdout": -0.2284836948295077
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          26
+        ],
+        "cv": -0.05969821311092708,
+        "holdout": -0.2284836948295077
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          26
+        ],
+        "cv": -0.031221755417991954,
+        "holdout": -0.2284836948295077
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          26
+        ],
+        "cv": -0.031221755417991954,
+        "holdout": -0.2284836948295077
+      },
+      "one_residual": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          26
+        ],
+        "cv": -0.031221755417991954,
+        "holdout": -0.2284836948295077
+      }
+    },
+    "full_ga_candidates": 42,
+    "full_ga_seconds": 0.21220199996605515,
+    "filter_cv_seconds": 0.03537590004270896,
+    "mask_seconds": 0.004752299981191754,
+    "residual_seconds": 0.014414899982511997
+  },
+  {
+    "task": "quadratic",
+    "cap": 4,
+    "column_order": [
+      13,
+      1,
+      19,
+      25,
+      22,
+      2,
+      10,
+      8,
+      28,
+      18,
+      0,
+      16,
+      4,
+      23,
+      31,
+      15,
+      9,
+      3,
+      17,
+      7,
+      30,
+      24,
+      5,
+      14,
+      26,
+      29,
+      20,
+      21,
+      11,
+      6,
+      27,
+      12
+    ],
+    "seed": 9683,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          7
+        ],
+        "cv": 0.7580668435343231,
+        "holdout": 0.8015537528658883
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          2,
+          24
+        ],
+        "cv": -0.029947253623389864,
+        "holdout": -0.20821513979314155
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          3,
+          7,
+          11,
+          25
+        ],
+        "cv": 0.7492169748316581,
+        "holdout": 0.7923618419571483
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          7
+        ],
+        "cv": 0.7580668435343231,
+        "holdout": 0.8015537528658883
+      },
+      "one_residual": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          7
+        ],
+        "cv": 0.7580668435343231,
+        "holdout": 0.8015537528658883
+      }
+    },
+    "full_ga_candidates": 42,
+    "full_ga_seconds": 0.20236739999381825,
+    "filter_cv_seconds": 0.0394596999976784,
+    "mask_seconds": 0.0056708999909460545,
+    "residual_seconds": 0.013968300016131252
+  },
+  {
+    "task": "redundant",
+    "cap": 4,
+    "column_order": [
+      10,
+      21,
+      24,
+      20,
+      1,
+      14,
+      13,
+      0,
+      5,
+      30,
+      4,
+      15,
+      22,
+      8,
+      28,
+      23,
+      31,
+      27,
+      12,
+      11,
+      29,
+      16,
+      6,
+      9,
+      7,
+      3,
+      25,
+      26,
+      18,
+      17,
+      19,
+      2
+    ],
+    "seed": 9684,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          13,
+          17,
+          18,
+          31
+        ],
+        "cv": 0.7934087148120502,
+        "holdout": 0.8174641303698406
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          4,
+          7
+        ],
+        "cv": 0.5688901577043649,
+        "holdout": 0.5553817863587296
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          13,
+          17,
+          18,
+          31
+        ],
+        "cv": 0.7934087148120502,
+        "holdout": 0.8174641303698406
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          13,
+          17,
+          18,
+          31
+        ],
+        "cv": 0.7934087148120502,
+        "holdout": 0.8174641303698406
+      },
+      "one_residual": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          13,
+          17,
+          18,
+          31
+        ],
+        "cv": 0.7934087148120502,
+        "holdout": 0.8174641303698406
+      }
+    },
+    "full_ga_candidates": 42,
+    "full_ga_seconds": 0.20586429996183142,
+    "filter_cv_seconds": 0.03921640000771731,
+    "mask_seconds": 0.005591299966908991,
+    "residual_seconds": 0.016594799992162734
+  },
+  {
+    "task": "contrast",
+    "cap": 4,
+    "column_order": [
+      10,
+      21,
+      24,
+      20,
+      1,
+      14,
+      13,
+      0,
+      5,
+      30,
+      4,
+      15,
+      22,
+      8,
+      28,
+      23,
+      31,
+      27,
+      12,
+      11,
+      29,
+      16,
+      6,
+      9,
+      7,
+      3,
+      25,
+      26,
+      18,
+      17,
+      19,
+      2
+    ],
+    "seed": 9684,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          5,
+          7,
+          31
+        ],
+        "cv": -0.10630257183809973,
+        "holdout": -0.22001072879551864
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          27
+        ],
+        "cv": -0.2560162150923122,
+        "holdout": -0.1701576020941722
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          5,
+          7,
+          31
+        ],
+        "cv": -0.10630257183809973,
+        "holdout": -0.22001072879551864
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          5,
+          7,
+          31
+        ],
+        "cv": -0.10630257183809973,
+        "holdout": -0.22001072879551864
+      },
+      "one_residual": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          4,
+          7,
+          27,
+          29
+        ],
+        "cv": 0.015869247072337462,
+        "holdout": -0.04149212935816493
+      }
+    },
+    "full_ga_candidates": 41,
+    "full_ga_seconds": 0.2063021000358276,
+    "filter_cv_seconds": 0.03622400003951043,
+    "mask_seconds": 0.005177200015168637,
+    "residual_seconds": 0.013983000011648983
+  },
+  {
+    "task": "quadratic",
+    "cap": 4,
+    "column_order": [
+      10,
+      21,
+      24,
+      20,
+      1,
+      14,
+      13,
+      0,
+      5,
+      30,
+      4,
+      15,
+      22,
+      8,
+      28,
+      23,
+      31,
+      27,
+      12,
+      11,
+      29,
+      16,
+      6,
+      9,
+      7,
+      3,
+      25,
+      26,
+      18,
+      17,
+      19,
+      2
+    ],
+    "seed": 9684,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          11,
+          13
+        ],
+        "cv": 0.7758005638342139,
+        "holdout": 0.7742417070678866
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          0,
+          1,
+          12,
+          13
+        ],
+        "cv": 0.4904190045435189,
+        "holdout": 0.7704656778726194
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          13,
+          17,
+          18,
+          31
+        ],
+        "cv": 0.7635629531856009,
+        "holdout": 0.7733933060376205
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          13,
+          17,
+          18,
+          31
+        ],
+        "cv": 0.7635629531856009,
+        "holdout": 0.7733933060376205
+      },
+      "one_residual": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          13,
+          17,
+          18,
+          31
+        ],
+        "cv": 0.7635629531856009,
+        "holdout": 0.7733933060376205
+      }
+    },
+    "full_ga_candidates": 42,
+    "full_ga_seconds": 0.21652760001597926,
+    "filter_cv_seconds": 0.035132299992255867,
+    "mask_seconds": 0.00517219997709617,
+    "residual_seconds": 0.014287400001194328
+  },
+  {
+    "task": "redundant",
+    "cap": 4,
+    "column_order": [
+      19,
+      20,
+      1,
+      12,
+      24,
+      14,
+      11,
+      17,
+      15,
+      9,
+      18,
+      7,
+      31,
+      25,
+      21,
+      10,
+      23,
+      5,
+      4,
+      30,
+      8,
+      29,
+      2,
+      6,
+      28,
+      27,
+      13,
+      22,
+      26,
+      16,
+      0,
+      3
+    ],
+    "seed": 9685,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          17,
+          25
+        ],
+        "cv": 0.5115211978626291,
+        "holdout": 0.5130345618516916
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          18,
+          30
+        ],
+        "cv": 0.5232769091069228,
+        "holdout": 0.4931618250211185
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          18,
+          30
+        ],
+        "cv": 0.5232769091069228,
+        "holdout": 0.4931618250211185
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          17,
+          25
+        ],
+        "cv": 0.5115211978626291,
+        "holdout": 0.5130345618516916
+      },
+      "one_residual": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          6,
+          20,
+          25,
+          30
+        ],
+        "cv": 0.7546554952893985,
+        "holdout": 0.8094260807747808
+      }
+    },
+    "full_ga_candidates": 42,
+    "full_ga_seconds": 0.2080145999789238,
+    "filter_cv_seconds": 0.034742999996524304,
+    "mask_seconds": 0.004446399980224669,
+    "residual_seconds": 0.014156899997033179
+  },
+  {
+    "task": "contrast",
+    "cap": 4,
+    "column_order": [
+      19,
+      20,
+      1,
+      12,
+      24,
+      14,
+      11,
+      17,
+      15,
+      9,
+      18,
+      7,
+      31,
+      25,
+      21,
+      10,
+      23,
+      5,
+      4,
+      30,
+      8,
+      29,
+      2,
+      6,
+      28,
+      27,
+      13,
+      22,
+      26,
+      16,
+      0,
+      3
+    ],
+    "seed": 9685,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          3,
+          27
+        ],
+        "cv": -0.09105210709053006,
+        "holdout": -0.14173901116537402
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          2,
+          24
+        ],
+        "cv": -0.26752895638816926,
+        "holdout": -0.19100257867344306
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          3,
+          27
+        ],
+        "cv": -0.09105210709053006,
+        "holdout": -0.14173901116537402
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          3,
+          27
+        ],
+        "cv": -0.09105210709053006,
+        "holdout": -0.14173901116537402
+      },
+      "one_residual": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          3,
+          27
+        ],
+        "cv": -0.09105210709053006,
+        "holdout": -0.14173901116537402
+      }
+    },
+    "full_ga_candidates": 42,
+    "full_ga_seconds": 0.20453619997715577,
+    "filter_cv_seconds": 0.035479200014378875,
+    "mask_seconds": 0.005039500014390796,
+    "residual_seconds": 0.015149699989706278
+  },
+  {
+    "task": "quadratic",
+    "cap": 4,
+    "column_order": [
+      19,
+      20,
+      1,
+      12,
+      24,
+      14,
+      11,
+      17,
+      15,
+      9,
+      18,
+      7,
+      31,
+      25,
+      21,
+      10,
+      23,
+      5,
+      4,
+      30,
+      8,
+      29,
+      2,
+      6,
+      28,
+      27,
+      13,
+      22,
+      26,
+      16,
+      0,
+      3
+    ],
+    "seed": 9685,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          12,
+          14,
+          19,
+          20
+        ],
+        "cv": 0.7380987874220076,
+        "holdout": 0.7577756223028477
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          19,
+          20
+        ],
+        "cv": 0.7550921446982654,
+        "holdout": 0.7733278820269172
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          19,
+          20
+        ],
+        "cv": 0.7550921446982654,
+        "holdout": 0.7733278820269172
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          19,
+          20,
+          30,
+          31
+        ],
+        "cv": 0.7494220229690901,
+        "holdout": 0.7709089863191911
+      },
+      "one_residual": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          12,
+          14,
+          19,
+          20
+        ],
+        "cv": 0.7380987874220076,
+        "holdout": 0.7577756223028477
+      }
+    },
+    "full_ga_candidates": 42,
+    "full_ga_seconds": 0.20912930002668872,
+    "filter_cv_seconds": 0.03496099996846169,
+    "mask_seconds": 0.004790999984834343,
+    "residual_seconds": 0.014845900004729629
+  },
+  {
+    "task": "redundant",
+    "cap": 4,
+    "column_order": [
+      25,
+      7,
+      14,
+      11,
+      16,
+      31,
+      4,
+      22,
+      0,
+      12,
+      15,
+      17,
+      26,
+      8,
+      20,
+      5,
+      2,
+      13,
+      18,
+      9,
+      3,
+      30,
+      29,
+      21,
+      24,
+      1,
+      6,
+      10,
+      19,
+      28,
+      27,
+      23
+    ],
+    "seed": 9686,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          15,
+          20
+        ],
+        "cv": 0.46282282239463884,
+        "holdout": 0.5259256098891332
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          1,
+          6,
+          15,
+          25
+        ],
+        "cv": 0.39301539057760415,
+        "holdout": 0.4549725125900045
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          0,
+          15,
+          20
+        ],
+        "cv": 0.44203314421645873,
+        "holdout": 0.4997499680908277
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          11,
+          15,
+          17,
+          20
+        ],
+        "cv": 0.45193322665394087,
+        "holdout": 0.4986648303794228
+      },
+      "one_residual": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          4,
+          13,
+          18,
+          25
+        ],
+        "cv": 0.7074566130794576,
+        "holdout": 0.7451247050833101
+      }
+    },
+    "full_ga_candidates": 40,
+    "full_ga_seconds": 0.21593399997800589,
+    "filter_cv_seconds": 0.03558520000660792,
+    "mask_seconds": 0.004636800033040345,
+    "residual_seconds": 0.01531990000512451
+  },
+  {
+    "task": "contrast",
+    "cap": 4,
+    "column_order": [
+      25,
+      7,
+      14,
+      11,
+      16,
+      31,
+      4,
+      22,
+      0,
+      12,
+      15,
+      17,
+      26,
+      8,
+      20,
+      5,
+      2,
+      13,
+      18,
+      9,
+      3,
+      30,
+      29,
+      21,
+      24,
+      1,
+      6,
+      10,
+      19,
+      28,
+      27,
+      23
+    ],
+    "seed": 9686,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          18
+        ],
+        "cv": -0.17608604291686633,
+        "holdout": -0.14533734394219922
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          0
+        ],
+        "cv": -0.2825038165892196,
+        "holdout": -0.2607569428674441
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          18
+        ],
+        "cv": -0.17608604291686633,
+        "holdout": -0.14533734394219922
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          18
+        ],
+        "cv": -0.17608604291686633,
+        "holdout": -0.14533734394219922
+      },
+      "one_residual": {
+        "folds": 72,
+        "filter": true,
+        "selected": [
+          0,
+          8,
+          18,
+          25
+        ],
+        "cv": -0.09490239920633999,
+        "holdout": -0.015231868757958011
+      }
+    },
+    "full_ga_candidates": 42,
+    "full_ga_seconds": 0.20058409997727722,
+    "filter_cv_seconds": 0.034610799979418516,
+    "mask_seconds": 0.006196799979079515,
+    "residual_seconds": 0.014550200023222715
+  },
+  {
+    "task": "quadratic",
+    "cap": 4,
+    "column_order": [
+      25,
+      7,
+      14,
+      11,
+      16,
+      31,
+      4,
+      22,
+      0,
+      12,
+      15,
+      17,
+      26,
+      8,
+      20,
+      5,
+      2,
+      13,
+      18,
+      9,
+      3,
+      30,
+      29,
+      21,
+      24,
+      1,
+      6,
+      10,
+      19,
+      28,
+      27,
+      23
+    ],
+    "seed": 9686,
+    "arms": {
+      "genetic": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          10,
+          13,
+          18,
+          29
+        ],
+        "cv": 0.7756339269666097,
+        "holdout": 0.8027810451282021
+      },
+      "filters": {
+        "folds": 12,
+        "filter": true,
+        "selected": [
+          8,
+          16,
+          29
+        ],
+        "cv": 0.06545922170583525,
+        "holdout": -0.2585032050138396
+      },
+      "portfolio": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          10,
+          13,
+          18,
+          29
+        ],
+        "cv": 0.7756339269666097,
+        "holdout": 0.8027810451282021
+      },
+      "one_filter": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          10,
+          13,
+          18,
+          29
+        ],
+        "cv": 0.7756339269666097,
+        "holdout": 0.8027810451282021
+      },
+      "one_residual": {
+        "folds": 72,
+        "filter": false,
+        "selected": [
+          10,
+          13,
+          18,
+          29
+        ],
+        "cv": 0.7756339269666097,
+        "holdout": 0.8027810451282021
+      }
+    },
+    "full_ga_candidates": 42,
+    "full_ga_seconds": 0.21579940000083297,
+    "filter_cv_seconds": 0.03515419998439029,
+    "mask_seconds": 0.00549670000327751,
+    "residual_seconds": 0.014474899973720312
+  }
+]

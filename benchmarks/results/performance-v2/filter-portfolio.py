@@ -33,6 +33,7 @@ def compare(
     one_slot=False,
     cap=4,
     residual=False,
+    time_slot=False,
     **kwargs,
 ):
     ga = GAFeatureSelectionCV(
@@ -80,9 +81,11 @@ def compare(
             threshold=1e-12,
         )
         residual_model = make_pipeline(selector, clone(model))
+        start = perf_counter()
         score = cross_val_score(
             residual_model, X, y, cv=cv, scoring=metric, n_jobs=1, error_score="raise"
         ).mean()
+        residual_seconds = perf_counter() - start
         policies.append(("one_residual", genetic[:23] + [(float(score), cap, None)]))
     for name, candidates in policies:
         score, k, mask = max(candidates, key=lambda c: (c[0], -c[1]))
@@ -105,12 +108,23 @@ def compare(
             cv=score,
             holdout=held,
         )
+    timing = {}
+    if residual and time_slot:
+        mask = genetic[-1][2]
+        start = perf_counter()
+        replay = cross_val_score(
+            model, X[:, mask], y, cv=cv, scoring=metric, n_jobs=1, error_score="raise"
+        ).mean()
+        timing["mask_seconds"] = perf_counter() - start
+        np.testing.assert_allclose(replay, genetic[-1][0])
+        timing["residual_seconds"] = residual_seconds
     return dict(
         seed=seed,
         arms=arms,
         full_ga_candidates=len(scores),
         full_ga_seconds=full_ga_seconds,
         filter_cv_seconds=filter_cv_seconds,
+        **timing,
     )
 
 
