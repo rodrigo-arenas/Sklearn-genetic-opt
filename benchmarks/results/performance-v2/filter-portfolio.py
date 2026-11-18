@@ -18,12 +18,12 @@ from threadpoolctl import threadpool_limits
 from sklearn_genetic import GAFeatureSelectionCV
 
 
-def compare(X, y, test, labels, cv, model, metric, seed, *args, one_slot=False, **kwargs):
+def compare(X, y, test, labels, cv, model, metric, seed, *args, one_slot=False, cap=4, **kwargs):
     ga = GAFeatureSelectionCV(
         clone(model),
         cv=cv,
         scoring=metric,
-        max_features=4,
+        max_features=cap,
         population_size=6,
         generations=3,
         random_state=seed,
@@ -42,7 +42,7 @@ def compare(X, y, test, labels, cv, model, metric, seed, *args, one_slot=False, 
     filters = []
     scorer = f_classif if is_classifier(model) else f_regression
     start = perf_counter()
-    for k in range(1, 5):
+    for k in np.linspace(1, cap, 4).round().astype(int).tolist():
         candidate = make_pipeline(SelectKBest(scorer, k=k), clone(model))
         score = cross_val_score(
             candidate, X, y, cv=cv, scoring=metric, n_jobs=1, error_score="raise"

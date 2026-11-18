@@ -2310,6 +2310,36 @@ at an enforced 24-candidate limit.
 Reproduce with `python benchmarks/results/performance-v2/filter-portfolio.py --one-slot`.
 [Per-split winners, selected columns and scores](results/performance-v2/one-filter-slot.json).
 
+### Does a filter slot still help with correlated predictors?
+
+Six new synthetic datasets each had eight noisy measurements of a common
+factor, one independent predictor and 23 noise columns. A redundant-signal
+task rewarded finding both the common factor and the independent predictor.
+A contrast task on the same inputs rewarded the difference between two
+specific measurements, which cancels the common factor. Ridge used three
+inner folds on 240 training rows and 860 held-out rows. At each cap the
+single filter used that cap. The four filter sizes were 1, 2, 3, 4 at cap
+four and 1, 3, 6, 8 at cap eight.
+
+| Target | Cap | 24 genetic masks | 23 masks + one filter | 20 masks + four filters | Filters alone |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Redundant signal | 4 | 0.8709 | 0.8217 | 0.8212 | 0.6398 |
+| Redundant signal | 8 | 0.9210 | 0.8715 | 0.8689 | 0.6384 |
+| Contrast | 4 | 0.2610 | 0.2689 | 0.2572 | 0.0517 |
+| Contrast | 8 | 0.5799 | 0.5794 | 0.5794 | 0.3496 |
+
+The table reports mean held-out R². Each mixed policy had the same 72 fold
+fits as the genetic prefix. The filter-only control used 12. On the
+redundant-signal task, the filter-only winners omitted the independent
+predictor in all twelve runs. At each cap a different seed accounted for
+most of the one-slot loss: the 24th genetic mask contained the independent
+predictor, and the mixed winner omitted it. The single filter was selected
+in only two of the 24 mixed runs across both tasks and caps. Together with
+the independent-column experiment, these results argue against reserving a
+filter slot unconditionally under a hard candidate budget.
+[Reproduction script](results/performance-v2/correlated-filters.py) and
+[per-seed winners and column identities](results/performance-v2/correlated-filters.json).
+
 ## Selecting masks using scores of previously evaluated subsets
 
 This pilot tested whether the columns in high-scoring masks are worth trying
