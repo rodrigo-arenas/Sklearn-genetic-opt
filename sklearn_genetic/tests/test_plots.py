@@ -116,14 +116,44 @@ def test_live_plot_tracks_generations_without_tensorflow(tmp_path, monkeypatch):
     plt.close("all")
 
 
-def test_generation_plot_rejects_missing_metric():
+@pytest.mark.parametrize(
+    "rows, metrics, message",
+    [
+        ([], ["fitness_best"], "no generations"),
+        ([{"gen": 0, "fitness_best": 0.4}], [], "at least one field"),
+        ([{"gen": 0, "fitness_best": 0.4}], ["missing"], "missing"),
+    ],
+)
+def test_generation_plot_rejects_unavailable_metrics(rows, metrics, message):
     from deap.tools import Logbook
     from ..plots import plot_generation_metrics
 
     logbook = Logbook()
-    logbook.record(gen=0, fitness_best=0.4)
-    with pytest.raises(ValueError, match="missing"):
-        plot_generation_metrics(logbook, metrics=["missing"])
+    for row in rows:
+        logbook.record(**row)
+    with pytest.raises(ValueError, match=message):
+        plot_generation_metrics(logbook, metrics=metrics)
+
+
+@pytest.mark.parametrize(
+    "plot, field_group",
+    [
+        (plot_convergence, "convergence"),
+        (plot_diversity, "diversity"),
+        (plot_search_decisions, "optimizer-control"),
+        (plot_optimizer_events, "optimizer event"),
+    ],
+)
+def test_diagnostic_plot_reports_missing_telemetry(plot, field_group):
+    legacy = SimpleNamespace(history={"gen": [0, 1]})
+    with pytest.raises(ValueError, match=f"No {field_group} fields"):
+        plot(legacy)
+
+
+def test_candidate_rankings_reject_all_failed_candidates():
+    estimator = SimpleNamespace(cv_results_={"mean_test_score": [np.nan, -np.inf]})
+    with pytest.raises(ValueError, match="No candidate scores"):
+        plot_candidate_rankings(estimator)
 
 
 @pytest.mark.parametrize("kind", ["hpo", "features"])
