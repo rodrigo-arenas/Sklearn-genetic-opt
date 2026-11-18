@@ -2066,6 +2066,31 @@ fixed candidate budget. It does not measure wall time or establish that four
 is a good group size across dimensions or sparsity levels. The production
 search policy is unchanged. [Recorded trajectories and reproduction script](results/performance-v2/partition-four-pilot.json)
 
+#### How much of the signal space do these proposals reach?
+
+For each of 2,048 new shuffle seeds we counted all distinct column pairs
+that occurred together in a mask. Dividing by the total number of pairs
+gives the chance of proposing a uniformly located informative pair at least
+once. This averages over every possible placement of the signal for each
+trajectory. Both policies used four columns per mask and skipped duplicates.
+
+| Columns | Random, 6 masks | Partitioned, 6 masks | Random, 24 masks | Partitioned, 24 masks |
+| ---: | ---: | ---: | ---: | ---: |
+| 12 | 43.80% | 47.19% | 90.51% | 92.61% |
+| 16 | 26.51% | 28.06% | 70.96% | 74.00% |
+| 32 | 7.05% | 7.26% | 25.32% | 26.32% |
+| 64 | 1.77% | 1.79% | 6.90% | 7.03% |
+
+At the pilot's width and budget, partitioning gained about three percentage
+points in pair exposure. The four-seed XOR result overstates the typical
+difference in proposal coverage. Partitioning had a larger effect on
+individual column exposure: at 32 columns, six masks tested 75.00% of
+columns versus 55.15% with random groups. At 64 columns even 24 partitioned
+masks reached only 7.03% of possible pairs. These figures quantify the
+opportunity to evaluate a signal. Predictive quality also depends on how the
+estimator scores that signal in the presence of the other selected columns.
+[Reproduce the coverage calculation](results/performance-v2/partition-coverage.py)
+
 ## How much fit time goes into integer sampling?
 
 Drawing 2,000 variable integers directly with NumPy took 3.6–3.8 ms on the
