@@ -1410,6 +1410,33 @@ These timings cover one worker and six overlapping holdouts per dataset.
 [Reproduction script](results/performance-v2/shortlist-transfer.py) and
 [per-split results](results/performance-v2/shortlist-transfer.json).
 
+#### Should the saved finalist fits fund another generation?
+
+We compared three public configurations on six fresh split seeds per task.
+With a population of six, an extra generation can propose twelve candidates,
+each initially scored on one fold. Reducing the shortlist from eight to five
+frees twelve fold fits. Rotating the execution order put each configuration
+in each timing position twice. The three columns below report mean held-out
+score and mean total CV fold fits (in parentheses).
+
+| Dataset and search | Two generations, eight finalists | Two generations, five finalists | Three generations, five finalists |
+| --- | ---: | ---: | ---: |
+| Wine KNN hyperparameters, accuracy | 0.9667 (59.2) | 0.9667 (47.2) | 0.9667 (55.7) |
+| Wine KNN features, accuracy | 0.9481 (62.0) | 0.9259 (50.0) | 0.9407 (61.7) |
+| Diabetes tree hyperparameters, MSE | 4282.8 (62.0) | 4282.8 (50.0) | 4307.6 (61.8) |
+| Diabetes tree features, MSE | 7470.0 (60.7) | 7405.2 (48.7) | 6891.9 (59.7) |
+
+Three generations with five finalists stayed within the eight-finalist
+fold count in every pair. Against eight finalists, Wine hyperparameter
+accuracy tied on every split. The Diabetes feature search had a lower mean
+error but improved on only two splits, worsened on three and tied on one.
+A single reduction of 5343.8 MSE dominated its mean. End-to-end time also
+varied: on Diabetes hyperparameters it rose from 111 to 121 ms despite
+similar fold counts. The choice between additional exploration and a longer
+shortlist therefore depends on the workload and the relative cost of fits.
+Reproduce with `python benchmarks/results/performance-v2/shortlist-transfer.py --reallocate`.
+[Paired timings, winners and fold counts](results/performance-v2/reallocated-finalist-budget.json).
+
 ## Holdout quality at intermediate candidate budgets
 
 The shared-initialization comparison above also permits a comparison before

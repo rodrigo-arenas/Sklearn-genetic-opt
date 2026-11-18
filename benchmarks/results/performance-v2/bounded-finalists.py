@@ -74,10 +74,18 @@ def promote(search, features, train, labels, test, target, metric):
     return arms
 
 
-def time_shortlists(search, train, labels, test, target, metric, seed, features):
+def time_shortlists(search, train, labels, test, target, metric, seed, features, reallocate=False):
     runs = {}
-    for k in ((5, 8) if seed % 2 else (8, 5)):
-        fitted = clone(search).set_params(final_selection_top_k=k)
+    settings = [(5, search.generations), (8, search.generations)]
+    if reallocate:
+        settings.append((5, search.generations + 1))
+        # Across six consecutive seeds each arm runs twice in each position.
+        offset = seed % 3
+        settings = settings[offset:] + settings[:offset]
+    elif not seed % 2:
+        settings.reverse()
+    for k, generations in settings:
+        fitted = clone(search).set_params(final_selection_top_k=k, generations=generations)
         counts = FitCounters()
         with count_cross_validate_calls(counts):
             start = perf_counter()
@@ -86,7 +94,8 @@ def time_shortlists(search, train, labels, test, target, metric, seed, features)
         finalist_folds = counts.cv_fold_fits - fitted.fit_stats_["cross_validate_calls"]
         assert finalist_folds == 4 * k
         holdout = fitted.transform(test) if features else test
-        runs[str(k)] = dict(
+        key = f"{generations}g_{k}k" if reallocate else str(k)
+        runs[key] = dict(
             finalists=[row["index"] for row in fitted.final_selection_results_["candidates"]],
             seconds=elapsed,
             folds=counts.cv_fold_fits,

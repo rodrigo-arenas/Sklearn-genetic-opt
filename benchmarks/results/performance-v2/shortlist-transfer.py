@@ -1,5 +1,6 @@
 """Time public finalist budgets on two additional Bayesmark model families."""
 
+import argparse
 import json
 import sys
 from pathlib import Path
@@ -13,6 +14,9 @@ from benchmarks import benchmark_bayesmark as bm
 from sklearn_genetic import GAFeatureSelectionCV, GASearchCV
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--reallocate", action="store_true")
+    args = parser.parse_args()
     time_shortlists = run_path(str(Path(__file__).with_name("bounded-finalists.py")))[
         "time_shortlists"
     ]
@@ -21,7 +25,7 @@ if __name__ == "__main__":
         for dataset, family in (("wine", "knn"), ("diabetes", "dt")):
             task = bm.build_task(bm.DATASETS[dataset], bm.MODELS[family])
             X, y = task.dataset.loader()
-            for seed in range(8811, 8817):
+            for seed in (range(8921, 8927) if args.reallocate else range(8811, 8817)):
                 train, test, labels, target = train_test_split(
                     X,
                     y,
@@ -52,7 +56,15 @@ if __name__ == "__main__":
                         space = bm.to_sklearn_genetic_space(bm.task_space(task), prefix)
                         search = GASearchCV(model, param_grid=space, **options)
                     runs = time_shortlists(
-                        search, train, labels, test, target, task.scoring, seed, features
+                        search,
+                        train,
+                        labels,
+                        test,
+                        target,
+                        task.scoring,
+                        seed,
+                        features,
+                        reallocate=args.reallocate,
                     )
                     rows.append(
                         dict(
