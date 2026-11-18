@@ -1285,6 +1285,29 @@ win and two losses. On Friedman1 two pairs tied and the exchange lost the
 third. The current mutation remains the default. This small cohort includes
 two regression tasks with the same estimator and overlapping outer splits.
 
+### Exchange only when the parent reaches a four-feature limit
+
+A follow-up kept the usual bit flips below the limit and exchanged one column
+when a parent already held four. We compared the CV winner among the first 24
+distinct masks (72 inner fold fits) on a reserved 25% split. Each row averages
+two outer splits and two search seeds. The synthetic classification datasets
+used the same generator settings and independent dataset seeds.
+
+| Dataset | Holdout metric | Default | Exchange at the limit |
+| --- | --- | ---: | ---: |
+| Breast Cancer, 30 columns | Balanced accuracy | .96198 | .96572 |
+| Diabetes, 10 columns | R² | .51691 | .50733 |
+| Synthetic, 256 columns, seed 981 | Balanced accuracy | .55041 | .68332 |
+| Synthetic, 256 columns, seed 1223 | Balanced accuracy | .66012 | .65354 |
+| Synthetic, 256 columns, seed 1997 | Balanced accuracy | .64972 | .64980 |
+
+Across all four generations on the wide datasets, the default mutation kept
+an average of 0.57 to 0.70 of the four parent columns. The exchange kept three
+by construction. Its large holdout gain on seed 981 came from two of the four
+pairs and did not recur on the other two datasets. Width and the feature limit
+alone gave insufficient evidence for switching operators. The report includes
+per-mutation overlap, selected columns and the [reproduction script and scores](results/performance-v2/capped-swap-pilot.json).
+
 The [raw records](results/performance-v2/feature-exchange.json) include mask
 indices, CV and holdout scores for each paired checkpoint. Run the
 [experiment](results/performance-v2/feature-exchange.py) from the repository root:

@@ -1,0 +1,908 @@
+{
+  "source_commit": "53fb801f3b1331c178710ba8fd84597d898ac951",
+  "python": "3.12.0",
+  "numpy": "2.5.3",
+  "sklearn": "1.9.1",
+  "reproduction_script": "import json\nimport platform\nimport random\nimport subprocess\nfrom pathlib import Path\nfrom statistics import mean\nfrom unittest.mock import patch\n\nimport numpy as np\nimport sklearn\nfrom sklearn.base import clone\nfrom sklearn.datasets import load_breast_cancer, load_diabetes, make_classification\nfrom sklearn.linear_model import LogisticRegression, Ridge\nfrom sklearn.metrics import get_scorer\nfrom sklearn.model_selection import KFold, StratifiedKFold, train_test_split\nfrom sklearn.pipeline import make_pipeline\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn_genetic import GAFeatureSelectionCV\nfrom threadpoolctl import threadpool_limits\n\noriginal = GAFeatureSelectionCV.mutate\nrows = []\nwith threadpool_limits(1):\n    for task in (\"breast_cancer\", \"diabetes\", \"sparse_981\", \"sparse_1223\", \"sparse_1997\"):\n        classification = task != \"diabetes\"\n        if task.startswith(\"sparse_\"):\n            X, y = make_classification(n_samples=300, n_features=256, n_informative=4,\n                                       n_redundant=4, random_state=int(task.split(\"_\")[1]))\n        else:\n            X, y = (load_breast_cancer if classification else load_diabetes)(return_X_y=True)\n        model = make_pipeline(StandardScaler(), LogisticRegression() if classification else Ridge())\n        metric = \"balanced_accuracy\" if classification else \"r2\"\n        for split in (17, 31):\n            a,b,c,d = train_test_split(X,y,stratify=y if classification else None,\n                                      random_state=split,test_size=.25)\n            splitter = StratifiedKFold if classification else KFold\n            cv = list(splitter(3,shuffle=True,random_state=split).split(a,c))\n            for seed in (9, 21):\n                for method in (\"default\", \"swap_at_cap\"):\n                    overlap = []\n                    def mutate(estimator, mask):\n                        parent = {i for i,v in enumerate(mask) if v}\n                        if method == \"swap_at_cap\" and len(parent) == estimator.max_features:\n                            remove = random.choice(sorted(parent))\n                            add = random.choice([i for i,v in enumerate(mask) if not v])\n                            mask[remove], mask[add] = 0, 1\n                            result = (mask,)\n                        else:\n                            result = original(estimator,mask)\n                        if len(parent) == estimator.max_features:\n                            overlap.append(sum(mask[i] for i in parent))\n                        return result\n                    with patch.object(GAFeatureSelectionCV,\"mutate\",mutate):\n                        search = GAFeatureSelectionCV(model, max_features=4, population_size=6,\n                            generations=4, scoring=metric, cv=cv, random_state=seed,\n                            n_jobs=1, error_score=\"raise\", verbose=False).fit(a,c)\n                    archive = {}\n                    for mask,score in zip(search.cv_results_[\"features\"],search.cv_results_[\"mean_test_score\"]):\n                        archive.setdefault(tuple(np.flatnonzero(mask).tolist()),score)\n                    assert len(archive) == search.fit_stats_[\"cross_validate_calls\"]\n                    assert len(archive) >= 24\n                    winner,score = max(list(archive.items())[:24],key=lambda item:item[1])\n                    fitted = clone(model).fit(a[:,winner],c)\n                    rows.append(dict(task=task,split=split,seed=seed,method=method,\n                        capped_mutations=len(overlap),retained_columns=overlap,\n                        total_evaluations=len(archive),budget=24,winner=winner,cv=float(score),\n                        holdout=float(get_scorer(metric)(fitted,b[:,winner],d))))\n        for method in (\"default\",\"swap_at_cap\"):\n            subset = [r for r in rows if r[\"task\"]==task and r[\"method\"]==method]\n            retained = [n for r in subset for n in r[\"retained_columns\"]]\n            print(task,method,len(retained),mean(retained) if retained else None,\n                  round(mean(r[\"holdout\"] for r in subset),5),flush=True)\nreport = dict(source_commit=subprocess.check_output([\"git\",\"rev-parse\",\"HEAD\"],text=True).strip(),\n              python=platform.python_version(),numpy=np.__version__,sklearn=sklearn.__version__,\n              reproduction_script=Path(__file__).read_text(encoding=\"utf8\"),rows=rows)\nPath(\"benchmarks/results/performance-v2/capped-swap-pilot.json\").write_text(\n    json.dumps(report,indent=2,allow_nan=False)+\"\\n\",encoding=\"utf8\")\n",
+  "rows": [
+    {
+      "task": "breast_cancer",
+      "split": 17,
+      "seed": 9,
+      "method": "default",
+      "capped_mutations": 5,
+      "retained_columns": [
+        3,
+        2,
+        2,
+        1,
+        3
+      ],
+      "total_evaluations": 53,
+      "budget": 24,
+      "winner": [
+        5,
+        7,
+        22,
+        24
+      ],
+      "cv": 0.9347042611829552,
+      "holdout": 0.9738993710691823
+    },
+    {
+      "task": "breast_cancer",
+      "split": 17,
+      "seed": 9,
+      "method": "swap_at_cap",
+      "capped_mutations": 2,
+      "retained_columns": [
+        3,
+        3
+      ],
+      "total_evaluations": 53,
+      "budget": 24,
+      "winner": [
+        5,
+        7,
+        22,
+        24
+      ],
+      "cv": 0.9347042611829552,
+      "holdout": 0.9738993710691823
+    },
+    {
+      "task": "breast_cancer",
+      "split": 17,
+      "seed": 21,
+      "method": "default",
+      "capped_mutations": 5,
+      "retained_columns": [
+        2,
+        1,
+        2,
+        2,
+        1
+      ],
+      "total_evaluations": 52,
+      "budget": 24,
+      "winner": [
+        1,
+        20,
+        26,
+        28
+      ],
+      "cv": 0.9478835417991661,
+      "holdout": 0.9905660377358491
+    },
+    {
+      "task": "breast_cancer",
+      "split": 17,
+      "seed": 21,
+      "method": "swap_at_cap",
+      "capped_mutations": 6,
+      "retained_columns": [
+        3,
+        3,
+        3,
+        3,
+        3,
+        3
+      ],
+      "total_evaluations": 54,
+      "budget": 24,
+      "winner": [
+        1,
+        20,
+        26,
+        28
+      ],
+      "cv": 0.9478835417991661,
+      "holdout": 0.9905660377358491
+    },
+    {
+      "task": "breast_cancer",
+      "split": 31,
+      "seed": 9,
+      "method": "default",
+      "capped_mutations": 6,
+      "retained_columns": [
+        3,
+        2,
+        2,
+        3,
+        2,
+        3
+      ],
+      "total_evaluations": 52,
+      "budget": 24,
+      "winner": [
+        5,
+        7,
+        22,
+        24
+      ],
+      "cv": 0.9484842060631756,
+      "holdout": 0.9378406708595388
+    },
+    {
+      "task": "breast_cancer",
+      "split": 31,
+      "seed": 9,
+      "method": "swap_at_cap",
+      "capped_mutations": 4,
+      "retained_columns": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "total_evaluations": 52,
+      "budget": 24,
+      "winner": [
+        5,
+        7,
+        22,
+        24
+      ],
+      "cv": 0.9484842060631756,
+      "holdout": 0.9378406708595388
+    },
+    {
+      "task": "breast_cancer",
+      "split": 31,
+      "seed": 21,
+      "method": "default",
+      "capped_mutations": 8,
+      "retained_columns": [
+        3,
+        4,
+        1,
+        2,
+        2,
+        3,
+        3,
+        3
+      ],
+      "total_evaluations": 54,
+      "budget": 24,
+      "winner": [
+        1,
+        20,
+        26,
+        28
+      ],
+      "cv": 0.9642074765034273,
+      "holdout": 0.9455974842767296
+    },
+    {
+      "task": "breast_cancer",
+      "split": 31,
+      "seed": 21,
+      "method": "swap_at_cap",
+      "capped_mutations": 5,
+      "retained_columns": [
+        3,
+        3,
+        3,
+        3,
+        3
+      ],
+      "total_evaluations": 54,
+      "budget": 24,
+      "winner": [
+        21,
+        23,
+        24,
+        26
+      ],
+      "cv": 0.9679527948554872,
+      "holdout": 0.960587002096436
+    },
+    {
+      "task": "diabetes",
+      "split": 17,
+      "seed": 9,
+      "method": "default",
+      "capped_mutations": 4,
+      "retained_columns": [
+        4,
+        4,
+        3,
+        3
+      ],
+      "total_evaluations": 50,
+      "budget": 24,
+      "winner": [
+        2,
+        3,
+        4,
+        8
+      ],
+      "cv": 0.4533831734654706,
+      "holdout": 0.5265601200956929
+    },
+    {
+      "task": "diabetes",
+      "split": 17,
+      "seed": 9,
+      "method": "swap_at_cap",
+      "capped_mutations": 2,
+      "retained_columns": [
+        3,
+        3
+      ],
+      "total_evaluations": 50,
+      "budget": 24,
+      "winner": [
+        2,
+        3,
+        4,
+        8
+      ],
+      "cv": 0.4533831734654706,
+      "holdout": 0.5265601200956929
+    },
+    {
+      "task": "diabetes",
+      "split": 17,
+      "seed": 21,
+      "method": "default",
+      "capped_mutations": 6,
+      "retained_columns": [
+        4,
+        3,
+        3,
+        4,
+        2,
+        3
+      ],
+      "total_evaluations": 50,
+      "budget": 24,
+      "winner": [
+        2,
+        3,
+        4,
+        8
+      ],
+      "cv": 0.4533831734654706,
+      "holdout": 0.5265601200956929
+    },
+    {
+      "task": "diabetes",
+      "split": 17,
+      "seed": 21,
+      "method": "swap_at_cap",
+      "capped_mutations": 5,
+      "retained_columns": [
+        3,
+        3,
+        3,
+        3,
+        3
+      ],
+      "total_evaluations": 50,
+      "budget": 24,
+      "winner": [
+        1,
+        2,
+        3,
+        8
+      ],
+      "cv": 0.46754489641863994,
+      "holdout": 0.46530143316203565
+    },
+    {
+      "task": "diabetes",
+      "split": 31,
+      "seed": 9,
+      "method": "default",
+      "capped_mutations": 4,
+      "retained_columns": [
+        4,
+        4,
+        3,
+        3
+      ],
+      "total_evaluations": 50,
+      "budget": 24,
+      "winner": [
+        2,
+        3,
+        4,
+        8
+      ],
+      "cv": 0.4716578121484776,
+      "holdout": 0.5072570228571145
+    },
+    {
+      "task": "diabetes",
+      "split": 31,
+      "seed": 9,
+      "method": "swap_at_cap",
+      "capped_mutations": 2,
+      "retained_columns": [
+        3,
+        3
+      ],
+      "total_evaluations": 50,
+      "budget": 24,
+      "winner": [
+        2,
+        3,
+        4,
+        8
+      ],
+      "cv": 0.4716578121484776,
+      "holdout": 0.5072570228571145
+    },
+    {
+      "task": "diabetes",
+      "split": 31,
+      "seed": 21,
+      "method": "default",
+      "capped_mutations": 5,
+      "retained_columns": [
+        4,
+        3,
+        3,
+        2,
+        3
+      ],
+      "total_evaluations": 50,
+      "budget": 24,
+      "winner": [
+        2,
+        3,
+        4,
+        8
+      ],
+      "cv": 0.4716578121484776,
+      "holdout": 0.5072570228571145
+    },
+    {
+      "task": "diabetes",
+      "split": 31,
+      "seed": 21,
+      "method": "swap_at_cap",
+      "capped_mutations": 5,
+      "retained_columns": [
+        3,
+        3,
+        3,
+        3,
+        3
+      ],
+      "total_evaluations": 49,
+      "budget": 24,
+      "winner": [
+        1,
+        2,
+        3,
+        8
+      ],
+      "cv": 0.4542563865846217,
+      "holdout": 0.530186537340687
+    },
+    {
+      "task": "sparse_981",
+      "split": 17,
+      "seed": 9,
+      "method": "default",
+      "capped_mutations": 5,
+      "retained_columns": [
+        1,
+        1,
+        2,
+        0,
+        0
+      ],
+      "total_evaluations": 54,
+      "budget": 24,
+      "winner": [
+        29,
+        90,
+        223,
+        237
+      ],
+      "cv": 0.5821479374110953,
+      "holdout": 0.4139402560455192
+    },
+    {
+      "task": "sparse_981",
+      "split": 17,
+      "seed": 9,
+      "method": "swap_at_cap",
+      "capped_mutations": 1,
+      "retained_columns": [
+        3
+      ],
+      "total_evaluations": 54,
+      "budget": 24,
+      "winner": [
+        29,
+        106,
+        207,
+        226
+      ],
+      "cv": 0.7019914651493598,
+      "holdout": 0.6678520625889047
+    },
+    {
+      "task": "sparse_981",
+      "split": 17,
+      "seed": 21,
+      "method": "default",
+      "capped_mutations": 0,
+      "retained_columns": [],
+      "total_evaluations": 53,
+      "budget": 24,
+      "winner": [
+        197,
+        214
+      ],
+      "cv": 0.6443812233285917,
+      "holdout": 0.7343527738264581
+    },
+    {
+      "task": "sparse_981",
+      "split": 17,
+      "seed": 21,
+      "method": "swap_at_cap",
+      "capped_mutations": 0,
+      "retained_columns": [],
+      "total_evaluations": 53,
+      "budget": 24,
+      "winner": [
+        197,
+        214
+      ],
+      "cv": 0.6443812233285917,
+      "holdout": 0.7343527738264581
+    },
+    {
+      "task": "sparse_981",
+      "split": 31,
+      "seed": 9,
+      "method": "default",
+      "capped_mutations": 3,
+      "retained_columns": [
+        1,
+        1,
+        0
+      ],
+      "total_evaluations": 54,
+      "budget": 24,
+      "winner": [
+        19,
+        188,
+        223
+      ],
+      "cv": 0.5559506875296348,
+      "holdout": 0.4274537695590327
+    },
+    {
+      "task": "sparse_981",
+      "split": 31,
+      "seed": 9,
+      "method": "swap_at_cap",
+      "capped_mutations": 4,
+      "retained_columns": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "total_evaluations": 54,
+      "budget": 24,
+      "winner": [
+        106,
+        207,
+        226,
+        249
+      ],
+      "cv": 0.6891891891891891,
+      "holdout": 0.7051920341394026
+    },
+    {
+      "task": "sparse_981",
+      "split": 31,
+      "seed": 21,
+      "method": "default",
+      "capped_mutations": 4,
+      "retained_columns": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "total_evaluations": 52,
+      "budget": 24,
+      "winner": [
+        197,
+        214
+      ],
+      "cv": 0.6699857752489331,
+      "holdout": 0.6258890469416785
+    },
+    {
+      "task": "sparse_981",
+      "split": 31,
+      "seed": 21,
+      "method": "swap_at_cap",
+      "capped_mutations": 1,
+      "retained_columns": [
+        3
+      ],
+      "total_evaluations": 54,
+      "budget": 24,
+      "winner": [
+        197,
+        214
+      ],
+      "cv": 0.6699857752489331,
+      "holdout": 0.6258890469416785
+    },
+    {
+      "task": "sparse_1223",
+      "split": 17,
+      "seed": 9,
+      "method": "default",
+      "capped_mutations": 5,
+      "retained_columns": [
+        1,
+        1,
+        0,
+        1,
+        1
+      ],
+      "total_evaluations": 54,
+      "budget": 24,
+      "winner": [
+        104,
+        136,
+        148
+      ],
+      "cv": 0.599810336652442,
+      "holdout": 0.732574679943101
+    },
+    {
+      "task": "sparse_1223",
+      "split": 17,
+      "seed": 9,
+      "method": "swap_at_cap",
+      "capped_mutations": 3,
+      "retained_columns": [
+        3,
+        3,
+        3
+      ],
+      "total_evaluations": 54,
+      "budget": 24,
+      "winner": [
+        104,
+        136,
+        146,
+        148
+      ],
+      "cv": 0.604551920341394,
+      "holdout": 0.7062588904694167
+    },
+    {
+      "task": "sparse_1223",
+      "split": 17,
+      "seed": 21,
+      "method": "default",
+      "capped_mutations": 4,
+      "retained_columns": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "total_evaluations": 54,
+      "budget": 24,
+      "winner": [
+        100,
+        185
+      ],
+      "cv": 0.6525604551920341,
+      "holdout": 0.7069701280227596
+    },
+    {
+      "task": "sparse_1223",
+      "split": 17,
+      "seed": 21,
+      "method": "swap_at_cap",
+      "capped_mutations": 2,
+      "retained_columns": [
+        3,
+        3
+      ],
+      "total_evaluations": 54,
+      "budget": 24,
+      "winner": [
+        100,
+        185
+      ],
+      "cv": 0.6525604551920341,
+      "holdout": 0.7069701280227596
+    },
+    {
+      "task": "sparse_1223",
+      "split": 31,
+      "seed": 9,
+      "method": "default",
+      "capped_mutations": 2,
+      "retained_columns": [
+        1,
+        1
+      ],
+      "total_evaluations": 54,
+      "budget": 24,
+      "winner": [
+        104,
+        136,
+        148
+      ],
+      "cv": 0.6580132764343292,
+      "holdout": 0.6006401137980086
+    },
+    {
+      "task": "sparse_1223",
+      "split": 31,
+      "seed": 9,
+      "method": "swap_at_cap",
+      "capped_mutations": 6,
+      "retained_columns": [
+        3,
+        3,
+        3,
+        3,
+        3,
+        3
+      ],
+      "total_evaluations": 53,
+      "budget": 24,
+      "winner": [
+        104,
+        136,
+        148
+      ],
+      "cv": 0.6580132764343292,
+      "holdout": 0.6006401137980086
+    },
+    {
+      "task": "sparse_1223",
+      "split": 31,
+      "seed": 21,
+      "method": "default",
+      "capped_mutations": 3,
+      "retained_columns": [
+        0,
+        0,
+        2
+      ],
+      "total_evaluations": 54,
+      "budget": 24,
+      "winner": [
+        100,
+        185
+      ],
+      "cv": 0.6669037458511143,
+      "holdout": 0.6002844950213371
+    },
+    {
+      "task": "sparse_1223",
+      "split": 31,
+      "seed": 21,
+      "method": "swap_at_cap",
+      "capped_mutations": 2,
+      "retained_columns": [
+        3,
+        3
+      ],
+      "total_evaluations": 54,
+      "budget": 24,
+      "winner": [
+        100,
+        185
+      ],
+      "cv": 0.6669037458511143,
+      "holdout": 0.6002844950213371
+    },
+    {
+      "task": "sparse_1997",
+      "split": 17,
+      "seed": 9,
+      "method": "default",
+      "capped_mutations": 4,
+      "retained_columns": [
+        1,
+        1,
+        0,
+        1
+      ],
+      "total_evaluations": 54,
+      "budget": 24,
+      "winner": [
+        104,
+        123,
+        136,
+        148
+      ],
+      "cv": 0.8490990990990991,
+      "holdout": 0.8410384068278806
+    },
+    {
+      "task": "sparse_1997",
+      "split": 17,
+      "seed": 9,
+      "method": "swap_at_cap",
+      "capped_mutations": 10,
+      "retained_columns": [
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3
+      ],
+      "total_evaluations": 53,
+      "budget": 24,
+      "winner": [
+        26,
+        104,
+        123,
+        136
+      ],
+      "cv": 0.8492176386913229,
+      "holdout": 0.8413940256045519
+    },
+    {
+      "task": "sparse_1997",
+      "split": 17,
+      "seed": 21,
+      "method": "default",
+      "capped_mutations": 7,
+      "retained_columns": [
+        0,
+        0,
+        0,
+        2,
+        0,
+        1,
+        2
+      ],
+      "total_evaluations": 54,
+      "budget": 24,
+      "winner": [
+        14,
+        104,
+        163,
+        164
+      ],
+      "cv": 0.5739687055476529,
+      "holdout": 0.519203413940256
+    },
+    {
+      "task": "sparse_1997",
+      "split": 17,
+      "seed": 21,
+      "method": "swap_at_cap",
+      "capped_mutations": 5,
+      "retained_columns": [
+        3,
+        3,
+        3,
+        3,
+        3
+      ],
+      "total_evaluations": 53,
+      "budget": 24,
+      "winner": [
+        14,
+        104,
+        163,
+        164
+      ],
+      "cv": 0.5739687055476529,
+      "holdout": 0.519203413940256
+    },
+    {
+      "task": "sparse_1997",
+      "split": 31,
+      "seed": 9,
+      "method": "default",
+      "capped_mutations": 7,
+      "retained_columns": [
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        1
+      ],
+      "total_evaluations": 54,
+      "budget": 24,
+      "winner": [
+        104,
+        123,
+        136,
+        148
+      ],
+      "cv": 0.8264580369843527,
+      "holdout": 0.7994310099573257
+    },
+    {
+      "task": "sparse_1997",
+      "split": 31,
+      "seed": 9,
+      "method": "swap_at_cap",
+      "capped_mutations": 6,
+      "retained_columns": [
+        3,
+        3,
+        3,
+        3,
+        3,
+        3
+      ],
+      "total_evaluations": 53,
+      "budget": 24,
+      "winner": [
+        104,
+        123,
+        136,
+        148
+      ],
+      "cv": 0.8264580369843527,
+      "holdout": 0.7994310099573257
+    },
+    {
+      "task": "sparse_1997",
+      "split": 31,
+      "seed": 21,
+      "method": "default",
+      "capped_mutations": 5,
+      "retained_columns": [
+        1,
+        1,
+        0,
+        2,
+        0
+      ],
+      "total_evaluations": 54,
+      "budget": 24,
+      "winner": [
+        93,
+        94
+      ],
+      "cv": 0.5555950687529635,
+      "holdout": 0.4391891891891892
+    },
+    {
+      "task": "sparse_1997",
+      "split": 31,
+      "seed": 21,
+      "method": "swap_at_cap",
+      "capped_mutations": 2,
+      "retained_columns": [
+        3,
+        3
+      ],
+      "total_evaluations": 53,
+      "budget": 24,
+      "winner": [
+        93,
+        94
+      ],
+      "cv": 0.5555950687529635,
+      "holdout": 0.4391891891891892
+    }
+  ]
+}
