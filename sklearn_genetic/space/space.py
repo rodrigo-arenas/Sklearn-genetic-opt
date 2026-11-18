@@ -97,9 +97,6 @@ class Integer(BaseDimension):
             np.random.default_rng(self.random_state) if self.random_state is not None else None
         )
 
-        if self.distribution == IntegerDistributions.uniform.value:
-            self.rvs = stats.randint.rvs
-
     def __repr__(self) -> str:
         return (
             f"{self.__class__.__name__}(lower={self.lower}, upper={self.upper}, "
@@ -111,11 +108,10 @@ class Integer(BaseDimension):
 
         if self.lower == self.upper:
             return int(self.lower)
-        return self.rvs(
-            self.lower,
-            self.upper + 1,
-            random_state=self.rng if self.rng is not None else check_random_state(None),
-        )
+        # Match SciPy's int64 draws even on platforms where randint defaults to int32.
+        if self.rng is None:
+            return int(np.random.randint(self.lower, self.upper + 1, dtype=np.int64))
+        return int(self.rng.integers(self.lower, self.upper + 1, dtype=np.int64))
 
     def _round_and_clip(self, value):
         if isinstance(value, (int, np.integer)):
