@@ -80,6 +80,8 @@ def paired_fit(width, seed, methods=(TupleRanking, GAFeatureSelectionCV)):
         finalists = search.final_selection_results_["candidates"]
         outcomes.append(
             (
+                [np.packbits(mask).tobytes() for mask in search.cv_results_["features"]],
+                list(search.cv_results_["mean_test_score"]),
                 [row["index"] for row in finalists],
                 [row["cv_scores"] for row in finalists],
                 search.best_features_.tolist(),

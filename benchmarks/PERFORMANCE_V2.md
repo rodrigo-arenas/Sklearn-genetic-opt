@@ -1650,6 +1650,31 @@ speedup. Reproduce with
 `python benchmarks/results/performance-v2/feature-repair-fit.py --audit`.
 [Counts and timings by caller and seed](results/performance-v2/feature-repair-stages.json).
 
+#### Does skipping the second repair improve complete fits?
+
+A benchmark subclass connected the evolutionary toolbox directly to the
+shared batch evaluator. Standard variation operators continued to repair
+their outputs. Eight fresh seeds per width repeated the depth-three tree
+workload, alternating the order of the baseline and experimental fits.
+
+| Columns | Median baseline fit | Median experimental fit | Faster experimental fits |
+| ---: | ---: | ---: | ---: |
+| 16 | 125.98 ms | 128.36 ms | 2/8 |
+| 256 | 179.22 ms | 180.23 ms | 4/8 |
+| 4,096 | 299.39 ms | 278.64 ms | 8/8 |
+
+All 24 pairs matched on the ordered candidate masks and mean CV scores,
+finalists and their fold scores, winning mask, held-out predictions and
+candidate CV count. At 4,096 columns the median within-pair saving was
+22.17 ms. The prototype has a compatibility issue: a subclass override of
+`evaluate_population` received two batch calls during an ordinary one-generation
+Iris fit and zero through the experimental toolbox. Direct calls still
+repaired empty and oversized masks in both cases. This rules out wiring
+the shared evaluator directly for all subclasses. The experiment used fresh
+populations and built-in operators. Reproduce with
+`python benchmarks/results/performance-v2/feature-repair-fit.py --internal-batch`.
+[Paired fit timings](results/performance-v2/internal-batch-repair.json).
+
 ## Mutation in grids that mix fixed and variable dimensions
 
 The standard HPO mutation used to select from every configured parameter.

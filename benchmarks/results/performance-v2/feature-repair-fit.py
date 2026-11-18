@@ -14,6 +14,7 @@ from sklearn.tree import DecisionTreeClassifier
 from threadpoolctl import threadpool_limits
 
 from sklearn_genetic import GAFeatureSelectionCV
+from sklearn_genetic.evaluation import evaluate_population
 
 
 class BulkRepair(GAFeatureSelectionCV):
@@ -28,6 +29,19 @@ class BulkRepair(GAFeatureSelectionCV):
         elif count == 0:
             individual[random.randrange(len(individual))] = 1
         return individual
+
+
+class InternalBatch(GAFeatureSelectionCV):
+    """Benchmark the internal path on built-in operators and fresh populations."""
+
+    def _register(self):
+        super()._register()
+        self.toolbox.register(
+            "evaluate_population",
+            evaluate_population,
+            self,
+            cache_record_key="current_generation_features",
+        )
 
 
 class AuditedRepair(GAFeatureSelectionCV):
@@ -74,21 +88,24 @@ def audit(seed, mode):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--audit", action="store_true")
+    modes = parser.add_mutually_exclusive_group()
+    modes.add_argument("--audit", action="store_true")
+    modes.add_argument("--internal-batch", action="store_true")
     args = parser.parse_args()
     paired_fit = run_path(str(Path(__file__).with_name("finalist-mask-keys.py")))["paired_fit"]
     with threadpool_limits(1):
-        rows = (
-            [
+        if args.audit:
+            rows = [
                 audit(seed, mode)
                 for mode in ("default", "random", "differential", "local")
                 for seed in range(9161, 9164)
             ]
-            if args.audit
-            else [
-                paired_fit(width, seed, (GAFeatureSelectionCV, BulkRepair))
+        else:
+            variant = InternalBatch if args.internal_batch else BulkRepair
+            seeds = range(9171, 9179) if args.internal_batch else range(9151, 9157)
+            rows = [
+                paired_fit(width, seed, (GAFeatureSelectionCV, variant))
                 for width in (16, 256, 4096)
-                for seed in range(9151, 9157)
+                for seed in seeds
             ]
-        )
     print(json.dumps(rows, indent=2))
