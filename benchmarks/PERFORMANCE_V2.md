@@ -2491,6 +2491,29 @@ selectors fitted separately in each fold can choose different masks across
 folds. Run the transfer script with `--reference` for the
 [per-split exhaustive winners and full-budget scores](results/performance-v2/physical-reference.json).
 
+#### Does evolution outperform uniform sampling at the same cost?
+
+For each split, give uniform sampling without replacement exactly as many
+distinct masks as the full-budget genetic run evaluated. The exhaustive
+scores give the exact distribution of the best sampled mask. Among all
+equally likely samples of size `k`, a mask with `i` lower-ranked masks wins
+in `comb(i, k - 1)` samples. Rank by training-fold CV and break ties by the
+original enumeration order. Use those probabilities to weight holdout R²
+only after fixing the ranks.
+
+| Dataset | Genetic CV R² | Expected random CV R² | Genetic holdout R² | Expected random holdout R² | Random chance to match or beat genetic CV |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Airfoil | 0.472042 | 0.465276 | 0.449364 | 0.443584 | 65.0% |
+| Yacht | 0.656379 | 0.656309 | 0.658010 | 0.657942 | 59.9% |
+
+Values are averages across six group splits. Genetic search exceeded the
+random expectation for CV on every split, yet random search often reached
+the same score or better (within 1e−12). The mean holdout advantage was
+0.00578 on airfoil and less than 0.0001 on yacht. The comparator matches
+CV fit counts and samples uniformly over masks, so subset sizes appear in
+proportion to their number of admissible masks. The results cover one
+genetic seed per split and two small spaces.
+
 ## Selecting masks using scores of previously evaluated subsets
 
 This pilot tested whether the columns in high-scoring masks are worth trying

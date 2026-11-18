@@ -5,6 +5,7 @@ import hashlib
 import json
 from io import BytesIO
 from itertools import combinations, permutations
+from math import comb
 from pathlib import Path
 from runpy import run_path
 from urllib.request import urlopen
@@ -20,7 +21,7 @@ from threadpoolctl import threadpool_limits
 run = run_path(str(Path(__file__).with_name("diabetes-target.py")))["run"]
 
 
-def exhaustive(X, y, test, labels, cv, seed):
+def exhaustive(X, y, test, labels, cv, seed, genetic):
     model = make_pipeline(StandardScaler(), Ridge())
     scores = {}
     for k in range(1, 5):
@@ -29,6 +30,22 @@ def exhaustive(X, y, test, labels, cv, seed):
                 model, X[:, mask], y, cv=cv, scoring="r2", error_score="raise"
             ).mean()
     best = max(scores, key=scores.get)
+    # For the mask at ascending rank i to win, all other draws must rank below it.
+    draws, remainder = divmod(genetic["folds"], len(cv))
+    assert remainder == 0 and 1 <= draws <= len(scores)
+    ranked = sorted(reversed(scores), key=scores.get)
+    ways = [comb(i, draws - 1) for i in range(len(scores))]
+    total = comb(len(scores), draws)
+    assert sum(ways) == total
+    expected_cv = expected_holdout = match = 0.0
+    for mask, count in zip(ranked, ways, strict=True):
+        if count:
+            weight = count / total
+            expected_cv += weight * scores[mask]
+            model.fit(X[:, mask], y)
+            expected_holdout += weight * model.score(test[:, mask], labels)
+            if scores[mask] >= genetic["cv"] - 1e-12:
+                match += weight
     model.fit(X[:, best], y)
     return dict(
         policy="exhaustive",
@@ -37,6 +54,12 @@ def exhaustive(X, y, test, labels, cv, seed):
         cv=scores[best],
         folds=len(scores) * len(cv),
         holdout=model.score(test[:, best], labels),
+        random_at_genetic_budget=dict(
+            draws=draws,
+            expected_cv=expected_cv,
+            expected_holdout=expected_holdout,
+            probability_matching_or_beating_genetic=match,
+        ),
     )
 
 
@@ -58,8 +81,8 @@ def compare(name, archive, member, group_columns, reference=False):
             assert not np.intersect1d(groups[train[a]], groups[train[b]]).size
         args = X[train], y[train], X[test], y[test], cv, seed
         if reference:
-            baseline = exhaustive(*args)
             genetic = run("genetic", *args, 1.0)
+            baseline = exhaustive(*args, genetic)
             assert not genetic["reached"] and genetic["cv"] <= baseline["cv"] + 1e-12
             rows.extend([baseline, genetic])
         else:

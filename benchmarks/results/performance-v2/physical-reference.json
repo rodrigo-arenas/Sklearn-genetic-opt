@@ -16,7 +16,13 @@
         ],
         "cv": 0.4626899700271711,
         "folds": 90,
-        "holdout": 0.4654569863534349
+        "holdout": 0.4654569863534349,
+        "random_at_genetic_budget": {
+          "draws": 19,
+          "expected_cv": 0.45682945032003497,
+          "expected_holdout": 0.46282144747159004,
+          "probability_matching_or_beating_genetic": 0.6333333333333333
+        }
       },
       {
         "policy": "genetic",
@@ -25,7 +31,7 @@
         "folds": 57,
         "cv": 0.4626899700271711,
         "reached": false,
-        "seconds": 0.17035030003171414,
+        "seconds": 0.19070719997398555,
         "holdout": 0.4654569863534349
       },
       {
@@ -39,7 +45,13 @@
         ],
         "cv": 0.45251957859105785,
         "folds": 90,
-        "holdout": 0.5527372381716582
+        "holdout": 0.5527372381716582,
+        "random_at_genetic_budget": {
+          "draws": 21,
+          "expected_cv": 0.44913591329835323,
+          "expected_holdout": 0.5423051953416443,
+          "probability_matching_or_beating_genetic": 0.7
+        }
       },
       {
         "policy": "genetic",
@@ -48,7 +60,7 @@
         "folds": 63,
         "cv": 0.45251957859105785,
         "reached": false,
-        "seconds": 0.17827169998781756,
+        "seconds": 0.16957829997409135,
         "holdout": 0.5527372381716582
       },
       {
@@ -62,7 +74,13 @@
         ],
         "cv": 0.4962094551599769,
         "folds": 90,
-        "holdout": 0.3503876329948745
+        "holdout": 0.3503876329948745,
+        "random_at_genetic_budget": {
+          "draws": 21,
+          "expected_cv": 0.48943179739410303,
+          "expected_holdout": 0.3610614057248638,
+          "probability_matching_or_beating_genetic": 0.7
+        }
       },
       {
         "policy": "genetic",
@@ -71,7 +89,7 @@
         "folds": 63,
         "cv": 0.4962094551599769,
         "reached": false,
-        "seconds": 0.16930249996948987,
+        "seconds": 0.17226750002009794,
         "holdout": 0.3503876329948745
       },
       {
@@ -85,7 +103,13 @@
         ],
         "cv": 0.46375161379701485,
         "folds": 90,
-        "holdout": 0.48183774782374866
+        "holdout": 0.48183774782374866,
+        "random_at_genetic_budget": {
+          "draws": 20,
+          "expected_cv": 0.4540203699471992,
+          "expected_holdout": 0.47626068838085345,
+          "probability_matching_or_beating_genetic": 0.6666666666666666
+        }
       },
       {
         "policy": "genetic",
@@ -94,7 +118,7 @@
         "folds": 60,
         "cv": 0.46375161379701485,
         "reached": false,
-        "seconds": 0.16459080000640824,
+        "seconds": 0.163635200005956,
         "holdout": 0.48183774782374866
       },
       {
@@ -108,7 +132,13 @@
         ],
         "cv": 0.46765209951484216,
         "folds": 90,
-        "holdout": 0.4798252956475998
+        "holdout": 0.4798252956475998,
+        "random_at_genetic_budget": {
+          "draws": 19,
+          "expected_cv": 0.45932546689756903,
+          "expected_holdout": 0.46710043606402385,
+          "probability_matching_or_beating_genetic": 0.6333333333333333
+        }
       },
       {
         "policy": "genetic",
@@ -117,7 +147,7 @@
         "folds": 57,
         "cv": 0.46765209951484216,
         "reached": false,
-        "seconds": 0.15546729997731745,
+        "seconds": 0.15444760001264513,
         "holdout": 0.4798252956475998
       },
       {
@@ -131,7 +161,13 @@
         ],
         "cv": 0.4894317256920551,
         "folds": 90,
-        "holdout": 0.3659388157433239
+        "holdout": 0.3659388157433239,
+        "random_at_genetic_budget": {
+          "draws": 17,
+          "expected_cv": 0.48291155682980874,
+          "expected_holdout": 0.3519577063023725,
+          "probability_matching_or_beating_genetic": 0.5666666666666667
+        }
       },
       {
         "policy": "genetic",
@@ -140,7 +176,7 @@
         "folds": 51,
         "cv": 0.4894317256920551,
         "reached": false,
-        "seconds": 0.1418120000162162,
+        "seconds": 0.14121200004592538,
         "holdout": 0.3659388157433239
       }
     ]
@@ -162,7 +198,13 @@
         ],
         "cv": 0.6598385629876019,
         "folds": 168,
-        "holdout": 0.6491245129293974
+        "holdout": 0.6491245129293974,
+        "random_at_genetic_budget": {
+          "draws": 28,
+          "expected_cv": 0.6597641157005627,
+          "expected_holdout": 0.6491004190880469,
+          "probability_matching_or_beating_genetic": 0.5
+        }
       },
       {
         "policy": "genetic",
@@ -171,7 +213,7 @@
         "folds": 84,
         "cv": 0.6598385629876019,
         "reached": false,
-        "seconds": 0.2208948999759741,
+        "seconds": 0.23736460000509396,
         "holdout": 0.6491245129293974
       },
       {
@@ -185,7 +227,13 @@
         ],
         "cv": 0.6545965642707159,
         "folds": 168,
-        "holdout": 0.6613038949180267
+        "holdout": 0.6613038949180267,
+        "random_at_genetic_budget": {
+          "draws": 28,
+          "expected_cv": 0.6544899170483347,
+          "expected_holdout": 0.6614380262496111,
+          "probability_matching_or_beating_genetic": 0.5
+        }
       },
       {
         "policy": "genetic",
@@ -194,7 +242,7 @@
         "folds": 84,
         "cv": 0.6545965642707159,
         "reached": false,
-        "seconds": 0.21936629997799173,
+        "seconds": 0.2174110999912955,
         "holdout": 0.6613038949180267
       },
       {
@@ -207,7 +255,13 @@
         ],
         "cv": 0.6542994805336404,
         "folds": 168,
-        "holdout": 0.6643093790406285
+        "holdout": 0.6643093790406285,
+        "random_at_genetic_budget": {
+          "draws": 27,
+          "expected_cv": 0.6541566452336254,
+          "expected_holdout": 0.6642367683353835,
+          "probability_matching_or_beating_genetic": 0.48214285714285715
+        }
       },
       {
         "policy": "genetic",
@@ -216,7 +270,7 @@
         "folds": 81,
         "cv": 0.6542994805336404,
         "reached": false,
-        "seconds": 0.21286730002611876,
+        "seconds": 0.21093420003307983,
         "holdout": 0.6643093790406285
       },
       {
@@ -229,7 +283,13 @@
         ],
         "cv": 0.6566835242202961,
         "folds": 168,
-        "holdout": 0.6574920970605609
+        "holdout": 0.6574920970605609,
+        "random_at_genetic_budget": {
+          "draws": 28,
+          "expected_cv": 0.6565994147446137,
+          "expected_holdout": 0.6572671188844974,
+          "probability_matching_or_beating_genetic": 0.7545454545454545
+        }
       },
       {
         "policy": "genetic",
@@ -238,7 +298,7 @@
         "folds": 84,
         "cv": 0.6566043785676121,
         "reached": false,
-        "seconds": 0.23381679999874905,
+        "seconds": 0.21861729997908697,
         "holdout": 0.6575035675717518
       },
       {
@@ -252,7 +312,13 @@
         ],
         "cv": 0.6565639255409823,
         "folds": 168,
-        "holdout": 0.6580641416953221
+        "holdout": 0.6580641416953221,
+        "random_at_genetic_budget": {
+          "draws": 25,
+          "expected_cv": 0.65647968528407,
+          "expected_holdout": 0.6583044108002564,
+          "probability_matching_or_beating_genetic": 0.8378427128427128
+        }
       },
       {
         "policy": "genetic",
@@ -261,7 +327,7 @@
         "folds": 75,
         "cv": 0.6565077289595406,
         "reached": false,
-        "seconds": 0.21142520004650578,
+        "seconds": 0.19558850000612438,
         "holdout": 0.6583042850390672
       },
       {
@@ -274,7 +340,13 @@
         ],
         "cv": 0.6564250038453239,
         "folds": 168,
-        "holdout": 0.6575155578553409
+        "holdout": 0.6575155578553409,
+        "random_at_genetic_budget": {
+          "draws": 29,
+          "expected_cv": 0.6563617924833896,
+          "expected_holdout": 0.6573057381650345,
+          "probability_matching_or_beating_genetic": 0.5178571428571429
+        }
       },
       {
         "policy": "genetic",
@@ -283,7 +355,7 @@
         "folds": 87,
         "cv": 0.6564250038453239,
         "reached": false,
-        "seconds": 0.22626450000097975,
+        "seconds": 0.24098190001677722,
         "holdout": 0.6575155578553409
       }
     ]
