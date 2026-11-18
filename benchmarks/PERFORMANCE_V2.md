@@ -2145,6 +2145,29 @@ universal initial mask size. Reproduce with
 `python benchmarks/results/performance-v2/partition-initialization.py --sparse-regression`.
 [Per-run measurements](results/performance-v2/sparse-initialization.json).
 
+#### Does maximizing initial column coverage help at the same mask sizes?
+
+On eight fresh seeds we kept the smart initializer's six mask sizes in their
+original order. For each mask we chose the columns used least often so far,
+breaking ties at random. The experiment used the sparse regression setup
+above and the ordinary evolutionary operators. Both policies used the same
+mask sizes in every paired run. The balanced policy covered 15 distinct
+columns with its 15 initial slots in every run.
+
+| Columns | Start | Mean distinct columns in first six masks | Runs reaching CV R² ≥ 0.75 by candidate 24 | Mean held-out R² at 24 |
+| ---: | --- | ---: | ---: | ---: |
+| 16 | Current smart | 10.50 | 5/8 | 0.702 |
+| 16 | Balanced coverage | 15.00 | 3/8 | 0.590 |
+| 64 | Current smart | 13.13 | 0/8 | 0.412 |
+| 64 | Balanced coverage | 15.00 | 0/8 | 0.198 |
+
+Maximizing initial coverage reduced mean held-out quality at both widths
+in this cohort. These results give no reason to force disjoint masks in the
+default smart initializer. They leave open how repeated exposure and later
+mutation contribute to finding useful combinations.
+Reproduce with `python benchmarks/results/performance-v2/partition-initialization.py --balanced-coverage`.
+[Per-run measurements](results/performance-v2/balanced-smart-start.json).
+
 ## How much fit time goes into integer sampling?
 
 Drawing 2,000 variable integers directly with NumPy took 3.6–3.8 ms on the

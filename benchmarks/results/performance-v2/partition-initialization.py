@@ -45,13 +45,34 @@ class TwoColumnStart(FourColumnStart):
     mask_size = 2
 
 
-def compare(X, y, test, labels, cv, model, metric, seed, *args, target=None, **kwargs):
+class BalancedSmartStart(GAFeatureSelectionCV):
+    def _initialize_population(self):
+        population = super()._initialize_population()
+        width = len(population[0])
+        exposure = [0] * width
+        rng = Random(self.random_state)
+        for individual in population:
+            order = rng.sample(range(width), width)
+            order.sort(key=exposure.__getitem__)
+            chosen = set(order[: sum(individual)])
+            individual[:] = [int(i in chosen) for i in range(width)]
+            for i in chosen:
+                exposure[i] += 1
+        assert max(exposure) - min(exposure) <= 1
+        return population
+
+
+def compare(
+    X, y, test, labels, cv, model, metric, seed, *args, target=None, balanced=False, **kwargs
+):
     rows = {}
     methods = [
         GAFeatureSelectionCV,
         FourColumnStart,
         PartitionStart if target is None else TwoColumnStart,
     ]
+    if balanced:
+        methods = [GAFeatureSelectionCV, BalancedSmartStart]
     Random(seed).shuffle(methods)
     for cls in methods:
         search = cls(
@@ -83,6 +104,10 @@ def compare(X, y, test, labels, cv, model, metric, seed, *args, target=None, **k
         rows[cls.__name__] = dict(
             candidates=len(observed), full_fit_seconds=elapsed, holdout=scores
         )
+        if balanced:
+            initial = list(observed)[:6]
+            rows[cls.__name__]["initial_sizes"] = [len(mask) for mask in initial]
+            rows[cls.__name__]["initial_coverage"] = len(set().union(*initial))
         if target is not None:
             rows[cls.__name__]["first_target_by_24"] = next(
                 (i for i, score in enumerate(list(observed.values())[:24], 1) if score >= target),
@@ -91,32 +116,52 @@ def compare(X, y, test, labels, cv, model, metric, seed, *args, target=None, **k
     return dict(seed=seed, methods=rows)
 
 
-def sparse_regression(width, seed):
+def sparse_regression(width, seed, balanced=False):
     rng = np.random.default_rng(seed)
     features = rng.normal(size=(1100, 64))
     y = features[:, 0] + features[:, 1] + 0.5 * rng.normal(size=len(features))
     X = features[:, rng.permutation(width)]
     folds = list(KFold(3, shuffle=True, random_state=seed).split(X[:240]))
-    result = compare(X[:240], y[:240], X[240:], y[240:], folds, Ridge(), "r2", seed, target=0.75)
+    result = compare(
+        X[:240],
+        y[:240],
+        X[240:],
+        y[240:],
+        folds,
+        Ridge(),
+        "r2",
+        seed,
+        target=0.75,
+        balanced=balanced,
+    )
     return dict(width=width, **result)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--sparse-regression", action="store_true")
+    modes = parser.add_mutually_exclusive_group()
+    modes.add_argument("--sparse-regression", action="store_true")
+    modes.add_argument("--balanced-coverage", action="store_true")
     args = parser.parse_args()
     here = Path(__file__).resolve().parent
     run_real = run_path(str(here / "known-support.py"))["run_real"]
     run_real.__globals__["compare"] = compare
     with threadpool_limits(1):
-        rows = (
-            [sparse_regression(width, seed) for width in (16, 64) for seed in range(8301, 8305)]
-            if args.sparse_regression
-            else [
+        if args.balanced_coverage:
+            rows = [
+                sparse_regression(width, seed, balanced=True)
+                for width in (16, 64)
+                for seed in range(8421, 8429)
+            ]
+        elif args.sparse_regression:
+            rows = [
+                sparse_regression(width, seed) for width in (16, 64) for seed in range(8301, 8305)
+            ]
+        else:
+            rows = [
                 run_real(task, split, seed)
                 for task in ("wine", "diabetes")
                 for split in (8231, 8232)
                 for seed in (8241, 8242)
             ]
-        )
     print(json.dumps(rows, indent=2, allow_nan=False))
