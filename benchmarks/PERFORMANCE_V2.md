@@ -2465,6 +2465,32 @@ datasets have small selection spaces (five and six input columns), limiting
 what this says about high-dimensional search. The [per-run results](results/performance-v2/physical-target.json)
 include input file hashes and all holdout scores.
 
+#### How close did genetic search get to the best fixed subset?
+
+On the same six group splits, enumerate every nonempty subset up to four
+columns: 30 masks on airfoil and 56 on yacht. Choose the highest mean
+training-fold R² and refit that mask before scoring the reserved groups.
+Compare the benchmark's three-generation budget with and without
+early stopping at 0.45. The full-budget run used an unattained target of 1.0.
+The gap is the exhaustive winner's CV R² minus the genetic winner's CV R².
+
+| Dataset | Search | Total downstream CV fits | Splits matching best CV score (within 1e−12) | Mean CV gap | Mean holdout R² |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Airfoil | Exhaustive | 540 | 6/6 | 0 | 0.44936 |
+| Airfoil | Genetic, full budget | 351 | 6/6 | 0 | 0.44936 |
+| Airfoil | Genetic, stop at 0.45 | 231 | 5/6 | 0.00006 | 0.44408 |
+| Yacht | Exhaustive | 1008 | 6/6 | 0 | 0.65797 |
+| Yacht | Genetic, full budget | 495 | 4/6 | 0.00002 | 0.65801 |
+| Yacht | Genetic, stop at 0.45 | 108 | 0/6 | 0.00081 | 0.65709 |
+
+On yacht, counting exact matches alone hides how close the early winners
+were. The additional 387 fold fits of full-budget genetic search improved
+mean holdout R² by about 0.0009. On airfoil the gain was about 0.0053 for 120
+additional fold fits. The exhaustive reference applies to fixed masks;
+selectors fitted separately in each fold can choose different masks across
+folds. Run the transfer script with `--reference` for the
+[per-split exhaustive winners and full-budget scores](results/performance-v2/physical-reference.json).
+
 ## Selecting masks using scores of previously evaluated subsets
 
 This pilot tested whether the columns in high-scoring masks are worth trying
