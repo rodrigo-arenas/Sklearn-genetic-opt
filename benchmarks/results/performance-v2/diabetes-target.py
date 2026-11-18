@@ -1,5 +1,6 @@
-"""Time complete feature selection policies up to a prespecified CV R² of 0.45."""
+"""Time complete feature selection policies up to a prespecified CV R² target."""
 
+import argparse
 import json
 import sys
 from contextlib import redirect_stdout
@@ -23,10 +24,9 @@ from sklearn_genetic.callbacks import ThresholdStopping
 residual_selector = run_path(str(Path(__file__).with_name("filter-portfolio.py")))[
     "residual_selector"
 ]
-TARGET = 0.45
 
 
-def run(policy, X, y, test, labels, cv, seed):
+def run(policy, X, y, test, labels, cv, seed, target):
     start = perf_counter()
     model = make_pipeline(StandardScaler(), Ridge())
     winner = None
@@ -38,7 +38,7 @@ def run(policy, X, y, test, labels, cv, seed):
         score = cross_val_score(proposal, X, y, cv=cv, scoring="r2", error_score="raise").mean()
         calls += 1
         winner = proposal
-    fallback = score < TARGET
+    fallback = score < target
     if fallback:
         ga = GAFeatureSelectionCV(
             model,
@@ -53,7 +53,7 @@ def run(policy, X, y, test, labels, cv, seed):
             verbose=False,
         )
         with redirect_stdout(sys.stderr):
-            ga.fit(X, y, callbacks=ThresholdStopping(TARGET, metric="fitness_max"))
+            ga.fit(X, y, callbacks=ThresholdStopping(target, metric="fitness_max"))
         mask = np.all(np.asarray(ga.cv_results_["features"]) == ga.best_features_, axis=1)
         ga_score = ga.cv_results_["mean_test_score"][np.flatnonzero(mask)[0]]
         calls += ga.fit_stats_["cross_validate_calls"]
@@ -68,20 +68,31 @@ def run(policy, X, y, test, labels, cv, seed):
         ran_genetic=bool(fallback),
         folds=calls * len(cv),
         cv=float(score),
-        reached=bool(score >= TARGET),
+        reached=bool(score >= target),
         seconds=seconds,
         holdout=winner.score(test, labels),
     )
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--sensitivity", action="store_true")
+    sensitivity = parser.parse_args().sensitivity
     X, y = load_diabetes(return_X_y=True)
     rows = []
     with threadpool_limits(1):
         for index, order in enumerate(permutations(("genetic", "univariate", "residual"))):
-            seed = 9791 + index
+            seed = (9901 if sensitivity else 9791) + index
             train, test, targets, labels = train_test_split(X, y, test_size=0.25, random_state=seed)
             cv = list(KFold(3, shuffle=True, random_state=seed).split(train))
-            for policy in order:
-                rows.append(run(policy, train, targets, test, labels, cv, seed))
+            thresholds = (0.40, 0.45, 0.50) if sensitivity else (0.45,)
+            offset = index % len(thresholds)
+            for target in thresholds[offset:] + thresholds[:offset]:
+                for policy in order:
+                    rows.append(
+                        dict(
+                            target=target,
+                            **run(policy, train, targets, test, labels, cv, seed, target),
+                        )
+                    )
     print(json.dumps(rows, indent=2, allow_nan=False))

@@ -2412,6 +2412,32 @@ outcomes, immediate success and budget exhaustion. The small holdout
 differences on repeated splits of one dataset cannot establish a general
 quality advantage. See the [per-split scores, times and fold counts](results/performance-v2/diabetes-target.json).
 
+On six fresh splits (seeds 9901–9906), the same policies ran at three
+prespecified thresholds. Each threshold used all six policy orders and
+identical training and holdout rows within a split. The totals below count
+downstream CV fits across six runs, excluding selector fits and final refits.
+
+| Target CV R² | Policy | Reached | Bypassed genetic search | Total fold fits | Median time to fitted model | Mean holdout R² |
+| ---: | --- | ---: | ---: | ---: | ---: | ---: |
+| 0.40 | Genetic | 6/6 | 0/6 | 216 | 96 ms | 0.4198 |
+| 0.40 | Univariate first | 6/6 | 6/6 | 18 | 14 ms | 0.4521 |
+| 0.40 | Residual first | 6/6 | 6/6 | 18 | 20 ms | 0.4632 |
+| 0.45 | Genetic | 5/6 | 0/6 | 480 | 224 ms | 0.4584 |
+| 0.45 | Univariate first | 6/6 | 4/6 | 258 | 14 ms | 0.4601 |
+| 0.45 | Residual first | 6/6 | 6/6 | 18 | 20 ms | 0.4632 |
+| 0.50 | Genetic | 0/6 | 0/6 | 708 | 319 ms | 0.4695 |
+| 0.50 | Univariate first | 0/6 | 0/6 | 726 | 322 ms | 0.4652 |
+| 0.50 | Residual first | 0/6 | 0/6 | 726 | 328 ms | 0.4672 |
+
+Pooling both six-split experiments at 0.45, the residual proposal bypassed
+genetic search on 9/12 splits. At 0.50 the extra evaluation increased cost
+on every split, and both filter-first policies had slightly lower mean holdout
+R² than the baseline. Selecting a higher CV score from more candidates can
+still produce a worse holdout score. These runs characterize the sensitivity
+of early stopping on diabetes and provide no basis for a universal threshold.
+Pass `--sensitivity` to the timing script to reproduce the
+[per-run results](results/performance-v2/diabetes-target-sensitivity.json).
+
 ## Selecting masks using scores of previously evaluated subsets
 
 This pilot tested whether the columns in high-scoring masks are worth trying
