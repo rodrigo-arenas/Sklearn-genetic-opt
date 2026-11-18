@@ -2909,3 +2909,28 @@ to change the estimator for this saving. The experiment used one thread,
 two folds and a mixed grid with few opportunities for duplicate candidates.
 See the [reproduction script](results/performance-v2/hpo-repair-pass.py) and
 [individual timings and call counts](results/performance-v2/hpo-repair-pass.json).
+
+### Can a bound on accuracy save finalist validation fits?
+
+For each of four seeds per dataset, keep eight distinct finalists from
+two-fold decision-tree HPO and evaluate them on the same five new folds.
+The reference scores each finalist with one five-fold call. The experimental
+arm scores one fold at a time. After each fold it replaces every missing
+accuracy with 1 and stops that finalist if even this optimistic mean is more
+than 1e−12 below the best completed score. Both arms keep the first finalist
+on a tie. Candidate order and evolutionary fitness are fixed before timing.
+
+| Dataset | Full fold fits | Bounded fold fits | Median paired change in validation time |
+| --- | ---: | ---: | ---: |
+| Iris | 160 | 155 | +26.3% |
+| Wine | 160 | 146 | +8.3% |
+| Breast cancer | 160 | 155 | +5.5% |
+
+All 12 shortlists produced the same winner and winning accuracy. Skipping
+24 of 480 fold fits saved 5%, but repeated single-fold sklearn calls made
+median finalist validation slower on each dataset. This experiment used
+serial evaluation and inexpensive trees. Pruned candidates have incomplete
+fold scores, so a production implementation would also need to account for
+the finalist reporting contract. The comparison measures finalist validation
+only. See the [script](results/performance-v2/finalist-bound.py) and
+[per-shortlist results](results/performance-v2/finalist-bound.json).

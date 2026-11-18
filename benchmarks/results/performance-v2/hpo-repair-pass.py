@@ -16,16 +16,19 @@ from sklearn_genetic import GASearchCV
 from sklearn_genetic.space import Categorical, Continuous, Integer
 
 
-def run(X, y, seed, evaluate, cache):
-    grid = dict(
+def tree_grid():
+    return dict(
         criterion=Categorical(["gini", "entropy"]),
         max_depth=Integer(1, 8),
         min_weight_fraction_leaf=Continuous(0.0, 0.25),
         min_samples_leaf=Integer(1, 12),
     )
+
+
+def run(X, y, seed, evaluate, cache):
     search = GASearchCV(
         DecisionTreeClassifier(random_state=11),
-        param_grid=grid,
+        param_grid=tree_grid(),
         cv=2,
         scoring="accuracy",
         population_size=8,
