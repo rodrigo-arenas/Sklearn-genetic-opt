@@ -1,6 +1,6 @@
 import pytest
+from array import array
 from functools import partial
-from deap import tools
 from scipy import sparse
 import pandas as pd
 from sklearn.base import BaseEstimator, OutlierMixin, clone
@@ -538,28 +538,28 @@ def test_optimizer_telemetry_is_recorded_for_feature_selection():
     assert estimator.history["stagnation_generations"][-1] == generations
 
 
-def test_feature_masks_are_repaired_before_evaluation():
+@pytest.mark.parametrize("mask_type", [list, partial(array, "i")])
+def test_feature_masks_are_repaired_before_evaluation(mask_type):
     estimator = GAFeatureSelectionCV(
-        DecisionTreeClassifier(),
-        cv=3,
+        DecisionTreeClassifier(random_state=42),
+        cv=2,
         scoring="accuracy",
         max_features=1,
+        population_size=4,
+        generations=0,
+        random_state=42,
+        n_jobs=1,
         verbose=False,
-        return_train_score=True,
-    )
-    estimator.X_ = X_train[:6]
-    estimator.y_ = y_train[:6]
-    estimator.n_splits_ = 3
-    estimator.refit_metric = "score"
-    estimator.metrics_list = ["score"]
-    estimator.logbook = tools.Logbook()
-    estimator.fit_stats_ = genetic_search._create_fit_stats()
+    ).fit(data.data, data.target)
 
-    individual = [1, 1]
-    estimator._repair_individual(individual)
+    individual = mask_type([0, -3, 2, 0])
+    (fitness,) = estimator.evaluate_population([individual])
 
     assert sum(individual) == 1
+    assert fitness[1] == 1
+    assert 0 <= fitness[0] <= 1
     assert set(individual).issubset({0, 1})
+    assert individual[0] == individual[3] == 0
 
 
 def test_feature_masks_are_repaired_when_max_features_is_missing():

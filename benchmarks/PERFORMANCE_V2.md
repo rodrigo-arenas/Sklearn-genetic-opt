@@ -1675,6 +1675,28 @@ populations and built-in operators. Reproduce with
 `python benchmarks/results/performance-v2/feature-repair-fit.py --internal-batch`.
 [Paired fit timings](results/performance-v2/internal-batch-repair.json).
 
+#### Can the repair itself be faster while preserving batch evaluation?
+
+A prototype normalized list-backed integer masks to bytes, counted selected
+columns once and wrote the bits back in bulk. Unconditional slice assignment
+failed on direct inputs such as `array.array`. Assuming standard list writes
+alone also changed the behavior of list subclasses with custom iteration.
+The measured variant checks iteration, assignment and integer element types
+before bulk conversion and uses indexed assignment for other sequences.
+
+| Columns | Median baseline fit | Median guarded prototype fit | Faster prototype fits |
+| ---: | ---: | ---: | ---: |
+| 16 | 117.14 ms | 117.52 ms | 4/8 |
+| 256 | 186.54 ms | 190.34 ms | 1/8 |
+| 4,096 | 300.67 ms | 304.87 ms | 4/8 |
+
+All 24 pairs matched on candidate trajectory, scores, finalists, predictions
+and CV call count. The median fit time increased at every width. The
+prototype also allocates temporary storage for the byte conversion and
+slice assignment. We retained the indexed production loop. Reproduce with
+`python benchmarks/results/performance-v2/feature-repair-fit.py --byte-mask`.
+[Per-seed timings](results/performance-v2/guarded-byte-mask-repair.json).
+
 ## Mutation in grids that mix fixed and variable dimensions
 
 The standard HPO mutation used to select from every configured parameter.
