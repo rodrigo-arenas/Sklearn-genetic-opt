@@ -1088,6 +1088,28 @@ and operations outside these probes. Reproduce with
 `python benchmarks/results/performance-v2/wine-cv-overhead.py --breakdown`.
 [Per-operation timings and call counts](results/performance-v2/wine-cv-stages.json).
 
+### How costly is the last unseen configuration in the Wine grid?
+
+We compared generation limits of four and forty on ten Wine splits with
+the same three inner folds, eight initial candidates, seed and 28-point
+tree grid in each pair. At four generations, five searches had covered all
+28 configurations, four had evaluated 27 and one had evaluated 24. The
+higher limit let all ten searches stop on complete coverage by generation
+11. The five incomplete searches recorded another 208 candidate proposals
+between them, triggering eight new candidate evaluations (24 fold fits).
+All ten pairs selected identical parameters and achieved identical CV and
+held-out accuracy.
+
+Across the ten completed searches, the distance from the 27th discovery
+to the 28th ranged from one to 128 recorded proposals (median 14.5). Mean
+fit time was 194 ms at the lower limit and 202 ms at the higher limit.
+Duplicate caching kept the extra fit cost small for this cheap estimator.
+If complete coverage is required, this tail suggests testing direct
+sampling of the remaining configurations in small enumerable grids. This
+experiment gives no evidence that doing so improves predictive quality.
+[Experiment](results/performance-v2/finite-grid-tail.py) and
+[discovery positions and winners](results/performance-v2/finite-grid-tail.json).
+
 ## Removing unused train-fold scoring in HPO
 
 Profiling Digits/KNN exposed an avoidable scoring pass: `GASearchCV` declared `return_train_score=False` in its constructor but did not forward it to scikit-learn's `BaseSearchCV`, whose default on the measured version is `True`. Consequently, a 39-candidate, three-fold KNN fit called scoring for both train and validation folds. The 0.14.0 fix forwards the configured value. Users who need train-fold metrics can still request `return_train_score=True`.
