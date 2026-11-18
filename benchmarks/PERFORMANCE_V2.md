@@ -1355,12 +1355,37 @@ scoring it on the outer holdout.
 
 Screening retained the full winner in 17 of 24 searches, versus 15 for the
 first-five control. The first-five control nevertheless achieved at least
-as high a mean held-out score in every row. Reducing the existing
-`final_selection_top_k` is a competitive baseline at this budget. The
+as high a mean held-out score in every row. This control takes a prefix of
+the eight finalists. The public top-five setting can resolve a feature-mask
+tie differently at its own cutoff, as measured below. The
 37.5% potential reduction applies only to new finalist folds. The replay
 actually computed every fold and does not establish a wall-time saving.
 Reproduce with `python benchmarks/results/performance-v2/bounded-finalists.py --promote`.
 [Per-split winners and scores](results/performance-v2/two-fold-promotion.json).
+
+### How much time does setting five finalists actually save?
+
+We fitted each estimator twice per split using the public
+`final_selection_top_k` values 8 and 5, alternating run order by split.
+Both runs reused one preliminary fold. Each shorter run performed exactly
+12 fewer fold fits and finished faster. The table shows means over six
+splits, including evolution, finalist scoring and refit in elapsed time.
+
+| Task | Search | Fit seconds, 8 / 5 | Held-out score, 8 / 5 |
+| --- | --- | ---: | ---: |
+| Breast Cancer, ROC AUC | Hyperparameters | 0.357 / 0.296 | 0.995458 / 0.995528 |
+| Breast Cancer, ROC AUC | Features | 0.314 / 0.266 | 0.993501 / 0.993501 |
+| Diabetes, R² | Hyperparameters | 0.187 / 0.157 | 0.527600 / 0.527351 |
+| Diabetes, R² | Features | 0.190 / 0.146 | 0.481996 / 0.481996 |
+
+The eight-finalist fits reproduced every reference winner and score above.
+In three Breast Cancer feature searches the five-finalist list differed
+from the first five of eight. At a tied preliminary cutoff the selector
+can include a denser mask. In two cases this changed the selected model
+relative to truncating the list of eight. The measured public setting
+therefore gives a different quality comparison for this task.
+Reproduce with `python benchmarks/results/performance-v2/bounded-finalists.py --time-shortlists`.
+[Timings, fold counts, finalist indices and scores](results/performance-v2/shortlist-fit-times.json).
 
 ## Holdout quality at intermediate candidate budgets
 

@@ -4,6 +4,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
+from time import perf_counter
 
 import numpy as np
 from sklearn.base import clone
@@ -12,7 +13,7 @@ from sklearn.model_selection import train_test_split
 from threadpoolctl import threadpool_limits
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
-from benchmarks.benchmark_fit import SCENARIOS, make_cv
+from benchmarks.benchmark_fit import SCENARIOS, FitCounters, count_cross_validate_calls, make_cv
 from sklearn_genetic import GAFeatureSelectionCV, GASearchCV
 
 
@@ -73,16 +74,44 @@ def promote(search, features, train, labels, test, target, metric):
     return arms
 
 
+def time_shortlists(search, train, labels, test, target, metric, seed, features):
+    runs = {}
+    for k in ((5, 8) if seed % 2 else (8, 5)):
+        fitted = clone(search).set_params(final_selection_top_k=k)
+        counts = FitCounters()
+        with count_cross_validate_calls(counts):
+            start = perf_counter()
+            fitted.fit(train, labels)
+            elapsed = perf_counter() - start
+        finalist_folds = counts.cv_fold_fits - fitted.fit_stats_["cross_validate_calls"]
+        assert finalist_folds == 4 * k
+        holdout = fitted.transform(test) if features else test
+        runs[str(k)] = dict(
+            finalists=[row["index"] for row in fitted.final_selection_results_["candidates"]],
+            seconds=elapsed,
+            folds=counts.cv_fold_fits,
+            finalist_folds=finalist_folds,
+            index=fitted.best_index_,
+            cv=fitted.best_score_,
+            holdout=get_scorer(metric)(fitted.best_estimator_, holdout, target),
+        )
+    return runs
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--promote", action="store_true")
+    modes = parser.add_mutually_exclusive_group()
+    modes.add_argument("--promote", action="store_true")
+    modes.add_argument("--time-shortlists", action="store_true")
     args = parser.parse_args()
     records = []
     with threadpool_limits(1):
         for name in ("classification_lr", "regression_ridge"):
             task = SCENARIOS[name]
             X, y = task.loader()
-            for seed in (range(8711, 8717) if args.promote else range(8601, 8604)):
+            for seed in (
+                range(8711, 8717) if args.promote or args.time_shortlists else range(8601, 8604)
+            ):
                 train, test, labels, target = train_test_split(
                     X,
                     y,
@@ -111,6 +140,12 @@ if __name__ == "__main__":
                         if features
                         else GASearchCV(model, param_grid=task.param_grid_builder(), **options)
                     )
+                    if args.time_shortlists:
+                        runs = time_shortlists(
+                            search, train, labels, test, target, task.scoring, seed, features
+                        )
+                        records.append(dict(task=name, features=features, seed=seed, runs=runs))
+                        continue
                     search.fit(train, labels)
                     result = (
                         promote(search, features, train, labels, test, target, task.scoring)
