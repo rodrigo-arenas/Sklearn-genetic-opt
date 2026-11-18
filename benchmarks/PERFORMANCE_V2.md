@@ -1037,6 +1037,30 @@ New-Item -ItemType Directory -Force -Path .agent-runs/performance-v2 | Out-Null
 .\.venv\Scripts\python.exe .agent-runs/performance-v2/hpo-random-transfer-post-fix.py
 ```
 
+### Where does the Wine tree search spend its time?
+
+We repeated the five Wine splits on the current checkout and timed the
+sequential scikit-learn fold worker in both methods. For genetic search we
+also timed each enclosing `cross_validate` call. The worker includes fold
+data slicing, estimator fit and scoring. The elapsed times below are means
+per complete fit, including the final refit.
+
+| Method | Candidates | Total (ms) | Inside fold workers (ms) | Outside fold workers (ms) |
+| --- | ---: | ---: | ---: | ---: |
+| Genetic | 27.8 | 184.3 | 147.5 | 36.8 |
+| Random | 28.0 | 175.6 | 158.2 | 17.5 |
+
+Of the genetic search's 36.8 ms outside fold workers, 23.1 ms occurred
+inside candidate-level CV calls and 13.7 ms elsewhere in `fit`. Repeated
+CV setup and dispatch therefore merit a closer look before optimizing
+genetic operators for this workload. These timers do not identify which
+setup operations can safely be reused. The mean paired GA/random time ratio
+in this instrumented run was 1.05, versus 1.44 in the historical run above.
+The five current ratios ranged from 1.003 to 1.072. The smaller gap cannot
+be attributed to a specific code change from these runs.
+[Timing script](results/performance-v2/wine-cv-overhead.py) and
+[per-split measurements](results/performance-v2/wine-cv-overhead.json).
+
 ## Removing unused train-fold scoring in HPO
 
 Profiling Digits/KNN exposed an avoidable scoring pass: `GASearchCV` declared `return_train_score=False` in its constructor but did not forward it to scikit-learn's `BaseSearchCV`, whose default on the measured version is `True`. Consequently, a 39-candidate, three-fold KNN fit called scoring for both train and validation folds. The 0.14.0 fix forwards the configured value. Users who need train-fold metrics can still request `return_train_score=True`.
