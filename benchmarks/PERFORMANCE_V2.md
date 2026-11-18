@@ -1623,6 +1623,33 @@ before replacing the default loop across widths.
 [Reproduction script](results/performance-v2/feature-repair-fit.py) and
 [per-seed timings](results/performance-v2/feature-repair-fit.json).
 
+#### Which repair passes actually change a mask?
+
+We recorded the caller, input types, value changes and elapsed repair time
+on 4,096-column searches capped at 16 features. Each row aggregates three
+seeds. The timing column covers just the repair inside batch evaluation and
+excludes the audit's mask snapshot and comparison.
+
+| Configuration | Batch evaluation repairs | Masks changed in batch evaluation | Mean batch repair time per fit |
+| --- | ---: | ---: | ---: |
+| Default | 168 | 0 | 13.94 ms |
+| Random initialization | 168 | 0 | 14.62 ms |
+| Differential evolution | 96 | 0 | 7.91 ms |
+| Local refinement | 171 | 0 | 13.85 ms |
+
+All 603 masks entering batch evaluation already contained canonical integer
+bits. Earlier passes did real work: across the default runs, repair changed
+all 29 mutation outputs and seven of 230 crossover outputs. In differential
+evolution it changed 30 of 72 trial masks. A separate direct call to the
+fitted estimator's `evaluate_population` with an empty selection and an
+oversized nonbinary selection repaired them to one and two selected columns
+under a two-feature cap. Any optimization that skips the batch pass must
+distinguish internally validated candidates from direct inputs. These timings
+estimate the cost available to remove; they do not measure an end-to-end
+speedup. Reproduce with
+`python benchmarks/results/performance-v2/feature-repair-fit.py --audit`.
+[Counts and timings by caller and seed](results/performance-v2/feature-repair-stages.json).
+
 ## Mutation in grids that mix fixed and variable dimensions
 
 The standard HPO mutation used to select from every configured parameter.
