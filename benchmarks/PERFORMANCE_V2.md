@@ -2886,3 +2886,26 @@ the saving inside the sampler was small enough for the overall timing to
 vary in either direction. These measurements cover one tree workload on one
 machine. The [individual timings and reproduction script](results/performance-v2/integer-sampling-attribution.json)
 include the number of draws and candidate evaluations for each run.
+
+### Cost of repeated hyperparameter repair before CV
+
+`GASearchCV` repairs candidates before cache lookup and again inside
+`_evaluate_individual`. A paired Iris decision-tree experiment removed only
+the inner call in memory. The four parameters included integer, continuous
+and categorical dimensions. Each cache setting used four seeds, a warm-up
+for each variant and both execution orders per seed. Every pair matched on
+ordered parameters, individual fold scores, evaluation counters, best
+parameters and predictions.
+
+| Cache | Median paired change in fit time | Pairs faster without inner repair | Median inner repair time per fit | Median share of fit time |
+| --- | ---: | ---: | ---: | ---: |
+| Enabled | +0.13% | 4/8 | 0.75 ms | 0.45% |
+| Disabled | −0.93% | 5/8 | 0.73 ms | 0.44% |
+
+Separate instrumented fits observed 320 inner repairs, all preserving the
+candidate values. The direct timing places this pass below one millisecond
+per fit on this workload. The mixed end-to-end results provide little reason
+to change the estimator for this saving. The experiment used one thread,
+two folds and a mixed grid with few opportunities for duplicate candidates.
+See the [reproduction script](results/performance-v2/hpo-repair-pass.py) and
+[individual timings and call counts](results/performance-v2/hpo-repair-pass.json).
