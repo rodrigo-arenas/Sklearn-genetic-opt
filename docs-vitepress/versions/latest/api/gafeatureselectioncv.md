@@ -82,11 +82,13 @@ feature and respect that upper bound.
 | `best_score_` | Winning finalist CV score, available when `final_selection=True` and `refit=True` |
 | `best_estimator_` | Estimator fitted with the selected features on the full training data |
 | `cv_results_` | Dict with per-candidate results |
-| `history` | List of per-generation dicts |
-| `logbook` | DEAP logbook |
+| `history` | Dictionary of lists aligned by generation. Pair `history["cross_validate_calls"]` with `history["fitness_best"]` to track the best search score against the number of mask evaluations. |
+| `logbook` | DEAP logbook with per-candidate evaluation records in `logbook.chapters["parameters"]` |
 | `fit_stats_` | Evaluation counters |
 | `n_features_` | Number of selected features |
 | `feature_names_in_` | Feature names seen during `fit` when `X` has string column names |
+
+See [plotting score against evaluation cost](./plots#quick-diagnostic-overview) to compare runs with different cache-hit rates.
 
 ## Methods
 
@@ -117,7 +119,7 @@ from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
 
-from sklearn_genetic import EvolutionConfig, GAFeatureSelectionCV, PopulationConfig, RuntimeConfig
+from sklearn_genetic import EvolutionConfig, GAFeatureSelectionCV
 
 X, y = load_iris(return_X_y=True)
 rng = np.random.default_rng(42)
@@ -130,14 +132,14 @@ selector = GAFeatureSelectionCV(
     estimator=SVC(gamma="auto"),
     cv=3,
     scoring="accuracy",
-    evolution_config=EvolutionConfig(population_size=30, generations=20, keep_top_k=2, elitism=True),
-    population_config=PopulationConfig(initializer="smart"),
-    runtime_config=RuntimeConfig(n_jobs=-1),
+    evolution_config=EvolutionConfig(population_size=6, generations=2),
+    random_state=42,
 )
 
 selector.fit(X_train, y_train)
 
 print("Selected features:", selector.support_)
+print("Search CV evaluations:", selector.history["cross_validate_calls"])
 print("Best search CV accuracy:", round(np.nanmax(selector.cv_results_["mean_test_score"]), 4))
 print("Test accuracy:", round(selector.score(X_test, y_test), 4))
 ```
