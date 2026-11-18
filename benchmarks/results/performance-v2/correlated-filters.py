@@ -1,6 +1,8 @@
 """Evaluate fold-local filter proposals with correlated regression predictors."""
 
+import argparse
 import json
+from functools import partial
 from pathlib import Path
 from runpy import run_path
 
@@ -44,7 +46,22 @@ def run(seed, compare):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--residual", action="store_true")
+    args = parser.parse_args()
     compare = run_path(str(Path(__file__).with_name("filter-portfolio.py")))["compare"]
+    seeds = range(9571, 9577) if args.residual else range(9461, 9467)
     with threadpool_limits(1):
-        rows = [row for seed in range(9461, 9467) for row in run(seed, compare)]
+        rows = [
+            row for seed in seeds for row in run(seed, partial(compare, residual=args.residual))
+        ]
+        if args.residual:
+            real = run_path(str(Path(__file__).with_name("known-support.py")))["run_real"]
+            sparse = run_path(str(Path(__file__).with_name("partition-initialization.py")))[
+                "sparse_regression"
+            ]
+            for builder in (real, sparse):
+                builder.__globals__["compare"] = partial(compare, residual=True, one_slot=True)
+            rows += [dict(cap=4, **real("diabetes", seed, seed + 10)) for seed in seeds]
+            rows += [dict(task="sparse", cap=4, **sparse(64, seed)) for seed in seeds]
     print(json.dumps(rows, indent=2, allow_nan=False))

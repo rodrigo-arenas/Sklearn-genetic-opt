@@ -2340,6 +2340,32 @@ filter slot unconditionally under a hard candidate budget.
 [Reproduction script](results/performance-v2/correlated-filters.py) and
 [per-seed winners and column identities](results/performance-v2/correlated-filters.json).
 
+### One fold-local residual selection candidate
+
+On six new seeds (9571–9576), replace the 24th genetic mask with a pipeline
+that standardizes training-fold predictors, fits orthogonal matching pursuit,
+and passes its selected columns to the same downstream Ridge estimator.
+Each policy selects its winner by three-fold CV before scoring the holdout.
+The table reports mean holdout R² across seeds.
+
+| Task | Feature cap | 24 genetic masks | 23 + univariate | 23 + residual |
+| --- | ---: | ---: | ---: | ---: |
+| Redundant predictors | 4 | 0.7587 | 0.7587 | 0.9139 |
+| Redundant predictors | 8 | 0.8173 | 0.8172 | 0.9170 |
+| Contrast between correlated predictors | 4 | 0.1666 | 0.1666 | 0.4861 |
+| Contrast between correlated predictors | 8 | 0.4315 | 0.4315 | 0.5791 |
+| Independent sparse predictors | 4 | 0.2770 | 0.8859 | 0.8803 |
+| Diabetes | 4 | 0.4665 | 0.4899 | 0.4886 |
+
+Residual selection improved mean holdout R² over genetic masks in all six
+settings. The univariate proposal scored slightly higher on independent sparse
+predictors and diabetes. Each policy used 72 downstream CV fits. The benchmark
+replays the genetic candidate sequence and does additional work to fit each
+selector, so these results establish neither a wall-time saving nor a benefit
+for nonlinear estimators. The diabetes rows use repeated splits of one dataset.
+Run [the benchmark](results/performance-v2/correlated-filters.py) with
+`--residual` to reproduce the [per-run results](results/performance-v2/correlated-residual.json).
+
 ## Selecting masks using scores of previously evaluated subsets
 
 This pilot tested whether the columns in high-scoring masks are worth trying

@@ -9,16 +9,32 @@ from time import perf_counter
 
 import numpy as np
 from sklearn.base import clone, is_classifier
-from sklearn.feature_selection import SelectKBest, f_classif, f_regression
+from sklearn.feature_selection import SelectFromModel, SelectKBest, f_classif, f_regression
+from sklearn.linear_model import OrthogonalMatchingPursuit
 from sklearn.metrics import get_scorer
 from sklearn.model_selection import cross_val_score
 from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
 from threadpoolctl import threadpool_limits
 
 from sklearn_genetic import GAFeatureSelectionCV
 
 
-def compare(X, y, test, labels, cv, model, metric, seed, *args, one_slot=False, cap=4, **kwargs):
+def compare(
+    X,
+    y,
+    test,
+    labels,
+    cv,
+    model,
+    metric,
+    seed,
+    *args,
+    one_slot=False,
+    cap=4,
+    residual=False,
+    **kwargs,
+):
     ga = GAFeatureSelectionCV(
         clone(model),
         cv=cv,
@@ -57,10 +73,26 @@ def compare(X, y, test, labels, cv, model, metric, seed, *args, one_slot=False, 
     ]
     if one_slot:
         policies.append(("one_filter", genetic[:23] + filters[-1:]))
+    if residual:
+        selector = SelectFromModel(
+            make_pipeline(StandardScaler(), OrthogonalMatchingPursuit(n_nonzero_coefs=cap)),
+            importance_getter="named_steps.orthogonalmatchingpursuit.coef_",
+            threshold=1e-12,
+        )
+        residual_model = make_pipeline(selector, clone(model))
+        score = cross_val_score(
+            residual_model, X, y, cv=cv, scoring=metric, n_jobs=1, error_score="raise"
+        ).mean()
+        policies.append(("one_residual", genetic[:23] + [(float(score), cap, None)]))
     for name, candidates in policies:
         score, k, mask = max(candidates, key=lambda c: (c[0], -c[1]))
         if mask is None:
-            fitted = make_pipeline(SelectKBest(scorer, k=k), clone(model)).fit(X, y)
+            candidate = (
+                residual_model
+                if name == "one_residual"
+                else make_pipeline(SelectKBest(scorer, k=k), clone(model))
+            )
+            fitted = candidate.fit(X, y)
             selected = np.flatnonzero(fitted[0].get_support()).tolist()
             held = get_scorer(metric)(fitted, test, labels)
         else:
