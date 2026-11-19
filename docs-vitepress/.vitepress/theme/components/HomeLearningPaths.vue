@@ -49,7 +49,8 @@ const paths = [
     steps: [
       { text: 'Choosing the right search space', link: '/versions/0.15/guide/choosing-search-spaces' },
       { text: 'Common tuning mistakes to avoid', link: '/versions/0.15/guide/common-mistakes' },
-      { text: 'Tune XGBoost / LightGBM', link: '/versions/0.15/tutorials/tune-xgboost' },
+      { text: 'XGBoost hyperparameter tuning', link: '/versions/0.15/tutorials/tune-xgboost' },
+      { text: 'Isolation Forest hyperparameter tuning', link: '/versions/0.15/tutorials/isolation-forest' },
       { text: 'Callbacks & early stopping', link: '/versions/0.15/guide/callbacks' },
     ],
     cta: { text: 'Browse intermediate recipes', link: '/versions/0.15/recipes/' },

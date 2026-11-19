@@ -12,8 +12,8 @@ hero:
     alt: sklearn-genetic-opt logo
   actions:
     - theme: brand
-      text: Get Started →
-      link: /versions/0.15/
+      text: Run Your First Search
+      link: /versions/0.15/guide/basic-usage
     - theme: alt
       text: Browse Recipes
       link: /versions/0.15/recipes/

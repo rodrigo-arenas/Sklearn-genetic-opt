@@ -87,6 +87,47 @@ def test_homepage_links_to_released_pages():
 
     assert "The GA finds better hyperparameters than a grid search" not in homepage
     assert "Joint hyperparameter + feature search in one step" not in homepage
+    for page, label in [
+        ("guide/basic-usage", "Run Your First Search"),
+        ("tutorials/tune-xgboost", "XGBoost hyperparameter tuning"),
+        ("tutorials/isolation-forest", "Isolation Forest hyperparameter tuning"),
+    ]:
+        target = f"/versions/{RELEASES[-1]}/{page}"
+        assert re.search(
+            rf'<a\b[^>]*href="{re.escape(target)}"[^>]*>{re.escape(label)}</a>', homepage
+        )
+
+
+def test_numbered_docs_landing_describes_the_release_in_search_and_social():
+    dist = DOCS / ".vitepress" / "dist" / "versions"
+    for version in RELEASES:
+        html = (dist / version / "index.html").read_text(encoding="utf-8")
+        title = f"sklearn-genetic-opt {version} Documentation"
+        assert f"<title>{title}</title>" in html
+        assert re.search(
+            rf'<meta name="description" content="Released documentation for sklearn-genetic-opt {version}\.',
+            html,
+        )
+        assert f'property="og:title" content="{title}"' in html
+    latest = (dist / "latest" / "index.html").read_text(encoding="utf-8")
+    assert "latest / dev" in re.search(r"<title>([^<]+)</title>", latest).group(1)
+
+
+@pytest.mark.parametrize(
+    ("old_path", "new_path"),
+    [("api/GASearchCV", "api/gasearchcv"), ("tutorials/callbacks", "guide/callbacks")],
+)
+def test_legacy_development_links_reach_equivalent_pages(old_path, new_path):
+    dist = DOCS / ".vitepress" / "dist"
+    latest = dist / "versions" / "latest"
+    target = f"/versions/latest/{new_path}"
+    html = (latest / old_path / "index.html").read_text(encoding="utf-8")
+    assert f'http-equiv="refresh" content="0; url={target}"' in html
+    assert f'<a href="{target}">' in html
+    assert f'rel="canonical" href="{SITE}{target}"' in html
+    assert (latest / f"{new_path}.html").is_file()
+    sitemap = (dist / "sitemap.xml").read_text(encoding="utf-8")
+    assert f"{SITE}/versions/latest/{old_path}" not in sitemap
 
 
 def test_freeze_points_homepage_at_new_stable_version(tmp_path):
@@ -125,6 +166,11 @@ def test_freeze_points_homepage_at_new_stable_version(tmp_path):
         if f"/versions/{old_version}/" in source:
             assert f"/versions/{next_version}/" in frozen
     assert (docs / "versions" / next_version / "guide" / "basic-usage.md").is_file()
+    frozen_index = (docs / "versions" / next_version / "index.md").read_text(encoding="utf-8")
+    latest_index = (docs / "versions" / "latest" / "index.md").read_text(encoding="utf-8")
+    assert "pip install sklearn-genetic-opt" in frozen_index
+    assert "pip install git+" not in frozen_index
+    assert "pip install git+" in latest_index
 
 
 @pytest.mark.parametrize("script", ["examples:generate", "examples:check"])
