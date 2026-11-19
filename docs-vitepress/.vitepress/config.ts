@@ -1,9 +1,10 @@
-import { existsSync, readdirSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { defineConfig, HeadConfig } from 'vitepress'
 
 const GITHUB_PAGES_BASE = '/'
+const SITE = 'https://sklearngeneticopt.rodrigo-arenas.com'
 const GA_TAG = process.env.GOOGLE_ANALYTICS_TAG
 const DOCS_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 
@@ -237,9 +238,9 @@ export default defineConfig({
   titleTemplate: ':title | sklearn-genetic-opt',
 
   sitemap: {
-    hostname: 'https://sklearngeneticopt.rodrigo-arenas.com',
+    hostname: SITE,
     transformItems: (items) => items.filter((item) => {
-      const path = new URL(item.url, 'https://sklearngeneticopt.rodrigo-arenas.com/').pathname
+      const path = new URL(item.url, SITE).pathname
       if (path === '/stable/') return false
       const version = path.match(/^\/versions\/([^/]+)\//)?.[1]
       return !version || version === stableVersion
@@ -248,10 +249,46 @@ export default defineConfig({
 
   srcExclude: ['**/CLAUDE.md', '**/README.md'],
 
+  buildEnd({ outDir }) {
+    // Directory indexes also work on case-insensitive filesystems where
+    // GASearchCV.html would overwrite the canonical gasearchcv.html.
+    const latest = join(outDir, 'versions', 'latest')
+    for (const [oldPath, destination] of [
+      ['api/GASearchCV', 'api/gasearchcv'],
+      ['tutorials/callbacks', 'guide/callbacks'],
+    ]) {
+      const target = `/versions/latest/${destination}`
+      if (!existsSync(join(latest, `${destination}.html`))) {
+        throw new Error(`Missing legacy URL destination: ${target}`)
+      }
+      const output = join(latest, oldPath)
+      mkdirSync(output, { recursive: true })
+      writeFileSync(join(output, 'index.html'), `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="refresh" content="0; url=${target}">
+  <link rel="canonical" href="${SITE}${target}">
+  <title>Documentation moved | sklearn-genetic-opt</title>
+</head>
+<body><p>Continue to the <a href="${target}">updated documentation</a>.</p></body>
+</html>
+`)
+    }
+  },
+
   transformPageData(pageData) {
-    const base = 'https://sklearngeneticopt.rodrigo-arenas.com'
+    const base = SITE
     const ogImage = `${base}/brand/social-preview-1280x640.png`
-    const pageTitle = pageData.title
+    const release = pageData.relativePath.match(/^versions\/(\d+\.\d+)\/index\.md$/)?.[1]
+    if (release) {
+      pageData.title = `sklearn-genetic-opt ${release} Documentation`
+      pageData.description = `Released documentation for sklearn-genetic-opt ${release}. Find examples and API references for hyperparameter tuning and feature selection with scikit-learn.`
+      pageData.titleTemplate = false
+    }
+    const pageTitle = pageData.titleTemplate === false
+      ? pageData.title
+      : pageData.title
       ? `${pageData.title} | sklearn-genetic-opt`
       : 'sklearn-genetic-opt'
     const pageDescription =

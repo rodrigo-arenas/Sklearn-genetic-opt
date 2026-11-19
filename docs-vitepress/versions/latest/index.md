@@ -29,19 +29,21 @@ You are reading the **latest (development)** docs. This version tracks the `mast
 - Callbacks for early stopping, progress reporting, checkpoints, live plots, and custom logic.
 - Plotting helpers plus MLflow 3 logging support.
 
-## Installation (dev)
+## Installation {#installation-dev}
 
-Install from the master branch:
-
-```bash
-pip install git+https://github.com/rodrigo-arenas/Sklearn-genetic-opt.git@master
-```
-
-Or install the released version:
+Install the released version from PyPI:
 
 ```bash
 pip install sklearn-genetic-opt
 ```
+
+:::warning Development version
+To try unreleased features documented on the development branch, install from `master`:
+
+```bash
+pip install git+https://github.com/rodrigo-arenas/Sklearn-genetic-opt.git@master
+```
+:::
 
 ## Quick Start
 
