@@ -1,4 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"><title>sklearn-genetic-opt crossover mark</title><rect width="64" height="64" rx="11" fill="#232522"/><g transform="translate(6 15) scale(.95)"><g id="crossover-mark">
-<path fill="#f4f4ee" d="M0 25h13l6-6 5.7 6-8.1 8H0z M27 11l8.1-8H55v8H38.4l-5.8 5.8z"/>
-<path fill="#ff9a7e" d="M0 3h17.1l20.7 22H55v8H34.3L13.5 11H0z"/>
-</g></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 -8 70 70" role="img" aria-labelledby="brand-title">
+<title id="brand-title">sklearn-genetic-opt</title>
+<style>.ink{fill:#202527}.terrain{stroke:#202527}.trace{stroke:#bf432e}.sample{fill:#bf432e}@media(prefers-color-scheme:dark){.ink{fill:#f5f2e9}.terrain{stroke:#f5f2e9}.trace{stroke:#ff9175}.sample{fill:#ff9175}}</style>
+<g class="terrain" fill="none" stroke-linejoin="round" stroke-linecap="round">
+<path d="M4 36Q10 32 16 22Q22 13 29 22Q34 29 39 17Q45 1 51 8Q54 12 58 17L65 18Q56 29 51 37Q46 48 39 43Q29 33 21 36Z" stroke-width="2.8"/>
+<path d="M15 31Q23 23 30 28Q36 33 47 22Q53 17 59 20" stroke-width="1.7"/>
+</g>
+<path d="M33.01 32.35 L42.00 25.00 L39.00 21.00 L50.00 8.00" class="trace" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+<circle class="trace" fill="none" cx="31" cy="34" r="2.6" stroke-width="2.4"/>
+<circle class="sample" cx="42" cy="25" r="1.8"/>
+<circle class="sample" cx="39" cy="21" r="1.8"/>
+<circle class="sample" cx="50" cy="8" r="2.6"/>
+</svg>

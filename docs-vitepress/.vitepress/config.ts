@@ -353,7 +353,7 @@ export default defineConfig({
   ],
 
   themeConfig: {
-    logo: { src: '/brand/logo-horizontal.svg', alt: 'sklearn-genetic-opt' },
+    logo: { src: '/brand/logo-nav.svg', alt: 'sklearn-genetic-opt' },
     siteTitle: false,
 
     nav: [
