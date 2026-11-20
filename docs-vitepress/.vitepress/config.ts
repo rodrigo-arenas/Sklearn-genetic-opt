@@ -315,10 +315,12 @@ export default defineConfig({
       ['meta', { property: 'og:description', content: pageDescription }],
       ['meta', { property: 'og:url',         content: pageUrl }],
       ['meta', { property: 'og:image',       content: ogImage }],
+      ['meta', { property: 'og:image:alt', content: 'sklearn-genetic-opt' }],
       ['meta', { name: 'twitter:card',        content: 'summary_large_image' }],
       ['meta', { name: 'twitter:title',       content: pageTitle }],
       ['meta', { name: 'twitter:description', content: pageDescription }],
       ['meta', { name: 'twitter:image',       content: ogImage }],
+      ['meta', { name: 'twitter:image:alt',   content: 'sklearn-genetic-opt' }],
     )
 
     if (pageData.relativePath === 'index.md') {
@@ -345,13 +347,14 @@ export default defineConfig({
 
   head: [
     ['link', { rel: 'icon', type: 'image/png', sizes: '32x32', href: `${GITHUB_PAGES_BASE}brand/favicon-32.png` }],
+    ['link', { rel: 'icon', type: 'image/svg+xml', sizes: 'any', href: `${GITHUB_PAGES_BASE}brand/icon.svg` }],
     ['link', { rel: 'apple-touch-icon', sizes: '180x180', href: `${GITHUB_PAGES_BASE}brand/apple-touch-icon-180.png` }],
     ...gaHead,
   ],
 
   themeConfig: {
-    logo: '/brand/icon.svg',
-    siteTitle: 'sklearn-genetic-opt',
+    logo: { src: '/brand/logo-nav.svg', alt: 'sklearn-genetic-opt' },
+    siteTitle: false,
 
     nav: [
       { text: 'Home', link: '/' },
