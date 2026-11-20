@@ -169,6 +169,6 @@ const paths = [
 
 .path-cta:hover {
   background: var(--vp-c-brand-1);
-  color: white;
+  color: var(--vp-button-brand-text);
 }
 </style>

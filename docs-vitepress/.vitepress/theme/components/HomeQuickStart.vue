@@ -42,7 +42,7 @@
 
 <span class="kw">from</span> sklearn.datasets <span class="kw">import</span> load_breast_cancer
 <span class="kw">from</span> sklearn.ensemble <span class="kw">import</span> RandomForestClassifier
-<span class="kw">from</span> sklearn_genetic <span class="kw">import</span> GASearchCV
+<span class="kw">from</span> sklearn_genetic <span class="kw">import</span> EvolutionConfig, GASearchCV, RuntimeConfig
 <span class="kw">from</span> sklearn_genetic.space <span class="kw">import</span> Integer, Continuous
 
 X, y = load_breast_cancer(return_X_y=<span class="kw">True</span>)
@@ -55,13 +55,12 @@ param_grid = {
 }
 
 evolved_estimator = GASearchCV(
-    estimator=RandomForestClassifier(),
+    estimator=RandomForestClassifier(random_state=<span class="n">42</span>),
     cv=<span class="n">5</span>,
     param_grid=param_grid,
-    population_size=<span class="n">20</span>,
-    generations=<span class="n">15</span>,
+    evolution_config=EvolutionConfig(population_size=<span class="n">20</span>, generations=<span class="n">15</span>),
     random_state=<span class="n">42</span>,
-    n_jobs=<span class="n">-1</span>,
+    runtime_config=RuntimeConfig(n_jobs=<span class="n">-1</span>),
 )
 
 evolved_estimator.fit(X, y)
@@ -91,6 +90,10 @@ evolved_estimator.fit(X, y)
     grid-template-columns: 1fr;
     gap: 2rem;
   }
+}
+
+.qs-right {
+  min-width: 0;
 }
 
 .left-align {
@@ -124,7 +127,7 @@ evolved_estimator.fit(X, y)
   height: 1.6rem;
   border-radius: 50%;
   background: var(--vp-c-brand-1);
-  color: white;
+  color: var(--vp-button-brand-text);
   font-size: 0.75rem;
   font-weight: 700;
   flex-shrink: 0;
@@ -151,7 +154,7 @@ evolved_estimator.fit(X, y)
 
 .qs-btn.primary {
   background: var(--vp-c-brand-1);
-  color: white;
+  color: var(--vp-button-brand-text);
 }
 
 .qs-btn.secondary {

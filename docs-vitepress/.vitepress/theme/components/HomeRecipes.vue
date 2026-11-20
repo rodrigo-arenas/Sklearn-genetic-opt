@@ -224,7 +224,7 @@ const recipes = [
   display: inline-block;
   padding: 0.7rem 1.75rem;
   background: var(--vp-c-brand-1);
-  color: white;
+  color: var(--vp-button-brand-text);
   border-radius: 6px;
   font-weight: 600;
   font-size: 0.9rem;

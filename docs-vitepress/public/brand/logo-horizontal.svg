@@ -1,16 +1,29 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="600" height="150" viewBox="0 0 600 150">
-  <svg x="8" y="15" width="120" height="120" viewBox="5 -3 120 120">
-  <defs>
-    <linearGradient id="hxc" x1="0" y1="8" x2="0" y2="50" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#2FBE8C"></stop><stop offset="1" stop-color="#12ADB6"></stop></linearGradient>
-    <linearGradient id="pgc" x1="30" y1="52" x2="74" y2="66" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#17B8A6"></stop><stop offset="1" stop-color="#8763F2"></stop></linearGradient>
-  </defs>
-  <circle cx="74" cy="66" r="40" stroke="#d3d6dd" stroke-width="1.6" fill="none"></circle>
-  <circle cx="74" cy="66" r="24" stroke="#d3d6dd" stroke-width="1.6" fill="none"></circle>
-  <path d="M30,52 C42,58 54,62 74,66" stroke="url(#pgc)" stroke-width="2.4" stroke-linecap="round" fill="none"></path>
-  <circle cx="40" cy="56" r="3" fill="#17B8A6"></circle><circle cx="52" cy="61" r="3" fill="#4C93C4"></circle><circle cx="63" cy="64" r="3" fill="#7A6BD3"></circle>
-  <g stroke="#a9d9d2" stroke-width="1.4" stroke-linecap="round"><line x1="18" y1="12" x2="34" y2="12"></line><line x1="18" y1="18" x2="34" y2="18"></line><line x1="18" y1="26" x2="34" y2="26"></line><line x1="18" y1="32" x2="34" y2="32"></line><line x1="18" y1="40" x2="34" y2="40"></line><line x1="18" y1="46" x2="34" y2="46"></line></g>
-  <path d="M26,8 C36,12 36,18 26,22 C16,26 16,32 26,36 C36,40 36,46 26,50" stroke="url(#hxc)" stroke-width="2.2" stroke-linecap="round" fill="none"></path>
-  <path d="M26,8 C16,12 16,18 26,22 C36,26 36,32 26,36 C16,40 16,46 26,50" stroke="url(#hxc)" stroke-width="2.2" stroke-linecap="round" fill="none"></path>
-  <circle cx="74" cy="66" r="13" fill="#8763F2"></circle><circle cx="74" cy="66" r="5" fill="#ffffff"></circle></svg>
-  <text x="150" y="93" font-family="&#39;Space Grotesk&#39;,sans-serif" font-weight="600" font-size="56" letter-spacing="-1.2"><tspan fill="#14181f">sklearn</tspan><tspan fill="#b9bdc7">-</tspan><tspan fill="#14181f">genetic</tspan><tspan fill="#b9bdc7">-</tspan><tspan fill="#8763F2" font-family="&#39;JetBrains Mono&#39;,monospace" font-weight="500">opt</tspan></text>
+<svg xmlns="http://www.w3.org/2000/svg" width="353" height="42" viewBox="-2 -1 353 42" role="img" aria-labelledby="logo-title">
+<title id="logo-title">sklearn-genetic-opt</title>
+<style>:root{--ink:#232522;--signal:#a53624}@media(prefers-color-scheme:dark){:root{--ink:#eceee8;--signal:#ff9a7e}}</style>
+<g transform="translate(0 2)"><g id="crossover-mark">
+<path fill="var(--ink)" d="M0 25h13l6-6 5.7 6-8.1 8H0z M27 11l8.1-8H55v8H38.4l-5.8 5.8z"/>
+<path fill="var(--signal)" d="M0 3h17.1l20.7 22H55v8H34.3L13.5 11H0z"/>
+</g></g>
+<g transform="translate(65 9)"><g id="wordmark" stroke="var(--ink)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none">
+  <path transform="translate(0.00 0)" d="M12 4.1C9.1 1.4 2.3 1.8 2.3 5.8c0 4.7 10.5 2.3 10.5 7.4 0 4.7-8.1 5.4-11.2 2.2"/>
+  <path transform="translate(15.78 0)" d="M2-5v22M13 2.8 2.8 12m4-3.2 7.1 8.2"/>
+  <path transform="translate(32.36 0)" d="M2-5v18.1c0 2.5.7 3.9 3.4 3.9"/>
+  <path transform="translate(40.84 0)" d="M2 9.9h12.2c.2-4.4-2.2-7.5-6-7.5-3.9 0-6.4 3.1-6.4 7.5 0 4.6 2.8 7.3 6.8 7.3 2.2 0 4.1-.8 5.1-2.1"/>
+  <path transform="translate(58.32 0)" d="M2.6 5.3c1.2-1.9 3.1-2.9 5.9-2.9 3.7 0 5.5 2 5.5 5.2V17m-.1-8.7c-2.4-.2-4.1-.3-6.4-.1-3.5.3-5.8 1.7-5.8 4.5 0 2.8 2.1 4.5 4.9 4.5 3.2 0 5.9-1.6 7.2-4.4"/>
+  <path transform="translate(75.40 0)" d="M2 2.8V17m.2-9.6c1.5-3.1 4-5.1 7.7-4.8"/>
+  <path transform="translate(87.88 0)" d="M2 2.8V17m.2-9.2c1.2-3.3 3.8-5.2 6.7-5.2 3.5 0 5.1 2.3 5.1 5.9V17"/>
+  <path transform="translate(105.36 0)" d="M1.5 10h6.8"/>
+  <path transform="translate(117.14 0)" d="M14 3v12.6c0 5.3-2.5 8.4-7.5 8.4-1.9 0-4.1-.5-5.4-1.7m12.7-12.7c0 4.4-2.2 7.4-6 7.4-3.8 0-6.1-3.1-6.1-7.4 0-4.2 2.3-7.2 6.1-7.2s6 3 6 7.2"/>
+  <path transform="translate(135.32 0)" d="M2 9.9h12.2c.2-4.4-2.2-7.5-6-7.5-3.9 0-6.4 3.1-6.4 7.5 0 4.6 2.8 7.3 6.8 7.3 2.2 0 4.1-.8 5.1-2.1"/>
+  <path transform="translate(152.80 0)" d="M2 2.8V17m.2-9.2c1.2-3.3 3.8-5.2 6.7-5.2 3.5 0 5.1 2.3 5.1 5.9V17"/>
+  <path transform="translate(170.28 0)" d="M2 9.9h12.2c.2-4.4-2.2-7.5-6-7.5-3.9 0-6.4 3.1-6.4 7.5 0 4.6 2.8 7.3 6.8 7.3 2.2 0 4.1-.8 5.1-2.1"/>
+  <path transform="translate(187.76 0)" d="M4.1-2v14.9c0 2.8 1.5 4.4 4 4.4.7 0 1.3-.1 1.9-.3M.7 3.3h8.5"/>
+  <path transform="translate(199.94 0)" d="M2.1 3v14m0-21v.75"/>
+  <path transform="translate(206.72 0)" d="M12.8 4.8c-1.1-1.6-2.9-2.4-5-2.4-3.8 0-6.1 3.1-6.1 7.5 0 4.3 2.4 7.3 6.2 7.3 2.1 0 4-1 5.1-2.7"/>
+  <path transform="translate(222.70 0)" d="M1.5 10h6.8"/>
+  <path transform="translate(234.48 0)" d="M14.1 9.8c0 4.4-2.4 7.5-6.2 7.5s-6.2-3.1-6.2-7.5c0-4.3 2.4-7.4 6.2-7.4s6.2 3.1 6.2 7.4Z"/>
+  <path transform="translate(252.56 0)" d="M2 3v20.5m.2-13.7c0-4.4 2.2-7.4 6.1-7.4 3.8 0 6.1 3.1 6.1 7.4 0 4.4-2.3 7.5-6.1 7.5-3.9 0-6.1-3.2-6.1-7.5Z"/>
+  <path transform="translate(270.94 0)" d="M4.1-2v14.9c0 2.8 1.5 4.4 4 4.4.7 0 1.3-.1 1.9-.3M.7 3.3h8.5"/>
+</g></g>
 </svg>
