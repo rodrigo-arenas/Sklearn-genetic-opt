@@ -17,7 +17,7 @@ We tune a `RandomForestClassifier` on the breast-cancer dataset with several
 hyperparameters of mixed type (integers, a continuous fraction, and two
 categoricals). Diversity control, fitness sharing, and local search are
 enabled so the diversity, optimizer-event, and decision plots actually have
-something to show. The run is small (population 12 x 10 generations) so the
+something to show. The run is small (population 10 x 10 generations) so the
 whole gallery builds in well under a minute.
 
 ```python
@@ -38,7 +38,9 @@ from sklearn_genetic import (
     RuntimeConfig,
 )
 from sklearn_genetic.plots import (
+    LivePlot,
     SearchPlotter,
+    plot_candidate_scores,
     plot_candidate_rankings,
     plot_convergence,
     plot_cv_scores,
@@ -94,15 +96,20 @@ search = GASearchCV(
     ),
 )
 
-search.fit(X_train, y_train)
+live = LivePlot(metrics=("fitness_best_observed", "fitness"))
+search.fit(X_train, y_train, callbacks=live)
 print("Best CV ROC AUC:", round(search.best_score_, 4))
 print("Best params    :", search.best_params_)
 ```
 
 ```text
-Best CV ROC AUC: 0.9894
-Best params    : {'n_estimators': 62, 'max_depth': 10, 'min_samples_split': 4, 'max_features': 0.2825358714597836, 'criterion': 'entropy', 'class_weight': None}
+Best CV ROC AUC: 0.9893
+Best params    : {'n_estimators': 83, 'max_depth': 15, 'min_samples_split': 3, 'max_features': 0.27267402874991875, 'criterion': 'entropy', 'class_weight': None}
 ```
+
+![Cumulative best ROC AUC and population mean at the end of the fit](/images/generation_gallery_live.png)
+
+*Final frame of the generation callback. The mean can fall while the best stays level.*
 
 ## Overview Dashboard
 
@@ -114,7 +121,7 @@ single 2x2 figure.
 plot_search_overview(search, top_k=6)
 ```
 
-![Search overview dashboard with convergence, diversity, events, and candidates](/images/plotting_gallery_search_overview.png)
+![Search overview dashboard with convergence, diversity, events, and candidates](/images/generation_gallery_search_overview.png)
 
 *Four diagnostics at a glance: convergence (top-left), diversity (top-right), optimizer events (bottom-left), and the best evaluated candidates (bottom-right).*
 
@@ -136,13 +143,14 @@ type(plotter).__name__
 
 ## Fitness Evolution
 
-`plot_fitness_evolution` shows how a fitness metric changes across generations.
+`fitness_best_observed` includes every finite candidate evaluation.
+`fitness_best` follows the archive, which may retain an earlier score for a repeated configuration.
 
 ```python
-plot_fitness_evolution(search)
+plot_fitness_evolution(search, metric="fitness_best_observed")
 ```
 
-![Best fitness so far across generations](/images/plotting_gallery_fitness_evolution.png)
+![Best observed fitness across generations](/images/generation_gallery_fitness_evolution.png)
 
 *Best-so-far ROC AUC climbing across generations.*
 
@@ -158,12 +166,11 @@ plot_fitness_evolution(
 )
 ```
 
-![Best, mean, and max fitness with a rolling window](/images/plotting_gallery_fitness_multi.png)
+![Best, mean, and max fitness with a rolling window](/images/generation_gallery_fitness_multi.png)
 
 *best vs. population mean vs. per-generation max, smoothed with a window of 2.*
 
-**What to look for:** the gap between `fitness_best` and `fitness` (mean) is
-the population's spread. A mean that races up to meet the best can signal the
+**What to look for:** the gap between `fitness_best` and `fitness` (mean) shows how far the current mean trails the best seen anywhere in the run. A mean that races up to meet the best can signal the
 population converging — cross-check with the diversity plot below.
 
 | Parameter | Description |
@@ -188,7 +195,7 @@ plot_history(
 )
 ```
 
-![Fitness and diversity history fields in stacked subplots](/images/plotting_gallery_history.png)
+![Fitness and diversity history fields in stacked subplots](/images/generation_gallery_history.png)
 
 *Fitness and diversity telemetry, one field per subplot.*
 
@@ -200,7 +207,7 @@ of step plots.
 plot_search_decisions(search)
 ```
 
-![Optimizer-control decisions over generations as step plots](/images/plotting_gallery_search_decisions.png)
+![Optimizer-control decisions over generations as step plots](/images/generation_gallery_search_decisions.png)
 
 *When the optimizer adjusted mutation, injected random immigrants, or ran local refinements.*
 
@@ -216,7 +223,7 @@ When you want one figure per question instead of the dashboard:
 plot_convergence(search)
 ```
 
-![Convergence of fitness summary fields across generations](/images/plotting_gallery_convergence.png)
+![Convergence of fitness summary fields across generations](/images/generation_gallery_convergence.png)
 
 *Best, mean, max, and min fitness on a single axis.*
 
@@ -226,7 +233,7 @@ plot_convergence(search)
 plot_diversity(search)
 ```
 
-![Population diversity ratios with stagnation on a secondary axis](/images/plotting_gallery_diversity.png)
+![Population diversity ratios with stagnation on a secondary axis](/images/generation_gallery_diversity.png)
 
 *Unique-individual ratio and genotype diversity; stagnant generations on the right axis.*
 
@@ -248,7 +255,7 @@ plot_search_space(
 )
 ```
 
-![Pairwise relationships between sampled hyperparameters](/images/plotting_gallery_search_space_pair.png)
+![Pairwise relationships between sampled hyperparameters](/images/generation_gallery_search_space_pair.png)
 
 *Pairwise scatter of the numeric parameters the search actually sampled.*
 
@@ -262,9 +269,9 @@ plot_search_space(
 )
 ```
 
-![Correlation heatmap of sampled numeric parameters](/images/plotting_gallery_search_space_heatmap.png)
+![Correlation heatmap of sampled numeric parameters](/images/generation_gallery_search_space_heatmap.png)
 
-*Correlations between sampled parameters and the score.*
+*Pearson correlations between the four displayed parameters.*
 
 **What to look for:** clusters of sampled points reveal where the optimizer
 concentrated its effort; a strong correlation in the heatmap hints at a
@@ -289,7 +296,7 @@ plot_parameter_evolution(
 )
 ```
 
-![Parameter values across candidate evaluations colored by score](/images/plotting_gallery_parameter_evolution.png)
+![Parameter values across candidate evaluations colored by score](/images/generation_gallery_parameter_evolution.png)
 
 *Each parameter's sampled value over evaluation order; brighter points scored higher.*
 
@@ -306,7 +313,7 @@ overlapping step lines when you only care *when* the optimizer changed behavior.
 plot_optimizer_events(search)
 ```
 
-![Optimizer interventions as a generation timeline](/images/plotting_gallery_optimizer_events.png)
+![Optimizer interventions as a generation timeline](/images/generation_gallery_optimizer_events.png)
 
 *Each row is an intervention type; markers mark the generations where it fired.*
 
@@ -322,7 +329,7 @@ smoothly without needing diversity interventions.
 plot_score_landscape(search, x="max_depth", y="min_samples_split")
 ```
 
-![Score landscape scatter for two parameters](/images/plotting_gallery_score_landscape.png)
+![Score landscape scatter for two parameters](/images/generation_gallery_score_landscape.png)
 
 *Scatter of evaluated candidates; color is the CV score, marker size encodes CV std.*
 
@@ -332,7 +339,7 @@ Dense numeric spaces aggregate cleanly with hexbins:
 plot_score_landscape(search, x="max_depth", y="min_samples_split", kind="hexbin")
 ```
 
-![Score landscape hexbin for two parameters](/images/plotting_gallery_score_landscape_hexbin.png)
+![Score landscape hexbin for two parameters](/images/generation_gallery_score_landscape_hexbin.png)
 
 *Hexbin aggregation of the same slice; each cell is the mean score of the candidates it contains.*
 
@@ -349,9 +356,17 @@ CV standard deviation as error bars.
 plot_candidate_rankings(search, top_k=8)
 ```
 
-![Top candidates ranked by mean CV score with standard-deviation error bars](/images/plotting_gallery_candidate_rankings.png)
+![Top candidates ranked by mean CV score with standard-deviation error bars](/images/generation_gallery_candidate_rankings.png)
 
 *Top candidates ranked by mean CV score; horizontal bars are the CV standard deviation.*
+
+```python
+plot_candidate_scores(search, top_k=5)
+```
+
+![Mean cross-validation score of the five highest-ranked evaluations](/images/generation_gallery_candidate_scores.png)
+
+*Each bar is one evaluation, including candidates with the same displayed parameters.*
 
 `plot_cv_scores` shows the fold-level scores for the strongest candidates so you can spot a winner that is not robust across splits.
 
@@ -359,7 +374,7 @@ plot_candidate_rankings(search, top_k=8)
 plot_cv_scores(search, top_k=5)
 ```
 
-![Fold-level CV score distributions for the top candidates](/images/plotting_gallery_cv_scores.png)
+![Fold-level CV score distributions for the top candidates](/images/generation_gallery_cv_scores.png)
 
 *Per-fold scores for the top candidates; a wide box means a candidate is fragile across splits.*
 
@@ -396,23 +411,13 @@ selector = GAFeatureSelectionCV(
     generations=8,
     max_features=6,
     n_jobs=1,
+    verbose=False,
 )
 selector.fit(X_fs, y_fs)
 print("Selected", int(selector.best_features_.sum()), "of", len(feature_names), "features")
 ```
 
 ```text
- gen evals           avg          best     div  unique  stag     mut   sel             events
----- ----- ------------- ------------- ------- ------- ----- ------- ----- ------------------
-   0    12       0.59389       0.91333   0.091   1.000     0       -     - -                 
-   1    24       0.81333       0.91333   0.091   0.667     1   0.200     3 div,imm=3,dup=16  
-   2    24       0.85000       0.91333   0.091   0.750     2   0.200     3 div,imm=3,dup=13  
-   3    24       0.90889       0.96000   0.073   0.500     0   0.200     3 div,imm=3,dup=13  
-   4    24       0.92667       0.96667   0.073   0.667     0   0.200     3 div,imm=3,dup=14  
-   5    24       0.92944       0.96667   0.064   0.833     1   0.200     3 div,imm=3,dup=13  
-   6    24       0.94222       0.96667   0.073   0.667     2   0.200     3 div,imm=3,dup=19  
-   7    24       0.85111       0.96667   0.091   0.750     3   0.200     3 div,imm=3,dup=16  
-   8    24       0.91333       0.96667   0.073   0.667     4   0.200     3 div,imm=3,dup=17  
 Selected 4 of 10 features
 ```
 
@@ -420,7 +425,7 @@ Selected 4 of 10 features
 plot_feature_selection(selector, feature_names=feature_names)
 ```
 
-![Selected feature mask for the GAFeatureSelectionCV search](/images/plotting_gallery_feature_selection.png)
+![Selected feature mask for the GAFeatureSelectionCV search](/images/generation_gallery_feature_selection.png)
 
 *The four real iris features survive; most injected noise columns are rejected.*
 
@@ -430,13 +435,13 @@ plot_feature_selection(selector, feature_names=feature_names)
 plot_search_overview(selector)
 ```
 
-![Feature-selection overview dashboard](/images/plotting_gallery_feature_overview.png)
+![Feature-selection overview dashboard](/images/generation_gallery_feature_overview.png)
 
 *Same dashboard layout, but the candidate panel is replaced by the selected-feature mask.*
 
 ## Reading History Directly
 
-Every plot reads from `search.history`. You can also work with it as a
+Generation summaries come from `search.history`. Candidate plots use per-evaluation records or `cv_results_`. You can also work with it as a
 DataFrame for custom reporting.
 
 ```python
@@ -460,11 +465,11 @@ print(history[available].tail().to_string(index=False))
 
 ```text
  gen  fitness_best  fitness  fitness_max  unique_individual_ratio  genotype_diversity  mutation_probability  selection_pressure  random_immigrants  duplicate_replacements  local_refinements
-   6      0.988693 0.985227     0.988517                      0.8            0.425926                   0.1                 3.0                  0                       4                  0
-   7      0.988693 0.983945     0.984771                      0.7            0.351852                   0.1                 3.0                  0                       3                  0
-   8      0.989365 0.983538     0.989365                      0.9            0.370370                   0.1                 3.0                  0                       2                  0
-   9      0.989365 0.985164     0.988976                      0.7            0.296296                   0.1                 3.0                  0                       4                  0
-  10      0.989365 0.985648     0.988941                      0.7            0.388889                   0.1                 3.0                  0                       7                  2
+   6      0.989223 0.986980     0.989223                      0.9            0.688889                   0.1                 3.0                  0                       5                  0
+   7      0.989259 0.987609     0.989259                      0.8            0.474074                   0.1                 3.0                  0                       3                  0
+   8      0.989259 0.987503     0.989259                      1.0            0.629630                   0.1                 3.0                  0                      10                  0
+   9      0.989259 0.987771     0.989259                      0.9            0.622222                   0.1                 3.0                  0                       5                  0
+  10      0.989259 0.987891     0.989259                      1.0            0.540741                   0.1                 3.0                  0                       6                  2
 ```
 
 ## When to Use Each Plot
@@ -473,7 +478,8 @@ print(history[available].tail().to_string(index=False))
 |------|----------|
 | `plot_search_overview` | One-call diagnostic dashboard after `.fit(...)` |
 | `SearchPlotter` | Repeated diagnostics from a fitted search object |
-| `plot_fitness_evolution` | Quick fitness trend, optionally multi-metric |
+| `LivePlot` / `plot_generation_metrics` | Follow or snapshot recorded fields during fitting |
+| `plot_fitness_evolution` | Quick fitness trend, optionally with multiple fields |
 | `plot_convergence` | Fitness progress without event clutter |
 | `plot_diversity` | Checking diversity collapse and stagnation |
 | `plot_history` | Inspecting any telemetry field from history or logbook |
@@ -483,15 +489,15 @@ print(history[available].tail().to_string(index=False))
 | `plot_parameter_evolution` | How parameter values changed across evaluations |
 | `plot_optimizer_events` | Explaining interventions as a timeline |
 | `plot_score_landscape` | Finding promising parameter regions |
-| `plot_candidate_rankings` | Comparing top solutions with CV uncertainty |
+| `plot_candidate_scores` / `plot_candidate_rankings` | Comparing top evaluations by mean score or fold spread |
 | `plot_cv_scores` | Checking fold-level robustness |
 | `plot_feature_selection` | Inspecting the selected support mask |
 
 ## Practical Notes
 
-- All plot helpers accept `ax=` (and the dashboards take `figsize=`) so you can
+- Single-axis helpers that expose `ax=` let you
   compose them into your own figures.
-- The plots need `seaborn` installed — it ships as the `sklearn-genetic-opt[all]`
+- The post-fit plots use `seaborn`, included in the `sklearn-genetic-opt[plot]`
   extra.
 - If `plot_diversity` shows an early collapse, reach for `fitness_sharing`,
   `random_immigrants_fraction`, and `diversity_control` before adding generations.

@@ -807,7 +807,7 @@ def eaMuPlusLambda(
         callbacks_end_args = {
             "callbacks": callbacks,
             "record": None,
-            "logbook": None,
+            "logbook": logbook,
             "estimator": estimator,
             "method": "on_end",
         }
@@ -925,7 +925,7 @@ def eaMuPlusLambda(
     callbacks_end_args = {
         "callbacks": callbacks,
         "record": None,
-        "logbook": None,
+        "logbook": logbook,
         "estimator": estimator,
         "method": "on_end",
     }

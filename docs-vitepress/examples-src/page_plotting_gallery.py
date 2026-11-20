@@ -44,7 +44,7 @@ nb.md("""
     hyperparameters of mixed type (integers, a continuous fraction, and two
     categoricals). Diversity control, fitness sharing, and local search are
     enabled so the diversity, optimizer-event, and decision plots actually have
-    something to show. The run is small (population 12 x 10 generations) so the
+    something to show. The run is small (population 10 x 10 generations) so the
     whole gallery builds in well under a minute.
     """)
 
@@ -66,7 +66,9 @@ nb.code("""
         RuntimeConfig,
     )
     from sklearn_genetic.plots import (
+        LivePlot,
         SearchPlotter,
+        plot_candidate_scores,
         plot_candidate_rankings,
         plot_convergence,
         plot_cv_scores,
@@ -122,10 +124,18 @@ nb.code("""
         ),
     )
 
-    search.fit(X_train, y_train)
+    live = LivePlot(metrics=("fitness_best_observed", "fitness"))
+    search.fit(X_train, y_train, callbacks=live)
     print("Best CV ROC AUC:", round(search.best_score_, 4))
     print("Best params    :", search.best_params_)
     """)
+
+nb.figure(
+    "generation_gallery_live.png",
+    "Cumulative best ROC AUC and population mean at the end of the fit",
+    fig=nb.ns["live"].ax.figure,
+    caption="Final frame of the generation callback. The mean can fall while the best stays level.",
+)
 
 nb.md("""
     ## Overview Dashboard
@@ -142,7 +152,7 @@ nb.code(
     output=False,
 )
 nb.figure(
-    "plotting_gallery_search_overview.png",
+    "generation_gallery_search_overview.png",
     "Search overview dashboard with convergence, diversity, events, and candidates",
     caption="Four diagnostics at a glance: convergence (top-left), diversity (top-right), optimizer events (bottom-left), and the best evaluated candidates (bottom-right).",
 )
@@ -164,18 +174,19 @@ nb.code("""
 nb.md("""
     ## Fitness Evolution
 
-    `plot_fitness_evolution` shows how a fitness metric changes across generations.
+    `fitness_best_observed` includes every finite candidate evaluation.
+    `fitness_best` follows the archive, which may retain an earlier score for a repeated configuration.
     """)
 
 nb.code(
     """
-    plot_fitness_evolution(search)
+    plot_fitness_evolution(search, metric="fitness_best_observed")
     """,
     output=False,
 )
 nb.figure(
-    "plotting_gallery_fitness_evolution.png",
-    "Best fitness so far across generations",
+    "generation_gallery_fitness_evolution.png",
+    "Best observed fitness across generations",
     caption="Best-so-far ROC AUC climbing across generations.",
 )
 
@@ -194,14 +205,13 @@ nb.code(
     output=False,
 )
 nb.figure(
-    "plotting_gallery_fitness_multi.png",
+    "generation_gallery_fitness_multi.png",
     "Best, mean, and max fitness with a rolling window",
     caption="best vs. population mean vs. per-generation max, smoothed with a window of 2.",
 )
 
 nb.md("""
-    **What to look for:** the gap between `fitness_best` and `fitness` (mean) is
-    the population's spread. A mean that races up to meet the best can signal the
+    **What to look for:** the gap between `fitness_best` and `fitness` (mean) shows how far the current mean trails the best seen anywhere in the run. A mean that races up to meet the best can signal the
     population converging — cross-check with the diversity plot below.
 
     | Parameter | Description |
@@ -230,7 +240,7 @@ nb.code(
     output=False,
 )
 nb.figure(
-    "plotting_gallery_history.png",
+    "generation_gallery_history.png",
     "Fitness and diversity history fields in stacked subplots",
     caption="Fitness and diversity telemetry, one field per subplot.",
 )
@@ -248,7 +258,7 @@ nb.code(
     output=False,
 )
 nb.figure(
-    "plotting_gallery_search_decisions.png",
+    "generation_gallery_search_decisions.png",
     "Optimizer-control decisions over generations as step plots",
     caption="When the optimizer adjusted mutation, injected random immigrants, or ran local refinements.",
 )
@@ -270,7 +280,7 @@ nb.code(
     output=False,
 )
 nb.figure(
-    "plotting_gallery_convergence.png",
+    "generation_gallery_convergence.png",
     "Convergence of fitness summary fields across generations",
     caption="Best, mean, max, and min fitness on a single axis.",
 )
@@ -288,7 +298,7 @@ nb.code(
     output=False,
 )
 nb.figure(
-    "plotting_gallery_diversity.png",
+    "generation_gallery_diversity.png",
     "Population diversity ratios with stagnation on a secondary axis",
     caption="Unique-individual ratio and genotype diversity; stagnant generations on the right axis.",
 )
@@ -316,7 +326,7 @@ nb.code(
     output=False,
 )
 nb.figure(
-    "plotting_gallery_search_space_pair.png",
+    "generation_gallery_search_space_pair.png",
     "Pairwise relationships between sampled hyperparameters",
     caption="Pairwise scatter of the numeric parameters the search actually sampled.",
 )
@@ -334,9 +344,9 @@ nb.code(
     output=False,
 )
 nb.figure(
-    "plotting_gallery_search_space_heatmap.png",
+    "generation_gallery_search_space_heatmap.png",
     "Correlation heatmap of sampled numeric parameters",
-    caption="Correlations between sampled parameters and the score.",
+    caption="Pearson correlations between the four displayed parameters.",
 )
 
 nb.md("""
@@ -367,7 +377,7 @@ nb.code(
     output=False,
 )
 nb.figure(
-    "plotting_gallery_parameter_evolution.png",
+    "generation_gallery_parameter_evolution.png",
     "Parameter values across candidate evaluations colored by score",
     caption="Each parameter's sampled value over evaluation order; brighter points scored higher.",
 )
@@ -390,7 +400,7 @@ nb.code(
     output=False,
 )
 nb.figure(
-    "plotting_gallery_optimizer_events.png",
+    "generation_gallery_optimizer_events.png",
     "Optimizer interventions as a generation timeline",
     caption="Each row is an intervention type; markers mark the generations where it fired.",
 )
@@ -412,7 +422,7 @@ nb.code(
     output=False,
 )
 nb.figure(
-    "plotting_gallery_score_landscape.png",
+    "generation_gallery_score_landscape.png",
     "Score landscape scatter for two parameters",
     caption="Scatter of evaluated candidates; color is the CV score, marker size encodes CV std.",
 )
@@ -426,7 +436,7 @@ nb.code(
     output=False,
 )
 nb.figure(
-    "plotting_gallery_score_landscape_hexbin.png",
+    "generation_gallery_score_landscape_hexbin.png",
     "Score landscape hexbin for two parameters",
     caption="Hexbin aggregation of the same slice; each cell is the mean score of the candidates it contains.",
 )
@@ -449,9 +459,16 @@ nb.code(
     output=False,
 )
 nb.figure(
-    "plotting_gallery_candidate_rankings.png",
+    "generation_gallery_candidate_rankings.png",
     "Top candidates ranked by mean CV score with standard-deviation error bars",
     caption="Top candidates ranked by mean CV score; horizontal bars are the CV standard deviation.",
+)
+
+nb.code("plot_candidate_scores(search, top_k=5)", output=False)
+nb.figure(
+    "generation_gallery_candidate_scores.png",
+    "Mean cross-validation score of the five highest-ranked evaluations",
+    caption="Each bar is one evaluation, including candidates with the same displayed parameters.",
 )
 
 nb.md(
@@ -466,7 +483,7 @@ nb.code(
     output=False,
 )
 nb.figure(
-    "plotting_gallery_cv_scores.png",
+    "generation_gallery_cv_scores.png",
     "Fold-level CV score distributions for the top candidates",
     caption="Per-fold scores for the top candidates; a wide box means a candidate is fragile across splits.",
 )
@@ -506,6 +523,7 @@ nb.code("""
         generations=8,
         max_features=6,
         n_jobs=1,
+        verbose=False,
     )
     selector.fit(X_fs, y_fs)
     print("Selected", int(selector.best_features_.sum()), "of", len(feature_names), "features")
@@ -518,7 +536,7 @@ nb.code(
     output=False,
 )
 nb.figure(
-    "plotting_gallery_feature_selection.png",
+    "generation_gallery_feature_selection.png",
     "Selected feature mask for the GAFeatureSelectionCV search",
     caption="The four real iris features survive; most injected noise columns are rejected.",
 )
@@ -532,7 +550,7 @@ nb.code(
     output=False,
 )
 nb.figure(
-    "plotting_gallery_feature_overview.png",
+    "generation_gallery_feature_overview.png",
     "Feature-selection overview dashboard",
     caption="Same dashboard layout, but the candidate panel is replaced by the selected-feature mask.",
 )
@@ -540,7 +558,7 @@ nb.figure(
 nb.md("""
     ## Reading History Directly
 
-    Every plot reads from `search.history`. You can also work with it as a
+    Generation summaries come from `search.history`. Candidate plots use per-evaluation records or `cv_results_`. You can also work with it as a
     DataFrame for custom reporting.
     """)
 
@@ -570,7 +588,8 @@ nb.md("""
     |------|----------|
     | `plot_search_overview` | One-call diagnostic dashboard after `.fit(...)` |
     | `SearchPlotter` | Repeated diagnostics from a fitted search object |
-    | `plot_fitness_evolution` | Quick fitness trend, optionally multi-metric |
+    | `LivePlot` / `plot_generation_metrics` | Follow or snapshot recorded fields during fitting |
+    | `plot_fitness_evolution` | Quick fitness trend, optionally with multiple fields |
     | `plot_convergence` | Fitness progress without event clutter |
     | `plot_diversity` | Checking diversity collapse and stagnation |
     | `plot_history` | Inspecting any telemetry field from history or logbook |
@@ -580,15 +599,15 @@ nb.md("""
     | `plot_parameter_evolution` | How parameter values changed across evaluations |
     | `plot_optimizer_events` | Explaining interventions as a timeline |
     | `plot_score_landscape` | Finding promising parameter regions |
-    | `plot_candidate_rankings` | Comparing top solutions with CV uncertainty |
+    | `plot_candidate_scores` / `plot_candidate_rankings` | Comparing top evaluations by mean score or fold spread |
     | `plot_cv_scores` | Checking fold-level robustness |
     | `plot_feature_selection` | Inspecting the selected support mask |
 
     ## Practical Notes
 
-    - All plot helpers accept `ax=` (and the dashboards take `figsize=`) so you can
+    - Single-axis helpers that expose `ax=` let you
       compose them into your own figures.
-    - The plots need `seaborn` installed — it ships as the `sklearn-genetic-opt[all]`
+    - The post-fit plots use `seaborn`, included in the `sklearn-genetic-opt[plot]`
       extra.
     - If `plot_diversity` shows an early collapse, reach for `fitness_sharing`,
       `random_immigrants_fraction`, and `diversity_control` before adding generations.
