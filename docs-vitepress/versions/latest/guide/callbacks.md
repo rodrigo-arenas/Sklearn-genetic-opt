@@ -190,19 +190,19 @@ The same callback works for `GASearchCV` and `GAFeatureSelectionCV`.
 ```python
 from sklearn_genetic.plots import LivePlot
 
-callback = LivePlot(save_path="./training-progress.png")
+callback = LivePlot(metrics=("fitness_best_observed", "fitness"), save_path="./training-progress.png")
 search.fit(X, y, callbacks=callback)
 ```
 
-Install with `pip install sklearn-genetic-opt[plot]`. The Matplotlib window
-updates during fitting when a graphical backend is available. `save_path`
-rewrites the current PNG after each generation, including in headless runs.
-The callback keeps the figure open for inspection after fitting.
+Install with `pip install 'sklearn-genetic-opt[plot]'`. The initial population is generation 0. Each completed generation updates the same lines, including the last one before early stopping. A resumed search includes the recorded generations from its checkpoint. Local refinement can update the final point during `on_end`.
 
-For a custom callback, use `plot_generation_metrics(logbook)` to draw the
-same generation traces from the logbook received by `on_step`. After fitting,
-use [`plot_search_overview`](../api/plots) to inspect convergence, diversity,
-optimizer events and the best candidates or selected features.
+The example uses `fitness_best_observed` for the best finite primary score among all candidates evaluated through the generation, including discarded offspring and repeated evaluations. The default `fitness_best` follows the elite archive, which can retain an older score for an identical configuration. Older checkpoints show a gap where the observed series was never recorded. On resume, the new series uses the candidate records available in the checkpoint and new evaluations. The dashed line (`fitness`) is the current population mean. Use `fitness_min` or `fitness_max` for the current population extremes. A negative sklearn scorer keeps its sign. A multi-metric search tracks its refit objective. Fitness may include search penalties.
+
+- **Desktop**. Select a GUI backend such as QtAgg or TkAgg before importing pyplot. The callback processes window events between generations. A long CV evaluation can leave the window unchanged until that generation completes.
+- **Notebook**. With ipympl installed, run `%matplotlib widget` and display the target canvas in a preceding cell, then pass its axis to `LivePlot(ax=ax)`. Updates depend on the kernel and frontend processing widget messages. With `%matplotlib inline`, the callback replaces a static snapshot through a Jupyter display handle at each update. Frontends may buffer these messages.
+- **Agg / CI**. Pass `save_path="training-progress.png"` to overwrite a snapshot on each update. Rendering and file writes take time on the fitting thread. Close the figure with `plt.close(callback.ax.figure)` when finished.
+
+To monitor diversity in its own units, pass a second callback with `LivePlot(metrics=("unique_individual_ratio", "genotype_diversity"))`. Both fields are ratios computed from the current population. A custom callback can call `plot_generation_metrics(logbook, metrics=..., ax=...)` for a single snapshot. Candidate rankings, fold distributions, parameter landscapes and the selected feature mask use completed fit results.
 
 The legacy `TensorBoard` callback remains importable for existing users who
 install TensorFlow separately. TensorFlow is no longer included in any extra.

@@ -2,6 +2,7 @@ import logging
 from collections.abc import Iterable
 
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
 import numpy as np
 import pandas as pd
 
@@ -37,6 +38,7 @@ _CONTROL_FIELDS = [
     "fitness_sharing_applied",
 ]
 _CONVERGENCE_FIELDS = ["fitness_best", "fitness", "fitness_max", "fitness_min"]
+_FITNESS_METRICS = [*Metrics.list(), "fitness_best_observed"]
 _DIVERSITY_FIELDS = ["unique_individual_ratio", "genotype_diversity"]
 _STAGNATION_FIELD = "stagnation_generations"
 _EVENT_FIELDS = [
@@ -302,74 +304,219 @@ def _plottable_values(values):
     return normalized
 
 
-def _plot_single_series(ax, series, kind="line", label=None, alpha=0.9, color=None):
+_COLORS = ("#185b75", "#a94c17", "#416d51", "#685884")
+_DASHES = ("-", "--", ":", "-.")
+_MARKERS = ("o", "s", "^", "D")
+_LABELS = {
+    "fitness_best_observed": "Best observed so far",
+    "fitness_best": "Best archived",
+    "fitness": "Population mean",
+    "fitness_max": "Generation maximum",
+    "fitness_min": "Generation minimum",
+    "fitness_std": "Population SD",
+    "unique_individual_ratio": "Unique individuals",
+    "genotype_diversity": "Genotype diversity",
+    "fit_time": "Fit time (s)",
+    "score_time": "Scoring time (s)",
+}
+
+
+def _field_label(field):
+    return _LABELS.get(field, field.replace("_", " ").capitalize())
+
+
+def _metric_name(estimator, metric=None):
+    name = metric or getattr(estimator, "refit_metric", "score")
+    scoring = getattr(estimator, "scoring", None)
+    if name == "score" and isinstance(scoring, str):
+        name = scoring
+    return name.replace("_", " ")
+
+
+def _style_axis(ax, grid="y"):
+    ax.set_axisbelow(True)
+    ax.spines[["top", "right"]].set_visible(False)
+    ax.spines[["left", "bottom"]].set_alpha(0.35)
+    ax.tick_params(length=3, labelsize=10)
+    ax.title.set(fontsize=14, fontweight="bold")
+    if grid:
+        ax.grid(axis=grid, alpha=0.18, linewidth=0.7)
+
+
+def _legend(ax, **kwargs):
+    # An unmanaged caller-owned figure may have no margin below its axes.
+    position = (
+        dict(loc="upper left", bbox_to_anchor=(0, -0.23), borderaxespad=0)
+        if ax.figure.get_layout_engine()
+        else dict(loc="best")
+    )
+    ax.legend(frameon=False, ncol=2, fontsize=9, **position, **kwargs)
+
+
+def _colors(palette, fields):
+    if palette is not None:
+        return sns.color_palette(palette, n_colors=len(fields))
+    return [_COLORS[i % len(_COLORS)] for i in range(len(fields))]
+
+
+def _line_style(field, position, color, n):
+    i = position
+    return dict(
+        color=color,
+        linestyle=_DASHES[i % len(_DASHES)],
+        marker=_MARKERS[(i + i // len(_DASHES)) % len(_MARKERS)],
+        markersize=4,
+        markevery=max(1, n // 12),
+        linewidth=2.6 if field in ("fitness_best", "fitness_best_observed") else 1.7,
+    )
+
+
+def _plot_single_series(
+    ax, series, kind="line", label=None, alpha=0.9, color=None, index=0, count=1
+):
+    name = _field_label(label)
     if kind == "bar":
-        ax.bar(series.index, series.values, label=label, alpha=alpha, color=color)
-    elif kind == "area":
-        ax.fill_between(series.index, series.values, alpha=alpha, label=label, color=color)
+        spacing = np.diff(np.unique(series.index))
+        width = 0.8 * (spacing.min() if spacing.size else 1) / count
+        centers = series.index + (index - (count - 1) / 2) * width
+        ax.bar(
+            centers,
+            series.values,
+            width=width,
+            label=name,
+            alpha=alpha,
+            color=color,
+            hatch=("", "//", "..", "xx")[index % 4],
+        )
+    else:
+        if kind == "area":
+            ax.fill_between(series.index, series.values, alpha=0.16, color=color)
         ax.plot(
             series.index,
             series.values,
-            alpha=0.95,
-            linewidth=1.5,
-            label=label,
-            color=color,
+            label=name,
+            alpha=alpha,
+            drawstyle="steps-post" if kind == "step" else "default",
+            **_line_style(label, index, color, len(series)),
         )
-    elif kind == "step":
-        ax.step(series.index, series.values, where="post", label=label, alpha=alpha, color=color)
+
+
+def _generation_data(logbook, metrics):
+    if not logbook:
+        raise ValueError("logbook has no generations to plot")
+    if not metrics:
+        raise ValueError("metrics must contain at least one field")
+    # Historical checkpoints do not contain per-generation observed scores.
+    missing = [
+        metric
+        for metric in metrics
+        if (
+            metric not in logbook[-1]
+            or (metric != "fitness_best_observed" and any(metric not in row for row in logbook))
+        )
+    ]
+    if missing:
+        raise ValueError(f"metrics missing from logbook: {missing}")
+    return [row["gen"] for row in logbook], [
+        [row.get(m, np.nan) for row in logbook] for m in metrics
+    ]
+
+
+def _generation_axis(metrics, ax, estimator=None):
+    if ax is None:
+        _, ax = plt.subplots(figsize=(7.6, 4.5), layout="constrained")
+    if all(m in _FITNESS_METRICS for m in metrics):
+        ylabel = f"Fitness ({_metric_name(estimator)})"
+    elif all(m in _DIVERSITY_FIELDS for m in metrics):
+        ylabel = "Population diversity (ratio)"
     else:
-        ax.plot(series.index, series.values, label=label, alpha=alpha, color=color)
+        ylabel = _field_label(metrics[0]) if len(metrics) == 1 else "Recorded value"
+    ax.set(xlabel="Generation", ylabel=ylabel, title="Training progress")
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True, min_n_ticks=1))
+    _style_axis(ax)
+    return ax
+
+
+def _generation_lines(ax, metrics, generations, values):
+    lines = []
+    for i, (field, ys, color) in enumerate(zip(metrics, values, _colors(None, metrics))):
+        (line,) = ax.plot(
+            generations,
+            ys,
+            label=_field_label(field),
+            **_line_style(field, i, color, len(generations)),
+        )
+        lines.append(line)
+    _legend(ax)
+    return lines
 
 
 def plot_generation_metrics(logbook, metrics=("fitness_best", "fitness"), *, ax=None):
-    """Plot generation-level fitness from a running or completed search logbook.
-
-    Unlike plots based on ``estimator.history``, this works during ``fit``.
-    Pass the logbook received by a callback to inspect the search in progress.
-    """
-    if not logbook:
-        raise ValueError("logbook has no generations to plot")
-
+    """Plot generation metrics; fitness_best_observed includes discarded candidates."""
     metrics = _as_list(metrics)
-    if not metrics:
-        raise ValueError("metrics must contain at least one field")
-    missing = [metric for metric in metrics if any(metric not in row for row in logbook)]
-    if missing:
-        raise ValueError(f"metrics missing from logbook: {missing}")
-
-    if ax is None:
-        _, ax = plt.subplots(figsize=(10, 5))
-    generations = [row["gen"] for row in logbook]
-    for metric in metrics:
-        ax.plot(generations, [row[metric] for row in logbook], label=metric)
-    ax.set(xlabel="generations", ylabel="fitness", title="Training progress")
-    if len(metrics) > 1:
-        ax.legend(title="metric")
+    generations, values = _generation_data(logbook, metrics)
+    ax = _generation_axis(metrics, ax)
+    _generation_lines(ax, metrics, generations, values)
     return ax
 
 
 class LivePlot(BaseCallback):
-    """Update a Matplotlib fitness chart after every generation.
+    """Update the same chart at each generation boundary and after final refinement.
 
-    ``save_path`` also writes the current chart after each update, which is
-    useful in a headless run. The interactive display depends on the active
-    Matplotlib backend.
+    Pass this callback to fit to enable it. The default series are the archived
+    best fitness and the current population mean. Pass metrics=("fitness_best_observed",
+    "fitness") for the best finite candidate score and the population mean. Use save_path to write
+    the current figure on a non-interactive backend.
     """
 
     def __init__(self, metrics=("fitness_best", "fitness"), *, ax=None, save_path=None):
         self.metrics = metrics
         self.ax = ax
         self.save_path = save_path
+        self._display_handle = None
+        self._lines = []
+
+    def on_start(self, estimator=None):
+        self._display_handle = None
+        for line in self._lines:
+            line.remove()
+        self._lines = []
 
     def on_step(self, record=None, logbook=None, estimator=None):
-        if self.ax is not None:
-            self.ax.clear()
-        self.ax = plot_generation_metrics(logbook, metrics=self.metrics, ax=self.ax)
-        self.ax.figure.canvas.draw_idle()
+        metrics = _as_list(self.metrics)
+        generations, values = _generation_data(logbook, metrics)
+        if not self._lines:
+            self.ax = _generation_axis(metrics, self.ax, estimator)
+            self._lines = _generation_lines(self.ax, metrics, generations, values)
+            canvas = self.ax.figure.canvas
+            if canvas.required_interactive_framework and canvas.manager is not None:
+                canvas.manager.show()
+        else:
+            for line, ys in zip(self._lines, values):
+                line.set_data(generations, ys)
+                line.set_markevery(max(1, len(generations) // 12))
+            self.ax.relim()
+            self.ax.autoscale_view()
+        canvas = self.ax.figure.canvas
+        if "inline" in plt.get_backend().lower():
+            # Inline figures are static. Jupyter can replace a displayed snapshot.
+            from IPython.display import display
+
+            if self._display_handle is None:
+                self._display_handle = display(self.ax.figure, display_id=True)
+            else:
+                self._display_handle.update(self.ax.figure)
+        else:
+            canvas.draw_idle()
+            canvas.flush_events()
         if self.save_path is not None:
             self.ax.figure.savefig(self.save_path)
-        plt.pause(0.001)
         return False
+
+    def on_end(self, logbook=None, estimator=None):
+        # Local refinement can replace the final row after the last on_step.
+        if logbook and logbook[-1].get("local_refinements"):
+            self.on_step(logbook=logbook, estimator=estimator)
 
 
 def plot_fitness_evolution(
@@ -422,8 +569,8 @@ def plot_fitness_evolution(
     else:
         metrics = _as_list(metrics)
 
-    if metrics == [metric] and metric not in Metrics.list():
-        raise ValueError(f"metric must be one of {Metrics.list()}, but got {metric} instead")
+    if metrics == [metric] and metric not in _FITNESS_METRICS:
+        raise ValueError(f"metric must be one of {_FITNESS_METRICS}, but got {metric} instead")
 
     missing = [name for name in metrics if name not in estimator.history]
     if missing:
@@ -437,23 +584,28 @@ def plot_fitness_evolution(
         frame.loc[:, metrics] = frame.loc[:, metrics].rolling(window=window, min_periods=1).mean()
 
     if ax is None:
-        _, ax = plt.subplots(figsize=(10, 6))
+        _, ax = plt.subplots(figsize=(7.6, 4.5), layout="constrained")
 
-    sns.set_style("white")
-    colors = sns.color_palette(palette or "rocket", n_colors=len(metrics))
+    colors = _colors(palette, metrics)
 
-    for color, name in zip(colors, metrics):
+    for i, (color, name) in enumerate(zip(colors, metrics)):
         series = frame.set_index("gen")[name]
-        _plot_single_series(ax, series, kind=kind, label=name, alpha=0.9, color=color)
+        _plot_single_series(
+            ax, series, kind=kind, label=name, alpha=0.9, color=color, index=i, count=len(metrics)
+        )
 
-    title = title or ("Best fitness so far" if metrics == ["fitness_best"] else "Fitness evolution")
+    title = title or (_field_label(metrics[0]) if len(metrics) == 1 else "Fitness evolution")
     if window is not None:
         title = f"{title} (rolling window={window})"
 
     ax.set_title(title)
-    ax.set(xlabel="generations", ylabel=f"fitness ({estimator.refit_metric})")
+    _style_axis(ax)
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True, min_n_ticks=1))
+    ax.set(xlabel="Generation", ylabel=f"Fitness ({_metric_name(estimator)})")
+    if len(metrics) == 1 and metrics[0] not in ("fitness_best_observed", "fitness_best"):
+        ax.set_ylabel(f"{_field_label(metrics[0])} ({_metric_name(estimator)})")
     if len(metrics) > 1:
-        ax.legend(title="metric")
+        _legend(ax)
     return ax
 
 
@@ -526,26 +678,28 @@ def plot_history(
         plotted = plotted.rolling(window=rolling, min_periods=1).mean()
 
     x_values = frame["gen"] if "gen" in frame.columns else frame.index
-    x_label = "generations" if "gen" in frame.columns else "record index"
+    x_label = "Generation" if "gen" in frame.columns else "record index"
 
     if subplots is None:
         subplots = len(fields) > 3
 
-    sns.set_style("white")
-    colors = sns.color_palette(palette or "crest", n_colors=len(fields))
+    colors = _colors(palette, fields)
 
     if subplots:
         fig, axes = plt.subplots(
             len(fields),
             1,
             sharex=True,
-            figsize=figsize or (10, max(3, 2.75 * len(fields))),
+            figsize=figsize or (7.6, max(3, 1.65 * len(fields))),
+            layout="constrained",
         )
         axes = np.atleast_1d(axes)
-        for axis, color, field in zip(axes, colors, fields):
+        for i, (axis, color, field) in enumerate(zip(axes, colors, fields)):
             series = pd.Series(_plottable_values(plotted[field]), index=x_values)
             _plot_single_series(axis, series, kind=kind, label=field, alpha=0.9, color=color)
-            axis.set_ylabel(field)
+            axis.set_title(_field_label(field), loc="left", fontsize=11)
+            _style_axis(axis)
+            axis.xaxis.set_major_locator(MaxNLocator(integer=True, min_n_ticks=1))
         axes[-1].set_xlabel(x_label)
         if title:
             fig.suptitle(title)
@@ -554,16 +708,20 @@ def plot_history(
         return axes
 
     if figsize is None:
-        figsize = (10, 6)
-    _, ax = plt.subplots(figsize=figsize)
-    for color, field in zip(colors, fields):
+        figsize = (7.6, 4.5)
+    _, ax = plt.subplots(figsize=figsize, layout="constrained")
+    for i, (color, field) in enumerate(zip(colors, fields)):
         series = pd.Series(_plottable_values(plotted[field]), index=x_values)
-        _plot_single_series(ax, series, kind=kind, label=field, alpha=0.9, color=color)
+        _plot_single_series(
+            ax, series, kind=kind, label=field, alpha=0.9, color=color, index=i, count=len(fields)
+        )
 
+    _style_axis(ax)
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True, min_n_ticks=1))
     ax.set_title(title or f"{source.capitalize()} fields")
-    ax.set(xlabel=x_label, ylabel="value")
+    ax.set(xlabel=x_label, ylabel=_field_label(fields[0]) if len(fields) == 1 else "Value")
     if len(fields) > 1:
-        ax.legend(title="field")
+        _legend(ax)
     return ax
 
 
@@ -611,8 +769,6 @@ def plot_search_space(
     if kind not in _SEARCH_SPACE_KINDS:
         raise ValueError(f"kind must be one of {sorted(_SEARCH_SPACE_KINDS)}")
 
-    sns.set_style("white")
-
     df = logbook_to_pandas(estimator.logbook)
     if features:
         available_features = [feature for feature in _as_list(features) if feature in df.columns]
@@ -631,8 +787,21 @@ def plot_search_space(
         if heatmap_frame.empty:
             raise ValueError("No numeric columns available to plot the heatmap")
         corr = heatmap_frame.corr(numeric_only=True)
-        _, ax = plt.subplots(figsize=(max(6, 1.2 * len(corr.columns)), max(5, 0.8 * len(corr))))
-        sns.heatmap(corr, annot=True, fmt=".2f", cmap="crest", ax=ax, vmin=-1, vmax=1)
+        _, ax = plt.subplots(
+            figsize=(max(6, 1.2 * len(corr.columns)), max(5, 0.8 * len(corr))), layout="constrained"
+        )
+        sns.heatmap(
+            corr,
+            annot=True,
+            fmt=".2f",
+            cmap="RdBu_r",
+            center=0,
+            ax=ax,
+            vmin=-1,
+            vmax=1,
+            cbar_kws={"label": "Pearson correlation"},
+            linewidths=0.6,
+        )
         ax.set_title("Search-space correlation heatmap")
         return ax
 
@@ -646,14 +815,18 @@ def plot_search_space(
         "height": height,
         "diag_kind": "hist",
         "corner": False,
-        "plot_kws": {"s": s, "alpha": 0.25, "edgecolor": "none"},
+        "plot_kws": {"s": s, "alpha": 0.55, "edgecolor": "white", "linewidth": 0.35},
         "diag_kws": {"alpha": 0.35, "bins": 15},
     }
     if hue and hue in df.columns:
         plot_kwargs["data"] = df[numeric_stats.columns.tolist() + [hue]].copy()
         plot_kwargs["hue"] = hue
+        levels = pd.Categorical(df[hue]).categories
+        plot_kwargs["markers"] = [_MARKERS[i % len(_MARKERS)] for i in range(len(levels))]
 
     grid = sns.pairplot(**plot_kwargs)
+    for axis in grid.axes.flat:
+        _style_axis(axis, grid=None)
     grid.fig.suptitle("Search-space relationships", y=1.02)
     return grid
 
@@ -702,17 +875,17 @@ def plot_parameter_evolution(
     if not parameter_columns:
         raise ValueError("No parameters were found to plot")
 
-    sns.set_style("white")
     if len(parameter_columns) == 1:
         if ax is None:
-            _, ax = plt.subplots(figsize=(10, 4))
+            _, ax = plt.subplots(figsize=(7.6, 4), layout="constrained")
         axes = np.asarray([ax])
     else:
         _, axes = plt.subplots(
             len(parameter_columns),
             1,
             sharex=True,
-            figsize=(10, max(3, 2.5 * len(parameter_columns))),
+            figsize=(7.6, max(3, 2.2 * len(parameter_columns))),
+            layout="constrained",
         )
         axes = np.atleast_1d(axes)
 
@@ -729,12 +902,15 @@ def plot_parameter_evolution(
             edgecolors="none",
         )
         axis.set_ylabel(column.replace("param_", ""))
-        axis.grid(True, axis="x", alpha=0.15)
+        _style_axis(axis)
+        axis.xaxis.set_major_locator(MaxNLocator(integer=True, min_n_ticks=1))
 
     axes[-1].set_xlabel("evaluation index")
     axes[0].set_title("Parameter exploration over time")
     if mappable is not None:
-        axes[0].figure.colorbar(mappable, ax=axes.tolist(), label=score_column)
+        axes[0].figure.colorbar(
+            mappable, ax=axes.tolist(), label=f"Mean CV score ({_metric_name(estimator, metric)})"
+        )
 
     return axes[0] if len(axes) == 1 else axes
 
@@ -851,14 +1027,16 @@ def plot_candidate_scores(
     )
 
     if ax is None:
-        _, ax = plt.subplots(figsize=(10, max(4, 0.35 * len(candidates))))
+        _, ax = plt.subplots(
+            figsize=(8.4, max(3.4, 1.4 + 0.40 * len(candidates))), layout="constrained"
+        )
 
-    sns.set_style("white")
-    bar_color = color or sns.color_palette("crest", n_colors=1)[0]
+    bar_color = color or _COLORS[0]
     positions = np.arange(len(candidates))[::-1]
     ax.barh(positions, candidates[score_column], color=bar_color, alpha=0.9)
     ax.set_yticks(positions, labels=labels)
-    ax.set_xlabel(score_column)
+    ax.set_xlabel(f"Mean CV score ({_metric_name(estimator, metric)})")
+    _style_axis(ax, grid="x")
     ax.set_ylabel("candidate")
     ax.set_title(title or f"Top {len(candidates)} candidate scores")
     return ax
@@ -870,7 +1048,7 @@ def plot_feature_selection(
     *,
     ax=None,
     selected_color=None,
-    rejected_color="0.82",
+    rejected_color="0.42",
 ):
     """
     Plot the feature mask selected by ``GAFeatureSelectionCV``.
@@ -885,9 +1063,9 @@ def plot_feature_selection(
     ax: matplotlib.axes.Axes | None, default=None
         Axis to draw on.
     selected_color: matplotlib color | None, default=None
-        Bar color for selected features.
-    rejected_color: matplotlib color, default="0.82"
-        Bar color for rejected features.
+        Marker color for selected features.
+    rejected_color: matplotlib color, default="0.42"
+        Marker color for rejected features.
 
     Returns
     -------
@@ -914,14 +1092,24 @@ def plot_feature_selection(
             )
 
     if ax is None:
-        _, ax = plt.subplots(figsize=(10, max(4, 0.28 * mask.size)))
+        _, ax = plt.subplots(figsize=(7.6, max(3.5, 1.3 + 0.30 * mask.size)), layout="constrained")
 
-    sns.set_style("white")
-    selected_color = selected_color or sns.color_palette("crest", n_colors=1)[0]
-    colors = [selected_color if selected else rejected_color for selected in mask]
-    ax.barh(feature_names[::-1], mask.astype(int)[::-1], color=colors[::-1], alpha=0.95)
-    ax.set_xlim(0, 1)
+    selected_color = selected_color or _COLORS[0]
+    positions = np.arange(mask.size)[::-1]
+    ax.set_yticks(positions, labels=feature_names)
+    for selected, marker in ((False, "x"), (True, "o")):
+        subset = mask == selected
+        ax.scatter(
+            mask[subset].astype(int),
+            positions[subset],
+            marker=marker,
+            color=selected_color if selected else rejected_color,
+            s=50,
+            zorder=3,
+        )
+    ax.set_xlim(-0.15, 1.15)
     ax.set_xticks([0, 1], labels=["rejected", "selected"])
+    _style_axis(ax, grid="x")
     ax.set_xlabel("selection")
     ax.set_title(f"Selected features ({int(mask.sum())}/{mask.size})")
     return ax
@@ -970,18 +1158,20 @@ def plot_convergence(
     x_values = frame["gen"] if "gen" in frame.columns else frame.index
 
     if ax is None:
-        _, ax = plt.subplots(figsize=(10, 5))
+        _, ax = plt.subplots(figsize=(7.6, 4.5), layout="constrained")
 
-    colors = sns.color_palette(palette or "rocket", n_colors=len(fields))
-    for color, field in zip(colors, fields):
+    colors = _colors(palette, fields)
+    for i, (color, field) in enumerate(zip(colors, fields)):
         series = pd.Series(_plottable_values(frame[field]), index=x_values)
-        _plot_single_series(ax, series, kind="line", label=field, color=color)
+        _plot_single_series(ax, series, kind="line", label=field, color=color, index=i)
 
     ax.set_title(title)
-    ax.set_xlabel("generations")
-    ax.set_ylabel(f"fitness ({getattr(estimator, 'refit_metric', 'score')})")
+    _style_axis(ax)
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True, min_n_ticks=1))
+    ax.set_xlabel("Generation")
+    ax.set_ylabel(f"Fitness ({_metric_name(estimator)})")
     if len(fields) > 1:
-        ax.legend(title="metric")
+        _legend(ax)
     return ax
 
 
@@ -1032,18 +1222,20 @@ def plot_diversity(
     x_values = frame["gen"] if "gen" in frame.columns else frame.index
 
     if ax is None:
-        _, ax = plt.subplots(figsize=(10, 5))
+        _, ax = plt.subplots(figsize=(7.6, 4.5), layout="constrained")
 
-    colors = sns.color_palette(palette or "crest", n_colors=len(fields))
-    for color, field in zip(colors, fields):
+    colors = _colors(palette, fields)
+    for i, (color, field) in enumerate(zip(colors, fields)):
         series = pd.Series(_plottable_values(frame[field]), index=x_values)
-        _plot_single_series(ax, series, kind="line", label=field, color=color)
+        _plot_single_series(ax, series, kind="line", label=field, color=color, index=i)
 
     ax.set_title(title)
-    ax.set_xlabel("generations")
+    _style_axis(ax)
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True, min_n_ticks=1))
+    ax.set_xlabel("Generation")
     ax.set_ylabel("diversity ratio")
     ax.set_ylim(bottom=0)
-    ax.legend(title="field", loc="upper left")
+    handles, labels = ax.get_legend_handles_labels()
 
     if stagnation and _STAGNATION_FIELD in getattr(estimator, "history", {}):
         stagnation_frame = _history_frame(estimator, fields=[_STAGNATION_FIELD])
@@ -1052,11 +1244,17 @@ def plot_diversity(
             x_values,
             stagnation_frame[_STAGNATION_FIELD],
             color="0.25",
-            linestyle="--",
-            label=_STAGNATION_FIELD,
+            linestyle=":",
+            marker="x",
+            label="Stagnation (right axis)",
         )
         twin.set_ylabel("stagnant generations")
-        twin.legend(loc="upper right")
+        twin.yaxis.set_major_locator(MaxNLocator(integer=True, min_n_ticks=1))
+        twin.spines["top"].set_visible(False)
+        more_handles, more_labels = twin.get_legend_handles_labels()
+        handles += more_handles
+        labels += more_labels
+    _legend(ax, handles=handles, labels=labels)
 
     return ax
 
@@ -1109,9 +1307,9 @@ def plot_optimizer_events(
     )
 
     if ax is None:
-        _, ax = plt.subplots(figsize=(10, max(3, 0.45 * len(fields))))
+        _, ax = plt.subplots(figsize=(7.6, max(3, 1.3 + 0.48 * len(fields))), layout="constrained")
 
-    colors = sns.color_palette(palette or "tab10", n_colors=len(fields))
+    colors = _colors(palette, fields)
     any_event = False
     for row, (field, color) in enumerate(zip(fields, colors)):
         values = pd.to_numeric(frame[field], errors="coerce").fillna(0)
@@ -1140,9 +1338,11 @@ def plot_optimizer_events(
             transform=ax.transAxes,
         )
 
-    ax.set_yticks(range(len(fields)), labels=fields)
-    ax.set_xlabel("generations")
+    ax.set_yticks(range(len(fields)), labels=[_field_label(f) for f in fields])
+    ax.set_xlabel("Generation")
     ax.set_title(title)
+    _style_axis(ax)
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True, min_n_ticks=1))
     ax.grid(True, axis="x", alpha=0.15)
     return ax
 
@@ -1211,7 +1411,7 @@ def plot_score_landscape(
         raise ValueError("No numeric candidate values were found for the requested landscape")
 
     if ax is None:
-        _, ax = plt.subplots(figsize=(8, 6))
+        _, ax = plt.subplots(figsize=(7.6, 5), layout="constrained")
 
     if kind == "hexbin":
         mappable = ax.hexbin(
@@ -1241,7 +1441,8 @@ def plot_score_landscape(
             edgecolors="none",
         )
 
-    ax.figure.colorbar(mappable, ax=ax, label=score_column)
+    ax.figure.colorbar(mappable, ax=ax, label=f"Mean CV score ({_metric_name(estimator, metric)})")
+    _style_axis(ax, grid=None)
     ax.set_xlabel(x)
     ax.set_ylabel(y)
     ax.set_title(f"Score landscape: {x} vs {y}")
@@ -1322,9 +1523,11 @@ def plot_cv_scores(
 
     long_frame = pd.DataFrame(records)
     if ax is None:
-        _, ax = plt.subplots(figsize=(max(8, 1.2 * len(labels)), 5))
+        _, ax = plt.subplots(figsize=(max(7.6, 1.55 * len(labels)), 4.6), layout="constrained")
 
-    colors = sns.color_palette(palette or "crest", n_colors=len(labels))
+    colors = (
+        sns.color_palette(palette, n_colors=len(labels)) if palette else ["#9dbfca"] * len(labels)
+    )
     if kind == "violin":
         sns.violinplot(
             data=long_frame,
@@ -1332,21 +1535,11 @@ def plot_cv_scores(
             y="score",
             hue="candidate",
             palette=colors,
+            cut=0,
             legend=False,
             ax=ax,
         )
-    elif kind == "strip":
-        sns.stripplot(
-            data=long_frame,
-            x="candidate",
-            y="score",
-            hue="candidate",
-            palette=colors,
-            legend=False,
-            ax=ax,
-            size=7,
-        )
-    else:
+    elif kind == "box":
         sns.boxplot(
             data=long_frame,
             x="candidate",
@@ -1356,12 +1549,26 @@ def plot_cv_scores(
             legend=False,
             ax=ax,
         )
-        sns.stripplot(data=long_frame, x="candidate", y="score", color="0.25", ax=ax, size=4)
+    if kind in ("box", "strip"):
+        offsets = (
+            np.linspace(-0.16, 0.16, len(split_columns)) if len(split_columns) > 1 else np.zeros(1)
+        )
+        for index, (_, row) in enumerate(candidates.iterrows()):
+            ax.scatter(
+                index + offsets,
+                row[split_columns].to_numpy(dtype=float),
+                s=28 if kind == "strip" else 16,
+                zorder=3,
+                color=colors[index] if kind == "strip" and palette else _COLORS[0],
+            )
+        ax.set_xlim(-0.5, len(labels) - 0.5)
 
     ax.set_title(f"Cross-validation scores for top {len(labels)} candidates")
     ax.set_xlabel("candidate")
-    ax.set_ylabel(score_column.replace("mean_", "split_"))
-    ax.tick_params(axis="x", rotation=30)
+    ax.set_ylabel(f"Fold score ({_metric_name(estimator, metric)})")
+    _style_axis(ax)
+    tick_labels = [label.replace(" ", "\n", 1).replace(", ", "\n") for label in labels]
+    ax.set_xticks(np.arange(len(labels)), tick_labels)
     return ax
 
 
@@ -1424,9 +1631,11 @@ def plot_candidate_rankings(
     errors = candidates[std_column].to_numpy() if std_column in candidates else None
 
     if ax is None:
-        _, ax = plt.subplots(figsize=(10, max(4, 0.35 * len(candidates))))
+        _, ax = plt.subplots(
+            figsize=(8.4, max(3.4, 1.4 + 0.40 * len(candidates))), layout="constrained"
+        )
 
-    marker_color = color or sns.color_palette("crest", n_colors=1)[0]
+    marker_color = color or _COLORS[0]
     y_positions = np.arange(len(candidates))[::-1]
     ax.errorbar(
         scores,
@@ -1439,8 +1648,11 @@ def plot_candidate_rankings(
         markersize=7,
     )
     ax.set_yticks(y_positions, labels=labels)
-    ax.set_xlabel(score_column)
+    ax.set_xlabel(f"Mean CV score ({_metric_name(estimator, metric)})")
+    _style_axis(ax, grid="x")
     ax.set_ylabel("candidate")
+    if errors is not None:
+        ax.set_xlabel(ax.get_xlabel() + " ± 1 fold SD")
     ax.set_title(title or f"Candidate ranking (top {len(candidates)})")
     ax.grid(True, axis="x", alpha=0.2)
     return ax
@@ -1451,7 +1663,7 @@ def plot_search_overview(
     *,
     metric=None,
     top_k=8,
-    figsize=(14, 10),
+    figsize=(9.6, 8),
     palette=None,
 ):
     """
@@ -1470,7 +1682,7 @@ def plot_search_overview(
         Metric used for candidate scores. Defaults to the refit metric.
     top_k: int, default=8
         Number of candidates to show in the score panel.
-    figsize: tuple[float, float], default=(14, 10)
+    figsize: tuple[float, float], default=(9.6, 8)
         Figure size.
     palette: str | None, default=None
         Optional seaborn palette name for line plots.
@@ -1483,7 +1695,7 @@ def plot_search_overview(
 
     _require_seaborn()
 
-    fig, axes = plt.subplots(2, 2, figsize=figsize)
+    fig, axes = plt.subplots(2, 2, figsize=figsize, layout="constrained")
     plot_convergence(estimator, ax=axes[0, 0], palette=palette)
     plot_diversity(estimator, ax=axes[0, 1])
     plot_optimizer_events(estimator, ax=axes[1, 0])
@@ -1497,9 +1709,11 @@ def plot_search_overview(
             metric=metric,
             ax=axes[1, 1],
             title="Best evaluated candidates",
+            label_params=[],
         )
+        axes[1, 1].set_ylabel("Rank / candidate row")
+        axes[1, 1].xaxis.set_major_locator(MaxNLocator(nbins=4))
 
-    fig.tight_layout()
     return axes
 
 

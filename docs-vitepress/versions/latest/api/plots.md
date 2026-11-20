@@ -35,14 +35,13 @@ Requires the plotting extra: `pip install sklearn-genetic-opt[plot]`.
 
 ## During fitting
 
-`LivePlot` is a callback for both search classes. It redraws best and average
-fitness after each generation. With a graphical Matplotlib backend the chart
+`LivePlot` is a callback for both search classes. It updates the same lines for the requested series after generation 0 and each completed generation. See the [callback guide](../guide/callbacks) for backend setup and checkpoint behavior. With a graphical Matplotlib backend the chart
 updates on screen; `save_path` also rewrites a PNG for headless monitoring.
 
 ```python
 from sklearn_genetic.plots import LivePlot
 
-live_plot = LivePlot(save_path="training-progress.png")
+live_plot = LivePlot(metrics=("fitness_best_observed", "fitness"), save_path="training-progress.png")
 search.fit(X, y, callbacks=live_plot)
 ```
 
@@ -80,7 +79,7 @@ use the aligned entries in the fitted history:
 ```python
 import matplotlib.pyplot as plt
 
-plt.step(search.history["cross_validate_calls"], search.history["fitness_best"], where="post")
+plt.step(search.history["cross_validate_calls"], search.history["fitness_best_observed"], where="post")
 plt.xlabel("Candidate cross-validations")
 plt.ylabel("Best search score")
 ```
@@ -118,7 +117,7 @@ plot_fitness_evolution(estimator, metric="fitness_best")
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `estimator` | fitted `GASearchCV` or `GAFeatureSelectionCV` | — | The fitted search estimator |
-| `metric` | str | `"fitness_best"` | Best score observed so far. Use `"fitness"` for the current population mean. |
+| `metric` | str | `"fitness_best"` | Best archived fitness by default. Use `"fitness_best_observed"` for the best finite evaluation so far or `"fitness"` for the population mean. |
 
 Returns a `matplotlib.axes.Axes`.
 

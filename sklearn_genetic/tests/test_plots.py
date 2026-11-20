@@ -65,8 +65,8 @@ evolved_estimator.fit(X_train, y_train)
 
 def test_plot_evolution():
     plot = plot_fitness_evolution(evolved_estimator)
-    assert plot.get_xlabel() == "generations"
-    assert "fitness" in plot.get_ylabel()
+    assert plot.get_xlabel() == "Generation"
+    assert plot.get_ylabel() == "Fitness (r2)"
 
     plot = plot_fitness_evolution(
         evolved_estimator,
@@ -81,7 +81,7 @@ def test_plot_evolution():
 
     assert (
         str(excinfo.value) == "metric must be one of "
-        "['fitness', 'fitness_std', 'fitness_best', 'fitness_max', 'fitness_min'], "
+        "['fitness', 'fitness_std', 'fitness_best', 'fitness_max', 'fitness_min', 'fitness_best_observed'], "
         "but got accuracy instead"
     )
 
@@ -184,13 +184,193 @@ def test_live_plot_receives_both_searches_generation_history(kind, tmp_path, mon
     plt.close("all")
 
 
+def test_live_plot_preserves_axes_and_refreshes_final_generation():
+    from matplotlib import pyplot as plt
+    from ..plots import LivePlot
+
+    fig, ax = plt.subplots()
+    guide = ax.axhline(0)
+    rows = [{"gen": 3, "fitness_best": -6, "fitness": -3}]
+    live = LivePlot(ax=ax)
+    try:
+        live.on_step(logbook=rows)
+        best = ax.lines[-2]
+        rows.append({"gen": 5, "fitness_best": -6, "fitness": -2})
+        live.on_step(logbook=rows)
+        assert guide in ax.lines and best is ax.lines[-2]
+        rows[-1].update(fitness_best=-8, local_refinements=1)
+        live.on_end(logbook=rows)
+        assert list(best.get_xdata()) == [3, 5]
+        assert list(best.get_ydata()) == [-6, -8]
+    finally:
+        plt.close(fig)
+
+
+@pytest.mark.parametrize("direction", ["min", "max"])
+def test_live_observed_includes_reevaluations_and_final_refinement(direction):
+    from itertools import count
+    from matplotlib import pyplot as plt
+    from ..callbacks import BaseCallback
+    from ..plots import LivePlot
+
+    # Reevaluating the same genotype can yield a better CV score.
+    sequence = count()
+    sign = 1 if direction == "max" else -1
+
+    def scorer(estimator, X, y):
+        return sign * next(sequence)
+
+    search = GASearchCV(
+        DecisionTreeRegressor(random_state=7),
+        cv=2,
+        scoring=scorer,
+        criteria=direction,
+        param_grid={"max_depth": Integer(1, 2)},
+        random_state=7,
+        population_size=6,
+        generations=2,
+        keep_top_k=2,
+        use_cache=False,
+        n_jobs=1,
+        verbose=False,
+        algorithm="eaMuPlusLambda",
+        local_search=True,
+        local_search_steps=1,
+    )
+    live = LivePlot(metrics=("fitness_best_observed", "fitness"))
+    before_refinement = []
+
+    class CheckFrame(BaseCallback):
+        def on_step(self, record, logbook, estimator):
+            candidates = estimator.logbook.chapters["parameters"]
+            expected = (max if direction == "max" else min)(row["score"] for row in candidates)
+            np.testing.assert_equal(live.ax.lines[0].get_ydata()[-1], expected)
+            np.testing.assert_equal(live.ax.lines[1].get_ydata()[-1], record["fitness"])
+            before_refinement.append(expected)
+
+    try:
+        search.fit(X[:40], y[:40], callbacks=[live, CheckFrame()])
+        assert len(before_refinement) >= 2
+        assert sign * live.ax.lines[0].get_ydata()[-1] > sign * before_refinement[-1]
+        assert search.history["local_refinements"][-1] > 0
+        for line, field in zip(live.ax.lines, live.metrics):
+            np.testing.assert_array_equal(line.get_ydata(), search.history[field])
+        scores = search.cv_results_["mean_test_score"]
+        assert live.ax.lines[0].get_ydata()[-1] == (max if direction == "max" else min)(scores)
+        assert search.history["fitness_best"][-1] != live.ax.lines[0].get_ydata()[-1]
+    finally:
+        plt.close("all")
+
+
+def test_plus_lambda_live_final_frame_matches_improved_r2():
+    from matplotlib import pyplot as plt
+    from ..callbacks import BaseCallback
+    from ..plots import LivePlot
+
+    live = LivePlot(metrics=("fitness_best_observed", "fitness"))
+    step_scores = []
+
+    class Capture(BaseCallback):
+        def on_step(self, record, logbook, estimator):
+            step_scores.append(live.ax.lines[0].get_ydata()[-1])
+
+    search = GASearchCV(
+        DecisionTreeRegressor(random_state=3),
+        cv=2,
+        scoring="r2",
+        param_grid={"max_depth": Integer(1, 18), "min_samples_leaf": Integer(1, 15)},
+        population_size=4,
+        generations=1,
+        random_state=0,
+        n_jobs=1,
+        verbose=False,
+        algorithm="eaMuPlusLambda",
+        local_search=True,
+        local_search_steps=3,
+        local_search_top_k=2,
+    )
+    try:
+        search.fit(X[:100], y[:100], callbacks=[live, Capture()])
+        assert len(step_scores) == 2
+        assert live.ax.lines[0].get_ydata()[-1] > step_scores[-1]
+        for line, field in zip(live.ax.lines, live.metrics):
+            np.testing.assert_array_equal(line.get_ydata(), search.history[field])
+    finally:
+        plt.close("all")
+
+
+@pytest.mark.parametrize("kind", ["hpo", "features"])
+def test_live_resume_early_stop_and_multimetric(kind, tmp_path):
+    from matplotlib import pyplot as plt
+    from ..callbacks import ModelCheckpoint, ThresholdStopping
+    from ..plots import LivePlot
+
+    def build():
+        common = dict(
+            cv=2,
+            scoring={"loss": "neg_mean_absolute_error", "r2": "r2"},
+            refit="loss",
+            population_size=4,
+            generations=2,
+            n_jobs=1,
+            verbose=False,
+            random_state=18,
+        )
+        tree = DecisionTreeRegressor(random_state=3)
+        if kind == "hpo":
+            return GASearchCV(tree, param_grid={"max_depth": Integer(1, 12)}, **common)
+        return GAFeatureSelectionCV(tree, **common)
+
+    live = LivePlot(metrics=("fitness_best_observed", "fitness"))
+    checkpoint = ModelCheckpoint(str(tmp_path / "checkpoint.pkl"))
+    try:
+        first = build().fit(
+            X[:60],
+            y[:60],
+            callbacks=[checkpoint, ThresholdStopping(-np.inf, metric="fitness_best"), live],
+        )
+        assert first.history["gen"] == [0]
+        first_score = live.ax.lines[0].get_ydata()[0]
+        assert first_score == max(first.cv_results_["mean_test_loss"]) < 0
+        resumed = build().fit(X[:60], y[:60], callbacks=[checkpoint, live])
+        assert resumed.history["gen"][0] == 0 and resumed.history["gen"][-1] > 0
+        assert len(live.ax.lines) == 2
+        assert live.ax.get_ylabel() == "Fitness (loss)"
+        np.testing.assert_array_equal(live.ax.lines[0].get_xdata(), resumed.history["gen"])
+        best = live.ax.lines[0].get_ydata()
+        assert best[0] == first_score and np.all(np.diff(best) >= 0)
+        assert best[-1] == max(resumed.cv_results_["mean_test_loss"])
+    finally:
+        plt.close("all")
+
+
+def test_generation_plot_preserves_style_and_legend_on_standard_axes():
+    from matplotlib import pyplot as plt
+    from ..plots import plot_generation_metrics
+
+    fig, ax = plt.subplots()
+    try:
+        with plt.rc_context({"axes.facecolor": "ivory", "axes.grid": False}):
+            before = plt.rcParams.copy()
+            plot_fitness_evolution(evolved_estimator, metrics=["fitness_best", "fitness"], ax=ax)
+            assert plt.rcParams == before
+        fig.canvas.draw()
+        legend = ax.get_legend().get_window_extent()
+        assert fig.bbox.contains(*legend.min) and fig.bbox.contains(*legend.max)
+        ax.clear()
+        plot_generation_metrics([{"gen": 0, "fitness": -3}], "fitness", ax=ax)
+        assert all(float(value).is_integer() for value in ax.get_xticks())
+    finally:
+        plt.close(fig)
+
+
 def test_plot_history():
     plot = plot_history(
         evolved_estimator,
         fields=["fitness_best", "unique_individual_ratio"],
         kind="line",
     )
-    assert plot.get_xlabel() == "generations"
+    assert plot.get_xlabel() == "Generation"
 
     axes = plot_history(
         evolved_estimator,
@@ -270,7 +450,7 @@ def test_plot_search_decisions():
 def test_plot_candidate_scores():
     plot = plot_candidate_scores(evolved_estimator, top_k=3)
     assert plot.get_title() == "Top 3 candidate scores"
-    assert plot.get_xlabel() == "mean_test_score"
+    assert plot.get_xlabel() == "Mean CV score (r2)"
     labels = [label.get_text() for label in plot.get_yticklabels()]
     assert any("+2 more" in label for label in labels)
     ccp_alpha_values = [
@@ -404,7 +584,7 @@ def test_diagnostics_use_recorded_generations(diagnostic):
 def test_plot_convergence_and_diversity():
     convergence = plot_convergence(evolved_estimator)
     assert convergence.get_title() == "Convergence"
-    assert convergence.get_xlabel() == "generations"
+    assert convergence.get_xlabel() == "Generation"
 
     diversity = plot_diversity(evolved_estimator)
     assert diversity.get_title() == "Diversity"
@@ -414,7 +594,7 @@ def test_plot_convergence_and_diversity():
 def test_plot_optimizer_events():
     plot = plot_optimizer_events(evolved_estimator)
     assert plot.get_title() == "Optimizer events"
-    assert plot.get_xlabel() == "generations"
+    assert plot.get_xlabel() == "Generation"
 
     with pytest.raises(ValueError, match="fields not found in history"):
         plot_optimizer_events(evolved_estimator, fields=["missing_event"])
@@ -448,10 +628,14 @@ def test_plot_cv_scores_and_candidate_rankings():
 
     strip_plot = plot_cv_scores(evolved_estimator, top_k=2, kind="strip")
     assert strip_plot.get_xlabel() == "candidate"
+    for points in strip_plot.collections:
+        offsets = points.get_offsets()
+        assert len(set(offsets[:, 0])) == evolved_estimator.n_splits_
+    assert len(strip_plot.collections) == 2
 
     ranking = plot_candidate_rankings(evolved_estimator, top_k=3)
     assert ranking.get_title() == "Candidate ranking (top 3)"
-    assert ranking.get_xlabel() == "mean_test_score"
+    assert ranking.get_xlabel() == "Mean CV score (r2) ± 1 fold SD"
     assert any("+2 more" in label.get_text() for label in ranking.get_yticklabels())
 
     selected_ranking = plot_candidate_rankings(

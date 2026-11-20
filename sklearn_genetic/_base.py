@@ -1,5 +1,6 @@
 import logging
 import pickle
+from math import isfinite
 
 import pandas as pd
 from sklearn.exceptions import NotFittedError
@@ -19,6 +20,24 @@ def reset_adapters(estimator):
 
 def history_record(history, index):
     return {key: values[index] for key, values in history.items()}
+
+
+def _best_observed_stat(records, minimize):
+    # Stats.compile runs at each generation boundary and after final refinement.
+    # Candidate records also include discarded offspring and repeated evaluations.
+    position = 0
+    best = None
+
+    def best_observed(_population):
+        nonlocal position, best
+        for index in range(position, len(records)):
+            score = records[index]["score"]
+            if isfinite(score) and (best is None or (score < best if minimize else score > best)):
+                best = score
+        position = len(records)
+        return float("nan") if best is None else best
+
+    return best_observed
 
 
 class GeneticEstimatorMixin:
@@ -171,6 +190,10 @@ class GeneticEstimatorMixin:
         if selected_algorithm:
             fit_stats = self.fit_stats_
             stats.register("cross_validate_calls", lambda _: fit_stats["cross_validate_calls"])
+            stats.register(
+                "fitness_best_observed",
+                _best_observed_stat(self.logbook.chapters["parameters"], self.criteria == "min"),
+            )
             self._evaluation_timers = [
                 callback for callback in self.callbacks if isinstance(callback, TimerStopping)
             ]
