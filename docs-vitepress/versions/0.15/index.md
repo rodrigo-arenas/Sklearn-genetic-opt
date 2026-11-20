@@ -1,6 +1,6 @@
 ---
-title: sklearn-genetic-opt (latest / dev)
-description: Development documentation for sklearn-genetic-opt — tracks the master branch and may contain unreleased features.
+title: sklearn-genetic-opt (0.15 stable)
+description: Stable documentation for the sklearn-genetic-opt 0.15 release series.
 ---
 
 ![sklearn-genetic-opt logo](/brand/logo-horizontal.svg)
@@ -25,19 +25,15 @@ If the project helps your work, consider [starring it on GitHub](https://github.
 - Callbacks for early stopping, progress reporting, checkpoints, live plots, and custom logic.
 - Plotting helpers plus MLflow 3 logging support.
 
-## Installation (dev)
+## Installation {#installation-dev}
 
-Install from the master branch:
-
-```bash
-pip install git+https://github.com/rodrigo-arenas/Sklearn-genetic-opt.git@master
-```
-
-Or install the released version:
+Install the published 0.15.0 release from PyPI. It requires Python 3.12 or newer:
 
 ```bash
-pip install sklearn-genetic-opt
+pip install sklearn-genetic-opt==0.15.0
 ```
+
+See the [installation guide](./guide/installation) for conda and optional extras.
 
 ## Quick Start
 
