@@ -136,9 +136,12 @@ logbook = load("./logbook.pkl")
 ## ModelCheckpoint
 
 Saves a snapshot at a reported generation. DEAP stores its historical continuation state.
-SciPy, Nevergrad, CatCMAwM and pymoo save progress with `resumable=False`. A
-plugin can support exact continuation by implementing the [resume protocol](../api/algorithms#callbacks-and-checkpoints).
-Use a fresh path for a new run and load only trusted snapshots.
+SciPy, pymoo, Nevergrad and CatCMAwM resume from a completed generation when
+you pass the same checkpoint path to `fit` again with the same data, settings
+and environment. Older shared-runtime snapshots with `resumable=False` remain
+readable for inspection. See the [resume recipe](../recipes/advanced/checkpointing)
+and the [optional plugin protocol](../api/algorithms#callbacks-and-checkpoints).
+Use a fresh path for an independent run and load only trusted snapshots.
 
 ```python
 ModelCheckpoint(checkpoint_path)

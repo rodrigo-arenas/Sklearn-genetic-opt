@@ -6,6 +6,7 @@ from tempfile import NamedTemporaryFile
 
 import numpy as np
 
+from .._optimizer_checkpoint import resume_method
 from .base import BaseCallback
 from copy import deepcopy
 
@@ -122,7 +123,7 @@ def load_search_checkpoint(callbacks, optimizer):
                     raise ValueError("A plugin checkpoint cannot resume a DEAP search")
                 if data["optimizer_checkpoint_version"] != 1:
                     raise ValueError("Unsupported optimizer checkpoint version")
-                if not data["resumable"] or not callable(getattr(optimizer, "resume", None)):
+                if not data["resumable"] or not callable(resume_method(optimizer)):
                     raise ValueError(
                         "This progress snapshot does not support exact resume. Use a new checkpoint path to start a search."
                     )

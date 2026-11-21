@@ -9,6 +9,7 @@ from joblib import hash as joblib_hash
 
 import numpy as np
 
+from ._optimizer_checkpoint import checkpoint_engine, environment, resume_method, validate_boundary
 from .backends import OptimizationProblem
 from .callbacks.model_checkpoint import ModelCheckpoint
 from .callbacks.validations import eval_callbacks
@@ -320,23 +321,31 @@ def _config_hash(estimator):
 
 
 def checkpoint_context(estimator, optimize, checkpoint):
-    if not callable(getattr(optimize, "resume", None)) or not any(
+    if not callable(resume_method(optimize)) or not any(
         isinstance(c, ModelCheckpoint) for c in estimator.callbacks
     ):
         return None
     if checkpoint and checkpoint["backend"] != _backend_name(estimator.optimizer_backend):
         raise ValueError("Checkpoint belongs to a different optimizer backend")
+    engine = checkpoint_engine(optimize)
+    compatibility = (environment(engine),) if engine else ()
+    if checkpoint and checkpoint["context"][3:] != compatibility:
+        raise ValueError(
+            "Optimizer checkpoint environment or adapter version differs from this fit"
+        )
+    if checkpoint and engine:
+        validate_boundary(engine, checkpoint)
     # Fingerprint training inputs once, before sampling folds, dimensions or RNGs.
     data = joblib_hash(
         (type(estimator), estimator.X_, estimator.y_, estimator.groups_, estimator._fit_params)
     )
     config = _config_hash(estimator)
     if checkpoint:
-        saved_data, initial_config, sampled_config = checkpoint["context"]
+        saved_data, initial_config, sampled_config = checkpoint["context"][:3]
         if data != saved_data or config not in (initial_config, sampled_config):
             raise ValueError("Checkpoint data or search configuration differs from this fit")
         return checkpoint["context"]
-    return (data, config, None)
+    return (data, config, None, *compatibility)
 
 
 def run_optimizer(estimator, optimize, checkpoint, context):
@@ -344,13 +353,13 @@ def run_optimizer(estimator, optimize, checkpoint, context):
         vars(estimator).pop(name, None)
     estimator._candidate_rows = []
     checkpointing = any(isinstance(c, ModelCheckpoint) for c in estimator.callbacks)
-    resumable = callable(getattr(optimize, "resume", None))
+    resumable = callable(resume_method(optimize))
     problem = checkpoint["problem"] if checkpoint else _make_problem(estimator, checkpointing)
     run = _SearchRun(estimator, problem)
     run.resume_supported = resumable
     if context is not None and not checkpoint:
         # Reusing the same estimator can legitimately expose advanced splitter/dimension RNGs.
-        context = (*context[:2], _config_hash(estimator))
+        context = (*context[:2], _config_hash(estimator), *context[3:])
     run.checkpoint_context = context
     if checkpoint:
         run.restore(checkpoint)
@@ -365,7 +374,7 @@ def run_optimizer(estimator, optimize, checkpoint, context):
                     np.random.set_state(checkpoint["rng"][1])
                     estimator._evaluation_started = True
                     if len(run.generations) <= problem.generations:
-                        optimize.resume(
+                        resume_method(optimize)(
                             problem, run.evaluate, run.report, checkpoint["solver_state"]
                         )
                 else:

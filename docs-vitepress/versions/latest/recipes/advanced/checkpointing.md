@@ -13,7 +13,9 @@ You are reading the **latest (development)** docs. For stable documentation, see
 
 ## What This Solves
 
-This recipe uses the default DEAP engine and its historical checkpoint format. For SciPy, Nevergrad, CatCMAwM and pymoo, [inspect the progress snapshot](../../tutorials/optimizer-backends#select-features-and-inspect-progress) and use a fresh path for the next fit.
+Both `GASearchCV` and `GAFeatureSelectionCV` accept `ModelCheckpoint`. The
+first example uses the default DEAP engine. For SciPy, pymoo, Nevergrad
+and CatCMAwM, see [Resume an alternative engine](#resume-an-alternative-engine).
 
 Use a generation checkpoint to resume a search with its saved candidate scores
 and cumulative evaluation counts. Give each experiment its own checkpoint path.
@@ -85,6 +87,53 @@ Each successful checkpoint replaces the previous snapshot. If serialization
 fails, the callback logs a warning and the previous file remains available.
 To keep a fitted estimator for prediction, use the search object's `save`
 method after `fit`.
+
+## Resume an alternative engine
+
+To try the previous tree search with SciPy, use its own checkpoint file.
+This example stops after the first completed generation report, then refits
+an identically configured estimator from that file. The same workflow works
+with `optimizer_backend="nevergrad"`, `"cmaes"` and `"pymoo"`.
+
+```python
+from sklearn.base import clone
+from sklearn_genetic.callbacks import ThresholdStopping
+
+search = make_search().set_params(optimizer_backend="scipy")
+checkpoint = ModelCheckpoint("tree-scipy.pkl")
+clone(search).fit(X_train, y_train, callbacks=[ThresholdStopping(0.0), checkpoint])
+saved = checkpoint.load()
+print("Last completed generation", saved["logbook"][-1]["gen"])
+print("Ready to resume", saved["resumable"])
+
+resumed = clone(search).fit(X_train, y_train, callbacks=[checkpoint])
+print("Additional CV calls",
+      resumed.fit_stats_["cross_validate_calls"] - saved["fit_stats"]["cross_validate_calls"])
+```
+
+For these four engines, keep the training rows and targets in the same order,
+along with the original splits, fit metadata, scorer, model, seed, population
+size, generation budget and solver options. Use the same Python environment
+and dependency versions. If you configured the adapter with `functools.partial`,
+recreate it with the same adapter function and keyword arguments. A stopping
+callback starts a fresh lifecycle on the next fit. Leave the previous timer
+or stopping condition out if you want to finish the original budget.
+
+Nevergrad and CatCMAwM restore their saved solver state. SciPy and pymoo replay
+completed proposals, verify them against the saved record and return stored
+evaluations to the solver. This adds solver work on restart while avoiding new
+CV fits for the completed generations. A timer or interruption partway through
+a generation can require those unfinished proposals to be evaluated again.
+When the full generation budget was already saved, the search skips evolution.
+The checkpoint covers the evolutionary CV evaluations through the last completed
+generation. Optional validation of finalists and the final model refit happen
+after that checkpoint and can run again even when you resume a completed search.
+
+Earlier progress-only files with `resumable=False` remain readable with
+`checkpoint.load()`. Start a new experiment with its own file. Only load
+trusted pickle files. See the [feature selection example](../../tutorials/optimizer-backends#select-features-and-inspect-progress)
+for a run with a binary mask, and the [plugin protocol](../../api/algorithms#callbacks-and-checkpoints)
+for third-party optimizers.
 
 ## See Also
 

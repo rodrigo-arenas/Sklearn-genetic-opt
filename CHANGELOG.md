@@ -16,7 +16,12 @@ for upgrade guidance and links to the API examples.
 
 - SciPy and external optimizer plugins support LivePlot, progress logging and
   early stopping, including CV batch deadlines. ModelCheckpoint writes versioned
-  progress snapshots. Plugins can opt into exact resume by supplying solver state.
+  snapshots. Plugins can opt into exact resume by supplying solver state.
+
+- Both estimators can resume SciPy, Nevergrad, CatCMAwM and pymoo from a
+  completed generation. Nevergrad and CatCMAwM restore native solver state.
+  SciPy and pymoo reconstruct the solver with recorded evaluations. Earlier
+  progress-only files remain available for inspection.
 
 - Both estimators accept a callable optimizer or the name of an installed
   `sklearn_genetic.optimizers` entry point. Plugins and SciPy share initialization,

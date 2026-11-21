@@ -26,7 +26,7 @@ nb = Notebook(
     intro=(
         "This example uses the default DEAP engine and its historical checkpoint format. "
         "See the [backend tutorial](../tutorials/optimizer-backends#select-features-and-inspect-progress) "
-        "for progress snapshots from the other catalog engines. "
+        "for a worked example of resuming feature selection with pymoo. "
         "Long-running searches should be able to write intermediate checkpoints, "
         "persist the fitted search object, and reload it later for inspection or "
         "prediction. This page runs a small real search and shows both persistence "

@@ -123,8 +123,8 @@ ng_search = clone(cma_search).set_params(
 
 CatCMAwM accepts `0 < sigma <= 1` in normalized numeric coordinates. It only
 affects numeric variation. Nevergrad accepts `OnePlusOne` and `TwoPointsDE`.
-Live plotting and stopping callbacks work on reported batches. Checkpoint files
-store progress for these adapters. Exact continuation needs solver-state support.
+Live plotting and stopping callbacks work on reported batches. The same configured adapters can
+resume from a completed generation with [ModelCheckpoint](../recipes/advanced/checkpointing).
 
 The installed adapters use general-purpose engines. Nevergrad and cmaes are
 MIT-licensed. pymoo uses Apache-2.0. See the original

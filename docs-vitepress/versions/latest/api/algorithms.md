@@ -100,9 +100,9 @@ print(search.best_params_, selector.get_support())
   settings raises an error. Diversity control is inactive for SciPy under either
   Boolean setting. Final selection and fixed crossover are supported.
 - LivePlot, progress loggers and stopping callbacks run at the same generation
-  boundaries as external plugins. `ModelCheckpoint` saves an inspectable progress
-  snapshot. SciPy's public solver API does not restore its internal state for
-  exact continuation. See [callbacks and checkpoints](#callbacks-and-checkpoints).
+  boundaries as external plugins. To resume from a checkpoint, SciPy rebuilds
+  its solver by verifying proposals against saved evaluations. Completed
+  generations reuse their recorded results without running CV again. See [callbacks and checkpoints](#callbacks-and-checkpoints).
 
 SciPy was selected because scikit-learn already installs it and its recent releases
 publish Linux, macOS and Windows wheels for all four supported Python minors.
@@ -234,7 +234,7 @@ progress = checkpoint.load()
 print(len(progress["candidate_records"]), progress["resumable"])
 ```
 
-The example uses a plugin or SciPy. DEAP keeps its historical checkpoint format.
+The example uses any of the four alternative catalog engines or a plugin. DEAP keeps its historical checkpoint format.
 On the shared runtime, a custom callback receives the estimator at `on_start`,
 the generation row and accumulated rows at `on_step`, and the rows at `on_end`.
 The log supports indexing, iteration and `select("fitness")`. Returning `True`
@@ -268,10 +268,16 @@ budget, cache, observed candidates, elites and generation numbers before calling
 `resume`. Comparisons require the same software versions and reproducible
 model/scoring behavior. Checkpoint-enabled exact resume requires fingerprintable
 settings, including importable scorers. Callback instances start a new lifecycle
-and can consult the accumulated generation log. A completed generation budget
-can be refitted directly. SciPy and plugins implementing only the base protocol
-can save and inspect progress; starting a new search uses a fresh path. Load
-pickle checkpoints only from trusted sources.
+and can consult the accumulated generation log. On resuming a completed budget,
+the search skips evolution. Extra finalist validation and the final model refit
+take place after the checkpoint and can run again. Nevergrad and CatCMAwM restore native solver state.
+SciPy and pymoo reconstruct the solver by replaying completed proposals and
+checking them against the saved record. Replay takes time proportional to the
+completed solver steps and reuses saved evaluations. Work after the last saved
+generation may need to run again. Plugins implementing only the base protocol
+and earlier progress-only files support inspection with `ModelCheckpoint.load()`.
+Load pickle checkpoints only from trusted sources. See the
+[checkpoint recipe](../recipes/advanced/checkpointing) for the repeat-`fit` workflow.
 
 ## Nevergrad
 
@@ -286,7 +292,8 @@ The generation history summarizes each evaluated
 batch. The default crossover setting leaves variation to Nevergrad. Use unweighted categories,
 finite linear or logarithmic intervals and variable integers within int64 spanning less than 2**52. Fixed coordinates are
 removed, and an entirely fixed search finishes after initialization. LivePlot, early stopping
-and progress snapshots are supported. Start a fresh search to generate new trials.
+and resumable generation checkpoints are supported, including when the strategy
+is configured with `functools.partial`.
 
 ## CatCMA with Margin
 
@@ -301,8 +308,8 @@ uniform prior. The initial numeric step size is 0.25 of the normalized interval.
 Flat initial numeric batches keep sampling until the continuous boundary penalty
 has a positive interquartile loss range.
 
-Use at least four individuals per generation. The same domain, callback, progress
-snapshot and generation-history rules as Nevergrad apply. Full covariance costs
+Use at least four individuals per generation. The same domain, callback,
+checkpoint and generation-history rules as Nevergrad apply. Full covariance costs
 quadratic memory in the number of numeric parameters.
 
 ## pymoo
@@ -319,5 +326,6 @@ trials for final selection. Adjust `crossover_probability` between 0 and 1
 Use the same parameter domains as Nevergrad. Repeated proposals count against
 the proposal budget, and the estimator cache can reuse their CV results. This
 allows small discrete spaces to complete without costly duplicate-rejection
-loops. LivePlot, early stopping and progress snapshots use the common runtime.
+loops. LivePlot, early stopping and generation checkpoints use the common
+runtime. On resume, pymoo reconstructs the solver from recorded evaluations.
 On platforms without a compatible upstream wheel, pip builds pymoo from source.

@@ -15,10 +15,10 @@ work as with other scikit-learn estimators. Start with the
 | Value | Solver and useful settings | Population summarized in `history` | Checkpoint |
 | --- | --- | --- | --- |
 | `"deap"` | Defaults to `eaMuPlusLambda`. Choose an [algorithm](./algorithms), schedules, elitism or local search. Supports categorical priors. | Algorithm population | DEAP continuation |
-| `"scipy"` | Deferred `best1bin` differential evolution. Use at least 5 individuals. A fixed `crossover_probability` sets recombination. Equal energies can end the run early. | Survivors | Progress |
-| `"nevergrad"` | OnePlusOne for both tasks. Set `strategy="TwoPointsDE"` on the adapter callable to try differential evolution. Leave estimator crossover at its default. | Evaluated batch | Progress |
-| `"cmaes"` | CatCMA with Margin. Use at least 4 individuals. Set `sigma` on the adapter callable in `(0, 1]` (default 0.25) for the initial normalized numeric step. Leave estimator crossover at its default. | Evaluated batch | Progress |
-| `"pymoo"` | Mixed-variable GA for parameters and binary GA for masks. Tune fixed `crossover_probability` in `[0, 1]` (default 0.8). | Survivors | Progress |
+| `"scipy"` | Deferred `best1bin` differential evolution. Use at least 5 individuals. A fixed `crossover_probability` sets recombination. Equal energies can end the run early. | Survivors | Resume by verified replay |
+| `"nevergrad"` | OnePlusOne for both tasks. Set `strategy="TwoPointsDE"` on the adapter callable to try differential evolution. Leave estimator crossover at its default. | Evaluated batch | Restore native solver state |
+| `"cmaes"` | CatCMA with Margin. Use at least 4 individuals. Set `sigma` on the adapter callable in `(0, 1]` (default 0.25) for the initial normalized numeric step. Leave estimator crossover at its default. | Evaluated batch | Restore native solver state |
+| `"pymoo"` | Mixed-variable GA for parameters and binary GA for masks. Tune fixed `crossover_probability` in `[0, 1]` (default 0.8). | Survivors | Resume by verified replay |
 
 ## Choose a starting point
 
@@ -59,10 +59,14 @@ See the [measured cost and quality comparison](../benchmarks/optimizer-catalog).
 - Use `cv_results_` for per-candidate scores, `history` for per-generation
   metrics, and `fitness_best_observed` in [LivePlot](./plots) to follow the best
   finite primary score seen so far. The archive considers discarded candidates too.
-- Stopping and progress callbacks receive generation records. A shared-runtime
-  checkpoint with `resumable=False` can be inspected with `ModelCheckpoint.load()`.
-  Starting another fit with that file raises an error. Use a new path for a new
-  search. The [checkpoint recipe](../recipes/advanced/checkpointing) covers DEAP.
+- To resume any catalog engine, pass the same checkpoint path to a new `fit`
+  with the same data, settings and environment. For SciPy and pymoo, replay
+  uses recorded results for completed generations. Native solver state serves
+  the same purpose for Nevergrad and CatCMAwM. A partially evaluated generation
+  may repeat CV. Additional finalist validation and final refit run after the
+  checkpoint and can repeat on resume, including after the last generation.
+  Older progress-only files (`resumable=False`) can be inspected
+  with `ModelCheckpoint.load()`. See the [checkpoint recipe](../recipes/advanced/checkpointing).
 - Leave DEAP-specific controls at their constructor defaults when switching engines.
   These include `algorithm`, mutation probability, tournament size, elitism,
   adaptive schedules, immigrants, local search and fitness sharing. The shared

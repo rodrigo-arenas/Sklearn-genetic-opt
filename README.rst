@@ -72,7 +72,8 @@ SciPy, Nevergrad, CatCMAwM and pymoo share the estimators' cross-validation,
 results and callbacks. From a development checkout, install the desired extra
 with, for example, ``python -m pip install -e ".[pymoo]"`` and pass
 ``optimizer_backend="pymoo"`` to either estimator. The `backend tutorial`_
-shows both tasks, and the `engine comparison`_ reports quality and actual CV cost.
+shows both tasks and how to resume from a completed generation with the same
+``ModelCheckpoint`` file. The `engine comparison`_ reports quality and actual CV cost.
 
 .. _backend tutorial: https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/tutorials/optimizer-backends
 .. _engine comparison: https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/benchmarks/optimizer-catalog

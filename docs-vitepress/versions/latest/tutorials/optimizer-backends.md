@@ -1,6 +1,6 @@
 ---
 title: "Switch optimization backends in a scikit-learn search"
-description: "Tune a classifier, select features and inspect a progress checkpoint with interchangeable optimizers."
+description: "Tune a classifier, select features and resume from a generation checkpoint with interchangeable optimizers."
 ---
 
 :::warning Development version
@@ -86,34 +86,48 @@ test balanced accuracy 0.917
 
 Pass the same keyword to `GAFeatureSelectionCV`. pymoo now evolves binary masks.
 The estimator applies the selected mask for prediction. A stopping callback checks
-each reported generation and a checkpoint records its candidate and generation rows.
+each reported generation. Here the callback stops after generation 1 so we can
+resume the original two-generation budget and measure additional CV calls.
 
 ```python
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from sklearn_genetic.callbacks import ModelCheckpoint, ThresholdStopping
+from sklearn_genetic.callbacks import BaseCallback, ModelCheckpoint
+
+class StopAfterOne(BaseCallback):
+    def on_step(self, record=None, logbook=None, estimator=None):
+        return record["gen"] == 1
 
 selector = GAFeatureSelectionCV(model, optimizer_backend="pymoo", max_features=8, **settings)
 with TemporaryDirectory() as directory:
     checkpoint = ModelCheckpoint(Path(directory) / "progress.pkl")
-    selector.fit(X_train, y_train, callbacks=[ThresholdStopping(0.99), checkpoint])
+    clone(selector).fit(X_train, y_train, callbacks=[StopAfterOne(), checkpoint])
     saved = checkpoint.load()
+    selector.fit(X_train, y_train, callbacks=[checkpoint])
 
+print("checkpoint", saved["backend"], saved["logbook"][-1]["gen"], saved["resumable"])
+print("final generation", selector.history["gen"][-1])
+print("additional CV calls",
+      selector.fit_stats_["cross_validate_calls"] - saved["fit_stats"]["cross_validate_calls"])
 print("selected columns", selector.get_support(indices=True).tolist())
 print("test balanced accuracy", round(balanced_accuracy_score(y_test, selector.predict(X_test)), 3))
-print(saved["backend"], len(saved["candidate_records"]), saved["resumable"])
 ```
 
 ```text
+checkpoint pymoo 1 True
+final generation 2
+additional CV calls 6
 selected columns [6, 11, 12, 15, 23, 27]
 test balanced accuracy 0.901
-pymoo 24 False
 ```
 
-The last value is `False` for SciPy, Nevergrad, CatCMAwM and pymoo. To run again,
-use a fresh checkpoint path. DEAP supports continuation with its historical
-format. Plugin authors can implement exact continuation through the
-[optimizer protocol](../api/algorithms#callbacks-and-checkpoints).
+SciPy and pymoo verify the recorded proposals while reconstructing the solver,
+using saved results for generations already completed. Nevergrad and CatCMAwM
+restore native solver state. Use the same data, search settings and environment
+when resuming. Work in a partially completed generation can require CV again.
+The [checkpoint recipe](../recipes/advanced/checkpointing) also covers DEAP's
+historical format and older progress-only files. Third-party engines can implement
+continuation through the [optimizer protocol](../api/algorithms#callbacks-and-checkpoints).
 
 ## Configure a solver
 

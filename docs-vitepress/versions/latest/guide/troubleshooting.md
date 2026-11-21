@@ -249,7 +249,8 @@ Post-fit plots read generation history, candidate records or fitted results, dep
 | Unknown optimizer backend | Install the development checkout in the interpreter running the search. Use the exact [backend name](../api/optimizer-backends), such as `"cmaes"` for CatCMAwM. A third-party name must be registered in `sklearn_genetic.optimizers`. |
 | Import error naming an extra | From that checkout, install the named extra in the same environment, for example `python -m pip install -e ".[nevergrad]"`. |
 | A control is DEAP-only | Remove custom mutation, tournament, elitism or other DEAP settings before selecting another engine. Consult its [supported settings](../api/optimizer-backends). |
-| A progress snapshot cannot resume | Read it with `ModelCheckpoint.load()` to inspect results. For a new SciPy, Nevergrad, CatCMAwM or pymoo run, give the callback a fresh path. |
+| A progress snapshot has `resumable=False` | Use `ModelCheckpoint.load()` to inspect it. Earlier progress-only snapshots and snapshots from plugins without continuation cannot restart a solver. Give a new run a fresh path. |
+| A catalog checkpoint reports incompatible settings or environment | Recreate the same training inputs, search settings, solver options and software environment. Pass the same callback path to `fit`. See the [resume recipe](../recipes/advanced/checkpointing). |
 
 ## Unsupported Estimator Type
 

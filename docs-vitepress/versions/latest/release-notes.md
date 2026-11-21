@@ -14,9 +14,12 @@ You are reading the **latest (dev)** docs. For the stable version, see [stable](
 Both search estimators accept the keyword-only `optimizer_backend` setting.
 DEAP remains the default. SciPy, Nevergrad, CatCMAwM, pymoo and external
 optimizer callables use estimator-owned CV, cache, history and refit. LivePlot
-and early stopping work across the catalog. The four alternative engines write
-inspectable progress snapshots. DEAP and plugins implementing continuation
-can resume a search. See the [tutorial](./tutorials/optimizer-backends),
+and early stopping work across the catalog. All five engines now support
+generation checkpoints. Nevergrad and CatCMAwM restore native solver state.
+SciPy and pymoo replay completed proposals using recorded results, avoiding
+repeat cross-validation. Earlier progress-only snapshots remain readable.
+Third-party plugins can implement continuation through the existing protocol.
+See the [tutorial](./tutorials/optimizer-backends),
 [backend API](./api/optimizer-backends) and [benchmarks](./benchmarks/optimizer-catalog).
 
 The CI matrix now includes CPython 3.15 for both search estimators, plotting,
