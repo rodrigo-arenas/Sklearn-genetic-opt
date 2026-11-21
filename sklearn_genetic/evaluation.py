@@ -1,4 +1,4 @@
-from contextlib import nullcontext
+from contextlib import contextmanager, nullcontext
 from numbers import Real
 
 from joblib import Parallel, delayed, effective_n_jobs
@@ -88,6 +88,23 @@ def record_fit_stats(
     estimator.fit_stats_["cache_hits"] += cache_hits
     estimator.fit_stats_["duplicate_candidates"] += duplicates
     estimator.fit_stats_["skipped_invalid_candidates"] += skipped
+
+
+@contextmanager
+def evaluation_timers(estimator):
+    from .callbacks.early_stoppers import TimerStopping
+
+    estimator._evaluation_timers = [c for c in estimator.callbacks if isinstance(c, TimerStopping)]
+    estimator._evaluation_started = False
+    estimator._evaluation_budget_exhausted = False
+    try:
+        yield
+    finally:
+        del (
+            estimator._evaluation_timers,
+            estimator._evaluation_started,
+            estimator._evaluation_budget_exhausted,
+        )
 
 
 def _time_budget_exhausted(estimator):

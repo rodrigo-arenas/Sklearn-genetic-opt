@@ -8,7 +8,7 @@ from typing import Literal, Protocol
 
 from .config import EvolutionConfig, OptimizationConfig
 
-__all__ = ["OptimizationProblem", "Optimizer"]
+__all__ = ["OptimizationProblem", "Optimizer", "GenerationReporter", "ResumableOptimizer"]
 
 
 @dataclass(frozen=True)
@@ -28,11 +28,18 @@ class OptimizationProblem:
     generations: int
     crossover_probability: float
     seed: int
+    checkpoint_requested: bool = False
 
     @property
     def max_evaluations(self):
         """Maximum number of proposals, including cache hits and initial rows."""
         return len(self.initial_population) * (self.generations + 1)
+
+
+class GenerationReporter(Protocol):
+    """Report survivors; optionally supply picklable continuation state at this boundary."""
+
+    def __call__(self, survivors: Iterable[object], /, *, state: object = None) -> None: ...
 
 
 class Optimizer(Protocol):
@@ -42,14 +49,25 @@ class Optimizer(Protocol):
         self,
         problem: OptimizationProblem,
         evaluate: Callable[[Iterable[Sequence]], list[tuple[float, object]]],
-        report: Callable[[Iterable[object]], None],
+        report: GenerationReporter,
+        /,
+    ) -> None: ...
+
+
+class ResumableOptimizer(Optimizer, Protocol):
+    """Optional capability for continuing at a completed report boundary."""
+
+    def resume(
+        self,
+        problem: OptimizationProblem,
+        evaluate: Callable[[Iterable[Sequence]], list[tuple[float, object]]],
+        report: GenerationReporter,
+        state: object,
         /,
     ) -> None: ...
 
 
 def _validate_controls(estimator, label):
-    if estimator.callbacks:
-        raise ValueError("Callbacks, including ModelCheckpoint, require optimizer_backend='deap'")
     if not isinstance(estimator.population_size, Integral) or estimator.population_size < 1:
         raise ValueError(f"{label} requires positive integer population_size")
     if not isinstance(estimator.keep_top_k, Integral) or estimator.keep_top_k < 1:

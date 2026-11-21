@@ -288,7 +288,7 @@ Take into consideration:
 
 Implement the [optimizer protocol](docs-vitepress/versions/latest/api/algorithms.md#optimizer-plugins)
 to add an engine in an independent package. Both estimators resolve the selected
-engine before reading checkpoints. SciPy uses the same protocol as external engines.
+engine before loading a checkpoint. SciPy uses the same protocol as external engines.
 
 | Responsibility | Owner | Extension guidance |
 | --- | --- | --- |
@@ -296,7 +296,7 @@ engine before reading checkpoints. SciPy uses the same protocol as external engi
 | Initial population and domains | `population.py` and `space/` | Reuse the supplied population, including warm starts. Validate engine-specific domain limits before requesting CV. |
 | Evaluation, cache, parallel jobs, scoring and refit | `evaluation.py` and the estimators | Call the batch evaluator. Preserve proposal order and separate handles even for identical candidates. |
 | Archive, history, plots and CV results | `_backend_runtime.py`, `_telemetry.py` and `utils/cv_scores.py` | The runtime consumes plain candidate records. Historical DEAP logbook and feature archive objects are constructed on explicit access for plugins. |
-| Legacy evolution and resume | `_deap_backend.py`, `algorithms.py`, `optimizer_control.py` and callbacks | DEAP owns its toolbox, weighted fitness, operators, checkpoint state and callback timing. A future resumable plugin needs a contract for its own solver state, RNG and partial batches. |
+| Legacy evolution and resume | `_deap_backend.py`, `algorithms.py`, `optimizer_control.py` and callbacks | DEAP owns its toolbox, weighted fitness, operators, checkpoint state and callback timing. Plugin callbacks use the shared generation runtime. Optional exact resume restores CV state and delegates opaque solver state to the plugin’s `resume` method. |
 
 Use the [paired benchmark](benchmarks/benchmark_optimizer_backends.py) to compare
 actual CV calls, including cache and convergence differences.

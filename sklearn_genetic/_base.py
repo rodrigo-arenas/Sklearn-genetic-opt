@@ -44,8 +44,10 @@ def generation_history(records):
     )
     history = {key: [] for key in fields}
     for row in records:
+        if row.get("partial") and "partial" not in history:
+            history["partial"] = [False] * len(history["gen"])
         for key, values in history.items():
-            values.append(row.get(key))
+            values.append(row.get(key, False) if key == "partial" else row.get(key))
     return history
 
 
@@ -57,7 +59,7 @@ class GeneticEstimatorMixin:
     # ``hof`` is a DEAP HallOfFame but is part of the public, user-facing
     # result surface, so it is deliberately NOT excluded: it is plain
     # picklable data and ``test_estimator_serialization`` asserts on it.
-    _volatile_pickle_attrs = {"toolbox", "_stats", "_pop", "_hof"}
+    _volatile_pickle_attrs = {"toolbox", "_stats", "_pop", "_hof", "_optimizer_snapshot"}
 
     # Contract for the two serialization paths (see #297):
     #
@@ -207,15 +209,27 @@ class GeneticEstimatorMixin:
 
         return resolve_optimizer(self)
 
-    def _run_optimizer(self, optimizer, restored_logbook, restored_elites, checkpoint_loaded):
+    def _prepare_checkpoint(self, optimizer):
+        from .callbacks.model_checkpoint import load_search_checkpoint
+
+        checkpoint = load_search_checkpoint(self.callbacks, optimizer)
+        if optimizer is None:
+            return checkpoint, None
+        from ._backend_runtime import checkpoint_context
+
+        return checkpoint, checkpoint_context(self, optimizer, checkpoint)
+
+    def _run_optimizer(self, optimizer, runtime, checkpoint, context):
         if optimizer is not None:
             from ._backend_runtime import run_optimizer
 
-            return run_optimizer(self, optimizer)
+            return run_optimizer(self, optimizer, checkpoint, context)
 
         from ._deap_backend import run_deap
 
-        return run_deap(self, restored_logbook, restored_elites, checkpoint_loaded)
+        return run_deap(
+            self, runtime.get("candidate_logbook"), runtime.get("elites", ()), bool(checkpoint)
+        )
 
     def __getattr__(self, name):
         # Historical result objects are materialized only when explicitly requested.

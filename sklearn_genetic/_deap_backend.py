@@ -14,6 +14,7 @@ from .optimizer_control import adaptive_tournament_size
 from .utils.random import weighted_bool_individual
 from .utils.tools import cxUniform, mutFlipBit
 from .callbacks.early_stoppers import TimerStopping
+from .evaluation import evaluation_timers
 
 
 def _restore_search_elites(hall_of_fame, elites):
@@ -234,12 +235,7 @@ def select_algorithm(self, pop, stats, hof):
     )
     selected_algorithm = algorithms_factory.get(self.algorithm, None)
     if selected_algorithm:
-        self._evaluation_timers = [
-            callback for callback in self.callbacks if isinstance(callback, TimerStopping)
-        ]
-        self._evaluation_started = False
-        self._evaluation_budget_exhausted = False
-        try:
+        with evaluation_timers(self):
             pop, log, gen = selected_algorithm(
                 pop,
                 self.toolbox,
@@ -255,10 +251,6 @@ def select_algorithm(self, pop, stats, hof):
                 estimator=self,
                 resume_log=getattr(self, "_resume_generation_log", None),
             )
-        finally:
-            del self._evaluation_timers
-            del self._evaluation_started
-            del self._evaluation_budget_exhausted
     else:
         raise ValueError(
             f"The algorithm {self.algorithm} is not supported, "

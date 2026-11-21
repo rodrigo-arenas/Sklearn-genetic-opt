@@ -515,7 +515,7 @@ class LivePlot(BaseCallback):
 
     def on_end(self, logbook=None, estimator=None):
         # Local refinement can replace the final row after the last on_step.
-        if logbook and logbook[-1].get("local_refinements"):
+        if logbook and (not self._lines or logbook[-1].get("local_refinements")):
             self.on_step(logbook=logbook, estimator=estimator)
 
 

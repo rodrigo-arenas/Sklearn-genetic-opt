@@ -97,10 +97,10 @@ print(search.best_params_, selector.get_support())
   retain their constructor defaults when selecting SciPy. Changing these DEAP-only
   settings raises an error. Diversity control is inactive for SciPy under either
   Boolean setting. Final selection and fixed crossover are supported.
-- Historical callbacks, including early stopping and `ModelCheckpoint`, require
-  DEAP. SciPy rejects them before opening a checkpoint or running CV. Fitted model
-  save/load remains available. SciPy uses the same evaluation and history
-  runtime as external optimizer plugins.
+- LivePlot, progress loggers and stopping callbacks run at the same generation
+  boundaries as external plugins. `ModelCheckpoint` saves an inspectable progress
+  snapshot. SciPy's public solver API does not restore its internal state for
+  exact continuation. See [callbacks and checkpoints](#callbacks-and-checkpoints).
 
 SciPy was selected because scikit-learn already installs it and its recent releases
 publish Linux, macOS and Windows wheels for all four supported Python minors.
@@ -196,7 +196,8 @@ before calling `evaluate`.
   the estimator's normal API. DEAP remains an installation dependency for the
   default engine. Plugin fits do not import it. Explicit access to the historical
   `logbook` or feature `hof` materializes the corresponding DEAP object.
-  LivePlot, stopping callbacks and checkpoint/resume require the DEAP engine.
+  LivePlot and stopping callbacks use the shared runtime. Custom callbacks that
+  access DEAP operators or the toolbox still require the DEAP engine.
 
 To distribute this function independently, put it in a Python package and add
 the following entry point to that package's `pyproject.toml`:
@@ -211,3 +212,61 @@ Only the selected plugin is loaded. The names `deap` and `scipy` are reserved.
 Use a unique name and declare solver dependencies in the plugin package. For
 serialization, use its registered name or an importable module-level callable.
 See the [PyPA plugin guide](https://packaging.python.org/en/latest/guides/creating-and-discovering-plugins/).
+
+### Callbacks and checkpoints
+
+For either estimator, pass callbacks to `fit`. This example displays the best
+observed fitness, stops on a plateau and saves progress at each reported boundary:
+
+```python
+from sklearn_genetic.callbacks import DeltaThreshold, ModelCheckpoint
+from sklearn_genetic.plots import LivePlot
+
+checkpoint = ModelCheckpoint("search-progress.pkl")  # Use a fresh path for a new search.
+search.fit(X, y, callbacks=[
+    LivePlot(metrics=("fitness_best_observed",)),
+    DeltaThreshold(threshold=0.001, generations=3),
+    checkpoint,
+])
+progress = checkpoint.load()
+print(len(progress["candidate_records"]), progress["resumable"])
+```
+
+The example uses a plugin or SciPy. DEAP keeps its historical checkpoint format.
+On the shared runtime, a custom callback receives the estimator at `on_start`,
+the generation row and accumulated rows at `on_step`, and the rows at `on_end`.
+The log supports indexing, iteration and `select("fitness")`. Returning `True`
+from `on_step` stops after all callbacks for that row have run. The shared
+runtime writes checkpoints after the other observers finish that step. A plugin can
+release resources in `finally`; let exceptions from `evaluate` and `report`
+propagate to the runtime.
+
+`TimerStopping` checks between CV batches. The in-flight batch can finish and
+the first batch is allowed to complete, so refit has evaluated candidates. When
+a deadline interrupts a generation, its final row has `partial=True` and
+summarizes the completed proposals since the last report. Refitting uses the
+normal selection rules. A partial row preserves the previous complete resumable
+checkpoint when one exists.
+
+**Optional exact resume for plugins.** A callable may implement
+`resume(problem, evaluate, report, state)` as described by
+`sklearn_genetic.backends.ResumableOptimizer`. When
+`problem.checkpoint_requested` is true, such a plugin calls
+`report(survivors, state=...)` with non-None, picklable continuation state at
+each completed boundary. Save everything needed to propose the **next**
+generation, including the solver's RNG state, iteration number and any retained
+evaluation handles. Give the solver state its own version and validate it in
+`resume`. For example, an engine using a Python `random.Random` generator can
+save `(1, next_generation, rng.getstate(), parents)` and reconstruct its
+generator with `rng.setstate(saved_rng_state)`.
+
+To continue, supply the same checkpoint to `fit` with the same inputs and
+search settings. The runtime restores the original CV folds, remaining proposal
+budget, cache, observed candidates, elites and generation numbers before calling
+`resume`. Comparisons require the same software versions and reproducible
+model/scoring behavior. Checkpoint-enabled exact resume requires fingerprintable
+settings, including importable scorers. Callback instances start a new lifecycle
+and can consult the accumulated generation log. A completed generation budget
+can be refitted directly. SciPy and plugins implementing only the base protocol
+can save and inspect progress; starting a new search uses a fresh path. Load
+pickle checkpoints only from trusted sources.

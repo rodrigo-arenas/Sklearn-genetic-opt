@@ -55,7 +55,7 @@ class ThresholdStopping(BaseCallback):
             stat = record[self.metric]
         elif logbook is not None:
             # Get the last metric value
-            stat = logbook.select(self.metric)[-1]
+            stat = logbook[-1][self.metric]
 
         else:
             raise ValueError("At least one of record or logbook parameters must be provided")
@@ -97,10 +97,10 @@ class ConsecutiveStopping(BaseCallback):
             if record is not None:
                 current_stat = record[self.metric]
             else:
-                current_stat = logbook.select(self.metric)[-1]
+                current_stat = logbook[-1][self.metric]
 
             # Compare the current metric with the last |generations| metrics
-            stats = logbook.select(self.metric)[(-self.generations - 1) : -1]
+            stats = [row[self.metric] for row in logbook[-self.generations - 1 : -1]]
 
             minimize = (
                 self.metric != "fitness_std" and getattr(estimator, "criteria", "max") == "min"
@@ -147,7 +147,7 @@ class DeltaThreshold(BaseCallback):
             if len(logbook) < self.generations:
                 return False
 
-            stats = logbook.select(self.metric)[(-self.generations) :]
+            stats = [row[self.metric] for row in logbook[-self.generations :]]
 
             diff = abs(max(stats) - min(stats))
 

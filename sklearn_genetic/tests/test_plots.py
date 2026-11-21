@@ -856,3 +856,47 @@ def test_as_list_falsy_values():
     # 0 and False are falsy but they're not None — easy bug to introduce
     assert _as_list(0) == [0]
     assert _as_list(False) == [False]
+
+
+@pytest.mark.parametrize("kind", ["parameters", "features"])
+@pytest.mark.parametrize("engine", ["plugin", "scipy"])
+def test_liveplot_and_early_stop_on_portable_engines(kind, engine, tmp_path):
+    from matplotlib import pyplot as plt
+    from scipy import __version__ as scipy_version
+    from ..plots import LivePlot
+    from ..callbacks import DeltaThreshold
+
+    def plugin(problem, evaluate, report):
+        for _ in range(problem.generations + 1):
+            report([handle for _, handle in evaluate(problem.initial_population)])
+
+    if engine == "scipy" and np.lib.NumpyVersion(scipy_version) < "1.15.0":
+        pytest.skip("requires the SciPy optimizer extra")
+    opts = dict(
+        cv=2,
+        population_size=6,
+        generations=5,
+        n_jobs=1,
+        random_state=6,
+        optimizer_backend=plugin if engine == "plugin" else engine,
+        verbose=False,
+    )
+    reg = DecisionTreeRegressor(max_depth=2, random_state=6)
+    model = (
+        GASearchCV(
+            reg, param_grid={"max_depth": Integer(1, 5), "min_samples_leaf": Integer(1, 3)}, **opts
+        )
+        if kind == "parameters"
+        else GAFeatureSelectionCV(reg, **opts)
+    )
+    callback = LivePlot(metrics=("fitness_best_observed",), save_path=tmp_path / "live.png")
+    try:
+        model.fit(X_train[:40], y_train[:40], callbacks=[DeltaThreshold(1e10, 2), callback])
+        assert model.history["gen"] == [0, 1]
+        line = callback.ax.lines[0]
+        np.testing.assert_equal(line.get_xdata(), model.history["gen"])
+        np.testing.assert_equal(line.get_ydata(), model.history["fitness_best_observed"])
+        assert callback.save_path.stat().st_size > 0
+    finally:
+        if callback.ax is not None:
+            plt.close(callback.ax.figure)
