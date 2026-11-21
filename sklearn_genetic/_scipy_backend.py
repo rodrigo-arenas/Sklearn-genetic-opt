@@ -1,17 +1,12 @@
 """Internal adapter for SciPy's vectorized differential evolution solver."""
 
+from collections import defaultdict
 from numbers import Integral, Real
 
 import numpy as np
 from scipy import __version__ as scipy_version
 from scipy.optimize import differential_evolution
 
-from .algorithms import (
-    _compile_generation_record,
-    _new_telemetry_state,
-    _print_verbose_record,
-    _seed_logbook,
-)
 from .config import EvolutionConfig, OptimizationConfig
 from .space import Categorical, Continuous, Integer
 
@@ -93,85 +88,81 @@ def _decode_mask(row, max_features):
     return selected.astype(int).tolist()
 
 
-def run_scipy(estimator, initial, stats, hof):
-    """Give SciPy losses in proposal order; the estimator owns CV, caching and refit."""
-    dimensions = tuple(getattr(estimator, "param_grid", {}).values())
+def run_scipy(
+    initial, evaluate, report, *, dimensions, max_features, generations, recombination, seed
+):
+    """Ask for (loss, handle) pairs and report survivor handles in generation order.
+
+    Candidates are plain lists. A handle identifies one evaluated proposal, even if
+    several proposals decode to the same candidate. Only the caller interprets it.
+    Equal coordinates and loss are indistinguishable in SciPy's survivor report.
+    """
     if dimensions:
         encoded = [[_encode(dim, x) for dim, x in zip(dimensions, ind)] for ind in initial]
     else:
         encoded = initial
-    individual_type = type(initial[0])
-    state = _new_telemetry_state()
-    log, _ = _seed_logbook(None, stats)
-    # Only parents and this generation's trials are needed to report survivors.
-    evaluated = {}
-    survivors = initial
-
-    def record(population):
-        gen = len(log)
-        values = _compile_generation_record(stats, population, state, gen, halloffame=hof)
-        log.record(gen=gen, nevals=len(population), **values)
-        if estimator.verbose:
-            _print_verbose_record(gen, len(population), values, print_header=gen == 0)
+    # Keep handles for parents and trials until the solver reports its survivors.
+    evaluated = defaultdict(list)
+    first_batch = True
 
     def objective(columns):
+        nonlocal first_batch
         rows = columns.T
-        if not log:
+        if first_batch:
             # Keep exact warm starts, including floats that lose precision in a round trip.
             candidates = initial
         elif dimensions:
-            candidates = [
-                individual_type(_decode(dim, x) for dim, x in zip(dimensions, row)) for row in rows
-            ]
+            candidates = [[_decode(dim, x) for dim, x in zip(dimensions, row)] for row in rows]
         else:
-            candidates = [
-                individual_type(_decode_mask(row, estimator.max_features)) for row in rows
-            ]
+            candidates = [_decode_mask(row, max_features) for row in rows]
 
         try:
-            fitnesses = estimator.evaluate_population(candidates)
+            results = list(evaluate(candidates))
         except (TypeError, ValueError) as exc:
             raise _EvaluationError from exc
         losses = []
-        for row, candidate, fitness in zip(rows, candidates, fitnesses, strict=True):
-            candidate.fitness.values = fitness
-            loss = -estimator.criteria_sign * fitness[0]
+        handles = []
+        for row, (loss, handle) in zip(rows, results, strict=True):
             # An all-infinite initial population makes SciPy evaluate initialization again.
             loss = loss if np.isfinite(loss) else np.finfo(float).max
-            evaluated[(row.tobytes(), loss)] = candidate
+            evaluated[(row.tobytes(), loss)].append(handle)
+            handles.append(handle)
             losses.append(loss)
-        hof.update(candidates)
-        if not log:
-            record(candidates)
+        if first_batch:
+            report(handles)
+            first_batch = False
         return np.asarray(losses)
 
     def generation_finished(intermediate_result):
-        nonlocal survivors, evaluated
+        nonlocal evaluated
         keys = [
             (row.tobytes(), loss)
             for row, loss in zip(
                 intermediate_result.population, intermediate_result.population_energies
             )
         ]
-        survivors = [evaluated[key] for key in keys]
-        evaluated = {key: evaluated[key] for key in keys}
-        record(survivors)
+        # Equal coordinates and energy carry no trial ID. Use each matching
+        # evaluation at most once and retain only handles for surviving copies.
+        survivors = [evaluated[key].pop() for key in keys]
+        evaluated = defaultdict(list)
+        for key, handle in zip(keys, survivors):
+            evaluated[key].append(handle)
+        report(survivors)
 
     try:
         differential_evolution(
             objective,
             bounds=[(0.0, 1.0)] * len(initial[0]),
             init=np.asarray(encoded, dtype=float),
-            maxiter=estimator.generations,
+            maxiter=generations,
             strategy="best1bin",
-            recombination=estimator.crossover_probability,
+            recombination=recombination,
             updating="deferred",
             vectorized=True,
             polish=False,
             tol=0,
-            rng=int(np.random.randint(2**31)),
+            rng=seed,
             callback=generation_finished,
         )
     except _EvaluationError as exc:
         raise exc.__cause__ from None
-    return survivors, log, len(log)

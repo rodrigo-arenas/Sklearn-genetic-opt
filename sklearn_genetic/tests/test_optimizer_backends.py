@@ -191,3 +191,66 @@ def test_feature_operators_preserve_seeded_repairs():
         assert random.random() == 0.3610574739836072
     finally:
         random.setstate(state)
+
+
+@requires_scipy_backend
+def test_scipy_runner_uses_plain_candidates_and_opaque_evaluation_handles():
+    from sklearn_genetic._scipy_backend import run_scipy
+
+    proposals = []
+    generations = []
+
+    def evaluate(candidates):
+        batch = []
+        for genes in candidates:
+            assert type(genes) is list
+            handle = len(proposals)
+            proposals.append(genes.copy())
+            batch.append((genes[0] ** 2, handle))
+        return iter(batch)
+
+    run_scipy(
+        [[value] for value in range(6)],
+        evaluate,
+        generations.append,
+        dimensions=(Integer(0, 5),),
+        max_features=None,
+        generations=1,
+        recombination=0.8,
+        seed=11,
+    )
+    assert len(proposals) == 12
+    assert generations[0] == list(range(6))
+    assert len(generations[1]) == 6
+    assert all(0 <= handle < len(proposals) for handle in generations[1])
+    assert min(proposals[h][0] for h in generations[1]) == 0
+
+
+def test_history_accepts_generation_rows_without_deap():
+    from sklearn_genetic._base import generation_history
+
+    history = generation_history(iter([{"gen": 3, "fitness": 0.8}, {"gen": 5, "fitness": 0.9}]))
+    assert history["gen"] == [3, 5]
+    assert history["fitness"] == [0.8, 0.9]
+    assert history["fitness_best_observed"] == [None, None]
+
+
+@requires_scipy_backend
+def test_identical_scipy_survivors_keep_separate_handles():
+    from itertools import count
+    from sklearn_genetic._scipy_backend import run_scipy
+
+    numbers = count()
+    reports = []
+    run_scipy(
+        [[0]] * 6,
+        lambda candidates: ((0.0, next(numbers)) for _ in candidates),
+        reports.append,
+        dimensions=(Integer(0, 0),),
+        max_features=None,
+        generations=1,
+        recombination=0.8,
+        seed=11,
+    )
+    assert reports[0] == list(range(6))
+    assert len(set(reports[1])) == 6

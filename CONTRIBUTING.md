@@ -284,4 +284,30 @@ Take into consideration:
 * Include the author name or GitHub handle.
 * Keep the description short and focused on what the content teaches.
 
+## Optimizer integration and DEAP coupling
+
+The internal boundary is a batch of decoded Python lists. An engine calls
+`evaluate(candidates)` and receives one `(loss, handle)` per proposal, in order.
+A smaller loss is better. The handle identifies the evaluated candidate and stays
+opaque to the engine. At initialization and each generation boundary the engine
+calls `report(survivor_handles)`. For example, SciPy obtains survivor coordinates
+and energies from its public callback. It reports a separate matching handle per
+survivor. Trials with identical coordinates and losses are indistinguishable in
+that callback.
+Cache hits can share scores. Every proposal still has a record in `cv_results_`.
+
+| Area | Current dependency | Where a future engine can share code |
+| --- | --- | --- |
+| Proposals and domains | `algorithms.py` and `optimizer_control.py` use DEAP variation, weighted fitness, cloning and survivor replacement. The SciPy runner uses the batch boundary and its own coordinate decoder. | Keep operators and convergence rules with each engine. Use `space/` for parameter meaning and the same decoded candidates for CV. |
+| Initialization | Both `_register` methods in `genetic_search.py` build a DEAP toolbox, dynamic individual types, archive and statistics. `population.py` already receives factories but still calls toolbox methods. | A next step is to pass ordinary sampling factories to the initializer and move DEAP operator registration into its own runner. Check warm starts, ordering, RNG consumption and saturated spaces before migrating. |
+| Evaluation and results | `evaluation.py` owns deduplication, cache counters, CV vs population parallelism and ordered writes. The two estimators own split construction, fit metadata, scoring and refit. `_BatchSearchResults` adapts these operations to the current archive and generation log. | Route additional engines through this evaluator. Preserve actual CV counts, per-fold scores and feature-count tie breaks. Engines need neither joblib nor scikit-learn scoring calls. |
+| Public records and plots | `utils/cv_scores.py`, `utils/logbook.py` and the logbook saver consume the DEAP parameters chapter. Post-fit generation plots consume the public history. Both estimators now construct that history from ordinary row mappings. | Move candidate result assembly to a sequence of row mappings next. Keep the public logbook and feature hall of fame as compatibility views for existing consumers. |
+| Callbacks, checkpoints and RNG | The DEAP loop drives start/step/end callbacks. Timer callbacks can truncate a batch. `ModelCheckpoint` persists generation and candidate logs, elites, cache, adapter counters and Python/NumPy RNG state. | A future resumable engine needs its own versioned solver state, RNG and partial-budget semantics. Preserve the DEAP reader for historical files. SciPy rejects callbacks before opening files. |
+
+Use `test_scipy_runner_uses_plain_candidates_and_opaque_evaluation_handles` for
+a small example without a fitted estimator or a DEAP individual. Use the
+[paired benchmark](benchmarks/benchmark_optimizer_backends.py) to measure actual
+candidate CV calls. The interface is private while evaluation, result and resume
+requirements are being exercised by real engines.
+
 ## Thank you for being part of this project!

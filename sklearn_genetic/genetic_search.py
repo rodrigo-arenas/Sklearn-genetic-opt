@@ -62,7 +62,7 @@ from sklearn.metrics._scorer import _check_multimetric_scoring
 from .parameters import Criteria
 from .space import Categorical, Continuous, Integer, Space
 from .algorithms import feature_population_diversity
-from ._base import GeneticEstimatorMixin, reset_adapters as _reset_adapters
+from ._base import GeneticEstimatorMixin, generation_history, reset_adapters as _reset_adapters
 from .callbacks.validations import check_callback
 from .schedules.validations import check_adapter
 from .utils.cv_scores import (
@@ -1479,33 +1479,7 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
             greater_is_better=self.criteria == "max",
         )
 
-        self.history = {
-            "gen": log.select("gen"),
-            "cross_validate_calls": log.select("cross_validate_calls"),
-            "fitness": log.select("fitness"),
-            "fitness_std": log.select("fitness_std"),
-            "fitness_best": log.select("fitness_best"),
-            "fitness_best_observed": log.select("fitness_best_observed"),
-            "fitness_max": log.select("fitness_max"),
-            "fitness_min": log.select("fitness_min"),
-            "population_size": log.select("population_size"),
-            "unique_individuals": log.select("unique_individuals"),
-            "unique_individual_ratio": log.select("unique_individual_ratio"),
-            "genotype_diversity": log.select("genotype_diversity"),
-            "fitness_improvement": log.select("fitness_improvement"),
-            "fitness_improved": log.select("fitness_improved"),
-            "stagnation_generations": log.select("stagnation_generations"),
-            "best_generation": log.select("best_generation"),
-            "mutation_probability": log.select("mutation_probability"),
-            "selection_pressure": log.select("selection_pressure"),
-            "diversity_control_triggered": log.select("diversity_control_triggered"),
-            "random_immigrants": log.select("random_immigrants"),
-            "duplicate_replacements": log.select("duplicate_replacements"),
-            "local_refinements": log.select("local_refinements"),
-            "fitness_sharing_applied": log.select("fitness_sharing_applied"),
-            "mean_niche_count": log.select("mean_niche_count"),
-            "max_niche_count": log.select("max_niche_count"),
-        }
+        self.history = generation_history(log)
 
         # Imitate the logic of scikit-learn refit parameter
         if self.refit:
@@ -2607,33 +2581,7 @@ class GAFeatureSelectionCV(
             greater_is_better=self.criteria == "max",
         )
 
-        self.history = {
-            "gen": log.select("gen"),
-            "cross_validate_calls": log.select("cross_validate_calls"),
-            "fitness": log.select("fitness"),
-            "fitness_std": log.select("fitness_std"),
-            "fitness_best": log.select("fitness_best"),
-            "fitness_best_observed": log.select("fitness_best_observed"),
-            "fitness_max": log.select("fitness_max"),
-            "fitness_min": log.select("fitness_min"),
-            "population_size": log.select("population_size"),
-            "unique_individuals": log.select("unique_individuals"),
-            "unique_individual_ratio": log.select("unique_individual_ratio"),
-            "genotype_diversity": log.select("genotype_diversity"),
-            "fitness_improvement": log.select("fitness_improvement"),
-            "fitness_improved": log.select("fitness_improved"),
-            "stagnation_generations": log.select("stagnation_generations"),
-            "best_generation": log.select("best_generation"),
-            "mutation_probability": log.select("mutation_probability"),
-            "selection_pressure": log.select("selection_pressure"),
-            "diversity_control_triggered": log.select("diversity_control_triggered"),
-            "random_immigrants": log.select("random_immigrants"),
-            "duplicate_replacements": log.select("duplicate_replacements"),
-            "local_refinements": log.select("local_refinements"),
-            "fitness_sharing_applied": log.select("fitness_sharing_applied"),
-            "mean_niche_count": log.select("mean_niche_count"),
-            "max_niche_count": log.select("max_niche_count"),
-        }
+        self.history = generation_history(log)
 
         if self.refit:
             if self.final_selection:
