@@ -1,4 +1,4 @@
-"""Nevergrad's NGOpt portfolio with batched ask/tell and typed coordinates."""
+"""Nevergrad optimizers with batched ask/tell and typed coordinates."""
 
 import numpy as np
 
@@ -16,12 +16,11 @@ def optimize(problem, evaluate, report, *, strategy=None):
     if problem.crossover_probability != EvolutionConfig.crossover_probability:
         raise ValueError("Nevergrad manages crossover_probability internally")
     space = MixedSpace(problem)
+    # NGOpt's portfolio can select an incompatible metamodel in mixed spaces too.
     if strategy is None:
-        # NGOpt can choose a quadratic metamodel on numeric-only problems. Its
-        # scalar prediction conversion fails on modern NumPy for longer runs.
-        strategy = "NGOpt" if any(kind == "choice" for kind, _ in space.axes) else "OnePlusOne"
-    if strategy not in ("NGOpt", "OnePlusOne"):
-        raise ValueError("strategy must be NGOpt or OnePlusOne")
+        strategy = "TwoPointsDE" if problem.task == "features" else "OnePlusOne"
+    if strategy not in ("OnePlusOne", "TwoPointsDE"):
+        raise ValueError("strategy must be OnePlusOne or TwoPointsDE")
     initial = evaluate(problem.initial_population)
     report([handle for _, handle in initial])
     if not space.axes or not problem.generations:

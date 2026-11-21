@@ -176,3 +176,21 @@ def test_nevergrad_continuous_search_completes_long_budget():
     optimize(problem, evaluate, batches.append)
     assert len(batches) == 15
     assert all(len(population) == 8 for population in batches)
+
+
+def test_nevergrad_long_mixed_run_with_boundary_start():
+    pytest.importorskip("nevergrad")
+    from sklearn_genetic._nevergrad_backend import optimize
+    from sklearn_genetic.backends import OptimizationProblem
+
+    dims = (Continuous(0, 1), Integer(1, 4), Categorical([None, "x", "y"]))
+    problem = OptimizationProblem(
+        "parameters", ((0.0, 1, "y"),) * 8, ("x", "y", "z"), dims, None, 15, 0.8, 12
+    )
+    batches = []
+
+    def evaluate(rows):
+        return [(x**2 + n + (c == "y"), (x, n, c)) for x, n, c in rows]
+
+    optimize(problem, evaluate, batches.append)
+    assert len(batches) == 16

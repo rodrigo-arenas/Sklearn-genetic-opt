@@ -5,14 +5,14 @@ for upgrade guidance and links to the API examples.
 
 ## Unreleased
 
-- Use Nevergrad OnePlusOne for numeric-only searches, avoiding an upstream
+- Use explicit Nevergrad strategies across domains, avoiding an upstream
   NGOpt surrogate incompatibility with recent NumPy.
 
 - Add optional pymoo GAs with type-specific variation and survivor reporting.
 
 - Add optional CatCMA with Margin for joint numeric and categorical optimization.
 
-- Add an optional Nevergrad NGOpt / OnePlusOne backend for both estimators.
+- Add an optional Nevergrad backend for both estimators.
 
 - SciPy and external optimizer plugins support LivePlot, progress logging and
   early stopping, including CV batch deadlines. ModelCheckpoint writes versioned
