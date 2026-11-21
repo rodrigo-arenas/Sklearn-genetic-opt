@@ -28,30 +28,33 @@ pip install sklearn-genetic-opt
 Install the runtime extras for optimization, plotting and MLflow:
 
 ```bash
-pip install sklearn-genetic-opt[all]
+python -m pip install "sklearn-genetic-opt[all]"
 ```
 
 Install individual extras:
 
 ```bash
-pip install sklearn-genetic-opt[plot]      # seaborn for plot_fitness_evolution / plot_search_space
-pip install sklearn-genetic-opt[mlflow]    # MLflow 3 logging
+python -m pip install "sklearn-genetic-opt[plot]"      # seaborn for plot_fitness_evolution / plot_search_space
+python -m pip install "sklearn-genetic-opt[mlflow]"    # MLflow 3 logging
 ```
 
 ## Optimization backends
 
-The catalog described here is in development on `master`. To run the
-tutorial against that code, install the repository and the desired extras
-together in your Python environment:
+Choose the extra with the same name as the engine. For releases that include
+the catalog, install an engine and plotting together with
+`python -m pip install "sklearn-genetic-opt[pymoo,plot]"`.
+
+:::warning Development version
+PyPI 0.15.0 predates the catalog. To follow this version of the guide,
+install from source with the extras you want:
 
 ```bash
 git clone https://github.com/rodrigo-arenas/Sklearn-genetic-opt.git
 cd Sklearn-genetic-opt
 python -m pip install -e ".[scipy,nevergrad,cmaes,pymoo]"
 ```
+:::
 
-For a smaller installation, specify only the extras you need. For example,
-`python -m pip install -e ".[pymoo,plot]"` installs pymoo and the plotting tools.
 DEAP is included in the base package. The SciPy extra enforces the solver's
 minimum version even when scikit-learn can use an older SciPy. Some platforms
 may build pymoo from source. See the [engine reference](../api/optimizer-backends)

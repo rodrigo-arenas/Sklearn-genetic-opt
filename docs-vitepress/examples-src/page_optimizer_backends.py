@@ -10,10 +10,11 @@ nb = Notebook(
 )
 
 nb.md("""
-## Install the development checkout
+## Install the engines
 
-From the repository root, run `python -m pip install -e ".[scipy,nevergrad,cmaes,pymoo]"`.
-For a single engine, install just its [extra](../guide/installation#optimization-backends).
+Follow the [installation guide for your version](../guide/installation#optimization-backends).
+To run every example, select the `scipy`, `nevergrad`, `cmaes` and `pymoo` extras.
+For a single engine, select just its extra.
 The examples use built-in scikit-learn data and run serially.
 """)
 nb.code("""

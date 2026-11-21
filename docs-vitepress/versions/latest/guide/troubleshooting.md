@@ -246,7 +246,7 @@ Post-fit plots read generation history, candidate records or fitted results, dep
 
 | Symptom | What to check |
 | --- | --- |
-| Unknown optimizer backend | Install the development checkout in the interpreter running the search. Use the exact [backend name](../api/optimizer-backends), such as `"cmaes"` for CatCMAwM. A third-party name must be registered in `sklearn_genetic.optimizers`. |
+| Unknown optimizer backend | Check the installed package version and [install the engine extra](./installation#optimization-backends) in the interpreter running the search. Use the exact [backend name](../api/optimizer-backends), such as `"cmaes"` for CatCMAwM. A third-party name must be registered in `sklearn_genetic.optimizers`. |
 | Import error naming an extra | From that checkout, install the named extra in the same environment, for example `python -m pip install -e ".[nevergrad]"`. |
 | A control is DEAP-only | Remove custom mutation, tournament, elitism or other DEAP settings before selecting another engine. Consult its [supported settings](../api/optimizer-backends). |
 | A progress snapshot has `resumable=False` | Use `ModelCheckpoint.load()` to inspect it. Earlier progress-only snapshots and snapshots from plugins without continuation cannot restart a solver. Give a new run a fresh path. |

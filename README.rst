@@ -1,102 +1,166 @@
 sklearn-genetic-opt
 ===================
 
-Evolutionary hyperparameter search and feature selection for scikit-learn.
-``GASearchCV`` tunes estimator parameters. ``GAFeatureSelectionCV`` searches for
-subsets of input features. Both score candidates with cross-validation and
-recombine promising candidates to build the next generation.
-
-.. image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/docs-vitepress/public/brand/readme-banner-1280x320.png?raw=true
+.. image:: https://raw.githubusercontent.com/rodrigo-arenas/Sklearn-genetic-opt/master/docs-vitepress/public/brand/readme-banner-1280x320.png
    :alt: sklearn-genetic-opt
-   :width: 410
-   :target: https://sklearngeneticopt.rodrigo-arenas.com/stable/
+   :width: 760
+   :target: https://sklearngeneticopt.rodrigo-arenas.com/
 
-Use it when a grid would be too large and you can budget several generations
-of model fits. For a small discrete grid, exhaustive search is simpler.
+|release| |tests| |license|
 
-Install
--------
+**Tune a scikit-learn estimator or find a smaller set of features.**
+Give the search a model, a scorer and a budget. It evaluates candidates with
+cross-validation, refits the winner and lets you call ``predict`` on new data.
+Use it when the combinations of parameters or columns would make an exhaustive
+search too expensive.
 
-With Python 3.12 or newer and scikit-learn 1.5 or newer, install the release
-used in the example:
+`Stable documentation`_ · `Backend tutorial`_ · `Benchmarks`_ · `Plot gallery`_
+
+Run your first search
+---------------------
+
+Install the published package on Python 3.12 or newer:
 
 .. code-block:: bash
 
-   python -m pip install sklearn-genetic-opt==0.15.0
+   python -m pip install sklearn-genetic-opt
 
-The development test matrix covers CPython 3.12–3.15. On 3.15, use
-scikit-learn 1.9.1 or newer. See the `installation guide`_ for
-conda and optional plotting and MLflow dependencies.
-
-Run a first search
-------------------
-
-Tune a decision tree on the built-in iris dataset. Each candidate specifies a
-tree depth and a minimum leaf size. Three-fold cross-validation scores each
-candidate on the training data. The test set stays separate.
+How deep should a decision tree grow? Search integer depths and two split
+criteria on the training set. Compare the winning cross-validation score with
+balanced accuracy on data the search never saw.
 
 .. code-block:: python
 
-   from sklearn.datasets import load_iris
+   from sklearn.datasets import load_breast_cancer
+   from sklearn.metrics import balanced_accuracy_score
    from sklearn.model_selection import train_test_split
    from sklearn.tree import DecisionTreeClassifier
-   from sklearn_genetic import EvolutionConfig, GASearchCV, RuntimeConfig
-   from sklearn_genetic.space import Integer
+   from sklearn_genetic import GASearchCV
+   from sklearn_genetic.space import Categorical, Integer
 
-   X, y = load_iris(return_X_y=True)
+   X, y = load_breast_cancer(return_X_y=True)
    X_train, X_test, y_train, y_test = train_test_split(
-       X, y, stratify=y, random_state=42
+       X, y, stratify=y, test_size=0.25, random_state=7
    )
+   tree = DecisionTreeClassifier(random_state=7)
+   settings = dict(cv=3, scoring="balanced_accuracy", population_size=8,
+                   generations=3, random_state=7, n_jobs=1, verbose=False)
 
    search = GASearchCV(
-       estimator=DecisionTreeClassifier(random_state=42),
-       param_grid={"max_depth": Integer(1, 6), "min_samples_leaf": Integer(1, 5)},
-       scoring="accuracy",
-       cv=3,
-       evolution_config=EvolutionConfig(population_size=6, generations=3),
-       runtime_config=RuntimeConfig(n_jobs=1, verbose=False),
-       random_state=42,
-   )
-   search.fit(X_train, y_train)
-   print(search.best_params_)
-   print(search.score(X_test, y_test))
+       tree,
+       param_grid={"max_depth": Integer(2, 12), "criterion": Categorical(["gini", "entropy"])},
+       **settings,
+   ).fit(X_train, y_train)
 
-To select columns instead, follow the `feature selection tutorial`_. It shows
-how to inspect ``support_`` and evaluate the selected features on held-out data.
+   print(search.best_params_, search.best_score_)
+   print(balanced_accuracy_score(y_test, search.predict(X_test)))
 
-Development optimizer catalog
------------------------------
+Which columns does the tree need?
+---------------------------------
 
-On ``master``, both estimators accept ``optimizer_backend``. DEAP is the default;
-SciPy, Nevergrad, CatCMAwM and pymoo share the estimators' cross-validation,
-results and callbacks. From a development checkout, install the desired extra
-with, for example, ``python -m pip install -e ".[pymoo]"`` and pass
-``optimizer_backend="pymoo"`` to either estimator. The `backend tutorial`_
-shows both tasks and how to resume from a completed generation with the same
-``ModelCheckpoint`` file. The `engine comparison`_ reports quality and actual CV cost.
+Reuse the model, folds and budget with ``GAFeatureSelectionCV``. Set an upper
+limit of eight columns. The fitted selector applies its mask during prediction.
 
+.. code-block:: python
+
+   from sklearn_genetic import GAFeatureSelectionCV
+
+   selector = GAFeatureSelectionCV(tree, max_features=8, **settings).fit(X_train, y_train)
+   print(selector.get_support(indices=True))
+   print(balanced_accuracy_score(y_test, selector.predict(X_test)))
+
+Choose an optimizer
+-------------------
+
+**Using the PyPI 0.15.0 release?** It includes the two examples above. To try
+the five-engine catalog with that environment, install from source with the
+extras you want. For example:
+
+.. code-block:: bash
+
+   git clone https://github.com/rodrigo-arenas/Sklearn-genetic-opt.git
+   cd Sklearn-genetic-opt
+   python -m pip install -e ".[pymoo]"
+
+Change one parameter on either estimator to run the same experiment with a
+different engine. Cloning keeps the earlier result available for comparison.
+
+.. code-block:: python
+
+   from sklearn.base import clone
+
+   alternative = clone(selector).set_params(optimizer_backend="pymoo")
+   alternative.fit(X_train, y_train)
+   print(alternative.get_support(indices=True), alternative.fit_stats_["cross_validate_calls"])
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 80
+
+   * - Backend
+     - What it brings to the search
+   * - ``deap``
+     - Included by default. Choose genetic operators, adaptive schedules and local search.
+   * - ``scipy``
+     - Differential evolution for bounded spaces. It can stop early when the population converges.
+   * - ``nevergrad``
+     - OnePlusOne adjusts its mutations as candidates succeed or fail. TwoPointsDE is also available.
+   * - ``cmaes``
+     - CatCMA with Margin learns how numeric variables vary together and adapts category probabilities.
+   * - ``pymoo``
+     - Uses type-specific operators for mixed parameters and a binary genetic algorithm for feature masks.
+
+Each optional engine has a pip extra with the same name. All five support
+live plotting, early stopping and resuming from a completed generation.
+The `engine reference`_ lists supported domains, controls and checkpoint
+requirements. To integrate another optimizer, see the `plugin protocol`_.
+
+How do they compare? Across five held-out splits, pymoo had the lowest mean
+RMSE on both synthetic linear-regression feature-selection tasks. DEAP had
+the lowest mean RMSE when tuning a tree on Friedman #1. The `benchmarks`_
+compare nine workloads at matched counts of actual CV calls and include
+overhead, raw measurements and commands to reproduce the runs.
+
+Inspect a fitted search
+-----------------------
+
+Use ``cv_results_`` for individual candidates and ``history`` for progress by
+generation. This example from the `digits walkthrough`_ shows how a neural
+network search progressed and which candidates finished near the top.
+
+.. image:: https://raw.githubusercontent.com/rodrigo-arenas/Sklearn-genetic-opt/master/docs-vitepress/public/images/basic_usage_mlp_search_overview.png
+   :alt: Digits search dashboard with fitness by generation, population diversity, optimizer events and top candidate scores
+   :width: 720
+   :target: https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/guide/basic-usage
+
+Go further
+----------
+
+* **Build a search** with the `GASearchCV`_, `GAFeatureSelectionCV`_ and `search space`_ references.
+* **Track a long run** with the `checkpoint recipe`_, `plot gallery`_ and `backend tutorial`_.
+* **Work on the project** with the `contributor guide`_, `release notes`_ and `software citation`_.
+
+.. |release| image:: https://img.shields.io/pypi/v/sklearn-genetic-opt
+   :alt: Latest release on PyPI
+   :target: https://pypi.org/project/sklearn-genetic-opt/
+.. |tests| image:: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/actions/workflows/ci-tests.yml/badge.svg?branch=master
+   :alt: Continuous integration on master
+   :target: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/actions/workflows/ci-tests.yml
+.. |license| image:: https://img.shields.io/badge/license-MIT-blue
+   :alt: MIT license
+   :target: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/LICENSE
+
+.. _stable documentation: https://sklearngeneticopt.rodrigo-arenas.com/stable/
 .. _backend tutorial: https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/tutorials/optimizer-backends
-.. _engine comparison: https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/benchmarks/optimizer-catalog
-
-Documentation and project
--------------------------
-
-* `Stable documentation`_, `model-specific tutorials`_ and `recipes`_.
-* API references for `GASearchCV`_, `GAFeatureSelectionCV`_ and `search spaces`_.
-* `Search method comparisons`_, `benchmarks`_ and the `plotting gallery`_.
-* `Contributing and running tests`_, `software citation`_ and `MIT license`_.
-
-.. _installation guide: https://sklearngeneticopt.rodrigo-arenas.com/versions/0.15/guide/installation
-.. _feature selection tutorial: https://sklearngeneticopt.rodrigo-arenas.com/versions/0.15/tutorials/feature-selection
-.. _Stable documentation: https://sklearngeneticopt.rodrigo-arenas.com/stable/
-.. _model-specific tutorials: https://sklearngeneticopt.rodrigo-arenas.com/versions/0.15/tutorials/
-.. _recipes: https://sklearngeneticopt.rodrigo-arenas.com/versions/0.15/recipes/
-.. _GASearchCV: https://sklearngeneticopt.rodrigo-arenas.com/versions/0.15/api/gasearchcv
-.. _GAFeatureSelectionCV: https://sklearngeneticopt.rodrigo-arenas.com/versions/0.15/api/gafeatureselectioncv
-.. _search spaces: https://sklearngeneticopt.rodrigo-arenas.com/versions/0.15/api/space
-.. _Search method comparisons: https://sklearngeneticopt.rodrigo-arenas.com/versions/0.15/comparisons/
-.. _benchmarks: https://sklearngeneticopt.rodrigo-arenas.com/versions/0.15/benchmarks/
-.. _plotting gallery: https://sklearngeneticopt.rodrigo-arenas.com/versions/0.15/examples/plotting-gallery
-.. _Contributing and running tests: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/CONTRIBUTING.md
+.. _benchmarks: https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/benchmarks/optimizer-catalog
+.. _engine reference: https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/api/optimizer-backends
+.. _plugin protocol: https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/api/algorithms#optimizer-plugins
+.. _digits walkthrough: https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/guide/basic-usage
+.. _GASearchCV: https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/api/gasearchcv
+.. _GAFeatureSelectionCV: https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/api/gafeatureselectioncv
+.. _search space: https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/api/space
+.. _checkpoint recipe: https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/recipes/advanced/checkpointing
+.. _plot gallery: https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/examples/plotting-gallery
+.. _contributor guide: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/CONTRIBUTING.md
+.. _release notes: https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/release-notes
 .. _software citation: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/CITATION.cff
-.. _MIT license: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/LICENSE

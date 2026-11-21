@@ -10,7 +10,7 @@ It accepts an engine name or a synchronous optimizer callable and defaults to
 `"deap"`. It is a constructor parameter, so `clone`, `get_params` and `set_params`
 work as with other scikit-learn estimators. Start with the
 [executable tutorial](../tutorials/optimizer-backends) or the
-[development installation instructions](../guide/installation#optimization-backends).
+[installation instructions](../guide/installation#optimization-backends).
 
 | Value | Solver and useful settings | Population summarized in `history` | Checkpoint |
 | --- | --- | --- | --- |

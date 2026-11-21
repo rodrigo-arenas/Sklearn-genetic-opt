@@ -49,11 +49,11 @@ about:
   license: MIT
   license_family: MIT
   license_file: LICENSE
-  summary: Scikit-learn models hyperparameter tuning and feature selection using evolutionary algorithms
+  summary: Cross-validated hyperparameter search and feature selection for scikit-learn
   description: |
-    sklearn-genetic-opt adds evolutionary optimization tools to the scikit-learn
-    workflow. It tunes hyperparameters with GASearchCV and selects feature subsets
-    with GAFeatureSelectionCV using algorithms powered by DEAP.
+    Tune hyperparameters with GASearchCV or select feature subsets with
+    GAFeatureSelectionCV. Both estimators include DEAP as the default optimizer
+    and support alternative engines installed separately.
   doc_url: https://sklearngeneticopt.rodrigo-arenas.com/
   dev_url: https://github.com/rodrigo-arenas/Sklearn-genetic-opt
 

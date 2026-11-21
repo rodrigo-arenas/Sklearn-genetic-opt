@@ -29,7 +29,7 @@ search = GAFeatureSelectionCV(
     generations=3, random_state=41, n_jobs=1, verbose=False,
 )
 search.fit(X, y)
-print(search.best_score_, search.support_.sum(), search.fit_stats_["cross_validate_calls"])
+print(search.get_support(indices=True), search.fit_stats_["cross_validate_calls"])
 ```
 
 ## Results at equal CV cost
