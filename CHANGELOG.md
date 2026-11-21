@@ -5,6 +5,8 @@ for upgrade guidance and links to the API examples.
 
 ## Unreleased
 
+- Add optional CatCMA with Margin for joint numeric and categorical optimization.
+
 - Add an optional Nevergrad NGOpt / OnePlusOne backend for both estimators.
 
 - SciPy and external optimizer plugins support LivePlot, progress logging and

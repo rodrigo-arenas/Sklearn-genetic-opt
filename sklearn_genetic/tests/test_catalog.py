@@ -10,7 +10,7 @@ from sklearn_genetic.callbacks import ModelCheckpoint, ThresholdStopping
 from sklearn_genetic.space import Categorical, Continuous, Integer
 from sklearn_genetic.tests.test_optimizer_backends import search
 
-BACKENDS = ["nevergrad"]
+BACKENDS = ["nevergrad", "cmaes"]
 
 
 @pytest.mark.parametrize("backend", BACKENDS)
@@ -57,3 +57,45 @@ def test_fixed_space_and_priors(backend):
     grid["criterion"] = Categorical(["gini", "entropy"], priors=[0.2, 0.8])
     with pytest.raises(ValueError, match="Unsupported dimension"):
         search("parameters", optimizer_backend=backend, param_grid=grid).fit(X, y)
+
+
+def test_cmaes_wide_integers_and_flat_objective():
+    pytest.importorskip("cmaes")
+    from sklearn_genetic._cmaes_backend import optimize
+    from sklearn_genetic.backends import OptimizationProblem
+
+    problem = OptimizationProblem(
+        "parameters",
+        ((0, 0.5),) * 4,
+        ("i", "x"),
+        (Integer(0, 10**12), Continuous(0, 1)),
+        None,
+        3,
+        0.8,
+        22,
+    )
+    observed = []
+
+    def evaluate(rows):
+        rows = list(rows)
+        observed.extend(rows)
+        return [(0, row) for row in rows]
+
+    with np.errstate(invalid="raise", divide="raise"):
+        optimize(problem, evaluate, lambda handles: None)
+    assert len(observed) == 16
+    assert all(isinstance(i, int) and 0 <= i <= 10**12 and 0 <= x <= 1 for i, x in observed)
+
+
+def test_cmaes_boundary_initialization():
+    pytest.importorskip("cmaes")
+    from sklearn_genetic._cmaes_backend import optimize
+    from sklearn_genetic.backends import OptimizationProblem
+
+    problem = OptimizationProblem(
+        "parameters", ((0,),) * 4, ("x",), (Integer(0, 1),), None, 6, 0.8, 429
+    )
+    batches = []
+    with np.errstate(invalid="raise", divide="raise"):
+        optimize(problem, lambda rows: [(row[0], row) for row in rows], batches.append)
+    assert len(batches) == 7

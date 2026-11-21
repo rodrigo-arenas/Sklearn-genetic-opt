@@ -282,3 +282,20 @@ batch. The default crossover setting leaves variation to Nevergrad. Use unweight
 finite linear or logarithmic intervals and integer spans below 2**52. Fixed coordinates are
 removed, and an entirely fixed search finishes after initialization. LivePlot, early stopping
 and progress snapshots are supported. Start a fresh search to generate new trials.
+
+## CatCMA with Margin
+
+Install `sklearn-genetic-opt[cmaes]` and set `optimizer_backend="cmaes"`.
+CatCMAwM adapts a covariance matrix for numeric parameters and a categorical
+distribution for unordered choices. Masks use two-category variables and avoid
+a feature-by-feature covariance matrix. Numeric coordinates are normalized, with
+log-scale transforms where specified. Integer spans up to 255 use discrete margins;
+wider integers use rounded continuous proposals. The best quarter of initialization
+sets the numeric center and biases category probabilities, mixed equally with a
+uniform prior. The initial numeric step size is 0.25 of the normalized interval.
+Flat initial numeric batches keep sampling until the continuous boundary penalty
+has a positive interquartile loss range.
+
+Use at least four individuals per generation. The same domain, callback, progress
+snapshot and generation-history rules as Nevergrad apply. Full covariance costs
+quadratic memory in the number of numeric parameters.
