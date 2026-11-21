@@ -166,25 +166,22 @@ nb.md("""
     """)
 
 nb.code("""
-    import matplotlib.pyplot as plt
     from sklearn_genetic.plots import plot_search_overview
 
-    plot_search_overview(search, top_k=6)
-    plt.tight_layout()
+    overview = plot_search_overview(search, top_k=6)
     """)
 nb.figure(
-    "basic_usage_search_overview.png",
+    "basic_usage_mlp_search_overview.png",
     "Search overview dashboard: convergence, diversity, optimizer events, and top candidates",
 )
 
 nb.code("""
     from sklearn_genetic.plots import plot_parameter_evolution
 
-    plot_parameter_evolution(search, parameters=["alpha", "learning_rate_init", "batch_size"])
-    plt.tight_layout()
+    evolution = plot_parameter_evolution(search, parameters=["alpha", "learning_rate_init", "batch_size"])
     """)
 nb.figure(
-    "basic_usage_parameter_evolution.png",
+    "basic_usage_mlp_parameter_evolution.png",
     "How sampled values of alpha, learning rate, and batch size evolved over evaluations",
 )
 
@@ -241,11 +238,10 @@ nb.md("""
 nb.code("""
     from sklearn_genetic.plots import plot_feature_selection
 
-    plot_feature_selection(selector, feature_names=feature_names)
-    plt.tight_layout()
+    mask_plot = plot_feature_selection(selector, feature_names=feature_names)
     """)
 nb.figure(
-    "basic_usage_feature_selection.png",
+    "basic_usage_iris_mask.png",
     "Selected-feature mask over the four Iris features plus ten noise columns",
 )
 
