@@ -40,9 +40,11 @@ dependencies = [
 
 [project.entry-points."sklearn_genetic.optimizers"]
 nevergrad = "sklearn_genetic._nevergrad_backend:optimize"
+cmaes = "sklearn_genetic._cmaes_backend:optimize"
 
 [project.optional-dependencies]
 nevergrad = ["nevergrad>=1.0.12,<2"]
+cmaes = ["cmaes>=0.13.1,<0.14"]
 scipy = ["scipy>=1.15"]
 plot = [
     "seaborn>=0.13.2",
