@@ -643,9 +643,12 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
         ``max`` if a higher scoring metric is better, ``min`` otherwise.
 
     optimizer_backend : str or callable, default="deap"
-        Optimization engine, installed optimizer entry-point name, or a callable
-        implementing sklearn_genetic.backends.Optimizer. SciPy requires
-        SciPy 1.15 or newer. Variation controls specific to DEAP require that backend.
+        Keyword-only engine selector. Use ``"deap"`` (default), ``"scipy"``,
+        ``"nevergrad"``, ``"cmaes"``, ``"pymoo"``, an installed optimizer entry
+        point or a callable implementing ``sklearn_genetic.backends.Optimizer``.
+        Install the corresponding extra for each alternative engine. The
+        estimator owns CV, caching and refit. ``parallel_backend`` controls
+        evaluation parallelism. DEAP-specific variation controls require DEAP.
 
     algorithm : str, default='eaMuPlusLambda'
         One of ``eaMuPlusLambda``, ``eaMuCommaLambda``, ``eaSimple``, or
@@ -717,7 +720,8 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
         alone do not count as coverage by the current run.
 
     logbook : :class:`DEAP.tools.Logbook`
-        Contains the logs of every set of hyperparameters fitted with its average scoring metric.
+        Compatibility view of per-candidate evaluation records. Shared-runtime
+        engines construct the DEAP view when this attribute is accessed.
     history : dict
         Dictionary with one list per generation. It includes ``gen``,
         ``fitness``, ``fitness_std``, ``fitness_best``, ``fitness_max``, ``fitness_min``,
@@ -1602,9 +1606,12 @@ class GAFeatureSelectionCV(
         ``max`` if a higher scoring metric is better, ``min`` otherwise.
 
     optimizer_backend : str or callable, default="deap"
-        Optimization engine, installed optimizer entry-point name, or a callable
-        implementing sklearn_genetic.backends.Optimizer. SciPy requires
-        SciPy 1.15 or newer. Variation controls specific to DEAP require that backend.
+        Keyword-only engine selector. Use ``"deap"`` (default), ``"scipy"``,
+        ``"nevergrad"``, ``"cmaes"``, ``"pymoo"``, an installed optimizer entry
+        point or a callable implementing ``sklearn_genetic.backends.Optimizer``.
+        Install the corresponding extra for each alternative engine. The
+        estimator owns CV, caching and refit. ``parallel_backend`` controls
+        evaluation parallelism. DEAP-specific variation controls require DEAP.
 
     algorithm : str, default='eaMuPlusLambda'
         One of ``eaMuPlusLambda``, ``eaMuCommaLambda``, ``eaSimple``, or
@@ -1676,7 +1683,8 @@ class GAFeatureSelectionCV(
         alone do not count as coverage by the current run.
 
     logbook : :class:`DEAP.tools.Logbook`
-        Contains the logs of every set of hyperparameters fitted with its average scoring metric.
+        Compatibility view of per-candidate evaluation records. Shared-runtime
+        engines construct the DEAP view when this attribute is accessed.
     history : dict
         Dictionary with one list per generation. It includes ``gen``,
         ``fitness``, ``fitness_std``, ``fitness_best``, ``fitness_max``, ``fitness_min``,

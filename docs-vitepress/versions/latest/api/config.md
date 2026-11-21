@@ -11,6 +11,8 @@ You are reading the **latest (dev)** docs. For the stable version, see [stable](
 
 sklearn-genetic-opt groups advanced settings into four configuration objects. Passing `None` (the default) uses sensible defaults for each.
 
+Select the engine using the estimator's keyword-only `optimizer_backend`. Population size, generations, archive size and scoring direction apply across engines. Crossover support varies by engine. Mutation, tournament, elitism, schedules and the choice of DEAP algorithm are DEAP-specific. See the [backend compatibility table](./optimizer-backends).
+
 ## EvolutionConfig
 
 Controls the core evolutionary algorithm parameters.
@@ -100,6 +102,8 @@ If your estimator already uses parallelism (e.g., `RandomForestClassifier(n_jobs
 :::
 
 ## OptimizationConfig
+
+Finalist selection also applies to alternative engines. The diversity, fitness-sharing, immigrant and local-search operators in this section belong to DEAP.
 
 Optional quality controls for the main GA loop. All features here are disabled by default except `diversity_control`.
 

@@ -20,6 +20,8 @@ This page walks through the two workflows you will use most:
 
 Every code block below is executed to build this page, so what you copy is exactly what ran — including the outputs and figures.
 
+This walkthrough uses the default DEAP engine. To keep the same estimator and CV workflow while changing optimizers, follow [Switch optimization backends](../tutorials/optimizer-backends).
+
 ## Prerequisites
 
 - `sklearn-genetic-opt` installed (`pip install sklearn-genetic-opt`)

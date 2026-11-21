@@ -1,6 +1,6 @@
 ---
 title: Algorithms
-description: API reference for the DEAP-based evolutionary algorithm implementations used internally by GASearchCV.
+description: Evolutionary algorithms, alternative optimizer adapters and the extension protocol for both search estimators.
 ---
 
 :::warning Development version
@@ -9,7 +9,9 @@ You are reading the **latest (dev)** docs. For the stable version, see [stable](
 
 # Algorithms
 
-The `sklearn_genetic.algorithms` module provides the DEAP-based evolutionary algorithm implementations used internally by `GASearchCV` and `GAFeatureSelectionCV`.
+Use the [backend API](./optimizer-backends) to select an engine, or follow the [tutorial](../tutorials/optimizer-backends) to switch engines between fits.
+
+With the default `optimizer_backend="deap"`, the `sklearn_genetic.algorithms` module provides the DEAP-based evolutionary algorithm implementations used internally by `GASearchCV` and `GAFeatureSelectionCV`.
 
 These are low-level functions — you typically do not call them directly. They are exposed for advanced users who want to inspect or extend the evolutionary logic.
 
@@ -208,7 +210,7 @@ recombine = "my_optimizer:recombine"
 ```
 
 After installation, select `optimizer_backend="recombine"` in either estimator.
-Only the selected plugin is loaded. The names `deap` and `scipy` are reserved.
+Only the selected plugin is loaded. Built-in names `deap` and `scipy` are reserved. This distribution also registers `nevergrad`, `cmaes` and `pymoo`. A duplicate registered name raises an error.
 Use a unique name and declare solver dependencies in the plugin package. For
 serialization, use its registered name or an importable module-level callable.
 See the [PyPA plugin guide](https://packaging.python.org/en/latest/guides/creating-and-discovering-plugins/).
@@ -273,7 +275,7 @@ pickle checkpoints only from trusted sources.
 
 ## Nevergrad
 
-Install `sklearn-genetic-opt[nevergrad]` and pass `optimizer_backend="nevergrad"` to either
+From the development checkout, run `python -m pip install -e ".[nevergrad]"` and pass `optimizer_backend="nevergrad"` to either
 estimator. OnePlusOne adapts mutations around the best initial candidate.
 Numeric and categorical parameters keep their types. Masks use a vector of
 ordered binary choices. TwoPointsDE is also available through the backend
@@ -288,7 +290,7 @@ and progress snapshots are supported. Start a fresh search to generate new trial
 
 ## CatCMA with Margin
 
-Install `sklearn-genetic-opt[cmaes]` and set `optimizer_backend="cmaes"`.
+From the development checkout, run `python -m pip install -e ".[cmaes]"` and set `optimizer_backend="cmaes"`.
 CatCMAwM adapts a covariance matrix for numeric parameters and a categorical
 distribution for unordered choices. Masks use two-category variables and avoid
 a feature-by-feature covariance matrix. Numeric coordinates are normalized, with
@@ -305,7 +307,7 @@ quadratic memory in the number of numeric parameters.
 
 ## pymoo
 
-Install `sklearn-genetic-opt[pymoo]`, then pass `optimizer_backend="pymoo"`.
+From the development checkout, run `python -m pip install -e ".[pymoo]"`, then pass `optimizer_backend="pymoo"`.
 MixedVariableGA uses separate crossover and mutation operators for unordered
 choices, integers and real parameters. For masks, the binary GA uses uniform
 crossover and bit-flip mutation. The adapter repairs empty or oversized masks

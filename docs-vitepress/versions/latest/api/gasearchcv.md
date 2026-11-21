@@ -40,7 +40,7 @@ GASearchCV(
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `optimizer_backend` | str or callable, keyword-only | `"deap"` | Choose DEAP, SciPy, [Nevergrad](./algorithms#nevergrad), [CatCMAwM](./algorithms#catcma-with-margin), [pymoo](./algorithms#pymoo), or a callable or installed [optimizer plugin](./algorithms#optimizer-plugins). See [SciPy support and limits](./algorithms#scipy-backend) for `"scipy"`. |
+| `optimizer_backend` | str or callable, keyword-only | `"deap"` | Select `"deap"`, `"scipy"`, `"nevergrad"`, `"cmaes"`, `"pymoo"` or a plugin. See [backend settings and limits](./optimizer-backends) and the [tutorial](../tutorials/optimizer-backends). |
 | `estimator` | estimator | — | A scikit-learn estimator with a `fit` method |
 | `param_grid` | dict | — | Mapping from parameter name to `Integer`, `Continuous`, or `Categorical` |
 | `scoring` | str or dict | `None` | Metric(s) to evaluate. `None` uses the estimator's default scorer |
@@ -53,9 +53,9 @@ GASearchCV(
 | `evolution_config` | `EvolutionConfig` | `None` | Controls population size, generations, crossover/mutation rates, elitism |
 | `population_config` | `PopulationConfig` | `None` | Controls initialization strategy, warm starts, diversity |
 | `runtime_config` | `RuntimeConfig` | `None` | Controls parallelism, caching, verbosity |
-| `optimization_config` | `OptimizationConfig` | `None` | Controls local search, fitness sharing |
+| `optimization_config` | `OptimizationConfig` | `None` | Finalist selection; DEAP-specific local search and fitness sharing |
 
-Standard mutation excludes numeric dimensions with equal bounds and
+Under the default DEAP engine, standard mutation excludes numeric dimensions with equal bounds and
 single-choice categorical dimensions. `GASearchCV` chooses uniformly among
 the remaining dimensions and draws from the chosen distribution. A discrete draw may still
 repeat the parent value. With caching enabled, fewer repeated proposals can
@@ -92,7 +92,7 @@ candidate log contains repeated cache hits.
 | `best_estimator_` | Estimator fitted with `best_params_` on the full training data (if `refit=True`) |
 | `cv_results_` | Dict with per-candidate results, compatible with `pd.DataFrame` |
 | `history` | Dictionary of lists aligned by generation. At position `i`, `history["fitness_best"][i]` is the best search score after `history["cross_validate_calls"][i]` cumulative candidate evaluations. |
-| `logbook` | DEAP logbook with per-candidate evaluation records in `logbook.chapters["parameters"]` |
+| `logbook` | Compatibility view of per-candidate records, materialized on access for shared-runtime engines, in `logbook.chapters["parameters"]` |
 | `fit_stats_` | Dict with evaluation counters (cache hits, skipped candidates, etc.) |
 
 See [plotting score against evaluation cost](./plots#quick-diagnostic-overview) to compare runs with different cache-hit rates.

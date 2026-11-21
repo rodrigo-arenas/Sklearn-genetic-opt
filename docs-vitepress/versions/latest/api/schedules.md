@@ -9,6 +9,8 @@ You are reading the **latest (dev)** docs. For the stable version, see [stable](
 
 # Schedules (Adapters)
 
+Adaptive schedules control DEAP variation. When switching engines, use the [supported fixed controls](./optimizer-backends) for the selected adapter.
+
 Adapters are schedule objects that let `crossover_probability` and `mutation_probability` in `EvolutionConfig` change automatically over generations instead of staying at a fixed value.
 
 ```python

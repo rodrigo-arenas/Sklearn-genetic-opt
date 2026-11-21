@@ -9,7 +9,7 @@ This is the **latest (dev)** documentation. It may contain unreleased features o
 
 # Checkpointing and Persistence
 
-Long-running searches should be able to write intermediate checkpoints, persist the fitted search object, and reload it later for inspection or prediction. This page runs a small real search and shows both persistence mechanisms end to end: a checkpoint callback that fires every generation, and `save` / `load` for the finished search.
+This example uses the default DEAP engine and its historical checkpoint format. See the [backend tutorial](../tutorials/optimizer-backends#select-features-and-inspect-progress) for progress snapshots from the other catalog engines. Long-running searches should be able to write intermediate checkpoints, persist the fitted search object, and reload it later for inspection or prediction. This page runs a small real search and shows both persistence mechanisms end to end: a checkpoint callback that fires every generation, and `save` / `load` for the finished search.
 
 ## The Two Persistence Mechanisms
 

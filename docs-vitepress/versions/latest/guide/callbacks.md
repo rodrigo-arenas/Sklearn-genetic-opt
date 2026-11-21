@@ -139,7 +139,7 @@ within a generation. Final selection and refit can extend the total fit time.
 
 ### LogbookSaver
 
-Saves the generation logbook to a file after each generation. Useful for long runs — if the search is interrupted, you can inspect progress so far.
+Writes the per-candidate evaluation records with joblib after each generation. The saved object can be iterated to inspect each row. Use `ModelCheckpoint` for search snapshots.
 
 ```python
 from sklearn_genetic.callbacks import LogbookSaver
@@ -160,7 +160,10 @@ print(logbook)
 
 ### ModelCheckpoint
 
-Saves the search configuration, generation history and runtime state, including cached candidate scores, archived elites and random generator states. Each successful write replaces the previous snapshot. See the [checkpoint recipe](../recipes/advanced/checkpointing) to resume a search.
+Saves a snapshot at a reported generation. DEAP stores its historical continuation state.
+SciPy, Nevergrad, CatCMAwM and pymoo save progress with `resumable=False`. A
+plugin can support exact continuation by implementing the [resume protocol](../api/algorithms#callbacks-and-checkpoints).
+Use a fresh path for a new run and load only trusted snapshots.
 
 ```python
 from sklearn_genetic.callbacks import ModelCheckpoint
@@ -168,16 +171,17 @@ from sklearn_genetic.callbacks import ModelCheckpoint
 callback = ModelCheckpoint(checkpoint_path="./checkpoint.pkl")
 ```
 
-Inspect the saved state:
+Inspect a saved snapshot from either format:
 
 ```python
-import pickle
+from sklearn_genetic.callbacks import ModelCheckpoint
 
-with open("./checkpoint.pkl", "rb") as f:
-    checkpoint = pickle.load(f)
-
-estimator_state = checkpoint["estimator_state"]
-logbook = checkpoint["logbook"]
+snapshot = ModelCheckpoint("./checkpoint.pkl").load()
+print(len(snapshot["logbook"]))  # generation records
+if "optimizer_checkpoint_version" in snapshot:
+    print(snapshot["backend"], snapshot["resumable"], len(snapshot["candidate_records"]))
+else:
+    print(snapshot["estimator_state"]["generations"])  # historical DEAP format
 ```
 
 ---

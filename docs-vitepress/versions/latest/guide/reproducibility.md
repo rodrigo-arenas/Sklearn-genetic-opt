@@ -23,11 +23,10 @@ randomness is seeded. The simplest, recommended way is the single
 
 ## One Seed Controls the Search
 
-Pass `random_state` to the estimator. At `fit` time it seeds **every** stochastic
-part of the search from that one value — population initialization (including the
-Latin hypercube sampler), mutation, crossover, and random immigrants — so
-repeated fits give identical results. You no longer need to seed the global
-`random` / `numpy` RNGs yourself.
+Pass an integer `random_state` to seed the search. For the alternative engines
+the shared runtime supplies a per-fit solver seed. Seed the model, data split and
+shuffled CV splitter separately. Compare repeat runs within the same backend and
+software environment. Different engines generate different proposal sequences.
 
 ```python
 from sklearn.datasets import load_breast_cancer
@@ -72,7 +71,7 @@ scikit-learn's convention — useful when you want to explore different runs.
 
 ## Why `n_jobs=1`?
 
-Parallel execution with `n_jobs > 1` uses `joblib`, which may introduce non-determinism when multiple workers race to write results. For fully reproducible results, use `n_jobs=1`. For production runs where speed matters, accept that results may vary slightly between runs.
+Use one worker for an easy-to-reproduce baseline. When increasing parallelism, check the fitted model's own determinism and compare actual CV calls and scores.
 
 ## Checkpointing
 
@@ -90,13 +89,13 @@ import joblib
 logbook = joblib.load("./logbook.pkl")
 ```
 
-To continue a search from saved candidate scores, use the [ModelCheckpoint resume recipe](../recipes/advanced/checkpointing).
+LogbookSaver records candidates for inspection. For DEAP continuation use the [ModelCheckpoint resume recipe](../recipes/advanced/checkpointing). SciPy, Nevergrad, CatCMAwM and pymoo write progress snapshots. The [backend tutorial](../tutorials/optimizer-backends) shows how to inspect one.
 
 ## Tips & Gotchas
 
-- Seed `random`, `np.random`, the CV splitter, and every estimator that accepts `random_state`.
+- Set the search seed and use explicit integer seeds for the model and shuffled splitter.
 - If using `PopulationConfig(warm_start_configs=[...])`, the warm-start configs are deterministic by definition.
-- DEAP's internal RNG is seeded through Python's `random` module — seeding `random` before `fit` is sufficient.
+- A custom optimizer can draw from a local random generator initialized with `problem.seed`.
 
 ## See Also
 
