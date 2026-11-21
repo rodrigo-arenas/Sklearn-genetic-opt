@@ -59,7 +59,8 @@ pip install -r dev-requirements.txt
 ```
 
 The `dev-requirements.txt` file is now a small wrapper around the dependency
-groups declared in `pyproject.toml`. You can also install only the dependency
+groups declared in `pyproject.toml`. Add the optional engine extras below to
+exercise the full catalog locally. You can also install only the dependency
 groups you need:
 
 ```bash
@@ -69,8 +70,8 @@ pip install -e .
 # Tests
 pip install -e ".[test,plot,mlflow]"
 
-# Documentation Python helpers
-pip install -e ".[docs]"
+# Run backend tests or regenerate the backend tutorial
+pip install -e ".[test,docs,scipy,nevergrad,cmaes,pymoo]"
 
 # VitePress site dependencies
 npm --prefix docs-vitepress install

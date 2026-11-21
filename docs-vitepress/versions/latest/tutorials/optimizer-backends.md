@@ -11,10 +11,11 @@ This is the **latest (dev)** documentation. It may contain unreleased features o
 
 Use the same folds and scorer when changing engines. This walkthrough uses all five named backends and keeps a test partition for the final model.
 
-## Install the development checkout
+## Install the engines
 
-From the repository root, run `python -m pip install -e ".[scipy,nevergrad,cmaes,pymoo]"`.
-For a single engine, install just its [extra](../guide/installation#optimization-backends).
+Follow the [installation guide for your version](../guide/installation#optimization-backends).
+To run every example, select the `scipy`, `nevergrad`, `cmaes` and `pymoo` extras.
+For a single engine, select just its extra.
 The examples use built-in scikit-learn data and run serially.
 
 ```python

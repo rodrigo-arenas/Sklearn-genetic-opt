@@ -55,8 +55,7 @@ accurate replacement for the default algorithm.
 
 ## SciPy backend
 
-Install the supported solver from this development checkout with `pip install ".[scipy]"`
-(SciPy 1.15+). The base installation already includes SciPy through scikit-learn.
+Install the [`scipy` extra](../guide/installation#optimization-backends) for SciPy 1.15+. The base installation already includes SciPy through scikit-learn.
 Both estimators use DEAP by default. Select SciPy when a bounded, single-objective
 differential evolution search fits your problem.
 
@@ -281,7 +280,7 @@ Load pickle checkpoints only from trusted sources. See the
 
 ## Nevergrad
 
-From the development checkout, run `python -m pip install -e ".[nevergrad]"` and pass `optimizer_backend="nevergrad"` to either
+Install the [`nevergrad` extra](../guide/installation#optimization-backends) and pass `optimizer_backend="nevergrad"` to either
 estimator. OnePlusOne adapts mutations around the best initial candidate.
 Numeric and categorical parameters keep their types. Masks use a vector of
 ordered binary choices. TwoPointsDE is also available through the backend
@@ -297,7 +296,7 @@ is configured with `functools.partial`.
 
 ## CatCMA with Margin
 
-From the development checkout, run `python -m pip install -e ".[cmaes]"` and set `optimizer_backend="cmaes"`.
+Install the [`cmaes` extra](../guide/installation#optimization-backends) and set `optimizer_backend="cmaes"`.
 CatCMAwM adapts a covariance matrix for numeric parameters and a categorical
 distribution for unordered choices. Masks use two-category variables and avoid
 a feature-by-feature covariance matrix. Numeric coordinates are normalized, with
@@ -314,7 +313,7 @@ quadratic memory in the number of numeric parameters.
 
 ## pymoo
 
-From the development checkout, run `python -m pip install -e ".[pymoo]"`, then pass `optimizer_backend="pymoo"`.
+Install the [`pymoo` extra](../guide/installation#optimization-backends) and pass `optimizer_backend="pymoo"`.
 MixedVariableGA uses separate crossover and mutation operators for unordered
 choices, integers and real parameters. For masks, the binary GA uses uniform
 crossover and bit-flip mutation. The adapter repairs empty or oversized masks

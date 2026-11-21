@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "sklearn-genetic-opt"
 dynamic = ["version"]
-description = "Scikit-learn models hyperparameter tuning and feature selection using evolutionary algorithms"
+description = "Cross-validated hyperparameter search and feature selection for scikit-learn with interchangeable optimizers"
 readme = { file = "README.rst", content-type = "text/x-rst" }
 requires-python = ">=3.12"
 license = "MIT"
