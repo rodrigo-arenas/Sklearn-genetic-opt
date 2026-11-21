@@ -25,7 +25,7 @@ Install the core package:
 pip install sklearn-genetic-opt
 ```
 
-Install all optional extras (plotting and MLflow):
+Install the runtime extras for optimization, plotting and MLflow:
 
 ```bash
 pip install sklearn-genetic-opt[all]
@@ -37,6 +37,9 @@ Install individual extras:
 pip install sklearn-genetic-opt[plot]      # seaborn for plot_fitness_evolution / plot_search_space
 pip install sklearn-genetic-opt[mlflow]    # MLflow 3 logging
 ```
+
+For the SciPy engine in this development checkout, run `pip install ".[scipy]"`.
+See [optimizer backends](../api/algorithms#scipy-backend) for supported domains and options.
 
 ## conda
 
@@ -58,8 +61,9 @@ conda install -c conda-forge sklearn-genetic-opt seaborn mlflow
 | scikit-learn | 1.5.0 | Yes |
 | NumPy | 1.26.0 | Yes |
 | pandas | 1.3.0 | Yes |
-| DEAP | 1.4.0 | Yes |
+| DEAP | 1.4.4 | Yes |
 | tqdm | 4.60.0 | Yes |
+| SciPy | 1.15 | For the SciPy optimization backend |
 | Seaborn | 0.13.2 | No (plots) |
 | MLflow | 3.14.0 | No (MLflow logging) |
 

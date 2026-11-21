@@ -51,6 +51,62 @@ choices and feature masks stay within their valid domains. It is an
 alternative to benchmark for your task, not a generally faster or more
 accurate replacement for the default algorithm.
 
+## SciPy backend
+
+Install the supported solver from this development checkout with `pip install ".[scipy]"`
+(SciPy 1.15+). The base installation already includes SciPy through scikit-learn.
+Both estimators use DEAP by default. Select SciPy when a bounded, single-objective
+differential evolution search fits your problem.
+
+```python
+from sklearn.datasets import load_iris
+from sklearn.tree import DecisionTreeClassifier
+from sklearn_genetic import GASearchCV, GAFeatureSelectionCV
+from sklearn_genetic.space import Integer, Categorical
+
+X, y = load_iris(return_X_y=True)
+options = dict(optimizer_backend="scipy", cv=3, population_size=8,
+               generations=4, random_state=7, verbose=False)
+tree = DecisionTreeClassifier(random_state=7)
+search = GASearchCV(tree, param_grid={"max_depth": Integer(1, 8),
+                    "criterion": Categorical(["gini", "entropy"])}, **options).fit(X, y)
+selector = GAFeatureSelectionCV(tree, max_features=2, **options).fit(X, y)
+print(search.best_params_, selector.get_support())
+```
+
+- SciPy proposes one trial per target using deferred `best1bin`, its default
+  dithering scale (0.5–1.0) and the numeric `crossover_probability`. Start with at
+  least five individuals. The maximum is `population_size * (generations + 1)`
+  proposals. Equal population energies can stop the solver early. Polishing is off.
+  Cache hits avoid CV. Final selection and refit can add work after optimization.
+- The existing random/smart initializer and warm starts provide the first population.
+  Continuous values use linear or logarithmic coordinates. Variable integer bounds
+  must fit int64 and span less than 2**52. Fixed integers remain exact. Unweighted
+  categories use equal-width bins in the supplied order, so reordering choices can
+  change the trajectory. Weighted categories require DEAP.
+- Feature coordinates at or above 0.5 select columns. Overflow keeps the largest
+  coordinates, with ties resolved in column order. An empty mask selects the largest
+  coordinate. SciPy compares scalar scores; the archive breaks score ties in favor
+  of smaller masks. CV receives the decoded mask in every case.
+- `parallel_backend` still selects fold or population evaluation. Both engines
+  use the same scoring, cache, finalist selection, candidate records, plots and
+  refit. Generation summaries describe survivors; the archive includes discarded
+  trials. Seed the estimator, search and any shuffled splitter for repeatability
+  within the same software environment.
+- The legacy `algorithm`, mutation, tournament, elitism and optimization controls
+  retain their constructor defaults when selecting SciPy. Changing these DEAP-only
+  settings raises an error. Diversity control is inactive for SciPy under either
+  Boolean setting. Final selection and fixed crossover are supported.
+- Historical callbacks, including early stopping and `ModelCheckpoint`, require
+  DEAP. SciPy rejects them before opening a checkpoint or running CV. Fitted model
+  save/load remains available. DEAP still supplies the common population,
+  hall-of-fame and logbook representations in this first implementation.
+
+SciPy was selected because scikit-learn already installs it and its recent releases
+publish Linux, macOS and Windows wheels for all four supported Python minors.
+The public vectorized objective lets the estimator keep ownership of CV and
+parallelism. See the [SciPy solver documentation](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.differential_evolution.html).
+
 ## See Also
 
 - [DEAP documentation](https://deap.readthedocs.io/en/master/api/algo.html) — upstream algorithm documentation

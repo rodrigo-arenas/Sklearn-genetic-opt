@@ -13,18 +13,17 @@ Genetic algorithm wrapper-based feature selection with cross-validation.
 
 `GAFeatureSelectionCV` selects a subset of columns from the input data that maximises the cross-validation score of the given estimator. After fitting, it exposes `support_` (a boolean mask of selected features) and behaves as a fitted scikit-learn estimator for prediction.
 
-## Class Signature
+## Common constructor arguments
 
 ```python
 from sklearn_genetic import GAFeatureSelectionCV
 
 GAFeatureSelectionCV(
     estimator,
-    *,
-    cv=5,
+    cv=3,
     scoring=None,
     refit=True,
-    verbose=0,
+    verbose=True,
     keep_top_k=1,
     elitism=True,
     error_score=np.nan,
@@ -34,6 +33,7 @@ GAFeatureSelectionCV(
     population_config=None,
     runtime_config=None,
     optimization_config=None,
+    optimizer_backend="deap",
 )
 ```
 
@@ -41,11 +41,12 @@ GAFeatureSelectionCV(
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
+| `optimizer_backend` | str, keyword-only | `"deap"` | Optimization engine. See [SciPy support and limits](./algorithms#scipy-backend) for `"scipy"`. |
 | `estimator` | estimator | — | A scikit-learn estimator with a `fit` method |
-| `cv` | int or CV splitter | `5` | Cross-validation strategy |
+| `cv` | int or CV splitter | `3` | Cross-validation strategy |
 | `scoring` | str, callable or dict | `None` | Metric to evaluate. `None` uses the estimator's default scorer |
 | `refit` | bool or str | `True` | Refit the best estimator on the full training data after search; name the metric for multi-metric scoring |
-| `verbose` | int | `0` | Verbosity level |
+| `verbose` | bool | `True` | Print the generation log |
 | `keep_top_k` | int | `1` | Number of hall-of-fame individuals to keep across generations |
 | `elitism` | bool | `True` | Whether to carry over the best individual to the next generation |
 | `error_score` | float or `"raise"` | `np.nan` | Score to assign when a candidate raises an exception |

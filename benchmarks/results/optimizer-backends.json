@@ -1,0 +1,187 @@
+{
+  "python": "3.12.14",
+  "packages": {
+    "deap": "1.4.4",
+    "scipy": "1.18.1",
+    "numpy": "2.5.5",
+    "scikit-learn": "1.9.1"
+  },
+  "runs": [
+    {
+      "task": "parameters",
+      "backend": "deap",
+      "seed": 17,
+      "cv_calls": 24,
+      "best_cv": 0.9046710479824748,
+      "held_out": 0.9833333333333334,
+      "features": null,
+      "wall_ms": 451.23236700055713,
+      "outside_cv_and_refit_ms": 11.35425160828163
+    },
+    {
+      "task": "parameters",
+      "backend": "scipy",
+      "seed": 17,
+      "cv_calls": 24,
+      "best_cv": 0.9046710479824748,
+      "held_out": 0.9833333333333334,
+      "features": null,
+      "wall_ms": 414.5771869989403,
+      "outside_cv_and_refit_ms": 12.655634431212093
+    },
+    {
+      "task": "features",
+      "backend": "deap",
+      "seed": 17,
+      "cv_calls": 24,
+      "best_cv": 0.9242103031587874,
+      "held_out": 0.9627882599580713,
+      "features": 12,
+      "wall_ms": 276.7822759997216,
+      "outside_cv_and_refit_ms": 8.420579302764963
+    },
+    {
+      "task": "features",
+      "backend": "scipy",
+      "seed": 17,
+      "cv_calls": 24,
+      "best_cv": 0.9260829623348172,
+      "held_out": 0.9683438155136268,
+      "features": 10,
+      "wall_ms": 295.39796500102966,
+      "outside_cv_and_refit_ms": 11.99074770192965
+    },
+    {
+      "task": "parameters",
+      "backend": "scipy",
+      "seed": 29,
+      "cv_calls": 24,
+      "best_cv": 0.9372482510069959,
+      "held_out": 0.9178197064989517,
+      "features": null,
+      "wall_ms": 413.05123699930846,
+      "outside_cv_and_refit_ms": 12.697208789177239
+    },
+    {
+      "task": "parameters",
+      "backend": "deap",
+      "seed": 29,
+      "cv_calls": 24,
+      "best_cv": 0.9391209101830259,
+      "held_out": 0.8972746331236897,
+      "features": null,
+      "wall_ms": 407.3869530002412,
+      "outside_cv_and_refit_ms": 12.566893123221234
+    },
+    {
+      "task": "features",
+      "backend": "scipy",
+      "seed": 29,
+      "cv_calls": 24,
+      "best_cv": 0.9454808847431276,
+      "held_out": 0.9400419287211741,
+      "features": 12,
+      "wall_ms": 281.6106030004448,
+      "outside_cv_and_refit_ms": 10.295299214703846
+    },
+    {
+      "task": "features",
+      "backend": "deap",
+      "seed": 29,
+      "cv_calls": 24,
+      "best_cv": 0.9391915765670271,
+      "held_out": 0.9272536687631028,
+      "features": 12,
+      "wall_ms": 283.0333639994933,
+      "outside_cv_and_refit_ms": 8.531864577889792
+    },
+    {
+      "task": "parameters",
+      "backend": "deap",
+      "seed": 43,
+      "cv_calls": 24,
+      "best_cv": 0.9304289449508868,
+      "held_out": 0.9211740041928722,
+      "features": null,
+      "wall_ms": 383.6459400008607,
+      "outside_cv_and_refit_ms": 10.223552983006812
+    },
+    {
+      "task": "parameters",
+      "backend": "scipy",
+      "seed": 43,
+      "cv_calls": 24,
+      "best_cv": 0.9304289449508868,
+      "held_out": 0.9211740041928722,
+      "features": null,
+      "wall_ms": 400.8189289997972,
+      "outside_cv_and_refit_ms": 12.170534377219155
+    },
+    {
+      "task": "features",
+      "backend": "deap",
+      "seed": 43,
+      "cv_calls": 24,
+      "best_cv": 0.9323016041269169,
+      "held_out": 0.8933962264150943,
+      "features": 10,
+      "wall_ms": 256.9938220003678,
+      "outside_cv_and_refit_ms": 9.577540475220303
+    },
+    {
+      "task": "features",
+      "backend": "scipy",
+      "seed": 43,
+      "cv_calls": 24,
+      "best_cv": 0.9379195816550068,
+      "held_out": 0.8928721174004193,
+      "features": 12,
+      "wall_ms": 270.26984999974957,
+      "outside_cv_and_refit_ms": 11.790145372287952
+    },
+    {
+      "task": "parameters",
+      "backend": "scipy",
+      "seed": 61,
+      "cv_calls": 24,
+      "best_cv": 0.9296869479188749,
+      "held_out": 0.8856394129979036,
+      "features": null,
+      "wall_ms": 397.2731060002843,
+      "outside_cv_and_refit_ms": 11.50732009591593
+    },
+    {
+      "task": "parameters",
+      "backend": "deap",
+      "seed": 61,
+      "cv_calls": 24,
+      "best_cv": 0.9397922408310366,
+      "held_out": 0.8817610062893082,
+      "features": null,
+      "wall_ms": 419.0620079989458,
+      "outside_cv_and_refit_ms": 12.049895674863365
+    },
+    {
+      "task": "features",
+      "backend": "scipy",
+      "seed": 61,
+      "cv_calls": 24,
+      "best_cv": 0.9479542081831672,
+      "held_out": 0.9156184486373166,
+      "features": 5,
+      "wall_ms": 314.91264200121805,
+      "outside_cv_and_refit_ms": 13.656039847774082
+    },
+    {
+      "task": "features",
+      "backend": "deap",
+      "seed": 61,
+      "cv_calls": 24,
+      "best_cv": 0.9403929050950462,
+      "held_out": 0.9361635220125786,
+      "features": 9,
+      "wall_ms": 331.8899869991583,
+      "outside_cv_and_refit_ms": 12.441673898138106
+    }
+  ]
+}

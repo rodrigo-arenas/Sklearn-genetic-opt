@@ -98,6 +98,7 @@ class GeneticEstimatorMixin:
 
     def __setstate__(self, state):
         """Restore instance state, leaving DEAP attrs unset (rebuilt on fit)."""
+        self.optimizer_backend = "deap"
         self.__dict__.update(state)
 
     def _serializable_state(self):
@@ -185,15 +186,29 @@ class GeneticEstimatorMixin:
 
         logger.info("%s model successfully loaded from %s", class_name, filepath)
 
+    def _validate_backend(self):
+        if self.optimizer_backend == "deap":
+            return
+        if self.optimizer_backend != "scipy":
+            raise ValueError("optimizer_backend must be 'deap' or 'scipy'")
+        from ._scipy_backend import validate_scipy_backend
+
+        validate_scipy_backend(self)
+
     def _select_algorithm(self, pop, stats, hof):
+        fit_stats = self.fit_stats_
+        stats.register("cross_validate_calls", lambda _: fit_stats["cross_validate_calls"])
+        stats.register(
+            "fitness_best_observed",
+            _best_observed_stat(self.logbook.chapters["parameters"], self.criteria == "min"),
+        )
+        if self.optimizer_backend == "scipy":
+            from ._scipy_backend import run_scipy
+
+            return run_scipy(self, pop, stats, hof)
+
         selected_algorithm = algorithms_factory.get(self.algorithm, None)
         if selected_algorithm:
-            fit_stats = self.fit_stats_
-            stats.register("cross_validate_calls", lambda _: fit_stats["cross_validate_calls"])
-            stats.register(
-                "fitness_best_observed",
-                _best_observed_stat(self.logbook.chapters["parameters"], self.criteria == "min"),
-            )
             self._evaluation_timers = [
                 callback for callback in self.callbacks if isinstance(callback, TimerStopping)
             ]
@@ -275,7 +290,7 @@ class GeneticEstimatorMixin:
         return self
 
     def __next__(self):
-        if self.n < self._n_iterations + 1:
+        if self.n < len(self.history["gen"]):
             result = self.__getitem__(self.n)
             self.n += 1
             return result

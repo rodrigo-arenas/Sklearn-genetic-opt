@@ -5,6 +5,12 @@ for upgrade guidance and links to the API examples.
 
 ## Unreleased
 
+- Both estimators accept the keyword-only `optimizer_backend="scipy"` for
+  differential evolution. Install the `scipy` extra for the supported version.
+  DEAP remains the default and now requires 1.4.4 across Python 3.12–3.15.
+- Fitted history iteration stops at the last recorded generation. Multi-metric
+  results can be pickled with the ordered list of scorer names.
+
 - Added CPython 3.15 coverage on Linux, macOS, and Windows. On 3.15, pip
   requires versions of scikit-learn, NumPy, pandas, and SciPy with upstream
   wheels for that interpreter. Other Python versions keep their dependency
