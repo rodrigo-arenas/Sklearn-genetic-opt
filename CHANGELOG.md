@@ -3,40 +3,36 @@
 Read the [development release notes](docs-vitepress/versions/latest/release-notes.md)
 for upgrade guidance and links to the API examples.
 
-## Unreleased
+## 0.16.0
 
-- Default to Nevergrad OnePlusOne across domains, avoiding an upstream
-  NGOpt surrogate incompatibility with recent NumPy.
+### Optimization backends
 
-- Add optional pymoo GAs with type-specific variation and survivor reporting.
+- Both estimators accept the keyword-only `optimizer_backend` parameter. DEAP
+  remains the default. Install the `scipy`, `nevergrad`, `cmaes` or `pymoo` extra
+  to use differential evolution, OnePlusOne, CatCMA with Margin or a mixed-variable
+  or binary genetic algorithm respectively.
+- Custom optimizers can be passed as callables or registered under
+  `sklearn_genetic.optimizers`. The estimators own cross-validation, caching,
+  candidate results and refitting across engines.
+- The backend tutorial and benchmarks compare five engines at matched counts of
+  actual cross-validation calls on classification and regression tasks.
 
-- Add optional CatCMA with Margin for joint numeric and categorical optimization.
+### Callbacks, checkpoints and results
 
-- Add an optional Nevergrad backend for both estimators.
-
-- SciPy and external optimizer plugins support LivePlot, progress logging and
-  early stopping, including CV batch deadlines. ModelCheckpoint writes versioned
-  snapshots. Plugins can opt into exact resume by supplying solver state.
-
-- Both estimators can resume SciPy, Nevergrad, CatCMAwM and pymoo from a
-  completed generation. Nevergrad and CatCMAwM restore native solver state.
-  SciPy and pymoo reconstruct the solver with recorded evaluations. Earlier
-  progress-only files remain available for inspection.
-
-- Both estimators accept a callable optimizer or the name of an installed
-  `sklearn_genetic.optimizers` entry point. Plugins and SciPy share initialization,
-  CV, candidate records and history without constructing a DEAP toolbox.
-
-- Both estimators accept the keyword-only `optimizer_backend="scipy"` for
-  differential evolution. Install the `scipy` extra for the supported version.
-  DEAP remains the default and now requires 1.4.4 across Python 3.12–3.15.
+- LivePlot, progress logging and early stopping work across the five engines.
+  Both estimators resume from a completed generation. Nevergrad and CatCMAwM
+  restore native solver state. SciPy and pymoo verify and replay saved proposals
+  without repeating completed CV evaluations. Earlier progress-only snapshots
+  remain readable. External optimizers can supply state for continuation.
 - Fitted history iteration stops at the last recorded generation. Multi-metric
   results can be pickled with the ordered list of scorer names.
 
-- Added CPython 3.15 coverage on Linux, macOS, and Windows. On 3.15, pip
-  requires versions of scikit-learn, NumPy, pandas, and SciPy with upstream
-  wheels for that interpreter. Other Python versions keep their dependency
-  lower bounds.
+### Compatibility
+
+- DEAP now requires version 1.4.4 or newer. CI covers CPython 3.12–3.15 on Linux,
+  macOS and Windows. On 3.15, pip selects versions of scikit-learn, NumPy, pandas
+  and SciPy with upstream wheels. Earlier Python versions retain their existing
+  minimums for those four packages.
 
 ## 0.15.0
 

@@ -40,20 +40,12 @@ python -m pip install "sklearn-genetic-opt[mlflow]"    # MLflow 3 logging
 
 ## Optimization backends
 
-Choose the extra with the same name as the engine. For releases that include
-the catalog, install an engine and plotting together with
-`python -m pip install "sklearn-genetic-opt[pymoo,plot]"`.
-
-:::warning Development version
-PyPI 0.15.0 predates the catalog. To follow this version of the guide,
-install from source with the extras you want:
+Install one engine and plotting together, or install all four extra engines:
 
 ```bash
-git clone https://github.com/rodrigo-arenas/Sklearn-genetic-opt.git
-cd Sklearn-genetic-opt
-python -m pip install -e ".[scipy,nevergrad,cmaes,pymoo]"
+python -m pip install "sklearn-genetic-opt[pymoo,plot]>=0.16.0"
+python -m pip install "sklearn-genetic-opt[scipy,nevergrad,cmaes,pymoo]>=0.16.0"
 ```
-:::
 
 DEAP is included in the base package. The SciPy extra enforces the solver's
 minimum version even when scikit-learn can use an older SciPy. Some platforms
