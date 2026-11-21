@@ -6,6 +6,7 @@ import numpy as np
 from scipy import __version__ as scipy_version
 from scipy.optimize import differential_evolution
 
+from ._mixed_space import decode_real, encode_real
 from .space import Categorical, Continuous, Integer
 
 
@@ -39,11 +40,7 @@ def _encode(dim, value):
         return (dim._choice_index(value) + 0.5) / len(dim.choices)
     if isinstance(dim, Integer):
         return (int(value) - dim.lower + 0.5) / (dim.upper - dim.lower + 1)
-    if dim.lower == dim.upper:
-        return 0.5
-    if dim.distribution == "log-uniform" and np.log(dim.upper) != np.log(dim.lower):
-        return (np.log(value) - np.log(dim.lower)) / (np.log(dim.upper) - np.log(dim.lower))
-    return (value - dim.lower) / (dim.upper - dim.lower)
+    return encode_real(dim, value)
 
 
 def _decode(dim, value):
@@ -51,12 +48,7 @@ def _decode(dim, value):
         return dim.choices[min(int(value * len(dim.choices)), len(dim.choices) - 1)]
     if isinstance(dim, Integer):
         return min(dim.lower + int(value * (dim.upper - dim.lower + 1)), dim.upper)
-    if dim.lower == dim.upper:
-        return float(dim.lower)
-    if dim.distribution == "log-uniform" and np.log(dim.upper) != np.log(dim.lower):
-        result = np.exp(np.log(dim.lower) + value * (np.log(dim.upper) - np.log(dim.lower)))
-        return float(np.clip(result, dim.lower, dim.upper))
-    return float(np.clip(dim.lower + value * (dim.upper - dim.lower), dim.lower, dim.upper))
+    return decode_real(dim, value)
 
 
 def _decode_mask(row, max_features):
