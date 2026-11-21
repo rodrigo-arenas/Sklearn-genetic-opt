@@ -9,6 +9,13 @@ You are reading the **latest (dev)** docs. For the stable version, see [stable](
 
 # Release Notes
 
+## Unreleased
+
+The CI matrix now includes CPython 3.15 for both search estimators, plotting,
+and MLflow integration. On 3.15, pip requires versions of scikit-learn, NumPy,
+pandas, and SciPy with upstream wheels for that interpreter. See the
+[installation requirements](./guide/installation#requirements).
+
 ## 0.15.0
 
 ### Spending and measuring the search budget

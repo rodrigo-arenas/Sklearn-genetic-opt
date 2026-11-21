@@ -47,7 +47,8 @@ Keep personal agent configuration local rather than duplicating project rules.
 
 ### Python environment
 
-sklearn-genetic-opt supports Python 3.12 and newer.
+CI tests CPython 3.12–3.15 on Linux, macOS, and Windows. It also tests
+scikit-learn 1.5.0 on Python 3.12 to keep the lower bound working.
 
 Create and activate a virtual environment, then install the project in editable
 mode with the development dependencies:

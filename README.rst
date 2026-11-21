@@ -24,7 +24,8 @@ used in the example:
 
    python -m pip install sklearn-genetic-opt==0.15.0
 
-The test matrix covers Python 3.12–3.14. See the `installation guide`_ for
+The development test matrix covers CPython 3.12–3.15. On 3.15, use
+scikit-learn 1.9.1 or newer. See the `installation guide`_ for
 conda and optional plotting and MLflow dependencies.
 
 Run a first search

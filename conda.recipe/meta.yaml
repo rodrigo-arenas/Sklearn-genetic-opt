@@ -21,7 +21,9 @@ requirements:
     - setuptools >=77
     - wheel
   run:
-    # Keep this in sync with the core "dependencies" in pyproject.toml.
+    # Keep the general minimums in sync with pyproject.toml. As a noarch recipe,
+    # this relies on conda's solver to select builds for the environment's Python
+    # rather than mirroring pip's Python-specific wheel floors.
     # Optional plotting and MLflow extras MUST NOT be listed here. Pinning them as hard runtime
     # requirements is what made the previous conda-forge recipe unsolvable
     # (see issue #138). Users who need them can install the extras separately.

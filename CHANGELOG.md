@@ -5,6 +5,11 @@ for upgrade guidance and links to the API examples.
 
 ## Unreleased
 
+- Added CPython 3.15 coverage on Linux, macOS, and Windows. On 3.15, pip
+  requires versions of scikit-learn, NumPy, pandas, and SciPy with upstream
+  wheels for that interpreter. Other Python versions keep their dependency
+  lower bounds.
+
 ## 0.15.0
 
 ### Search, performance and compatibility

@@ -9,6 +9,7 @@ import tomllib
 from pathlib import Path
 
 import pytest
+from packaging.requirements import Requirement
 
 UPDATE_SOURCE = Path(__file__).resolve().parents[2] / "conda.recipe" / "update_source.py"
 VERSION = "0.14.0"
@@ -72,17 +73,24 @@ def test_release_updater_rejects_unknown_source_without_writing(tmp_path, origin
 
 def test_conda_runtime_dependencies_match_project_metadata():
     root = Path(__file__).resolve().parents[2]
-    project = tomllib.loads((root / "pyproject.toml").read_text(encoding="utf-8"))
-    core = {dependency.split(">=")[0] for dependency in project["project"]["dependencies"]}
+    project = tomllib.loads((root / "pyproject.toml").read_text(encoding="utf-8"))["project"]
+    requirements = map(Requirement, project["dependencies"])
+    # The noarch recipe follows the general package minimums; conda itself
+    # matches native dependency builds to the selected Python version.
+    core = {
+        f"{req.name}{req.specifier}"
+        for req in requirements
+        if req.marker is None or req.marker.evaluate({"python_version": "3.12"})
+    }
     recipe = (root / "conda.recipe" / "meta.yaml").read_text(encoding="utf-8")
     run_requirements = recipe.split("  run:\n", 1)[1].split("\ntest:\n", 1)[0]
     conda = {
-        line.strip().removeprefix("- ").split(" ")[0]
+        "".join(line.strip().removeprefix("- ").split())
         for line in run_requirements.splitlines()
         if line.strip().startswith("- ")
     }
 
-    assert conda - {"python"} == core
+    assert conda == core | {f"python{project['requires-python']}"}
 
 
 def test_release_workflow_uses_checksum_from_published_sdist(tmp_path):
