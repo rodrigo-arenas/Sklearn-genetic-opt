@@ -3,10 +3,12 @@
 import numpy as np
 
 from ._mixed_space import MixedSpace
+from ._optimizer_checkpoint import native_checkpoint, report_native
 from .config import EvolutionConfig
 
 
-def optimize(problem, evaluate, report, *, strategy="OnePlusOne"):
+@native_checkpoint("nevergrad")
+def optimize(problem, evaluate, report, *, strategy="OnePlusOne", _state=None):
     try:
         import nevergrad as ng
     except ModuleNotFoundError as exc:
@@ -19,11 +21,27 @@ def optimize(problem, evaluate, report, *, strategy="OnePlusOne"):
     # NGOpt's portfolio can select an incompatible metamodel in mixed spaces too.
     if strategy not in ("OnePlusOne", "TwoPointsDE"):
         raise ValueError("strategy must be OnePlusOne or TwoPointsDE")
-    initial = evaluate(problem.initial_population)
-    report([handle for _, handle in initial])
+    size = len(problem.initial_population)
+    if _state is None:
+        initial = evaluate(problem.initial_population)
+        best_index = int(np.argmin([loss for loss, _ in initial]))
+        _state = (0, None, best_index)
+        report_native(problem, report, [handle for _, handle in initial], _state)
+    generation, solver, best_index = _state
     if not space.axes or not problem.generations:
         return
-    best = space.encode(problem.initial_population[np.argmin([loss for loss, _ in initial])])
+    if solver is None:
+        best = space.encode(problem.initial_population[best_index])
+        solver = _make_solver(ng, problem, space, best, size, strategy)
+    for gen in range(generation + 1, problem.generations + 1):
+        trials = [solver.ask() for _ in range(size)]
+        results = evaluate([space.decode(trial.value) for trial in trials])
+        for trial, (loss, _) in zip(trials, results, strict=True):
+            solver.tell(trial, loss)
+        report_native(problem, report, [handle for _, handle in results], (gen, solver, None))
+
+
+def _make_solver(ng, problem, space, best, size, strategy):
     if problem.task == "features":
         param = ng.p.TransitionChoice([0, 1], repetitions=len(best))
         param.value = tuple(best)
@@ -40,13 +58,6 @@ def optimize(problem, evaluate, report, *, strategy="OnePlusOne"):
             coords.append(coord)
         param = ng.p.Tuple(*coords)
     param.random_state.seed(problem.seed)
-    size = len(initial)
-    solver = ng.optimizers.registry[strategy](
+    return ng.optimizers.registry[strategy](
         parametrization=param, budget=size * problem.generations, num_workers=size
     )
-    for _ in range(problem.generations):
-        trials = [solver.ask() for _ in range(size)]
-        results = evaluate([space.decode(trial.value) for trial in trials])
-        for trial, (loss, _) in zip(trials, results, strict=True):
-            solver.tell(trial, loss)
-        report([handle for _, handle in results])

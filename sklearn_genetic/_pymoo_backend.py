@@ -2,9 +2,11 @@
 
 import numpy as np
 
+from ._optimizer_checkpoint import replay_checkpoint
 from ._mixed_space import MixedSpace
 
 
+@replay_checkpoint("pymoo")
 def optimize(problem, evaluate, report):
     try:
         from pymoo.algorithms.soo.nonconvex.ga import GA

@@ -3,10 +3,12 @@
 import numpy as np
 
 from ._mixed_space import MixedSpace
+from ._optimizer_checkpoint import native_checkpoint, report_native
 from .config import EvolutionConfig
 
 
-def optimize(problem, evaluate, report, *, sigma=0.25):
+@native_checkpoint("cmaes")
+def optimize(problem, evaluate, report, *, sigma=0.25, _state=None):
     try:
         from cmaes import CatCMAwM
     except ModuleNotFoundError as exc:
@@ -21,8 +23,12 @@ def optimize(problem, evaluate, report, *, sigma=0.25):
     if not 0 < sigma <= 1:
         raise ValueError("sigma must be in (0, 1]")
     space = MixedSpace(problem)
-    initial = evaluate(problem.initial_population)
-    report([handle for _, handle in initial])
+    if _state is None:
+        initial = evaluate(problem.initial_population)
+        losses = [loss for loss, _ in initial]
+        _state = (0, None, False, losses)
+        report_native(problem, report, [handle for _, handle in initial], _state)
+    generation, solver, penalty_initialized, initial_losses = _state
     if not space.axes or not problem.generations:
         return
     # Wide integer intervals would allocate a dense table proportional to their range.
@@ -35,35 +41,11 @@ def optimize(problem, evaluate, report, *, sigma=0.25):
     integer = [i for i, (kind, span) in enumerate(space.axes) if kind == "int" and span <= 255]
     cat = [i for i, (kind, _) in enumerate(space.axes) if kind in ("choice", "bit")]
     spans = np.asarray([upper for _, upper in space.axes])
-    elite = np.asarray(
-        [
-            space.encode(problem.initial_population[i])
-            for i in np.argsort([loss for loss, _ in initial], kind="stable")[: max(1, size // 4)]
-        ]
-    )
-    gaussian = real + integer
-    mean = (elite[:, gaussian] / spans[gaussian]).mean(axis=0) if gaussian else None
-    counts = [int(spans[i]) + 1 for i in cat]
-    probs = None
-    if cat:
-        probs = np.zeros((len(cat), max(counts)))
-        for j, (i, k) in enumerate(zip(cat, counts)):
-            frequencies = np.bincount(elite[:, i].astype(int), minlength=k) / len(elite)
-            probs[j, :k] = (frequencies + 1 / k) / 2
-    solver = CatCMAwM(
-        x_space=[(0.0, 1.0)] * len(real) or None,
-        z_space=[np.linspace(0, 1, int(spans[i]) + 1) for i in integer] or None,
-        c_space=counts or None,
-        mean=mean,
-        # The upstream default has zero variance when an elite lies on a bound.
-        cov=np.eye(len(gaussian)) if gaussian else None,
-        sigma=sigma,
-        cat_param=probs,
-        population_size=size,
-        seed=problem.seed,
-    )
-    penalty_initialized = False
-    for _ in range(problem.generations):
+    if solver is None:
+        solver = _make_solver(
+            CatCMAwM, problem, space, initial_losses, real, integer, cat, spans, sigma
+        )
+    for gen in range(generation + 1, problem.generations + 1):
         trials = [solver.ask() for _ in range(size)]
         rows = []
         for trial in trials:
@@ -84,4 +66,40 @@ def optimize(problem, evaluate, report, *, sigma=0.25):
             penalty_initialized = np.isfinite(spread) and spread > 0
         if not real or penalty_initialized:
             solver.tell([(trial, loss) for trial, (loss, _) in zip(trials, results, strict=True)])
-        report([handle for _, handle in results])
+        report_native(
+            problem,
+            report,
+            [handle for _, handle in results],
+            (gen, solver, penalty_initialized, None),
+        )
+
+
+def _make_solver(cls, problem, space, initial_losses, real, integer, cat, spans, sigma):
+    size = len(problem.initial_population)
+    elite = np.asarray(
+        [
+            space.encode(problem.initial_population[i])
+            for i in np.argsort(initial_losses, kind="stable")[: max(1, size // 4)]
+        ]
+    )
+    gaussian = real + integer
+    mean = (elite[:, gaussian] / spans[gaussian]).mean(axis=0) if gaussian else None
+    counts = [int(spans[i]) + 1 for i in cat]
+    probs = None
+    if cat:
+        probs = np.zeros((len(cat), max(counts)))
+        for j, (i, k) in enumerate(zip(cat, counts)):
+            frequencies = np.bincount(elite[:, i].astype(int), minlength=k) / len(elite)
+            probs[j, :k] = (frequencies + 1 / k) / 2
+    return cls(
+        x_space=[(0.0, 1.0)] * len(real) or None,
+        z_space=[np.linspace(0, 1, int(spans[i]) + 1) for i in integer] or None,
+        c_space=counts or None,
+        mean=mean,
+        # The upstream default has zero variance when an elite lies on a bound.
+        cov=np.eye(len(gaussian)) if gaussian else None,
+        sigma=sigma,
+        cat_param=probs,
+        population_size=size,
+        seed=problem.seed,
+    )

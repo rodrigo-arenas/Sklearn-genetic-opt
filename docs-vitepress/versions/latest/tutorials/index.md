@@ -18,7 +18,7 @@ Step-by-step tutorials for common real-world scenarios. Each tutorial is self-co
 ## Choose an optimizer
 
 [Switch optimization backends](./optimizer-backends) walks through both estimators,
-measuring actual CV calls, configuring individual solvers and inspecting a checkpoint.
+measuring actual CV calls, configuring individual solvers and resuming feature selection.
 
 ## scikit-learn Estimators
 

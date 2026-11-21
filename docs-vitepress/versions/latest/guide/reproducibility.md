@@ -89,7 +89,13 @@ import joblib
 logbook = joblib.load("./logbook.pkl")
 ```
 
-LogbookSaver records candidates for inspection. For DEAP continuation use the [ModelCheckpoint resume recipe](../recipes/advanced/checkpointing). SciPy, Nevergrad, CatCMAwM and pymoo write progress snapshots. The [backend tutorial](../tutorials/optimizer-backends) shows how to inspect one.
+LogbookSaver records candidates for inspection. To continue training, use the
+[ModelCheckpoint resume recipe](../recipes/advanced/checkpointing). The
+[backend tutorial](../tutorials/optimizer-backends#select-features-and-inspect-progress)
+stops a pymoo feature search, resumes it and prints the new CV calls. A
+generation checkpoint covers evolutionary CV through the last saved generation.
+If you enable extra validation of finalists or refit the best model, these
+steps can run again after loading even a completed search.
 
 ## Tips & Gotchas
 

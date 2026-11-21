@@ -296,7 +296,8 @@ engine before loading a checkpoint. SciPy and the shipped Nevergrad, cmaes and p
 | Initial population and domains | `population.py` and `space/` | Reuse the supplied population, including warm starts. Validate engine-specific domain limits before requesting CV. |
 | Evaluation, cache, parallel jobs, scoring and refit | `evaluation.py` and the estimators | Call the batch evaluator. Preserve proposal order and separate handles even for identical candidates. |
 | Archive, history, plots and CV results | `_backend_runtime.py`, `_telemetry.py` and `utils/cv_scores.py` | The runtime consumes plain candidate records. Historical DEAP logbook and feature archive objects are constructed on explicit access for plugins. |
-| Legacy evolution and resume | `_deap_backend.py`, `algorithms.py`, `optimizer_control.py` and callbacks | DEAP owns its toolbox, weighted fitness, operators, checkpoint state and callback timing. Plugin callbacks use the shared generation runtime. Optional exact resume restores CV state and delegates opaque solver state to the plugin’s `resume` method. |
+| Catalog checkpoints | `_optimizer_checkpoint.py` and `_backend_runtime.py` | The runtime restores CV state at completed boundaries. Nevergrad and CatCMAwM save native state. SciPy and pymoo verify and replay recorded batches with saved replies. Third-party engines can supply opaque state and a `resume` method through the existing protocol. |
+| Legacy evolution and resume | `_deap_backend.py`, `algorithms.py`, `optimizer_control.py` and callbacks | DEAP owns its toolbox, weighted fitness, operators, checkpoint state and callback timing. |
 
 Use the [catalog benchmark](benchmarks/benchmark_optimizer_catalog.py) to compare all five engines at matched real CV budgets. The earlier [two-engine benchmark](benchmarks/benchmark_optimizer_backends.py) compares SciPy specifically against DEAP's differential evolution mode.
 

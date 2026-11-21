@@ -6,6 +6,7 @@ import numpy as np
 from scipy import __version__ as scipy_version
 from scipy.optimize import differential_evolution
 
+from ._optimizer_checkpoint import replay_checkpoint
 from ._mixed_space import decode_real, encode_real
 from .space import Categorical, Continuous, Integer
 
@@ -140,6 +141,7 @@ def run_scipy(
         raise exc.__cause__ from None
 
 
+@replay_checkpoint("scipy")
 def optimize(problem, evaluate, report):
     run_scipy(
         [list(row) for row in problem.initial_population],

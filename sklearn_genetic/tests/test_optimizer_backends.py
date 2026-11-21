@@ -89,16 +89,20 @@ def test_scipy_results_and_repeated_fit(kind, parallel):
 
 @pytest.mark.parametrize("kind", ["features", "parameters"])
 @requires_scipy_backend
-def test_scipy_progress_checkpoint_and_threshold(kind, tmp_path):
+def test_scipy_checkpoint_and_legacy_progress_file(kind, tmp_path):
     checkpoint = ModelCheckpoint(tmp_path / "progress.pkl")
     est = search(kind, optimizer_backend="scipy")
     X, y = load_iris(return_X_y=True)
     est.fit(X, y, callbacks=[ThresholdStopping(0.0), checkpoint])
     saved = checkpoint.load()
-    assert saved["resumable"] is False
+    assert saved["resumable"] is True
     assert len(saved["candidate_records"]) == est.fit_stats_["evaluated_candidates"] == 6
     assert saved["logbook"][0]["gen"] == 0
-    contents = checkpoint.checkpoint_path.read_bytes()
+    est.fit(X, y, callbacks=checkpoint)
+    assert len(est.history["gen"]) > 1
+    saved.update(resumable=False, solver_state=None, context=None)
+    contents = pickle.dumps(saved)
+    checkpoint.checkpoint_path.write_bytes(contents)
     with pytest.raises(ValueError, match="does not support exact resume"):
         est.fit(X, y, callbacks=checkpoint)
     assert checkpoint.checkpoint_path.read_bytes() == contents
