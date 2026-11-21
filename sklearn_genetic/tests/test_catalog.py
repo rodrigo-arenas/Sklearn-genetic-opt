@@ -101,11 +101,13 @@ def test_nevergrad_resume_preserves_cv_rng_in_fresh_process(tmp_path):
     pytest.importorskip("nevergrad")
     script = dedent("""
         import json
+        import os
         import sys
         from pathlib import Path
         import numpy as np
         from sklearn.datasets import load_iris
-        from sklearn_genetic.callbacks import ModelCheckpoint, ThresholdStopping
+        from sklearn_genetic import genetic_search
+        from sklearn_genetic.callbacks import ModelCheckpoint
         from sklearn_genetic.tests.test_optimizer_backends import search
 
         def score(estimator, X, y):
@@ -113,17 +115,32 @@ def test_nevergrad_resume_preserves_cv_rng_in_fresh_process(tmp_path):
 
         directory, phase = Path(sys.argv[1]), sys.argv[2]
         checkpoint = ModelCheckpoint(directory / "search.pkl")
-        callbacks = {"control": [], "pause": [ThresholdStopping(0), checkpoint], "resume": [checkpoint]}
+        if phase == "crash":
+            cv = genetic_search.cross_validate
+            calls = 0
+
+            def interrupt_after_cv(*args, **kwargs):
+                global calls
+                result = cv(*args, **kwargs)
+                calls += 1
+                if calls == 7:  # generation zero is durable; the next batch is not
+                    os._exit(86)
+                return result
+
+            genetic_search.cross_validate = interrupt_after_cv
+        callbacks = [] if phase == "control" else [checkpoint]
         model = search("parameters", optimizer_backend="nevergrad", scoring=score, use_cache=False)
-        model.fit(*load_iris(return_X_y=True), callbacks=callbacks[phase])
+        model.fit(*load_iris(return_X_y=True), callbacks=callbacks)
         (directory / phase).write_text(json.dumps(list(model.cv_results_["mean_test_score"])))
     """)
-    for phase in ("control", "pause", "resume"):
-        subprocess.run(
+    for phase in ("control", "crash", "resume"):
+        child = subprocess.run(
             [sys.executable, "-c", script, str(tmp_path), phase],
             cwd=Path(__file__).resolve().parents[2],
-            check=True,
+            check=phase != "crash",
         )
+        if phase == "crash":
+            assert child.returncode == 86
     assert (tmp_path / "control").read_bytes() == (tmp_path / "resume").read_bytes()
 
 
