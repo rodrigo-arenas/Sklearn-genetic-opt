@@ -63,12 +63,17 @@ jobs:
         if: matrix.sklearn == 'latest'
         run: |
           python -m pip install --upgrade pip
-          python -m pip install --upgrade --upgrade-strategy eager -e ".[test,plot,mlflow]"
+          python -m pip install --upgrade --upgrade-strategy eager -e ".[test,plot,mlflow,scipy]"
+      - name: Check base installation with older SciPy
+        if: matrix.sklearn != 'latest'
+        run: |
+          python -m pip install . "scikit-learn==1.5.0" "scipy==1.11.4" pytest
+          python -m pytest sklearn_genetic/tests/test_optimizer_backends.py -k "default_and_explicit or base_install"
       - name: Install test dependencies with minimum scikit-learn
         if: matrix.sklearn != 'latest'
         run: |
           python -m pip install --upgrade pip
-          python -m pip install --upgrade --upgrade-strategy eager -e ".[test,plot,mlflow]" "scikit-learn==${{ matrix.sklearn }}"
+          python -m pip install --upgrade --upgrade-strategy eager -e ".[test,plot,mlflow,scipy]" "scikit-learn==${{ matrix.sklearn }}"
       - name: Run tests
         run: pytest sklearn_genetic/
 
@@ -89,7 +94,7 @@ jobs:
       - name: Install coverage dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install --upgrade --upgrade-strategy eager -e ".[test,plot,mlflow]"
+          python -m pip install --upgrade --upgrade-strategy eager -e ".[test,plot,mlflow,scipy]"
       - name: Run coverage
         run: |
           pytest sklearn_genetic/ --cov-fail-under=95 --cov=./ --cov-report=term-missing:skip-covered --cov-report=xml

@@ -13,19 +13,18 @@ Genetic algorithm hyperparameter search for scikit-learn estimators.
 
 `GASearchCV` implements the scikit-learn estimator interface and follows the same patterns as `GridSearchCV` and `RandomizedSearchCV`. After calling `fit`, it exposes `best_params_`, `best_score_`, `cv_results_`, `predict`, `predict_proba`, and `score`.
 
-## Class Signature
+## Common constructor arguments
 
 ```python
 from sklearn_genetic import GASearchCV
 
 GASearchCV(
     estimator,
-    param_grid,
-    *,
+    cv=3,
+    param_grid=param_grid,
     scoring=None,
-    cv=5,
     refit=True,
-    verbose=0,
+    verbose=True,
     error_score=np.nan,
     return_train_score=False,
     random_state=None,
@@ -33,6 +32,7 @@ GASearchCV(
     population_config=None,
     runtime_config=None,
     optimization_config=None,
+    optimizer_backend="deap",
 )
 ```
 
@@ -40,12 +40,13 @@ GASearchCV(
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
+| `optimizer_backend` | str, keyword-only | `"deap"` | Optimization engine. See [SciPy support and limits](./algorithms#scipy-backend) for `"scipy"`. |
 | `estimator` | estimator | — | A scikit-learn estimator with a `fit` method |
 | `param_grid` | dict | — | Mapping from parameter name to `Integer`, `Continuous`, or `Categorical` |
 | `scoring` | str or dict | `None` | Metric(s) to evaluate. `None` uses the estimator's default scorer |
-| `cv` | int or CV splitter | `5` | Cross-validation strategy |
+| `cv` | int or CV splitter | `3` | Cross-validation strategy |
 | `refit` | bool or str | `True` | Metric to use when refitting the best model. If `scoring` is a dict, pass the metric name |
-| `verbose` | int | `0` | Verbosity level. `1` = generation log |
+| `verbose` | bool | `True` | Print the generation log |
 | `error_score` | float or `"raise"` | `np.nan` | Score to use when a candidate raises an exception |
 | `return_train_score` | bool | `False` | Include training scores in `cv_results_` |
 | `random_state` | int, RandomState or `None` | `None` | Seeds the whole search (population init, mutation, crossover, immigrants) at `fit` time for reproducible runs. `None` is non-deterministic |

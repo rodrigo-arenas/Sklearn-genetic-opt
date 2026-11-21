@@ -1,0 +1,187 @@
+{
+  "python": "3.12.14",
+  "packages": {
+    "deap": "1.4.4",
+    "scipy": "1.18.1",
+    "numpy": "2.5.5",
+    "scikit-learn": "1.9.1"
+  },
+  "runs": [
+    {
+      "task": "parameters",
+      "backend": "deap",
+      "seed": 17,
+      "cv_calls": 24,
+      "best_cv": 0.9046710479824748,
+      "held_out": 0.9833333333333334,
+      "features": null,
+      "wall_ms": 410.8316849997209,
+      "outside_cv_and_refit_ms": 11.168529308633879
+    },
+    {
+      "task": "parameters",
+      "backend": "scipy",
+      "seed": 17,
+      "cv_calls": 24,
+      "best_cv": 0.9046710479824748,
+      "held_out": 0.9833333333333334,
+      "features": null,
+      "wall_ms": 406.7430629984301,
+      "outside_cv_and_refit_ms": 13.652958368766122
+    },
+    {
+      "task": "features",
+      "backend": "deap",
+      "seed": 17,
+      "cv_calls": 24,
+      "best_cv": 0.9242103031587874,
+      "held_out": 0.9627882599580713,
+      "features": 12,
+      "wall_ms": 293.1068409998261,
+      "outside_cv_and_refit_ms": 9.865500676824013
+    },
+    {
+      "task": "features",
+      "backend": "scipy",
+      "seed": 17,
+      "cv_calls": 24,
+      "best_cv": 0.9260829623348172,
+      "held_out": 0.9683438155136268,
+      "features": 10,
+      "wall_ms": 301.78172800151515,
+      "outside_cv_and_refit_ms": 13.957689225208014
+    },
+    {
+      "task": "parameters",
+      "backend": "scipy",
+      "seed": 29,
+      "cv_calls": 24,
+      "best_cv": 0.9372482510069959,
+      "held_out": 0.9178197064989517,
+      "features": null,
+      "wall_ms": 510.88253399939276,
+      "outside_cv_and_refit_ms": 23.467609906219877
+    },
+    {
+      "task": "parameters",
+      "backend": "deap",
+      "seed": 29,
+      "cv_calls": 24,
+      "best_cv": 0.9391209101830259,
+      "held_out": 0.8972746331236897,
+      "features": null,
+      "wall_ms": 446.353569997882,
+      "outside_cv_and_refit_ms": 13.45670003502164
+    },
+    {
+      "task": "features",
+      "backend": "scipy",
+      "seed": 29,
+      "cv_calls": 24,
+      "best_cv": 0.9454808847431276,
+      "held_out": 0.9400419287211741,
+      "features": 12,
+      "wall_ms": 301.77990599986515,
+      "outside_cv_and_refit_ms": 10.608111104374984
+    },
+    {
+      "task": "features",
+      "backend": "deap",
+      "seed": 29,
+      "cv_calls": 24,
+      "best_cv": 0.9391915765670271,
+      "held_out": 0.9272536687631028,
+      "features": 12,
+      "wall_ms": 275.4231129983964,
+      "outside_cv_and_refit_ms": 8.454832834104309
+    },
+    {
+      "task": "parameters",
+      "backend": "deap",
+      "seed": 43,
+      "cv_calls": 24,
+      "best_cv": 0.9304289449508868,
+      "held_out": 0.9211740041928722,
+      "features": null,
+      "wall_ms": 363.8223050002125,
+      "outside_cv_and_refit_ms": 10.018161843618145
+    },
+    {
+      "task": "parameters",
+      "backend": "scipy",
+      "seed": 43,
+      "cv_calls": 24,
+      "best_cv": 0.9304289449508868,
+      "held_out": 0.9211740041928722,
+      "features": null,
+      "wall_ms": 537.9343159984273,
+      "outside_cv_and_refit_ms": 25.022604040714214
+    },
+    {
+      "task": "features",
+      "backend": "deap",
+      "seed": 43,
+      "cv_calls": 24,
+      "best_cv": 0.9323016041269169,
+      "held_out": 0.8933962264150943,
+      "features": 10,
+      "wall_ms": 252.4150360004569,
+      "outside_cv_and_refit_ms": 10.117816560523352
+    },
+    {
+      "task": "features",
+      "backend": "scipy",
+      "seed": 43,
+      "cv_calls": 24,
+      "best_cv": 0.9379195816550068,
+      "held_out": 0.8928721174004193,
+      "features": 12,
+      "wall_ms": 268.9851869981794,
+      "outside_cv_and_refit_ms": 12.111489977542078
+    },
+    {
+      "task": "parameters",
+      "backend": "scipy",
+      "seed": 61,
+      "cv_calls": 24,
+      "best_cv": 0.9296869479188749,
+      "held_out": 0.8856394129979036,
+      "features": null,
+      "wall_ms": 381.5877829983947,
+      "outside_cv_and_refit_ms": 11.143116058519809
+    },
+    {
+      "task": "parameters",
+      "backend": "deap",
+      "seed": 61,
+      "cv_calls": 24,
+      "best_cv": 0.9397922408310366,
+      "held_out": 0.8817610062893082,
+      "features": null,
+      "wall_ms": 404.9707199992554,
+      "outside_cv_and_refit_ms": 10.58110676240176
+    },
+    {
+      "task": "features",
+      "backend": "scipy",
+      "seed": 61,
+      "cv_calls": 24,
+      "best_cv": 0.9479542081831672,
+      "held_out": 0.9156184486373166,
+      "features": 5,
+      "wall_ms": 264.5345749988337,
+      "outside_cv_and_refit_ms": 10.697132660425268
+    },
+    {
+      "task": "features",
+      "backend": "deap",
+      "seed": 61,
+      "cv_calls": 24,
+      "best_cv": 0.9403929050950462,
+      "held_out": 0.9361635220125786,
+      "features": 9,
+      "wall_ms": 323.247602002084,
+      "outside_cv_and_refit_ms": 10.836970712261973
+    }
+  ]
+}

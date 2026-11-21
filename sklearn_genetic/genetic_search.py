@@ -62,7 +62,7 @@ from sklearn.metrics._scorer import _check_multimetric_scoring
 from .parameters import Criteria
 from .space import Categorical, Continuous, Integer, Space
 from .algorithms import feature_population_diversity
-from ._base import GeneticEstimatorMixin, reset_adapters as _reset_adapters
+from ._base import GeneticEstimatorMixin, generation_history, reset_adapters as _reset_adapters
 from .callbacks.validations import check_callback
 from .schedules.validations import check_adapter
 from .utils.cv_scores import (
@@ -646,6 +646,10 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
     criteria : {'max', 'min'} , default='max'
         ``max`` if a higher scoring metric is better, ``min`` otherwise.
 
+    optimizer_backend : {"deap", "scipy"}, default="deap"
+        Optimization engine. SciPy uses bounded differential evolution and requires
+        SciPy 1.15 or newer. Callbacks and DEAP variation controls require DEAP.
+
     algorithm : str, default='eaMuPlusLambda'
         One of ``eaMuPlusLambda``, ``eaMuCommaLambda``, ``eaSimple``, or
         ``eaDifferentialEvolution``. Differential evolution uses deferred
@@ -803,6 +807,8 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
         final_selection=False,
         final_selection_top_k=3,
         final_selection_cv=None,
+        *,
+        optimizer_backend="deap",
     ):
         legacy_warm_start_configs = warm_start_configs
 
@@ -919,6 +925,7 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
         self.keep_top_k = keep_top_k
         self.criteria = criteria
         self.param_grid = param_grid
+        self.optimizer_backend = optimizer_backend
         self.algorithm = algorithm
         self.refit = refit
         self.n_jobs = n_jobs
@@ -1318,6 +1325,7 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
 
         # Make sure the callbacks are valid
         self.callbacks = check_callback(callbacks)
+        self._validate_backend()
 
         checkpoint_loaded = False
         restored_logbook = None
@@ -1419,7 +1427,7 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
             self.scorer_ = _check_multimetric_scoring(self.estimator, self.scoring)
             self._check_refit_for_multimetric(self.scorer_)
             self.refit_metric = self.refit
-            self.metrics_list = self.scorer_.keys()
+            self.metrics_list = list(self.scorer_)
             self.multimetric_ = True
 
         # Only pass groups when given, so custom splitters written without a
@@ -1452,7 +1460,13 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
             self.logbook = restored_logbook
 
         # Optimization routine from the selected evolutionary algorithm
-        pop, log, n_gen = self._select_algorithm(pop=self._pop, stats=self._stats, hof=self._hof)
+        try:
+            pop, log, n_gen = self._select_algorithm(
+                pop=self._pop, stats=self._stats, hof=self._hof
+            )
+        finally:
+            del creator.FitnessMax
+            del creator.Individual
 
         # Update the _n_iterations value as the algorithm could stop earlier due a callback
         self._n_iterations = n_gen
@@ -1465,33 +1479,7 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
             greater_is_better=self.criteria == "max",
         )
 
-        self.history = {
-            "gen": log.select("gen"),
-            "cross_validate_calls": log.select("cross_validate_calls"),
-            "fitness": log.select("fitness"),
-            "fitness_std": log.select("fitness_std"),
-            "fitness_best": log.select("fitness_best"),
-            "fitness_best_observed": log.select("fitness_best_observed"),
-            "fitness_max": log.select("fitness_max"),
-            "fitness_min": log.select("fitness_min"),
-            "population_size": log.select("population_size"),
-            "unique_individuals": log.select("unique_individuals"),
-            "unique_individual_ratio": log.select("unique_individual_ratio"),
-            "genotype_diversity": log.select("genotype_diversity"),
-            "fitness_improvement": log.select("fitness_improvement"),
-            "fitness_improved": log.select("fitness_improved"),
-            "stagnation_generations": log.select("stagnation_generations"),
-            "best_generation": log.select("best_generation"),
-            "mutation_probability": log.select("mutation_probability"),
-            "selection_pressure": log.select("selection_pressure"),
-            "diversity_control_triggered": log.select("diversity_control_triggered"),
-            "random_immigrants": log.select("random_immigrants"),
-            "duplicate_replacements": log.select("duplicate_replacements"),
-            "local_refinements": log.select("local_refinements"),
-            "fitness_sharing_applied": log.select("fitness_sharing_applied"),
-            "mean_niche_count": log.select("mean_niche_count"),
-            "max_niche_count": log.select("max_niche_count"),
-        }
+        self.history = generation_history(log)
 
         # Imitate the logic of scikit-learn refit parameter
         if self.refit:
@@ -1527,9 +1515,6 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
             k: dict(zip(self.space.parameters, candidate))
             for k, candidate in enumerate(hof_candidates[: self.keep_top_k])
         }
-
-        del creator.FitnessMax
-        del creator.Individual
 
         return self
 
@@ -1757,6 +1742,10 @@ class GAFeatureSelectionCV(
     criteria : {'max', 'min'} , default='max'
         ``max`` if a higher scoring metric is better, ``min`` otherwise.
 
+    optimizer_backend : {"deap", "scipy"}, default="deap"
+        Optimization engine. SciPy uses bounded differential evolution and requires
+        SciPy 1.15 or newer. Callbacks and DEAP variation controls require DEAP.
+
     algorithm : str, default='eaMuPlusLambda'
         One of ``eaMuPlusLambda``, ``eaMuCommaLambda``, ``eaSimple``, or
         ``eaDifferentialEvolution``. Differential evolution uses deferred
@@ -1920,6 +1909,8 @@ class GAFeatureSelectionCV(
         final_selection=False,
         final_selection_top_k=3,
         final_selection_cv=None,
+        *,
+        optimizer_backend="deap",
     ):
         population_size = _resolve_config_value(
             evolution_config, "population_size", population_size
@@ -2031,6 +2022,7 @@ class GAFeatureSelectionCV(
         self.verbose = verbose
         self.keep_top_k = keep_top_k
         self.criteria = criteria
+        self.optimizer_backend = optimizer_backend
         self.algorithm = algorithm
         self.refit = refit
         self.n_jobs = n_jobs
@@ -2418,6 +2410,7 @@ class GAFeatureSelectionCV(
 
         # Make sure the callbacks are valid
         self.callbacks = check_callback(callbacks)
+        self._validate_backend()
 
         checkpoint_loaded = False
         restored_logbook = None
@@ -2525,7 +2518,7 @@ class GAFeatureSelectionCV(
             self.scorer_ = _check_multimetric_scoring(self.estimator, self.scoring)
             self._check_refit_for_multimetric(self.scorer_)
             self.refit_metric = self.refit
-            self.metrics_list = self.scorer_.keys()
+            self.metrics_list = list(self.scorer_)
             self.multimetric_ = True
 
         # Only pass groups when given, so custom splitters written without a
@@ -2567,7 +2560,13 @@ class GAFeatureSelectionCV(
             self._pop.insert(0, self._pop.pop(densest))
 
         # Optimization routine from the selected evolutionary algorithm
-        pop, log, n_gen = self._select_algorithm(pop=self._pop, stats=self._stats, hof=self._hof)
+        try:
+            pop, log, n_gen = self._select_algorithm(
+                pop=self._pop, stats=self._stats, hof=self._hof
+            )
+        finally:
+            del creator.FitnessMax
+            del creator.Individual
 
         # Update the _n_iterations value as the algorithm could stop earlier due a callback
         self._n_iterations = n_gen
@@ -2582,33 +2581,7 @@ class GAFeatureSelectionCV(
             greater_is_better=self.criteria == "max",
         )
 
-        self.history = {
-            "gen": log.select("gen"),
-            "cross_validate_calls": log.select("cross_validate_calls"),
-            "fitness": log.select("fitness"),
-            "fitness_std": log.select("fitness_std"),
-            "fitness_best": log.select("fitness_best"),
-            "fitness_best_observed": log.select("fitness_best_observed"),
-            "fitness_max": log.select("fitness_max"),
-            "fitness_min": log.select("fitness_min"),
-            "population_size": log.select("population_size"),
-            "unique_individuals": log.select("unique_individuals"),
-            "unique_individual_ratio": log.select("unique_individual_ratio"),
-            "genotype_diversity": log.select("genotype_diversity"),
-            "fitness_improvement": log.select("fitness_improvement"),
-            "fitness_improved": log.select("fitness_improved"),
-            "stagnation_generations": log.select("stagnation_generations"),
-            "best_generation": log.select("best_generation"),
-            "mutation_probability": log.select("mutation_probability"),
-            "selection_pressure": log.select("selection_pressure"),
-            "diversity_control_triggered": log.select("diversity_control_triggered"),
-            "random_immigrants": log.select("random_immigrants"),
-            "duplicate_replacements": log.select("duplicate_replacements"),
-            "local_refinements": log.select("local_refinements"),
-            "fitness_sharing_applied": log.select("fitness_sharing_applied"),
-            "mean_niche_count": log.select("mean_niche_count"),
-            "max_niche_count": log.select("max_niche_count"),
-        }
+        self.history = generation_history(log)
 
         if self.refit:
             if self.final_selection:
@@ -2632,9 +2605,6 @@ class GAFeatureSelectionCV(
             self.estimator_ = self.best_estimator_
 
         self.hof = self._hof
-
-        del creator.FitnessMax
-        del creator.Individual
 
         return self
 

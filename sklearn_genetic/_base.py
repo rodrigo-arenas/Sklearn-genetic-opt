@@ -2,11 +2,18 @@ import logging
 import pickle
 from math import isfinite
 
+import numpy as np
 import pandas as pd
 from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import check_is_fitted
 
-from .algorithms import algorithms_factory
+from .algorithms import (
+    _compile_generation_record,
+    _new_telemetry_state,
+    _print_verbose_record,
+    _seed_logbook,
+    algorithms_factory,
+)
 from .callbacks.early_stoppers import TimerStopping
 from .parameters import Algorithms
 
@@ -16,6 +23,42 @@ logger = logging.getLogger(__name__)
 def reset_adapters(estimator):
     estimator.crossover_adapter.reset()
     estimator.mutation_adapter.reset()
+
+
+def generation_history(records):
+    """Build the public column-wise history from generation rows, including legacy gaps."""
+    fields = (
+        "gen",
+        "cross_validate_calls",
+        "fitness",
+        "fitness_std",
+        "fitness_best",
+        "fitness_best_observed",
+        "fitness_max",
+        "fitness_min",
+        "population_size",
+        "unique_individuals",
+        "unique_individual_ratio",
+        "genotype_diversity",
+        "fitness_improvement",
+        "fitness_improved",
+        "stagnation_generations",
+        "best_generation",
+        "mutation_probability",
+        "selection_pressure",
+        "diversity_control_triggered",
+        "random_immigrants",
+        "duplicate_replacements",
+        "local_refinements",
+        "fitness_sharing_applied",
+        "mean_niche_count",
+        "max_niche_count",
+    )
+    history = {key: [] for key in fields}
+    for row in records:
+        for key, values in history.items():
+            values.append(row.get(key))
+    return history
 
 
 def history_record(history, index):
@@ -38,6 +81,43 @@ def _best_observed_stat(records, minimize):
         return float("nan") if best is None else best
 
     return best_observed
+
+
+class _BatchSearchResults:
+    """Adapt plain candidate batches to the estimators' historical result objects."""
+
+    def __init__(self, estimator, initial, stats, hof):
+        self.estimator = estimator
+        self.individual_type = type(initial[0])
+        self.stats = stats
+        self.hof = hof
+        self.population = initial
+        self.proposals_since_report = 0
+        self.state = _new_telemetry_state()
+        self.log, _ = _seed_logbook(None, stats)
+
+    def evaluate(self, candidates):
+        fitnesses = self.estimator.evaluate_population(candidates)
+        handles = [self.individual_type(candidate) for candidate in candidates]
+        for handle, fitness in zip(handles, fitnesses, strict=True):
+            handle.fitness.values = fitness
+        self.hof.update(handles)
+        self.proposals_since_report += len(handles)
+        return [
+            (-self.estimator.criteria_sign * fitness[0], handle)
+            for fitness, handle in zip(fitnesses, handles)
+        ]
+
+    def report(self, survivors):
+        self.population = survivors
+        gen = len(self.log)
+        values = _compile_generation_record(
+            self.stats, survivors, self.state, gen, halloffame=self.hof
+        )
+        self.log.record(gen=gen, nevals=self.proposals_since_report, **values)
+        if self.estimator.verbose:
+            _print_verbose_record(gen, self.proposals_since_report, values, print_header=gen == 0)
+        self.proposals_since_report = 0
 
 
 class GeneticEstimatorMixin:
@@ -98,6 +178,7 @@ class GeneticEstimatorMixin:
 
     def __setstate__(self, state):
         """Restore instance state, leaving DEAP attrs unset (rebuilt on fit)."""
+        self.optimizer_backend = "deap"
         self.__dict__.update(state)
 
     def _serializable_state(self):
@@ -185,15 +266,40 @@ class GeneticEstimatorMixin:
 
         logger.info("%s model successfully loaded from %s", class_name, filepath)
 
+    def _validate_backend(self):
+        if self.optimizer_backend == "deap":
+            return
+        if self.optimizer_backend != "scipy":
+            raise ValueError("optimizer_backend must be 'deap' or 'scipy'")
+        from ._scipy_backend import validate_scipy_backend
+
+        validate_scipy_backend(self)
+
     def _select_algorithm(self, pop, stats, hof):
+        fit_stats = self.fit_stats_
+        stats.register("cross_validate_calls", lambda _: fit_stats["cross_validate_calls"])
+        stats.register(
+            "fitness_best_observed",
+            _best_observed_stat(self.logbook.chapters["parameters"], self.criteria == "min"),
+        )
+        if self.optimizer_backend == "scipy":
+            from ._scipy_backend import run_scipy
+
+            results = _BatchSearchResults(self, pop, stats, hof)
+            run_scipy(
+                [list(candidate) for candidate in pop],
+                results.evaluate,
+                results.report,
+                dimensions=tuple(getattr(self, "param_grid", {}).values()),
+                max_features=getattr(self, "max_features", None),
+                generations=self.generations,
+                recombination=self.crossover_probability,
+                seed=int(np.random.randint(2**31)),
+            )
+            return results.population, results.log, len(results.log)
+
         selected_algorithm = algorithms_factory.get(self.algorithm, None)
         if selected_algorithm:
-            fit_stats = self.fit_stats_
-            stats.register("cross_validate_calls", lambda _: fit_stats["cross_validate_calls"])
-            stats.register(
-                "fitness_best_observed",
-                _best_observed_stat(self.logbook.chapters["parameters"], self.criteria == "min"),
-            )
             self._evaluation_timers = [
                 callback for callback in self.callbacks if isinstance(callback, TimerStopping)
             ]
@@ -275,7 +381,7 @@ class GeneticEstimatorMixin:
         return self
 
     def __next__(self):
-        if self.n < self._n_iterations + 1:
+        if self.n < len(self.history["gen"]):
             result = self.__getitem__(self.n)
             self.n += 1
             return result
