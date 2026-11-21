@@ -279,7 +279,7 @@ search space and batch width. The best initial candidate seeds its parameterizat
 Wine calibration at 32 real CV calls, this reduced average non-CV time and improved
 mean best mask CV over NGOpt across three seeds. The generation history summarizes each evaluated
 batch. The default crossover setting leaves variation to Nevergrad. Use unweighted categories,
-finite linear or logarithmic intervals and integer spans below 2**52. Fixed coordinates are
+finite linear or logarithmic intervals and variable integers within int64 spanning less than 2**52. Fixed coordinates are
 removed, and an entirely fixed search finishes after initialization. LivePlot, early stopping
 and progress snapshots are supported. Start a fresh search to generate new trials.
 
@@ -299,3 +299,20 @@ has a positive interquartile loss range.
 Use at least four individuals per generation. The same domain, callback, progress
 snapshot and generation-history rules as Nevergrad apply. Full covariance costs
 quadratic memory in the number of numeric parameters.
+
+## pymoo
+
+Install `sklearn-genetic-opt[pymoo]`, then pass `optimizer_backend="pymoo"`.
+MixedVariableGA uses separate crossover and mutation operators for unordered
+choices, integers and real parameters. For masks, the binary GA uses uniform
+crossover and bit-flip mutation. The adapter repairs empty or oversized masks
+before scoring and returns the repaired masks to the population. The generation
+history summarizes survivors. The estimator archive also retains discarded
+trials for final selection. Adjust `crossover_probability` between 0 and 1
+(default 0.8) for either estimator.
+
+Use the same parameter domains as Nevergrad. Repeated proposals count against
+the proposal budget, and the estimator cache can reuse their CV results. This
+allows small discrete spaces to complete without costly duplicate-rejection
+loops. LivePlot, early stopping and progress snapshots use the common runtime.
+On platforms without a compatible upstream wheel, pip builds pymoo from source.

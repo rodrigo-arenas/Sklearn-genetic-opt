@@ -10,7 +10,7 @@ from sklearn_genetic.callbacks import ModelCheckpoint, ThresholdStopping
 from sklearn_genetic.space import Categorical, Continuous, Integer
 from sklearn_genetic.tests.test_optimizer_backends import search
 
-BACKENDS = ["nevergrad", "cmaes"]
+BACKENDS = ["nevergrad", "cmaes", "pymoo"]
 
 
 @pytest.mark.parametrize("backend", BACKENDS)
@@ -39,7 +39,18 @@ def test_catalog_fit(backend, task, tmp_path):
 
 @pytest.mark.parametrize("backend", BACKENDS)
 def test_missing_extra(backend, monkeypatch):
-    monkeypatch.setitem(sys.modules, backend, None)
+    for name in tuple(sys.modules):
+        if name.startswith(backend + "."):
+            monkeypatch.delitem(sys.modules, name)
+    monkeypatch.delitem(sys.modules, backend, raising=False)
+
+    class AbsentPackage:
+        def find_spec(self, name, *args):
+            if name == backend:
+                raise ModuleNotFoundError(f"No module named {name!r}", name=name)
+            return None
+
+    monkeypatch.setattr(sys, "meta_path", [AbsentPackage(), *sys.meta_path])
     adapter = importlib.import_module(f"sklearn_genetic._{backend}_backend")
     with pytest.raises(ImportError, match=rf"sklearn-genetic-opt\[{backend}\]"):
         adapter.optimize(None, None, None)
@@ -99,3 +110,50 @@ def test_cmaes_boundary_initialization():
     with np.errstate(invalid="raise", divide="raise"):
         optimize(problem, lambda rows: [(row[0], row) for row in rows], batches.append)
     assert len(batches) == 7
+
+
+def test_pymoo_saturated_choice_preserves_batch_budget():
+    pytest.importorskip("pymoo")
+    from sklearn_genetic._pymoo_backend import optimize
+    from sklearn_genetic.backends import OptimizationProblem
+
+    problem = OptimizationProblem(
+        "parameters",
+        (({"a": 0},),) * 5,
+        ("x",),
+        (Categorical([{"a": 0}, {"b": 1}]),),
+        None,
+        3,
+        0,
+        73,
+    )
+    evaluated = []
+    history = []
+
+    def evaluate(rows):
+        evaluated.extend(rows)
+        return [(float("a" in row[0]), row) for row in rows]
+
+    optimize(problem, evaluate, history.append)
+    assert len(evaluated) == 20
+    assert all(len(survivors) == 5 for survivors in history)
+    assert all(row[0] in problem.dimensions[0].choices for row in evaluated)
+
+
+def test_pymoo_wide_integer_offsets():
+    pytest.importorskip("pymoo")
+    from sklearn_genetic._pymoo_backend import optimize
+    from sklearn_genetic.backends import OptimizationProblem
+
+    initial = ((2**38,), (2**39,), (2**40,), (2**41,))
+    problem = OptimizationProblem(
+        "parameters", initial, ("x",), (Integer(0, 2**42),), None, 4, 0.8, 13
+    )
+    rows = []
+
+    def evaluate(batch):
+        rows.extend(batch)
+        return [(-row[0], row) for row in batch]
+
+    optimize(problem, evaluate, lambda population: None)
+    assert len(rows) == 20 and all(isinstance(row[0], int) and 0 <= row[0] <= 2**42 for row in rows)
