@@ -1,15 +1,11 @@
 from copy import deepcopy
-import copyreg
 import inspect
-from itertools import repeat
 from numbers import Integral
-from operator import is_
 import random
 import time
 import warnings
 
 import numpy as np
-from deap import base, creator, tools
 from sklearn.base import clone
 from sklearn.model_selection import cross_validate
 from sklearn.base import is_classifier, is_regressor, BaseEstimator, MetaEstimatorMixin
@@ -61,7 +57,6 @@ from sklearn.metrics._scorer import _check_multimetric_scoring
 
 from .parameters import Criteria
 from .space import Categorical, Continuous, Integer, Space
-from .algorithms import feature_population_diversity
 from ._base import GeneticEstimatorMixin, generation_history, reset_adapters as _reset_adapters
 from .callbacks.validations import check_callback
 from .schedules.validations import check_adapter
@@ -69,12 +64,12 @@ from .utils.cv_scores import (
     create_gasearch_cv_results_,
     create_feature_selection_cv_results_,
 )
-from .utils.random import weighted_bool_individual
-from .utils.tools import _hashable_key, cxUniform, mutFlipBit
+from .utils.tools import _hashable_key
 from .evaluation import (
+    candidate_records,
     create_fit_stats as _create_fit_stats,
     evaluate_population as _evaluate_population_batch,
-    logbook_record as _logbook_record,
+    record_candidate,
     record_fit_stats as _record_fit_stats,
     validate_error_score as _validate_error_score,
     validate_parallel_backend as _validate_parallel_backend,
@@ -85,14 +80,10 @@ from .population import (
     validate_population_initializer as _validate_population_initializer,
 )
 from .optimizer_control import (
-    adaptive_tournament_size,
     mutable_dimensions,
     validate_optimizer_control as _validate_optimizer_control,
 )
 
-import os
-from .callbacks.model_checkpoint import ModelCheckpoint
-from .callbacks.early_stoppers import TimerStopping
 from .config import EvolutionConfig, OptimizationConfig, PopulationConfig, RuntimeConfig
 
 
@@ -107,14 +98,6 @@ def _restore_search_rngs(state):
         python_state, numpy_state = state
         random.setstate(python_state)
         np.random.set_state(numpy_state)
-
-
-def _restore_search_elites(hall_of_fame, elites):
-    # DEAP inserts equal-fitness entries ahead of existing ties.
-    for genes, fitness in reversed(elites[: hall_of_fame.maxsize]):
-        individual = creator.Individual(genes)
-        individual.fitness.values = fitness
-        hall_of_fame.update([individual])
 
 
 def _seed_global_rngs(random_state):
@@ -161,6 +144,19 @@ def _normalize_cached_fitness(cache, criteria_sign):
             normalized = _evolution_score(fitness[0], criteria_sign)
             result["fitness"] = type(fitness)((normalized, *fitness[1:]))
     return cache
+
+
+def _restore_legacy_checkpoint(estimator, checkpoint):
+    if checkpoint is None:
+        return {}
+    estimator.__dict__.update(checkpoint["estimator_state"])
+    # Older DEAP files contain only the constructor state and generation log.
+    runtime = checkpoint.get("runtime_state") or {}
+    if runtime.get("fitness_cache") is not None:
+        estimator.fitness_cache = _normalize_cached_fitness(
+            runtime["fitness_cache"], _get_criteria_sign(estimator.criteria)
+        )
+    return runtime
 
 
 def _check_fit_params_supported(estimator, fit_params):
@@ -646,9 +642,10 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
     criteria : {'max', 'min'} , default='max'
         ``max`` if a higher scoring metric is better, ``min`` otherwise.
 
-    optimizer_backend : {"deap", "scipy"}, default="deap"
-        Optimization engine. SciPy uses bounded differential evolution and requires
-        SciPy 1.15 or newer. Callbacks and DEAP variation controls require DEAP.
+    optimizer_backend : str or callable, default="deap"
+        Optimization engine, installed optimizer entry-point name, or a callable
+        implementing sklearn_genetic.backends.Optimizer. SciPy requires
+        SciPy 1.15 or newer. Variation controls specific to DEAP require that backend.
 
     algorithm : str, default='eaMuPlusLambda'
         One of ``eaMuPlusLambda``, ``eaMuCommaLambda``, ``eaSimple``, or
@@ -932,7 +929,6 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
         self.pre_dispatch = pre_dispatch
         self.error_score = error_score
         self.return_train_score = return_train_score
-        # self.creator = creator
         self.log_config = log_config
         self.use_cache = use_cache
         self.fitness_cache = {}
@@ -1014,81 +1010,23 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
         )
 
     def _register(self):
-        """
-        This function is the responsible for registering the DEAPs necessary methods
-        and create other objects to hold the hof, logbook and stats.
-        """
-        # Rebuild derived fitness weights from the current public parameter.
+        from ._deap_backend import register_parameters
+
         self.criteria_sign = _get_criteria_sign(self.criteria)
-        self.toolbox = base.Toolbox()
-
-        creator.create("FitnessMax", base.Fitness, weights=(self.criteria_sign,))
-        creator.create("Individual", list, fitness=creator.FitnessMax)
-
-        attributes = []
-        # Assign all the parameters defined in the param_grid
-        # It uses the distribution parameter to set the sampling function
-        for parameter, dimension in self.space.param_grid.items():
-            self.toolbox.register(f"{parameter}", dimension.sample)
-            attributes.append(getattr(self.toolbox, parameter))
-
-        IND_SIZE = 1
-
-        self.toolbox.register(
-            "individual",
-            tools.initCycle,
-            creator.Individual,
-            tuple(attributes),
-            n=IND_SIZE,
-        )
-
-        self.toolbox.register("population", tools.initRepeat, list, self.toolbox.individual)
-
-        if len(self.space) == 1 and hasattr(list(self.space.param_grid.values())[0], "lower"):
-            sampler = list(self.space.param_grid.values())[0]
-            lower, upper = sampler.lower, sampler.upper
-
-            self.toolbox.register(
-                "mate_raw", tools.cxSimulatedBinaryBounded, low=lower, up=upper, eta=10
-            )
-        else:
-            self.toolbox.register("mate_raw", tools.cxUniform, indpb=0.5)
-
-        self.toolbox.register("mate", self.mate)
-        self.toolbox.register("mutate", self.mutate)
-        self.toolbox.register("select", self.select)
-
-        self.toolbox.register("evaluate", self.evaluate)
-        self.toolbox.register("evaluate_population", self.evaluate_population)
-
-        self._pop = self._initialize_population()
-        self._hof = tools.HallOfFame(self.keep_top_k, similar=self._same_individual)
-
-        self._stats = tools.Statistics(lambda ind: ind.fitness.values)
-        self._stats.register("fitness", np.mean, axis=0)
-        self._stats.register("fitness_std", np.std, axis=0)
-        self._stats.register("fitness_max", np.max, axis=0)
-        self._stats.register("fitness_min", np.min, axis=0)
-
-        self.logbook = tools.Logbook()
+        register_parameters(self)
 
     def _initialize_population(self):
         """
         Initialize the population, using warm-start configurations if provided.
         """
-        population = initialize_search_population(self, self.toolbox, creator.Individual)
-        for individual in population:
-            self._repair_individual(individual)
-        return population
+        from ._deap_backend import initialize_population
+
+        return initialize_population(self, initialize_search_population)
 
     def select(self, population, k):
-        tournament_size = adaptive_tournament_size(
-            self,
-            getattr(self, "_last_generation_record", None),
-            len(population),
-        )
-        self._selection_pressure_ = tournament_size
-        return tools.selTournament(population, k, tournsize=tournament_size)
+        from ._deap_backend import select_tournament
+
+        return select_tournament(self, population, k)
 
     def _repair_value(self, dimension, value):
         if isinstance(dimension, Integer):
@@ -1239,7 +1177,7 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
             # Retrieve cached result
             cached_result = self.fitness_cache[individual_key]
             # Ensure the logbook is updated even if the individual is cached
-            _logbook_record(self.logbook, "parameters", cached_result["current_generation_params"])
+            record_candidate(self, cached_result["current_generation_params"])
             _record_fit_stats(self, evaluated=1, cache_hits=1)
             return cached_result["fitness"]
 
@@ -1253,9 +1191,8 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
             individual,
             n_jobs=candidate_n_jobs,
         )
-        current_generation_params = _logbook_record(
-            self.logbook,
-            "parameters",
+        current_generation_params = record_candidate(
+            self,
             current_generation_params,
         )
 
@@ -1325,53 +1262,12 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
 
         # Make sure the callbacks are valid
         self.callbacks = check_callback(callbacks)
-        self._validate_backend()
+        optimizer = self._validate_backend()
 
-        checkpoint_loaded = False
-        restored_logbook = None
-        restored_fit_stats = None
-        restored_generation_log = None
-        restored_elites = ()
-        restored_rng_state = None
-        restored_adapter_state = None
-
-        # Load state if a checkpoint exists
-        for callback in self.callbacks:
-            if isinstance(callback, ModelCheckpoint):
-                if os.path.exists(callback.checkpoint_path):
-                    checkpoint_data = callback.load()
-                    if checkpoint_data:
-                        self.__dict__.update(checkpoint_data["estimator_state"])  # noqa
-                        # Restore the fitness cache so already-evaluated
-                        # candidates are reused instead of re-evaluated. Older
-                        # checkpoints have no ``runtime_state``, so guard with
-                        # .get() for backward compatibility.
-                        runtime_state = checkpoint_data.get("runtime_state") or {}
-                        cached = runtime_state.get("fitness_cache")
-                        if cached is not None:
-                            self.fitness_cache = _normalize_cached_fitness(
-                                cached, _get_criteria_sign(self.criteria)
-                            )
-                        restored_fit_stats = runtime_state.get("fit_stats_")
-                        # ``checkpoint_data["logbook"]`` is the per-*generation*
-                        # summary log (see ModelCheckpoint.on_step), not
-                        # ``self.logbook`` -- restoring it onto ``self.logbook``
-                        # would silently break ``cv_results_``/``history``.
-                        # ``_register()`` below also unconditionally creates a
-                        # fresh ``self.logbook``, so stash the real one and put
-                        # it back afterwards (see comment near the
-                        # ``_register()`` call).
-                        restored_logbook = runtime_state.get("candidate_logbook")
-                        # The per-generation summary log saved under the
-                        # legacy ``"logbook"`` key is exactly what generation
-                        # numbering needs to continue from -- see
-                        # ``_seed_logbook`` in ``algorithms.py``.
-                        restored_generation_log = checkpoint_data.get("logbook")
-                        restored_elites = runtime_state.get("elites", ())
-                        restored_rng_state = runtime_state.get("rng_state")
-                        restored_adapter_state = runtime_state.get("adapter_state")
-                        checkpoint_loaded = True
-                    break
+        checkpoint, context = self._prepare_checkpoint(optimizer)
+        legacy_checkpoint = checkpoint if optimizer is None else None
+        runtime = _restore_legacy_checkpoint(self, legacy_checkpoint)
+        restored_adapter_state = runtime.get("adapter_state")
 
         # ``set_params(param_grid=...)`` updates the public parameter but not
         # the Space built at construction. Rebuild after any checkpoint load,
@@ -1385,22 +1281,22 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
         _seed_global_rngs(self.random_state)
 
         self._validate_final_selection_mode()
-        if checkpoint_loaded and restored_adapter_state is not None:
+        if restored_adapter_state is not None:
             # Restore the crossover/mutation adapter step counters so the
             # schedule continues from where the previous run left off
             # instead of restarting from step 0 (see adapter checkpoint).
             self.crossover_adapter.load_state_dict(restored_adapter_state["crossover"])
             self.mutation_adapter.load_state_dict(restored_adapter_state["mutation"])
-        elif not checkpoint_loaded:
+        elif legacy_checkpoint is None:
             self.fitness_cache = {}
             _reset_adapters(self)
 
         # Preserve cumulative counters across a resume instead of zeroing them,
         # so e.g. ``cache_hits``/``evaluated_candidates`` reflect the whole run.
-        self.fit_stats_ = (
-            restored_fit_stats if restored_fit_stats is not None else _create_fit_stats()
+        self.fit_stats_ = runtime.get("fit_stats_") or _create_fit_stats()
+        self._resume_generation_log = (
+            legacy_checkpoint.get("logbook") if legacy_checkpoint else None
         )
-        self._resume_generation_log = restored_generation_log
 
         if callable(self.scoring):
             self.scorer_ = self.scoring
@@ -1444,35 +1340,21 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
         else:
             cv_orig = check_cv(self.cv, self.y_, classifier=_is_classifier(self.estimator))
             self.n_splits_ = cv_orig.get_n_splits(X, self.y_, **cv_groups_kwargs)
-        self._cv_splits = self._search_splits(cv_orig, cv_groups_kwargs)
+        if checkpoint and optimizer is not None:
+            self._cv_splits = checkpoint["cv_splits"]
+            self.n_splits_ = len(self._cv_splits)
+        else:
+            self._cv_splits = self._search_splits(cv_orig, cv_groups_kwargs)
 
-        # Set the DEAPs necessary methods
-        # Keep fold construction on its original seed before resuming proposal draws.
-        _restore_search_rngs(restored_rng_state)
-        self._register()
-        _restore_search_elites(self._hof, restored_elites)
-        # ``_register()`` always creates a fresh, empty ``self.logbook`` (it
-        # also builds the toolbox/population/hof/stats, which are ``deap``
-        # objects that cannot be checkpointed and are intentionally rebuilt on
-        # every ``fit`` call). Put the restored per-candidate logbook back so
-        # resumed candidates are not dropped from ``cv_results_``/``history``.
-        if restored_logbook is not None:
-            self.logbook = restored_logbook
-
-        # Optimization routine from the selected evolutionary algorithm
-        try:
-            pop, log, n_gen = self._select_algorithm(
-                pop=self._pop, stats=self._stats, hof=self._hof
-            )
-        finally:
-            del creator.FitnessMax
-            del creator.Individual
+        _restore_search_rngs(runtime.get("rng_state"))
+        self.criteria_sign = _get_criteria_sign(self.criteria)
+        log, n_gen = self._run_optimizer(optimizer, runtime, checkpoint, context)
 
         # Update the _n_iterations value as the algorithm could stop earlier due a callback
         self._n_iterations = n_gen
 
         self.cv_results_ = create_gasearch_cv_results_(
-            logbook=self.logbook,
+            records=candidate_records(self),
             space=self.space,
             return_train_score=self.return_train_score,
             metrics=self.metrics_list,
@@ -1484,7 +1366,7 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
         # Imitate the logic of scikit-learn refit parameter
         if self.refit:
             self.best_index_, self.best_score_, self.best_params_ = self._select_final_candidate(
-                checkpoint_loaded=checkpoint_loaded
+                checkpoint_loaded=bool(legacy_checkpoint)
             )
 
             self.best_estimator_ = clone(self.estimator).set_params(
@@ -1517,29 +1399,6 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
         }
 
         return self
-
-
-def _clone_feature_mask(x, memo=None, *, mask_type, native_attributes):
-    """Copy immutable integer genes in bulk and independently clone DEAP state."""
-    if (
-        memo is not None
-        or type(x) is not mask_type
-        or vars(x).keys() != {"fitness"}
-        or type(x.fitness) is not mask_type.fitness
-        or mask_type in copyreg.dispatch_table
-        or mask_type.__bases__ != (list,)
-        # Pickle may cache an empty slot-name list on this list subclass.
-        or vars(mask_type).get("__slotnames__")
-        or vars(mask_type).keys() - {"__slotnames__"} != native_attributes
-        # Stream exact type checks without resuming a Python generator for every column.
-        or not all(map(is_, map(type, x), repeat(int)))
-    ):
-        return deepcopy(x, memo)
-
-    child = list.__new__(mask_type)
-    child.fitness = deepcopy(x.fitness, {id(x): child})
-    child.extend(x)
-    return child
 
 
 class GAFeatureSelectionCV(
@@ -1742,9 +1601,10 @@ class GAFeatureSelectionCV(
     criteria : {'max', 'min'} , default='max'
         ``max`` if a higher scoring metric is better, ``min`` otherwise.
 
-    optimizer_backend : {"deap", "scipy"}, default="deap"
-        Optimization engine. SciPy uses bounded differential evolution and requires
-        SciPy 1.15 or newer. Callbacks and DEAP variation controls require DEAP.
+    optimizer_backend : str or callable, default="deap"
+        Optimization engine, installed optimizer entry-point name, or a callable
+        implementing sklearn_genetic.backends.Optimizer. SciPy requires
+        SciPy 1.15 or newer. Variation controls specific to DEAP require that backend.
 
     algorithm : str, default='eaMuPlusLambda'
         One of ``eaMuPlusLambda``, ``eaMuCommaLambda``, ``eaSimple``, or
@@ -2029,7 +1889,6 @@ class GAFeatureSelectionCV(
         self.pre_dispatch = pre_dispatch
         self.error_score = error_score
         self.return_train_score = return_train_score
-        # self.creator = creator
         self.log_config = log_config
         self.use_cache = use_cache
         self.fitness_cache = {}
@@ -2088,78 +1947,20 @@ class GAFeatureSelectionCV(
         self.criteria_sign = _get_criteria_sign(self.criteria)
 
     def _register(self):
-        """
-        This function is the responsible for registering the DEAPs necessary methods
-        and create other objects to hold the hof, logbook and stats.
-        """
-        # Rebuild derived fitness weights from the current public parameter.
+        from ._deap_backend import register_features
+
         self.criteria_sign = _get_criteria_sign(self.criteria)
-        self.toolbox = base.Toolbox()
-
-        # Criteria sign to set max or min problem
-        # And -1.0 as second weight to minimize number of features
-        creator.create("FitnessMax", base.Fitness, weights=[self.criteria_sign, -1.0])
-        creator.create("Individual", list, fitness=creator.FitnessMax)
-
-        self.toolbox.register(
-            "clone",
-            _clone_feature_mask,
-            mask_type=creator.Individual,
-            native_attributes=frozenset(vars(creator.Individual)),
-        )
-
-        # Register the array to choose the features
-        # Each binary value represents if the feature is selected or not
-
-        self.toolbox.register(
-            "individual_raw",
-            weighted_bool_individual,
-            creator.Individual,
-            weight=self.features_proportion,
-            size=self.n_features,
-        )
-        self.toolbox.register("individual", self._new_feature_individual)
-
-        self.toolbox.register("population", tools.initRepeat, list, self.toolbox.individual)
-
-        self.toolbox.register("mate_raw", cxUniform, indpb=self.crossover_adapter.current_value)
-        self.toolbox.register("mutate_raw", mutFlipBit, indpb=self.mutation_adapter.current_value)
-        self.toolbox.register("mate", self.mate)
-        self.toolbox.register("mutate", self.mutate)
-
-        self.toolbox.register("select", self.select)
-
-        self.toolbox.register("evaluate", self.evaluate)
-        self.toolbox.register("evaluate_population", self.evaluate_population)
-
-        self._pop = self._initialize_population()
-        self._hof = tools.HallOfFame(self.keep_top_k)
-
-        # Stats among axis 0 to get two values:
-        # One based on the score and the other in the number of features
-        self._stats = tools.Statistics(ind_fitness_values)
-        self._stats.population_diversity = feature_population_diversity
-        self._stats.register("fitness", np.mean, axis=0)
-        self._stats.register("fitness_std", np.std, axis=0)
-        self._stats.register("fitness_max", np.max, axis=0)
-        self._stats.register("fitness_min", np.min, axis=0)
-
-        self.logbook = tools.Logbook()
+        register_features(self)
 
     def _initialize_population(self):
-        population = initialize_feature_population(self, self.toolbox, creator.Individual)
-        for individual in population:
-            self._repair_individual(individual)
-        return population
+        from ._deap_backend import initialize_population
+
+        return initialize_population(self, initialize_feature_population)
 
     def select(self, population, k):
-        tournament_size = adaptive_tournament_size(
-            self,
-            getattr(self, "_last_generation_record", None),
-            len(population),
-        )
-        self._selection_pressure_ = tournament_size
-        return tools.selTournament(population, k, tournsize=tournament_size)
+        from ._deap_backend import select_tournament
+
+        return select_tournament(self, population, k)
 
     def _repair_individual(self, individual):
         for index, value in enumerate(individual):
@@ -2311,9 +2112,7 @@ class GAFeatureSelectionCV(
         if self.use_cache and individual_key in self.fitness_cache:
             cached_result = self.fitness_cache[individual_key]
             # Ensure the logbook is updated even if the individual is cached
-            _logbook_record(
-                self.logbook, "parameters", cached_result["current_generation_features"]
-            )
+            record_candidate(self, cached_result["current_generation_features"])
             _record_fit_stats(self, evaluated=1, cache_hits=1)
             return cached_result["fitness"]
 
@@ -2327,9 +2126,8 @@ class GAFeatureSelectionCV(
             individual,
             n_jobs=candidate_n_jobs,
         )
-        current_generation_params = _logbook_record(
-            self.logbook,
-            "parameters",
+        current_generation_params = record_candidate(
+            self,
             current_generation_params,
         )
 
@@ -2410,53 +2208,12 @@ class GAFeatureSelectionCV(
 
         # Make sure the callbacks are valid
         self.callbacks = check_callback(callbacks)
-        self._validate_backend()
+        optimizer = self._validate_backend()
 
-        checkpoint_loaded = False
-        restored_logbook = None
-        restored_fit_stats = None
-        restored_generation_log = None
-        restored_elites = ()
-        restored_rng_state = None
-        restored_adapter_state = None
-
-        # Load state if a checkpoint exists
-        for callback in self.callbacks:
-            if isinstance(callback, ModelCheckpoint):
-                if os.path.exists(callback.checkpoint_path):
-                    checkpoint_data = callback.load()
-                    if checkpoint_data:
-                        self.__dict__.update(checkpoint_data["estimator_state"])  # noqa
-                        # Restore the fitness cache so already-evaluated
-                        # candidates are reused instead of re-evaluated. Older
-                        # checkpoints have no ``runtime_state``, so guard with
-                        # .get() for backward compatibility.
-                        runtime_state = checkpoint_data.get("runtime_state") or {}
-                        cached = runtime_state.get("fitness_cache")
-                        if cached is not None:
-                            self.fitness_cache = _normalize_cached_fitness(
-                                cached, _get_criteria_sign(self.criteria)
-                            )
-                        restored_fit_stats = runtime_state.get("fit_stats_")
-                        # ``checkpoint_data["logbook"]`` is the per-*generation*
-                        # summary log (see ModelCheckpoint.on_step), not
-                        # ``self.logbook`` -- restoring it onto ``self.logbook``
-                        # would silently break ``cv_results_``/``history``.
-                        # ``_register()`` below also unconditionally creates a
-                        # fresh ``self.logbook``, so stash the real one and put
-                        # it back afterwards (see comment near the
-                        # ``_register()`` call).
-                        restored_logbook = runtime_state.get("candidate_logbook")
-                        # The per-generation summary log saved under the
-                        # legacy ``"logbook"`` key is exactly what generation
-                        # numbering needs to continue from -- see
-                        # ``_seed_logbook`` in ``algorithms.py``.
-                        restored_generation_log = checkpoint_data.get("logbook")
-                        restored_elites = runtime_state.get("elites", ())
-                        restored_rng_state = runtime_state.get("rng_state")
-                        restored_adapter_state = runtime_state.get("adapter_state")
-                        checkpoint_loaded = True
-                    break
+        checkpoint, context = self._prepare_checkpoint(optimizer)
+        legacy_checkpoint = checkpoint if optimizer is None else None
+        runtime = _restore_legacy_checkpoint(self, legacy_checkpoint)
+        restored_adapter_state = runtime.get("adapter_state")
 
         self.features_proportion = None
         max_features = getattr(self, "max_features", None)
@@ -2476,22 +2233,22 @@ class GAFeatureSelectionCV(
         _seed_global_rngs(self.random_state)
 
         self._validate_final_selection_mode()
-        if checkpoint_loaded and restored_adapter_state is not None:
+        if restored_adapter_state is not None:
             # Restore the crossover/mutation adapter step counters so the
             # schedule continues from where the previous run left off
             # instead of restarting from step 0 (see adapter checkpoint).
             self.crossover_adapter.load_state_dict(restored_adapter_state["crossover"])
             self.mutation_adapter.load_state_dict(restored_adapter_state["mutation"])
-        elif not checkpoint_loaded:
+        elif legacy_checkpoint is None:
             self.fitness_cache = {}
             _reset_adapters(self)
 
         # Preserve cumulative counters across a resume instead of zeroing them,
         # so e.g. ``cache_hits``/``evaluated_candidates`` reflect the whole run.
-        self.fit_stats_ = (
-            restored_fit_stats if restored_fit_stats is not None else _create_fit_stats()
+        self.fit_stats_ = runtime.get("fit_stats_") or _create_fit_stats()
+        self._resume_generation_log = (
+            legacy_checkpoint.get("logbook") if legacy_checkpoint else None
         )
-        self._resume_generation_log = restored_generation_log
 
         if callable(self.scoring):
             self.scorer_ = self.scoring
@@ -2534,39 +2291,15 @@ class GAFeatureSelectionCV(
         else:
             cv_orig = check_cv(self.cv, self.y_, classifier=_is_classifier(self.estimator))
             self.n_splits_ = cv_orig.get_n_splits(X, self.y_, **cv_groups_kwargs)
-        self._cv_splits = self._search_splits(cv_orig, cv_groups_kwargs)
+        if checkpoint and optimizer is not None:
+            self._cv_splits = checkpoint["cv_splits"]
+            self.n_splits_ = len(self._cv_splits)
+        else:
+            self._cv_splits = self._search_splits(cv_orig, cv_groups_kwargs)
 
-        # Set the DEAPs necessary methods
-        # Keep fold construction on its original seed before resuming proposal draws.
-        _restore_search_rngs(restored_rng_state)
-        self._register()
-        _restore_search_elites(self._hof, restored_elites)
-        # ``_register()`` always creates a fresh, empty ``self.logbook`` (it
-        # also builds the toolbox/population/hof/stats, which are ``deap``
-        # objects that cannot be checkpointed and are intentionally rebuilt on
-        # every ``fit`` call). Put the restored per-candidate logbook back so
-        # resumed candidates are not dropped from ``cv_results_``/``history``.
-        if restored_logbook is not None:
-            self.logbook = restored_logbook
-
-        if (
-            not checkpoint_loaded
-            and self.population_initializer == "smart"
-            and any(isinstance(callback, TimerStopping) for callback in self.callbacks)
-        ):
-            # Evaluate a dense baseline before a deadline can truncate the
-            # ascending-size smart population. Keep every original candidate.
-            densest = max(range(len(self._pop)), key=lambda index: sum(self._pop[index]))
-            self._pop.insert(0, self._pop.pop(densest))
-
-        # Optimization routine from the selected evolutionary algorithm
-        try:
-            pop, log, n_gen = self._select_algorithm(
-                pop=self._pop, stats=self._stats, hof=self._hof
-            )
-        finally:
-            del creator.FitnessMax
-            del creator.Individual
+        _restore_search_rngs(runtime.get("rng_state"))
+        self.criteria_sign = _get_criteria_sign(self.criteria)
+        log, n_gen = self._run_optimizer(optimizer, runtime, checkpoint, context)
 
         # Update the _n_iterations value as the algorithm could stop earlier due a callback
         self._n_iterations = n_gen
@@ -2575,7 +2308,7 @@ class GAFeatureSelectionCV(
         self.support_ = self.best_features_
 
         self.cv_results_ = create_feature_selection_cv_results_(
-            logbook=self.logbook,
+            records=candidate_records(self),
             return_train_score=self.return_train_score,
             metrics=self.metrics_list,
             greater_is_better=self.criteria == "max",
@@ -2586,7 +2319,7 @@ class GAFeatureSelectionCV(
         if self.refit:
             if self.final_selection:
                 self.best_index_, self.best_score_, selected = self._select_final_candidate(
-                    checkpoint_loaded=checkpoint_loaded
+                    checkpoint_loaded=bool(legacy_checkpoint)
                 )
                 self.best_features_ = np.asarray(selected["features"], dtype=bool)
                 self.support_ = self.best_features_
@@ -2604,7 +2337,8 @@ class GAFeatureSelectionCV(
 
             self.estimator_ = self.best_estimator_
 
-        self.hof = self._hof
+        if optimizer is None:
+            self.hof = self._hof
 
         return self
 

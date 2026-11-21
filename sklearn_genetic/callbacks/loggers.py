@@ -2,13 +2,13 @@ import logging
 import os
 import sys
 import time
-from copy import deepcopy
 from joblib import dump
 
 from tqdm.auto import tqdm
 
 from .base import BaseCallback
 from ..parameters import Metrics
+from ..evaluation import candidate_records
 
 logger = logging.getLogger(__name__)  # noqa
 
@@ -64,8 +64,7 @@ class LogbookSaver(BaseCallback):
 
     def on_step(self, record=None, logbook=None, estimator=None):
         try:
-            dump_logbook = deepcopy(estimator.logbook.chapters["parameters"])
-            dump(dump_logbook, self.checkpoint_path, **self.dump_options)
+            dump(candidate_records(estimator), self.checkpoint_path, **self.dump_options)
         except Exception as e:
             logger.error("Could not save the Logbook in the checkpoint")
 

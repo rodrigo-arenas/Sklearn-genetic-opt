@@ -5,6 +5,14 @@ for upgrade guidance and links to the API examples.
 
 ## Unreleased
 
+- SciPy and external optimizer plugins support LivePlot, progress logging and
+  early stopping, including CV batch deadlines. ModelCheckpoint writes versioned
+  progress snapshots. Plugins can opt into exact resume by supplying solver state.
+
+- Both estimators accept a callable optimizer or the name of an installed
+  `sklearn_genetic.optimizers` entry point. Plugins and SciPy share initialization,
+  CV, candidate records and history without constructing a DEAP toolbox.
+
 - Both estimators accept the keyword-only `optimizer_backend="scipy"` for
   differential evolution. Install the `scipy` extra for the supported version.
   DEAP remains the default and now requires 1.4.4 across Python 3.12–3.15.

@@ -40,7 +40,7 @@ GASearchCV(
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `optimizer_backend` | str, keyword-only | `"deap"` | Optimization engine. See [SciPy support and limits](./algorithms#scipy-backend) for `"scipy"`. |
+| `optimizer_backend` | str or callable, keyword-only | `"deap"` | Built-in engine, callable, or installed [optimizer plugin](./algorithms#optimizer-plugins). See [SciPy support and limits](./algorithms#scipy-backend) for `"scipy"`. |
 | `estimator` | estimator | — | A scikit-learn estimator with a `fit` method |
 | `param_grid` | dict | — | Mapping from parameter name to `Integer`, `Continuous`, or `Categorical` |
 | `scoring` | str or dict | `None` | Metric(s) to evaluate. `None` uses the estimator's default scorer |

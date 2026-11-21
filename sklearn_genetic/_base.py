@@ -1,21 +1,9 @@
 import logging
 import pickle
-from math import isfinite
 
-import numpy as np
 import pandas as pd
 from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import check_is_fitted
-
-from .algorithms import (
-    _compile_generation_record,
-    _new_telemetry_state,
-    _print_verbose_record,
-    _seed_logbook,
-    algorithms_factory,
-)
-from .callbacks.early_stoppers import TimerStopping
-from .parameters import Algorithms
 
 logger = logging.getLogger(__name__)
 
@@ -56,8 +44,10 @@ def generation_history(records):
     )
     history = {key: [] for key in fields}
     for row in records:
+        if row.get("partial") and "partial" not in history:
+            history["partial"] = [False] * len(history["gen"])
         for key, values in history.items():
-            values.append(row.get(key))
+            values.append(row.get(key, False) if key == "partial" else row.get(key))
     return history
 
 
@@ -65,66 +55,11 @@ def history_record(history, index):
     return {key: values[index] for key, values in history.items()}
 
 
-def _best_observed_stat(records, minimize):
-    # Stats.compile runs at each generation boundary and after final refinement.
-    # Candidate records also include discarded offspring and repeated evaluations.
-    position = 0
-    best = None
-
-    def best_observed(_population):
-        nonlocal position, best
-        for index in range(position, len(records)):
-            score = records[index]["score"]
-            if isfinite(score) and (best is None or (score < best if minimize else score > best)):
-                best = score
-        position = len(records)
-        return float("nan") if best is None else best
-
-    return best_observed
-
-
-class _BatchSearchResults:
-    """Adapt plain candidate batches to the estimators' historical result objects."""
-
-    def __init__(self, estimator, initial, stats, hof):
-        self.estimator = estimator
-        self.individual_type = type(initial[0])
-        self.stats = stats
-        self.hof = hof
-        self.population = initial
-        self.proposals_since_report = 0
-        self.state = _new_telemetry_state()
-        self.log, _ = _seed_logbook(None, stats)
-
-    def evaluate(self, candidates):
-        fitnesses = self.estimator.evaluate_population(candidates)
-        handles = [self.individual_type(candidate) for candidate in candidates]
-        for handle, fitness in zip(handles, fitnesses, strict=True):
-            handle.fitness.values = fitness
-        self.hof.update(handles)
-        self.proposals_since_report += len(handles)
-        return [
-            (-self.estimator.criteria_sign * fitness[0], handle)
-            for fitness, handle in zip(fitnesses, handles)
-        ]
-
-    def report(self, survivors):
-        self.population = survivors
-        gen = len(self.log)
-        values = _compile_generation_record(
-            self.stats, survivors, self.state, gen, halloffame=self.hof
-        )
-        self.log.record(gen=gen, nevals=self.proposals_since_report, **values)
-        if self.estimator.verbose:
-            _print_verbose_record(gen, self.proposals_since_report, values, print_header=gen == 0)
-        self.proposals_since_report = 0
-
-
 class GeneticEstimatorMixin:
     # ``hof`` is a DEAP HallOfFame but is part of the public, user-facing
     # result surface, so it is deliberately NOT excluded: it is plain
     # picklable data and ``test_estimator_serialization`` asserts on it.
-    _volatile_pickle_attrs = {"toolbox", "_stats", "_pop", "_hof"}
+    _volatile_pickle_attrs = {"toolbox", "_stats", "_pop", "_hof", "_optimizer_snapshot"}
 
     # Contract for the two serialization paths (see #297):
     #
@@ -179,6 +114,8 @@ class GeneticEstimatorMixin:
     def __setstate__(self, state):
         """Restore instance state, leaving DEAP attrs unset (rebuilt on fit)."""
         self.optimizer_backend = "deap"
+        for key in ("_candidate_rows", "_feature_elites", "logbook", "hof"):
+            self.__dict__.pop(key, None)
         self.__dict__.update(state)
 
     def _serializable_state(self):
@@ -210,7 +147,7 @@ class GeneticEstimatorMixin:
         """
         class_name = self.__class__.__name__
         checkpoint_data = {"estimator_state": self.__getstate__(), "logbook": None}
-        if hasattr(self, "logbook"):
+        if "_candidate_rows" not in vars(self) and hasattr(self, "logbook"):
             checkpoint_data["logbook"] = self.logbook
 
         try:
@@ -252,7 +189,8 @@ class GeneticEstimatorMixin:
         try:
             if isinstance(checkpoint_data, dict) and "estimator_state" in checkpoint_data:
                 self.__setstate__(checkpoint_data["estimator_state"])
-                self.logbook = checkpoint_data["logbook"]
+                if "_candidate_rows" not in vars(self):
+                    self.logbook = checkpoint_data["logbook"]
             else:
                 # Raw instance written with ``pickle.dump(self, f)``; its DEAP
                 # internals were already stripped by ``__getstate__``.
@@ -267,71 +205,51 @@ class GeneticEstimatorMixin:
         logger.info("%s model successfully loaded from %s", class_name, filepath)
 
     def _validate_backend(self):
-        if self.optimizer_backend == "deap":
-            return
-        if self.optimizer_backend != "scipy":
-            raise ValueError("optimizer_backend must be 'deap' or 'scipy'")
-        from ._scipy_backend import validate_scipy_backend
+        from .backends import resolve_optimizer
 
-        validate_scipy_backend(self)
+        return resolve_optimizer(self)
+
+    def _prepare_checkpoint(self, optimizer):
+        from .callbacks.model_checkpoint import load_search_checkpoint
+
+        checkpoint = load_search_checkpoint(self.callbacks, optimizer)
+        if optimizer is None:
+            return checkpoint, None
+        from ._backend_runtime import checkpoint_context
+
+        return checkpoint, checkpoint_context(self, optimizer, checkpoint)
+
+    def _run_optimizer(self, optimizer, runtime, checkpoint, context):
+        if optimizer is not None:
+            from ._backend_runtime import run_optimizer
+
+            return run_optimizer(self, optimizer, checkpoint, context)
+
+        from ._deap_backend import run_deap
+
+        return run_deap(
+            self, runtime.get("candidate_logbook"), runtime.get("elites", ()), bool(checkpoint)
+        )
+
+    def __getattr__(self, name):
+        # Historical result objects are materialized only when explicitly requested.
+        if name == "logbook" and "_candidate_rows" in vars(self):
+            from ._deap_backend import legacy_logbook
+
+            self.logbook = legacy_logbook(self._candidate_rows)
+            self._candidate_rows = self.logbook.chapters["parameters"]
+            return self.logbook
+        if name == "hof" and "_feature_elites" in vars(self):
+            from ._deap_backend import legacy_feature_archive
+
+            self.hof = legacy_feature_archive(*self._feature_elites)
+            return self.hof
+        raise AttributeError(name)
 
     def _select_algorithm(self, pop, stats, hof):
-        fit_stats = self.fit_stats_
-        stats.register("cross_validate_calls", lambda _: fit_stats["cross_validate_calls"])
-        stats.register(
-            "fitness_best_observed",
-            _best_observed_stat(self.logbook.chapters["parameters"], self.criteria == "min"),
-        )
-        if self.optimizer_backend == "scipy":
-            from ._scipy_backend import run_scipy
+        from ._deap_backend import select_algorithm
 
-            results = _BatchSearchResults(self, pop, stats, hof)
-            run_scipy(
-                [list(candidate) for candidate in pop],
-                results.evaluate,
-                results.report,
-                dimensions=tuple(getattr(self, "param_grid", {}).values()),
-                max_features=getattr(self, "max_features", None),
-                generations=self.generations,
-                recombination=self.crossover_probability,
-                seed=int(np.random.randint(2**31)),
-            )
-            return results.population, results.log, len(results.log)
-
-        selected_algorithm = algorithms_factory.get(self.algorithm, None)
-        if selected_algorithm:
-            self._evaluation_timers = [
-                callback for callback in self.callbacks if isinstance(callback, TimerStopping)
-            ]
-            self._evaluation_started = False
-            self._evaluation_budget_exhausted = False
-            try:
-                pop, log, gen = selected_algorithm(
-                    pop,
-                    self.toolbox,
-                    mu=self.population_size,
-                    lambda_=2 * self.population_size,
-                    cxpb=self.crossover_adapter,
-                    stats=stats,
-                    mutpb=self.mutation_adapter,
-                    ngen=self.generations,
-                    halloffame=hof,
-                    callbacks=self.callbacks,
-                    verbose=self.verbose,
-                    estimator=self,
-                    resume_log=getattr(self, "_resume_generation_log", None),
-                )
-            finally:
-                del self._evaluation_timers
-                del self._evaluation_started
-                del self._evaluation_budget_exhausted
-        else:
-            raise ValueError(
-                f"The algorithm {self.algorithm} is not supported, "
-                f"please select one from {Algorithms.list()}"
-            )
-
-        return pop, log, gen
+        return select_algorithm(self, pop, stats, hof)
 
     def cv_results_dataframe(self):
         """Return the candidate CV results as a pandas DataFrame.

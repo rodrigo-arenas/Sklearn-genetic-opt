@@ -1,4 +1,4 @@
-from contextlib import nullcontext
+from contextlib import contextmanager, nullcontext
 from numbers import Real
 
 from joblib import Parallel, delayed, effective_n_jobs
@@ -23,6 +23,21 @@ def logbook_record(logbook, chapter_name, parameters):
     logbook.chapters[chapter_name].append(parameters)
     logbook.record()
     return parameters
+
+
+def candidate_records(estimator):
+    if "_candidate_rows" in vars(estimator):
+        return estimator._candidate_rows
+    return estimator.logbook.chapters["parameters"]
+
+
+def record_candidate(estimator, parameters):
+    if "_candidate_rows" in vars(estimator) and "logbook" not in vars(estimator):
+        rows = estimator._candidate_rows
+        record = {"index": len(rows), **parameters}
+        rows.append(record)
+        return record
+    return logbook_record(estimator.logbook, "parameters", parameters)
 
 
 def is_parallel_enabled(n_jobs, n_tasks):
@@ -73,6 +88,23 @@ def record_fit_stats(
     estimator.fit_stats_["cache_hits"] += cache_hits
     estimator.fit_stats_["duplicate_candidates"] += duplicates
     estimator.fit_stats_["skipped_invalid_candidates"] += skipped
+
+
+@contextmanager
+def evaluation_timers(estimator):
+    from .callbacks.early_stoppers import TimerStopping
+
+    estimator._evaluation_timers = [c for c in estimator.callbacks if isinstance(c, TimerStopping)]
+    estimator._evaluation_started = False
+    estimator._evaluation_budget_exhausted = False
+    try:
+        yield
+    finally:
+        del (
+            estimator._evaluation_timers,
+            estimator._evaluation_started,
+            estimator._evaluation_budget_exhausted,
+        )
 
 
 def _time_budget_exhausted(estimator):
@@ -163,16 +195,15 @@ def evaluate_population(estimator, individuals, cache_record_key):
 
         if estimator.use_cache and individual_key in estimator.fitness_cache:
             cached_result = estimator.fitness_cache[individual_key]
-            logbook_record(estimator.logbook, "parameters", cached_result[cache_record_key])
+            record_candidate(estimator, cached_result[cache_record_key])
         else:
             if lookup_key not in pending_results:
                 break
             fitness, current_generation_record, used_cv, skipped_invalid = pending_results[
                 lookup_key
             ]
-            current_generation_record = logbook_record(
-                estimator.logbook,
-                "parameters",
+            current_generation_record = record_candidate(
+                estimator,
                 current_generation_record,
             )
             batch_cv_calls += int(used_cv)

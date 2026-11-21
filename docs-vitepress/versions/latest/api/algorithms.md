@@ -97,10 +97,10 @@ print(search.best_params_, selector.get_support())
   retain their constructor defaults when selecting SciPy. Changing these DEAP-only
   settings raises an error. Diversity control is inactive for SciPy under either
   Boolean setting. Final selection and fixed crossover are supported.
-- Historical callbacks, including early stopping and `ModelCheckpoint`, require
-  DEAP. SciPy rejects them before opening a checkpoint or running CV. Fitted model
-  save/load remains available. DEAP still supplies the common population,
-  hall-of-fame and logbook representations in this first implementation.
+- LivePlot, progress loggers and stopping callbacks run at the same generation
+  boundaries as external plugins. `ModelCheckpoint` saves an inspectable progress
+  snapshot. SciPy's public solver API does not restore its internal state for
+  exact continuation. See [callbacks and checkpoints](#callbacks-and-checkpoints).
 
 SciPy was selected because scikit-learn already installs it and its recent releases
 publish Linux, macOS and Windows wheels for all four supported Python minors.
@@ -132,3 +132,141 @@ slots for copies of the best archived candidates. With `elitism=False`, all
 survivors are selected from the algorithm's candidate pool. In both cases,
 `fitness_best` tracks the best evaluated candidate in the hall of fame, while
 `fitness_min`, `fitness_max` and `fitness` describe the current population.
+
+## Optimizer plugins
+
+Pass a function as `optimizer_backend` to try a search strategy with either
+estimator. This example evaluates the supplied population, then proposes new
+candidates by recombining coordinates. For feature selection it repeats valid
+initial masks, preserving the feature-count limit.
+
+```python
+from random import Random
+
+from sklearn.tree import DecisionTreeClassifier
+from sklearn_genetic import GASearchCV
+from sklearn_genetic.space import Integer
+
+
+def recombine(problem, evaluate, report):
+    rng = Random(problem.seed)
+    parents = problem.initial_population
+    for generation in range(problem.generations + 1):
+        if generation == 0:
+            candidates = parents
+        elif problem.task == "parameters":
+            candidates = [
+                [rng.choice(parents)[i] for i in range(len(parents[0]))]
+                for _ in parents
+            ]
+        else:
+            candidates = [rng.choice(parents) for _ in parents]
+        scored = evaluate(candidates)
+        report([handle for loss, handle in scored])
+        ranked = sorted(zip(candidates, scored), key=lambda item: item[1][0])
+        parents = [row for row, _ in ranked[: max(1, len(ranked) // 2)]]
+
+
+search = GASearchCV(
+    DecisionTreeClassifier(random_state=7), cv=3,
+    param_grid={"max_depth": Integer(1, 10), "min_samples_leaf": Integer(1, 5)},
+    optimizer_backend=recombine, population_size=8, generations=2, random_state=7,
+)
+```
+
+The public signature is `optimize(problem, evaluate, report) -> None`.
+`sklearn_genetic.backends.Optimizer` describes the callable type.
+`OptimizationProblem` supplies the task, initial rows, parameter names and
+dimensions in coordinate order, feature limit, generation limit, fixed crossover
+probability and a per-fit seed. Treat dimensions and category values as read-only.
+Use the initial rows to honor warm starts. Check any solver-specific restrictions
+before calling `evaluate`.
+
+- Pass a nonempty batch of valid decoded rows to `evaluate`. It returns ordered
+  `(loss, handle)` pairs. Minimize the scalar loss for either scoring direction.
+  Feature masks must be binary, nonempty and respect `max_features`.
+- Pass surviving handles to `report` after initialization and once per generation.
+  Report between one and `population_size` survivors. A handle identifies one evaluation and may survive several generations. Keep it
+  opaque. The estimator records the best candidates across all evaluated proposals.
+- Stop early if appropriate. The upper limits are `problem.max_evaluations`
+  proposals (including cache hits) and `problem.generations + 1` reports.
+  The last evaluation must be followed by a report. Use these callbacks
+  synchronously within the call. The estimator owns CV parallelism and caching.
+- Predictions, refit, fitted history, post-fit plots and candidate results share
+  the estimator's normal API. DEAP remains an installation dependency for the
+  default engine. Plugin fits do not import it. Explicit access to the historical
+  `logbook` or feature `hof` materializes the corresponding DEAP object.
+  LivePlot and stopping callbacks use the shared runtime. Custom callbacks that
+  access DEAP operators or the toolbox still require the DEAP engine.
+
+To distribute this function independently, put it in a Python package and add
+the following entry point to that package's `pyproject.toml`:
+
+```toml
+[project.entry-points."sklearn_genetic.optimizers"]
+recombine = "my_optimizer:recombine"
+```
+
+After installation, select `optimizer_backend="recombine"` in either estimator.
+Only the selected plugin is loaded. The names `deap` and `scipy` are reserved.
+Use a unique name and declare solver dependencies in the plugin package. For
+serialization, use its registered name or an importable module-level callable.
+See the [PyPA plugin guide](https://packaging.python.org/en/latest/guides/creating-and-discovering-plugins/).
+
+### Callbacks and checkpoints
+
+For either estimator, pass callbacks to `fit`. This example displays the best
+observed fitness, stops on a plateau and saves progress at each reported boundary:
+
+```python
+from sklearn_genetic.callbacks import DeltaThreshold, ModelCheckpoint
+from sklearn_genetic.plots import LivePlot
+
+checkpoint = ModelCheckpoint("search-progress.pkl")  # Use a fresh path for a new search.
+search.fit(X, y, callbacks=[
+    LivePlot(metrics=("fitness_best_observed",)),
+    DeltaThreshold(threshold=0.001, generations=3),
+    checkpoint,
+])
+progress = checkpoint.load()
+print(len(progress["candidate_records"]), progress["resumable"])
+```
+
+The example uses a plugin or SciPy. DEAP keeps its historical checkpoint format.
+On the shared runtime, a custom callback receives the estimator at `on_start`,
+the generation row and accumulated rows at `on_step`, and the rows at `on_end`.
+The log supports indexing, iteration and `select("fitness")`. Returning `True`
+from `on_step` stops after all callbacks for that row have run. The shared
+runtime writes checkpoints after the other observers finish that step. A plugin can
+release resources in `finally`; let exceptions from `evaluate` and `report`
+propagate to the runtime.
+
+`TimerStopping` checks between CV batches. The in-flight batch can finish and
+the first batch is allowed to complete, so refit has evaluated candidates. When
+a deadline interrupts a generation, its final row has `partial=True` and
+summarizes the completed proposals since the last report. Refitting uses the
+normal selection rules. A partial row preserves the previous complete resumable
+checkpoint when one exists.
+
+**Optional exact resume for plugins.** A callable may implement
+`resume(problem, evaluate, report, state)` as described by
+`sklearn_genetic.backends.ResumableOptimizer`. When
+`problem.checkpoint_requested` is true, such a plugin calls
+`report(survivors, state=...)` with non-None, picklable continuation state at
+each completed boundary. Save everything needed to propose the **next**
+generation, including the solver's RNG state, iteration number and any retained
+evaluation handles. Give the solver state its own version and validate it in
+`resume`. For example, an engine using a Python `random.Random` generator can
+save `(1, next_generation, rng.getstate(), parents)` and reconstruct its
+generator with `rng.setstate(saved_rng_state)`.
+
+To continue, supply the same checkpoint to `fit` with the same inputs and
+search settings. The runtime restores the original CV folds, remaining proposal
+budget, cache, observed candidates, elites and generation numbers before calling
+`resume`. Comparisons require the same software versions and reproducible
+model/scoring behavior. Checkpoint-enabled exact resume requires fingerprintable
+settings, including importable scorers. Callback instances start a new lifecycle
+and can consult the accumulated generation log. A completed generation budget
+can be refitted directly. SciPy and plugins implementing only the base protocol
+can save and inspect progress; starting a new search uses a fresh path. Load
+pickle checkpoints only from trusted sources.

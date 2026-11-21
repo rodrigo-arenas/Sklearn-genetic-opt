@@ -1,13 +1,11 @@
 """Internal adapter for SciPy's vectorized differential evolution solver."""
 
 from collections import defaultdict
-from numbers import Integral, Real
 
 import numpy as np
 from scipy import __version__ as scipy_version
 from scipy.optimize import differential_evolution
 
-from .config import EvolutionConfig, OptimizationConfig
 from .space import Categorical, Continuous, Integer
 
 
@@ -18,27 +16,8 @@ class _EvaluationError(Exception):
 def validate_scipy_backend(estimator):
     if np.lib.NumpyVersion(scipy_version) < "1.15.0":
         raise ImportError("Install sklearn-genetic-opt[scipy] for SciPy >= 1.15")
-    if estimator.callbacks:
-        raise ValueError("Callbacks, including ModelCheckpoint, require optimizer_backend='deap'")
-    if not isinstance(estimator.population_size, Integral) or estimator.population_size < 5:
+    if estimator.population_size < 5:
         raise ValueError("SciPy requires population_size >= 5")
-    if not isinstance(estimator.generations, Integral) or estimator.generations < 0:
-        raise ValueError("SciPy requires nonnegative integer generations")
-    if not isinstance(estimator.crossover_probability, Real) or not (
-        0 <= estimator.crossover_probability <= 1
-    ):
-        raise ValueError("SciPy requires a fixed crossover_probability in [0, 1]")
-
-    # The legacy constructor defaults also apply when only optimizer_backend is supplied.
-    for name in ("algorithm", "mutation_probability", "tournament_size", "elitism"):
-        if getattr(estimator, name) != getattr(EvolutionConfig, name):
-            raise ValueError(f"{name} is a DEAP-only option")
-    for name in OptimizationConfig.__dataclass_fields__:
-        if name == "diversity_control" or name.startswith("final_selection"):
-            continue
-        if getattr(estimator, name) != getattr(OptimizationConfig, name):
-            raise ValueError(f"{name} is a DEAP-only option")
-
     for name, dim in getattr(estimator, "param_grid", {}).items():
         if isinstance(dim, Categorical) and dim.priors is None and len(dim.choices):
             continue
@@ -75,8 +54,9 @@ def _decode(dim, value):
     if dim.lower == dim.upper:
         return float(dim.lower)
     if dim.distribution == "log-uniform" and np.log(dim.upper) != np.log(dim.lower):
-        return float(np.exp(np.log(dim.lower) + value * (np.log(dim.upper) - np.log(dim.lower))))
-    return float(dim.lower + value * (dim.upper - dim.lower))
+        result = np.exp(np.log(dim.lower) + value * (np.log(dim.upper) - np.log(dim.lower)))
+        return float(np.clip(result, dim.lower, dim.upper))
+    return float(np.clip(dim.lower + value * (dim.upper - dim.lower), dim.lower, dim.upper))
 
 
 def _decode_mask(row, max_features):
@@ -166,3 +146,16 @@ def run_scipy(
         )
     except _EvaluationError as exc:
         raise exc.__cause__ from None
+
+
+def optimize(problem, evaluate, report):
+    run_scipy(
+        [list(row) for row in problem.initial_population],
+        evaluate,
+        report,
+        dimensions=problem.dimensions,
+        max_features=problem.max_features,
+        generations=problem.generations,
+        recombination=problem.crossover_probability,
+        seed=problem.seed,
+    )
