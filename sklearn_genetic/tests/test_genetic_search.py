@@ -5,7 +5,7 @@ from sklearn.datasets import load_digits, load_diabetes
 from sklearn.ensemble import IsolationForest
 from sklearn.linear_model import SGDClassifier
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import ParameterGrid, cross_val_score, train_test_split
 from sklearn.utils.validation import check_is_fitted
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.cluster import KMeans
@@ -168,13 +168,26 @@ def test_dictionary_class_weight_categories(population_initializer, use_cache, f
         assert len(search.final_selection_results_["candidates"]) == 2
 
 
+def _parameter_grid_mean_scores(model, param_grid, X, y):
+    # GridSearchCV in scikit-learn 1.5 can error when formatting dictionary
+    # parameters as result columns. Score each candidate independently instead.
+    return [
+        (
+            params,
+            np.mean(
+                cross_val_score(clone(model).set_params(**params), X, y, cv=2, error_score="raise")
+            ),
+        )
+        for params in ParameterGrid(param_grid)
+    ]
+
+
 @pytest.mark.parametrize("use_cache", [False, True])
 @pytest.mark.parametrize(
     "callback_location", ["sibling", "dictionary", "set", "frozenset", "array"]
 )
 def test_dictionary_categories_preserve_local_callbacks(use_cache, callback_location):
     from sklearn.datasets import load_iris
-    from sklearn.model_selection import GridSearchCV
     from sklearn.pipeline import Pipeline
     from sklearn.preprocessing import FunctionTransformer
 
@@ -202,11 +215,12 @@ def test_dictionary_categories_preserve_local_callbacks(use_cache, callback_loca
     model = Pipeline(
         [("transform", FunctionTransformer()), ("model", DecisionTreeClassifier(random_state=0))]
     )
-    control = GridSearchCV(
+    control = _parameter_grid_mean_scores(
         model,
         {"transform__func": [transform], "transform__kw_args": kwargs, "model__max_depth": [1, 2]},
-        cv=2,
-    ).fit(samples, targets)
+        samples,
+        targets,
+    )
     search = GASearchCV(
         model,
         param_grid={
@@ -230,13 +244,13 @@ def test_dictionary_categories_preserve_local_callbacks(use_cache, callback_loca
     ).fit(samples, targets)
 
     for params, score in zip(search.cv_results_["params"], search.cv_results_["mean_test_score"]):
-        index = next(
-            i
-            for i, expected in enumerate(control.cv_results_["params"])
+        expected_score = next(
+            expected_score
+            for expected, expected_score in control
             if expected["model__max_depth"] == params["model__max_depth"]
             and (expected["transform__kw_args"] is None) == (params["transform__kw_args"] is None)
         )
-        assert score == pytest.approx(control.cv_results_["mean_test_score"][index])
+        assert score == pytest.approx(expected_score)
     assert search.best_estimator_["transform"].func is transform
     assert search.predict(samples).shape == targets.shape
 
@@ -249,7 +263,6 @@ def test_dictionary_categories_preserve_local_callbacks(use_cache, callback_loca
 def test_dictionary_array_categories(population_initializer, use_cache, optimizer_controls):
     from copy import deepcopy
     from sklearn.datasets import load_iris
-    from sklearn.model_selection import GridSearchCV
     from sklearn.pipeline import Pipeline
     from sklearn.preprocessing import FunctionTransformer
 
@@ -272,15 +285,13 @@ def test_dictionary_array_categories(population_initializer, use_cache, optimize
             ("model", DecisionTreeClassifier(random_state=0)),
         ]
     )
-    control = GridSearchCV(
-        model, {"transform__kw_args": kwargs, "model__max_depth": [1, 2]}, cv=2
-    ).fit(samples, targets)
+    control = _parameter_grid_mean_scores(
+        model, {"transform__kw_args": kwargs, "model__max_depth": [1, 2]}, samples, targets
+    )
     # Different array contents choose different features and produce distinct fitness.
     grid_scores = {
         columns_key(params["transform__kw_args"]): score
-        for params, score in zip(
-            control.cv_results_["params"], control.cv_results_["mean_test_score"]
-        )
+        for params, score in control
         if params["model__max_depth"] == 2
     }
     assert grid_scores[columns_key(kwargs[0])] != grid_scores[columns_key(kwargs[1])]
@@ -311,14 +322,14 @@ def test_dictionary_array_categories(population_initializer, use_cache, optimize
         for params in search.cv_results_["params"][: len(kwargs)]
     } == {columns_key(option) for option in kwargs}
     for params, score in zip(search.cv_results_["params"], search.cv_results_["mean_test_score"]):
-        index = next(
-            i
-            for i, expected in enumerate(control.cv_results_["params"])
+        expected_score = next(
+            expected_score
+            for expected, expected_score in control
             if expected["model__max_depth"] == params["model__max_depth"]
             and columns_key(expected["transform__kw_args"])
             == columns_key(params["transform__kw_args"])
         )
-        assert score == pytest.approx(control.cv_results_["mean_test_score"][index])
+        assert score == pytest.approx(expected_score)
     assert search.predict(samples).shape == targets.shape
 
 
@@ -330,7 +341,6 @@ def test_dictionary_category_order(population_initializer, use_cache, category_k
     from copy import deepcopy
     from sklearn.datasets import load_diabetes
     from sklearn.linear_model import Ridge
-    from sklearn.model_selection import GridSearchCV
     from sklearn.pipeline import Pipeline
     from sklearn.preprocessing import FunctionTransformer
 
@@ -345,14 +355,12 @@ def test_dictionary_category_order(population_initializer, use_cache, category_k
     if category_kind == "mixed":
         kwargs = [kwargs[0], OrderedDict(kwargs[0]), OrderedDict(kwargs[1])]
     model = Pipeline([("transform", FunctionTransformer(transform)), ("model", Ridge())])
-    control = GridSearchCV(model, {"transform__kw_args": kwargs, "model__alpha": [1, 2]}, cv=2).fit(
-        samples, targets
+    control = _parameter_grid_mean_scores(
+        model, {"transform__kw_args": kwargs, "model__alpha": [1, 2]}, samples, targets
     )
     grid_scores = {
         (tuple(params["transform__kw_args"].items()), params["model__alpha"]): score
-        for params, score in zip(
-            control.cv_results_["params"], control.cv_results_["mean_test_score"]
-        )
+        for params, score in control
     }
     assert grid_scores[(tuple(kwargs[0].items()), 1)] != grid_scores[(tuple(kwargs[-1].items()), 1)]
     search = GASearchCV(
@@ -386,16 +394,15 @@ def test_dictionary_category_order(population_initializer, use_cache, category_k
     assert len(search.final_selection_results_["candidates"]) == len(kwargs) * 2
     for params, score in zip(search.cv_results_["params"], search.cv_results_["mean_test_score"]):
         matches = [
-            i
-            for i, expected in enumerate(control.cv_results_["params"])
+            expected_score
+            for expected, expected_score in control
             if expected["model__alpha"] == params["model__alpha"]
             and type(expected["transform__kw_args"]) is type(params["transform__kw_args"])
             and tuple(expected["transform__kw_args"].items())
             == tuple(params["transform__kw_args"].items())
         ]
         assert len(matches) == 1
-        index = matches[0]
-        assert score == pytest.approx(control.cv_results_["mean_test_score"][index])
+        assert score == pytest.approx(matches[0])
 
 
 def test_default_n_jobs_is_none():

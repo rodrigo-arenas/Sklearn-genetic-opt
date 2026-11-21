@@ -14,6 +14,9 @@ You are reading the **latest (dev)** docs. For the stable version, see [stable](
 - Python ≥ 3.12
 - pip or conda
 
+The test matrix covers standard CPython 3.12–3.15 on Linux, macOS, and Windows.
+Free-threaded builds are not covered.
+
 ## pip
 
 Install the core package:
@@ -59,6 +62,12 @@ conda install -c conda-forge sklearn-genetic-opt seaborn mlflow
 | tqdm | 4.60.0 | Yes |
 | Seaborn | 0.13.2 | No (plots) |
 | MLflow | 3.14.0 | No (MLflow logging) |
+
+On Python 3.15, pip requires scikit-learn ≥ 1.9.1, NumPy ≥ 2.5.2,
+pandas ≥ 3.0.6, and SciPy ≥ 1.18.1. These versions have upstream wheels
+for CPython 3.15. Update any older pins in your environment before installing;
+the general lower bounds above remain unchanged on older interpreters. Conda
+instead resolves compatible builds from its channels.
 
 ## Verify the installation
 

@@ -36,7 +36,7 @@ jobs:
         run: black --check .
 
   tests:
-    name: Tests (${{ matrix.os }}, Python ${{ matrix.python-version }})
+    name: Tests (${{ matrix.os }}, Python ${{ matrix.python-version }}${{ matrix.sklearn != 'latest' && format(', scikit-learn {0}', matrix.sklearn) || '' }})
     if: github.actor != 'github-actions[bot]'
     runs-on: ${{ matrix.os }}
     env:
@@ -44,8 +44,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.12", "3.13", "3.14"]
+        python-version: ["3.12", "3.13", "3.14", "3.15"]
         os: [ubuntu-latest, windows-latest, macos-latest]
+        sklearn: ["latest"]
+        include:
+          - python-version: "3.12"
+            os: ubuntu-latest
+            sklearn: "1.5.0"
     steps:
       - uses: actions/checkout@v7
       - name: Set up Python ${{ matrix.python-version }}
@@ -55,9 +60,15 @@ jobs:
           cache: pip
           cache-dependency-path: pyproject.toml
       - name: Install test dependencies
+        if: matrix.sklearn == 'latest'
         run: |
           python -m pip install --upgrade pip
           python -m pip install --upgrade --upgrade-strategy eager -e ".[test,plot,mlflow]"
+      - name: Install test dependencies with minimum scikit-learn
+        if: matrix.sklearn != 'latest'
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --upgrade --upgrade-strategy eager -e ".[test,plot,mlflow]" "scikit-learn==${{ matrix.sklearn }}"
       - name: Run tests
         run: pytest sklearn_genetic/
 
