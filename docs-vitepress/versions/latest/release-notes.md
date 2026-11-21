@@ -9,7 +9,19 @@ You are reading the **latest (dev)** docs. For the stable version, see [stable](
 
 # Release Notes
 
-## Unreleased
+## 0.16.0
+
+### Choose an optimization backend
+
+Upgrade the base package to keep using DEAP. To switch to another engine, install
+its extra and set `optimizer_backend` on either estimator. For example:
+
+```bash
+python -m pip install "sklearn-genetic-opt[pymoo]==0.16.0"
+```
+
+The optional extras are `scipy`, `nevergrad`, `cmaes` and `pymoo`. Existing
+DEAP searches keep their constructor defaults.
 
 Both search estimators accept the keyword-only `optimizer_backend` setting.
 DEAP remains the default. SciPy, Nevergrad, CatCMAwM, pymoo and external

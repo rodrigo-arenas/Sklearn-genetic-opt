@@ -10,7 +10,8 @@ authors:
 repository-code: "https://github.com/rodrigo-arenas/Sklearn-genetic-opt"
 url: "https://sklearngeneticopt.rodrigo-arenas.com/"
 license: MIT
-version: "0.15.0"
+version: "0.16.0"
+date-released: 2026-11-21
 keywords:
   - hyperparameter-tuning
   - feature-selection

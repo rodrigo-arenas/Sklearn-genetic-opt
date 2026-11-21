@@ -72,15 +72,12 @@ limit of eight columns. The fitted selector applies its mask during prediction.
 Choose an optimizer
 -------------------
 
-**Using the PyPI 0.15.0 release?** It includes the two examples above. To try
-the five-engine catalog with that environment, install from source with the
-extras you want. For example:
+Version 0.16.0 includes DEAP by default and supports four optional engines.
+Install the extra for the engine you want. For example, to use pymoo:
 
 .. code-block:: bash
 
-   git clone https://github.com/rodrigo-arenas/Sklearn-genetic-opt.git
-   cd Sklearn-genetic-opt
-   python -m pip install -e ".[pymoo]"
+   python -m pip install "sklearn-genetic-opt[pymoo]==0.16.0"
 
 Change one parameter on either estimator to run the same experiment with a
 different engine. Cloning keeps the earlier result available for comparison.
@@ -131,14 +128,32 @@ network search progressed and which candidates finished near the top.
 .. image:: https://raw.githubusercontent.com/rodrigo-arenas/Sklearn-genetic-opt/master/docs-vitepress/public/images/basic_usage_mlp_search_overview.png
    :alt: Digits search dashboard with fitness by generation, population diversity, optimizer events and top candidate scores
    :width: 720
-   :target: https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/guide/basic-usage
+   :target: https://sklearngeneticopt.rodrigo-arenas.com/versions/0.16/guide/basic-usage
 
 Go further
 ----------
 
 * **Build a search** with the `GASearchCV`_, `GAFeatureSelectionCV`_ and `search space`_ references.
 * **Track a long run** with the `checkpoint recipe`_, `plot gallery`_ and `backend tutorial`_.
-* **Work on the project** with the `contributor guide`_, `release notes`_ and `software citation`_.
+* **Work on the project** with the `contributor guide`_ and `release notes`_.
+
+Cite sklearn-genetic-opt
+------------------------
+
+If you use the library in research, cite the version used in your experiment.
+For version 0.16.0, cite Rodrigo Arenas (2026), *sklearn-genetic-opt*
+(version 0.16.0) [Computer software]. The `software citation`_ contains the
+machine-readable metadata. For BibTeX, use:
+
+.. code-block:: bibtex
+
+   @software{arenas2026sklearn_genetic_opt,
+     author  = {Arenas, Rodrigo},
+     title   = {{sklearn-genetic-opt}},
+     year    = {2026},
+     version = {0.16.0},
+     url     = {https://pypi.org/project/sklearn-genetic-opt/0.16.0/}
+   }
 
 .. |release| image:: https://img.shields.io/pypi/v/sklearn-genetic-opt
    :alt: Latest release on PyPI
@@ -151,16 +166,16 @@ Go further
    :target: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/LICENSE
 
 .. _stable documentation: https://sklearngeneticopt.rodrigo-arenas.com/stable/
-.. _backend tutorial: https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/tutorials/optimizer-backends
-.. _benchmarks: https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/benchmarks/optimizer-catalog
-.. _engine reference: https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/api/optimizer-backends
-.. _plugin protocol: https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/api/algorithms#optimizer-plugins
-.. _digits walkthrough: https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/guide/basic-usage
-.. _GASearchCV: https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/api/gasearchcv
-.. _GAFeatureSelectionCV: https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/api/gafeatureselectioncv
-.. _search space: https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/api/space
-.. _checkpoint recipe: https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/recipes/advanced/checkpointing
-.. _plot gallery: https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/examples/plotting-gallery
+.. _backend tutorial: https://sklearngeneticopt.rodrigo-arenas.com/versions/0.16/tutorials/optimizer-backends
+.. _benchmarks: https://sklearngeneticopt.rodrigo-arenas.com/versions/0.16/benchmarks/optimizer-catalog
+.. _engine reference: https://sklearngeneticopt.rodrigo-arenas.com/versions/0.16/api/optimizer-backends
+.. _plugin protocol: https://sklearngeneticopt.rodrigo-arenas.com/versions/0.16/api/algorithms#optimizer-plugins
+.. _digits walkthrough: https://sklearngeneticopt.rodrigo-arenas.com/versions/0.16/guide/basic-usage
+.. _GASearchCV: https://sklearngeneticopt.rodrigo-arenas.com/versions/0.16/api/gasearchcv
+.. _GAFeatureSelectionCV: https://sklearngeneticopt.rodrigo-arenas.com/versions/0.16/api/gafeatureselectioncv
+.. _search space: https://sklearngeneticopt.rodrigo-arenas.com/versions/0.16/api/space
+.. _checkpoint recipe: https://sklearngeneticopt.rodrigo-arenas.com/versions/0.16/recipes/advanced/checkpointing
+.. _plot gallery: https://sklearngeneticopt.rodrigo-arenas.com/versions/0.16/examples/plotting-gallery
 .. _contributor guide: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/CONTRIBUTING.md
-.. _release notes: https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/release-notes
-.. _software citation: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/CITATION.cff
+.. _release notes: https://sklearngeneticopt.rodrigo-arenas.com/versions/0.16/release-notes
+.. _software citation: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/0.16.0/CITATION.cff
