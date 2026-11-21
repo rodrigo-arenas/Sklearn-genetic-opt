@@ -157,3 +157,40 @@ def test_pymoo_wide_integer_offsets():
 
     optimize(problem, evaluate, lambda population: None)
     assert len(rows) == 20 and all(isinstance(row[0], int) and 0 <= row[0] <= 2**42 for row in rows)
+
+
+def test_nevergrad_continuous_search_completes_long_budget():
+    pytest.importorskip("nevergrad")
+    from sklearn_genetic._nevergrad_backend import optimize
+    from sklearn_genetic.backends import OptimizationProblem
+
+    dims = tuple(Continuous(0.001, 10, distribution="log-uniform") for _ in range(3))
+    problem = OptimizationProblem(
+        "parameters", ((1.0, 1.0, 1.0),) * 8, ("a", "b", "c"), dims, None, 14, 0.8, 41
+    )
+
+    def evaluate(batch):
+        return [(sum((x - 0.3) ** 2 for x in row), row) for row in batch]
+
+    batches = []
+    optimize(problem, evaluate, batches.append)
+    assert len(batches) == 15
+    assert all(len(population) == 8 for population in batches)
+
+
+def test_nevergrad_long_mixed_run_with_boundary_start():
+    pytest.importorskip("nevergrad")
+    from sklearn_genetic._nevergrad_backend import optimize
+    from sklearn_genetic.backends import OptimizationProblem
+
+    dims = (Continuous(0, 1), Integer(1, 4), Categorical([None, "x", "y"]))
+    problem = OptimizationProblem(
+        "parameters", ((0.0, 1, "y"),) * 8, ("x", "y", "z"), dims, None, 15, 0.8, 12
+    )
+    batches = []
+
+    def evaluate(rows):
+        return [(x**2 + n + (c == "y"), (x, n, c)) for x, n, c in rows]
+
+    optimize(problem, evaluate, batches.append)
+    assert len(batches) == 16

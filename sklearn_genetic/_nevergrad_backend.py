@@ -1,4 +1,4 @@
-"""Nevergrad's NGOpt portfolio with batched ask/tell and typed coordinates."""
+"""Nevergrad optimizers with batched ask/tell and typed coordinates."""
 
 import numpy as np
 
@@ -6,7 +6,7 @@ from ._mixed_space import MixedSpace
 from .config import EvolutionConfig
 
 
-def optimize(problem, evaluate, report, *, strategy=None):
+def optimize(problem, evaluate, report, *, strategy="OnePlusOne"):
     try:
         import nevergrad as ng
     except ModuleNotFoundError as exc:
@@ -15,11 +15,10 @@ def optimize(problem, evaluate, report, *, strategy=None):
         raise ImportError("Install sklearn-genetic-opt[nevergrad] to use this optimizer") from exc
     if problem.crossover_probability != EvolutionConfig.crossover_probability:
         raise ValueError("Nevergrad manages crossover_probability internally")
-    if strategy is None:
-        strategy = "OnePlusOne" if problem.task == "features" else "NGOpt"
-    if strategy not in ("NGOpt", "OnePlusOne"):
-        raise ValueError("strategy must be NGOpt or OnePlusOne")
     space = MixedSpace(problem)
+    # NGOpt's portfolio can select an incompatible metamodel in mixed spaces too.
+    if strategy not in ("OnePlusOne", "TwoPointsDE"):
+        raise ValueError("strategy must be OnePlusOne or TwoPointsDE")
     initial = evaluate(problem.initial_population)
     report([handle for _, handle in initial])
     if not space.axes or not problem.generations:

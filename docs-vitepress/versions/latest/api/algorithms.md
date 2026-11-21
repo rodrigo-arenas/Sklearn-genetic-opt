@@ -274,10 +274,13 @@ pickle checkpoints only from trusted sources.
 ## Nevergrad
 
 Install `sklearn-genetic-opt[nevergrad]` and pass `optimizer_backend="nevergrad"` to either
-estimator. For parameter searches, NGOpt chooses an optimizer from its portfolio using the remaining budget, typed
-search space and batch width. The best initial candidate seeds its parameterization. Feature searches use OnePlusOne on a vector of ordered binary choices. In the
-Wine calibration at 32 real CV calls, this reduced average non-CV time and improved
-mean best mask CV over NGOpt across three seeds. The generation history summarizes each evaluated
+estimator. OnePlusOne adapts mutations around the best initial candidate.
+Numeric and categorical parameters keep their types. Masks use a vector of
+ordered binary choices. TwoPointsDE is also available through the backend
+callable for searches with larger budgets.
+NGOpt's portfolio can select a metamodel that fails on modern NumPy in continuous
+and mixed spaces. The adapter uses an explicit strategy for reproducible long runs.
+The generation history summarizes each evaluated
 batch. The default crossover setting leaves variation to Nevergrad. Use unweighted categories,
 finite linear or logarithmic intervals and variable integers within int64 spanning less than 2**52. Fixed coordinates are
 removed, and an entirely fixed search finishes after initialization. LivePlot, early stopping
