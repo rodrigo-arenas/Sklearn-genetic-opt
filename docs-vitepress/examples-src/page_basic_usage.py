@@ -26,6 +26,8 @@ nb = Notebook(
         "- **Feature selection** with `GAFeatureSelectionCV`\n\n"
         "Every code block below is executed to build this page, so what you copy "
         "is exactly what ran — including the outputs and figures.\n\n"
+        "This walkthrough uses the default DEAP engine. To keep the same estimator and CV workflow "
+        "while changing optimizers, follow [Switch optimization backends](../tutorials/optimizer-backends).\n\n"
         "## Prerequisites\n\n"
         "- `sklearn-genetic-opt` installed (`pip install sklearn-genetic-opt`)\n"
         "- Optional plotting extra for the figures: `pip install sklearn-genetic-opt[plot]`\n"
