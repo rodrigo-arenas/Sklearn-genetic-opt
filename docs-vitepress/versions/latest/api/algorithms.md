@@ -270,3 +270,15 @@ and can consult the accumulated generation log. A completed generation budget
 can be refitted directly. SciPy and plugins implementing only the base protocol
 can save and inspect progress; starting a new search uses a fresh path. Load
 pickle checkpoints only from trusted sources.
+
+## Nevergrad
+
+Install `sklearn-genetic-opt[nevergrad]` and pass `optimizer_backend="nevergrad"` to either
+estimator. For parameter searches, NGOpt chooses an optimizer from its portfolio using the remaining budget, typed
+search space and batch width. The best initial candidate seeds its parameterization. Feature searches use OnePlusOne on a vector of ordered binary choices. In the
+Wine calibration at 32 real CV calls, this reduced average non-CV time and improved
+mean best mask CV over NGOpt across three seeds. The generation history summarizes each evaluated
+batch. The default crossover setting leaves variation to Nevergrad. Use unweighted categories,
+finite linear or logarithmic intervals and integer spans below 2**52. Fixed coordinates are
+removed, and an entirely fixed search finishes after initialization. LivePlot, early stopping
+and progress snapshots are supported. Start a fresh search to generate new trials.

@@ -38,7 +38,11 @@ dependencies = [
     "tqdm>=4.60.0",
 ]
 
+[project.entry-points."sklearn_genetic.optimizers"]
+nevergrad = "sklearn_genetic._nevergrad_backend:optimize"
+
 [project.optional-dependencies]
+nevergrad = ["nevergrad>=1.0.12,<2"]
 scipy = ["scipy>=1.15"]
 plot = [
     "seaborn>=0.13.2",
