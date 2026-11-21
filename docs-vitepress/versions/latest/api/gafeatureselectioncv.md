@@ -41,7 +41,7 @@ GAFeatureSelectionCV(
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `optimizer_backend` | str or callable, keyword-only | `"deap"` | Built-in engine, callable, or installed [optimizer plugin](./algorithms#optimizer-plugins). See [SciPy support and limits](./algorithms#scipy-backend) for `"scipy"`. |
+| `optimizer_backend` | str or callable, keyword-only | `"deap"` | Choose DEAP, SciPy, [Nevergrad](./algorithms#nevergrad), [CatCMAwM](./algorithms#catcma-with-margin), [pymoo](./algorithms#pymoo), or a callable or installed [optimizer plugin](./algorithms#optimizer-plugins). See [SciPy support and limits](./algorithms#scipy-backend) for `"scipy"`. |
 | `estimator` | estimator | — | A scikit-learn estimator with a `fit` method |
 | `cv` | int or CV splitter | `3` | Cross-validation strategy |
 | `scoring` | str, callable or dict | `None` | Metric to evaluate. `None` uses the estimator's default scorer |
