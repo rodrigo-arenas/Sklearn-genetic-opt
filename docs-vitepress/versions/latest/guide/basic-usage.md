@@ -1,13 +1,15 @@
 ---
-title: "Basic Usage"
-description: "Your first hyperparameter search with GASearchCV and your first feature selection with GAFeatureSelectionCV — a complete, runnable walkthrough."
+title: "Getting Started with GASearchCV: Hyperparameter Tuning and Feature Selection"
+description: "Step-by-step introduction to GASearchCV for hyperparameter optimization and GAFeatureSelectionCV for feature selection, with complete runnable examples."
 ---
 
 :::warning Development version
 This is the **latest (dev)** documentation. It may contain unreleased features or breaking changes. For the stable release, use [stable](/stable/).
 :::
 
-# Basic Usage
+# Getting Started with GASearchCV: Hyperparameter Tuning and Feature Selection
+
+**Estimated reading time:** 15 minutes. **Difficulty:** Beginner.
 
 This page walks through the two workflows you will use most:
 
@@ -22,7 +24,7 @@ This walkthrough uses the default DEAP engine. To keep the same estimator and CV
 
 - `sklearn-genetic-opt` installed (`pip install sklearn-genetic-opt`)
 - Optional plotting extra for the figures: `pip install sklearn-genetic-opt[plot]`
-- Basic familiarity with scikit-learn's `fit` / `predict` API
+- Basic familiarity with Python, pip, `train_test_split`, and classifiers' `fit` / `predict` API
 
 ## Hyperparameter Tuning
 
@@ -263,10 +265,11 @@ mask_plot = plot_feature_selection(selector, feature_names=feature_names)
 - Check `fit_stats_["skipped_invalid_candidates"]` after fitting — a non-zero
   value means some sampled configurations raised errors during `fit`.
 
-## Next Steps
+## See Also
 
-- [When to Use](./when-to-use) — is a genetic search the right tool for your problem?
-- [Understanding Cross-Validation](./understand-cv) — read the generation log in depth
-- [Pipeline Tuning](./pipeline-tuning) — tune a scikit-learn `Pipeline` with `step__param` names
-- [Callbacks](./callbacks) — early stopping, progress bars, and checkpoints
-- [Plotting Gallery](../examples/plotting-gallery) — every diagnostic plot, explained
+- [How Hyperparameter Optimization Works](./how-hyperparameter-optimization-works) — understand the theory behind different search methods
+- [Choosing the Right Search Space](./choosing-search-spaces) — pick optimal parameter bounds
+- [Common Hyperparameter Tuning Mistakes](./common-mistakes) — avoid the most frequent pitfalls
+- [Cross-Validation in Hyperparameter Search](./understand-cv) — understand generation logs and convergence
+- [Random Forest Hyperparameter Tuning](../tutorials/tune-random-forest) — first real tutorial
+- [Troubleshooting](./troubleshooting) — if something doesn't work

@@ -15,12 +15,13 @@ from _nbgen import Notebook  # noqa: E402
 
 nb = Notebook(
     path="guide/basic-usage.md",
-    title="Basic Usage",
+    title="Getting Started with GASearchCV: Hyperparameter Tuning and Feature Selection",
     description=(
-        "Your first hyperparameter search with GASearchCV and your first feature "
-        "selection with GAFeatureSelectionCV — a complete, runnable walkthrough."
+        "Step-by-step introduction to GASearchCV for hyperparameter optimization and "
+        "GAFeatureSelectionCV for feature selection, with complete runnable examples."
     ),
     intro=(
+        "**Estimated reading time:** 15 minutes. **Difficulty:** Beginner.\n\n"
         "This page walks through the two workflows you will use most:\n\n"
         "- **Hyperparameter tuning** with `GASearchCV`\n"
         "- **Feature selection** with `GAFeatureSelectionCV`\n\n"
@@ -31,7 +32,7 @@ nb = Notebook(
         "## Prerequisites\n\n"
         "- `sklearn-genetic-opt` installed (`pip install sklearn-genetic-opt`)\n"
         "- Optional plotting extra for the figures: `pip install sklearn-genetic-opt[plot]`\n"
-        "- Basic familiarity with scikit-learn's `fit` / `predict` API"
+        "- Basic familiarity with Python, pip, `train_test_split`, and classifiers' `fit` / `predict` API"
     ),
 )
 
@@ -256,13 +257,14 @@ nb.md("""
     - Check `fit_stats_["skipped_invalid_candidates"]` after fitting — a non-zero
       value means some sampled configurations raised errors during `fit`.
 
-    ## Next Steps
+    ## See Also
 
-    - [When to Use](./when-to-use) — is a genetic search the right tool for your problem?
-    - [Understanding Cross-Validation](./understand-cv) — read the generation log in depth
-    - [Pipeline Tuning](./pipeline-tuning) — tune a scikit-learn `Pipeline` with `step__param` names
-    - [Callbacks](./callbacks) — early stopping, progress bars, and checkpoints
-    - [Plotting Gallery](../examples/plotting-gallery) — every diagnostic plot, explained
+    - [How Hyperparameter Optimization Works](./how-hyperparameter-optimization-works) — understand the theory behind different search methods
+    - [Choosing the Right Search Space](./choosing-search-spaces) — pick optimal parameter bounds
+    - [Common Hyperparameter Tuning Mistakes](./common-mistakes) — avoid the most frequent pitfalls
+    - [Cross-Validation in Hyperparameter Search](./understand-cv) — understand generation logs and convergence
+    - [Random Forest Hyperparameter Tuning](../tutorials/tune-random-forest) — first real tutorial
+    - [Troubleshooting](./troubleshooting) — if something doesn't work
     """)
 
 nb.write()
