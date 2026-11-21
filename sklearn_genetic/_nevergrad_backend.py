@@ -15,11 +15,13 @@ def optimize(problem, evaluate, report, *, strategy=None):
         raise ImportError("Install sklearn-genetic-opt[nevergrad] to use this optimizer") from exc
     if problem.crossover_probability != EvolutionConfig.crossover_probability:
         raise ValueError("Nevergrad manages crossover_probability internally")
+    space = MixedSpace(problem)
     if strategy is None:
-        strategy = "OnePlusOne" if problem.task == "features" else "NGOpt"
+        # NGOpt can choose a quadratic metamodel on numeric-only problems. Its
+        # scalar prediction conversion fails on modern NumPy for longer runs.
+        strategy = "NGOpt" if any(kind == "choice" for kind, _ in space.axes) else "OnePlusOne"
     if strategy not in ("NGOpt", "OnePlusOne"):
         raise ValueError("strategy must be NGOpt or OnePlusOne")
-    space = MixedSpace(problem)
     initial = evaluate(problem.initial_population)
     report([handle for _, handle in initial])
     if not space.axes or not problem.generations:

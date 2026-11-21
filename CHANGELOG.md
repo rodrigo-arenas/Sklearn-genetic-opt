@@ -5,6 +5,9 @@ for upgrade guidance and links to the API examples.
 
 ## Unreleased
 
+- Use Nevergrad OnePlusOne for numeric-only searches, avoiding an upstream
+  NGOpt surrogate incompatibility with recent NumPy.
+
 - Add optional pymoo GAs with type-specific variation and survivor reporting.
 
 - Add optional CatCMA with Margin for joint numeric and categorical optimization.
