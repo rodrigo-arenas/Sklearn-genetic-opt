@@ -274,10 +274,10 @@ pickle checkpoints only from trusted sources.
 ## Nevergrad
 
 Install `sklearn-genetic-opt[nevergrad]` and pass `optimizer_backend="nevergrad"` to either
-estimator. For parameter searches, OnePlusOne adapts mutations around the best
-initial candidate. Numeric and categorical parameters keep their types. For
-feature masks, TwoPointsDE uses differential evolution with two-point crossover
-on a vector of ordered binary choices.
+estimator. OnePlusOne adapts mutations around the best initial candidate.
+Numeric and categorical parameters keep their types. Masks use a vector of
+ordered binary choices. TwoPointsDE is also available through the backend
+callable for searches with larger budgets.
 NGOpt's portfolio can select a metamodel that fails on modern NumPy in continuous
 and mixed spaces. The adapter uses an explicit strategy for reproducible long runs.
 The generation history summarizes each evaluated

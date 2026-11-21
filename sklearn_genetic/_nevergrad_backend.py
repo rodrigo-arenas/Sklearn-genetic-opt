@@ -6,7 +6,7 @@ from ._mixed_space import MixedSpace
 from .config import EvolutionConfig
 
 
-def optimize(problem, evaluate, report, *, strategy=None):
+def optimize(problem, evaluate, report, *, strategy="OnePlusOne"):
     try:
         import nevergrad as ng
     except ModuleNotFoundError as exc:
@@ -17,8 +17,6 @@ def optimize(problem, evaluate, report, *, strategy=None):
         raise ValueError("Nevergrad manages crossover_probability internally")
     space = MixedSpace(problem)
     # NGOpt's portfolio can select an incompatible metamodel in mixed spaces too.
-    if strategy is None:
-        strategy = "TwoPointsDE" if problem.task == "features" else "OnePlusOne"
     if strategy not in ("OnePlusOne", "TwoPointsDE"):
         raise ValueError("strategy must be OnePlusOne or TwoPointsDE")
     initial = evaluate(problem.initial_population)
