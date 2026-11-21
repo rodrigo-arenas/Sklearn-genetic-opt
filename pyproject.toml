@@ -72,10 +72,16 @@ lint = [
     "black>=26.5.1",
 ]
 benchmark = [
+    "nevergrad>=1.0.12,<2",
+    "cmaes>=0.13.1,<0.14",
+    "pymoo>=0.6.2,<0.7",
     "scipy>=1.15",
     "optuna>=4.0.0",
 ]
 all = [
+    "nevergrad>=1.0.12,<2",
+    "cmaes>=0.13.1,<0.14",
+    "pymoo>=0.6.2,<0.7",
     "scipy>=1.15",
     "seaborn>=0.13.2",
     "mlflow>=3.14.0",

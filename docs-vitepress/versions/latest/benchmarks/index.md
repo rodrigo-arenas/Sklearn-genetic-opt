@@ -20,6 +20,8 @@ This is the **latest (dev)** documentation. It may contain unreleased features o
 
 How quickly does genetic search find a useful model? The Bayesmark comparisons below report the best inner cross-validation score reached under a candidate budget. A separate paired experiment measures how well the selected hyperparameters and feature masks perform on held-out data.
 
+Compare [all five optimization engines at matched CV budgets](./optimizer-catalog).
+
 ## When does GASearchCV save time over random search?
 
 On Digits with K-nearest neighbors, `GASearchCV` evaluated about 40 of 50 configurations and took 81% of the time of `RandomizedSearchCV`, with similar mean held-out accuracy. On Wine with a decision tree, both explored almost the entire 28-configuration space and genetic search took 144% of the random-search time. A smaller evaluation count alone cannot tell you how much time you will save.
