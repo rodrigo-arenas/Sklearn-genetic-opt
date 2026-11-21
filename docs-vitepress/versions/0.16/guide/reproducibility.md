@@ -1,0 +1,107 @@
+---
+title: Reproducibility and Checkpointing in Hyperparameter Optimization
+description: Make genetic algorithm hyperparameter searches reproducible with random_state, inspect candidate logs with LogbookSaver, and resume searches with ModelCheckpoint.
+---
+
+**Estimated reading time:** 6 minutes  
+**Difficulty:** Beginner  
+**Prerequisites:** [Getting Started with GASearchCV](./basic-usage)
+
+# Reproducibility and Checkpointing in Hyperparameter Optimization
+
+Genetic algorithms are stochastic — results vary between runs unless the
+randomness is seeded. The simplest, recommended way is the single
+`random_state` parameter on `GASearchCV` / `GAFeatureSelectionCV`.
+
+## Prerequisites
+
+- Completed [Basic Usage](./basic-usage)
+
+## One Seed Controls the Search
+
+Pass an integer `random_state` to seed the search. For the alternative engines
+the shared runtime supplies a per-fit solver seed. Seed the model, data split and
+shuffled CV splitter separately. Compare repeat runs within the same backend and
+software environment. Different engines generate different proposal sequences.
+
+```python
+from sklearn.datasets import load_breast_cancer
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import StratifiedKFold, train_test_split
+
+from sklearn_genetic import EvolutionConfig, GASearchCV, PopulationConfig, RuntimeConfig
+from sklearn_genetic.space import Categorical, Continuous, Integer
+
+X, y = load_breast_cancer(return_X_y=True)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.25, stratify=y, random_state=42  # seed the split
+)
+
+search = GASearchCV(
+    estimator=RandomForestClassifier(random_state=42),  # seed the estimator
+    random_state=42,                                    # seed the whole search
+    param_grid={
+        "n_estimators": Integer(50, 250),
+        "max_depth": Integer(2, 14),
+        "max_features": Categorical(["sqrt", "log2"]),
+        "ccp_alpha": Continuous(0.0, 0.03),
+    },
+    cv=StratifiedKFold(n_splits=3, shuffle=True, random_state=42),  # seed CV
+    scoring="roc_auc",
+    evolution_config=EvolutionConfig(population_size=20, generations=12),
+    population_config=PopulationConfig(initializer="smart"),
+    runtime_config=RuntimeConfig(n_jobs=1),  # n_jobs=1 for full determinism
+)
+
+search.fit(X_train, y_train)
+```
+
+The four `random_state=42` values above seed four independent things: the
+train/test split, the estimator, the cross-validation splitter, and — the new
+one — the genetic search itself. Set all four for an end-to-end reproducible run.
+
+:::tip Leave it unset for variety
+`random_state=None` (the default) keeps the search non-deterministic, matching
+scikit-learn's convention — useful when you want to explore different runs.
+:::
+
+## Why `n_jobs=1`?
+
+Use one worker for an easy-to-reproduce baseline. When increasing parallelism, check the fitted model's own determinism and compare actual CV calls and scores.
+
+## Checkpointing
+
+For long runs, save the logbook periodically so you can inspect progress even if the search is interrupted:
+
+```python
+from sklearn_genetic.callbacks import LogbookSaver
+
+search.fit(X_train, y_train, callbacks=[
+    LogbookSaver(checkpoint_path="./logbook.pkl")
+])
+
+# Load later:
+import joblib
+logbook = joblib.load("./logbook.pkl")
+```
+
+LogbookSaver records candidates for inspection. To continue training, use the
+[ModelCheckpoint resume recipe](../recipes/advanced/checkpointing). The
+[backend tutorial](../tutorials/optimizer-backends#select-features-and-inspect-progress)
+stops a pymoo feature search, resumes it and prints the new CV calls. A
+generation checkpoint covers evolutionary CV through the last saved generation.
+If you enable extra validation of finalists or refit the best model, these
+steps can run again after loading even a completed search.
+
+## Tips & Gotchas
+
+- Set the search seed and use explicit integer seeds for the model and shuffled splitter.
+- If using `PopulationConfig(warm_start_configs=[...])`, the warm-start configs are deterministic by definition.
+- A custom optimizer can draw from a local random generator initialized with `problem.seed`.
+
+## See Also
+
+- [Early Stopping with Callbacks](./callbacks) — LogbookSaver and ModelCheckpoint
+- [Common Hyperparameter Tuning Mistakes](./common-mistakes) — why inconsistent seeds hurt results
+- [Cross-Validation in Hyperparameter Search](./understand-cv) — seed your CV splitter
+- [Troubleshooting](./troubleshooting) — if results vary unexpectedly between runs

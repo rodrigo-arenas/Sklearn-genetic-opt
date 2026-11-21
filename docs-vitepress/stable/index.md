@@ -3,8 +3,8 @@ title: sklearn-genetic-opt docs
 head:
   - - meta
     - http-equiv: refresh
-      content: '0; url=/versions/0.15/'
+      content: '0; url=/versions/0.16/'
   - - script
     - {}
-    - "window.location.replace('/versions/0.15/')"
+    - "window.location.replace('/versions/0.16/')"
 ---
