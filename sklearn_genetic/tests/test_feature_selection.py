@@ -1,3 +1,4 @@
+from deap import creator
 import pytest
 from array import array
 from functools import partial
@@ -497,8 +498,8 @@ def test_smart_population_initializer_creates_diverse_feature_masks():
         assert min(selected_counts) >= 1
         assert len(set(selected_counts)) > 1
     finally:
-        del genetic_search.creator.FitnessMax
-        del genetic_search.creator.Individual
+        del creator.FitnessMax
+        del creator.Individual
 
 
 def test_optimizer_telemetry_is_recorded_for_feature_selection():
@@ -598,18 +599,18 @@ def test_feature_selection_genetic_operations_respect_max_features():
     estimator._register()
 
     try:
-        first = genetic_search.creator.Individual([1, 1, 1, 0, 0, 0])
-        second = genetic_search.creator.Individual([0, 0, 0, 1, 1, 1])
+        first = creator.Individual([1, 1, 1, 0, 0, 0])
+        second = creator.Individual([0, 0, 0, 1, 1, 1])
 
         offspring = estimator.mate(first, second)
-        mutated = estimator.mutate(genetic_search.creator.Individual([1, 1, 1, 1, 1, 1]))
+        mutated = estimator.mutate(creator.Individual([1, 1, 1, 1, 1, 1]))
 
         for individual in (*offspring, *mutated, estimator.toolbox.individual()):
             assert 1 <= sum(individual) <= estimator.max_features
             assert set(individual).issubset({0, 1})
     finally:
-        del genetic_search.creator.FitnessMax
-        del genetic_search.creator.Individual
+        del creator.FitnessMax
+        del creator.Individual
 
 
 def test_feature_toolbox_clone_preserves_mask_and_metadata_independence():
@@ -649,8 +650,8 @@ def test_feature_toolbox_clone_preserves_mask_and_metadata_independence():
         type(canonical).__deepcopy__ = lambda self, memo: sentinel
         assert selector.toolbox.clone(canonical) is sentinel
     finally:
-        del genetic_search.creator.FitnessMax
-        del genetic_search.creator.Individual
+        del creator.FitnessMax
+        del creator.Individual
 
 
 def test_expected_ga_results():

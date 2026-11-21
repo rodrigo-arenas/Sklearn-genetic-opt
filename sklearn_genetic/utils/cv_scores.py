@@ -114,7 +114,7 @@ def _add_cv_statistics(cv_results, records, return_train_score, metrics, greater
     for metric in metrics:
         for subset in ("test", "train") if return_train_score else ("test",):
             name = f"{subset}_{metric}"
-            scores = records.select(name)
+            scores = [row[name] for row in records]
             for split in range(n_splits):
                 cv_results[f"split{split}_{name}"] = [row[split] for row in scores]
             means = [np.mean(row) for row in scores]
@@ -123,7 +123,7 @@ def _add_cv_statistics(cv_results, records, return_train_score, metrics, greater
             cv_results[f"rank_{name}"] = _rank_scores(means, greater_is_better)
 
     for name in ("fit_time", "score_time"):
-        rows = records.select(name)
+        rows = [row[name] for row in records]
         means, deviations = [], []
         # Bound temporary timing matrices even for long searches and leave-one-out CV.
         batch_size = max(1, 65536 // max(1, n_splits))
@@ -150,10 +150,9 @@ def _add_cv_statistics(cv_results, records, return_train_score, metrics, greater
 
 
 def create_gasearch_cv_results_(
-    logbook, space, return_train_score, metrics, greater_is_better=True
+    records, space, return_train_score, metrics, greater_is_better=True
 ):
-    records = logbook.chapters["parameters"]
-    cv_results = {f"param_{name}": records.select(name) for name in space.parameters}
+    cv_results = {f"param_{name}": [row[name] for row in records] for name in space.parameters}
     _add_cv_statistics(cv_results, records, return_train_score, metrics, greater_is_better)
     cv_results["params"] = [
         select_dict_keys(individual, space.parameters) for individual in records
@@ -162,12 +161,11 @@ def create_gasearch_cv_results_(
 
 
 def create_feature_selection_cv_results_(
-    logbook, return_train_score, metrics, greater_is_better=True
+    records, return_train_score, metrics, greater_is_better=True
 ):
-    records = logbook.chapters["parameters"]
     cv_results = {}
     _add_cv_statistics(cv_results, records, return_train_score, metrics, greater_is_better)
-    features = records.select("features")
+    features = [row["features"] for row in records]
     cv_results["n_features"] = [np.sum(mask) for mask in features]
     cv_results["rank_n_features"] = rankdata(cv_results["n_features"], method="min").astype(int)
     cv_results["features"] = features

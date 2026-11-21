@@ -99,8 +99,8 @@ print(search.best_params_, selector.get_support())
   Boolean setting. Final selection and fixed crossover are supported.
 - Historical callbacks, including early stopping and `ModelCheckpoint`, require
   DEAP. SciPy rejects them before opening a checkpoint or running CV. Fitted model
-  save/load remains available. DEAP still supplies the common population,
-  hall-of-fame and logbook representations in this first implementation.
+  save/load remains available. SciPy uses the same evaluation and history
+  runtime as external optimizer plugins.
 
 SciPy was selected because scikit-learn already installs it and its recent releases
 publish Linux, macOS and Windows wheels for all four supported Python minors.
@@ -132,3 +132,82 @@ slots for copies of the best archived candidates. With `elitism=False`, all
 survivors are selected from the algorithm's candidate pool. In both cases,
 `fitness_best` tracks the best evaluated candidate in the hall of fame, while
 `fitness_min`, `fitness_max` and `fitness` describe the current population.
+
+## Optimizer plugins
+
+Pass a function as `optimizer_backend` to try a search strategy with either
+estimator. This example evaluates the supplied population, then proposes new
+candidates by recombining coordinates. For feature selection it repeats valid
+initial masks, preserving the feature-count limit.
+
+```python
+from random import Random
+
+from sklearn.tree import DecisionTreeClassifier
+from sklearn_genetic import GASearchCV
+from sklearn_genetic.space import Integer
+
+
+def recombine(problem, evaluate, report):
+    rng = Random(problem.seed)
+    parents = problem.initial_population
+    for generation in range(problem.generations + 1):
+        if generation == 0:
+            candidates = parents
+        elif problem.task == "parameters":
+            candidates = [
+                [rng.choice(parents)[i] for i in range(len(parents[0]))]
+                for _ in parents
+            ]
+        else:
+            candidates = [rng.choice(parents) for _ in parents]
+        scored = evaluate(candidates)
+        report([handle for loss, handle in scored])
+        ranked = sorted(zip(candidates, scored), key=lambda item: item[1][0])
+        parents = [row for row, _ in ranked[: max(1, len(ranked) // 2)]]
+
+
+search = GASearchCV(
+    DecisionTreeClassifier(random_state=7), cv=3,
+    param_grid={"max_depth": Integer(1, 10), "min_samples_leaf": Integer(1, 5)},
+    optimizer_backend=recombine, population_size=8, generations=2, random_state=7,
+)
+```
+
+The public signature is `optimize(problem, evaluate, report) -> None`.
+`sklearn_genetic.backends.Optimizer` describes the callable type.
+`OptimizationProblem` supplies the task, initial rows, parameter names and
+dimensions in coordinate order, feature limit, generation limit, fixed crossover
+probability and a per-fit seed. Treat dimensions and category values as read-only.
+Use the initial rows to honor warm starts. Check any solver-specific restrictions
+before calling `evaluate`.
+
+- Pass a nonempty batch of valid decoded rows to `evaluate`. It returns ordered
+  `(loss, handle)` pairs. Minimize the scalar loss for either scoring direction.
+  Feature masks must be binary, nonempty and respect `max_features`.
+- Pass surviving handles to `report` after initialization and once per generation.
+  Report between one and `population_size` survivors. A handle identifies one evaluation and may survive several generations. Keep it
+  opaque. The estimator records the best candidates across all evaluated proposals.
+- Stop early if appropriate. The upper limits are `problem.max_evaluations`
+  proposals (including cache hits) and `problem.generations + 1` reports.
+  The last evaluation must be followed by a report. Use these callbacks
+  synchronously within the call. The estimator owns CV parallelism and caching.
+- Predictions, refit, fitted history, post-fit plots and candidate results share
+  the estimator's normal API. DEAP remains an installation dependency for the
+  default engine. Plugin fits do not import it. Explicit access to the historical
+  `logbook` or feature `hof` materializes the corresponding DEAP object.
+  LivePlot, stopping callbacks and checkpoint/resume require the DEAP engine.
+
+To distribute this function independently, put it in a Python package and add
+the following entry point to that package's `pyproject.toml`:
+
+```toml
+[project.entry-points."sklearn_genetic.optimizers"]
+recombine = "my_optimizer:recombine"
+```
+
+After installation, select `optimizer_backend="recombine"` in either estimator.
+Only the selected plugin is loaded. The names `deap` and `scipy` are reserved.
+Use a unique name and declare solver dependencies in the plugin package. For
+serialization, use its registered name or an importable module-level callable.
+See the [PyPA plugin guide](https://packaging.python.org/en/latest/guides/creating-and-discovering-plugins/).

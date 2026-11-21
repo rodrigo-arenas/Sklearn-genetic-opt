@@ -1,3 +1,4 @@
+from deap import creator
 import pytest
 from deap import tools
 from sklearn.base import clone
@@ -1242,8 +1243,8 @@ def test_adaptive_selection_reduces_pressure_when_diversity_is_low():
 
         assert estimator._selection_pressure_ == 2
     finally:
-        del genetic_search.creator.FitnessMax
-        del genetic_search.creator.Individual
+        del creator.FitnessMax
+        del creator.Individual
 
 
 def test_offspring_generation_replaces_parent_duplicates():
@@ -1264,10 +1265,10 @@ def test_offspring_generation_replaces_parent_duplicates():
     estimator._register()
 
     try:
-        parent = genetic_search.creator.Individual([1, "gini"])
+        parent = creator.Individual([1, "gini"])
         offspring = [
-            genetic_search.creator.Individual([1, "gini"]),
-            genetic_search.creator.Individual([1, "gini"]),
+            creator.Individual([1, "gini"]),
+            creator.Individual([1, "gini"]),
         ]
 
         replacements = replace_duplicate_candidates(
@@ -1284,8 +1285,8 @@ def test_offspring_generation_replaces_parent_duplicates():
         )
         assert len({estimator._individual_key(individual) for individual in offspring}) == 2
     finally:
-        del genetic_search.creator.FitnessMax
-        del genetic_search.creator.Individual
+        del creator.FitnessMax
+        del creator.Individual
 
 
 def test_smart_population_initializer_seeds_defaults_warm_starts_and_diversity():
@@ -1312,8 +1313,8 @@ def test_smart_population_initializer_seeds_defaults_warm_starts_and_diversity()
         assert len({tuple(individual) for individual in population}) == len(population)
         assert {individual[1] for individual in population} == {"gini", "entropy"}
     finally:
-        del genetic_search.creator.FitnessMax
-        del genetic_search.creator.Individual
+        del creator.FitnessMax
+        del creator.Individual
 
 
 def test_integer_search_space_is_repaired_after_single_dimension_crossover():
@@ -1329,13 +1330,13 @@ def test_integer_search_space_is_repaired_after_single_dimension_crossover():
     estimator._register()
 
     try:
-        first = genetic_search.creator.Individual([1])
-        second = genetic_search.creator.Individual([3])
+        first = creator.Individual([1])
+        second = creator.Individual([3])
 
         for _ in range(25):
             child_1, child_2 = estimator.mate(
-                genetic_search.creator.Individual(first),
-                genetic_search.creator.Individual(second),
+                creator.Individual(first),
+                creator.Individual(second),
             )
 
             assert isinstance(child_1[0], int)
@@ -1343,8 +1344,8 @@ def test_integer_search_space_is_repaired_after_single_dimension_crossover():
             assert 1 <= child_1[0] <= 3
             assert 1 <= child_2[0] <= 3
     finally:
-        del genetic_search.creator.FitnessMax
-        del genetic_search.creator.Individual
+        del creator.FitnessMax
+        del creator.Individual
 
 
 def test_integer_search_space_fit_never_passes_float_to_estimator():

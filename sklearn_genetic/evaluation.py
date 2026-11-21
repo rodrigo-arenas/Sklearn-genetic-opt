@@ -25,6 +25,21 @@ def logbook_record(logbook, chapter_name, parameters):
     return parameters
 
 
+def candidate_records(estimator):
+    if "_candidate_rows" in vars(estimator):
+        return estimator._candidate_rows
+    return estimator.logbook.chapters["parameters"]
+
+
+def record_candidate(estimator, parameters):
+    if "_candidate_rows" in vars(estimator) and "logbook" not in vars(estimator):
+        rows = estimator._candidate_rows
+        record = {"index": len(rows), **parameters}
+        rows.append(record)
+        return record
+    return logbook_record(estimator.logbook, "parameters", parameters)
+
+
 def is_parallel_enabled(n_jobs, n_tasks):
     return n_tasks > 1 and effective_n_jobs(n_jobs) != 1
 
@@ -163,16 +178,15 @@ def evaluate_population(estimator, individuals, cache_record_key):
 
         if estimator.use_cache and individual_key in estimator.fitness_cache:
             cached_result = estimator.fitness_cache[individual_key]
-            logbook_record(estimator.logbook, "parameters", cached_result[cache_record_key])
+            record_candidate(estimator, cached_result[cache_record_key])
         else:
             if lookup_key not in pending_results:
                 break
             fitness, current_generation_record, used_cv, skipped_invalid = pending_results[
                 lookup_key
             ]
-            current_generation_record = logbook_record(
-                estimator.logbook,
-                "parameters",
+            current_generation_record = record_candidate(
+                estimator,
                 current_generation_record,
             )
             batch_cv_calls += int(used_cv)

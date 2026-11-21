@@ -18,7 +18,7 @@ except ModuleNotFoundError:  # noqa
 from .genetic_search import GAFeatureSelectionCV
 from .callbacks.base import BaseCallback
 from .parameters import Metrics
-from .utils import logbook_to_pandas
+from .evaluation import candidate_records
 
 """
 This module contains useful plotting helpers to explore optimization results.
@@ -69,7 +69,7 @@ def _history_frame(estimator, source="history", fields=None):
     if source == "history":
         frame = pd.DataFrame(estimator.history)
     elif source == "logbook":
-        frame = logbook_to_pandas(estimator.logbook)
+        frame = pd.DataFrame(candidate_records(estimator))
     else:
         raise ValueError("source must be one of ['history', 'logbook']")
 
@@ -769,7 +769,7 @@ def plot_search_space(
     if kind not in _SEARCH_SPACE_KINDS:
         raise ValueError(f"kind must be one of {sorted(_SEARCH_SPACE_KINDS)}")
 
-    df = logbook_to_pandas(estimator.logbook)
+    df = pd.DataFrame(candidate_records(estimator))
     if features:
         available_features = [feature for feature in _as_list(features) if feature in df.columns]
         missing = [feature for feature in _as_list(features) if feature not in df.columns]

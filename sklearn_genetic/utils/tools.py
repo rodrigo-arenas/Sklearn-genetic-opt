@@ -2,7 +2,6 @@ import random
 from dataclasses import dataclass
 
 import numpy as np
-from deap import tools
 from joblib import hash as joblib_hash
 
 
@@ -33,12 +32,16 @@ def _hashable_key(value):
 
 def mutFlipBit(individual, indpb):
     """Apply DEAP bit mutation and keep the mask nonempty."""
+    from deap import tools
+
     (individual,) = tools.mutFlipBit(individual, indpb)
     return (check_bool_individual(individual),)
 
 
 def cxUniform(ind1, ind2, indpb):
     """Apply DEAP uniform crossover and keep both masks nonempty."""
+    from deap import tools
+
     ind1, ind2 = tools.cxUniform(ind1, ind2, indpb)
     return check_bool_individual(ind1), check_bool_individual(ind2)
 
