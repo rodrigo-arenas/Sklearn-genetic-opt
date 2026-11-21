@@ -11,6 +11,14 @@ You are reading the **latest (dev)** docs. For the stable version, see [stable](
 
 ## Unreleased
 
+Both search estimators accept the keyword-only `optimizer_backend` setting.
+DEAP remains the default. SciPy, Nevergrad, CatCMAwM, pymoo and external
+optimizer callables use estimator-owned CV, cache, history and refit. LivePlot
+and early stopping work across the catalog. The four alternative engines write
+inspectable progress snapshots. DEAP and plugins implementing continuation
+can resume a search. See the [tutorial](./tutorials/optimizer-backends),
+[backend API](./api/optimizer-backends) and [benchmarks](./benchmarks/optimizer-catalog).
+
 The CI matrix now includes CPython 3.15 for both search estimators, plotting,
 and MLflow integration. On 3.15, pip requires versions of scikit-learn, NumPy,
 pandas, and SciPy with upstream wheels for that interpreter. See the

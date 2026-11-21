@@ -1,6 +1,6 @@
 ---
 title: Installation
-description: Install sklearn-genetic-opt with pip or conda, including optional extras for plotting and MLflow.
+description: Install sklearn-genetic-opt with pip or conda, with optional optimizer engines, plotting and MLflow.
 ---
 
 :::warning Development version
@@ -38,8 +38,24 @@ pip install sklearn-genetic-opt[plot]      # seaborn for plot_fitness_evolution 
 pip install sklearn-genetic-opt[mlflow]    # MLflow 3 logging
 ```
 
-For the SciPy engine in this development checkout, run `pip install ".[scipy]"`.
-See [optimizer backends](../api/algorithms#scipy-backend) for supported domains and options.
+## Optimization backends
+
+The catalog described here is in development on `master`. To run the
+tutorial against that code, install the repository and the desired extras
+together in your Python environment:
+
+```bash
+git clone https://github.com/rodrigo-arenas/Sklearn-genetic-opt.git
+cd Sklearn-genetic-opt
+python -m pip install -e ".[scipy,nevergrad,cmaes,pymoo]"
+```
+
+For a smaller installation, specify only the extras you need. For example,
+`python -m pip install -e ".[pymoo,plot]"` installs pymoo and the plotting tools.
+DEAP is included in the base package. The SciPy extra enforces the solver's
+minimum version even when scikit-learn can use an older SciPy. Some platforms
+may build pymoo from source. See the [engine reference](../api/optimizer-backends)
+and [run your first backend comparison](../tutorials/optimizer-backends).
 
 ## conda
 
@@ -64,6 +80,9 @@ conda install -c conda-forge sklearn-genetic-opt seaborn mlflow
 | DEAP | 1.4.4 | Yes |
 | tqdm | 4.60.0 | Yes |
 | SciPy | 1.15 | For the SciPy optimization backend |
+| Nevergrad | >=1.0.12, <2 | `nevergrad` extra |
+| cmaes | >=0.13.1, <0.14 | `cmaes` extra |
+| pymoo | >=0.6.2, <0.7 | `pymoo` extra |
 | Seaborn | 0.13.2 | No (plots) |
 | MLflow | 3.14.0 | No (MLflow logging) |
 

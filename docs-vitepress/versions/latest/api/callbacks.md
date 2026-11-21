@@ -116,7 +116,7 @@ ProgressBar()
 
 ## LogbookSaver
 
-Saves the generation logbook to a file after each generation using `joblib.dump`.
+Writes the per-candidate evaluation records with joblib after each generation. The saved object can be iterated to inspect each row. Use `ModelCheckpoint` for search snapshots.
 
 ```python
 LogbookSaver(checkpoint_path)
@@ -135,7 +135,10 @@ logbook = load("./logbook.pkl")
 
 ## ModelCheckpoint
 
-Saves the search configuration, generation history and runtime state, including cached candidate scores, archived elites and random generator states. Each successful write replaces the previous snapshot. See the [checkpoint recipe](../recipes/advanced/checkpointing) to resume a search.
+Saves a snapshot at a reported generation. DEAP stores its historical continuation state.
+SciPy, Nevergrad, CatCMAwM and pymoo save progress with `resumable=False`. A
+plugin can support exact continuation by implementing the [resume protocol](../api/algorithms#callbacks-and-checkpoints).
+Use a fresh path for a new run and load only trusted snapshots.
 
 ```python
 ModelCheckpoint(checkpoint_path)
@@ -145,16 +148,17 @@ ModelCheckpoint(checkpoint_path)
 |-----------|------|-------------|
 | `checkpoint_path` | str or Path | File path for the checkpoint |
 
-Inspect the saved state:
+Inspect a saved snapshot from either format:
 
 ```python
-import pickle
+from sklearn_genetic.callbacks import ModelCheckpoint
 
-with open("./checkpoint.pkl", "rb") as f:
-    checkpoint = pickle.load(f)
-
-estimator_state = checkpoint["estimator_state"]
-logbook = checkpoint["logbook"]
+snapshot = ModelCheckpoint("./checkpoint.pkl").load()
+print(len(snapshot["logbook"]))  # generation records
+if "optimizer_checkpoint_version" in snapshot:
+    print(snapshot["backend"], snapshot["resumable"], len(snapshot["candidate_records"]))
+else:
+    print(snapshot["estimator_state"]["generations"])  # historical DEAP format
 ```
 
 ## Legacy TensorBoard callback

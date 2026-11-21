@@ -15,21 +15,24 @@ from _nbgen import Notebook  # noqa: E402
 
 nb = Notebook(
     path="guide/basic-usage.md",
-    title="Basic Usage",
+    title="Getting Started with GASearchCV: Hyperparameter Tuning and Feature Selection",
     description=(
-        "Your first hyperparameter search with GASearchCV and your first feature "
-        "selection with GAFeatureSelectionCV — a complete, runnable walkthrough."
+        "Step-by-step introduction to GASearchCV for hyperparameter optimization and "
+        "GAFeatureSelectionCV for feature selection, with complete runnable examples."
     ),
     intro=(
+        "**Estimated reading time:** 15 minutes. **Difficulty:** Beginner.\n\n"
         "This page walks through the two workflows you will use most:\n\n"
         "- **Hyperparameter tuning** with `GASearchCV`\n"
         "- **Feature selection** with `GAFeatureSelectionCV`\n\n"
         "Every code block below is executed to build this page, so what you copy "
         "is exactly what ran — including the outputs and figures.\n\n"
+        "This walkthrough uses the default DEAP engine. To keep the same estimator and CV workflow "
+        "while changing optimizers, follow [Switch optimization backends](../tutorials/optimizer-backends).\n\n"
         "## Prerequisites\n\n"
         "- `sklearn-genetic-opt` installed (`pip install sklearn-genetic-opt`)\n"
         "- Optional plotting extra for the figures: `pip install sklearn-genetic-opt[plot]`\n"
-        "- Basic familiarity with scikit-learn's `fit` / `predict` API"
+        "- Basic familiarity with Python, pip, `train_test_split`, and classifiers' `fit` / `predict` API"
     ),
 )
 
@@ -164,25 +167,22 @@ nb.md("""
     """)
 
 nb.code("""
-    import matplotlib.pyplot as plt
     from sklearn_genetic.plots import plot_search_overview
 
-    plot_search_overview(search, top_k=6)
-    plt.tight_layout()
+    overview = plot_search_overview(search, top_k=6)
     """)
 nb.figure(
-    "basic_usage_search_overview.png",
+    "basic_usage_mlp_search_overview.png",
     "Search overview dashboard: convergence, diversity, optimizer events, and top candidates",
 )
 
 nb.code("""
     from sklearn_genetic.plots import plot_parameter_evolution
 
-    plot_parameter_evolution(search, parameters=["alpha", "learning_rate_init", "batch_size"])
-    plt.tight_layout()
+    evolution = plot_parameter_evolution(search, parameters=["alpha", "learning_rate_init", "batch_size"])
     """)
 nb.figure(
-    "basic_usage_parameter_evolution.png",
+    "basic_usage_mlp_parameter_evolution.png",
     "How sampled values of alpha, learning rate, and batch size evolved over evaluations",
 )
 
@@ -239,11 +239,10 @@ nb.md("""
 nb.code("""
     from sklearn_genetic.plots import plot_feature_selection
 
-    plot_feature_selection(selector, feature_names=feature_names)
-    plt.tight_layout()
+    mask_plot = plot_feature_selection(selector, feature_names=feature_names)
     """)
 nb.figure(
-    "basic_usage_feature_selection.png",
+    "basic_usage_iris_mask.png",
     "Selected-feature mask over the four Iris features plus ten noise columns",
 )
 
@@ -258,13 +257,14 @@ nb.md("""
     - Check `fit_stats_["skipped_invalid_candidates"]` after fitting — a non-zero
       value means some sampled configurations raised errors during `fit`.
 
-    ## Next Steps
+    ## See Also
 
-    - [When to Use](./when-to-use) — is a genetic search the right tool for your problem?
-    - [Understanding Cross-Validation](./understand-cv) — read the generation log in depth
-    - [Pipeline Tuning](./pipeline-tuning) — tune a scikit-learn `Pipeline` with `step__param` names
-    - [Callbacks](./callbacks) — early stopping, progress bars, and checkpoints
-    - [Plotting Gallery](../examples/plotting-gallery) — every diagnostic plot, explained
+    - [How Hyperparameter Optimization Works](./how-hyperparameter-optimization-works) — understand the theory behind different search methods
+    - [Choosing the Right Search Space](./choosing-search-spaces) — pick optimal parameter bounds
+    - [Common Hyperparameter Tuning Mistakes](./common-mistakes) — avoid the most frequent pitfalls
+    - [Cross-Validation in Hyperparameter Search](./understand-cv) — understand generation logs and convergence
+    - [Random Forest Hyperparameter Tuning](../tutorials/tune-random-forest) — first real tutorial
+    - [Troubleshooting](./troubleshooting) — if something doesn't work
     """)
 
 nb.write()

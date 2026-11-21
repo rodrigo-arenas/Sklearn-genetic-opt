@@ -12,6 +12,8 @@ import budget96 from '../../../../benchmarks/results/optimizer-catalog/budget96.
 
 # Comparing optimization backends
 
+For a first fit, follow the [backend tutorial](../tutorials/optimizer-backends). The [API reference](../api/optimizer-backends) lists the controls and checkpoint support for each engine.
+
 Choose an engine with the `optimizer_backend` keyword in either estimator. Use the
 same estimator, folds, budget and random state to compare engines on your own data.
 

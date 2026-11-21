@@ -41,20 +41,20 @@ GAFeatureSelectionCV(
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `optimizer_backend` | str or callable, keyword-only | `"deap"` | Choose DEAP, SciPy, [Nevergrad](./algorithms#nevergrad), [CatCMAwM](./algorithms#catcma-with-margin), [pymoo](./algorithms#pymoo), or a callable or installed [optimizer plugin](./algorithms#optimizer-plugins). See [SciPy support and limits](./algorithms#scipy-backend) for `"scipy"`. |
+| `optimizer_backend` | str or callable, keyword-only | `"deap"` | Select `"deap"`, `"scipy"`, `"nevergrad"`, `"cmaes"`, `"pymoo"` or a plugin. See [backend settings and limits](./optimizer-backends) and the [tutorial](../tutorials/optimizer-backends). |
 | `estimator` | estimator | — | A scikit-learn estimator with a `fit` method |
 | `cv` | int or CV splitter | `3` | Cross-validation strategy |
 | `scoring` | str, callable or dict | `None` | Metric to evaluate. `None` uses the estimator's default scorer |
 | `refit` | bool or str | `True` | Refit the best estimator on the full training data after search; name the metric for multi-metric scoring |
 | `verbose` | bool | `True` | Print the generation log |
 | `keep_top_k` | int | `1` | Number of hall-of-fame individuals to keep across generations |
-| `elitism` | bool | `True` | Whether to carry over the best individual to the next generation |
+| `elitism` | bool | `True` | DEAP control for carrying an elite into the next generation |
 | `error_score` | float or `"raise"` | `np.nan` | Score to assign when a candidate raises an exception |
 | `random_state` | int, RandomState or `None` | `None` | Seeds the whole search at `fit` time for reproducible runs. `None` is non-deterministic |
-| `evolution_config` | `EvolutionConfig` | `None` | Population size, generations, crossover/mutation rates |
-| `population_config` | `PopulationConfig` | `None` | Initialization strategy and diversity settings |
+| `evolution_config` | `EvolutionConfig` | `None` | Population size and generations; variation settings depend on the backend |
+| `population_config` | `PopulationConfig` | `None` | Initialization strategy and warm starts |
 | `runtime_config` | `RuntimeConfig` | `None` | Parallelism, caching, verbosity |
-| `optimization_config` | `OptimizationConfig` | `None` | Local search, fitness sharing |
+| `optimization_config` | `OptimizationConfig` | `None` | Finalist selection; DEAP-specific local search and fitness sharing |
 
 ## Search correctness
 
@@ -84,7 +84,7 @@ feature and respect that upper bound.
 | `best_estimator_` | Estimator fitted with the selected features on the full training data |
 | `cv_results_` | Dict with per-candidate results |
 | `history` | Dictionary of lists aligned by generation. Pair `history["cross_validate_calls"]` with `history["fitness_best"]` to track the best search score against the number of mask evaluations. |
-| `logbook` | DEAP logbook with per-candidate evaluation records in `logbook.chapters["parameters"]` |
+| `logbook` | Compatibility view of per-candidate records, materialized on access for shared-runtime engines, in `logbook.chapters["parameters"]` |
 | `fit_stats_` | Evaluation counters |
 | `n_features_` | Number of selected features |
 | `feature_names_in_` | Feature names seen during `fit` when `X` has string column names |

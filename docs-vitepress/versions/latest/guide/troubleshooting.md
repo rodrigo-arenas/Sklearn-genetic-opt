@@ -240,7 +240,16 @@ pip install sklearn-genetic-opt[all]
 pip install seaborn
 ```
 
-The plotting helpers operate on the fitted estimator's `logbook` attribute. If `verbose=False` was set during fit, the logbook is still populated — the flag only controls printed output.
+Post-fit plots read generation history, candidate records or fitted results, depending on the plot. Setting `verbose=False` only changes printed output. Use [LivePlot](../api/plots#during-fitting) to see progress during fitting.
+
+## Optimizer selection or checkpoint errors
+
+| Symptom | What to check |
+| --- | --- |
+| Unknown optimizer backend | Install the development checkout in the interpreter running the search. Use the exact [backend name](../api/optimizer-backends), such as `"cmaes"` for CatCMAwM. A third-party name must be registered in `sklearn_genetic.optimizers`. |
+| Import error naming an extra | From that checkout, install the named extra in the same environment, for example `python -m pip install -e ".[nevergrad]"`. |
+| A control is DEAP-only | Remove custom mutation, tournament, elitism or other DEAP settings before selecting another engine. Consult its [supported settings](../api/optimizer-backends). |
+| A progress snapshot cannot resume | Read it with `ModelCheckpoint.load()` to inspect results. For a new SciPy, Nevergrad, CatCMAwM or pymoo run, give the callback a fresh path. |
 
 ## Unsupported Estimator Type
 

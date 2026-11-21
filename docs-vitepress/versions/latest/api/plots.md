@@ -35,7 +35,7 @@ Requires the plotting extra: `pip install sklearn-genetic-opt[plot]`.
 
 ## During fitting
 
-`LivePlot` is a callback for both search classes. It updates the same lines for the requested series after generation 0 and each completed generation. See the [callback guide](../guide/callbacks) for backend setup and checkpoint behavior. With a graphical Matplotlib backend the chart
+`LivePlot` works during fitting with both estimators and all five [optimization backends](./optimizer-backends). It updates the same lines for the requested series after generation 0 and each completed generation. See the [callback guide](../guide/callbacks) for Matplotlib display setup and checkpoint behavior. With a graphical Matplotlib backend the chart
 updates on screen; `save_path` also rewrites a PNG for headless monitoring.
 
 ```python

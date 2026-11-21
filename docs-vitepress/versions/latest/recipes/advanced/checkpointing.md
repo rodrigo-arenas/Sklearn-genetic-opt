@@ -13,6 +13,8 @@ You are reading the **latest (development)** docs. For stable documentation, see
 
 ## What This Solves
 
+This recipe uses the default DEAP engine and its historical checkpoint format. For SciPy, Nevergrad, CatCMAwM and pymoo, [inspect the progress snapshot](../../tutorials/optimizer-backends#select-features-and-inspect-progress) and use a fresh path for the next fit.
+
 Use a generation checkpoint to resume a search with its saved candidate scores
 and cumulative evaluation counts. Give each experiment its own checkpoint path.
 The first run below assumes the file does not exist.

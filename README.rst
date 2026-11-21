@@ -64,6 +64,19 @@ candidate on the training data. The test set stays separate.
 To select columns instead, follow the `feature selection tutorial`_. It shows
 how to inspect ``support_`` and evaluate the selected features on held-out data.
 
+Development optimizer catalog
+-----------------------------
+
+On ``master``, both estimators accept ``optimizer_backend``. DEAP is the default;
+SciPy, Nevergrad, CatCMAwM and pymoo share the estimators' cross-validation,
+results and callbacks. From a development checkout, install the desired extra
+with, for example, ``python -m pip install -e ".[pymoo]"`` and pass
+``optimizer_backend="pymoo"`` to either estimator. The `backend tutorial`_
+shows both tasks, and the `engine comparison`_ reports quality and actual CV cost.
+
+.. _backend tutorial: https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/tutorials/optimizer-backends
+.. _engine comparison: https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/benchmarks/optimizer-catalog
+
 Documentation and project
 -------------------------
 

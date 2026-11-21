@@ -149,6 +149,7 @@ function versionSidebar(versionPrefix: string) {
       collapsed: false,
       items: [
         { text: 'Overview',                                       link: `${versionPrefix}/tutorials/` },
+        ...pageItem(versionPrefix, 'Switch Optimization Backends', 'tutorials/optimizer-backends'),
         ...pageItem(versionPrefix, 'Random Forest Hyperparameter Tuning', 'tutorials/tune-random-forest'),
         ...pageItem(versionPrefix, 'Gradient Boosting Hyperparameter Tuning', 'tutorials/tune-gradient-boosting'),
         ...pageItem(versionPrefix, 'Logistic Regression Hyperparameter Tuning', 'tutorials/tune-logistic-regression'),
@@ -199,10 +200,12 @@ function versionSidebar(versionPrefix: string) {
         { text: 'MLflow', link: `${versionPrefix}/api/mlflow` },
         { text: 'Search Space', link: `${versionPrefix}/api/space` },
         ...pageItem(versionPrefix, 'Estimator Presets', 'api/presets'),
+        ...pageItem(versionPrefix, 'Optimizer Backends', 'api/optimizer-backends'),
         { text: 'Algorithms', link: `${versionPrefix}/api/algorithms` },
       ],
     },
     ...pageSection(versionPrefix, 'Benchmarks', 'benchmarks/', [
+      { text: 'Optimizer Backend Comparison', relativePath: 'benchmarks/optimizer-catalog' },
       { text: 'Bayesmark Comparison', relativePath: 'benchmarks/' },
     ]),
     ...pageSection(versionPrefix, 'Comparisons', 'comparisons/', [
@@ -332,7 +335,7 @@ export default defineConfig({
           '@type': 'SoftwareApplication',
           name: 'sklearn-genetic-opt',
           description:
-            'Evolutionary hyperparameter tuning and feature selection for scikit-learn using genetic algorithms powered by DEAP.',
+            'Evolutionary hyperparameter tuning and feature selection for scikit-learn with DEAP and optional optimization engines.',
           applicationCategory: 'DeveloperApplication',
           operatingSystem: 'Linux, macOS, Windows',
           programmingLanguage: 'Python',

@@ -15,6 +15,8 @@ You are reading the **latest (dev)** docs. For the stable version, see [stable](
 
 When default settings produce premature convergence or poor search quality, these controls give you finer-grained command over the evolutionary process. They are **optional** — the defaults are conservative and work well for most searches. Add them one at a time when telemetry shows the optimizer needs them.
 
+Diversity-driven variation, fitness sharing, random immigrants and local refinement in this guide apply to DEAP. Shared telemetry and finalist selection also work with the other [optimizer backends](../api/optimizer-backends).
+
 ## Prerequisites
 
 - Completed [Basic Usage](./basic-usage)

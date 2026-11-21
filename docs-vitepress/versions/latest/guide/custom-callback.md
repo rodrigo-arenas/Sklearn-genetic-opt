@@ -42,8 +42,8 @@ class MyCallback(BaseCallback):
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `record` | dict | Current generation stats: `gen`, `nevals`, `fitness`, `fitness_std`, `fitness_best`, `fitness_max`, `fitness_min`, `genotype_diversity`, `stagnation_generations`, etc. |
-| `logbook` | DEAP Logbook | All previous generation records. Use `logbook.select("fitness")` to get a list of values |
-| `estimator` | `GASearchCV` | The search estimator with all its attributes |
+| `logbook` | Generation log | Records up to and including this step. Iterate, index or call `logbook.select("fitness")` on any catalog engine. |
+| `estimator` | Either search estimator | The running `GASearchCV` or `GAFeatureSelectionCV` instance |
 
 ## Example: Stop After N Generations Below a Threshold
 
@@ -143,7 +143,7 @@ class PlateauAlert(BaseCallback):
 
 - Always return `False` from `on_step` unless you explicitly want to stop the search.
 - Call `print(record.keys())` inside `on_step` during development to see all available fields.
-- The `logbook` is a DEAP `Logbook` object. Use `logbook.select("metric_name")` to get a Python list of values across all generations.
+- Use the generation log's `select`, indexing and iteration methods for a portable callback. Code that accesses a DEAP toolbox requires `optimizer_backend="deap"`. The fitted estimator's `cv_results_` holds per-candidate scores.
 - You can combine custom callbacks with built-in ones in the same list.
 - Heavy computation in `on_step` (e.g., writing to a remote server) can slow down the search. For non-critical logging, consider buffering and flushing only in `on_end`.
 
