@@ -130,7 +130,7 @@ nb.md("""
     | Search work performed in the current session | `fit_counts_["search_cv_calls"]` and `fit_counts_["search_fold_fits"]` |
     | Fresh search work recoverable from the file | `resumable_cv_calls_` on the `ModelCheckpoint` callback |
     | Fresh work outside the checkpoint after a partial generation or skipped write | `unsaved_cv_calls_` on the callback |
-    | Time in search, finalist validation, and refit | [`plot_fit_work(search, unit="seconds")`](../api/plots#plot_fit_work) |
+    | Time in search, finalist validation, and refit | [`plot_fit_work(search, unit="seconds")`](../api/plots#plot-fit-work) |
 
     For a resume error, see the [checkpoint recipe](../recipes/advanced/checkpointing#diagnose-a-resume-error).
     To choose a backend, use the [matched-budget optimizer catalog](../benchmarks/optimizer-catalog).

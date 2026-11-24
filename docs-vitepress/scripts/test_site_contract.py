@@ -73,6 +73,18 @@ def test_built_site_advertises_only_indexable_pages():
     assert not any(f"/versions/{older}/" in url for older in RELEASES[:-1] for url in locations)
 
 
+def test_budgeted_search_tutorial_links_to_diagnostics():
+    latest = DOCS / ".vitepress" / "dist" / "versions" / "latest"
+    tutorial = (latest / "tutorials/budgeted-optimizer-search.html").read_text(encoding="utf-8")
+    for page, heading in (
+        ("api/plots", "plot-fit-work"),
+        ("recipes/advanced/checkpointing", "diagnose-a-resume-error"),
+    ):
+        assert f"{page}#{heading}" in tutorial
+        target = (latest / f"{page}.html").read_text(encoding="utf-8")
+        assert f'id="{heading}"' in target
+
+
 def test_homepage_links_to_released_pages():
     dist = DOCS / ".vitepress" / "dist"
     sitemap = ET.parse(dist / "sitemap.xml")
