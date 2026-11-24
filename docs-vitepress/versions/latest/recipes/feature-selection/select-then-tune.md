@@ -91,6 +91,7 @@ print(f"Test ROC AUC: {ga.score(X_test_sel, y_test):.4f}")
 
 ## See Also
 
+- [Use the selector in a pipeline without refitting](../../api/gafeatureselectioncv#use-the-selector-in-a-pipeline-without-refitting)
 - [Feature Selection Tutorial](../../tutorials/feature-selection) — 3-stage workflow with second-estimator validation
 - [Feature Selection on 50+ Columns](./high-dimensional) — scaling to large feature sets
 - [Feature Selection Methods Compared](../../guide/feature-selection-guide) — wrapper vs filter

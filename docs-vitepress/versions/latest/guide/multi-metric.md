@@ -1,6 +1,6 @@
 ---
 title: Multi-Metric Optimization
-description: Track multiple scoring metrics during a GASearchCV search and choose which one drives optimization.
+description: Track multiple scoring metrics in GASearchCV or GAFeatureSelectionCV and choose the optimization objective with or without refitting.
 ---
 
 :::warning Development version
@@ -9,7 +9,8 @@ You are reading the **latest (dev)** docs. For the stable version, see [stable](
 
 # Multi-Metric Optimization
 
-`GASearchCV` supports multi-metric evaluation — you can track several metrics simultaneously while optimizing (refitting) on one of them.
+`GASearchCV` and `GAFeatureSelectionCV` can record several metrics while using
+one metric to guide the evolutionary search.
 
 ## Prerequisites
 
@@ -62,6 +63,12 @@ print("Best ROC-AUC (refit metric):", round(search.best_score_, 4))
 print("Best parameters:", search.best_params_)
 ```
 
+A standalone callable scorer returns one numeric score per fold. If a
+callable produces several metrics, `fit` reports a configuration error.
+Supply those metrics as separate entries in `scoring`. Each entry accepts a
+registered scorer name or a callable returning one score.
+See the [executable example](../tutorials/optimizer-backends#configure-a-combined-scorer).
+
 ## Inspecting All Metrics
 
 After fitting, `cv_results_` contains columns for every metric:
@@ -78,10 +85,44 @@ best_by_f1 = results.sort_values("rank_test_f1").iloc[0]
 print("Best params by F1:", best_by_f1["params"])
 ```
 
+The validation columns are available by default. Use `return_train_score=True`
+when you also want to compare training and validation scores for each metric.
+This adds scoring work per fold. See
+[how to measure the cost](./troubleshooting#check-the-cost-of-training-scores).
+
+## Search without refitting
+
+To inspect the candidates before committing to a full-data fit, set
+`refit=False` and name the metric that should guide the search in
+`objective_metric`. All metrics are still available in `cv_results_`.
+
+```python
+from sklearn.base import clone
+
+report_only = clone(search).set_params(refit=False, objective_metric="roc_auc")
+report_only.fit(X_train, y_train)
+print(report_only.cv_results_dataframe(columns=["mean_test_roc_auc", "mean_test_f1"], top_k=5))
+```
+
+`cv_results_dataframe()` sorts candidates by the objective metric, even when
+`columns` omits its rank column. Keep the same objective when resuming a
+checkpoint so that saved and new scores are comparable.
+The search [warns if no candidate has a finite mean for the objective](./troubleshooting#no-candidate-has-a-finite-objective-score).
+
+## Choose a candidate by several metrics
+
+Set `objective_metric` to guide the search and pass a
+[refit function](./advanced-optimizer-control#choose-a-refit-candidate-with-a-function)
+to select an index from `cv_results_` after search. For example, optimize
+balanced accuracy and choose the shallowest tree within one percentage point
+of the best score. `best_index_` identifies that row, and `score(X, y)` uses
+the named objective on the refitted model.
+
 ## Tips & Gotchas
 
-- `best_params_` and `best_score_` always refer to the `refit` metric, not the others.
-- The evolutionary search only uses the `refit` metric as the fitness signal. Other metrics are recorded in `cv_results_` but do not influence which individuals survive.
+- With a metric name for `refit`, `best_params_` and `best_score_` refer to that metric.
+- The evolutionary search uses the named `refit` metric or `objective_metric`
+  as its fitness signal. Inspect the other metrics in `cv_results_`.
 - For binary classification, `make_scorer(f1_score)` defaults to `average="binary"`. For multi-class, pass `average="macro"` or `"weighted"`.
 
 ## Next Steps

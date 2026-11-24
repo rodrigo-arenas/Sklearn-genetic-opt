@@ -249,6 +249,11 @@ nb.figure(
 nb.md("""
     ## Tips & Gotchas
 
+    - Pass the training targets to `search.fit(X_train, y_train)` and
+      `selector.fit(Xtr, ytr)`. Models that require targets raise an
+      error before cross-validation when the target is omitted. For
+      [unlabeled outlier detection](./outliers#score-unlabeled-samples), call
+      `fit(X_train)`.
     - Set `RuntimeConfig(verbose=True)` to watch the per-generation log live.
     - `PopulationConfig(initializer="smart")` is strongly recommended — it usually
       finds better solutions faster than a purely random start.

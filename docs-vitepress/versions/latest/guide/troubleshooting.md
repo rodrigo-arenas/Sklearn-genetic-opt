@@ -1,6 +1,6 @@
 ---
 title: Troubleshooting
-description: Common problems encountered with sklearn-genetic-opt, organized by symptom.
+description: Diagnose failed CV fits, slow hyperparameter searches, parallelism settings, repeated candidates, and convergence in sklearn-genetic-opt.
 ---
 
 :::warning Development version
@@ -20,7 +20,7 @@ This page covers the most common problems, organized by symptom.
 | `ImportError` for `mlflow` or `seaborn` | An optional dependency is not installed | `pip install "sklearn-genetic-opt[all]"` (or the specific extra) |
 | `TensorBoard` asks for TensorFlow | A legacy callback is in use | Use `LivePlot` from `sklearn_genetic.plots`, or install TensorFlow separately for the old callback |
 | `InvalidParameterError` mentioning `'max_error'` | recent scikit-learn no longer accepts `max_error` as a scoring string | Use `scoring="neg_max_error"` |
-| Fit is much slower than expected | CPU oversubscription from nested parallelism | See [Search Is Slow](#search-is-slow) and the `parallel_backend` table |
+| Fit is much slower than expected | Expensive CV folds, repeated proposals, or nested parallelism | [Measure fit work and choose a parallelism layer](#search-is-slow) |
 
 Each row is explained in more detail in the sections below.
 
@@ -67,6 +67,18 @@ param_grid = {"kernel": ["rbf", "linear"], "max_depth": range(2, 20)}
 param_grid = {"kernel": Categorical(["rbf", "linear"]), "max_depth": Integer(2, 20)}
 ```
 
+## Precomputed kernels and distances
+
+`GAFeatureSelectionCV` selects original feature columns. The columns of
+a precomputed kernel or distance matrix represent training samples. Pass
+the original features to the selector with an estimator that computes its
+kernel or distances during fitting. A pipeline can also compute the matrix
+from the selected columns inside each training fold.
+
+Use [GASearchCV with a precomputed matrix](../examples/precomputed-kernel-search)
+to tune an estimator's hyperparameters on a kernel or distances you have
+already computed.
+
 ## All Candidates Score the Same
 
 **Every generation shows the same `fitness` and `fitness_best`**
@@ -79,40 +91,129 @@ Possible causes:
 
 3. **The cross-validation strategy is deterministic across runs.** Set `shuffle=True` and a `random_state` on your CV splitter.
 
-4. **`error_score` is masking failures.** If the estimator raises exceptions for some configurations, `error_score=nan` (default) replaces scores with `nan`, which can appear as a flat line. Check `fit_stats_["skipped_invalid_candidates"]`:
+4. **The search encountered fold failures.** Check for `FitFailedWarning`
+   and inspect the split scores in `cv_results_`.
 
-```python
-print(search.fit_stats_)
-# skipped_invalid_candidates > 0 means some configs raised exceptions
-```
+## All fits failed
 
-Switch to `RuntimeConfig(error_score="raise")` temporarily to see the actual exception.
+When an estimator cannot fit any fold for a particular hyperparameter
+configuration or feature subset, scikit-learn reports `All the ... fits failed`.
+With numeric `error_score`, the search emits this diagnostic as a warning,
+records `NaN` scores for that candidate and ranks it below candidates that fit.
+If every candidate fails to fit, the search raises before selecting a winner.
+With numeric `error_score`, it keeps `cv_results_`, `history` and
+`fit_counts_` available for inspection. Failed fits still count toward the
+CV budget.
+
+Filter `cv_results_["all_fits_failed"]` to find the affected configurations or
+masks by row. Partial fit failures and non-finite scores from fitted estimators
+leave this flag false. Repeated proposals that reuse a failed evaluation carry
+the same flag. See the
+[failed candidate example](../tutorials/optimizer-backends#inspect-candidates-that-fail-all-cv-folds).
+
+The [fold score heatmap](../api/plots#plot_cv_fold_scores) marks a candidate's
+row with outlined squares when this flag is true. Pass the affected row
+positions as `candidate_indices` to inspect them alongside successful rows.
+When every fit fails, the heatmap can still show the affected rows and folds.
+The [fold score distribution](../api/plots#plot_cv_scores) labels those
+candidates **All fits failed** alongside the rows with finite scores.
+
+For candidates that fit at least one fold, scikit-learn can use the requested
+replacement score on failed folds. Set `error_score="raise"` on your search
+to get the original exception and identify the parameter combination, feature
+subset or data constraint that caused the failure. If the exception ends the
+optimizer run, `search_time_` records the elapsed seconds up to that point.
+See [how to read the duration after an error](../tutorials/optimizer-backends#inspect-an-optimizer-error).
+
+## Finalist validation ends without a winner
+
+When all finalist scores are non-finite, `fit` raises before the final refit.
+`final_selection_results_["candidates"]` still contains each completed
+finalist evaluation and its per-fold scores. `selected_index` is `None`.
+If validation raises during a candidate, earlier completed evaluations
+remain available. Use `plot_finalist_scores(search)` to inspect them.
+See the [finalist diagnostic example](../tutorials/optimizer-backends#inspect-finalist-validation-without-a-winner).
+
+## Refit fails after cross-validation
+
+The selected estimator can fail on the full training set after completing its
+cross-validation folds. `fit` propagates the original error. The search
+keeps its `cv_results_` and any completed finalist scores so you can inspect
+the selected configuration. `fit_counts_["refit_fits"]` is zero and
+`best_estimator_` becomes available only after a successful refit.
+
+If finalist validation completed, use
+[`plot_finalist_scores(search)`](../api/plots#plot-finalist-scores) to compare
+the candidate chosen for refit with the other finalists. The plot reads saved
+CV scores, so it works even after a refit error.
+
+Use [a search with refit disabled](./advanced-optimizer-control#inspect-the-selected-candidate-without-refitting)
+when you want to inspect the CV results and fit the selected model separately.
+
+## No candidate has a finite objective score
+
+The warning names the metric that guides optimization. Inspect its
+`split*_test_<metric>` columns in `cv_results_` for non-finite values.
+Check whether the scorer is defined on each validation fold. For example,
+ROC AUC requires both classes in a binary validation fold. A finite
+secondary metric is still available for reporting or callable refit.
+With the usual refit rule, the selected row can have a non-finite
+`best_score_`. See the
+[undefined objective example](../tutorials/optimizer-backends#diagnose-an-undefined-objective).
+Use the [fold score heatmap](../api/plots#plot_cv_fold_scores) to locate
+non-finite cells and compare the same fold across candidates.
 
 ## Search Is Slow
 
-**Fit takes much longer than expected**
+Start with elapsed `fit` time and `fit_counts_["search_fold_fits"]` to compare
+total runtime and search workload. Use `mean_fit_time` and `mean_score_time`
+in `cv_results_` to inspect per-candidate fold timings in seconds.
+`fit_counts_` also reports finalist and refit work separately. With caching
+enabled, `fit_stats_["cache_hits"]` counts proposals reused from earlier batches
+and `fit_stats_["duplicate_candidates"]` counts repeats that share a fresh
+evaluation in their batch. The
+[cache example](../tutorials/optimizer-backends#read-both-cache-counters-in-one-batch)
+shows how to interpret both counters together. Compare
+settings with the same CV splits, seed, and fresh candidate budget. See
+[fit work by phase](../api/optimizer-backends#fit-work-by-phase)
+and [`CVBudgetStopping`](../api/callbacks#cvbudgetstopping).
 
-1. **Nested parallelism.** The default `parallel_backend="auto"` parallelizes across unique candidates in a generation. If the estimator itself uses parallelism (e.g., `RandomForestClassifier(n_jobs=-1)`), you will oversubscribe the CPU. Either set the estimator's `n_jobs=1`, or switch parallelism to the CV level:
+For pipelines that repeatedly fit an expensive transformer, try
+[caching fitted preprocessing](./pipeline-tuning#cache-fitted-preprocessing-with-pipeline-memory)
+and compare total `fit` time at the same number of fold fits.
 
-```python
-runtime_config=RuntimeConfig(parallel_backend="cv", n_jobs=-1)
-```
+### Check the cost of training scores
 
-This keeps candidate evaluation serial but parallelizes the cross-validation splits for each candidate.
+`return_train_score=True` scores each fitted fold model on its training
+rows as well as its validation rows. This adds scoring work without increasing
+`fit_counts_["search_fold_fits"]`. The `mean_score_time` column measures
+validation scoring, so use elapsed `fit` time to compare this setting.
 
-**Choosing `parallel_backend` vs estimator `n_jobs`.** Parallelize in exactly one layer to avoid oversubscribing the CPU:
+Both search classes default to `return_train_score=False` and still report
+validation scores for every configured metric. Enable training scores when you
+need the `mean_train_<metric>` and `split<N>_train_<metric>` columns, for
+example to compare training and validation performance across candidates.
 
-| Your estimator | Recommended setting |
-|----------------|---------------------|
-| Pure sklearn estimator with no internal threading (e.g. `SVC`, `LogisticRegression`) | `parallel_backend="population"` (or `"auto"`); leave estimator `n_jobs` unset |
-| sklearn estimator already using all cores (e.g. `RandomForestClassifier(n_jobs=-1)`) | Set the estimator's `n_jobs=1`, **or** use `parallel_backend="cv"` |
-| XGBoost / LightGBM / CatBoost | Set the model's thread count to 1 (`n_jobs=1` / `thread_count=1`) and use `parallel_backend="cv"` |
+### Choose a parallelism layer
 
-Rule of thumb: parallelize either across candidates/CV (`parallel_backend`) **or** inside the estimator (`n_jobs`) — not both. See the [joblib parallelism recipe](../recipes/integrations/joblib-parallel) and [`RuntimeConfig.parallel_backend`](../api/config).
+Start by allocating multiple workers to one layer. The search-level `n_jobs`
+and the estimator's worker count are independent.
 
-2. **Too many unique candidates.** Check `fit_stats_["unique_candidates"]`. If it equals `fit_stats_["evaluated_candidates"]` and `cache_hits` is zero, the cache is not helping. This is normal on the first run.
+| Work to parallelize | Search settings | Estimator settings |
+| --- | --- | --- |
+| Different candidates | `n_jobs=2`, `parallel_backend="population"` or `"auto"` | Set `n_jobs=1` or the estimator's equivalent, if available |
+| CV folds for one candidate | `n_jobs=2`, `parallel_backend="cv"` | Set `n_jobs=1` or the estimator's equivalent, if available |
+| Training within one fold | `n_jobs=1` | Set the estimator's worker count, for example `RandomForestClassifier(n_jobs=2)` |
 
-3. **Population is too large relative to the space.** On a small space with many duplicate candidates, reduce `population_size` and add more generations instead.
+`parallel_backend="cv"` controls fold scheduling. A forest with its own
+`n_jobs=2` can still request multiple workers inside each fold. With
+`"population"`, cached proposals require no fold work, so many repeated
+candidates can leave candidate workers idle. See the [joblib parallelism
+recipe](../recipes/integrations/joblib-parallel).
+
+Native OpenMP and BLAS libraries may also use threads. Check their limits
+separately if CPU usage stays high or adding workers slows the run. See
+[scikit-learn's guide to parallelism and oversubscription](https://scikit-learn.org/stable/computing/parallelism.html#oversubscription-spawning-too-many-threads).
 
 ## Population Converges Too Fast
 
@@ -158,16 +259,20 @@ search.fit(X_train, y_train, callbacks=[
 
 ## Understanding `fit_stats_`
 
+Each call to `fit` clears the previous search's counters and candidate
+records. If validation fails before the search begins, the previous
+`fit_stats_`, `logbook` and `hof` are unavailable on that instance.
+
 After fitting, `search.fit_stats_` is a dictionary with evaluation counters:
 
 ```python
 {
     "evaluated_candidates":        420,  # total individuals presented
-    "unique_candidates":           310,  # distinct configs cross-validated
+    "unique_candidates":           310,  # fresh candidate evaluations
     "cross_validate_calls":        310,  # actual CV calls made
     "cache_hits":                  110,  # scores reused from cache
-    "duplicate_candidates":          0,  # within-generation duplicates
-    "skipped_invalid_candidates":    0,  # configs that raised exceptions
+    "duplicate_candidates":          0,  # repeats coalesced within a batch
+    "skipped_invalid_candidates":    0,  # invalid candidates penalized before CV
     "population_parallel_batches":  21,
     "population_serial_batches":     0,
     "random_immigrants":            12,  # injected by diversity control
@@ -177,9 +282,15 @@ After fitting, `search.fit_stats_` is a dictionary with evaluation counters:
 
 Key ratios to check:
 
-- `cache_hits / evaluated_candidates` — cache efficiency; above 20% is good for many-generation searches.
-- `skipped_invalid_candidates > 0` — some parameter combinations caused exceptions.
+- With caching enabled, add `cache_hits` and `duplicate_candidates` and divide
+  by `evaluated_candidates` to see the share of proposals that reused a score.
+- `skipped_invalid_candidates` counts candidates skipped before starting CV.
+  A failed fold handled by `error_score` still belongs to a CV call.
 - `random_immigrants > 0` — diversity control was triggered at least once.
+
+`fit_stats_` includes the search history restored from a checkpoint. For work
+done by the latest call to `fit`, including finalist validation and refitting,
+read [`fit_counts_`](../api/optimizer-backends#fit-work-by-phase).
 
 ## Reproducibility
 

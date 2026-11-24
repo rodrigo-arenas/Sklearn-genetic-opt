@@ -28,6 +28,46 @@ X = create_outlier_dataset()
 X_train, X_test = train_test_split(X, test_size=0.33, random_state=42)
 
 
+@pytest.mark.parametrize("search_type", [GASearchCV, GAFeatureSelectionCV])
+@pytest.mark.parametrize("input_only", [False, True])
+def test_unlabeled_outlier_search_preserves_missing_target(search_type, input_only):
+    class InputOnlyForest(IsolationForest):
+        def fit(self, X, *, sample_weight=None):
+            return super().fit(X, sample_weight=sample_weight)
+
+    def input_only_score(estimator, X):
+        return float(estimator.score_samples(X).mean())
+
+    def optional_target_score(estimator, X, y=None):
+        assert y is None
+        return input_only_score(estimator, X)
+
+    estimator_type = InputOnlyForest if input_only else IsolationForest
+    search_params = {}
+    if search_type is GASearchCV:
+        search_params["param_grid"] = {
+            "contamination": Categorical([0.1, 0.2]),
+            "max_samples": Categorical([0.75, 1.0]),
+        }
+    search = search_type(
+        estimator_type(n_estimators=5, n_jobs=1, random_state=0),
+        scoring=input_only_score if input_only else optional_target_score,
+        cv=2,
+        population_size=4,
+        generations=0,
+        verbose=False,
+        n_jobs=1,
+        random_state=0,
+        error_score="raise",
+        **search_params,
+    ).fit(X_train)
+
+    assert search.y_ is None
+    assert search.fit_counts_["search_cv_calls"] > 0
+    assert search.fit_counts_["refit_fits"] == 1
+    assert search.score(X_test) == pytest.approx(search.score_samples(X_test).mean())
+
+
 def test_isolation_forest_gasearch():
     """Test GASearchCV with IsolationForest - using default scoring (score_samples path)"""
     estimator = IsolationForest(random_state=42)

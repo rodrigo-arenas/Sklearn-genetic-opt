@@ -552,6 +552,9 @@ def run_one_benchmark(
         "generalization_gap": metric_gap(train_metrics, test_metrics),
     }
 
+    if hasattr(estimator, "fit_counts_"):
+        result["fit_counts"] = dict(estimator.fit_counts_)
+
     final_selection_results = getattr(estimator, "final_selection_results_", None)
     if final_selection_results is not None:
         result.update(

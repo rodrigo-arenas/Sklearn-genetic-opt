@@ -1,6 +1,11 @@
 """Generation-boundary persistence for the bundled optimizer adapters."""
 
+from collections.abc import Mapping
 from functools import partial, wraps
+from hashlib import md5
+from itertools import chain, repeat
+from numbers import Integral
+from operator import is_
 import pickle
 import platform
 import random
@@ -12,6 +17,15 @@ import numpy as np
 from joblib import hash as joblib_hash
 
 from ._version import __version__
+
+
+def training_data_hash(estimator):
+    X = estimator.X_
+    if getattr(estimator, "preserve_dataframe", False):
+        # Normalize the pandas block layout so an equivalent copy can resume.
+        # Keep the index, columns, data and dtypes in the fingerprint.
+        X = X.copy(deep=True)
+    return joblib_hash((type(estimator), X, estimator.y_, estimator.groups_, estimator._fit_params))
 
 
 def checkpoint_engine(optimizer):
@@ -38,26 +52,64 @@ def environment(engine):
     return (1, __version__, sys.platform, platform.machine(), platform.python_version(), packages)
 
 
+def _is_nonnegative_count(value):
+    return isinstance(value, Integral) and not isinstance(value, (bool, np.bool_)) and value >= 0
+
+
+def _valid_generation_record(record, generation):
+    return (
+        isinstance(record, Mapping)
+        and _is_nonnegative_count(record.get("gen"))
+        and record["gen"] == generation
+        and _is_nonnegative_count(record.get("nevals"))
+        and _is_nonnegative_count(record.get("population_size"))
+        and record["population_size"] > 0
+    )
+
+
 def validate_boundary(engine, checkpoint):
     """Cross-check the solver cursor with the estimator before replaying any work."""
     log = checkpoint["logbook"]
+    if (
+        not isinstance(log, (list, tuple))
+        or not log
+        or not all(
+            _valid_generation_record(record, generation) for generation, record in enumerate(log)
+        )
+    ):
+        raise ValueError("Optimizer checkpoint logbook has an invalid generation boundary")
+    records = checkpoint["candidate_records"]
+    if not isinstance(records, list) or sum(int(row["nevals"]) for row in log) != len(records):
+        raise ValueError(
+            "Optimizer checkpoint candidate_records do not match the recorded generation boundary"
+        )
     state = checkpoint["solver_state"]
     if engine in ("cmaes", "nevergrad"):
-        valid = isinstance(state, tuple) and len(state) == 2 and state[0] == len(log) - 1
+        valid = (
+            isinstance(state, tuple)
+            and len(state) == 2
+            and _is_nonnegative_count(state[0])
+            and state[0] == len(log) - 1
+            and isinstance(state[1], bytes)
+        )
     else:
         valid = (
             isinstance(state, list)
             and len(state) == len(log)
             and all(
-                len(batch) == 3
+                isinstance(batch, (list, tuple))
+                and len(batch) == 3
+                and isinstance(batch[0], str)
+                and isinstance(batch[1], (list, tuple))
                 and len(batch[1]) == record["nevals"]
+                and isinstance(batch[2], tuple)
                 and len(batch[2]) == record["population_size"]
                 for batch, record in zip(state, log)
             )
         )
-    if not valid or sum(record["nevals"] for record in log) != len(checkpoint["candidate_records"]):
+    if not valid:
         raise ValueError(
-            "Optimizer checkpoint state does not match the recorded generation boundary"
+            "Optimizer checkpoint solver_state does not match the recorded generation boundary"
         )
 
 
@@ -72,7 +124,12 @@ def native_checkpoint(engine):
             rng = random.getstate(), np.random.get_state()
             try:
                 import_module(engine)
-                restored = pickle.loads(payload)
+                try:
+                    restored = pickle.loads(payload)
+                except (pickle.UnpicklingError, EOFError, ValueError) as exc:
+                    raise ValueError(
+                        "Optimizer checkpoint solver_state contains unreadable data"
+                    ) from exc
             finally:
                 random.setstate(rng[0])
                 np.random.set_state(rng[1])
@@ -93,17 +150,25 @@ def report_native(problem, report, handles, state):
         report(handles)
 
 
+def _feature_proposal_signature(rows, *, features):
+    if features and all(map(is_, map(type, chain.from_iterable(rows)), repeat(int))):
+        # Use the same protocol and digest as joblib for native integer tuples.
+        serialized = pickle.dumps(rows, protocol=3)
+        return md5(serialized, usedforsecurity=False).hexdigest()
+    return None
+
+
 def replay_checkpoint(engine):
     """Replay the deterministic, independently seeded batches of SciPy and pymoo."""
 
     def decorate(solve):
         @wraps(solve)
-        def optimize(problem, evaluate, report):
+        def optimize(problem, evaluate, report, **options):
             if getattr(problem, "checkpoint_requested", False):
-                return resume(problem, evaluate, report, [])
-            return solve(problem, evaluate, report)
+                return resume(problem, evaluate, report, [], **options)
+            return solve(problem, evaluate, report, **options)
 
-        def resume(problem, evaluate, report, journal):
+        def resume(problem, evaluate, report, journal, **options):
             # Both adapters evaluate one batch before each survivor report. Opaque
             # handles share the snapshot pickle with the archive and runtime owner.
             boundary = len(journal)
@@ -117,15 +182,19 @@ def replay_checkpoint(engine):
                     raise ValueError(
                         "Expected one evaluation batch per optimizer checkpoint report"
                     )
-                rows = tuple(map(tuple, rows))
-                signature = joblib_hash(rows)
+                if type(rows) is not tuple or any(type(row) is not tuple for row in rows):
+                    rows = tuple(map(tuple, rows))
+                signature = _feature_proposal_signature(rows, features=problem.task == "features")
                 if generation < boundary:
                     expected, replies, _ = journal[generation]
-                    if expected != signature:
+                    if (signature is None or signature != expected) and (
+                        joblib_hash(rows) != expected
+                    ):
                         raise ValueError(
                             "Optimizer checkpoint replay diverged on candidate proposals"
                         )
                 else:
+                    signature = signature or joblib_hash(rows)
                     replies = evaluate(rows)
                 pending = (signature, replies)
                 return replies
@@ -149,9 +218,11 @@ def replay_checkpoint(engine):
                     report(survivors, state=journal)
                 generation += 1
                 pending = None
+                # A changed stopping rule must let the solver verify every saved batch.
+                return generation < boundary
 
             try:
-                solve(problem, batch, finish)
+                solve(problem, batch, finish, **options)
             finally:
                 if saved_rng is not None:
                     random.setstate(saved_rng[0])

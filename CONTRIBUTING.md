@@ -122,6 +122,11 @@ Run the test suite without coverage:
 pytest sklearn_genetic/
 ```
 
+Use pytest's `tmp_path` for checkpoints, serialized estimators and
+callback artifacts created by a test. This gives concurrent runs their
+own files even when launched from the same checkout. If you pass
+`--basetemp`, give each pytest process a separate directory.
+
 Run the coverage check used by CI:
 
 ```bash

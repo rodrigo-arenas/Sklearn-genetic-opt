@@ -23,7 +23,7 @@ This tutorial explains how `GASearchCV` evaluates candidate hyperparameters and 
 ## Key Parameters
 
 `cv`
-: The cross-validation strategy. Can be an integer or any compatible scikit-learn cross-validator such as `KFold`, `StratifiedKFold`, or `RepeatedKFold`.
+: Use a fold count, a scikit-learn splitter or an iterable of explicit train/test pairs. Each pair can use positional indices or Boolean masks. Explicit splits must include at least one pair. Lists and tuples of folds are checked for malformed pairs and invalid row selectors before candidate evaluation. See the [split validation example](../tutorials/optimizer-backends#validate-explicit-cv-splits).
 
 `scoring`
 : The metric used to evaluate each candidate. For classification: `"accuracy"`, `"roc_auc"`, `"f1"`. For regression: `"r2"`, `"neg_root_mean_squared_error"`. See [scikit-learn model evaluation](https://scikit-learn.org/stable/modules/model_evaluation.html) for the full list.
@@ -54,7 +54,7 @@ gen  nevals  fitness  fitness_std  fitness_best  fitness_max  fitness_min  div  
 | `gen` | Generation number |
 | `nevals` | Individuals evaluated this generation (may be less than `population_size` if cache hits occur) |
 | `fitness` | Average CV score across the population |
-| `fitness_std` | Standard deviation of CV scores |
+| `fitness_std` | Standard deviation of the finite objective scores across candidates in the population |
 | `fitness_best` | Best score found so far across all generations |
 | `fitness_max` | Best score in this generation |
 | `fitness_min` | Worst score in this generation |
@@ -65,11 +65,16 @@ gen  nevals  fitness  fitness_std  fitness_best  fitness_max  fitness_min  div  
 
 ## How Candidates Are Evaluated
 
-1. A generation of individuals (parameter configurations) is produced by crossover and mutation.
-2. Duplicate individuals within the generation are detected and removed (only unique ones are evaluated).
-3. Unique candidates are evaluated in parallel (when `n_jobs > 1` and `parallel_backend` is `"auto"` or `"population"`).
-4. Each candidate runs its own cross-validation sequentially (to avoid nested parallelism).
-5. Scores are stored in the fitness cache. If the same configuration appears in a later generation, the cached score is reused (a cache hit).
+1. The optimizer proposes a batch of parameter configurations or feature masks.
+2. With caching enabled, the evaluator looks for candidates already in the fitness cache and groups repeated proposals within the batch.
+3. Fresh candidates can run in parallel when `n_jobs > 1` and `parallel_backend` is `"auto"` or `"population"`.
+4. With population-level parallelism, each candidate runs its CV folds sequentially. Set `parallel_backend="cv"` to parallelize folds.
+5. With caching enabled, the evaluator stores scores for reuse and records the completed candidates in proposal order.
+
+Both searches make private candidate copies as they feed the evaluator. Serial
+evaluation prepares one candidate at a time. The standard population worker
+pool keeps a bounded number of candidates in flight, which limits temporary
+memory for large populations and wide feature masks.
 
 ## Visualizing the CV Process
 
@@ -92,8 +97,8 @@ A healthy search shows the mean and best fitness rising together, then plateauin
 
 ## Passing Metadata (groups & sample_weight)
 
-Both `GASearchCV` and `GAFeatureSelectionCV` forward metadata from `fit` through
-cross-validation and the final refit:
+With metadata routing disabled, both `GASearchCV` and `GAFeatureSelectionCV`
+forward estimator fit parameters through cross-validation and the final refit:
 
 ```python
 from sklearn.model_selection import GroupKFold
@@ -105,23 +110,84 @@ evolved_estimator.fit(X, y, groups=groups, sample_weight=weights)
 ```
 
 - `groups` is passed to group-aware splitters (`GroupKFold`, `LeaveOneGroupOut`, ...)
-  when materializing the folds, so groups are never silently dropped.
+  when materializing the folds.
 - `sample_weight` (and any other `fit` metadata) reaches the wrapped estimator during
   candidate evaluation, final-selection scoring, and the final refit. Sample-aligned
   values are sliced per fold by scikit-learn.
 
-**Limitations**
+With routing disabled, supply arguments accepted by the wrapped estimator's
+`fit`. For a `Pipeline`, use a step prefix such as `clf__sample_weight`.
 
-- Metadata the wrapped estimator's `fit` cannot accept fails up front with a clear
-  error naming the parameter and the estimator, rather than being ignored. For a
-  `Pipeline`, route it with the step prefix (e.g. `clf__sample_weight`).
-- Full scikit-learn metadata routing (`sklearn.set_config(enable_metadata_routing=True)`)
-  is not wrapped; pass `groups`/`sample_weight` directly to `fit` with routing disabled.
+### Group labels in pipelines and nested validation
+
+With metadata routing enabled, a search splitter such as `GroupKFold`
+requests `groups` through `cv` for either estimator, including when
+`GAFeatureSelectionCV` is a transformer in a pipeline. Use
+`set_fit_request(groups=True)` when only `final_selection_cv` needs groups,
+or pass a string to request the group labels under an alias.
+For example, with `set_fit_request(groups="inner_groups")`, the search and
+finalist splitters receive `inner_groups` and the outer splitter can request
+`groups` separately.
+With a direct call to the search's `fit`, pass `groups` as the named argument.
+
+If a custom splitter defines only `split(X, y)`, you can still use it in
+one stage when the other active splitter accepts the `groups` keyword.
+The custom splitter defines its own train/test boundaries. Use folds
+that keep related rows together at every stage where you want to
+measure performance on unseen groups. See the
+[custom finalist splitter example](../tutorials/optimizer-backends#combine-grouped-search-with-a-custom-finalist-splitter).
+
+For nested validation on repeated observations, use group-aware splitters
+for the outer evaluation, the candidate search, and any finalist validation.
+The outer evaluator slices the group labels to the training rows before
+fitting each search. The
+[grouped validation tutorial](../tutorials/optimizer-backends#route-groups-in-nested-cross-validation)
+shows how to route separate names to the outer splitter and the inner search.
+
+### Separate training and validation weights
+
+Use scikit-learn metadata requests to give the estimator and the scorer
+different weight arrays in a direct call to either search's `fit`. Each array
+has one value per row in `X`. The final refit receives the full training weights.
+
+```python
+from sklearn import config_context
+from sklearn.metrics import accuracy_score, make_scorer
+from sklearn.tree import DecisionTreeClassifier
+from sklearn_genetic import GAFeatureSelectionCV
+
+with config_context(enable_metadata_routing=True):
+    tree = DecisionTreeClassifier(random_state=42).set_fit_request(
+        sample_weight="training_weight"
+    )
+    scorer = make_scorer(accuracy_score).set_score_request(
+        sample_weight="validation_weight"
+    )
+    selector = GAFeatureSelectionCV(
+        tree, scoring=scorer, cv=3, random_state=42,
+        n_jobs=2, parallel_backend="population",
+    )
+    selector.fit(
+        X, y, training_weight=training_weights, validation_weight=validation_weights
+    )
+```
+
+Each candidate and finalist receives the training weights for its training rows,
+and the scorer receives the validation weights for its validation rows.
+Keep the call to `fit` inside `config_context` so candidate workers also use
+the active routing configuration.
+When `GAFeatureSelectionCV` is a step in a pipeline, pass the same aliases
+to `pipeline.fit`. The selector exposes both sets of requests, including
+when it acts as a transformer with `refit=False`.
 
 ## Tips & Gotchas
 
 - Use `StratifiedKFold` for classification tasks to keep class balance across folds.
-- A noisy scoring metric (high `fitness_std`) can mislead the optimizer. Increase `cv` folds to reduce variance.
+- Use `history["fitness_std"]` to see how spread out the population's scores are.
+  To see how a single candidate's score varies across folds, read its row in
+  `cv_results_["std_test_score"]` or `cv_results_["std_test_<metric>"]` for a named metric.
+  The mean and standard deviation use the scorer's units, including for custom
+  scorers with very large or very small finite values.
 - The `use_cache=True` option in `RuntimeConfig` is strongly recommended — it avoids re-evaluating previously seen configurations.
 
 ## See Also

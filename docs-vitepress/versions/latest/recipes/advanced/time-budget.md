@@ -59,6 +59,8 @@ elapsed = time.perf_counter() - started
 
 last_generation = ga.history["gen"][-1]
 print(f"Last logged generation {last_generation} after {elapsed:.1f}s (budget: {BUDGET_SECONDS}s)")
+if ga.history.get("partial", [False])[-1]:
+    print("The timer interrupted this generation")
 print(f"Best CV ROC AUC: {ga.best_score_:.4f}")
 ```
 

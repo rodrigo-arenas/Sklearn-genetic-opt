@@ -322,6 +322,77 @@ def test_sample_warm_start_accepts_valid_config():
     assert sampled["criterion"] == "gini"
 
 
+def test_estimator_category_lookup_reuses_constructor_params(monkeypatch):
+    from sklearn.base import clone
+    from sklearn.linear_model import Ridge
+
+    choices = [None, Ridge(alpha=0.5), Ridge(alpha=1), Ridge(alpha=1.0)]
+    dimension = Categorical(choices)
+    value = clone(choices[-1])
+    original_get_params = Ridge.get_params
+    reads = Counter()
+
+    def counted_params(estimator, deep=True):
+        reads[id(estimator)] += 1
+        return original_get_params(estimator, deep=deep)
+
+    monkeypatch.setattr(Ridge, "get_params", counted_params)
+    expected_reads = Counter(id(model) for model in [value, *choices[1:]])
+
+    assert dimension._choice_index(value) == 3
+    assert reads == expected_reads
+
+    # A later lookup must see changes and retain the first compatible choice
+    # when there is no strict match.
+    choices[-1].set_params(alpha=2.0)
+    reads.clear()
+    assert dimension._choice_index(value) == 2
+    assert reads == expected_reads
+
+
+def test_candidate_keys_use_canonical_names_and_require_one_value_per_dimension():
+    grid = {"last": Integer(1, 8), "first": Integer(1, 8)}
+    space = Space(grid)
+    reordered = Space(dict(reversed(list(grid.items()))))
+
+    key = space._candidate_key(iter([7, np.int64(2)]))
+    assert key == (("first", 2), ("last", 7))
+    assert type(key[0][1]) is np.int64
+    assert key == reordered._candidate_key(iter([np.int64(2), 7]))
+    for values in ([7], [7, 2, 3]):
+        with pytest.raises(ValueError, match="zip"):
+            space._candidate_key(iter(values))
+
+
+def test_nan_categorical_keys_preserve_scalar_types_and_bits_after_pickle():
+    import pickle
+    from struct import unpack
+
+    different_payload = unpack(">d", bytes.fromhex("7ff8000000000001"))[0]
+    choices = [
+        float("nan"),
+        float("-nan"),
+        different_payload,
+        np.float16("nan"),
+        np.float32("nan"),
+        np.float64("nan"),
+    ]
+    space = Space({"missing": Categorical(choices + [float("nan")])})
+    restored = pickle.loads(pickle.dumps(space))
+
+    keys = [space._candidate_key([choice]) for choice in choices]
+    assert len(set(keys)) == len(choices)
+    for index, choice in enumerate(choices):
+        assert restored["missing"]._choice_index(choice) == index
+        assert restored._candidate_key([choice]) == keys[index]
+    assert restored._population_key([float("nan")]) == keys[0]
+    warm = restored.sample_warm_start({"missing": float("nan")})
+    assert type(warm["missing"]) is float
+    unlisted = unpack(">d", bytes.fromhex("7ff8000000000002"))[0]
+    with pytest.raises(ValueError, match="outside its search space"):
+        restored.sample_warm_start({"missing": unlisted})
+
+
 def test_sample_warm_start_rejects_unknown_key():
     """A misspelled hyperparameter name is reported clearly (issue #220)."""
     space = _warm_start_space()
@@ -506,10 +577,92 @@ def test_fixed_integer_samples_exact_python_integer(bound):
     assert value == bound
 
 
+@pytest.mark.parametrize(
+    "lower, upper, value, expected",
+    [
+        (-3, 5, -4, -3),
+        (-3, 5, 5, 5),
+        (-3, 5, 6, 5),
+        (2**100, 2**100 + 10, 2**100 + 1, 2**100 + 1),
+        (0, 2**64 - 1, np.uint64(2**64 - 1), 2**64 - 1),
+        (0, 3, False, 0),
+        (False, True, 2, 1),
+        (-5, 5, np.float64(-2.5), -2),
+        (-5, 5, 3.5, 4),
+    ],
+)
+def test_integer_repair_preserves_bounds_rounding_and_python_type(lower, upper, value, expected):
+    repaired = Integer(lower, upper)._round_and_clip(value)
+    assert type(repaired) is int
+    assert repaired == expected
+
+
 @pytest.mark.parametrize("bound", [np.inf, -np.inf, 2**53 + 1, 10**400])
 def test_fixed_continuous_bound_requires_an_exact_finite_float(bound):
     with pytest.raises(ValueError, match="finite, exactly representable"):
         Continuous(bound, bound)
+
+
+@pytest.mark.parametrize(
+    "bounds, message",
+    [
+        ((np.nan, 1.0), "lower bound"),
+        ((0.0, np.nan), "upper bound"),
+        ((-np.inf, 1.0), "lower bound"),
+        ((0.0, np.inf), "upper bound"),
+        ((0, 10**400), "upper bound"),
+        ((2**54 + 1, 2**54 + 3), "representable float"),
+        ((-1.5e308, 1.5e308), "finite span"),
+    ],
+)
+def test_invalid_continuous_endpoints_are_rejected(bounds, message):
+    with pytest.raises(ValueError, match=message):
+        Continuous(*bounds)
+
+
+@pytest.mark.parametrize(
+    "bounds, expected",
+    [((2**53, 2**53 + 1), 2**53), ((2**53 + 1, 2**53 + 2), 2**53 + 2)],
+)
+@pytest.mark.parametrize("distribution", ["uniform", "log-uniform"])
+def test_nonrepresentable_integer_bound_keeps_the_float_inside(bounds, expected, distribution):
+    dimension = Continuous(*bounds, distribution=distribution, random_state=19)
+    assert (dimension.lower, dimension.upper) == bounds
+    assert {dimension.sample() for _ in range(8)} == {float(expected)}
+    assert dimension._clip_scalar(float("-inf")) == expected
+    assert dimension._clip_scalar(float("inf")) == expected
+
+
+def test_deserialized_continuous_bounds_are_checked_when_building_space():
+    dimension = Continuous(0.0, 1.0)
+    dimension.upper = np.inf
+    with pytest.raises(ValueError, match="upper bound"):
+        Space({"alpha": dimension})
+
+
+@pytest.mark.parametrize("random_state", [None, 19])
+def test_log_uniform_sampling_covers_bounds_when_logarithms_tie(random_state, monkeypatch):
+    rng = np.random.RandomState(19)
+    monkeypatch.setattr("sklearn_genetic.space.space.check_random_state", lambda _: rng)
+    lower = 1e308
+    upper = np.nextafter(lower, np.inf)
+    assert np.log(lower) == np.log(upper)
+    dimension = Continuous(lower, upper, distribution="log-uniform", random_state=random_state)
+    with np.errstate(over="raise", invalid="raise", divide="raise"):
+        assert {dimension.sample() for _ in range(64)} == {lower, upper}
+
+
+@pytest.mark.parametrize("bounds", [(-1.0, 1.0), (-0.0, 1.0), (0.0, 0.0), (-2e30, 2e30)])
+@pytest.mark.parametrize("dtype", [float, np.float32, np.float64])
+def test_continuous_scalar_clipping_matches_numpy(bounds, dtype):
+    dimension = Continuous(*bounds)
+    for sample in (-np.inf, -2.0, -1.0, -0.0, 0.0, 0.5, 1.0, 2.0, np.inf, np.nan):
+        value = dtype(sample)
+        expected = float(np.clip(value, *bounds))
+        actual = dimension._clip_scalar(value)
+        np.testing.assert_equal(actual, expected)
+        if expected == 0:
+            assert np.signbit(actual) == np.signbit(expected)
 
 
 @pytest.mark.parametrize("weights", [np.array([1.0, 2.0]), np.array([1.0, np.nan])])

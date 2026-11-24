@@ -3,6 +3,7 @@ from .early_stoppers import (
     DeltaThreshold,
     ThresholdStopping,
     ConsecutiveStopping,
+    CVBudgetStopping,
     TimerStopping,
 )
 from .loggers import ProgressBar, LogbookSaver, TensorBoard
@@ -14,6 +15,7 @@ __all__ = [
     "DeltaThreshold",
     "ThresholdStopping",
     "ConsecutiveStopping",
+    "CVBudgetStopping",
     "TimerStopping",
     "LogbookSaver",
     "TensorBoard",

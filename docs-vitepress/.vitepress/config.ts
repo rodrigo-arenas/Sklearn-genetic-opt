@@ -5,6 +5,9 @@ import { defineConfig, HeadConfig } from 'vitepress'
 
 const GITHUB_PAGES_BASE = '/'
 const SITE = 'https://sklearngeneticopt.rodrigo-arenas.com'
+const PACKAGE_NAME = 'sklearn-genetic-opt'
+const REPOSITORY = 'https://github.com/rodrigo-arenas/Sklearn-genetic-opt'
+const PYPI = 'https://pypi.org/project/sklearn-genetic-opt/'
 const GA_TAG = process.env.GOOGLE_ANALYTICS_TAG
 const DOCS_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 
@@ -33,6 +36,11 @@ function stableCounterpart(relativePath: string) {
   if (!existsSync(join(DOCS_ROOT, 'versions', stableVersion, `${match[2]}.md`))) return undefined
   return `/versions/${stableVersion}/${match[2]}`.replace(/\/index$/, '/')
 }
+
+// Index this standalone tutorial while it is new. After it is released, use
+// the stable URL in search results and on the homepage.
+const budgetedTutorial = 'versions/latest/tutorials/budgeted-optimizer-search'
+const budgetedTutorialUrl = stableCounterpart(`${budgetedTutorial}.md`) ?? `/${budgetedTutorial}`
 
 const versionNavItems = [
   ...releaseVersions.map((version, index) => ({
@@ -150,6 +158,7 @@ function versionSidebar(versionPrefix: string) {
       items: [
         { text: 'Overview',                                       link: `${versionPrefix}/tutorials/` },
         ...pageItem(versionPrefix, 'Switch Optimization Backends', 'tutorials/optimizer-backends'),
+        ...pageItem(versionPrefix, 'Budget and Resume a Search', 'tutorials/budgeted-optimizer-search'),
         ...pageItem(versionPrefix, 'Random Forest Hyperparameter Tuning', 'tutorials/tune-random-forest'),
         ...pageItem(versionPrefix, 'Gradient Boosting Hyperparameter Tuning', 'tutorials/tune-gradient-boosting'),
         ...pageItem(versionPrefix, 'Logistic Regression Hyperparameter Tuning', 'tutorials/tune-logistic-regression'),
@@ -233,7 +242,7 @@ function versionSidebar(versionPrefix: string) {
 }
 
 export default defineConfig({
-  title: 'sklearn-genetic-opt',
+  title: PACKAGE_NAME,
   description: 'Evolutionary hyperparameter tuning and feature selection for scikit-learn',
   base: GITHUB_PAGES_BASE,
   cleanUrls: true,
@@ -246,7 +255,7 @@ export default defineConfig({
       const path = new URL(item.url, SITE).pathname
       if (path === '/stable/') return false
       const version = path.match(/^\/versions\/([^/]+)\//)?.[1]
-      return !version || version === stableVersion
+      return !version || version === stableVersion || path === budgetedTutorialUrl
     }),
   },
 
@@ -308,12 +317,14 @@ export default defineConfig({
 
     pageData.frontmatter.head ??= []
     if (pageData.relativePath === 'stable/index.md' ||
-        (pageData.relativePath.startsWith('versions/latest/') && !counterpart)) {
+        (pageData.relativePath.startsWith('versions/latest/') && !counterpart &&
+         cleanPath !== budgetedTutorial)) {
       pageData.frontmatter.head.push(['meta', { name: 'robots', content: 'noindex,follow' }])
     }
     pageData.frontmatter.head.push(
       ['link', { rel: 'canonical',           href: pageUrl }],
       ['meta', { property: 'og:type',        content: 'website' }],
+      ['meta', { property: 'og:site_name',   content: PACKAGE_NAME }],
       ['meta', { property: 'og:title',       content: pageTitle }],
       ['meta', { property: 'og:description', content: pageDescription }],
       ['meta', { property: 'og:url',         content: pageUrl }],
@@ -327,22 +338,40 @@ export default defineConfig({
     )
 
     if (pageData.relativePath === 'index.md') {
+      const budgetFeature = pageData.frontmatter.features?.find(
+        (feature: { link?: string }) => feature.link === `/${budgetedTutorial}`,
+      )
+      if (budgetFeature) budgetFeature.link = budgetedTutorialUrl
+      const packageId = `${pageUrl}#software`
       pageData.frontmatter.head.push([
         'script',
         { type: 'application/ld+json' },
         JSON.stringify({
           '@context': 'https://schema.org',
-          '@type': 'SoftwareApplication',
-          name: 'sklearn-genetic-opt',
-          description:
-            'Evolutionary hyperparameter tuning and feature selection for scikit-learn with DEAP and optional optimization engines.',
-          applicationCategory: 'DeveloperApplication',
-          operatingSystem: 'Linux, macOS, Windows',
-          programmingLanguage: 'Python',
-          url: `${base}/`,
-          license: 'https://opensource.org/licenses/MIT',
-          author: { '@type': 'Person', name: 'Rodrigo Arenas Gómez' },
-          offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+          '@graph': [
+            {
+              '@type': 'WebSite',
+              '@id': `${pageUrl}#website`,
+              name: PACKAGE_NAME,
+              url: pageUrl,
+              about: { '@id': packageId },
+            },
+            {
+              '@type': 'SoftwareApplication',
+              '@id': packageId,
+              name: PACKAGE_NAME,
+              description: pageDescription,
+              applicationCategory: 'DeveloperApplication',
+              operatingSystem: 'Linux, macOS, Windows',
+              runtimePlatform: 'Python',
+              url: pageUrl,
+              sameAs: [PYPI, REPOSITORY],
+              installUrl: PYPI,
+              license: 'https://opensource.org/licenses/MIT',
+              author: { '@type': 'Person', name: 'Rodrigo Arenas Gómez' },
+              offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+            },
+          ],
         }),
       ])
     }
@@ -368,8 +397,8 @@ export default defineConfig({
       {
         text: 'Links',
         items: [
-          { text: 'GitHub', link: 'https://github.com/rodrigo-arenas/Sklearn-genetic-opt' },
-          { text: 'PyPI', link: 'https://pypi.org/project/sklearn-genetic-opt/' },
+          { text: 'GitHub', link: REPOSITORY },
+          { text: 'PyPI', link: PYPI },
         ],
       },
     ],
@@ -404,7 +433,7 @@ export default defineConfig({
       },
       {
         icon: packageIcon,
-        link: 'https://pypi.org/project/sklearn-genetic-opt/',
+        link: PYPI,
         ariaLabel: 'PyPI package',
       },
     ],

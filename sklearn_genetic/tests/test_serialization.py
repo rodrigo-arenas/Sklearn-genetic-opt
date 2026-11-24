@@ -22,7 +22,6 @@ from ..callbacks import (
 from ..schedules import ExponentialAdapter, InverseAdapter
 from ..space import Integer
 from joblib import dump, load
-import os
 
 data = load_iris()
 label_names = data["target_names"]
@@ -36,7 +35,7 @@ X = np.hstack((X, noise))
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
 
 
-def test_estimator_serialization():
+def test_estimator_serialization(tmp_path):
     clf = SGDClassifier(loss="modified_huber", fit_intercept=True)
     generations = 6
     evolved_estimator = GAFeatureSelectionCV(
@@ -55,7 +54,7 @@ def test_estimator_serialization():
     )
 
     evolved_estimator.fit(X_train, y_train)
-    dump_file = "evolved_estimator.pkl"
+    dump_file = str(tmp_path / "evolved_estimator.pkl")
 
     # test dump
     assert dump(evolved_estimator, dump_file)[0] == dump_file
@@ -103,11 +102,8 @@ def test_estimator_serialization():
     assert "rank_n_features" in cv_result_keys
     assert "features" in cv_result_keys
 
-    # delete dumped estimator
-    os.remove(dump_file)
 
-
-def test_estimator_serialization_with_config_objects():
+def test_estimator_serialization_with_config_objects(tmp_path):
     clf = SGDClassifier(loss="modified_huber", fit_intercept=True)
     evolved_estimator = GAFeatureSelectionCV(
         clf,
@@ -126,7 +122,7 @@ def test_estimator_serialization_with_config_objects():
     )
 
     evolved_estimator.fit(X_train, y_train)
-    dump_file = "evolved_estimator_config.pkl"
+    dump_file = str(tmp_path / "evolved_estimator_config.pkl")
 
     assert dump(evolved_estimator, dump_file)[0] == dump_file
 
@@ -138,8 +134,6 @@ def test_estimator_serialization_with_config_objects():
         y_test, dumped_estimator.predict(X_test)
     )
     assert bool(dumped_estimator.get_params())
-
-    os.remove(dump_file)
 
 
 _PICKLABLE_ESTIMATOR_BUILDERS = [

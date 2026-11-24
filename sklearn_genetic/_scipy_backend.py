@@ -1,14 +1,16 @@
 """Internal adapter for SciPy's vectorized differential evolution solver."""
 
 from collections import defaultdict
+from math import sqrt
 
 import numpy as np
 from scipy import __version__ as scipy_version
 from scipy.optimize import differential_evolution
 
 from ._optimizer_checkpoint import replay_checkpoint
-from ._mixed_space import decode_real, encode_real
+from ._mixed_space import decode_real, encode_real, real_coordinate_interval
 from .space import Categorical, Continuous, Integer
+from .utils._score_statistics import score_scale_limits
 
 
 class _EvaluationError(Exception):
@@ -36,20 +38,20 @@ def validate_scipy_backend(estimator):
         )
 
 
-def _encode(dim, value):
+def _encode(dim, value, interval):
     if isinstance(dim, Categorical):
         return (dim._choice_index(value) + 0.5) / len(dim.choices)
     if isinstance(dim, Integer):
         return (int(value) - dim.lower + 0.5) / (dim.upper - dim.lower + 1)
-    return encode_real(dim, value)
+    return encode_real(dim, value, interval=interval)
 
 
-def _decode(dim, value):
+def _decode(dim, value, interval):
     if isinstance(dim, Categorical):
         return dim.choices[min(int(value * len(dim.choices)), len(dim.choices) - 1)]
     if isinstance(dim, Integer):
         return min(dim.lower + int(value * (dim.upper - dim.lower + 1)), dim.upper)
-    return decode_real(dim, value)
+    return decode_real(dim, value, interval=interval)
 
 
 def _decode_mask(row, max_features):
@@ -61,8 +63,30 @@ def _decode_mask(row, max_features):
     return selected.astype(int).tolist()
 
 
+def _losses_converged(losses):
+    first = losses[0]
+    if not np.isfinite(first) or not np.all(losses == first):
+        return False
+    _, lower, upper = score_scale_limits(losses.dtype)
+    scale = abs(first)
+    if scale < lower or scale >= upper / sqrt(len(losses)):
+        return True
+    # Preserve SciPy's zero-tolerance decision for ordinary flat populations,
+    # including its rounding of repeated values in previously saved searches.
+    return np.std(losses) == 0
+
+
 def run_scipy(
-    initial, evaluate, report, *, dimensions, max_features, generations, recombination, seed
+    initial,
+    evaluate,
+    report,
+    *,
+    dimensions,
+    max_features,
+    generations,
+    recombination,
+    seed,
+    stop_on_convergence=True,
 ):
     """Ask for (loss, handle) pairs and report survivor handles in generation order.
 
@@ -70,81 +94,107 @@ def run_scipy(
     several proposals decode to the same candidate. Only the caller interprets it.
     Equal coordinates and loss are indistinguishable in SciPy's survivor report.
     """
-    if dimensions:
-        encoded = [[_encode(dim, x) for dim, x in zip(dimensions, ind)] for ind in initial]
+    coordinates = [
+        (dim, real_coordinate_interval(dim) if type(dim) is Continuous else None)
+        for dim in dimensions
+    ]
+    if coordinates:
+        encoded = [
+            [_encode(dim, x, interval) for (dim, interval), x in zip(coordinates, row)]
+            for row in initial
+        ]
     else:
         encoded = initial
     # Keep handles for parents and trials until the solver reports its survivors.
     evaluated = defaultdict(list)
     first_batch = True
+    retry_rows = None
+    caller_policy = np.geterr()
 
     def objective(columns):
-        nonlocal first_batch
+        nonlocal first_batch, retry_rows
         rows = columns.T
-        if first_batch:
-            # Keep exact warm starts, including floats that lose precision in a round trip.
-            candidates = initial
-        elif dimensions:
-            candidates = [[_decode(dim, x) for dim, x in zip(dimensions, row)] for row in rows]
-        else:
-            candidates = [_decode_mask(row, max_features) for row in rows]
-
-        try:
-            results = list(evaluate(candidates))
-        except (TypeError, ValueError) as exc:
-            raise _EvaluationError from exc
+        # SciPy treats an all-infinite population as uninitialized and asks
+        # for its parent energies again before proposing the next trial batch.
+        if retry_rows is not None:
+            previous, retry_rows = retry_rows, None
+            if np.array_equal(rows, previous):
+                return np.full(len(rows), np.inf)
+        with np.errstate(**caller_policy):
+            if first_batch:
+                # Preserve warm starts that lose precision in an encode/decode round trip.
+                candidates = initial
+            elif coordinates:
+                candidates = [
+                    [_decode(dim, x, interval) for (dim, interval), x in zip(coordinates, row)]
+                    for row in rows
+                ]
+            else:
+                candidates = [_decode_mask(row, max_features) for row in rows]
+            try:
+                results = list(evaluate(candidates))
+            except (TypeError, ValueError) as exc:
+                raise _EvaluationError from exc
         losses = []
         handles = []
         for row, (loss, handle) in zip(rows, results, strict=True):
-            # An all-infinite initial population makes SciPy evaluate initialization again.
-            loss = loss if np.isfinite(loss) else np.finfo(float).max
+            loss = loss if np.isfinite(loss) else np.inf
             evaluated[(row.tobytes(), loss)].append(handle)
             handles.append(handle)
             losses.append(loss)
         if first_batch:
-            report(handles)
+            if all(loss == np.inf for loss in losses):
+                retry_rows = rows.copy()
+            with np.errstate(**caller_policy):
+                report(handles)
             first_batch = False
         return np.asarray(losses)
 
     def generation_finished(intermediate_result):
-        nonlocal evaluated
-        keys = [
-            (row.tobytes(), loss)
-            for row, loss in zip(
-                intermediate_result.population, intermediate_result.population_energies
-            )
-        ]
+        nonlocal evaluated, retry_rows
+        population = intermediate_result.population
+        energies = intermediate_result.population_energies
+        keys = [(row.tobytes(), loss) for row, loss in zip(population, energies)]
         # Equal coordinates and energy carry no trial ID. Use each matching
         # evaluation at most once and retain only handles for surviving copies.
         survivors = [evaluated[key].pop() for key in keys]
         evaluated = defaultdict(list)
         for key, handle in zip(keys, survivors):
             evaluated[key].append(handle)
-        report(survivors)
+        if energies.min() == np.inf:
+            retry_rows = population.copy()
+        with np.errstate(**caller_policy):
+            replay_pending = report(survivors)
+        return stop_on_convergence and not replay_pending and _losses_converged(energies)
 
     try:
-        differential_evolution(
-            objective,
-            bounds=[(0.0, 1.0)] * len(initial[0]),
-            init=np.asarray(encoded, dtype=float),
-            maxiter=generations,
-            strategy="best1bin",
-            recombination=recombination,
-            updating="deferred",
-            vectorized=True,
-            polish=False,
-            tol=0,
-            rng=seed,
-            callback=generation_finished,
-        )
+        # SciPy still computes raw moments for its convergence diagnostics.
+        # Survivor selection uses the original losses and the callback makes
+        # our stopping decision without those potentially overflowing moments.
+        with np.errstate(over="ignore", under="ignore", invalid="ignore"):
+            differential_evolution(
+                objective,
+                bounds=[(0.0, 1.0)] * len(initial[0]),
+                init=np.asarray(encoded, dtype=float),
+                maxiter=generations,
+                strategy="best1bin",
+                recombination=recombination,
+                updating="deferred",
+                vectorized=True,
+                polish=False,
+                tol=0,
+                atol=-1.0,
+                rng=seed,
+                callback=generation_finished,
+            )
     except _EvaluationError as exc:
         raise exc.__cause__ from None
 
 
 @replay_checkpoint("scipy")
-def optimize(problem, evaluate, report):
+def optimize(problem, evaluate, report, *, stop_on_convergence=True):
     run_scipy(
-        [list(row) for row in problem.initial_population],
+        problem.initial_population,
         evaluate,
         report,
         dimensions=problem.dimensions,
@@ -152,4 +202,5 @@ def optimize(problem, evaluate, report):
         generations=problem.generations,
         recombination=problem.crossover_probability,
         seed=problem.seed,
+        stop_on_convergence=stop_on_convergence,
     )

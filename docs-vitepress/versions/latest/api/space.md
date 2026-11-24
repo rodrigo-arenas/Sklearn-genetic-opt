@@ -32,6 +32,8 @@ including adjacent values above `2**53`. Pass large integer warm-start
 values as Python or NumPy integers to preserve their identity.
 Equal bounds hold an integer parameter fixed. Sampling that dimension returns
 the exact Python integer, including values outside the signed 64-bit range.
+To evaluate a few scales early while keeping a full integer range, see the
+[integer warm-start example](../guide/choosing-search-spaces#start-an-integer-search-at-several-scales).
 
 **Example:**
 
@@ -58,8 +60,13 @@ Continuous(lower, upper, distribution="uniform")
 
 Equal bounds hold a continuous parameter fixed. For example,
 `Continuous(0.01, 0.01, distribution="log-uniform")` always proposes 0.01
-while other dimensions evolve. A fixed continuous value must be finite and
-exactly representable as a float. Log-uniform bounds must both be positive.
+while other dimensions evolve. Bounds must be finite and within the float
+range. A fixed value must be exactly representable as a float. A variable
+interval must contain at least one representable float and uniform sampling
+requires a finite span. Use `Integer` when you need to sample exact integers
+beyond float precision. Log-uniform bounds must both be positive. If distinct bounds
+round to the same logarithm, sampling uses the interval in the original
+scale at float precision.
 
 Use `distribution="log-uniform"` for parameters that span orders of magnitude (learning rates, regularization strengths):
 
@@ -69,6 +76,14 @@ Use `distribution="log-uniform"` for parameters that span orders of magnitude (l
 ```
 
 ## Categorical
+
+Values that compare equal in Python can configure an estimator differently.
+For example, `Categorical([1, 1.0])` keeps two distinct per-split feature limits
+for a decision tree's `max_features`. The integer uses one feature and the float
+uses the full feature count. The cache, coverage
+count and finalist shortlist use the declared types to distinguish them.
+When an older checkpoint may have merged their scores, start the search
+with a new checkpoint file.
 
 Samples from a fixed list of choices.
 
@@ -96,6 +111,36 @@ When all positive weights are equal, the stratified draws use the same seeded sa
 "solver": Categorical(["lbfgs", "sgd", "adam"]),
 "activation": Categorical(["relu", "tanh", "logistic"]),
 ```
+
+For [preconfigured estimator choices](../examples/conditional-pipeline-choices),
+the search matches a copied estimator to a choice by its constructor
+parameters. An exact match in values and types takes priority over a choice
+whose values merely compare equal.
+Object arrays in constructor parameters compare by shape, dtype and cell
+contents, including nested arrays and dictionaries. For example, an integer
+`1` in an object-array cell prefers the declared integer choice when a
+Boolean `True` choice also compares equal.
+
+If a pipeline step accepts missing-value markers, you can include them in its
+search space. For a step named `imputer` that uses `SimpleImputer` with numeric
+data, you can use the following dimension.
+
+```python
+import numpy as np
+import pandas as pd
+from sklearn_genetic.space import Categorical
+
+param_grid = {"imputer__missing_values": Categorical([np.nan, pd.NA])}
+```
+
+Both markers are separate choices and can use the cache. With markers whose
+equality is ambiguous or non-reflexive, the search skips the early stopping
+check for full finite-space coverage. Other stopping conditions still apply.
+
+For a floating-point NaN listed directly in `choices`, warm starts and
+checkpoints match the declared type and bit pattern. This applies to Python
+`float` and NumPy `float16`, `float32`, and `float64`. Use the same scalar
+type in `warm_start_configs` as in `choices`.
 
 ## Complete Example
 

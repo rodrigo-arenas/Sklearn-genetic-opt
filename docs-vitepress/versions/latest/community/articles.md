@@ -1,6 +1,6 @@
 ---
 title: Community Articles
-description: Community-written articles, tutorials, and external walkthroughs about sklearn-genetic-opt.
+description: Community-written tutorials, external walkthroughs, and published research using sklearn-genetic-opt.
 ---
 
 # Community Articles
@@ -53,3 +53,12 @@ promotional.
 
 9. [Hyperparameter Tuning Made Easy with GASearchCV](https://dev.to/shivampandey261/hyperparameter-tuning-made-easy-with-gasearchcv-26b6)  
    Shivam Pandey (@shivampandey261) on dev.to. Walks through tuning a random forest on Iris with `GASearchCV`, from defining the search space to checking test accuracy.
+
+## Research use
+
+- [Predicting Machine Activity of Forwarders Using J1939 CAN Bus Data and Machine Learning](https://crojfe.com/archive/volume-48-no-1/predicting-machine-activity-of-forwarders-using-j1939-can-bus-data-and-machine-learning/)
+
+  Patrick Humphrey and Campbell Harvey, *Croatian Journal of Forest Engineering*.
+  Section 2.4 describes tuning scikit-learn's `DecisionTreeClassifier` and
+  `RandomForestClassifier` with `GASearchCV` to classify forestry forwarder
+  activities from J1939 CAN bus telemetry.

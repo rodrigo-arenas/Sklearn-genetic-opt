@@ -27,6 +27,9 @@ class Metrics(ExtendedEnum):
     fitness_min = "fitness_min"
 
 
+FITNESS_HISTORY_METRICS = [*Metrics.list(), "fitness_best_observed"]
+
+
 class CallbackMethods(ExtendedEnum):
     on_start = "on_start"
     on_step = "on_step"

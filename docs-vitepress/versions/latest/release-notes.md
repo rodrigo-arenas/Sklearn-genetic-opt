@@ -9,6 +9,38 @@ You are reading the **latest (dev)** docs. For the stable version, see [stable](
 
 # Release Notes
 
+## Unreleased
+
+`GAFeatureSelectionCV(preserve_dataframe=True)` can pass
+[named, typed columns](./examples/categorical-feature-selection#route-columns-by-dtype)
+to a scikit-learn pipeline during CV and prediction.
+
+`GAFeatureSelectionCV` can [start from known feature subsets](./examples/warm-start-feature-selection)
+through `PopulationConfig(warm_start_masks=...)`. All five built-in backends
+score the seeds on the current CV splits.
+
+[Saved candidate records](./api/callbacks#logbooksaver) use the row position
+in `cv_results_` as their index, including proposals resolved by the cache.
+
+Both search estimators reuse local worker threads across parallel candidate
+batches, look up cached proposals with less work, and assemble `cv_results_`
+in bounded batches. The [backend benchmark](./benchmarks/optimizer-catalog#compare-with-random-search-and-optuna-tpe)
+compares random search and Optuna TPE at matched evaluation counts and
+elapsed-time checkpoints, with a separate held-out score.
+
+Use `CVBudgetStopping` to cap new search CV calls and
+`ModelCheckpoint(every_n_generations=N)` to reduce writes. The
+[budget and resume tutorial](./tutorials/budgeted-optimizer-search) shows how
+to account for work from a partial generation. Checkpoint errors identify
+invalid generation records and unreadable solver state before fresh CV.
+SciPy and pymoo compute binary proposal signatures faster, and all four
+shared-runtime engines can fingerprint plain list and tuple CV selectors directly.
+
+With caching enabled and finalist selection off, SciPy, Nevergrad, CatCMAwM
+and pymoo now stop at a generation boundary after visiting every candidate
+in a finite space. Check [the stopping rules](./api/optimizer-backends) and
+inspect `search_space_exhausted_` after fitting.
+
 ## 0.16.0
 
 ### Choose an optimization backend
@@ -406,7 +438,7 @@ A new [Recipes](./recipes/) section provides 30 copy-paste ready solutions (5–
 ## 0.11.0
 
 - Added `use_cache` parameter (default `True`) to skip re-evaluating already-seen configurations.
-- Added `warm_start_configs` to `GAFeatureSelectionCV`.
+- Added `warm_start_configs` to `GASearchCV`.
 - Introduced novelty search strategy to `GASearchCV` (later revised in 0.13.0).
 
 ## 0.10.0

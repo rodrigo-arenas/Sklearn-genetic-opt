@@ -9,7 +9,7 @@ from ..algorithms import eaDifferentialEvolution, eaMuCommaLambda, eaMuPlusLambd
 from ..callbacks import ConsecutiveStopping, DeltaThreshold
 from ..callbacks.base import BaseCallback
 from ..evaluation import create_fit_stats
-from ..optimizer_control import shared_fitness
+from ..optimizer_control import individual_distance, niche_counts, shared_fitness, sharing_value
 from ..schedules.schedulers import ConstantAdapter
 from ..space import Categorical, Continuous, Integer, Space
 
@@ -544,8 +544,6 @@ def test_shared_fitness_keeps_nonfinite_candidate_below_finite_candidates(weight
 @pytest.mark.parametrize("mixed", [False, True])
 @pytest.mark.parametrize("radius, alpha", [(0.25, 1.0), (0.8, 2.0)])
 def test_shared_fitness_matches_pairwise_reference(simple_toolbox, mixed, radius, alpha):
-    from ..optimizer_control import individual_distance, sharing_value
-
     values = (
         [[1, 0.1, ("a", 1), 2], [3, 0.5, None, 2], [1, 0.1, ("a", 1), 2], [5, 1.0, None, 2]]
         if mixed
@@ -575,9 +573,42 @@ def test_shared_fitness_matches_pairwise_reference(simple_toolbox, mixed, radius
     assert [item.fitness.values[0] for item in population] == [1.0, 2.0, 3.0, 4.0]
 
 
+@pytest.mark.parametrize("nonbinary", [False, True])
+def test_wide_feature_niche_counts_match_scalar_distances(nonbinary):
+    width = 1025
+    values = np.zeros((18, width), dtype=int)
+    for index, row in enumerate(values):
+        row[: 1 + index % 5] = 1
+        row[-1] = index % 2
+    if nonbinary:
+        values[0, 0] = 2
+    population = values.tolist()
+    radius, alpha = np.longdouble(4 / width), np.longdouble("1.3")
+    estimator = SimpleNamespace(sharing_radius=radius, sharing_alpha=alpha)
+    expected = [
+        np.cumsum(
+            [
+                sharing_value(individual_distance(estimator, row, other), radius, alpha)
+                for other in population
+            ],
+            dtype=float,
+        )[-1]
+        for row in population
+    ]
+    assert niche_counts(population, estimator) == expected
+
+
 @pytest.mark.parametrize(
     "kind",
-    ["large_integer", "continuous_integer", "unsigned_integer", "nan_category", "list_category"],
+    [
+        "large_integer",
+        "continuous_integer",
+        "unsigned_integer",
+        "signed_integer",
+        "matching_nan_category",
+        "distinct_nan_category",
+        "list_category",
+    ],
 )
 def test_shared_fitness_preserves_dimension_equality(simple_toolbox, kind):
     if kind in {"large_integer", "continuous_integer"}:
@@ -586,10 +617,12 @@ def test_shared_fitness_preserves_dimension_equality(simple_toolbox, kind):
     elif kind == "unsigned_integer":
         values = [np.uint64(1), np.uint64(2)]
         dimension = Integer(0, 10)
-    elif kind == "nan_category":
-        value = float("nan")
-        values = [value, value]
-        dimension = Categorical([value, "other"])
+    elif kind == "signed_integer":
+        values = [np.int64(-(2**63)), np.int64(2**63 - 1)]
+        dimension = Integer(-(2**63), 2**63 - 1)
+    elif kind in {"matching_nan_category", "distinct_nan_category"}:
+        values = [float("nan"), float("nan" if kind == "matching_nan_category" else "-nan")]
+        dimension = Categorical(values)
     else:
         values = [[1], [2]]
         dimension = Categorical(values)
@@ -599,9 +632,17 @@ def test_shared_fitness_preserves_dimension_equality(simple_toolbox, kind):
     estimator = SimpleNamespace(
         space=Space({"x": dimension}), fitness_sharing=True, sharing_radius=0.5, sharing_alpha=1.0
     )
-    with shared_fitness(population, estimator):
-        expected = [10.0, 10.0 / 1.8] if kind == "unsigned_integer" else [10.0, 10.0]
-        assert [item.fitness.values[0] for item in population] == expected
+    expected = {
+        "unsigned_integer": [10.0 / 1.8] * 2,
+        "matching_nan_category": [5.0, 5.0],
+    }
+    with np.errstate(over="raise"), shared_fitness(population, estimator):
+        assert [item.fitness.values[0] for item in population] == expected.get(kind, [10.0, 10.0])
+    if kind in {"unsigned_integer", "signed_integer"}:
+        expected_distance = 0.1 if kind == "unsigned_integer" else 1.0
+        with np.errstate(over="raise"):
+            assert individual_distance(estimator, *population) == expected_distance
+            assert individual_distance(estimator, *reversed(population)) == expected_distance
 
 
 def test_shared_fitness_preserves_selection_ties(simple_toolbox):

@@ -250,10 +250,9 @@ nb.code("""
 nb.md("""
     :::info `contamination` affects the threshold, not the score
     `contamination` determines the cut-off for `predict()` — it does not change
-    `score_samples`. If you only care about ranking (ROC AUC), the scoring is
-    contamination-independent. Including it in the search space is still valuable
-    because a well-calibrated threshold improves `predict()`, which drives precision
-    and recall.
+    `score_samples`. ROC AUC therefore gives the search no signal for choosing
+    `contamination`. If you need binary decisions, choose the threshold on
+    validation data using a threshold-sensitive metric.
     :::
     """)
 
@@ -331,6 +330,7 @@ nb.code("""
     ga_seconds = time.perf_counter() - started_at
 
     print(f"Best CV ROC AUC: {ga_search.best_score_:.4f}")
+    print(f"Validation folds: {ga_search.n_splits_}")
     print(f"Search time:     {ga_seconds:.0f}s")
     print("Best params:")
     pprint(ga_search.best_params_)
@@ -339,7 +339,7 @@ nb.code("""
 nb.md("### Evaluation Mechanics")
 
 nb.code("""
-    print(ga_search.fit_stats_)
+    print(ga_search.fit_counts_)
     """)
 
 nb.md("### Generation Telemetry")
@@ -373,9 +373,9 @@ nb.code("""
     fig.tight_layout()
     """)
 nb.figure(
-    "isolation_forest_fitness.png",
+    "isolation_forest_stratified_fitness.png",
     "Best, generation-max, and generation-mean CV ROC AUC across generations",
-    caption="Fitness (CV ROC AUC of the best individual) improves as the GA tunes the four IsolationForest hyperparameters.",
+    caption="Best candidate CV ROC AUC by generation.",
 )
 
 nb.md("""
@@ -410,7 +410,7 @@ nb.code("""
     fig.tight_layout()
     """)
 nb.figure(
-    "isolation_forest_contours.png",
+    "isolation_forest_stratified_contours.png",
     "Side-by-side anomaly-score contour plots for the default and tuned IsolationForest",
     caption="The tuned model keeps low scores inside the two normal clusters while concentrating high anomaly scores in the sparse outlier region.",
 )
@@ -441,15 +441,16 @@ nb.code("""
     fig.tight_layout()
     """)
 nb.figure(
-    "isolation_forest_roc.png",
+    "isolation_forest_stratified_roc.png",
     "ROC curves for the default and GA-tuned IsolationForest",
-    caption="The GA-tuned curve sits above the default across most of the FPR range — a higher ROC AUC means better-ranked anomaly scores.",
+    caption="ROC curves and AUC for both models on the held-out test set.",
 )
 
 nb.md("""
     ## Compare with RandomizedSearchCV
 
     A 3-way comparison on the held-out test set, all using the same custom scorer.
+    The two searches use the same three stratified folds and different search budgets.
     """)
 
 nb.code("""
@@ -492,9 +493,9 @@ nb.code("""
     """)
 
 nb.md("""
-    The GA tuning improves ranking quality (ROC AUC) over the default and calibrates
-    `contamination` to the true anomaly rate, which directly lifts outlier recall in
-    the binary `predict()` output.
+    Compare ROC AUC for ranking and precision and recall for binary decisions.
+    In this run the tuned model ranks anomalies better and has higher precision
+    on the test set, with lower recall at its fitted threshold.
     """)
 
 nb.md("""
@@ -513,10 +514,10 @@ nb.md("""
     - **`max_samples`** has the most impact on model quality. Very small values
       (< 0.05) over-isolate dense clusters; values near 1.0 reduce ensemble
       diversity. The range `[0.05, 0.80]` covers the useful region.
-    - **Warm-start `contamination`** near your best estimate of the true anomaly
-      rate to give the GA a good early candidate.
-    - **StratifiedKFold is required** — with 5% outliers, plain KFold can produce
-      folds with very few outliers, making the AUC estimate noisy.
+    - **Validate the decision threshold** with a metric that reflects your
+      precision and recall requirements.
+    - **Stratify by known anomaly labels** — when anomalies are rare, stratification
+      helps each fold contain enough anomalies to estimate AUC.
 
     ## See Also
 

@@ -53,6 +53,14 @@ choices and feature masks stay within their valid domains. It is an
 alternative to benchmark for your task, not a generally faster or more
 accurate replacement for the default algorithm.
 
+## Interrupt a DEAP search
+
+After the initial population is evaluated, pressing Ctrl+C during the DEAP
+evolution loop stops further candidate generations and skips local refinement.
+Both estimators use the candidate results recorded so far. Configured finalist
+validation and refit still run. A [checkpoint](../recipes/advanced/checkpointing)
+retains its most recently saved generation.
+
 ## SciPy backend
 
 Install the [`scipy` extra](../guide/installation#optimization-backends) for SciPy 1.15+. The base installation already includes SciPy through scikit-learn.
@@ -102,6 +110,39 @@ print(search.best_params_, selector.get_support())
   boundaries as external plugins. To resume from a checkpoint, SciPy rebuilds
   its solver by verifying proposals against saved evaluations. Completed
   generations reuse their recorded results without running CV again. See [callbacks and checkpoints](#callbacks-and-checkpoints).
+
+### Continue through equal population losses
+
+Use `scipy_optimizer(stop_on_convergence=False)` when you want SciPy to
+keep proposing candidates after all its population losses become equal.
+The optimizer still stops at the generation limit, complete cached coverage
+when supported, or a stopping callback. `CVBudgetStopping` sets a maximum on
+fresh evaluations. With caching enabled, repeated proposals can leave part
+of that cap unused.
+
+For extreme score magnitudes, the convergence check compares the original
+finite losses directly. Distinct tiny losses can keep the search running,
+and equal huge losses can stop it when convergence stopping is enabled.
+Checkpoint replay verifies all saved generations before checking convergence.
+
+```python
+from sklearn_genetic.backends import scipy_optimizer
+from sklearn_genetic.callbacks import CVBudgetStopping
+from sklearn_genetic.space import Continuous
+
+search.set_params(
+    optimizer_backend=scipy_optimizer(stop_on_convergence=False),
+    generations=8,
+    param_grid={**search.param_grid, "ccp_alpha": Continuous(0.0, 0.05)},
+)
+search.fit(X, y, callbacks=CVBudgetStopping(40))
+print(search.fit_counts_["search_cv_calls"])
+```
+
+This option applies to both search estimators. Its default value is `True`.
+Continuing may use more CV calls and elapsed time. Use the same backend
+configuration when resuming a checkpoint, and compare held-out scores at
+matched budgets when evaluating either setting.
 
 SciPy was selected because scikit-learn already installs it and its recent releases
 publish Linux, macOS and Windows wheels for all four supported Python minors.
@@ -186,6 +227,13 @@ before calling `evaluate`.
 - Pass a nonempty batch of valid decoded rows to `evaluate`. It returns ordered
   `(loss, handle)` pairs. Minimize the scalar loss for either scoring direction.
   Feature masks must be binary, nonempty and respect `max_features`.
+  The standard feature selector can evaluate masks of Python integers `0` and
+  `1` directly after validation. Adapters that revisit a mask can submit the
+  same integer tuple object again. The runtime reuses the immutable tuple and
+  validates it once per batch. Boolean and NumPy integer masks are also
+  accepted and normalized before evaluation.
+  The bundled pymoo adapter uses integer tuples to pass repaired masks to
+  `evaluate` while retaining Boolean arrays in the solver population.
 - Pass surviving handles to `report` after initialization and once per generation.
   Report between one and `population_size` survivors. A handle identifies one evaluation and may survive several generations. Keep it
   opaque. The estimator records the best candidates across all evaluated proposals.
@@ -283,7 +331,9 @@ Load pickle checkpoints only from trusted sources. See the
 Install the [`nevergrad` extra](../guide/installation#optimization-backends) and pass `optimizer_backend="nevergrad"` to either
 estimator. OnePlusOne adapts mutations around the best initial candidate.
 Numeric and categorical parameters keep their types. Masks use a vector of
-ordered binary choices. TwoPointsDE is also available through the backend
+ordered binary choices. The adapter decodes each batch and repairs empty masks
+and those above `max_features` using the search seed and individual mask.
+TwoPointsDE is also available through the backend
 callable for searches with larger budgets.
 NGOpt's portfolio can select a metamodel that fails on modern NumPy in continuous
 and mixed spaces. The adapter uses an explicit strategy for reproducible long runs.
@@ -293,6 +343,17 @@ finite linear or logarithmic intervals and variable integers within int64 spanni
 removed, and an entirely fixed search finishes after initialization. LivePlot, early stopping
 and resumable generation checkpoints are supported, including when the strategy
 is configured with `functools.partial`.
+
+Nevergrad receives the original loss for magnitudes up to `1e5` and a
+logarithmically compressed loss outside that range. Failed or non-finite
+evaluations receive a higher solver loss. `cv_results_` retains the original
+scores. A solver resumed from an active older checkpoint keeps its saved
+loss scale for the rest of that search.
+
+In feature selection, the first OnePlusOne proposal repeats the best initial
+mask. With `use_cache=True`, repeated masks can reuse their earlier CV scores.
+See the [cached evaluation example](../tutorials/optimizer-backends#compare-cached-evaluations-with-nevergrad)
+for how to compare fresh CV calls and cache hits with the same search budget.
 
 ## CatCMA with Margin
 
@@ -304,8 +365,20 @@ log-scale transforms where specified. Integer spans up to 255 use discrete margi
 wider integers use rounded continuous proposals. The best quarter of initialization
 sets the numeric center and biases category probabilities, mixed equally with a
 uniform prior. The initial numeric step size is 0.25 of the normalized interval.
+For feature selection, the adapter computes binary probabilities from the
+elite masks and decodes the proposed masks in bulk.
+It keeps the same elite frequencies and the same repair rules for empty
+masks and masks above `max_features`. See the
+[budgeted CatCMAwM example](../tutorials/optimizer-backends#run-binary-feature-selection-with-catcmawm).
 Flat initial numeric batches keep sampling until the continuous boundary penalty
-has a positive interquartile loss range.
+has a positive interquartile loss range. If a later batch has too few valid
+scores to compute the lower loss quartile, its scores stay in the search
+history and sampling continues with the previous distribution.
+
+When continuous proposals have very large finite losses, CatCMAwM's adapter
+rescales those losses and the saved penalty spreads by a power of two before
+updating the distribution. Checkpoints retain the scale for subsequent updates.
+The reported CV scores use the scorer's units.
 
 Use at least four individuals per generation. The same domain, callback,
 checkpoint and generation-history rules as Nevergrad apply. Full covariance costs
@@ -316,9 +389,10 @@ quadratic memory in the number of numeric parameters.
 Install the [`pymoo` extra](../guide/installation#optimization-backends) and pass `optimizer_backend="pymoo"`.
 MixedVariableGA uses separate crossover and mutation operators for unordered
 choices, integers and real parameters. For masks, the binary GA uses uniform
-crossover and bit-flip mutation. The adapter repairs empty or oversized masks
-before scoring and returns the repaired masks to the population. The generation
-history summarizes survivors. The estimator archive also retains discarded
+crossover and bit-flip mutation. The adapter processes binary proposals as a
+batch. It repairs empty or oversized masks using the search seed and the
+individual mask, then passes the same valid masks to scoring and to the solver.
+The generation history summarizes survivors. The estimator archive also retains discarded
 trials for final selection. Adjust `crossover_probability` between 0 and 1
 (default 0.8) for either estimator.
 
@@ -328,3 +402,16 @@ allows small discrete spaces to complete without costly duplicate-rejection
 loops. LivePlot, early stopping and generation checkpoints use the common
 runtime. On resume, pymoo reconstructs the solver from recorded evaluations.
 On platforms without a compatible upstream wheel, pip builds pymoo from source.
+
+### Candidate fit failures and CV budgets
+
+With a numeric `error_score`, a candidate that fails to fit in every fold
+emits `FitFailedWarning` and appears in `cv_results_` with `NaN` scores.
+A candidate with a finite score ranks ahead of these failed candidates in
+pymoo's survivor selection. Each attempted candidate CV still uses one call
+of the [search budget](callbacks#cvbudgetstopping).
+
+Compare `fit_counts_["search_cv_calls"]` with
+`history["finite_fitness_count"]` to see how many CV calls the search used
+and how many surviving candidates had finite scores in each generation.
+Use `error_score="raise"` to surface the original fit exception.

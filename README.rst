@@ -8,9 +8,10 @@ sklearn-genetic-opt
 
 |release| |tests| |license|
 
-**Tune a scikit-learn estimator or find a smaller set of features.**
-Give the search a model, a scorer and a budget. It evaluates candidates with
-cross-validation, refits the winner and lets you call ``predict`` on new data.
+**Hyperparameter tuning and feature selection for scikit-learn.**
+Give ``GASearchCV`` or ``GAFeatureSelectionCV`` a model, a scorer and a budget.
+The search evaluates candidates with cross-validation, refits the winner and
+lets you call ``predict`` on new data.
 Use it when the combinations of parameters or columns would make an exhaustive
 search too expensive.
 
