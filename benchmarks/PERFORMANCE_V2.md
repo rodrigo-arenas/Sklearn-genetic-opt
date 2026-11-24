@@ -2020,6 +2020,36 @@ budgets or transfer to other estimators and hardware. The
 [paired measurements and script](results/performance-v2/mask-clone-transfer.json)
 record the environment and execution order.
 
+### Converting native binary lists before feature CV
+
+A prototype changed the conversion of native binary lists from
+`np.array(mask, dtype=bool)` to `np.frombuffer(bytes(mask), dtype=bool).copy()`
+at 128 columns and above. Both produce a writable Boolean array with its
+own storage. Tests on NumPy 1.26.4 and 2.5.5 used sparse and dense binary lists
+and alternated conversion order. At widths of 128 to 32,768 columns the
+median paired conversion time fell by 64% to 86%. For 4,096 columns the
+isolated saving was about 70 to 100 microseconds per candidate.
+
+Full public fits matched on ordered candidates, CV scores, histories, finalists,
+work counts, predictions and held-out metrics. Timing includes the full-data
+refit. This table reports the median percentage change of paired fit times.
+
+| Workload | One worker, 16 CV calls, cache off | Two workers, up to 24 CV calls, cache on | Same process, cache off |
+| --- | ---: | ---: | ---: |
+| Wine, 13 columns, narrow control | +0.86% | — | +2.99% |
+| Dense classification, 256 columns | +1.71% | — | +1.96% |
+| CSR regression, 4,096 columns | -0.57% | +3.95% | +2.23% |
+| CSC classification, 8,192 columns | -2.53% | +0.40% | -2.58% |
+
+The first comparison had 30 pairs per case. All 120 pairs completed 16 CV
+calls. The cached comparison had 20 pairs per sparse case. Thirty-eight of
+40 pairs reached 24 CV calls, and both arms of the other two stopped at 23.
+The same-process comparison had 20 pairs per sparse case at 24 calls and
+eight DEAP pairs per narrow or dense case at 16 calls. Each fitness evaluation
+used the same three folds within its pair. The timing differences varied by
+case and engine, including in the narrow control where both arms used the
+same conversion. The prototype remains an experiment.
+
 ## Cost of writing a generation checkpoint
 
 How much time does checkpointing add on cheap estimators? This comparison

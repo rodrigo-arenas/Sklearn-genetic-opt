@@ -1,17 +1,21 @@
 import inspect
+from math import floor
 import random
 
 import numpy as np
 from scipy.stats import qmc
 from sklearn.utils import check_random_state
 
-from .space import Categorical, Continuous, Integer, Space
+from ._mixed_space import decode_real, real_coordinate_interval
 from .optimizer_control import finite_search_space_size
+from .space import Categorical, Continuous, Integer, Space
 from .utils.tools import _hashable_key
 
 
-def validate_population_initializer(population_initializer):
+def validate_population_initializer(population_initializer, *, feature_selection=False):
     valid_initializers = {"random", "smart"}
+    if feature_selection:
+        valid_initializers.add("spread")
     if population_initializer not in valid_initializers:
         raise ValueError(
             f"population_initializer must be one of {sorted(valid_initializers)}, "
@@ -42,31 +46,32 @@ def _default_estimator_params(estimator, space):
     return defaults
 
 
-def _sample_dimension_from_unit(dimension, value):
+def _sample_dimension_from_unit(dimension, value, interval=None):
     if isinstance(dimension, Integer):
-        n_values = dimension.upper - dimension.lower + 1
-        sampled = dimension.lower + int(np.floor(value * n_values))
-        return int(np.clip(sampled, dimension.lower, dimension.upper))
+        lower, upper = dimension.lower, dimension.upper
+        if lower == upper:
+            return int(lower)
+        sampled = lower + floor(value * (upper - lower + 1))
+        return int(min(upper, max(lower, sampled)))
 
     if isinstance(dimension, Continuous):
-        if dimension.lower == dimension.upper:
-            return dimension.sample()
-        if dimension.distribution == "log-uniform" and dimension.lower > 0:
-            log_lower = np.log(dimension.lower)
-            log_upper = np.log(dimension.upper)
-            return float(np.exp(log_lower + value * (log_upper - log_lower)))
-
-        return float(dimension.lower + value * (dimension.upper - dimension.lower))
+        return decode_real(dimension, value, interval=interval)
 
     raise TypeError("Latin hypercube sampling only supports numeric dimensions")
 
 
-def _append_unique_individual(population, seen_individuals, individual_values, individual_cls):
+def _append_unique_individual(
+    population, seen_individuals, individual_values, individual_cls, key=None
+):
     # Feature masks are already immutable binary keys. HPO values can be mixed types.
     individual_key = (
-        individual_values
-        if isinstance(individual_values, bytes)
-        else _hashable_key(tuple(individual_values))
+        key(individual_values)
+        if key is not None
+        else (
+            individual_values
+            if isinstance(individual_values, bytes)
+            else _hashable_key(tuple(individual_values))
+        )
     )
     if individual_key in seen_individuals:
         return False
@@ -88,36 +93,47 @@ def _feature_mask(n_features, n_selected):
 
 def random_search_population(estimator, toolbox, individual_cls):
     population = []
+    population_size = int(estimator.population_size)
     warm_start_configs = getattr(estimator, "_warm_start_configs", estimator.warm_start_configs)
     warm_start_configs = warm_start_configs or []
-    num_warm_start = min(len(warm_start_configs), estimator.population_size)
+    num_warm_start = min(len(warm_start_configs), population_size)
 
     for config in warm_start_configs[:num_warm_start]:
         individual_values = estimator.space.sample_warm_start(config)
         population.append(individual_cls(list(individual_values.values())))
 
-    num_random = estimator.population_size - num_warm_start
+    num_random = population_size - num_warm_start
     population.extend(toolbox.population(n=num_random))
 
     return population
 
 
+def _normalized_search_seed(space, parameters):
+    return [
+        space._repair_value(dimension, parameters[name])
+        for name, dimension in space.param_grid.items()
+    ]
+
+
 def smart_search_population(estimator, toolbox, individual_cls):
     population = []
+    population_size = int(estimator.population_size)
     seen_individuals = set()
+    key = estimator.space._population_key
     warm_start_configs = getattr(estimator, "_warm_start_configs", estimator.warm_start_configs)
     warm_start_configs = warm_start_configs or []
 
-    for config in warm_start_configs[: estimator.population_size]:
+    for config in warm_start_configs:
         individual_values = estimator.space.sample_warm_start(config)
         _append_unique_individual(
             population,
             seen_individuals,
-            list(individual_values.values()),
+            _normalized_search_seed(estimator.space, individual_values),
             individual_cls,
+            key,
         )
 
-        if len(population) == estimator.population_size:
+        if len(population) == population_size:
             return population
 
     default_params = _default_estimator_params(estimator.estimator, estimator.space)
@@ -125,11 +141,12 @@ def smart_search_population(estimator, toolbox, individual_cls):
         _append_unique_individual(
             population,
             seen_individuals,
-            [default_params[parameter] for parameter in estimator.space.parameters],
+            _normalized_search_seed(estimator.space, default_params),
             individual_cls,
+            key,
         )
 
-    remaining = estimator.population_size - len(population)
+    remaining = population_size - len(population)
     categorical_indices = {}
     for parameter, dimension in estimator.space.param_grid.items():
         if isinstance(dimension, Categorical):
@@ -186,13 +203,20 @@ def smart_search_population(estimator, toolbox, individual_cls):
         sampler = qmc.LatinHypercube(d=len(numeric_parameters), **{seed_keyword: lhs_seed})
         lhs_samples = sampler.random(n=remaining)
 
+    coordinate_intervals = {
+        parameter: real_coordinate_interval(dimension)
+        for parameter, dimension in estimator.space.param_grid.items()
+        if remaining > 1 and type(dimension) is Continuous
+    }
     for sample_index in range(remaining):
         individual_values = []
         numeric_index = 0
         for parameter, dimension in estimator.space.param_grid.items():
             if isinstance(dimension, (Continuous, Integer)):
                 value = _sample_dimension_from_unit(
-                    dimension, lhs_samples[sample_index, numeric_index]
+                    dimension,
+                    lhs_samples[sample_index, numeric_index],
+                    coordinate_intervals.get(parameter),
                 )
                 numeric_index += 1
             elif isinstance(dimension, Categorical):
@@ -202,21 +226,25 @@ def smart_search_population(estimator, toolbox, individual_cls):
 
             individual_values.append(value)
 
-        _append_unique_individual(population, seen_individuals, individual_values, individual_cls)
+        _append_unique_individual(
+            population, seen_individuals, individual_values, individual_cls, key
+        )
 
-    space_size = finite_search_space_size(estimator, estimator.population_size)
+    space_size = finite_search_space_size(estimator, population_size)
     attempts = 0
-    max_attempts = max(100, estimator.population_size * 20)
+    max_attempts = max(100, population_size * 20)
     while (
-        len(population) < estimator.population_size
+        len(population) < population_size
         and attempts < max_attempts
         and (space_size is None or len(seen_individuals) < space_size)
     ):
         individual = toolbox.individual()
-        _append_unique_individual(population, seen_individuals, list(individual), individual_cls)
+        _append_unique_individual(
+            population, seen_individuals, list(individual), individual_cls, key
+        )
         attempts += 1
 
-    while len(population) < estimator.population_size:
+    while len(population) < population_size:
         population.append(toolbox.individual())
 
     return population
@@ -229,17 +257,53 @@ def initialize_search_population(estimator, toolbox, individual_cls):
     return smart_search_population(estimator, toolbox, individual_cls)
 
 
-def smart_feature_population(estimator, toolbox, individual_cls):
-    population = []
-    seen_individuals = set()
-    max_selected = estimator.max_features or estimator.n_features
+def _warm_feature_masks(estimator):
+    masks = getattr(getattr(estimator, "population_config", None), "warm_start_masks", None)
+    if masks is None:
+        return ()
+    if not isinstance(masks, (list, tuple, np.ndarray)) or (
+        isinstance(masks, np.ndarray) and masks.ndim != 2
+    ):
+        raise ValueError("warm_start_masks must be a list, tuple, or 2D array of feature masks")
+
+    unique = {}
+    population_size = int(estimator.population_size)
+    for index, mask in enumerate(masks):
+        label = f"warm_start_masks mask {index}"
+        shape_error = f"{label} must be one-dimensional with length {estimator.n_features}"
+        try:
+            values = np.asarray(mask)
+        except ValueError as exc:
+            raise ValueError(shape_error) from exc
+        if values.shape != (estimator.n_features,):
+            raise ValueError(shape_error)
+        if values.dtype.kind not in "biu" or not np.all((values == 0) | (values == 1)):
+            raise ValueError(f"{label} must contain Boolean or integer 0/1 values")
+        selected = np.count_nonzero(values)
+        if selected == 0:
+            raise ValueError(f"{label} must select at least one feature")
+        if estimator.max_features is not None and selected > estimator.max_features:
+            raise ValueError(f"{label} selects {selected} features, exceeding max_features")
+        unique[values.astype(np.uint8, copy=False).tobytes()] = None
+        if len(unique) == population_size:
+            break
+    return tuple(unique)
+
+
+def smart_feature_population(estimator, toolbox, individual_cls, warm_masks=()):
+    population = [individual_cls(mask) for mask in warm_masks]
+    population_size = int(estimator.population_size)
+    if len(population) == population_size:
+        return population
+    seen_individuals = set(warm_masks)
+    max_selected = int(estimator.max_features or estimator.n_features)
     max_selected = max(1, min(max_selected, estimator.n_features))
 
-    selected_counts = np.linspace(1, max_selected, num=estimator.population_size)
+    selected_counts = np.linspace(1, max_selected, num=population_size - len(population))
     selected_counts = np.rint(selected_counts).astype(int)
 
-    space_size = finite_search_space_size(estimator, estimator.population_size)
-    padding_needed = estimator.population_size - space_size if space_size is not None else 0
+    space_size = finite_search_space_size(estimator, population_size)
+    padding_needed = population_size - space_size if space_size is not None else 0
     padding = []
     for n_selected in selected_counts:
         values = _feature_mask(estimator.n_features, int(n_selected))
@@ -250,9 +314,9 @@ def smart_feature_population(estimator, toolbox, individual_cls):
             padding.append(values)
 
     attempts = 0
-    max_attempts = max(100, estimator.population_size * 20)
+    max_attempts = max(100, population_size * 20)
     while (
-        len(population) < estimator.population_size
+        len(population) < population_size
         and attempts < max_attempts
         and (space_size is None or len(seen_individuals) < space_size)
     ):
@@ -261,15 +325,47 @@ def smart_feature_population(estimator, toolbox, individual_cls):
         attempts += 1
 
     population.extend(individual_cls(values) for values in padding)
-    while len(population) < estimator.population_size:
+    while len(population) < population_size:
         values = _feature_mask(estimator.n_features, random.randint(1, max_selected))
         population.append(individual_cls(values))
 
     return population
 
 
-def initialize_feature_population(estimator, toolbox, individual_cls):
-    if estimator.population_initializer == "random":
-        return toolbox.population(n=estimator.population_size)
+def _spread_feature_masks(population):
+    """Visit a middle mask size, then choose sizes far from those visited."""
+    if len(population) < 2:
+        return population
 
-    return smart_feature_population(estimator, toolbox, individual_cls)
+    counts = np.asarray([sum(mask) for mask in population])
+    midpoint = (int(counts.min()) + int(counts.max())) / 2
+    first = int(np.argmin(np.abs(counts - midpoint)))
+    ordered = [population[first]]
+    distances = np.abs(counts - counts[first])
+    distances[first] = -1
+    while len(ordered) < len(population):
+        index = int(np.argmax(distances))
+        ordered.append(population[index])
+        # Keep the distance to the closest selected size, excluding used masks.
+        np.minimum(distances, np.abs(counts - counts[index]), out=distances)
+        distances[index] = -1
+    return ordered
+
+
+def initialize_feature_population(estimator, toolbox, individual_cls):
+    warm_masks = _warm_feature_masks(estimator)
+    if estimator.population_initializer == "random":
+        population_size = int(estimator.population_size)
+        if not warm_masks:
+            return toolbox.population(n=population_size)
+        population = [individual_cls(mask) for mask in warm_masks]
+        population.extend(toolbox.population(n=population_size - len(population)))
+        return population
+
+    population = smart_feature_population(estimator, toolbox, individual_cls, warm_masks)
+    if estimator.population_initializer == "spread":
+        if not warm_masks:
+            return _spread_feature_masks(population)
+        count = len(warm_masks)
+        return population[:count] + _spread_feature_masks(population[count:])
+    return population

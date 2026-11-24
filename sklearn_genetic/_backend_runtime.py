@@ -1,7 +1,11 @@
 """Evaluate and record optimizer proposals using the shared estimator CV pipeline."""
 
+from collections import Counter
+from copy import copy
 from dataclasses import dataclass
-from itertools import islice
+from hashlib import md5
+from itertools import islice, repeat
+from operator import is_
 import random
 import pickle
 
@@ -9,17 +13,32 @@ from joblib import hash as joblib_hash
 
 import numpy as np
 
-from ._optimizer_checkpoint import checkpoint_engine, environment, resume_method, validate_boundary
+from ._optimizer_checkpoint import (
+    checkpoint_engine,
+    environment,
+    resume_method,
+    training_data_hash,
+    validate_boundary,
+)
 from .backends import OptimizationProblem
 from .callbacks.model_checkpoint import ModelCheckpoint
 from .callbacks.validations import eval_callbacks
-from .evaluation import evaluation_timers, _time_budget_exhausted
+from .config import PopulationConfig
+from .evaluation import (
+    evaluate_population,
+    evaluation_context,
+    _evaluation_limit_reached,
+    restore_candidate_positions,
+    start_evaluation_callbacks,
+)
+from .optimizer_control import finite_search_space_size
 from ._telemetry import (
     _new_telemetry_state,
     _population_diversity,
     _print_verbose_record,
     complete_generation,
     feature_population_diversity,
+    population_fitness_stats,
 )
 from .population import initialize_feature_population, initialize_search_population
 from .space import Continuous, Space
@@ -35,8 +54,11 @@ class _Sampler:
 
 
 def _make_problem(estimator, checkpointing):
+    from .genetic_search import _uses_native_feature_initialization
+
     space = getattr(estimator, "space", None)
     if space is None:
+        initializer = initialize_feature_population
 
         def sample():
             mask = weighted_bool_individual(
@@ -44,22 +66,24 @@ def _make_problem(estimator, checkpointing):
             )
             return estimator._repair_individual(mask)
 
-        population = initialize_feature_population(estimator, _Sampler(sample), list)
     else:
+        initializer = initialize_search_population
 
         def sample():
             return [dimension.sample() for dimension in space.param_grid.values()]
 
-        population = initialize_search_population(estimator, _Sampler(sample), list)
-    for candidate in population:
-        estimator._repair_individual(candidate)
+    population = initializer(estimator, _Sampler(sample), list)
+    if not _uses_native_feature_initialization(estimator, initializer):
+        for candidate in population:
+            estimator._repair_individual(candidate)
+    max_features = getattr(estimator, "max_features", None)
     return OptimizationProblem(
         task="features" if space is None else "parameters",
         initial_population=tuple(tuple(row) for row in population),
         parameter_names=tuple(space.parameters) if space is not None else (),
         dimensions=tuple(space.param_grid.values()) if space is not None else (),
-        max_features=getattr(estimator, "max_features", None),
-        generations=estimator.generations,
+        max_features=None if max_features is None else int(max_features),
+        generations=int(estimator.generations),
         crossover_probability=estimator.crossover_probability,
         seed=int(np.random.randint(2**31)),
         checkpoint_requested=checkpointing,
@@ -85,18 +109,39 @@ class _StopSearch(Exception):
     """Unwind a synchronous optimizer at a report or evaluation budget boundary."""
 
 
+def _valid_feature_mask(row, limit):
+    """Return mask validity and whether every coordinate is a Python int."""
+    if all(map(is_, map(type, row), repeat(int))):
+        # Bundled engines yield plain integers. Use bulk built-in operations
+        # for their binary values and count without casting every coordinate.
+        return set(row) <= {0, 1} and 1 <= sum(row) <= limit, True
+    valid = (
+        all(isinstance(bit, (bool, int, np.bool_, np.integer)) and bit in (0, 1) for bit in row)
+        and 1 <= sum(map(int, row)) <= limit
+    )
+    return valid, False
+
+
 class _SearchRun:
-    def __init__(self, estimator, problem):
+    def __init__(self, estimator, problem, space_size):
         self.estimator = estimator
         self.problem = problem
+        self.space_size = space_size
+        self.exhausted = False
+        estimator.search_space_exhausted_ = False
         self.owner = object()
         self.generations = _GenerationLog()
         self.elites = []
+        # Parameter keys can be expensive to rebuild for every member of a large archive.
+        self._elite_keys = (
+            Counter() if problem.task == "parameters" and estimator.keep_top_k > 1 else None
+        )
         self.pending = 0
         self.evaluations = 0
+        self._initial_feature_masks = None
         self.state = _new_telemetry_state()
         self.best_observed = None
-        self.timed_batch = []
+        self.limited_batch = []
         self.stopped = False
         self.checkpoint_context = None
         self.resume_supported = False
@@ -110,8 +155,13 @@ class _SearchRun:
         callbacks = self.step_callbacks if method == "on_step" else self.estimator.callbacks
         return eval_callbacks(callbacks, record, self.generations, self.estimator, method)
 
+    def _update_coverage(self):
+        # This cache contains only observations from this fit or its exact resume.
+        self.exhausted = self.space_size == len(self.estimator.fitness_cache)
+        self.estimator.search_space_exhausted_ = self.exhausted
+
     def snapshot(self):
-        # Keep the latest resumable boundary when a deadline cuts a generation short.
+        # Keep the latest resumable boundary when a limit cuts a generation short.
         if (
             self.generations[-1].get("partial")
             and self.resume_supported
@@ -121,6 +171,9 @@ class _SearchRun:
         est = self.estimator
         return {
             "optimizer_checkpoint_version": 1,
+            "outlier_scoring_uses_fitted_detector": True,
+            "typed_categorical_identity": True,
+            "stable_nan_categories": True,
             "backend": _backend_name(est.optimizer_backend),
             "resumable": self.resume_supported and self.solver_state is not None,
             "context": self.checkpoint_context,
@@ -148,16 +201,26 @@ class _SearchRun:
         self.evaluations = len(self.estimator._candidate_rows)
         self.estimator.fitness_cache = snapshot["fitness_cache"]
         self.estimator.fit_stats_ = snapshot["fit_stats"]
+        restore_candidate_positions(self.estimator, self.estimator._candidate_rows)
         if self.problem.task == "parameters":
             # Preserve the snapshot's shared identities between categories, archived
             # observations and cache keys, including estimator-valued categories.
             self.estimator.space = Space(
                 dict(zip(self.problem.parameter_names, self.problem.dimensions))
             )
+            if not snapshot.get("stable_nan_categories"):
+                self.estimator.fitness_cache = self.estimator.space._rekey_nan_cache(
+                    self.estimator.fitness_cache
+                )
+        if self._elite_keys is not None:
+            self._elite_keys = Counter(
+                self.estimator._individual_key(elite.genes) for elite in self.elites
+            )
+        self._update_coverage()
 
-    def _deadline(self):
-        if self.timed_batch:
-            self._record(self.timed_batch, partial=True)
+    def _stop_at_evaluation_limit(self):
+        if self.limited_batch:
+            self._record(self.limited_batch, partial=True)
         self.stopped = True
         raise _StopSearch
 
@@ -167,69 +230,130 @@ class _SearchRun:
 
     def _archive(self, observation):
         rank = self._rank(observation)
-        if len(self.elites) == self.estimator.keep_top_k and not rank > self._rank(self.elites[-1]):
+        keep = self.estimator.keep_top_k
+        if len(self.elites) == keep and not rank > self._rank(self.elites[-1]):
             return
         key = self.estimator._individual_key(observation.genes)
-        for elite in self.elites:
-            if key == self.estimator._individual_key(elite.genes):
-                return
+        keys = self._elite_keys
+        if keys is None:
+            for elite in self.elites:
+                if key == self.estimator._individual_key(elite.genes):
+                    return
+        elif key in keys:
+            return
         # Historical archives insert new distinct candidates ahead of equal scores.
         index = next(
             (i for i, elite in enumerate(self.elites) if self._rank(elite) <= rank),
             len(self.elites),
         )
         self.elites.insert(index, observation)
-        del self.elites[self.estimator.keep_top_k :]
+        if keys is not None:
+            keys[key] = 1
+            for removed in self.elites[keep:]:
+                removed_key = self.estimator._individual_key(removed.genes)
+                keys[removed_key] -= 1
+                # Older checkpoints can have equivalent keys for more than one elite.
+                if not keys[removed_key]:
+                    del keys[removed_key]
+        del self.elites[keep:]
 
-    def evaluate(self, candidates):
-        if self.estimator is None:
-            raise RuntimeError("Optimizer evaluation is closed")
-        if self.stopped:
-            raise _StopSearch
-        if _time_budget_exhausted(self.estimator):
-            self._deadline()
-        remaining = self.problem.max_evaluations - self.evaluations
+    def _proposal_rows(self, candidates, remaining):
+        # The built-in selector already repaired these exact immutable masks.
+        if (
+            candidates is self._initial_feature_masks
+            and candidates is not None
+            and len(candidates) <= remaining
+        ):
+            # Truncation only needs a mutable outer list of immutable masks.
+            return list(candidates), True
+
         width = len(self.problem.initial_population[0])
+        features = self.problem.task == "features"
         rows = [
-            list(islice(candidate, width + 1)) for candidate in islice(candidates, remaining + 1)
+            (
+                candidate
+                if features and type(candidate) is tuple
+                else list(islice(candidate, width + 1))
+            )
+            for candidate in islice(candidates, remaining + 1)
         ]
         if not rows or len(rows) > remaining:
             raise ValueError("Expected a nonempty batch within the optimizer proposal budget")
-        for row in rows:
+        canonical_masks = features
+        validated_tuples = {}
+        for index, row in enumerate(rows):
+            immutable = type(row) is tuple
+            if immutable and validated_tuples.get(id(row)) is row:
+                continue
             if len(row) != width:
                 raise ValueError(f"Optimizer candidate must have {width} coordinates")
-            if self.problem.task == "features":
-                if not all(
-                    isinstance(bit, (bool, int, np.bool_, np.integer)) and bit in (0, 1)
-                    for bit in row
-                ) or not 1 <= sum(map(int, row)) <= (self.problem.max_features or width):
+            if features:
+                valid, canonical = _valid_feature_mask(row, self.problem.max_features or width)
+                if not valid:
                     raise ValueError(
                         "Optimizer candidate must be a nonempty binary mask within max_features"
                     )
+                canonical_masks &= canonical
+                if immutable:
+                    if canonical:
+                        # Keep an identity only for tuples of immutable Python integers.
+                        validated_tuples[id(row)] = row
+                    else:
+                        rows[index] = list(row)
             elif not all(
                 Space.value_in_dimension(dim, value)
                 for dim, value in zip(self.problem.dimensions, row)
             ):
                 raise ValueError("Optimizer candidate is outside the parameter space")
+        return rows, canonical_masks
+
+    def evaluate(self, candidates):
+        from .genetic_search import _uses_native_feature_evaluation
+
+        if self.estimator is None:
+            raise RuntimeError("Optimizer evaluation is closed")
+        # A resumed solver may replay its journal first. Stop when it asks the
+        # live evaluator for fresh proposals, after replay has verified the log.
+        if self.stopped or self.exhausted:
+            self.stopped = True
+            raise _StopSearch
+        if _evaluation_limit_reached(self.estimator):
+            self._stop_at_evaluation_limit()
+        remaining = self.problem.max_evaluations - self.evaluations
+        rows, canonical_masks = self._proposal_rows(candidates, remaining)
         requested = len(rows)
-        fitnesses = self.estimator.evaluate_population(rows)
+        if (
+            canonical_masks
+            and self.problem.max_features == self.estimator.max_features
+            and _uses_native_feature_evaluation(self.estimator)
+        ):
+            # The backend validated these integer bits against the active cap.
+            fitnesses = evaluate_population(self.estimator, rows, "current_generation_features")
+        else:
+            if self.problem.task == "features":
+                # Repair and custom evaluators can edit each mask independently.
+                for index, row in enumerate(rows):
+                    if type(row) is tuple:
+                        rows[index] = list(row)
+            fitnesses = self.estimator.evaluate_population(rows)
         replies = []
+        minimize = self.estimator.criteria_sign < 0
         for row, fitness in zip(rows, fitnesses, strict=True):
             handle = _Observation(self.owner, tuple(row), tuple(fitness))
             self._archive(handle)
             score = self.estimator._candidate_rows[self.evaluations]["score"]
             if np.isfinite(score) and (
                 self.best_observed is None
-                or self.estimator.criteria_sign * (score - self.best_observed) > 0
+                or (score < self.best_observed if minimize else score > self.best_observed)
             ):
                 self.best_observed = score
             self.evaluations += 1
             replies.append((-self.estimator.criteria_sign * fitness[0], handle))
         self.pending += len(rows)
-        if self.estimator._evaluation_timers:
-            self.timed_batch.extend(handle for _, handle in replies)
+        if self.estimator._evaluation_timers or self.estimator._evaluation_cv_limit is not None:
+            self.limited_batch.extend(handle for _, handle in replies)
             if len(rows) < requested:
-                self._deadline()
+                self._stop_at_evaluation_limit()
         return replies
 
     def report(self, survivors, *, state=None):
@@ -256,19 +380,14 @@ class _SearchRun:
         gen = len(self.generations)
         if gen > self.problem.generations:
             raise ValueError("Too many optimizer generation reports")
-        # Match the established column-wise reductions for two-objective feature masks.
-        scores = np.asarray([h.fitness for h in survivors])
-        diversity = (
-            feature_population_diversity
+        population = [h.genes for h in survivors]
+        row = (
+            feature_population_diversity(population)
             if self.problem.task == "features"
-            else _population_diversity
+            else _population_diversity(population, self.estimator.space)
         )
-        row = diversity([h.genes for h in survivors])
+        row.update(population_fitness_stats([h.fitness for h in survivors]))
         row.update(
-            fitness=np.mean(scores, axis=0)[0],
-            fitness_std=np.std(scores, axis=0)[0],
-            fitness_max=np.max(scores, axis=0)[0],
-            fitness_min=np.min(scores, axis=0)[0],
             fitness_best_observed=np.nan if self.best_observed is None else self.best_observed,
             cross_validate_calls=self.estimator.fit_stats_["cross_validate_calls"],
         )
@@ -283,8 +402,10 @@ class _SearchRun:
         record = dict(gen=gen, nevals=self.pending, **row)
         self.generations.append(record)
         self.pending = 0
-        self.timed_batch.clear()
-        if self._callbacks("on_step", record):
+        self.limited_batch.clear()
+        if not partial:
+            self._update_coverage()
+        if self._callbacks("on_step", record) or self.exhausted:
             self.stopped = True
             raise _StopSearch
 
@@ -296,8 +417,55 @@ def _backend_name(backend):
     return f"{kind.__module__}.{kind.__qualname__}"
 
 
-def _config_hash(estimator):
+def _cv_fingerprint(cv, index_kinds, *, python_selectors):
+    if type(cv) not in (list, tuple) or not cv:
+        return cv
+    folds = []
+    for fold in cv:
+        if type(fold) not in (list, tuple) or len(fold) != 2:
+            return cv
+        # sklearn.clone can turn a fold shared by search and finalist CV into
+        # two independent copies. The ordered selectors define both folds.
+        selectors = []
+        for indices in fold:
+            if (
+                type(indices) is np.ndarray
+                and indices.ndim == 1
+                and indices.dtype.kind in index_kinds
+            ):
+                selectors.append(joblib_hash(np.ascontiguousarray(indices)))
+            elif (
+                python_selectors
+                and type(indices) in (list, tuple)
+                and all(type(index) in (int, bool) for index in indices)
+            ):
+                # Keep the container, scalar types and ordering of native selectors.
+                contents = pickle.dumps(indices, protocol=3)
+                selectors.append(
+                    ("python_cv_selector", md5(contents, usedforsecurity=False).hexdigest())
+                )
+            else:
+                return cv
+        folds.append(tuple(selectors))
+    return ("explicit_cv_indices", tuple(folds))
+
+
+def _config_hash(estimator, *, index_kinds="biu", python_selectors=True):
     params = estimator.get_params(deep=False)
+    population_config = params.get("population_config")
+    if (
+        isinstance(population_config, PopulationConfig)
+        and population_config.warm_start_masks is None
+    ):
+        # Preserve hashes of older PopulationConfig instances without this field.
+        population_config = copy(population_config)
+        vars(population_config).pop("warm_start_masks", None)
+        params["population_config"] = population_config
+    if params.get("objective_metric") is None:
+        # The default matches checkpoints created before this option existed.
+        params.pop("objective_metric", None)
+    if not params.get("preserve_dataframe", False):
+        params.pop("preserve_dataframe", None)
     if "param_grid" in params:
         # Keep coordinate order. A bound scipy.stats sampler carries the process-wide
         # NumPy RNG and is derived entirely from the Continuous constructor settings.
@@ -313,6 +481,11 @@ def _config_hash(estimator):
             for name, dim in params["param_grid"].items()
         )
     try:
+        if index_kinds:
+            for name in ("cv", "final_selection_cv"):
+                params[name] = _cv_fingerprint(
+                    params[name], index_kinds, python_selectors=python_selectors
+                )
         return joblib_hash(params)
     except (pickle.PicklingError, TypeError, AttributeError) as exc:
         raise ValueError(
@@ -336,26 +509,44 @@ def checkpoint_context(estimator, optimize, checkpoint):
     if checkpoint and engine:
         validate_boundary(engine, checkpoint)
     # Fingerprint training inputs once, before sampling folds, dimensions or RNGs.
-    data = joblib_hash(
-        (type(estimator), estimator.X_, estimator.y_, estimator.groups_, estimator._fit_params)
-    )
+    data = training_data_hash(estimator)
     config = _config_hash(estimator)
     if checkpoint:
         saved_data, initial_config, sampled_config = checkpoint["context"][:3]
-        if data != saved_data or config not in (initial_config, sampled_config):
+        accepted = (initial_config, sampled_config)
+        # Older checkpoints normalized only NumPy selectors, or hashed all
+        # fold containers together with the rest of the search settings.
+        if data != saved_data or (
+            config not in accepted
+            and _config_hash(estimator, python_selectors=False) not in accepted
+            and _config_hash(estimator, index_kinds="iu", python_selectors=False) not in accepted
+            and _config_hash(estimator, index_kinds="") not in accepted
+        ):
             raise ValueError("Checkpoint data or search configuration differs from this fit")
         return checkpoint["context"]
     return (data, config, None, *compatibility)
 
 
 def run_optimizer(estimator, optimize, checkpoint, context):
+    from .genetic_search import _uses_native_feature_evaluation
+
     for name in ("toolbox", "_stats", "_pop", "_hof", "logbook", "hof", "_feature_elites"):
         vars(estimator).pop(name, None)
     estimator._candidate_rows = []
     checkpointing = any(isinstance(c, ModelCheckpoint) for c in estimator.callbacks)
     resumable = callable(resume_method(optimize))
     problem = checkpoint["problem"] if checkpoint else _make_problem(estimator, checkpointing)
-    run = _SearchRun(estimator, problem)
+    # Plugins control their stopping rules. Keep the full proposal history when
+    # finalist selection is enabled, since repeats may affect its tie handling.
+    space_size = None
+    finalists_enabled = estimator.refit and estimator.final_selection
+    track_coverage = bool(checkpoint_engine(optimize)) and not finalists_enabled
+    initial_use_cache = estimator.use_cache
+    if track_coverage:
+        space_size = finite_search_space_size(estimator, problem.max_evaluations)
+    run = _SearchRun(estimator, problem, space_size)
+    if not checkpoint and problem.task == "features" and _uses_native_feature_evaluation(estimator):
+        run._initial_feature_masks = problem.initial_population
     run.resume_supported = resumable
     if context is not None and not checkpoint:
         # Reusing the same estimator can legitimately expose advanced splitter/dimension RNGs.
@@ -366,8 +557,11 @@ def run_optimizer(estimator, optimize, checkpoint, context):
     if checkpointing:
         estimator._optimizer_snapshot = run.snapshot
     try:
-        with evaluation_timers(estimator):
-            run._callbacks("on_start")
+        with evaluation_context(estimator):
+            start_evaluation_callbacks(estimator.callbacks, estimator)
+            if track_coverage and estimator.use_cache != initial_use_cache:
+                run.space_size = finite_search_space_size(estimator, problem.max_evaluations)
+                run._update_coverage()
             try:
                 if checkpoint:
                     random.setstate(checkpoint["rng"][0])

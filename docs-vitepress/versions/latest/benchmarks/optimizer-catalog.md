@@ -1,6 +1,6 @@
 ---
-title: Comparing optimization backends
-description: Compare five optimizer backends at matched cross-validation budgets for feature selection and hyperparameter search.
+title: scikit-learn Hyperparameter Tuning and Feature Selection Benchmarks
+description: Compare DEAP, SciPy, Nevergrad, CatCMAwM and pymoo for scikit-learn hyperparameter tuning and feature selection at the same cross-validation cost.
 ---
 
 <script setup>
@@ -149,7 +149,133 @@ python -m benchmarks.benchmark_optimizer_catalog --pilot --output pilot32.csv
 python -m benchmarks.benchmark_optimizer_catalog --pilot --budget 96 --output pilot96.csv
 python -m benchmarks.benchmark_optimizer_catalog --budget 32 --output budget32.csv
 python -m benchmarks.benchmark_optimizer_catalog --budget 96 --output budget96.csv
+python -m benchmarks.benchmark_optimizer_catalog --budget 32 --public-refit --output public32.csv
 ```
+
+### Reproduce selected cases and splits
+
+Use `--cases`, `--engines`, and `--seeds` to rerun specific comparisons or
+check a change on additional splits. This example compares tuning on Wine and
+feature selection on Breast Cancer using DEAP and the random search reference.
+It works with the base package installed from the checkout.
+
+```bash
+python -m benchmarks.benchmark_optimizer_catalog --cases wine cancer --engines deap --seeds 41 107 --references random --stop-at-budget --public-refit --output subset.csv --pairs-output subset-pairs.csv
+```
+
+Use `--help` to list case and engine names. Install the optional engines or
+Optuna only when your command uses them. With `--pilot`, selecting an engine
+runs all its configured calibration variants.
+
+Each seed controls the search, the inner folds, and the holdout split. Keep
+the same case, engine, and seed lists in the same order when comparing two
+versions. The CSV's cohort-wide shared CV count can change if you add engines.
+Use `subset-pairs.csv` for engine/reference comparisons at the same number of
+actual CV calls and `completed_target` to see which pairs reached the budget.
+
+### Compare with random search and Optuna TPE
+
+Run these references through the same estimators, search spaces, three inner
+folds, and outer test split as the five engines:
+
+```bash
+python -m pip install -e '.[benchmark]'
+python -m benchmarks.benchmark_optimizer_catalog --budget 32 --references random tpe --time-ms 250 1000 --public-refit --output references32.csv --pairs-output pairs32.csv
+python -m benchmarks.benchmark_optimizer_catalog --budget 96 --references random tpe --time-ms 250 1000 --public-refit --output references96.csv --pairs-output pairs96.csv
+```
+
+The references start with the same eight initial proposals as the engines.
+Random search draws tuning values from the defined distributions. For feature
+selection it draws a mask size uniformly from one through the feature limit,
+then chooses that many columns uniformly without replacement. Optuna TPE runs
+on tuning tasks and can update its model after each CV result.
+
+The optional `--pairs-output` CSV has one row per engine, reference, task, seed
+and cache setting. `matched_cv_calls` gives the largest shared count of actual
+CV calls up to the target. This count depends only on the two runs in the row.
+Filter `completed_target` to compare pairs at the full target. For each side,
+`*_best_cv` gives the best CV score at the matched count, `*_prefix_holdout`
+scores that candidate on the test split after refitting on the training split,
+and `*_prefix_ms` measures the search time to return the matched CV result.
+
+### Compare several CV budgets in one run
+
+Use `--cv-checkpoints` to score prefixes of the same search at several fresh
+CV call counts. Choose positive counts up to `--budget`. This uses the same
+folds, seed, and proposal stream at every checkpoint.
+
+```bash
+python -m benchmarks.benchmark_optimizer_catalog --budget 96 --stop-at-budget --cv-checkpoints 8 16 32 64 96 --references random tpe --output checkpoints.csv --pairs-output checkpoint-pairs.csv
+```
+
+For a checkpoint at 32 calls, the main CSV reports `cv_32_best_cv`,
+`cv_32_holdout`, and `cv_32_elapsed_ms`. The holdout score comes from refitting
+that prefix's CV winner on the training partition. The elapsed time stops
+when the 32nd CV result returns. A run that ends before that call has blank
+values for the checkpoint.
+
+In the pairs CSV, filter `cv_32_completed` before comparing the `backend_cv_32_*`
+and `reference_cv_32_*` columns. Both sides need 32 calls for any of those score
+and time fields to be populated. Use `completed_by_cv_calls` and `eligible`
+from the JSON metadata to report the sample size for each requested checkpoint
+by backend, reference, and cache setting. When reading a trend across budgets,
+check how the number of completed pairs changes.
+
+### Stop the benchmark at a fixed CV budget
+
+Use `--stop-at-budget` to stop each fit with
+[CVBudgetStopping](../api/callbacks#cvbudgetstopping). Give the engines extra
+proposal capacity with `--proposal-budget` so they can continue past cache
+hits. The nominal proposal budget sets the generation limit using an
+eight-member population. It defaults to twice the CV target in this mode.
+Actual proposals per generation vary by engine. Use `full_proposals` and
+`full_cv_calls` for the measured counts.
+
+```bash
+python -m benchmarks.benchmark_optimizer_catalog --budget 32 --proposal-budget 64 --stop-at-budget --references random tpe --public-refit --output capped32.csv --pairs-output capped-pairs32.csv
+```
+
+`full_ms` measures time until `fit` returns. With `--public-refit`, this
+includes the full-data refit. `returned_cv` and `returned_holdout` describe
+the candidate selected by the estimator. `returned_matches_trace_winner`
+shows whether it matches the harness's best candidate across the recorded
+trace. Equal CV scores can yield different selections and holdout scores.
+Holdout scoring happens outside the measured fit.
+
+Filter `completed_target` before comparing paired durations at the requested
+budget. Each side has `*_fit_ms` for the full fit, `*_search_ms` for the completed
+optimizer run, and `*_refit_ms` for the full-data refit with `--public-refit`.
+The refit fields are blank when refit is disabled. To compare with a longer
+search on the same settings, retain `--proposal-budget` and omit `--stop-at-budget`.
+
+Read `budget_status` in the primary CSV and `backend_budget_status` or
+`reference_budget_status` in the pairs CSV to see the outcome for each fit.
+
+| Status | Meaning |
+| --- | --- |
+| `target_reached` | The run completed the requested number of fresh CV calls |
+| `space_exhausted` | The run finished below the target with confirmed coverage of its finite search space |
+| `below_target` | The run finished below the target with the reason unconfirmed |
+
+`space_exhausted` comes from the estimator's
+[`search_space_exhausted_`](../api/optimizer-backends#domain-and-budget) flag.
+Built-in engines check coverage on eligible finite cached searches. Random and
+TPE references report `below_target` when they finish short. Use the measured
+`full_cv_calls` and `matched_cv_calls` for comparison.
+
+The primary CSV also reports each run's `target_best_cv`, `target_holdout`
+and `target_elapsed_ms`. Blank target fields indicate that a run finished
+before the requested number of actual CV calls. Its `cv_calls` column gives
+the common count across the whole group. The JSON printed to stdout counts
+eligible and completed pairs for each engine, reference and cache setting.
+
+For equal wall-time comparisons, use the `time_<ms>ms_*` columns. Each checkpoint
+uses the CV results returned by that deadline, up to the requested CV count.
+It can include a completed run's incumbent after the run ends. A run without
+a result by the deadline has no score for that checkpoint. The holdout score
+comes from refitting the CV winner on the training partition. The search clock
+ends before that separate refit. Use `public_holdout` for the score of the
+estimator returned by the full run.
 
 **Calibration.** Wine classification, Wine feature selection, synthetic classification CART tuning and synthetic correlated linear-regression mask selection used three seeds
 (7, 19, 31). The pilot compared Nevergrad TwoPointsDE with OnePlusOne, CatCMAwM numeric
@@ -199,10 +325,32 @@ training data and score it on the held-out partition.
 
 `prefix_ms` ends when the last matching CV result becomes available. Its
 non-CV component includes proposal generation and bookkeeping to that point.
-`full_ms` and `full_outside_cv_ms` also include the final population update and
-estimator result assembly for the full run. Neither clock includes the separate
-holdout refit. `mean_running_best` averages the best score seen after each real
-evaluation. This captures how quickly the engine found good candidates.
+`full_search_ms` measures the entire optimizer run using
+[`search_time_`](../api/optimizer-backends#fit-time-by-phase), including population
+setup, candidate evaluation, callbacks, and the last population update. This
+field is available in CSVs generated with the current harness.
+`full_ms` covers the entire call to `fit`, and `full_outside_cv_ms` subtracts the
+measured search CV time from that total. Both clocks stop before the separate
+refit used to score the prefix winner on holdout. `mean_running_best` averages
+the best score seen after each real evaluation. This captures how quickly the
+engine found good candidates.
+
+**Check the fitted estimator.** Add `--public-refit` to also call `fit` with
+`refit=True` and score the estimator's predictions on the same holdout.
+`public_holdout` is the test score of the refitted estimator, and `public_cv`
+records its `best_score_`. For repeated evaluations of the same feature mask,
+`public_cv` follows the evaluation selected by the estimator. The matched-prefix
+columns use the best score observed by the common budget.
+`public_winner_in_prefix` reports whether the selected configuration or
+mask was evaluated in that prefix. A repeated evaluation can assign it a
+different score. When comparing public scores across engines, match
+`full_cv_calls`. With this option, the full-run clocks include the estimator's
+refit, also reported separately as `public_refit_ms`.
+
+To inspect a fitted search, [plot the work by phase](../examples/plotting-gallery#fit-work-by-phase)
+and compare fresh fold fits with reused finalist scores. If you enabled
+finalist validation, [compare the finalists' search and validation scores](../examples/plotting-gallery#finalist-score-comparison)
+and check which candidate was refitted.
 
 The CSV also gives a holdout baseline and relative skill. For classification,
 skill is the fraction of the gap above chance balanced accuracy closed by the

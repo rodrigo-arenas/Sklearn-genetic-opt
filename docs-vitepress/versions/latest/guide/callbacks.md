@@ -1,6 +1,6 @@
 ---
 title: Early Stopping and Callbacks for Hyperparameter Search
-description: Use callbacks to stop search early, track progress with live plots, and save checkpoints during genetic algorithm hyperparameter optimization.
+description: Stop scikit-learn hyperparameter search at a score or loss threshold, detect convergence, track progress and save checkpoints with callbacks.
 ---
 
 :::warning Development version
@@ -39,6 +39,9 @@ search.fit(X_train, y_train, callbacks=[
 ```
 
 If any callback signals to stop, the search ends at the end of that generation.
+DEAP skips local refinement when this happens. Configured finalist validation
+and refit still run after `on_end`. See the
+[DEAP stopping example](../tutorials/optimizer-backends#stop-deap-with-local-refinement-enabled).
 
 ## Built-in Callbacks
 
@@ -58,7 +61,10 @@ No parameters required. The bar length equals the configured number of generatio
 
 ### ConsecutiveStopping
 
-Compares the current value with each of the previous `N` values and stops if it improves on none of them. Score metrics follow the search criterion: lower values improve a minimizing search and higher values improve a maximizing search. For `fitness_std`, an increase in dispersion counts as improvement in either direction.
+Compares the current value with each of the previous `N` values and stops if
+it improves on none of them. Score metrics follow the search criterion. For
+`fitness_std`, larger values count as improvement. The callback waits for a
+comparison window with finite scores, including the current generation.
 
 ```python
 from sklearn_genetic.callbacks import ConsecutiveStopping
@@ -75,7 +81,8 @@ callback = ConsecutiveStopping(generations=5, metric="fitness")
 
 ### ThresholdStopping
 
-Stops once the metric reaches or exceeds a target value.
+Stops once a finite metric reaches the target in the search direction.
+For `fitness_std`, it stops when dispersion reaches or exceeds the target.
 
 ```python
 from sklearn_genetic.callbacks import ThresholdStopping
@@ -85,14 +92,50 @@ callback = ThresholdStopping(threshold=0.98, metric="fitness_max")
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `threshold` | float | — | Stop when the metric ≥ this value |
+| `threshold` | float | — | Stop when the score is at least this value with `criteria="max"` or at most this value with `criteria="min"` |
 | `metric` | str | `"fitness"` | History column to watch |
+
+#### Stop when a loss reaches its target
+
+Use a positive loss with `criteria="min"` and `metric="fitness_best_observed"`
+to stop when any candidate's finite CV loss reaches or falls below your target.
+This includes discarded offspring and repeated evaluations. With a negated loss such as
+`scoring="neg_mean_absolute_error"`, use `criteria="max"` and negate the
+target too. After stopping, the configured finalist validation and refit can
+still run. The returned `best_score_` reflects the selected candidate and may
+differ from the observed score that triggered stopping.
+
+```python
+from sklearn.datasets import load_diabetes
+from sklearn.linear_model import Ridge
+from sklearn.metrics import make_scorer, mean_absolute_error
+
+from sklearn_genetic import GASearchCV
+from sklearn_genetic.callbacks import ThresholdStopping
+from sklearn_genetic.space import Continuous
+
+X, y = load_diabetes(return_X_y=True)
+search = GASearchCV(
+    Ridge(),
+    cv=3,
+    param_grid={"alpha": Continuous(0.001, 10.0, distribution="log-uniform")},
+    scoring=make_scorer(mean_absolute_error),
+    criteria="min",
+    population_size=6,
+    generations=4,
+    random_state=42,
+    verbose=False,
+)
+search.fit(X, y, callbacks=ThresholdStopping(47.0, metric="fitness_best_observed"))
+```
 
 ---
 
 ### DeltaThreshold
 
-Stops when the spread (max − min) across the last `N` generations falls below a threshold — useful for detecting convergence.
+Stops when the spread (max − min) across the last `N` generations is at
+most the threshold. A missing or non-finite value blocks the comparison
+until it leaves the window.
 
 ```python
 from sklearn_genetic.callbacks import DeltaThreshold
@@ -105,6 +148,54 @@ callback = DeltaThreshold(threshold=0.001, generations=5, metric="fitness_min")
 | `threshold` | float | — | Stop when `max(metric[-N:]) - min(metric[-N:]) ≤ threshold` |
 | `generations` | int | `2` | Window size for the comparison |
 | `metric` | str | `"fitness"` | History column to watch |
+
+---
+
+### CVBudgetStopping
+
+Use `CVBudgetStopping` to cap new candidate cross-validation calls across
+optimizers. One call evaluates a candidate on all search folds. With caching
+enabled, a repeated candidate can reuse its score without consuming a call.
+
+```python
+from sklearn.datasets import load_iris
+from sklearn.tree import DecisionTreeClassifier
+
+from sklearn_genetic import GASearchCV
+from sklearn_genetic.callbacks import CVBudgetStopping
+from sklearn_genetic.space import Integer
+
+X, y = load_iris(return_X_y=True)
+search = GASearchCV(
+    DecisionTreeClassifier(random_state=42),
+    param_grid={"max_depth": Integer(1, 8), "min_samples_leaf": Integer(1, 8)},
+    scoring="accuracy",
+    cv=3,
+    population_size=6,
+    generations=10,
+    random_state=42,
+    n_jobs=1,
+    refit=False,
+    verbose=False,
+)
+search.fit(X, y, callbacks=CVBudgetStopping(max_cv_calls=12))
+print(search.fit_counts_["search_cv_calls"])
+print(search.best_params_, search.best_score_)
+```
+
+The limit covers candidate evaluations during search, including DEAP local
+refinement. Finalist validation and refit can run afterward when enabled.
+When a population batch starts with one call left, candidate-level parallelism is skipped.
+The [optimizer tutorial](../tutorials/optimizer-backends#check-worker-use-at-a-small-cv-budget)
+shows how to check this in `fit_stats_`.
+An optimizer can finish with fewer calls after covering its space or reaching
+another stopping condition.
+
+On resume, the limit applies to new CV calls in the current fit. The bundled
+alternative engines resume from completed generations. A budget that cuts a
+generation short leaves an earlier completed checkpoint available for resume.
+Candidates from an interrupted generation may be evaluated again on the next
+fit. A file containing only an incomplete first generation records progress.
 
 ---
 
@@ -139,7 +230,13 @@ within a generation. Final selection and refit can extend the total fit time.
 
 ### LogbookSaver
 
-Writes the per-candidate evaluation records with joblib after each generation. The saved object can be iterated to inspect each row. Use `ModelCheckpoint` for search snapshots.
+Writes per-candidate evaluation records with joblib after each generation.
+For a regular file, the callback also saves new rows from DEAP local
+refinement, including rows that reuse cached scores. See the
+[local refinement example](../examples/checkpointing#resume-after-local-refinement).
+If writing a regular file fails, its last successful version stays readable
+and the search continues. The error log identifies the affected path and
+the cause. Use `ModelCheckpoint` for resumable search snapshots.
 
 ```python
 from sklearn_genetic.callbacks import LogbookSaver

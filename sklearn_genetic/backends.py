@@ -2,13 +2,21 @@
 
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
+from functools import partial
 from importlib.metadata import entry_points
 from numbers import Integral, Real
 from typing import Literal, Protocol
 
+from ._optimizer_checkpoint import checkpoint_engine
 from .config import EvolutionConfig, OptimizationConfig
 
-__all__ = ["OptimizationProblem", "Optimizer", "GenerationReporter", "ResumableOptimizer"]
+__all__ = [
+    "OptimizationProblem",
+    "Optimizer",
+    "GenerationReporter",
+    "ResumableOptimizer",
+    "scipy_optimizer",
+]
 
 
 @dataclass(frozen=True)
@@ -67,13 +75,33 @@ class ResumableOptimizer(Optimizer, Protocol):
     ) -> None: ...
 
 
+def scipy_optimizer(*, stop_on_convergence: bool = True) -> Optimizer:
+    """Configure the SciPy backend for either search estimator.
+
+    When stop_on_convergence is False, an equal-loss population does not
+    terminate the SciPy solver. The estimator still applies its generation,
+    coverage and callback limits.
+    """
+    if type(stop_on_convergence) is not bool:
+        raise ValueError("stop_on_convergence must be a bool")
+    from ._scipy_backend import optimize
+
+    return partial(optimize, stop_on_convergence=stop_on_convergence)
+
+
+def _validate_search_counts(estimator, label):
+    for name, minimum, requirement in (
+        ("population_size", 1, "positive"),
+        ("keep_top_k", 1, "positive"),
+        ("generations", 0, "nonnegative"),
+    ):
+        value = getattr(estimator, name)
+        if isinstance(value, bool) or not isinstance(value, Integral) or value < minimum:
+            raise ValueError(f"{label} requires {requirement} integer {name}")
+
+
 def _validate_controls(estimator, label):
-    if not isinstance(estimator.population_size, Integral) or estimator.population_size < 1:
-        raise ValueError(f"{label} requires positive integer population_size")
-    if not isinstance(estimator.keep_top_k, Integral) or estimator.keep_top_k < 1:
-        raise ValueError(f"{label} requires positive integer keep_top_k")
-    if not isinstance(estimator.generations, Integral) or estimator.generations < 0:
-        raise ValueError(f"{label} requires nonnegative integer generations")
+    _validate_search_counts(estimator, label)
     if not isinstance(estimator.crossover_probability, Real) or not (
         0 <= estimator.crossover_probability <= 1
     ):
@@ -95,12 +123,13 @@ def resolve_optimizer(estimator) -> Optimizer | None:
     name = estimator.optimizer_backend
     if isinstance(name, str) and name == "deap":
         return None
-    if isinstance(name, str) and name == "scipy":
+    scipy_name = isinstance(name, str) and name == "scipy"
+    if scipy_name or (callable(name) and checkpoint_engine(name) == "scipy"):
         from ._scipy_backend import optimize, validate_scipy_backend
 
         _validate_controls(estimator, "SciPy")
         validate_scipy_backend(estimator)
-        return optimize
+        return optimize if scipy_name else name
     _validate_controls(estimator, "Optimizer plugins")
     if callable(name):
         return name

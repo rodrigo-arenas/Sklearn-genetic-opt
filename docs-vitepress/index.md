@@ -1,16 +1,20 @@
 ---
 layout: home
-title: Genetic Algorithm Hyperparameter Tuning for scikit-learn
-description: "Tune scikit-learn hyperparameters and select features with genetic algorithms. GASearchCV and GAFeatureSelectionCV: examples, tutorials and API."
+title: "sklearn-genetic-opt | scikit-learn Tuning & Feature Selection"
+titleTemplate: false
+description: "Tune scikit-learn hyperparameters with GASearchCV and select features with GAFeatureSelectionCV. Install the Python package and compare five optimization backends."
 
 hero:
   name: sklearn-genetic-opt
-  text: Evolutionary search for scikit-learn
+  text: Evolutionary tuning and feature selection
   tagline: Tune hyperparameters or select features by recombining candidates and scoring them with cross-validation.
   actions:
     - theme: brand
       text: Run Your First Search
       link: /versions/0.16/guide/basic-usage
+    - theme: alt
+      text: Compare Optimizers
+      link: /versions/0.16/benchmarks/optimizer-catalog
     - theme: alt
       text: Browse Recipes
       link: /versions/0.16/recipes/
@@ -31,8 +35,8 @@ features:
     details: GAFeatureSelectionCV evaluates feature subsets through cross-validation. Control subset size and check the result on untouched data.
     link: /versions/0.16/tutorials/feature-selection
     linkText: Feature Selection Tutorial
-  - title: Built-in Monitoring
-    details: Use callbacks for early stopping and inspect each generation. Optional integrations include MLflow and TensorBoard.
-    link: /versions/0.16/guide/callbacks
-    linkText: Callbacks Guide
+  - title: Budgeted Search and Checkpoints
+    details: Cap fresh cross-validation calls and recover saved work across training sessions. The tutorial shows how to count search, finalist, and refit work separately.
+    link: /versions/latest/tutorials/budgeted-optimizer-search
+    linkText: Budget and Resume a Search
 ---

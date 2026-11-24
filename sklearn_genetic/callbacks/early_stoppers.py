@@ -1,6 +1,11 @@
-from datetime import datetime
+from datetime import UTC, datetime
+from fractions import Fraction
+from math import inf, isfinite
 from numbers import Integral, Real
-from operator import ge, le
+from operator import ge, index, le
+from time import monotonic
+
+import numpy as np
 
 from .validations import check_stats
 from .base import BaseCallback
@@ -9,6 +14,9 @@ from .base import BaseCallback
 def _validate_numeric(value, parameter_name):
     if isinstance(value, bool) or not isinstance(value, Real):
         raise TypeError(f"{parameter_name} must be a numeric value")
+    # Comparing the value with itself detects NaN without casting large integers to float.
+    if value != value:
+        raise ValueError(f"{parameter_name} received NaN. Supply a defined numeric value.")
 
 
 def _validate_positive_integer(value, parameter_name):
@@ -26,21 +34,35 @@ def _validate_positive_numeric(value, parameter_name):
         raise ValueError(f"{parameter_name} must be greater than 0")
 
 
+def _at_least_as_good(metric, estimator):
+    minimize = metric != "fitness_std" and getattr(estimator, "criteria", "max") == "min"
+    return le if minimize else ge
+
+
+def _finite_score(value):
+    return value is not None and isfinite(value)
+
+
+def _as_fraction(value):
+    return (
+        Fraction(int(value)) if isinstance(value, Integral) else Fraction(*value.as_integer_ratio())
+    )
+
+
 class ThresholdStopping(BaseCallback):
     """
-    Stop the optimization if the metric from
-    cross validation score is greater or equals than the define threshold
+    Stop when a finite metric reaches the target in the search direction.
+    For fitness_std, stop when the dispersion reaches or exceeds the target.
     """
 
     def __init__(self, threshold, metric="fitness"):
         """
         Parameters
         ----------
-        threshold: float, default=None
-            Threshold to compare against the current cross validation average score and determine if
-            the optimization process must stop
-        metric: {'fitness', 'fitness_std', 'fitness_best', 'fitness_max', 'fitness_min'}, default ='fitness'
-            Name of the metric inside 'record' logged in each iteration
+        threshold: float
+            Target for the selected generation metric.
+        metric: str, default="fitness"
+            History metric to watch, such as "fitness_best_observed".
         """
 
         check_stats(metric)
@@ -52,15 +74,15 @@ class ThresholdStopping(BaseCallback):
     def on_step(self, record=None, logbook=None, estimator=None):
         stat = None
         if record is not None:
-            stat = record[self.metric]
+            stat = record.get(self.metric)
         elif logbook is not None:
             # Get the last metric value
-            stat = logbook[-1][self.metric]
+            stat = logbook[-1].get(self.metric)
 
         else:
             raise ValueError("At least one of record or logbook parameters must be provided")
 
-        if stat is not None and stat >= self.threshold:
+        if _finite_score(stat) and _at_least_as_good(self.metric, estimator)(stat, self.threshold):
             print(f"INFO: {self.__class__.__name__} callback met its criteria")
             return True
         return False
@@ -71,16 +93,17 @@ class ConsecutiveStopping(BaseCallback):
     Stop when none of the last N values is worse than the current value.
     Score metrics follow the search criterion. For fitness_std, larger values
     retain their historical meaning of improvement.
+    The current value and every value in the comparison window must be finite.
     """
 
     def __init__(self, generations, metric="fitness"):
         """
         Parameters
         ----------
-        generations: int, default=None
-            Number of current generations to compare against current generation
-        metric: {'fitness', 'fitness_std', 'fitness_best', 'fitness_max', 'fitness_min'}, default ='fitness'
-            Name of the metric inside 'record' logged in each iteration
+        generations: int
+            Positive number of previous generations to compare with the current generation.
+        metric: str, default="fitness"
+            History metric to watch, such as "fitness_best_observed".
         """
 
         check_stats(metric)
@@ -91,21 +114,21 @@ class ConsecutiveStopping(BaseCallback):
 
     def on_step(self, record=None, logbook=None, estimator=None):
         if logbook is not None:
-            if len(logbook) <= self.generations:
+            window = index(self.generations)
+            if len(logbook) <= window:
                 return False
 
             if record is not None:
-                current_stat = record[self.metric]
+                current_stat = record.get(self.metric)
             else:
-                current_stat = logbook[-1][self.metric]
+                current_stat = logbook[-1].get(self.metric)
 
-            # Compare the current metric with the last |generations| metrics
-            stats = [row[self.metric] for row in logbook[-self.generations - 1 : -1]]
+            # Compare the current metric with the previous window.
+            stats = [row.get(self.metric) for row in logbook[-window - 1 : -1]]
+            if not _finite_score(current_stat) or not all(map(_finite_score, stats)):
+                return False
 
-            minimize = (
-                self.metric != "fitness_std" and getattr(estimator, "criteria", "max") == "min"
-            )
-            at_least_as_good = le if minimize else ge
+            at_least_as_good = _at_least_as_good(self.metric, estimator)
             if all(at_least_as_good(stat, current_stat) for stat in stats):
                 print(f"INFO: {self.__class__.__name__} callback met its criteria")
                 return True
@@ -117,21 +140,20 @@ class ConsecutiveStopping(BaseCallback):
 
 class DeltaThreshold(BaseCallback):
     """
-    Stops the optimization if the absolute difference between the maximum and minimum value from the last N generations
-    is less or equals to a threshold.
-    The threshold gets evaluated after the number of generations specified is reached.
+    Stop when the range across the last N generations is within the threshold
+    and every value in that window is finite.
     """
 
     def __init__(self, threshold, generations=2, metric: str = "fitness"):
         """
         Parameters
         ----------
-        threshold: float, default=None
+        threshold: float
             Threshold to compare the differences between cross-validation scores.
         generations: int, default=2
             Number of generations to compare, includes the current generation.
-        metric: {'fitness', 'fitness_std', 'fitness_best', 'fitness_max', 'fitness_min'}, default ='fitness'
-            Name of the metric inside 'record' logged in each iteration.
+        metric: str, default="fitness"
+            History metric to watch, such as "fitness_best_observed".
         """
 
         check_stats(metric)
@@ -144,14 +166,26 @@ class DeltaThreshold(BaseCallback):
 
     def on_step(self, record=None, logbook=None, estimator=None):
         if logbook is not None:
-            if len(logbook) < self.generations:
+            window = index(self.generations)
+            if len(logbook) < window:
                 return False
 
-            stats = [row[self.metric] for row in logbook[-self.generations :]]
+            stats = [row.get(self.metric) for row in logbook[-window:]]
+            if not all(map(_finite_score, stats)):
+                return False
 
-            diff = abs(max(stats) - min(stats))
+            low, high = min(stats), max(stats)
+            low = int(low) if isinstance(low, Integral) else low
+            high = int(high) if isinstance(high, Integral) else high
+            threshold = self.threshold
+            with np.errstate(over="ignore"):
+                diff = high - low
+            if diff == inf and 0 <= threshold < inf:
+                # An overflowing floating-point range can still fit the threshold.
+                diff = _as_fraction(high) - _as_fraction(low)
+                threshold = _as_fraction(threshold)
 
-            if diff <= self.threshold:
+            if diff <= threshold:
                 print(f"INFO: {self.__class__.__name__} callback met its criteria")
                 return True
             return False
@@ -160,20 +194,50 @@ class DeltaThreshold(BaseCallback):
             raise ValueError("logbook parameter must be provided")
 
 
+class CVBudgetStopping(BaseCallback):
+    """Limit fresh candidate cross-validation calls during one fit.
+
+    Each candidate scored with cross-validation counts once, regardless of
+    the number of folds. Cache hits and scores restored from a checkpoint do
+    not count. Finalist validation and the full-data refit have their own
+    counts and run after the search.
+
+    Parameters
+    ----------
+    max_cv_calls : int
+        Positive limit on new candidate cross-validation calls.
+    """
+
+    def __init__(self, max_cv_calls):
+        _validate_positive_integer(max_cv_calls, "max_cv_calls")
+        self.max_cv_calls = int(max_cv_calls)
+
+    def on_start(self, estimator=None):
+        self._starting_calls = estimator.fit_stats_["cross_validate_calls"]
+
+    def on_step(self, record=None, logbook=None, estimator=None):
+        return (
+            estimator.fit_stats_["cross_validate_calls"] - self._starting_calls >= self.max_cv_calls
+        )
+
+
+_NATIVE_CV_BUDGET_START = CVBudgetStopping.on_start
+
+
 class TimerStopping(BaseCallback):
     """
-    Stops the optimization process if a limit training time has been elapsed.
-    New candidate batches stop when the time limit expires. An in-flight CV
-    batch and final selection/refit are allowed to finish. At least one initial
-    batch completes so the search can return a fitted model.
+    Stop starting new candidate batches when the elapsed search time expires.
+    A monotonic clock measures elapsed time across system clock adjustments.
+    An in-flight CV batch and final selection/refit can finish after the limit.
+    A search without usable checkpoint results completes an initial batch.
     """
 
     def __init__(self, total_seconds):
         """
         Parameters
         ----------
-        total_seconds: int
-            Total time in seconds that the estimator is allowed to fit
+        total_seconds: float
+            Positive elapsed time limit in seconds for candidate search.
         """
         _validate_positive_numeric(total_seconds, "total_seconds")
 
@@ -181,12 +245,11 @@ class TimerStopping(BaseCallback):
         self.total_seconds = total_seconds
 
     def on_start(self, estimator=None):
-        self.initial_training_time = datetime.utcnow()
+        self._started_at = monotonic()
+        self.initial_training_time = datetime.now(UTC).replace(tzinfo=None)
 
     def _time_exceeded(self):
-        return (
-            datetime.utcnow() - self.initial_training_time
-        ).total_seconds() >= self.total_seconds
+        return monotonic() - self._started_at >= self.total_seconds
 
     def on_step(self, record=None, logbook=None, estimator=None):
         if self._time_exceeded():

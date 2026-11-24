@@ -1,4 +1,8 @@
+from dataclasses import dataclass
+from functools import cached_property
+from math import inf, isfinite, nextafter
 import random
+from struct import pack
 from sys import float_info
 from typing import Any, List, Optional, Union
 
@@ -13,15 +17,47 @@ from .space_parameters import (
     CategoricalDistributions,
 )
 from .base import BaseDimension
+from ..evaluation import candidate_parameters
+from ..utils.tools import _hashable_key
+
+_NAN_CATEGORY_TYPES = frozenset((float, np.float16, np.float32, np.float64))
 
 
-def _same_config(left, right):
+@dataclass(frozen=True)
+class _FloatingNaN:
+    kind: type
+    bits: bytes
+
+
+def _is_floating_nan(value):
+    return type(value) in _NAN_CATEGORY_TYPES and value != value
+
+
+def _nan_category_key(value):
+    if not _is_floating_nan(value):
+        return None
+    kind = type(value)
+    return _FloatingNaN(kind, pack(">d", value) if kind is float else value.tobytes())
+
+
+def _definite_equality(left, right):
+    result = left == right
+    try:
+        return bool(result)
+    except (TypeError, ValueError):
+        # Some comparisons report an unknown or ambiguous truth value.
+        return False
+
+
+def _same_config(left, right, *, strict_types=False):
     """Compare estimator constructor trees without requiring picklable classes."""
     if left is right:
         return True
+    if strict_types and type(left) is not type(right):
+        return False
     if isinstance(left, BaseEstimator):
         return type(left) is type(right) and _same_config(
-            left.get_params(deep=False), right.get_params(deep=False)
+            left.get_params(deep=False), right.get_params(deep=False), strict_types=strict_types
         )
     if isinstance(left, dict):
         if type(left) is not type(right):
@@ -31,22 +67,33 @@ def _same_config(left, right):
         return (
             isinstance(right, dict)
             and left.keys() == right.keys()
-            and all(_same_config(value, right[key]) for key, value in left.items())
+            and all(
+                _same_config(value, right[key], strict_types=strict_types)
+                for key, value in left.items()
+            )
         )
     if isinstance(left, (list, tuple)):
         return (
             type(left) is type(right)
             and len(left) == len(right)
-            and all(_same_config(a, b) for a, b in zip(left, right))
+            and all(_same_config(a, b, strict_types=strict_types) for a, b in zip(left, right))
         )
     if isinstance(left, np.ndarray) or isinstance(right, np.ndarray):
-        return (
+        if not (
             isinstance(left, np.ndarray)
             and isinstance(right, np.ndarray)
+            and left.shape == right.shape
             and left.dtype == right.dtype
-            and np.array_equal(
-                left, right, equal_nan=left.dtype.kind in "fc" and right.dtype.kind in "fc"
+        ):
+            return False
+        if left.dtype.kind == "O":
+            # NumPy delegates object equality to Python, which can conflate
+            # types or raise on nested arrays. Use the same rules as containers.
+            return all(
+                _same_config(a, b, strict_types=strict_types) for a, b in zip(left.flat, right.flat)
             )
+        return np.array_equal(
+            left, right, equal_nan=left.dtype.kind in "fc" and right.dtype.kind in "fc"
         )
     if isinstance(left, np.random.RandomState):
         return isinstance(right, np.random.RandomState) and _same_config(
@@ -56,7 +103,24 @@ def _same_config(left, right):
         return isinstance(right, np.random.Generator) and _same_config(
             left.bit_generator.state, right.bit_generator.state
         )
-    return left == right
+    return _definite_equality(left, right)
+
+
+def _category_types(value):
+    """Describe types inside containers whose values may compare equal in Python."""
+    if isinstance(value, dict):
+        return type(value), tuple(
+            (_category_types(key), _category_types(item)) for key, item in value.items()
+        )
+    if isinstance(value, (list, tuple)):
+        return type(value), tuple(map(_category_types, value))
+    if isinstance(value, np.ndarray) and value.dtype.hasobject:
+        return type(value), _category_types(value.tolist())
+    if isinstance(value, (set, frozenset)):
+        return type(value), frozenset(
+            (_hashable_key(item), _category_types(item)) for item in value
+        )
+    return type(value)
 
 
 class Integer(BaseDimension):
@@ -123,6 +187,11 @@ class Integer(BaseDimension):
         return int(self.rng.integers(self.lower, self.upper + 1, dtype=np.int64))
 
     def _round_and_clip(self, value):
+        if type(value) is int and type(self.lower) is int and type(self.upper) is int:
+            if value < self.lower:
+                value = self.lower
+            return self.upper if value > self.upper else value
+
         if isinstance(value, (int, np.integer)):
             rounded = int(value)
         else:
@@ -155,36 +224,15 @@ class Continuous(BaseDimension):
             Pseudo random number generator state used for random dimension sampling.
         """
 
-        if not isinstance(lower, (int, float)):
-            raise ValueError("lower bound must be an integer or float")
-
-        if not isinstance(upper, (int, float)):
-            raise ValueError("upper bound must be an integer or float")
-
-        if lower > upper:
-            raise ValueError("The upper bound can not be smaller that the lower bound")
-
         if distribution not in ContinuousDistributions.list():
             raise ValueError(
                 f"distribution must be one of {ContinuousDistributions.list()}, got {distribution} instead"
             )
 
-        if lower == upper and not (
-            -float_info.max <= lower <= float_info.max and float(lower) == lower
-        ):
-            raise ValueError(
-                "A fixed continuous bound must be a finite, exactly representable float"
-            )
-
-        if distribution == ContinuousDistributions.log_uniform.value and lower <= 0:
-            raise ValueError(
-                f"lower bound must be greater than zero for the log-uniform distribution, got {lower} instead"
-            )
-
         self.lower = lower
         self.upper = upper
         self.distribution = distribution
-        self.shifted_upper = self.upper
+        self._validate_bounds()
         self.random_state = random_state
         self.rng = (
             np.random.default_rng(self.random_state) if self.random_state is not None else None
@@ -192,9 +240,44 @@ class Continuous(BaseDimension):
 
         if self.distribution == ContinuousDistributions.uniform.value:
             self.rvs = stats.uniform.rvs
-            self.shifted_upper = self.upper - self.lower
         elif self.distribution == ContinuousDistributions.log_uniform.value:
             self.rvs = stats.loguniform.rvs
+
+    def _validate_bounds(self):
+        lower, upper = self.lower, self.upper
+        for name, bound in (("lower", lower), ("upper", upper)):
+            if not isinstance(bound, (int, float)):
+                raise ValueError(f"{name} bound must be an integer or float")
+            if not -float_info.max <= bound <= float_info.max:
+                if lower == upper:
+                    raise ValueError(
+                        "A fixed continuous bound must be a finite, exactly representable float"
+                    )
+                raise ValueError(f"{name} bound must be within the finite float range")
+        if lower > upper:
+            raise ValueError("The upper bound can not be smaller that the lower bound")
+        if lower == upper and float(lower) != lower:
+            raise ValueError(
+                "A fixed continuous bound must be a finite, exactly representable float"
+            )
+        sample_lower, sample_upper = self._sampling_bounds()
+        if sample_lower > sample_upper:
+            raise ValueError("A continuous interval must contain a representable float")
+        if self.distribution == "uniform" and not isfinite(sample_upper - sample_lower):
+            raise ValueError("A uniform continuous interval must have a finite span")
+        if self.distribution == "log-uniform" and lower <= 0:
+            raise ValueError(
+                f"lower bound must be greater than zero for the log-uniform distribution, got {lower} instead"
+            )
+
+    def _sampling_bounds(self):
+        lower, upper = float(self.lower), float(self.upper)
+        # An integer endpoint can lie between two representable floats.
+        if lower < self.lower:
+            lower = nextafter(lower, inf)
+        if upper > self.upper:
+            upper = nextafter(upper, -inf)
+        return lower, upper
 
     def __repr__(self) -> str:
         return (
@@ -202,16 +285,28 @@ class Continuous(BaseDimension):
             f"distribution={self.distribution!r})"
         )
 
+    def _clip_scalar(self, value):
+        if self.lower < value < self.upper:
+            return float(value)
+        # Keep NumPy's boundary semantics, including signed zero.
+        lower, upper = self._sampling_bounds()
+        return float(np.clip(value, lower, upper))
+
     def sample(self) -> float:
         """Sample a random value from the assigned distribution"""
 
-        if self.lower == self.upper:
-            return float(self.lower)
-        return self.rvs(
-            self.lower,
-            self.shifted_upper,
-            random_state=self.rng if self.rng is not None else check_random_state(None),
-        )
+        lower, upper = self._sampling_bounds()
+        if lower == upper:
+            return lower
+        rng = self.rng if self.rng is not None else check_random_state(None)
+        if self.distribution == "uniform":
+            sample = self.rvs(lower, upper - lower, random_state=rng)
+        elif np.log(lower) == np.log(upper):
+            # A logarithmic transform can lose the width of a valid interval.
+            sample = stats.uniform.rvs(lower, upper - lower, random_state=rng)
+        else:
+            sample = self.rvs(lower, upper, random_state=rng)
+        return sample if lower <= sample <= upper else self._clip_scalar(sample)
 
 
 class Categorical(BaseDimension):
@@ -275,19 +370,51 @@ class Categorical(BaseDimension):
 
     def _choice_index(self, value):
         """Resolve cloned estimator and container values to their original category."""
+        if type(value) in _NAN_CATEGORY_TYPES and value != value:
+            nan_key = _nan_category_key(value)
+            # Python's pickle creates a new float object for each NaN occurrence.
+            return next(
+                (
+                    index
+                    for index, choice in enumerate(self.choices)
+                    if nan_key == _nan_category_key(choice)
+                ),
+                None,
+            )
         for index, choice in enumerate(self.choices):
             if choice is value:
                 return index
-        if isinstance(value, (BaseEstimator, dict, list, tuple, np.ndarray)):
-            # Learned attributes are not part of a hyperparameter choice.
-            for index, choice in enumerate(self.choices):
-                if _same_config(value, choice):
-                    return index
-        else:
-            for index, choice in enumerate(self.choices):
-                if choice == value:
-                    return index
-        return None
+        if isinstance(value, BaseEstimator):
+            return self._estimator_choice_index(value)
+        compatible = None
+        for index, choice in enumerate(self.choices):
+            if _same_config(value, choice, strict_types=True) and (
+                _category_types(value) == _category_types(choice)
+            ):
+                return index
+            if compatible is None and _same_config(value, choice):
+                compatible = index
+        return compatible
+
+    def _estimator_choice_index(self, estimator):
+        # Reuse shallow constructor parameters during this lookup. Read them
+        # again on later calls so changes to choices are visible.
+        kind = type(estimator)
+        params = None
+        compatible = None
+        for index, choice in enumerate(self.choices):
+            if type(choice) is not kind:
+                continue
+            if params is None:
+                params = estimator.get_params(deep=False)
+            choice_params = choice.get_params(deep=False)
+            if _same_config(params, choice_params, strict_types=True) and (
+                _category_types(estimator) == _category_types(choice)
+            ):
+                return index
+            if compatible is None and _same_config(params, choice_params):
+                compatible = index
+        return compatible
 
     def sample(self) -> Any:
         """Sample a random value from the assigned distribution"""
@@ -336,6 +463,11 @@ def check_space(param_grid: dict = None):
                 f"    from sklearn_genetic.space import Categorical\n"
                 f'    param_grid = {{"{key}": Categorical([...])}}'
             )
+        if isinstance(value, Continuous):
+            try:
+                value._validate_bounds()
+            except ValueError as error:
+                raise ValueError(f"Invalid param_grid entry for '{key}': {error}") from error
 
 
 class Space(object):
@@ -355,6 +487,78 @@ class Space(object):
         check_space(param_grid)
 
         self.param_grid = param_grid
+
+    @cached_property
+    def _typed_categories(self):
+        # Keep archived cache keys for dimensions whose legacy keys are unambiguous.
+        typed = set()
+        for name, dimension in self.param_grid.items():
+            if not isinstance(dimension, Categorical):
+                continue
+            observed = {}
+            for choice in dimension.choices:
+                key = _hashable_key(choice)
+                previous = observed.setdefault(key, choice)
+                if previous is not choice and _category_types(previous) != _category_types(choice):
+                    typed.add(name)
+                    break
+        return typed
+
+    def _category_key(self, name, value):
+        if name in self._nan_categories:
+            nan_key = _nan_category_key(value)
+            if nan_key is not None:
+                return nan_key
+        key = _hashable_key(value)
+        return (key, _category_types(value)) if name in self._typed_categories else key
+
+    @cached_property
+    def _nan_categories(self):
+        return {
+            name
+            for name, dimension in self.param_grid.items()
+            if isinstance(dimension, Categorical) and any(map(_is_floating_nan, dimension.choices))
+        }
+
+    @cached_property
+    def _keyed_categories(self):
+        return self._typed_categories | self._nan_categories
+
+    def _candidate_key(self, values):
+        params = {}
+        for (name, dimension), value in zip(self.param_grid.items(), values, strict=True):
+            if isinstance(dimension, Categorical):
+                choice_index = dimension._choice_index(value)
+                if choice_index is not None:
+                    value = dimension.choices[choice_index]
+                if name in self._keyed_categories:
+                    value = self._category_key(name, value)
+            params[name] = value
+        return _hashable_key(tuple(sorted(params.items())))
+
+    def _population_key(self, values):
+        if self._keyed_categories:
+            return self._candidate_key(values)
+        return _hashable_key(tuple(values))
+
+    def _keyed_population_values(self, values):
+        return tuple(
+            self._category_key(name, value) if name in self._keyed_categories else value
+            for name, value in zip(self.param_grid, values)
+        )
+
+    def _rekey_nan_cache(self, cache):
+        if not cache or not self._nan_categories:
+            return cache
+        # Historical snapshots used non-reflexive floating-point values as keys.
+        # Retain the first recorded score when old aliases now resolve to one key.
+        restored = {}
+        for result in cache.values():
+            params = candidate_parameters(result["current_generation_params"])
+            restored.setdefault(
+                self._candidate_key(params[name] for name in self.param_grid), result
+            )
+        return restored
 
     def sample_warm_start(self, warm_start_values: dict):
         """
@@ -414,6 +618,21 @@ class Space(object):
                     f"warm_start_configs value {value!r} for '{name}' is outside "
                     f"its search space {dimension!r}."
                 )
+
+    @staticmethod
+    def _repair_value(dimension, value):
+        if isinstance(dimension, Integer):
+            if value is None:
+                return dimension.sample()
+            return dimension._round_and_clip(value)
+        if isinstance(dimension, Continuous):
+            if value is None:
+                return dimension.sample()
+            return dimension._clip_scalar(float(value))
+        if isinstance(dimension, Categorical):
+            index = dimension._choice_index(value)
+            return dimension.choices[index] if index is not None else dimension.sample()
+        return value
 
     @staticmethod
     def value_in_dimension(dimension, value) -> bool:

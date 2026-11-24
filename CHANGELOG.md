@@ -3,6 +3,507 @@
 Read the [development release notes](docs-vitepress/versions/latest/release-notes.md)
 for upgrade guidance and links to the API examples.
 
+## Unreleased
+
+### Feature selection
+
+- `GAFeatureSelectionCV(preserve_dataframe=True)` gives the wrapped estimator
+  pandas columns with their names and dtypes in CV, finalist validation,
+  refit and prediction. This supports fold-local preprocessing such as a
+  `ColumnTransformer` with dtype-based selectors.
+- `PopulationConfig(warm_start_masks=...)` lets `GAFeatureSelectionCV` try
+  known feature subsets first on all five built-in backends. Each fresh search
+  evaluates those masks on its own CV splits.
+
+### Cross-validation
+
+- Categorical matching compares object-array contents recursively when
+  resolving copied estimator configurations. Nested arrays can match and
+  choices with different scalar types retain their strict matching priority.
+- Searches with an optional target keep `y` omitted during CV, refit and
+  scoring. Feature selection validates lists and pandas DataFrames in this
+  mode before slicing candidate columns.
+- New unlabeled outlier searches call detectors and scorers without
+  synthetic targets. Compatible older checkpoints keep the target policy
+  used to produce their saved scores.
+- `GASearchCV` publishes the refitted estimator only after a successful
+  full-data fit. A failed refit leaves the recorded CV results available.
+- Feature selectors in pipelines can receive groups automatically when only
+  the active finalist splitter requests them.
+- Finalist validation preserves each recorded fold score when the two
+  ordered fold sequences match, including repeated train/test pairs.
+- Finalist validation can reuse matching Boolean train/test masks with
+  `final_selection="reuse_folds"`, including when the other stage uses the
+  same ordered row positions. Valid negative positions also match their
+  equivalent row positions.
+- Both estimators accept a custom `split(X, y)` method alongside an active
+  search or finalist splitter that accepts `groups`.
+- A `GASearchCV` group alias supplies its search and finalist splitters in
+  nested validation, including when the outer splitter requests plain `groups`.
+- `GAFeatureSelectionCV` uses the group request from a splitter such as
+  `GroupKFold` when it runs inside a pipeline with metadata routing enabled.
+  Explicit group aliases on the selector are supported.
+- Empty search or finalist CV reports the setting that needs a train/test
+  split. An empty finalist list or tuple is rejected before candidate search.
+- Explicit `cv` and `final_selection_cv` lists and tuples report malformed
+  train/test pairs, out-of-range positions and wrong-length Boolean masks
+  before candidate search.
+- Both estimators report a configuration error when a callable scorer
+  returns multiple scores. Use a dictionary of named scorers to track
+  multiple metrics.
+- Both search estimators reject `n_jobs=0` before candidate evaluation,
+  including when the CV budget allows only one candidate.
+- `GASearchCV` honors `set_fit_request(groups=...)` in pipelines and outer
+  cross-validation, including when only the finalist splitter needs groups.
+- `GASearchCV` retains estimator parameters named like CV diagnostics, such
+  as `fit_time` or `test_accuracy`, when reporting and refitting candidates.
+  New checkpoints retain both values. Resume rejects older records where
+  the CV fields overwrote the original parameters.
+- Candidate workers in both search estimators inherit the active scikit-learn
+  configuration, including metadata routing for separate training and scoring
+  weights. This applies to reused local threads and configured joblib backends.
+- `GAFeatureSelectionCV` exposes estimator and scorer metadata requests
+  to pipelines and external validation. It routes them during both
+  `fit` and `fit_transform`.
+- Both search estimators accept separate metadata requests for training
+  and scoring during CV, including aliases. The final refit receives
+  only metadata requested by the fitted estimator's `fit` method.
+- `GAFeatureSelectionCV.score` accepts sample weights for its selected
+  scorer. Pipelines and external cross-validation can route score weights
+  through `set_score_request`.
+- With refit enabled, `GAFeatureSelectionCV` exposes its wrapped estimator's
+  role to scikit-learn. External classifier CV can stratify and use ROC AUC,
+  and fitted classifiers expose `classes_`. Detectors with `score_samples`
+  expose per-sample scores on the selected features.
+- `GAFeatureSelectionCV` preserves `NaN` in input features during fit,
+  transformation, inverse transformation and inference when the estimator
+  advertises `allow_nan`.
+- `GAFeatureSelectionCV` reports its wrapped estimator's sparse input
+  support through scikit-learn's estimator tags, including inside pipelines.
+- `GAFeatureSelectionCV` preserves categorical input for compatible
+  estimators and pipelines whose first active step supports categories.
+- `GAFeatureSelectionCV` detects estimators that expect precomputed kernels
+  or distances and reports the input mismatch before evaluating masks.
+- `GAFeatureSelectionCV` accepts multi-output regression and multilabel
+  targets when the wrapped estimator supports them. Estimators such as
+  `MultiOutputRegressor` receive a two-dimensional target even with one column.
+- CatCMAwM rescales very large continuous losses and prior boundary-penalty
+  spreads together. The solver checkpoint retains the scale and
+  `cv_results_` continues to report the original scores.
+- SciPy preserves the ordering of extreme finite losses across generations.
+  Its stopping check handles very large plateaus and distinguishes tiny
+  unequal losses. Replay verifies saved generations before applying the check.
+- Both search estimators preserve the mean and dispersion of extreme finite
+  fold scores in `cv_results_`. Search and finalist selection use the same
+  overflow-safe fold mean.
+- Nevergrad compresses extreme finite solver losses and assigns failed fits
+  a higher loss. Cross-validation results retain the original scores.
+- CatCMAwM keeps sampling when failed candidate fits leave its continuous
+  boundary penalty without a usable lower loss quartile.
+- Feature selection uses scikit-learn's per-fold clones directly during
+  candidate evaluation. Candidate logging retains its own estimator clone.
+- SciPy keeps failed candidates at infinite loss, avoiding overflow in
+  convergence checks. Solver requests for an all-invalid population's
+  existing losses reuse those losses without additional CV.
+- With numeric `error_score`, a candidate that fails to fit every CV fold
+  emits `FitFailedWarning` and ranks behind candidates that fitted. Searches
+  with no successful candidate fits raise a configuration error.
+- The default outlier scorer uses the fitted detector to evaluate validation
+  rows. Its label fallback calls `predict`, and detectors that require fitting
+  anew for labels get a configuration error.
+- Both search estimators accept `objective_metric` to select the optimization
+  metric in a multi-metric search with `refit=False` or callable `refit`.
+- A callable `refit` selects a candidate row from `cv_results_`. In a
+  multi-metric search, the refitted estimator's `score` uses the named objective.
+- Both search estimators honor explicit CV splitters and folds for outlier
+  detectors, including grouped and stratified validation. Checkpoint resumes
+  retain the folds used to score saved candidates.
+- `GAFeatureSelectionCV.score` can apply configured and default anomaly
+  scorers after refit, including when the detector has no `score` method.
+- Search and finalist validation preserve each fold when a custom splitter or
+  iterable reuses its index arrays.
+
+### Fit diagnostics
+
+- Both searches retain `cv_results_` and `history` when every candidate
+  fails to fit. The search raises before finalist validation or refit.
+- Automatic finalist selection keeps completed evaluations and elapsed time
+  when validation raises. The result has no selected finalist in this case,
+  and `plot_finalist_scores` can show the recorded evaluations.
+- Candidate logs use the row position in `cv_results_` as `index`, including
+  rows that reuse cached scores. Resuming an older checkpoint also restores
+  the row positions.
+- `cv_results_dataframe(top_k=...)` returns a ranked shortlist. The feature
+  selector converts masks to parameter lists only for the returned rows.
+- `GASearchCV` accepts a one-parameter grid without a generic warning.
+  Backend-specific validation still applies.
+- `GASearchCV.fit` and `GAFeatureSelectionCV.fit` raise a clear error before
+  candidate evaluation when `y` is missing and the estimator or a standard
+  scikit-learn pipeline step requires it.
+- `plot_finalist_scores` and `SearchPlotter.finalist_scores()` compare search
+  and finalist CV scores and identify the candidate selected for refit.
+- Both estimators expose `search_time_` when the optimizer returns or raises.
+  It measures elapsed search seconds from the current `fit`, including callbacks
+  and any optimizer checkpoint replay. Search, finalist validation, and refit
+  durations use the same high-resolution elapsed clock as the optimizer catalog.
+- `plot_fit_work(unit="seconds")` and `SearchPlotter.fit_work(unit="seconds")`
+  chart elapsed search, finalist validation, and refit time. Phases without a
+  saved duration are marked `No timing`.
+- The optimizer catalog exports elapsed search time. Its capped pair reports
+  give search and full-data refit durations for both sides. Capped reports
+  also identify which runs reached the CV target or confirmed finite-space
+  coverage.
+- The optimizer catalog accepts `--cv-checkpoints` to report CV scores,
+  holdout scores, elapsed time, and pair completion at several call counts
+  from one run per optimizer, case, seed, and cache setting.
+- Each entry in `final_selection_results_["candidates"]` reports actual
+  CV calls and fold fits, including any retry when scores cannot be reused.
+- `plot_cv_scores` can display selected `cv_results_` rows with incomplete
+  fold scores. Candidate labels give the number of finite folds or mark
+  candidates flagged as `all_fits_failed`.
+- Fold score heatmaps use a separate marker for candidates whose estimator
+  failed to fit every fold, based on `cv_results_["all_fits_failed"]`.
+- Hyperparameter search overviews display recorded fold scores when the
+  requested metric has no finite candidate mean.
+- The search overview keeps available plots when saved searches lack
+  convergence, diversity or optimizer-event metrics.
+- `LivePlot` and `plot_generation_metrics` retain generation positions and
+  leave gaps when older checkpoint rows lack a plotted metric.
+- Fitness evolution leaves a gap between points on the CV axis when an
+  intervening generation has no recorded call count.
+- `plot_search_space` accepts `cv_results_` columns and uses the optimization
+  score in multi-metric searches. Parameter labels remain distinct from CV
+  diagnostics when names overlap.
+- `plot_cv_fold_scores` and `SearchPlotter.cv_fold_scores()` show the recorded
+  score for each candidate and fold, including non-finite values. Fold plots
+  keep similarly named scorers separate.
+- Both search estimators warn when no candidate has a finite mean CV score
+  for the optimization metric.
+- Both search estimators expose `cv_results_["all_fits_failed"]` to identify
+  candidates whose estimator failed to fit every search fold.
+- Both search estimators accept `columns` in `cv_results_dataframe()` to
+  return a narrower rank-sorted table. Feature selection only converts
+  masks to candidate parameter dictionaries when the table includes `params`.
+- `ModelCheckpoint` reports fresh search CV calls retained in a resumable
+  snapshot and calls outside it for the latest fit.
+- `plot_fitness_evolution` marks partial-generation scores with hollow diamonds,
+  including on the cumulative CV axis and on grouped bars.
+- `plot_fit_work` and `SearchPlotter.fit_work()` show fresh fold fits, the
+  final refit and reused finalist scores for the latest call to `fit`.
+- Callable refit in `GAFeatureSelectionCV` compares its chosen row with the
+  archived winner that standard refit would use, including ties in CV score.
+- DEAP fitness sharing computes symmetric distances for NumPy integer genes
+  and keeps temporary selection scores finite when shifting extreme CV scores.
+- `Continuous` rejects nonfinite bounds, intervals containing no representable
+  floats and uniform intervals with overflowing spans. Sampling and DEAP
+  operators keep valid log-uniform intervals usable when their logarithms
+  round together.
+- Replacing `OptimizationConfig` through `set_params` updates both search
+  estimators and preserves cloning. An explicit finalist CV splitter takes
+  precedence until reset to `None`. Fits validate updated controls before CV.
+- Replacing `EvolutionConfig` through `set_params` updates both estimators'
+  evolutionary controls and preserves cloning with DEAP schedules. Fresh
+  DEAP fits apply updated probabilities, and checkpoint resumes rebuild the
+  saved schedules before restoring their progress.
+- Replacing `RuntimeConfig` through `set_params` updates both estimators'
+  execution settings and preserves cloning. Fits validate the resulting
+  parallel strategy and error policy before running CV.
+- Replacing `PopulationConfig` through `set_params` updates the initializer for
+  both estimators. The updated estimators can be cloned before fitting.
+- A new call to `fit` clears the prior search's counters, coverage flag,
+  scoring metadata and candidate archives before validation. Feature selection
+  also drops the prior column names before checking the new inputs.
+- `GAFeatureSelectionCV` validates input names and shape for prediction and
+  scoring, then passes the selected columns to the refitted estimator in
+  array or sparse form, independent of `set_output`.
+- `GAFeatureSelectionCV` preserves CSR and CSC input formats when predicting
+  and scoring. CSC inputs no longer require conversion before selecting columns.
+- External engines compare finite observed scores directly, even when the
+  gap between them exceeds the floating-point range. An unrepresentable
+  `fitness_improvement` is recorded as signed infinity. `DeltaThreshold`
+  compares overflowing finite ranges without losing the stopping decision.
+- Score-based stopping callbacks accept `fitness_best_observed`, including
+  evaluations outside the elite archive. Missing legacy history values delay
+  the decision until its window is available.
+- `ConsecutiveStopping` and `DeltaThreshold` use the same history window
+  for Python and NumPy integer counts, including unsigned NumPy scalars.
+- All engines validate population size, generation count and archive size
+  before candidate CV. NumPy unsigned integer counts work across engines.
+- External optimizers reuse candidate keys when maintaining a top-k
+  hyperparameter archive with multiple entries.
+- `TimerStopping`, `ThresholdStopping`, and `DeltaThreshold` raise a
+  configuration error for `NaN` limits or thresholds.
+- `TimerStopping` measures elapsed search time with a monotonic clock so
+  system clock adjustments leave the deadline intact.
+- DEAP keeps the last recorded generation if the time limit prevents every
+  evaluation in the next generation, including during checkpoint resume.
+- An interruption handled during DEAP evolution ends the search at once and
+  skips local refinement. The estimator uses candidates recorded so far.
+- DEAP stops candidate evaluation when an `on_step` callback requests a stop,
+  including when local refinement is enabled. Configured finalist validation
+  and refit still run.
+- DEAP reuses usable checkpoint results when the time limit has already
+  expired at resume, without starting a new candidate evaluation.
+- If the time limit expires before a resumed DEAP search evaluates any
+  candidates, `search_space_exhausted_` reports coverage from the restored cache.
+- DEAP reports a complete generation when the time limit expires after its
+  last evaluation. The time limit also stops further generations when a
+  custom timer leaves its step callback running.
+- Fitness bar charts show generations with the same CV cost side by side in
+  generation order.
+- `ThresholdStopping` follows the search direction for score metrics.
+  Score-based stopping callbacks wait for finite values in their window.
+- Generation summaries use finite population fitness values and report
+  `finite_fitness_count`. Fitness plots leave gaps where scores are unavailable,
+  including when applying a rolling window.
+- Generation summaries preserve the scale of extreme finite population scores
+  when computing their mean and standard deviation for history and callbacks.
+- DEAP reports `history["partial"]` when a timer or CV budget interrupts a
+  generation, matching the other bundled engines.
+- Both search estimators expose generation records through indexing and
+  iteration with `refit=False`. Their length counts the recorded generations.
+- `plot_fitness_evolution(x="cv_calls")` plots against the cumulative number
+  of candidate CV evaluations.
+- `GAFeatureSelectionCV` can transform data and report selected feature names
+  with `refit=False`, including as a transformer in a scikit-learn pipeline.
+- With `refit=False`, both search estimators report the selected candidate's
+  search row and objective score. `GASearchCV` also reports its parameters.
+- `GAFeatureSelectionCV.n_features_` reports the selected feature count after
+  search, including when `refit=False`.
+- `cv_results_dataframe(preserve_index=True)` keeps the original candidate
+  row labels for lookup by `best_index_` in both search estimators.
+- `GAFeatureSelectionCV` exposes the search row and CV score for the refitted
+  mask when that row is available.
+- Both search estimators expose `fit_counts_` after fitting. It reports fresh
+  search, finalist and refit work for that call, including on checkpoint
+  resume, and counts reused finalist fold scores separately.
+- Finalist validation narrows potential reusable folds by their validation
+  indices before comparing every index. When search and finalist validation
+  share the same arrays, the matcher skips repeated index comparisons.
+
+### Checkpoint compatibility
+
+- Bundled optimizer resumes identify malformed generation records, mismatched
+  candidate counts, and invalid solver state before starting new CV.
+- `ModelCheckpoint(every_n_generations=N)` can space out snapshot writes. Its
+  counters report how many fresh CV calls the latest file can recover.
+- `LogbookSaver` includes DEAP local refinement rows in its final file,
+  including candidates whose scores came from the cache.
+- `LogbookSaver` replaces a regular file only after joblib finishes writing
+  the snapshot. A failed write keeps the previous log and reports the path
+  and error.
+- DEAP saves completed local refinement in the latest checkpoint, including
+  the candidate scores and cumulative CV count. A failed write keeps the
+  preceding generation snapshot.
+- DEAP skips repeat candidate evaluation on resume when a verified
+  checkpoint has complete cached coverage and uses standard refitting or
+  `refit=False`, with finalist validation inactive.
+- Resumable optimizer checkpoints compare explicit Boolean fold masks by
+  value so equivalent copies can resume from the same saved search.
+- DEAP resume recovers the cumulative CV count from the saved generation log
+  when the runtime count is missing. Missing auxiliary counters start at
+  zero for the resumed work.
+- New checkpoints record scikit-learn's metadata routing setting. Resume
+  rejects a changed setting before using saved CV scores. Older snapshots
+  remain readable and resumable under the existing compatibility rules.
+- Incomplete optimizer checkpoints report the missing resume fields and file
+  path before candidate evaluation.
+- Resumable optimizer checkpoints also validate the auxiliary fit counters
+  before starting CV. Errors name missing or invalid counters.
+- Checkpoint resume rejects invalid saved search CV counts and detects
+  disagreement with the last recorded generation before evaluation.
+- Searches reject empty or unrecognized checkpoint payloads before candidate
+  evaluation and preserve the existing file.
+- `ModelCheckpoint` keeps the previous file and lets the search continue
+  when serialization raises `ValueError` or `RecursionError`.
+- Loading a saved search replaces the receiving instance's fitted results
+  with those in the file. A missing logbook entry in a legacy save raises
+  before changing the receiving instance.
+- Direct categorical choices containing Python float or NumPy float16, float32
+  and float64 NaNs keep their type and bit pattern when resuming. Restored
+  searches reuse cached CV scores for these choices.
+- DEAP serializes checkpoint logs directly and can save custom report
+  metadata that supports pickle without supporting deep copies.
+- DEAP restores matching finalist fold scores with `final_selection="reuse_folds"`
+  when the checkpoint verifies the inputs and preserves the original fold indices.
+- DEAP checkpoints restore the saved search direction, CV error handling,
+  train-score setting and feature limit.
+- New DEAP checkpoints verify the training inputs before reuse of saved scores
+  and preserve the original folds from explicit cross-validation splitters.
+- Bundled optimizer checkpoints accept explicit search and finalist CV folds
+  with the same ordered NumPy indices when estimator cloning copies a shared fold.
+- Shared-runtime checkpoints fingerprint CV selectors made of Python integers
+  and booleans directly. Explicit selector order and types are verified on
+  resume, including for files with older configuration fingerprints.
+
+### Search performance
+
+- pymoo passes repaired feature masks to the evaluator as immutable integer
+  tuples, avoiding an intermediate list for each proposal.
+- Optimizer adapters can pass feature masks as tuples of Python integers.
+  The runtime reuses the tuple and validates repeated references once per batch.
+- On sparse inputs with at least 4,096 columns, native feature evaluation
+  can build a writable Boolean mask directly from the tuple prepared for
+  a cache lookup.
+- `GASearchCV` can use prepared candidate rows directly in batches with
+  native integer dimensions and the standard repair hooks.
+- CV fold heatmaps reuse the stable rank cutoff for short lists from long
+  histories. Candidate score and fold distribution plots read the columns
+  they display.
+- Short `cv_results_dataframe(top_k=...)` queries can use a rank cutoff
+  to sort only the leading candidates. Ties retain evaluation order.
+- `GASearchCV` reads parameter names once when building `cv_results_` and
+  reuses the recorded values for single-parameter grids.
+- Both searches prepare candidate copies as the evaluator consumes the batch,
+  reducing temporary memory for large populations.
+- pymoo, Nevergrad and CatCMAwM reuse immutable feature masks from the
+  initial population until those masks are dispatched for evaluation.
+- DEAP evaluates the built-in initial feature masks directly with no
+  callbacks or with the standard `CVBudgetStopping` callback.
+- The built-in feature initializers reuse masks that already satisfy the
+  feature bounds, saving a second normalization pass during setup.
+- With a CV call budget and no timer, both searches prepare cache keys only
+  through the first proposal that needs another call. Earlier proposals
+  with cached scores keep their original row order.
+- Matching a copied estimator to an estimator-valued categorical choice
+  reuses its constructor parameters within each lookup.
+- Search uses the smallest CV budget set by the callbacks after `on_start`
+  and checks the limit before dispatching candidates.
+- Feature finalist validation uses scikit-learn's per-fold estimator clones
+  directly, matching the feature search phase.
+- Finite-space stopping uses the cache setting after the `on_start` callback
+  runs, including on resume.
+- Finite categorical coverage counts floating-point `NaN` values with the
+  same identity as the candidate cache, so a fully evaluated space can stop.
+- Both searches track pending results by a shared candidate key within each
+  evaluation batch, reducing repeated hashing and temporary key storage.
+- Feature selection reuses validated integer masks during external optimizer
+  evaluation, avoiding a second mask normalization pass.
+- DEAP feature selection reuses the random draw function across columns in
+  uniform crossover, preserving the sequence of masks from each seed.
+- SciPy, Nevergrad, CMA-ES and pymoo reuse continuous coordinate bounds and
+  logarithmic spans across proposals. DEAP's differential evolution reuses
+  them within each generation.
+- Smart initialization reuses continuous coordinate bounds across candidates,
+  including the logarithmic span for `log-uniform` parameters.
+- Smart initialization decodes Latin hypercube samples for integer parameters
+  with scalar arithmetic and reads fixed integers directly from their bounds.
+- `GASearchCV` skips copying candidate parameters made entirely of immutable
+  Python scalars. Mutable choices and estimator-valued parameters still
+  use scikit-learn's cloning rules.
+- Both search estimators summarize finite fold timings directly when building
+  `cv_results_`. Recorded missing timing values retain their existing handling.
+- Both search estimators skip candidate worker dispatch when only one search
+  CV call remains. The batch is counted as serial and fold parallelism still
+  follows the configured strategy.
+- Feature selection counts Boolean masks directly when formatting CV results
+  and retains the existing sums for legacy mask formats.
+- Cached feature selection batches share the lookup key for repeated masks,
+  reducing temporary allocations while retaining all completed proposal rows.
+- Uncached batches prepare only the candidates dispatched within the search
+  limits, reducing bookkeeping allocations for oversized batches.
+- Nevergrad decodes binary feature proposals by generation, retaining the
+  seeded repair rules and the checkpoint format.
+- pymoo builds the initial binary population directly and repairs each new batch
+  of masks together, preserving seeded proposals and checkpoint replay.
+- CatCMAwM computes binary starting probabilities and decodes feature masks in
+  NumPy batches, preserving the elite counts and mask repair rules.
+- SciPy, pymoo, Nevergrad and CatCMAwM reuse the feature selector's immutable
+  initial masks, avoiding a second validation pass over those masks.
+- Both search estimators copy candidates into private evaluation lists only
+  when dispatching their batch, reducing allocation for proposals beyond an
+  evaluation limit.
+- Smart hyperparameter initialization fills available population slots with
+  distinct warm-start candidates in input order, including candidates supplied
+  after a prefix with duplicates.
+- Smart hyperparameter initialization compares warm starts and estimator
+  defaults using the values cross-validation receives. Equivalent estimator
+  clones and continuous values that round together share one initial slot.
+- SciPy and pymoo compute binary feature proposal signatures faster when writing
+  and replaying checkpoints. The saved signatures and evaluations remain compatible.
+- Finalist validation can combine cached small integers with large integers
+  from new folds without repeating the full validation.
+- Finalist validation can reuse a subset of large integer scores when every
+  requested fold matches and the search retained an integer score array.
+- Finalist validation can reuse the original score array, including large
+  scores, when every search fold matches one-to-one in the original order.
+- Finalist validation can reuse a matching fold with an undefined `NaN`
+  score and keeps finalists with undefined mean scores ineligible.
+- DEAP fitness sharing packs wide binary feature masks and computes each
+  pairwise distance once while preserving the order of the crowding sums.
+- Large tied finalist histories reuse the original row order for hyperparameter
+  search and compare denser feature masks in bounded batches.
+- Large finalist searches can sort a leading group of ranks while keeping
+  complete ties and falling back when more distinct candidates are needed.
+- Cached CV score ranks use the multiplicity of each shared summary,
+  preserving tied ranks while sorting fewer values.
+- When many candidates reuse cached scores, `cv_results_` summarizes the
+  shared fold arrays once and restores the original row order for both searches.
+  Feature selection also reuses the counts of shared Boolean masks.
+- `scipy_optimizer(stop_on_convergence=False)` lets either search continue
+  through equal population losses, subject to generation, coverage and
+  callback limits. Checkpoints replay with the configured option.
+- Hyperparameter repair traverses dimensions directly and clips native Python
+  integers without converting them. Candidate results keep the grid's order.
+- DEAP searches use internal individual types and preserve entries in the
+  caller's DEAP creator registry, including after initialization fails.
+- Categorical searches accept missing-value markers such as `pandas.NA`
+  without treating ambiguous equality as a match or aborting coverage checks.
+- Hyperparameter repair and optimizer decoding skip scalar NumPy clipping
+  when a continuous proposal already lies strictly inside its bounds.
+- Nevergrad reads binary choice indices directly during feature selection,
+  reducing mask conversion work on wide inputs.
+- `GAFeatureSelectionCV` accepts `population_initializer="spread"` to try a
+  wider range of subset sizes early when the CV budget is small.
+- `CVBudgetStopping` caps fresh search CV calls, including within a generation
+  and during DEAP local refinement. It accounts for cache hits and resume.
+- With `refit=False`, the bundled engines stop proposing cached candidates
+  after finite-space coverage even when finalist validation is configured.
+- Bundled optimizer adapters validate integer feature masks in bulk before
+  evaluation, reducing overhead on wide feature sets.
+- Categorical values that compare equal but have different declared types
+  retain separate cached scores, coverage entries and finalists.
+- DEAP counts local refinement toward finite-space coverage and skips remaining
+  cached neighbor proposals once coverage is complete in search-only runs.
+- Feature selection normalizes list-backed feature masks in bulk and counts
+  selected features once during repair.
+- Both search estimators reuse each proposal's cache key within its batch and
+  reduce the score statistics in `cv_results_` in bounded NumPy batches.
+- Both search estimators reuse those batches to populate per-fold score columns
+  in `cv_results_`, reducing formatting time for long or many-fold searches.
+- Both search estimators reuse worker threads across parallel candidate batches
+  when joblib selects its standard local thread backend.
+- SciPy, Nevergrad, CatCMAwM and pymoo stop at a completed generation after
+  covering a finite search space when caching is enabled and finalist
+  selection is off. Exact resume restores coverage from the checkpoint.
+
+### Finalist selection
+
+- Both estimators validate the finalist count at fit time, including after
+  `set_params`. When finalists will run, invalid CV types and integer fold
+  counts outside the sample limits raise before candidate cross-validation.
+- Repeated feature masks with the same search score no longer change which
+  distinct tied masks are re-evaluated during finalist selection.
+- A new fit clears the previous fitted winner and finalist results. After
+  `fit` with `refit=False`, both searches expose results from the current CV
+  run without exposing a fitted estimator from an earlier run.
+
+### Documentation and package metadata
+
+- With `--public-refit`, the optimizer catalog reports the estimator's
+  `best_score_` for the selected feature mask, including repeated evaluations.
+- The optimizer catalog accepts `--cases`, `--engines` and `--seeds` for
+  reproducing selected comparisons and trying new data splits. A subset
+  needs only the optional engines and references it runs.
+- The optimizer catalog can stop each fit at a fixed CV budget and record
+  the candidate returned by the estimator and its total fit time.
+- The optimizer catalog can export engine/reference pairs at their shared CV
+  budget, including search time and test scores for the winners at that budget.
+- The search comparison guides link to the matched-budget optimizer catalog.
+  Package metadata adds search terms and links to the benchmarks and changelog.
+- The troubleshooting guide explains cache reuse, batch duplicates and fresh
+  fit counts after a checkpoint resume.
+
 ## 0.16.0
 
 ### Optimization backends
@@ -266,7 +767,7 @@ for upgrade guidance and links to the API examples.
 ## 0.11.0
 
 - Added `use_cache` parameter (default `True`) to skip re-evaluating already-seen configurations.
-- Added `warm_start_configs` to `GAFeatureSelectionCV`.
+- Added `warm_start_configs` to `GASearchCV`.
 - Introduced novelty search strategy to `GASearchCV`.
 
 ## 0.10.0

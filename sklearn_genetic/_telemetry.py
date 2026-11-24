@@ -2,11 +2,15 @@
 
 from collections import Counter
 from itertools import repeat
+from math import sqrt
 from operator import is_
 
 import numpy as np
 
 from .utils.tools import _hashable_key
+from .utils._score_statistics import scaled_score_moments, score_scale_limits
+
+POPULATION_FITNESS_FIELDS = ("fitness", "fitness_std", "fitness_max", "fitness_min")
 
 TELEMETRY_FIELDS = [
     "fitness_best",
@@ -134,12 +138,46 @@ def _is_fitness_improvement(candidate, best, primary_weight):
 def _fitness_delta(candidate, best, primary_weight):
     if best is None:
         return 0.0
+    if np.isinf(candidate) and candidate == best:
+        return np.nan
 
-    delta = candidate - best
+    # Retain an infinite diagnostic if the gap exceeds the score dtype's range.
+    with np.errstate(over="ignore"):
+        delta = candidate - best
     return delta if primary_weight >= 0 else -delta
 
 
-def _population_diversity(population):
+def population_fitness_stats(fitnesses):
+    """Summarize finite primary scores while retaining column-wise reductions."""
+    scores = np.asarray(fitnesses)
+    finite = np.isfinite(scores[:, 0] if scores.size else scores)
+    count = int(finite.sum())
+    if not count:
+        return {**dict.fromkeys(POPULATION_FITNESS_FIELDS, np.nan), "finite_fitness_count": 0}
+    if count < len(scores):
+        scores = scores[finite]
+
+    maximum = np.max(scores, axis=0)[0]
+    minimum = np.min(scores, axis=0)[0]
+    scale = max(abs(maximum), abs(minimum)) if scores.dtype.kind == "f" else 0.0
+    _, lower, upper = score_scale_limits(scores.dtype) if scale else (0.0, 0.0, np.inf)
+    if scale and (scale < lower or scale >= upper / sqrt(count)):
+        average, deviation = scaled_score_moments(scores[:, 0], scale)
+    else:
+        average = np.mean(scores, axis=0)[0]
+        deviation = np.std(scores, axis=0)[0]
+    return {
+        "fitness": average,
+        "fitness_std": deviation,
+        "fitness_max": maximum,
+        "fitness_min": minimum,
+        "finite_fitness_count": count,
+    }
+
+
+def _population_diversity(population, space=None):
+    if space is not None and space._keyed_categories:
+        population = [space._keyed_population_values(individual) for individual in population]
     population_size = len(population)
     if population_size == 0:
         return {

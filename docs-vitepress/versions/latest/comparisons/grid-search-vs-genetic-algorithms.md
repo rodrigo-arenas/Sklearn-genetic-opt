@@ -594,6 +594,8 @@ A common pattern: run `RandomizedSearchCV` with 30 evaluations as a quick baseli
 
 - [When to Use sklearn-genetic-opt](../guide/when-to-use) — the concise decision guide with a 7-parameter example
 - [Benchmarks](../benchmarks/) — full Bayesmark results: honest wins and losses across multiple datasets and optimizers
+- [Optimizer comparisons at matched CV cost](../benchmarks/optimizer-catalog#compare-with-random-search-and-optuna-tpe)
+  compare actual cross-validation calls, elapsed time and held-out scores.
 - [Comparing Search Methods (Example)](../examples/sklearn-comparison) — fully reproducible side-by-side code with output
 - [How Hyperparameter Optimization Works](../guide/how-hyperparameter-optimization-works) — conceptual introduction to all four strategies
 - [Advanced Optimizer Control](../guide/advanced-optimizer-control) — diversity control, fitness sharing, local search, and adaptive schedules that give `GASearchCV` its edge on harder problems

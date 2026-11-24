@@ -88,4 +88,7 @@ print(search.best_params_)
 
 - [When to Use](./guide/when-to-use)
 - [Basic Usage](./guide/basic-usage)
+- [Compare Optimization Backends at Matched CV Budgets](./benchmarks/optimizer-catalog)
+- [Compare Search and Finalist Scores](./examples/plotting-gallery#finalist-score-comparison)
+- [Compare Optuna TPE and GASearchCV](./comparisons/optuna-vs-sklearn-genetic-opt)
 - [Troubleshooting](./guide/troubleshooting)

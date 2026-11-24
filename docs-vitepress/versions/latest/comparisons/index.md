@@ -18,7 +18,7 @@ Each page shows **when sklearn-genetic-opt wins and when it doesn't**. If a comp
 | Page | What it answers |
 |------|----------------|
 | [Grid Search vs Random Search vs Bayesian vs Genetic Algorithms](./grid-search-vs-genetic-algorithms) | Which method to use and why — with a fair benchmark, code for all four methods, and an honest breakdown of each method's failure modes |
-| [Optuna vs sklearn-genetic-opt](./optuna-vs-sklearn-genetic-opt) | Head-to-head: Bayesian optimization (TPE) vs genetic algorithms — with benchmarks, code examples for the same problem, and an honest decision guide including when Optuna wins |
+| [Optuna vs sklearn-genetic-opt](./optuna-vs-sklearn-genetic-opt) | Compare Optuna TPE with DEAP on the same scikit-learn folds and observed CV budget. See when to use conditional trials or a scikit-learn search estimator. |
 
 ## A Note on Honest Comparisons
 

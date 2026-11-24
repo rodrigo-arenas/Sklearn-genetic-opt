@@ -17,8 +17,9 @@ except ModuleNotFoundError:  # noqa
 
 from .genetic_search import GAFeatureSelectionCV
 from .callbacks.base import BaseCallback
-from .parameters import Metrics
-from .evaluation import candidate_records
+from .parameters import FITNESS_HISTORY_METRICS as _FITNESS_METRICS
+from .evaluation import candidate_parameters, candidate_records
+from ._base import _short_cv_positions
 
 """
 This module contains useful plotting helpers to explore optimization results.
@@ -38,7 +39,10 @@ _CONTROL_FIELDS = [
     "fitness_sharing_applied",
 ]
 _CONVERGENCE_FIELDS = ["fitness_best", "fitness", "fitness_max", "fitness_min"]
-_FITNESS_METRICS = [*Metrics.list(), "fitness_best_observed"]
+_FITNESS_AXES = {
+    "generation": ("gen", "Generation"),
+    "cv_calls": ("cross_validate_calls", "Candidate CV calls"),
+}
 _DIVERSITY_FIELDS = ["unique_individual_ratio", "genotype_diversity"]
 _STAGNATION_FIELD = "stagnation_generations"
 _EVENT_FIELDS = [
@@ -150,12 +154,14 @@ def _std_metric_column(estimator, metric=None):
 
 def _split_metric_columns(estimator, metric=None):
     metric = metric or getattr(estimator, "refit_metric", "score")
-    columns = [
-        column
-        for column in getattr(estimator, "cv_results_", {})
-        if column.startswith("split") and column.endswith(f"_test_{metric}")
-    ]
-    return sorted(columns, key=lambda column: int(column.split("_", 1)[0].replace("split", "")))
+    suffix = f"_test_{metric}"
+    columns = []
+    for column in getattr(estimator, "cv_results_", {}):
+        if column.startswith("split") and column.endswith(suffix):
+            fold = column[5 : -len(suffix)]
+            if fold.isdecimal():
+                columns.append((int(fold), column))
+    return [column for _, column in sorted(columns)]
 
 
 def _format_candidate_value(value, float_precision=3):
@@ -238,10 +244,27 @@ def _validate_top_k(top_k):
         raise ValueError("top_k must be a positive integer")
 
 
-def _candidate_frame(estimator, metric=None, top_k=None, sort=True):
+def _candidate_row_positions(candidate_indices, n_rows):
+    indices = _as_list(candidate_indices)
+    if not indices or any(
+        isinstance(i, (bool, np.bool_))
+        or not isinstance(i, (int, np.integer))
+        or not 0 <= i < n_rows
+        for i in indices
+    ):
+        raise ValueError("candidate_indices must contain valid row positions in cv_results_")
+    return indices
+
+
+def _candidate_frame(estimator, metric=None, top_k=None, sort=True, *, extra_columns=()):
     _validate_top_k(top_k)
 
-    frame, score_column, scores = _score_values(estimator, metric=metric)
+    _require_fitted(estimator, "cv_results_")
+    score_column = _metric_column(estimator, metric=metric)
+    fields = (score_column, "params", "n_features", *extra_columns)
+    data = estimator.cv_results_
+    frame = pd.DataFrame({name: data[name] for name in fields if name in data})
+    scores = pd.to_numeric(frame[score_column], errors="coerce")
     frame[score_column] = scores
     candidates = frame.loc[np.isfinite(scores)]
 
@@ -297,7 +320,10 @@ def _plottable_values(values):
     for value in values:
         if isinstance(value, (list, tuple, np.ndarray)):
             array = np.asarray(value, dtype=float)
-            normalized.append(float(np.nanmean(array)) if array.size else np.nan)
+            finite = array[np.isfinite(array)]
+            normalized.append(float(finite.mean()) if finite.size else np.nan)
+        elif isinstance(value, (float, np.floating)) and not np.isfinite(value):
+            normalized.append(np.nan)
         else:
             normalized.append(value)
 
@@ -314,6 +340,7 @@ _LABELS = {
     "fitness_max": "Generation maximum",
     "fitness_min": "Generation minimum",
     "fitness_std": "Population SD",
+    "finite_fitness_count": "Finite population scores",
     "unique_individual_ratio": "Unique individuals",
     "genotype_diversity": "Genotype diversity",
     "fit_time": "Fit time (s)",
@@ -376,13 +403,19 @@ def _plot_single_series(
 ):
     name = _field_label(label)
     if kind == "bar":
-        spacing = np.diff(np.unique(series.index))
-        width = 0.8 * (spacing.min() if spacing.size else 1) / count
-        centers = series.index + (index - (count - 1) / 2) * width
-        ax.bar(
+        positions, groups, sizes = np.unique(series.index, return_inverse=True, return_counts=True)
+        spacing = np.diff(positions)
+        # The available width belongs to the entire x group. Allocate slots
+        # in row order, and keep metrics for each generation together.
+        rank = pd.Series(groups).groupby(groups, sort=False).cumcount().to_numpy()
+        group_sizes = sizes[groups]
+        slots = group_sizes * count
+        slot_width = 0.8 * (spacing.min() if spacing.size else 1) / slots
+        centers = series.index + (rank * count + index - (slots - 1) / 2) * slot_width
+        return ax.bar(
             centers,
             series.values,
-            width=width,
+            width=np.where(group_sizes > 1, 0.9 * slot_width, slot_width),
             label=name,
             alpha=alpha,
             color=color,
@@ -406,19 +439,12 @@ def _generation_data(logbook, metrics):
         raise ValueError("logbook has no generations to plot")
     if not metrics:
         raise ValueError("metrics must contain at least one field")
-    # Historical checkpoints do not contain per-generation observed scores.
-    missing = [
-        metric
-        for metric in metrics
-        if (
-            metric not in logbook[-1]
-            or (metric != "fitness_best_observed" and any(metric not in row for row in logbook))
-        )
-    ]
+    # Newer generations can add metrics that older checkpoints did not record.
+    missing = [metric for metric in metrics if not any(metric in row for row in reversed(logbook))]
     if missing:
         raise ValueError(f"metrics missing from logbook: {missing}")
     return [row["gen"] for row in logbook], [
-        [row.get(m, np.nan) for row in logbook] for m in metrics
+        _plottable_values(row.get(m, np.nan) for row in logbook) for m in metrics
     ]
 
 
@@ -447,12 +473,22 @@ def _generation_lines(ax, metrics, generations, values):
             **_line_style(field, i, color, len(generations)),
         )
         lines.append(line)
+    _autoscale_generations(ax, generations)
     _legend(ax)
     return lines
 
 
+def _autoscale_generations(ax, generations):
+    # Matplotlib otherwise drops generation positions where every series has a gap.
+    ax.update_datalim([(min(generations), 0), (max(generations), 0)], updatey=False)
+    ax.autoscale_view()
+
+
 def plot_generation_metrics(logbook, metrics=("fitness_best", "fitness"), *, ax=None):
-    """Plot generation metrics; fitness_best_observed includes discarded candidates."""
+    """Plot recorded generation metrics, leaving gaps where values are unavailable.
+
+    Use fitness_best_observed to include discarded candidates.
+    """
     metrics = _as_list(metrics)
     generations, values = _generation_data(logbook, metrics)
     ax = _generation_axis(metrics, ax)
@@ -465,8 +501,9 @@ class LivePlot(BaseCallback):
 
     Pass this callback to fit to enable it. The default series are the archived
     best fitness and the current population mean. Pass metrics=("fitness_best_observed",
-    "fitness") for the best finite candidate score and the population mean. Use save_path to write
-    the current figure on a non-interactive backend.
+    "fitness") for the best finite candidate score and the population mean.
+    Missing values in individual generations appear as gaps. Use save_path to
+    write the current figure on a non-interactive backend.
     """
 
     def __init__(self, metrics=("fitness_best", "fitness"), *, ax=None, save_path=None):
@@ -496,7 +533,7 @@ class LivePlot(BaseCallback):
                 line.set_data(generations, ys)
                 line.set_markevery(max(1, len(generations) // 12))
             self.ax.relim()
-            self.ax.autoscale_view()
+            _autoscale_generations(self.ax, generations)
         canvas = self.ax.figure.canvas
         if "inline" in plt.get_backend().lower():
             # Inline figures are static. Jupyter can replace a displayed snapshot.
@@ -524,6 +561,7 @@ def plot_fitness_evolution(
     metric="fitness_best",
     metrics=None,
     *,
+    x="generation",
     kind="line",
     window=None,
     ax=None,
@@ -532,6 +570,8 @@ def plot_fitness_evolution(
 ):
     """
     Plot one or more evolution metrics stored in ``estimator.history``.
+
+    Finite points in a partial generation are marked with hollow diamonds.
 
     Parameters
     ----------
@@ -542,8 +582,13 @@ def plot_fitness_evolution(
         Backward-compatible name for a single metric to plot.
     metrics: list[str] | tuple[str] | None, default=None
         Optional collection of history fields to plot together.
+    x: {"generation", "cv_calls"}, default="generation"
+        Plot against generation numbers or cumulative search CV calls.
+        Missing call counts leave breaks between recorded points on the CV
+        axis. Bar charts omit those generations.
     kind: {"line", "bar", "area", "step"}, default="line"
-        Plot style.
+        Plot style. Bars for repeated CV counts sit side by side around
+        their shared count, in generation order.
     window: int | None, default=None
         Optional rolling window applied before plotting.
     ax: matplotlib.axes.Axes | None, default=None
@@ -563,6 +608,9 @@ def plot_fitness_evolution(
 
     if kind not in _HISTORY_KINDS:
         raise ValueError(f"kind must be one of {sorted(_HISTORY_KINDS)}")
+    if x not in _FITNESS_AXES:
+        raise ValueError(f"x must be one of {sorted(_FITNESS_AXES)}")
+    _require_fitted(estimator, "history", "plot_fitness_evolution")
 
     if metrics is None:
         metrics = [metric]
@@ -576,23 +624,71 @@ def plot_fitness_evolution(
     if missing:
         raise ValueError(f"metrics not found in estimator.history: {missing}")
 
-    frame = pd.DataFrame({"gen": estimator.history["gen"]})
+    axis_field, axis_label = _FITNESS_AXES[x]
+    if x == "cv_calls" and not pd.notna(estimator.history.get(axis_field, [])).any():
+        raise ValueError(
+            "No cumulative candidate CV calls were recorded. Use x='generation' for this history."
+        )
+    frame = pd.DataFrame({axis_field: estimator.history[axis_field]})
     for name in metrics:
-        frame[name] = estimator.history[name]
-
+        frame[name] = _plottable_values(estimator.history[name])
+    if x == "cv_calls":
+        frame = frame.dropna(subset=[axis_field]).copy()
     if window is not None:
-        frame.loc[:, metrics] = frame.loc[:, metrics].rolling(window=window, min_periods=1).mean()
+        values = frame.drop(columns=axis_field)
+        frame[values.columns] = (
+            values.rolling(window=window, min_periods=1).mean().where(values.notna())
+        )
+    if x == "cv_calls" and kind != "bar":
+        start, end = frame.index[0], frame.index[-1]
+        # Restore interior gaps after smoothing the visible observations.
+        if len(frame) != end - start + 1:
+            frame = frame.reindex(range(start, end + 1))
+
+    partial = estimator.history.get("partial")
+    if partial is not None:
+        partial = (
+            pd.Series(partial, dtype="boolean")
+            .reindex(frame.index, fill_value=False)
+            .fillna(False)
+            .to_numpy(dtype=bool)
+        )
+    frame = frame.set_index(axis_field)
 
     if ax is None:
         _, ax = plt.subplots(figsize=(7.6, 4.5), layout="constrained")
 
     colors = _colors(palette, metrics)
+    marked_partial = False
 
     for i, (color, name) in enumerate(zip(colors, metrics)):
-        series = frame.set_index("gen")[name]
-        _plot_single_series(
+        series = frame[name]
+        bars = _plot_single_series(
             ax, series, kind=kind, label=name, alpha=0.9, color=color, index=i, count=len(metrics)
         )
+        if partial is not None:
+            visible = partial & series.notna().to_numpy()
+            if visible.any():
+                positions = series.index[visible]
+                if kind == "bar":
+                    selected_bars = (bars[index] for index in np.flatnonzero(visible))
+                    positions = [bar.get_x() + bar.get_width() / 2 for bar in selected_bars]
+                ax.scatter(
+                    positions,
+                    series.to_numpy()[visible],
+                    marker="D",
+                    s=55,
+                    facecolors="none",
+                    edgecolors=color,
+                    linewidths=1.4,
+                    zorder=4,
+                    label=None if marked_partial else "Partial generation",
+                )
+                marked_partial = True
+    if x == "cv_calls":
+        # Matplotlib's line limits otherwise omit costs whose scores are missing.
+        ax.update_datalim([(frame.index.min(), 0), (frame.index.max(), 0)], updatey=False)
+        ax.autoscale_view(scaley=False)
 
     title = title or (_field_label(metrics[0]) if len(metrics) == 1 else "Fitness evolution")
     if window is not None:
@@ -601,10 +697,10 @@ def plot_fitness_evolution(
     ax.set_title(title)
     _style_axis(ax)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True, min_n_ticks=1))
-    ax.set(xlabel="Generation", ylabel=f"Fitness ({_metric_name(estimator)})")
+    ax.set(xlabel=axis_label, ylabel=f"Fitness ({_metric_name(estimator)})")
     if len(metrics) == 1 and metrics[0] not in ("fitness_best_observed", "fitness_best"):
         ax.set_ylabel(f"{_field_label(metrics[0])} ({_metric_name(estimator)})")
-    if len(metrics) > 1:
+    if len(metrics) > 1 or marked_partial:
         _legend(ax)
     return ax
 
@@ -746,7 +842,9 @@ def plot_search_space(
     s: float, default=25
         Marker size for scatter-based plots.
     features: list[str] | None, default=None
-        Subset of fields to plot. If omitted, numeric parameter fields are used.
+        Fields from `cv_results_` or the candidate logbook. Use `param_*` to
+        select parameter values whose names also appear in the logbook.
+        Defaults to numeric parameters and the optimization score.
     kind: {"pair", "heatmap"}, default="pair"
         Plot style. ``pair`` shows pairwise relationships, while ``heatmap``
         shows a correlation matrix.
@@ -769,18 +867,27 @@ def plot_search_space(
     if kind not in _SEARCH_SPACE_KINDS:
         raise ValueError(f"kind must be one of {sorted(_SEARCH_SPACE_KINDS)}")
 
-    df = pd.DataFrame(candidate_records(estimator))
-    if features:
-        available_features = [feature for feature in _as_list(features) if feature in df.columns]
-        missing = [feature for feature in _as_list(features) if feature not in df.columns]
-        if missing:
-            raise ValueError(f"features not found in estimator.logbook: {missing}")
-        stats = df[available_features].copy()
-    else:
-        base_columns = [*estimator.space.parameters, estimator.refit_metric]
-        if hue and hue in df.columns and hue not in base_columns:
-            base_columns.append(hue)
-        stats = df[base_columns].copy()
+    records = candidate_records(estimator)
+    df = pd.DataFrame(records)
+    columns = _as_list(features)
+    use_defaults = not columns
+    aliases = columns + _as_list(hue)
+    if use_defaults:
+        columns = list(estimator.space.parameters)
+        if any(candidate_parameters(row) is not row for row in records):
+            columns = [f"param_{name}" for name in columns]
+            aliases.extend(columns)
+        columns.append("score")
+    results = getattr(estimator, "cv_results_", {})
+    for name in dict.fromkeys(aliases):
+        if name in results:
+            df[name] = results[name]
+    if use_defaults and hue in df.columns and hue not in columns:
+        columns.append(hue)
+    missing = [name for name in columns if name not in df.columns]
+    if missing:
+        raise ValueError(f"features not found in estimator.logbook or cv_results_: {missing}")
+    stats = df[list(dict.fromkeys(columns))].copy()
 
     if kind == "heatmap":
         heatmap_frame = _select_numeric_columns(stats)
@@ -1454,6 +1561,7 @@ def plot_cv_scores(
     top_k=5,
     *,
     metric=None,
+    candidate_indices=None,
     kind="box",
     ax=None,
     palette=None,
@@ -1462,16 +1570,22 @@ def plot_cv_scores(
     float_precision=3,
 ):
     """
-    Plot fold-level CV scores for the strongest candidates.
+    Plot finite fold scores for ranked or explicitly selected candidates.
 
     Parameters
     ----------
     estimator: fitted GASearchCV or GAFeatureSelectionCV
         Fitted estimator with split-level ``cv_results_``.
-    top_k: int, default=5
-        Number of ranked candidates to include.
+    top_k: int or None, default=5
+        Number of ranked candidates to include. None uses all ranked rows.
+        Ignored when candidate_indices is supplied.
     metric: str | None, default=None
         Metric to plot. Defaults to the refit metric.
+    candidate_indices: int or iterable of int, optional
+        Zero-based row positions in `cv_results_`, in display order. This
+        can include candidates with a non-finite mean. Incomplete rows
+        show the number of finite folds. Candidates flagged as
+        `all_fits_failed` display "All fits failed".
     kind: {"box", "violin", "strip"}, default="box"
         Distribution plot type.
     ax: matplotlib.axes.Axes | None, default=None
@@ -1498,77 +1612,205 @@ def plot_cv_scores(
     if kind not in _CV_SCORE_KINDS:
         raise ValueError(f"kind must be one of {sorted(_CV_SCORE_KINDS)}")
 
+    _require_fitted(estimator, "cv_results_", "plot_cv_scores")
     split_columns = _split_metric_columns(estimator, metric=metric)
     if not split_columns:
         raise ValueError("No split-level test scores were found in estimator.cv_results_")
 
-    candidates, score_column = _candidate_frame(estimator, metric=metric, top_k=top_k)
+    if candidate_indices is None:
+        candidates, _ = _candidate_frame(
+            estimator, metric=metric, top_k=top_k, extra_columns=(*split_columns, "all_fits_failed")
+        )
+    else:
+        results = estimator.cv_results_
+        indices = _candidate_row_positions(candidate_indices, len(results[split_columns[0]]))
+        columns = (*split_columns, "params", "n_features", "all_fits_failed")
+        candidates = pd.DataFrame(
+            {name: [results[name][i] for i in indices] for name in columns if name in results},
+            index=indices,
+        )
+    scores = candidates[split_columns].to_numpy(dtype=float)
+    failed_rows = (
+        candidates["all_fits_failed"].to_numpy(dtype=bool)
+        if "all_fits_failed" in candidates
+        else np.zeros(len(candidates), dtype=bool)
+    )
+    finite = np.isfinite(scores) & ~failed_rows[:, None]
+    if not finite.any():
+        raise ValueError(
+            "No finite fold scores for the selected candidates. "
+            "Use plot_cv_fold_scores to inspect missing values."
+        )
+
     labels = _candidate_labels(
         candidates,
-        ranked=True,
+        ranked=candidate_indices is None,
         label_params=label_params,
         max_label_params=max_label_params,
         float_precision=float_precision,
     )
-    records = []
-    for label, (_, row) in zip(labels, candidates.iterrows()):
-        for split_column in split_columns:
-            records.append(
-                {
-                    "candidate": label,
-                    "split": split_column.split("_", 1)[0],
-                    "score": row[split_column],
-                }
-            )
+    if candidate_indices is None:
+        labels = [label.replace(" ", "\n", 1) for label in labels]
+    elif "params" in candidates:
+        labels = [
+            f"row {index}" if label == str(index) else f"row {index}\n{label}"
+            for index, label in zip(candidates.index, labels, strict=True)
+        ]
+    n_splits = len(split_columns)
+    tick_labels = [label.replace(", ", "\n") for label in labels]
+    for index, count in enumerate(finite.sum(axis=1)):
+        if failed_rows[index]:
+            tick_labels[index] += "\nAll fits failed"
+        elif count < n_splits:
+            tick_labels[index] += f"\n{count}/{n_splits} finite folds"
 
-    long_frame = pd.DataFrame(records)
     if ax is None:
         _, ax = plt.subplots(figsize=(max(7.6, 1.55 * len(labels)), 4.6), layout="constrained")
 
     colors = (
         sns.color_palette(palette, n_colors=len(labels)) if palette else ["#9dbfca"] * len(labels)
     )
-    if kind == "violin":
-        sns.violinplot(
+    positions = np.arange(len(labels))
+    if kind != "strip":
+        long_frame = pd.DataFrame(
+            {
+                "candidate": np.repeat(positions, n_splits),
+                "score": np.where(finite, scores, np.nan).ravel(),
+            }
+        )
+        options = dict(
             data=long_frame,
             x="candidate",
             y="score",
             hue="candidate",
-            palette=colors,
-            cut=0,
-            legend=False,
-            ax=ax,
-        )
-    elif kind == "box":
-        sns.boxplot(
-            data=long_frame,
-            x="candidate",
-            y="score",
-            hue="candidate",
+            order=positions,
+            hue_order=positions,
             palette=colors,
             legend=False,
             ax=ax,
         )
+        if kind == "violin":
+            sns.violinplot(cut=0, **options)
+        else:
+            sns.boxplot(**options)
     if kind in ("box", "strip"):
-        offsets = (
-            np.linspace(-0.16, 0.16, len(split_columns)) if len(split_columns) > 1 else np.zeros(1)
-        )
-        for index, (_, row) in enumerate(candidates.iterrows()):
+        offsets = np.linspace(-0.16, 0.16, n_splits) if n_splits > 1 else np.zeros(1)
+        for index, available in enumerate(finite):
+            if not available.any():
+                continue
             ax.scatter(
-                index + offsets,
-                row[split_columns].to_numpy(dtype=float),
+                index + offsets[available],
+                scores[index, available],
                 s=28 if kind == "strip" else 16,
                 zorder=3,
                 color=colors[index] if kind == "strip" and palette else _COLORS[0],
             )
-        ax.set_xlim(-0.5, len(labels) - 0.5)
 
-    ax.set_title(f"Cross-validation scores for top {len(labels)} candidates")
+    ax.set_xlim(-0.5, len(labels) - 0.5)
+    title = (
+        f"Cross-validation scores for top {len(labels)} candidates"
+        if candidate_indices is None
+        else "Cross-validation scores for selected candidates"
+    )
+    ax.set_title(title)
     ax.set_xlabel("candidate")
     ax.set_ylabel(f"Fold score ({_metric_name(estimator, metric)})")
     _style_axis(ax)
-    tick_labels = [label.replace(" ", "\n", 1).replace(", ", "\n") for label in labels]
-    ax.set_xticks(np.arange(len(labels)), tick_labels)
+    ax.set_xticks(positions, tick_labels)
+    return ax
+
+
+def plot_cv_fold_scores(
+    estimator, top_k=8, *, metric=None, candidate_indices=None, ax=None, cmap="viridis"
+):
+    """Show recorded test scores with candidates as rows and CV folds as columns.
+
+    Parameters
+    ----------
+    estimator : fitted GASearchCV or GAFeatureSelectionCV
+        Fitted search with split-level scores in `cv_results_`.
+    top_k : int or None, default=8
+        Maximum number of candidates to show in test-rank order. Ties keep
+        evaluation order. None uses all rows. Ignored with candidate_indices.
+    metric : str or None, default=None
+        Test metric to display. Defaults to the search objective.
+    candidate_indices : int or iterable of int, optional
+        Zero-based positions in `cv_results_`, shown in the requested order.
+        For example, pass `estimator.best_index_` to inspect the selected row.
+    ax : matplotlib.axes.Axes or None, default=None
+        Axis to draw on. Creates a new figure when omitted.
+    cmap : str, default="viridis"
+        Matplotlib colormap for finite scores. Crosses mark non-finite scores.
+        Outlined squares mark rows flagged as `all_fits_failed`.
+
+    Returns
+    -------
+    matplotlib.axes.Axes
+        The axis used for the heatmap.
+    """
+    _require_fitted(estimator, "cv_results_", "plot_cv_fold_scores")
+    columns = _split_metric_columns(estimator, metric=metric)
+    if not columns:
+        _metric_column(estimator, metric=metric)
+        raise ValueError("No split-level test scores were found in estimator.cv_results_")
+    results = estimator.cv_results_
+    n_rows = len(results[columns[0]])
+    if candidate_indices is None:
+        _validate_top_k(top_k)
+        rank_column = _metric_column(estimator, metric=metric, prefix="rank_test")
+        ranks = results[rank_column]
+        indices = _short_cv_positions(ranks, top_k) if type(ranks) is np.ndarray else None
+        if indices is None:
+            indices = np.argsort(ranks, kind="stable")[:top_k]
+    else:
+        indices = _candidate_row_positions(candidate_indices, n_rows)
+    if len(indices) == 0:
+        raise ValueError("No candidate scores were found in estimator.cv_results_")
+
+    scores = np.ma.masked_invalid(
+        np.array([[results[column][i] for column in columns] for i in indices], dtype=float)
+    )
+    failed = results.get("all_fits_failed")
+    failed_rows = (
+        np.asarray(failed, dtype=bool)[indices]
+        if failed is not None
+        else np.zeros(len(indices), dtype=bool)
+    )
+    has_failures = failed_rows.any()
+    if has_failures:
+        scores[failed_rows] = np.ma.masked
+    if ax is None:
+        _, ax = plt.subplots(
+            figsize=(max(6.4, min(12, len(columns) * 0.5)), max(3.0, min(8, len(indices) * 0.5))),
+            layout="constrained",
+        )
+    colors = plt.get_cmap(cmap).with_extremes(bad="#e6e8e9")
+    image = ax.imshow(scores, cmap=colors, aspect="auto", interpolation="nearest", origin="upper")
+    if scores.count():
+        ax.figure.colorbar(image, ax=ax)
+    missing_rows, missing_folds = np.nonzero(np.ma.getmaskarray(scores) & ~failed_rows[:, None])
+    if missing_rows.size:
+        ax.scatter(
+            missing_folds, missing_rows, marker="x", color="#384047", label="Non-finite score"
+        )
+    if has_failures:
+        rows, folds = np.nonzero(np.broadcast_to(failed_rows[:, None], scores.shape))
+        ax.scatter(
+            folds,
+            rows,
+            marker="s",
+            facecolors="none",
+            edgecolors=_COLORS[1],
+            label="All fits failed",
+        )
+    if missing_rows.size or has_failures:
+        ax.legend(loc="upper left", bbox_to_anchor=(0, -0.22), frameon=False)
+    folds = np.linspace(0, len(columns) - 1, min(len(columns), 12), dtype=int)
+    ax.set_xticks(folds, [columns[i].split("_", 1)[0][5:] for i in folds])
+    ax.set_yticks(np.arange(len(indices)), indices)
+    ax.set_xlabel("CV fold")
+    ax.set_ylabel("Candidate row")
+    ax.set_title(f"Cross-validation scores by fold ({_metric_name(estimator, metric)})")
     return ax
 
 
@@ -1618,7 +1860,10 @@ def plot_candidate_rankings(
 
     _require_seaborn()
 
-    candidates, score_column = _candidate_frame(estimator, metric=metric, top_k=top_k)
+    std_column = _std_metric_column(estimator, metric=metric)
+    candidates, score_column = _candidate_frame(
+        estimator, metric=metric, top_k=top_k, extra_columns=(std_column,)
+    )
     labels = _candidate_labels(
         candidates,
         ranked=True,
@@ -1627,7 +1872,6 @@ def plot_candidate_rankings(
         float_precision=float_precision,
     )
     scores = candidates[score_column].to_numpy()
-    std_column = _std_metric_column(estimator, metric=metric)
     errors = candidates[std_column].to_numpy() if std_column in candidates else None
 
     if ax is None:
@@ -1658,6 +1902,223 @@ def plot_candidate_rankings(
     return ax
 
 
+def plot_fit_work(estimator, *, unit="count", ax=None):
+    """Plot fit counts or recorded phase times from the latest fit.
+
+    In count mode, each search or finalist fold fit counts once. The full-data
+    refit has a separate bar. Reused finalist scores appear in a hatched bar.
+    Cached or restored search scores add no fresh work.
+
+    Parameters
+    ----------
+    estimator : GASearchCV or GAFeatureSelectionCV
+        Search with ``fit_counts_`` or, in seconds mode, a recorded
+        ``search_time_`` from its most recent call to ``fit``.
+    unit : {"count", "seconds"}, default="count"
+        Show fit and reuse counts or elapsed seconds for search, finalist
+        validation, and refit. In seconds mode, phases without recorded
+        durations are marked ``No timing``.
+    ax : matplotlib.axes.Axes or None, default=None
+        Axis to draw on. Creates a new figure when omitted.
+
+    Returns
+    -------
+    matplotlib.axes.Axes
+        The axis used for the fit-work plot.
+    """
+    if unit not in ("count", "seconds"):
+        raise ValueError("unit must be 'count' or 'seconds'")
+    show_counts = unit == "count"
+    if show_counts:
+        _require_fitted(estimator, "fit_counts_", "plot_fit_work")
+        counts = estimator.fit_counts_
+        labels = [
+            "Search fold fits",
+            "Finalist fold fits",
+            "Full-data refit",
+            "Reused finalist scores",
+        ]
+        values = [
+            counts["search_fold_fits"],
+            counts["finalist_fold_fits"],
+            counts["refit_fits"],
+            counts["finalist_reused_folds"],
+        ]
+        annotations = [f"{value:,}" for value in values]
+        xlabel, title = "Count", "Work in the latest fit"
+    else:
+        if not hasattr(estimator, "fit_counts_"):
+            _require_fitted(estimator, "search_time_", "plot_fit_work")
+        selection = getattr(estimator, "final_selection_results_", {})
+        durations = [
+            getattr(estimator, "search_time_", None),
+            selection.get("time_seconds") if selection.get("enabled") else None,
+            getattr(estimator, "refit_time_", None),
+        ]
+        labels = ["Search", "Finalist validation", "Full-data refit"]
+        values = [0.0 if duration is None else duration for duration in durations]
+        annotations = [
+            "No timing" if duration is None else f"{duration:.3g} s" for duration in durations
+        ]
+        xlabel, title = "Elapsed seconds", "Elapsed time by fit phase"
+    if ax is None:
+        _, ax = plt.subplots(figsize=(7.2, 3.4), layout="constrained")
+
+    positions = range(len(labels))
+    bars = ax.barh(positions, values, height=0.6, color=_COLORS[0])
+    if show_counts:
+        bars[-1].set(facecolor="#e6eef3", edgecolor=_COLORS[0], hatch="///")
+    ax.bar_label(bars, labels=annotations, padding=5)
+    ax.set_yticks(positions, labels=labels)
+    ax.set(xlabel=xlabel, title=title, ylim=(len(labels) - 0.5, -0.5))
+    ax.set_xlim(0, (max(values) or 1) * 1.18)
+    ax.xaxis.set_major_locator(MaxNLocator(integer=show_counts))
+    _style_axis(ax, grid="x")
+    return ax
+
+
+def plot_finalist_scores(estimator, *, ax=None):
+    """Compare each finalist's search and final validation scores.
+
+    Rows follow the recorded shortlist. A star marks a selected finalist when available.
+    Non-finite scores leave gaps and their row labels identify the missing
+    stage. The plot reads stored scores after at least one finalist evaluation,
+    including when validation ended without a winner.
+
+    Parameters
+    ----------
+    estimator : GASearchCV or GAFeatureSelectionCV
+        Search with recorded finalist validation results. The star marks the
+        candidate chosen for refit, even if the refit later raised an error.
+    ax : matplotlib.axes.Axes or None, default=None
+        Axis to draw on. Creates a new figure when omitted.
+
+    Returns
+    -------
+    matplotlib.axes.Axes
+        The axis used for the finalist comparison.
+    """
+    _require_fitted(estimator, "cv_results_", "plot_finalist_scores")
+    results = getattr(estimator, "final_selection_results_", {})
+    finalists = results.get("candidates")
+    if not finalists:
+        raise ValueError(
+            "plot_finalist_scores requires at least one completed finalist evaluation. "
+            "Fit with refitting and final_selection enabled."
+        )
+
+    positions = np.arange(len(finalists))
+    search = np.asarray([item["original_score"] for item in finalists], dtype=float)
+    final = np.asarray([item["score"] for item in finalists], dtype=float)
+    has_search, has_final = np.isfinite(search), np.isfinite(final)
+    selected = np.asarray([item["index"] == results["selected_index"] for item in finalists])
+    labels = []
+    for row, position in zip(finalists, positions, strict=True):
+        notes = []
+        if row["index"] == results["original_best_index"]:
+            notes.append("search winner")
+        if not has_search[position]:
+            notes.append("search CV unavailable")
+        if not has_final[position]:
+            notes.append("finalist CV unavailable")
+        label = f"Row {row['index']}"
+        labels.append(label + ("\n" + ", ".join(notes) if notes else ""))
+
+    if ax is None:
+        _, ax = plt.subplots(
+            figsize=(7.6, max(3.2, 2.0 + 0.52 * len(finalists))), layout="constrained"
+        )
+
+    pairs = has_search & has_final
+    for y, first, last in zip(positions[pairs], search[pairs], final[pairs], strict=True):
+        ax.plot([first, last], [y - 0.13, y + 0.13], color="0.68", linewidth=1.3, zorder=2)
+    ax.scatter(
+        search[has_search],
+        positions[has_search] - 0.13,
+        facecolors="white",
+        edgecolors=_COLORS[0],
+        label="Search CV",
+        zorder=3,
+    )
+    remaining = has_final & ~selected
+    ax.scatter(
+        final[remaining],
+        positions[remaining] + 0.13,
+        color=_COLORS[1],
+        marker="s",
+        label="Finalist CV",
+        zorder=3,
+    )
+    winner = has_final & selected
+    if winner.any():
+        ax.scatter(
+            final[winner],
+            positions[winner] + 0.13,
+            color=_COLORS[1],
+            marker="*",
+            s=130,
+            label="Selected finalist",
+            zorder=4,
+        )
+    ax.set_yticks(positions, labels)
+    ax.set_ylim(len(finalists) - 0.55, -0.45)
+    ax.set_xlabel(f"Mean CV score ({_metric_name(estimator)})")
+    ax.set_title("Finalist validation", loc="left", pad=30, fontsize=14, fontweight="bold")
+    ax.legend(
+        loc="lower left",
+        bbox_to_anchor=(0, 1.01),
+        ncols=3,
+        borderaxespad=0,
+        frameon=False,
+        fontsize=9,
+    )
+    _style_axis(ax, grid="x")
+    return ax
+
+
+def _recorded_history_fields(estimator, fields):
+    history = getattr(estimator, "history", {})
+    return [field for field in fields if pd.notna(_plottable_values(history.get(field, ()))).any()]
+
+
+def _empty_overview_panel(ax, title, message):
+    ax.set_title(title)
+    ax.set_axis_off()
+    ax.text(0.5, 0.5, message, ha="center", va="center", transform=ax.transAxes)
+
+
+def _plot_overview_history(estimator, ax, plot, fields, title, **kwargs):
+    recorded = _recorded_history_fields(estimator, fields)
+    if recorded:
+        plot(estimator, fields=recorded, ax=ax, **kwargs)
+    else:
+        _empty_overview_panel(ax, title, "No data recorded")
+
+
+def _plot_overview_candidates(estimator, ax, top_k, metric):
+    _validate_top_k(top_k)
+    column = _metric_column(estimator, metric=metric)
+    scores = pd.to_numeric(pd.Series(estimator.cv_results_[column]), errors="coerce")
+    if np.isfinite(scores).any():
+        plot_candidate_rankings(
+            estimator,
+            top_k=top_k,
+            metric=metric,
+            ax=ax,
+            title="Best evaluated candidates",
+            label_params=[],
+        )
+        ax.set_ylabel("Rank / candidate row")
+        ax.xaxis.set_major_locator(MaxNLocator(nbins=4))
+    elif len(scores) and _split_metric_columns(estimator, metric=metric):
+        plot_cv_fold_scores(
+            estimator, metric=metric, candidate_indices=range(len(scores))[:top_k], ax=ax
+        )
+        ax.set_title(f"No finite mean CV scores\n{_metric_name(estimator, metric)}")
+    else:
+        _empty_overview_panel(ax, "Candidate scores", "No finite mean CV scores")
+
+
 def plot_search_overview(
     estimator,
     *,
@@ -1672,7 +2133,9 @@ def plot_search_overview(
     The overview answers the most common post-fit questions: convergence,
     diversity, optimizer-control decisions, and whether strong candidates were
     found. For feature-selection searches, the last panel shows the selected
-    feature mask.
+    feature mask. For hyperparameter searches without finite mean CV scores,
+    the candidate panel displays recorded fold scores in evaluation order.
+    Panels with unavailable history metrics indicate that no data was recorded.
 
     Parameters
     ----------
@@ -1695,24 +2158,30 @@ def plot_search_overview(
 
     _require_seaborn()
 
-    fig, axes = plt.subplots(2, 2, figsize=figsize, layout="constrained")
-    plot_convergence(estimator, ax=axes[0, 0], palette=palette)
-    plot_diversity(estimator, ax=axes[0, 1])
-    plot_optimizer_events(estimator, ax=axes[1, 0])
+    feature_selection = isinstance(estimator, GAFeatureSelectionCV)
+    _require_fitted(
+        estimator, "best_features_" if feature_selection else "cv_results_", "plot_search_overview"
+    )
+    _, axes = plt.subplots(2, 2, figsize=figsize, layout="constrained")
+    _plot_overview_history(
+        estimator, axes[0, 0], plot_convergence, _CONVERGENCE_FIELDS, "Convergence", palette=palette
+    )
+    _plot_overview_history(
+        estimator,
+        axes[0, 1],
+        plot_diversity,
+        _DIVERSITY_FIELDS,
+        "Diversity",
+        stagnation=bool(_recorded_history_fields(estimator, [_STAGNATION_FIELD])),
+    )
+    _plot_overview_history(
+        estimator, axes[1, 0], plot_optimizer_events, _EVENT_FIELDS, "Optimizer events"
+    )
 
-    if isinstance(estimator, GAFeatureSelectionCV):
+    if feature_selection:
         plot_feature_selection(estimator, ax=axes[1, 1])
     else:
-        plot_candidate_rankings(
-            estimator,
-            top_k=top_k,
-            metric=metric,
-            ax=axes[1, 1],
-            title="Best evaluated candidates",
-            label_params=[],
-        )
-        axes[1, 1].set_ylabel("Rank / candidate row")
-        axes[1, 1].xaxis.set_major_locator(MaxNLocator(nbins=4))
+        _plot_overview_candidates(estimator, axes[1, 1], top_k, metric)
 
     return axes
 
@@ -1742,6 +2211,12 @@ class SearchPlotter:
     def convergence(self, **kwargs):
         return plot_convergence(self.estimator, **kwargs)
 
+    def fit_work(self, **kwargs):
+        return plot_fit_work(self.estimator, **kwargs)
+
+    def finalist_scores(self, **kwargs):
+        return plot_finalist_scores(self.estimator, **kwargs)
+
     def diversity(self, **kwargs):
         return plot_diversity(self.estimator, **kwargs)
 
@@ -1763,6 +2238,9 @@ class SearchPlotter:
     def cv_scores(self, **kwargs):
         return plot_cv_scores(self.estimator, **kwargs)
 
+    def cv_fold_scores(self, **kwargs):
+        return plot_cv_fold_scores(self.estimator, **kwargs)
+
     def feature_selection(self, **kwargs):
         return plot_feature_selection(self.estimator, **kwargs)
 
@@ -1773,9 +2251,12 @@ __all__ = [
     "plot_candidate_scores",
     "plot_candidate_rankings",
     "plot_convergence",
+    "plot_cv_fold_scores",
     "plot_cv_scores",
     "plot_diversity",
     "plot_feature_selection",
+    "plot_finalist_scores",
+    "plot_fit_work",
     "plot_fitness_evolution",
     "plot_generation_metrics",
     "plot_history",

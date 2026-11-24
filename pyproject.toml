@@ -6,6 +6,14 @@ build-backend = "setuptools.build_meta"
 name = "sklearn-genetic-opt"
 dynamic = ["version"]
 description = "Cross-validated hyperparameter search and feature selection for scikit-learn with interchangeable optimizers"
+keywords = [
+    "scikit-learn",
+    "hyperparameter tuning",
+    "feature selection",
+    "genetic algorithms",
+    "evolutionary optimization",
+    "cross-validation",
+]
 readme = { file = "README.rst", content-type = "text/x-rst" }
 requires-python = ">=3.12"
 license = "MIT"
@@ -103,6 +111,8 @@ dev = [
 Documentation = "https://sklearngeneticopt.rodrigo-arenas.com/"
 "Source Code" = "https://github.com/rodrigo-arenas/Sklearn-genetic-opt"
 "Bug Tracker" = "https://github.com/rodrigo-arenas/Sklearn-genetic-opt/issues"
+Changelog = "https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/CHANGELOG.md"
+"Benchmark Scripts" = "https://github.com/rodrigo-arenas/Sklearn-genetic-opt/tree/master/benchmarks"
 
 [tool.setuptools.dynamic]
 version = { attr = "sklearn_genetic._version.__version__" }

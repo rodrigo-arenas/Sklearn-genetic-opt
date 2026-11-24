@@ -1,5 +1,6 @@
 """Checks for the built site's crawl signals and the release documentation switch."""
 
+from html import unescape
 from pathlib import Path
 import importlib.util
 import io
@@ -39,7 +40,15 @@ def test_built_site_advertises_only_indexable_pages():
     assert f"{SITE}/" in locations
     assert f"{SITE}/versions/{RELEASES[-1]}/" in locations
     assert not any(url.endswith("/stable/") for url in locations)
-    assert not any("/versions/latest/" in url for url in locations)
+    tutorial = "tutorials/budgeted-optimizer-search"
+    latest_tutorial = f"{SITE}/versions/latest/{tutorial}"
+    stable_tutorial = DOCS / "versions" / RELEASES[-1] / f"{tutorial}.md"
+    if stable_tutorial.is_file():
+        assert f"{SITE}/versions/{RELEASES[-1]}/{tutorial}" in locations
+        assert latest_tutorial not in locations
+    else:
+        assert latest_tutorial in locations
+    assert {url for url in locations if "/versions/latest/" in url} <= {latest_tutorial}
 
     for url in locations:
         parsed = urlparse(url)
@@ -62,6 +71,18 @@ def test_built_site_advertises_only_indexable_pages():
         older_html = (dist / "versions" / older / "index.html").read_text(encoding="utf-8")
         assert f'rel="canonical" href="{SITE}/versions/{RELEASES[-1]}/"' in older_html
     assert not any(f"/versions/{older}/" in url for older in RELEASES[:-1] for url in locations)
+
+
+def test_budgeted_search_tutorial_links_to_diagnostics():
+    latest = DOCS / ".vitepress" / "dist" / "versions" / "latest"
+    tutorial = (latest / "tutorials/budgeted-optimizer-search.html").read_text(encoding="utf-8")
+    for page, heading in (
+        ("api/plots", "plot-fit-work"),
+        ("recipes/advanced/checkpointing", "diagnose-a-resume-error"),
+    ):
+        assert f"{page}#{heading}" in tutorial
+        target = (latest / f"{page}.html").read_text(encoding="utf-8")
+        assert f'id="{heading}"' in target
 
 
 def test_homepage_links_to_released_pages():
@@ -87,15 +108,54 @@ def test_homepage_links_to_released_pages():
 
     assert "The GA finds better hyperparameters than a grid search" not in homepage
     assert "Joint hyperparameter + feature search in one step" not in homepage
+    tutorial_link = re.search(
+        r'<a\b[^>]*href="/versions/[^/]+/tutorials/budgeted-optimizer-search"' r"[^>]*>(.*?)</a>",
+        homepage,
+        re.DOTALL,
+    )
+    assert tutorial_link and "Budget and Resume a Search" in tutorial_link[1]
     for page, label in [
         ("guide/basic-usage", "Run Your First Search"),
+        ("benchmarks/optimizer-catalog", "Compare Optimizers"),
+        ("api/gasearchcv", "GASearchCV API reference"),
+        ("api/gafeatureselectioncv", "GAFeatureSelectionCV API reference"),
+        ("tutorials/optimizer-backends", "Switch optimization backends"),
+        ("benchmarks/optimizer-catalog", "Compare five optimization backends"),
+        ("examples/sklearn-comparison", "Compare scikit-learn search methods"),
+        ("comparisons/optuna-vs-sklearn-genetic-opt", "Compare Optuna and sklearn-genetic-opt"),
         ("tutorials/tune-xgboost", "XGBoost hyperparameter tuning"),
         ("tutorials/isolation-forest", "Isolation Forest hyperparameter tuning"),
     ]:
         target = f"/versions/{RELEASES[-1]}/{page}"
         assert re.search(
             rf'<a\b[^>]*href="{re.escape(target)}"[^>]*>{re.escape(label)}</a>', homepage
-        )
+        ), f"Homepage is missing the link {label!r} to {target}"
+
+
+def test_homepage_metadata_identifies_the_site_and_python_package():
+    homepage = (DOCS / ".vitepress" / "dist" / "index.html").read_text(encoding="utf-8")
+    title = unescape(re.search(r"<title>([^<]+)</title>", homepage).group(1))
+    assert title == "sklearn-genetic-opt | scikit-learn Tuning & Feature Selection"
+    for attribute in ('property="og:title"', 'name="twitter:title"'):
+        social_title = re.search(rf'<meta {attribute} content="([^"]+)"', homepage).group(1)
+        assert unescape(social_title) == title
+    assert 'property="og:site_name" content="sklearn-genetic-opt"' in homepage
+    graph_text = re.search(r'<script type="application/ld\+json">(.*?)</script>', homepage, re.S)
+    graph = json.loads(graph_text.group(1))
+    assert graph["@context"] == "https://schema.org"
+    nodes = {node["@type"]: node for node in graph["@graph"]}
+    site, package = nodes["WebSite"], nodes["SoftwareApplication"]
+    assert site["name"] == package["name"] == "sklearn-genetic-opt"
+    assert site["url"] == package["url"] == f"{SITE}/"
+    assert site["about"]["@id"] == package["@id"]
+    assert package["runtimePlatform"] == "Python"
+    assert "GASearchCV" in package["description"]
+    assert "GAFeatureSelectionCV" in package["description"]
+    assert package["installUrl"] == "https://pypi.org/project/sklearn-genetic-opt/"
+    assert set(package["sameAs"]) == {
+        "https://pypi.org/project/sklearn-genetic-opt/",
+        "https://github.com/rodrigo-arenas/Sklearn-genetic-opt",
+    }
 
 
 def test_numbered_docs_landing_describes_the_release_in_search_and_social():
@@ -156,6 +216,7 @@ def test_freeze_points_homepage_at_new_stable_version(tmp_path):
     )
     homepage = (docs / "index.md").read_text(encoding="utf-8")
     assert f"/versions/{next_version}/guide/basic-usage" in homepage
+    assert f"/versions/{next_version}/benchmarks/optimizer-catalog" in homepage
     assert f"/versions/{old_version}/" not in homepage
     for original in (DOCS / ".vitepress" / "theme" / "components").glob("Home*.vue"):
         source = original.read_text(encoding="utf-8")
@@ -166,6 +227,16 @@ def test_freeze_points_homepage_at_new_stable_version(tmp_path):
         if f"/versions/{old_version}/" in source:
             assert f"/versions/{next_version}/" in frozen
     assert (docs / "versions" / next_version / "guide" / "basic-usage.md").is_file()
+    frozen_paths = (
+        docs / ".vitepress" / "theme" / "components" / "HomeLearningPaths.vue"
+    ).read_text(encoding="utf-8")
+    for target in (
+        "tutorials/optimizer-backends",
+        "examples/sklearn-comparison",
+        "comparisons/optuna-vs-sklearn-genetic-opt",
+    ):
+        assert f"/versions/{next_version}/{target}" in frozen_paths
+        assert (docs / "versions" / next_version / f"{target}.md").is_file()
     frozen_index = (docs / "versions" / next_version / "index.md").read_text(encoding="utf-8")
     latest_index = (docs / "versions" / "latest" / "index.md").read_text(encoding="utf-8")
     assert "pip install sklearn-genetic-opt" in frozen_index

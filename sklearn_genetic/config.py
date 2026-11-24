@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Literal
+from typing import Literal, Sequence
 
 import numpy as np
 
@@ -25,6 +25,7 @@ class PopulationConfig:
 
     initializer: str = "smart"
     warm_start_configs: list[dict] = field(default_factory=list)
+    warm_start_masks: Sequence[Sequence[bool | int] | np.ndarray] | np.ndarray | None = None
 
 
 @dataclass

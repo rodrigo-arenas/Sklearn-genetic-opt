@@ -39,10 +39,13 @@ def mutFlipBit(individual, indpb):
 
 
 def cxUniform(ind1, ind2, indpb):
-    """Apply DEAP uniform crossover and keep both masks nonempty."""
-    from deap import tools
-
-    ind1, ind2 = tools.cxUniform(ind1, ind2, indpb)
+    """Swap feature genes independently and keep both masks nonempty."""
+    # Resolve the random generator once per crossover for wide masks. Keep
+    # one draw per shared coordinate, including when the two genes match.
+    draw = random.random
+    for index in range(min(len(ind1), len(ind2))):
+        if draw() < indpb:
+            ind1[index], ind2[index] = ind2[index], ind1[index]
     return check_bool_individual(ind1), check_bool_individual(ind2)
 
 

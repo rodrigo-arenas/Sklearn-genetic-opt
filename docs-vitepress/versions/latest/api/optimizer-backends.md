@@ -15,7 +15,7 @@ work as with other scikit-learn estimators. Start with the
 | Value | Solver and useful settings | Population summarized in `history` | Checkpoint |
 | --- | --- | --- | --- |
 | `"deap"` | Defaults to `eaMuPlusLambda`. Choose an [algorithm](./algorithms), schedules, elitism or local search. Supports categorical priors. | Algorithm population | DEAP continuation |
-| `"scipy"` | Deferred `best1bin` differential evolution. Use at least 5 individuals. A fixed `crossover_probability` sets recombination. Equal energies can end the run early. | Survivors | Resume by verified replay |
+| `"scipy"` | Deferred `best1bin` differential evolution. Use at least 5 individuals. A fixed `crossover_probability` sets recombination. You can [continue through equal losses](./algorithms#continue-through-equal-population-losses). | Survivors | Resume by verified replay |
 | `"nevergrad"` | OnePlusOne for both tasks. Set `strategy="TwoPointsDE"` on the adapter callable to try differential evolution. Leave estimator crossover at its default. | Evaluated batch | Restore native solver state |
 | `"cmaes"` | CatCMA with Margin. Use at least 4 individuals. Set `sigma` on the adapter callable in `(0, 1]` (default 0.25) for the initial normalized numeric step. Leave estimator crossover at its default. | Evaluated batch | Restore native solver state |
 | `"pymoo"` | Mixed-variable GA for parameters and binary GA for masks. Tune fixed `crossover_probability` in `[0, 1]` (default 0.8). | Survivors | Resume by verified replay |
@@ -44,18 +44,80 @@ nonempty masks respecting `max_features`. The [algorithm details](./algorithms#s
 describe the encodings, including SciPy's ordered category bins and CatCMAwM's
 rounded representation for wide integer ranges.
 
+pymoo, Nevergrad and CatCMAwM can reuse the standard selector's immutable
+initial masks in a fresh fit. SciPy decodes its solver coordinates into masks
+for evaluation. The shared evaluator checks newly proposed masks and makes
+private copies of candidates as it dispatches them. Reusing the initial
+masks reduces temporary allocations when a budget cuts a batch short.
+The [budgeted feature selection example](../tutorials/optimizer-backends#compare-feature-selection-at-the-same-cv-budget)
+shows how to measure fresh evaluations and fold fits.
+
+For grids made entirely of built-in integer dimensions with the standard
+repair hooks, `GASearchCV` can pass repaired rows directly to the CV workers.
+The proposed parameters still appear in evaluation order in `cv_results_`.
+
 `population_size * (generations + 1)` bounds proposals on the shared optimizer
 runtime. The initial population is generation zero. Check
-`fit_stats_["cross_validate_calls"]` for actual CV work. Cache hits and convergence
-can reduce it, and optional finalist evaluation can add work. A real CV call fits
-one model per fold. DEAP's proposal count depends on the selected algorithm.
+`fit_stats_["cross_validate_calls"]` for actual CV calls used by the search.
+Cache hits and convergence can reduce that count. Each search CV call fits one
+model per fold. Finalist validation and the full-data refit run afterward.
+DEAP's proposal count depends on the selected algorithm.
 See the [measured cost and quality comparison](../benchmarks/optimizer-catalog).
+Use [CVBudgetStopping](./callbacks#cvbudgetstopping) to give different engines
+the same upper limit on fresh search CV calls. Check the observed count for
+each fit because convergence, finite coverage and cached proposals can leave
+part of the budget unused.
+
+With caching enabled, `fit_stats_["duplicate_candidates"]` counts repeat
+proposals that share a fresh evaluation in their batch. `cache_hits` counts
+proposals whose score was already cached before the batch, including every
+repeat of those proposals in that batch. Each completed proposal keeps its
+own row in `cv_results_`. Equivalent proposals share one key during batch
+evaluation. The persistent cache retains value-based keys for resuming a search.
+Hyperparameter keys sort pairs by name after resolving categorical values.
+Candidate result columns follow the declared grid order.
+With caching disabled, `unique_candidates` counts
+fresh evaluations, including repeated configurations. See the
+[worked cache example](../tutorials/optimizer-backends#read-both-cache-counters-in-one-batch).
+
+With caching enabled, the bundled engines can stop at a generation boundary
+after covering a finite search space. `search_space_exhausted_=True` confirms
+that the engine detected full coverage. `False` can also mean that coverage
+was untracked or that a limit interrupted a batch before the coverage check.
+Read the actual search CV calls in `fit_counts_` and the last row's
+`partial` flag in `history` alongside this attribute. See the
+[budget and coverage example](../tutorials/optimizer-backends#compare-a-cv-limit-with-complete-coverage).
+This stopping rule uses the cache setting after
+`on_start`, including when resuming a checkpoint. SciPy, Nevergrad, CatCMAwM and pymoo keep collecting
+their usual candidate history when the search will validate finalists.
+With `refit=False`, coverage can stop the search even if `final_selection` is
+configured. Third-party optimizers control their own stopping rules.
+DEAP can resume from a verified checkpoint with complete cached coverage
+without appending a generation with standard refitting or `refit=False`,
+when finalist validation is inactive. See the
+[exhausted checkpoint example](../tutorials/optimizer-backends#resume-an-exhausted-deap-search).
+Floating-point `NaN` categories use the same identity for coverage and
+score caching. See the
+[finite categorical example](../tutorials/optimizer-backends#stop-when-a-categorical-space-is-covered).
+
+DEAP also counts candidates scored during local refinement toward finite-space
+coverage. Once the cached space is covered, DEAP ends refinement in search-only
+runs with `refit=False`. Use `fit_counts_` for real fold work and
+`fit_stats_["local_refinement_candidates"]` for neighbor proposals, including
+ones resolved by the cache.
 
 ## Common estimator behavior
 
 - The engine proposes candidates. The estimator owns fold splitting, scoring,
   caching, finalist selection, refit and prediction. `parallel_backend` controls
   where CV work is parallelized, independently of `optimizer_backend`.
+- DEAP uses its own individual types, independent of classes registered in
+  `deap.creator`. When fitting separate search objects in threads, their Python
+  and NumPy random streams still share process-wide state. Running each search
+  in a separate process isolates those streams for reproducible parallel fits.
+- A fit with `refit=False` leaves the current CV results available and clears
+  the fitted winner from any previous fit. Call `fit` with `refit=True` to
+  use prediction again.
 - Use `cv_results_` for per-candidate scores, `history` for per-generation
   metrics, and `fitness_best_observed` in [LivePlot](./plots) to follow the best
   finite primary score seen so far. The archive considers discarded candidates too.
@@ -63,8 +125,13 @@ See the [measured cost and quality comparison](../benchmarks/optimizer-catalog).
   with the same data, settings and environment. For SciPy and pymoo, replay
   uses recorded results for completed generations. Native solver state serves
   the same purpose for Nevergrad and CatCMAwM. A partially evaluated generation
-  may repeat CV. Additional finalist validation and final refit run after the
+  may repeat CV. A completed finite search resumes without evaluating new
+  candidates. Additional finalist validation and final refit run after the
   checkpoint and can repeat on resume, including after the last generation.
+  Newly written optimizer checkpoints compare NumPy index arrays and Boolean
+  masks in explicit fold lists or tuples by value. Clones can resume when they
+  hold copies of the same selectors in the same order. See the
+  [Boolean fold checkpoint example](../tutorials/optimizer-backends#resume-with-shared-boolean-folds).
   Older progress-only files (`resumable=False`) can be inspected
   with `ModelCheckpoint.load()`. See the [checkpoint recipe](../recipes/advanced/checkpointing).
 - Leave DEAP-specific controls at their constructor defaults when switching engines.
@@ -72,6 +139,54 @@ See the [measured cost and quality comparison](../benchmarks/optimizer-catalog).
   adaptive schedules, immigrants, local search and fitness sharing. The shared
   runtime accepts `diversity_control` but does not adapt variation with it.
   Finalist selection remains available.
+
+## Fit work by phase
+
+After fitting either estimator, inspect `fit_counts_` for the most recent
+call to `fit`:
+
+| Key | Work measured |
+| --- | --- |
+| `search_cv_calls` | Fresh candidate cross-validation calls during search |
+| `search_fold_fits` | Estimator fits across the search CV folds |
+| `finalist_cv_calls` | Cross-validation calls during finalist selection |
+| `finalist_fold_fits` | Fresh estimator fits during finalist validation, including any repeated folds |
+| `finalist_reused_folds` | Finalist fold scores taken from search results |
+| `refit_fits` | One full-data fit with `refit` enabled, zero otherwise |
+
+Add the two `*_fold_fits` values and `refit_fits` to obtain the total fit
+work. Reused fold scores and cache hits cost zero fresh fits. On resume,
+`fit_counts_` measures work done by that call. Use
+`fit_stats_["cross_validate_calls"]` for cumulative search CV calls.
+When `history` contains `partial`, check the flag on each row to identify
+generations interrupted by a search budget.
+Use [`plot_fit_work`](./plots#plot-fit-work) to see fresh fits and reused
+finalist scores from the latest call to `fit` on separate bars.
+For one finalist, read `cv_calls`, `fold_fits`, and `reused_folds` from its entry
+in `final_selection_results_["candidates"]`. A retry can make `fold_fits`
+larger than the number of returned fold scores. See the
+[per-finalist example](../tutorials/optimizer-backends#inspect-actual-work-for-each-finalist).
+
+### Fit time by phase
+
+These elapsed times are in seconds. Both search estimators and the optimizer
+catalog measure durations with the same high-resolution clock, `time.perf_counter()`.
+Use [`plot_fit_work(unit="seconds")`](./plots#plot-fit-work) to chart the recorded
+phases.
+
+| Field | Phase measured |
+| --- | --- |
+| `search_time_` | Optimizer run, including population setup, candidate CV, and callbacks |
+| `final_selection_results_["time_seconds"]` | Automatic finalist validation, including the time to prepare its folds and reuse scores |
+| `refit_time_` | Successful full-data estimator fit |
+
+`search_time_` is recorded when the optimizer returns or raises, including with
+`refit=False`. If an error ends the search, the elapsed time measures work up to
+that error. `fit_counts_` is published once the optimizer returns successfully.
+On resume, the timer covers the current optimizer run, including any replay it
+performs. Run `fit` to populate `search_time_` on an estimator saved with an
+older version. Time the entire `fit` call to include input validation, search
+split preparation, and construction of `cv_results_`.
 
 ## Extend the catalog
 

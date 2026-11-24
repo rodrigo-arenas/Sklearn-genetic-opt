@@ -1,6 +1,6 @@
 ---
-title: "Resume a Stopped Hyperparameter Search from a Checkpoint"
-description: "Recipe to save GASearchCV state to disk and resume from a checkpoint, preserving all evaluated candidates."
+title: "Resume a Scikit-learn Search from a Checkpoint"
+description: "Resume a scikit-learn search with ModelCheckpoint. Recover saved CV scores, check partial generations and count new evaluations in GASearchCV or GAFeatureSelectionCV."
 ---
 
 :::warning Development version
@@ -60,31 +60,81 @@ print("Candidate CV calls", first.fit_stats_["cross_validate_calls"])
 
 Recreate the same data, split and search definition if you start a new Python
 session. Leave out the short timer to allow more evaluations. Pass a checkpoint callback pointing to the existing file on the next
-`fit`. The generation log continues from its last saved entry.
+`fit`. The generation log continues from its last saved entry. DEAP initializes
+a new population, reuses scores saved in the cache, and applies the configured
+`generations` to the new search phase.
+
+When the saved fit used metadata routing, start the resumed fit inside
+`config_context(enable_metadata_routing=True)` and pass the original fit
+metadata again. New snapshots record the setting and reject a mismatch
+before evaluating candidates. Older snapshots without the field rely on
+you to restore the original setting. See the
+[weighted resume example](../../examples/checkpointing#resume-a-search-with-metadata-routing).
+
+Use the estimator's `save(path)` and `load(path)` methods to restore the
+fitted results of a completed search. Loading into an existing instance
+replaces its previous fitted results, including when the saved search used
+`refit=False`. Use the `ModelCheckpoint` callback to resume optimization
+from a generation boundary.
 
 ```python
 checkpoint = ModelCheckpoint(path)
 previous = checkpoint.load()
 last_generation = previous["logbook"][-1]["gen"]
-previous_calls = previous["runtime_state"]["fit_stats_"]["cross_validate_calls"]
 
 resumed = make_search()
 resumed.fit(X_train, y_train, callbacks=[checkpoint])
 print("Generation before and after resume", last_generation, resumed.history["gen"][-1])
-print("Additional candidate CV calls", resumed.fit_stats_["cross_validate_calls"] - previous_calls)
+print("Additional candidate CV calls", resumed.fit_counts_["search_cv_calls"])
 ```
 
-With caching enabled, the resumed search reuses saved candidate scores. Use
-the same training rows in the same order, CV splits and scoring rule so those
-scores remain comparable. A current checkpoint restores the Python and NumPy
-proposal streams and archived elites before evolution continues with a newly
-initialized population. Its proposals can differ from a single uninterrupted
-run. Warm-start candidates or an exhausted space can still yield cache hits.
-Use the additional CV calls above to measure new evaluations. Older checkpoints
-load the available state and initialize any missing search state on resume.
+With caching enabled, the resumed search reuses saved candidate scores. Keep
+the scoring rule and the training inputs from the original search. New DEAP
+checkpoints record a fingerprint of the ordered rows, targets, groups and fit
+parameters when those inputs can be hashed. If they change, `fit` raises before
+using the saved scores. Start a new checkpoint file to search on changed data.
+
+New checkpoints with a fingerprint also store the folds produced by an
+explicit splitter. Resume uses those folds for fresh candidates. It restores
+the Python and NumPy proposal streams and archived elites before starting a
+new population. Warm-start candidates or an exhausted space can still yield
+cache hits. If a timer expires before DEAP evaluates any candidates on resume,
+`search_space_exhausted_` reports whether the saved cache covers the finite
+search space. A generation interrupted by a time or CV limit has `partial=True`
+in `history` and in a new DEAP checkpoint. DEAP saves the candidate results
+available at that boundary. If DEAP runs local refinement at the end of
+search, the callback updates that snapshot so the next fit can recover those
+candidate scores too. See the
+[local refinement example](../../examples/checkpointing#resume-after-local-refinement)
+for the saved and fresh CV counts.
+New DEAP checkpoints also restore the saved `criteria`, `error_score`,
+`return_train_score` and feature selection's `max_features`. This keeps the
+evaluation and feature limit consistent across search phases.
+For deterministic searches using `final_selection="reuse_folds"`, a DEAP
+resume can also reuse matching finalist fold scores once the training
+inputs are verified and the saved search used independent fold indices.
+Only unmatched folds need fresh fits. Read `fit_counts_["finalist_reused_folds"]`
+to see how many fold fits were avoided.
+Older checkpoints load the available state. For files without a fingerprint,
+verify the training inputs before resuming. Unverified checkpoints validate
+all finalist folds afresh.
+
+If a DEAP snapshot lacks the runtime CV counter, `fit` continues the
+cumulative count from the last saved generation when that record contains a
+valid count. Missing auxiliary counters start at zero for the resumed work.
+When the cumulative count is absent from both locations, the resumed search
+counts the CV calls it performs. `fit_counts_` reports fresh work in all of
+these cases. See the
+[counter recovery example](../../examples/checkpointing#recover-a-cumulative-cv-count).
 
 Each successful checkpoint replaces the previous snapshot. If serialization
 fails, the callback logs a warning and the previous file remains available.
+This includes a `ValueError` raised by a custom serializer or a
+`RecursionError` raised while pickling a deeply nested object. Read the
+warning to identify the failed save.
+If an existing file contains an empty payload or lacks the expected snapshot
+structure, `fit` reports the invalid checkpoint before evaluating candidates.
+Use a new path to start an independent search.
 To keep a fitted estimator for prediction, use the search object's `save`
 method after `fit`.
 
@@ -107,8 +157,7 @@ print("Last completed generation", saved["logbook"][-1]["gen"])
 print("Ready to resume", saved["resumable"])
 
 resumed = clone(search).fit(X_train, y_train, callbacks=[checkpoint])
-print("Additional CV calls",
-      resumed.fit_stats_["cross_validate_calls"] - saved["fit_stats"]["cross_validate_calls"])
+print("Additional CV calls", resumed.fit_counts_["search_cv_calls"])
 ```
 
 For these four engines, keep the training rows and targets in the same order,
@@ -118,12 +167,42 @@ and dependency versions. If you configured the adapter with `functools.partial`,
 recreate it with the same adapter function and keyword arguments. A stopping
 callback starts a fresh lifecycle on the next fit. Leave the previous timer
 or stopping condition out if you want to finish the original budget.
+New fingerprints handle explicit fold selectors supplied as plain lists or
+tuples of Python integers and booleans directly. Preserve the selector types
+and order when resuming. Checkpoints with older fingerprints can still use
+their original fold selectors.
+If the file declares a resumable snapshot but lacks required fields, the error
+names the missing fields before the search evaluates any candidates. The
+required fields include the counters in `fit_stats`, such as cache hits and
+worker batches. Every fit counter must be a nonnegative integer. See the
+[invalid counter example](../../tutorials/optimizer-backends#diagnose-an-invalid-checkpoint-counter).
+When a checkpoint records a cumulative search CV count, `fit` checks that it
+is a nonnegative integer. If the last saved generation also records the
+count, the two values must agree. A validation error identifies the file
+and counter before candidate evaluation.
+If an older file overwrote estimator parameters with CV fields of the same
+name, start with a new checkpoint path. Current snapshots retain both values.
 
 Nevergrad and CatCMAwM restore their saved solver state. SciPy and pymoo replay
 completed proposals, verify them against the saved record and return stored
 evaluations to the solver. This adds solver work on restart while avoiding new
-CV fits for the completed generations. A timer or interruption partway through
-a generation can require those unfinished proposals to be evaluated again.
+CV fits for the completed generations. When saving and replaying integer
+feature masks, both engines compute signatures with the existing checkpoint
+format directly.
+A timer or interruption partway through a generation can require those
+unfinished proposals to be evaluated again.
+When a partial generation follows a completed one, the in-memory history
+includes the partial row and the file keeps the completed boundary. A stop
+in the first generation can leave an inspection-only snapshot.
+Use [fitness evolution on the CV axis](../../tutorials/optimizer-backends#find-partial-generations-before-and-after-resume)
+to see which plotted rows are partial before and after resume.
+After each fit, read the callback's `resumable_cv_calls_` and
+`unsaved_cv_calls_` to see how much fresh search work can be recovered from
+its file. These counters exclude work loaded from a previous fit.
+Compare `fit_counts_["search_cv_calls"]` with
+`fit_stats_["cross_validate_calls"]` to see fresh calls and the cumulative
+count after resume. Their difference is the number restored from the
+checkpoint. Reusing a score from the cache uses zero fresh CV calls.
 When the full generation budget was already saved, the search skips evolution.
 The checkpoint covers the evolutionary CV evaluations through the last completed
 generation. Optional validation of finalists and the final model refit happen
@@ -135,8 +214,50 @@ trusted pickle files. See the [feature selection example](../../tutorials/optimi
 for a run with a binary mask, and the [plugin protocol](../../api/algorithms#callbacks-and-checkpoints)
 for third-party optimizers.
 
+## Reduce checkpoint writes
+
+Specify `every_n_generations` when writing a full snapshot after each
+generation takes a meaningful share of the fit. In this example, the search
+reports generations 0 through 3 and saves generations 0 and 2. Use a fresh
+checkpoint path and the SciPy optimizer extra.
+
+```python
+from sklearn_genetic.backends import scipy_optimizer
+
+search = make_search().set_params(
+    optimizer_backend=scipy_optimizer(stop_on_convergence=False),
+    generations=3,
+    use_cache=False,
+)
+checkpoint = ModelCheckpoint("tree-scipy-interval.pkl", every_n_generations=2)
+search.fit(X_train, y_train, callbacks=checkpoint)
+print("Last generation in memory", search.history["gen"][-1])
+print("Last saved generation", checkpoint.load()["logbook"][-1]["gen"])
+print("Fresh CV calls to repeat on resume", checkpoint.unsaved_cv_calls_)
+```
+
+The next fit resumes from generation 2. Choose the interval based on how
+much work you can afford to lose between saves. You can change the interval
+on resume. The schedule uses the same generation indices shown in `history`.
+See the [budget and resume tutorial](../../tutorials/budgeted-optimizer-search)
+for an example with two compute sessions and a partial generation.
+
+## Diagnose a resume error
+
+| Error names | What to check |
+| --- | --- |
+| `logbook` and `generation boundary` | The saved generation numbers must be consecutive, with valid candidate and population counts. |
+| `candidate_records` and `generation boundary` | The number of saved candidate rows must match the sum of the evaluation counts in the logbook. |
+| `solver_state` and `generation boundary` | The replay journal or native solver state must match the last completed generation. |
+| `solver_state` and `unreadable data` | The native solver payload could not be decoded in the active environment. |
+
+These diagnostics apply to the bundled alternative engines. `fit` raises
+before starting fresh CV and preserves the existing file. Resume from an
+earlier checkpoint you trust, or start an independent search with a new path.
+
 ## See Also
 
 - [Reproducibility and Checkpointing](../../guide/reproducibility) — full guide
+- [Finalist validation and fold reuse](../../guide/advanced-optimizer-control#cheaper-search-with-full-training-finalist-validation)
 - [Checkpointing & Resume Example](../../examples/checkpointing) — annotated example
 - [Stop After a Time Budget](./time-budget) — stop cleanly at a time limit, then resume

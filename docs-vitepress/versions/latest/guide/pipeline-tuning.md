@@ -41,6 +41,12 @@ print(list(pipe.get_params().keys()))
 
 Use `pipe.get_params().keys()` to discover the exact names before writing `param_grid`.
 
+### Choose a configured pipeline step
+
+Use the step name as the parameter and give `Categorical` a list of configured
+estimators. This lets you offer a finite set of model choices whose parameters
+depend on the model or kernel. See [conditional choices for an SVM pipeline](../examples/conditional-pipeline-choices).
+
 ## Full Example: Gradient Boosting Regression Pipeline
 
 ```python
@@ -95,6 +101,75 @@ y_pred = search.predict(X_test)
 - Always call `pipe.get_params().keys()` first — it is easy to misspell a step name.
 - Preprocessing parameters (e.g., `scaler__with_std`) are part of the same search space and can be tuned alongside model parameters.
 - For nested pipelines (a pipeline inside a pipeline), the naming chain extends: `outer_step__inner_step__paramname`.
+
+## Cache fitted preprocessing with `Pipeline.memory`
+
+When many candidates share an expensive transformer, set `memory` on the
+scikit-learn pipeline. Candidates that use the same transformer settings and
+training inputs can reuse the fitted transformer and its transformed training
+data. Keep the transformer inside the pipeline so it is fitted on each fold's
+training rows. scikit-learn fits the final pipeline step for every fresh CV fold.
+
+This example compares cold-cache and uncached fits with the same splits, seed,
+and search settings. Replace the transformer and dataset with your own workload
+when deciding whether to enable caching.
+
+```python
+from tempfile import TemporaryDirectory
+from time import perf_counter
+
+from sklearn.datasets import load_digits
+from sklearn.decomposition import PCA
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import StratifiedKFold, train_test_split
+from sklearn.pipeline import Pipeline
+
+from sklearn_genetic import GASearchCV
+from sklearn_genetic.callbacks import CVBudgetStopping
+from sklearn_genetic.space import Continuous
+
+X, y = load_digits(return_X_y=True)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.25, stratify=y, random_state=42
+)
+cv = list(StratifiedKFold(3, shuffle=True, random_state=42).split(X_train, y_train))
+
+with TemporaryDirectory() as cache_dir:
+    for memory in (None, cache_dir):
+        pipe = Pipeline([
+            ("pca", PCA(n_components=24, svd_solver="full")),
+            ("classifier", LogisticRegression(max_iter=500, random_state=42)),
+        ], memory=memory)
+        search = GASearchCV(
+            pipe,
+            param_grid={"classifier__C": Continuous(0.001, 100, distribution="log-uniform")},
+            cv=cv,
+            scoring="accuracy",
+            population_size=8,
+            generations=4,
+            random_state=42,
+            n_jobs=1,
+            verbose=False,
+        )
+        start = perf_counter()
+        search.fit(X_train, y_train, callbacks=CVBudgetStopping(16))
+        seconds = perf_counter() - start
+        label = "cached" if memory else "uncached"
+        folds = search.fit_counts_["search_fold_fits"]
+        holdout = search.score(X_test, y_test)
+        print(f"{label}: {seconds:.3f} seconds, {folds} fold fits")
+        print(f"CV accuracy: {search.best_score_:.4f}, holdout accuracy: {holdout:.4f}")
+```
+
+`GASearchCV(use_cache=True)` reuses whole candidate evaluations when the same
+parameters recur. `Pipeline.memory` can save preprocessing work even when each
+candidate uses different model parameters. Compare total elapsed `fit` time as
+well as CV fold counts, since a reused transformer still counts as part of a
+fold fit. Seed randomized transformers so a cached fit can be compared with a
+reproducible uncached fit. A cheap transformer or many distinct preprocessing
+settings can make hashing and disk I/O cost more than they save. The temporary
+directory in the example deletes cached data when the comparison finishes.
+See the [scikit-learn Pipeline API](https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html).
 
 ## Using Preset Search Spaces
 

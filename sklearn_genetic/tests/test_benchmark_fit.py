@@ -54,6 +54,10 @@ def test_fit_benchmark_counts_finalist_work_for_both_searches(monkeypatch, tmp_p
             == cv_calls
         )
         assert result["cv_fold_fits"] == summary["cv_fold_fits_mean"] == fold_fits
+        counts = result["fit_counts"]
+        assert counts["search_cv_calls"] + counts["finalist_cv_calls"] == cv_calls
+        assert counts["search_fold_fits"] + counts["finalist_fold_fits"] == fold_fits
+        assert counts["refit_fits"] == 1
 
 
 def _benchmark_result(*, use_cache, cache_hits, duplicate_candidates, cv_calls):

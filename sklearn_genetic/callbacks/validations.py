@@ -1,10 +1,12 @@
-from ..parameters import Metrics, CallbackMethods
+from ..parameters import FITNESS_HISTORY_METRICS, CallbackMethods
 from .base import BaseCallback
 
 
 def check_stats(metric):
-    if metric not in Metrics.list():
-        raise ValueError(f"metric must be one of {Metrics.list()}, but got {metric} instead")
+    if metric not in FITNESS_HISTORY_METRICS:
+        raise ValueError(
+            f"metric must be one of {FITNESS_HISTORY_METRICS}, but got {metric} instead"
+        )
 
 
 def check_callback(callback):

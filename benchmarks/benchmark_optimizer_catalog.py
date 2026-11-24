@@ -4,9 +4,12 @@ import argparse
 import csv
 import json
 import platform
-from contextlib import ExitStack
+import sys
+from collections import Counter
+from contextlib import ExitStack, redirect_stdout
 from functools import partial
 from importlib.metadata import version
+from importlib.util import find_spec
 from pathlib import Path
 from time import perf_counter
 from unittest.mock import patch
@@ -31,16 +34,97 @@ from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from threadpoolctl import threadpool_limits
 
 from sklearn_genetic import GAFeatureSelectionCV, GASearchCV
+from sklearn_genetic.callbacks import CVBudgetStopping
 from sklearn_genetic.space import Categorical, Continuous, Integer
 
+_ENGINE_NAMES = ("deap", "scipy", "nevergrad", "cmaes", "pymoo")
+_PILOT_VARIANTS = {
+    "nevergrad": ("TwoPointsDE", "OnePlusOne"),
+    "cmaes": (".15", ".25", ".4"),
+    "pymoo": (".5", ".8", "1"),
+}
+_CATALOG_CASES = (
+    "tumor-params",
+    "cancer",
+    "diabetes",
+    "diabetes-svr",
+    "sparse-easy",
+    "sparse-hard",
+    "linear-easy",
+    "linear-hard",
+    "friedman",
+)
+_PILOT_CASES = ("wine", "wine-mask", "calibration-cls", "linear-calibration")
+# Synthetic data use offset seeds to keep generation separate from splitting.
+_MAX_DATA_SEED_OFFSET = 40_000
 
-def measure(case, backend, variant, seed, cache, pilot, target=32):
-    from sklearn_genetic._cmaes_backend import optimize as cmaes
-    from sklearn_genetic._nevergrad_backend import optimize as nevergrad
-    from sklearn_genetic._pymoo_backend import optimize as pymoo
 
+def random_search(problem, evaluate, report):
+    """Keep the shared initial population and draw independent later proposals."""
+    rng = np.random.default_rng(problem.seed)
+    size = len(problem.initial_population)
+    width = len(problem.initial_population[0])
+    cap = problem.max_features or width
+
+    def sample():
+        if problem.task == "parameters":
+            return [dim.sample() for dim in problem.dimensions]
+        mask = np.zeros(width, dtype=int)
+        count = rng.integers(1, cap + 1)
+        mask[rng.choice(width, count, replace=False)] = 1
+        return mask.tolist()
+
+    report([handle for _, handle in evaluate(problem.initial_population)])
+    for _ in range(problem.generations):
+        report([handle for _, handle in evaluate([sample() for _ in range(size)])])
+
+
+def tpe_search(problem, evaluate, report):
+    """Run sequential Optuna TPE on the catalog's tuning spaces."""
+    import optuna
+
+    previous_verbosity = optuna.logging.get_verbosity()
+    optuna.logging.set_verbosity(optuna.logging.WARNING)
+    try:
+        study = optuna.create_study(sampler=optuna.samplers.TPESampler(seed=problem.seed))
+    finally:
+        optuna.logging.set_verbosity(previous_verbosity)
+
+    for row in problem.initial_population:
+        study.enqueue_trial(dict(zip(problem.parameter_names, row, strict=True)))
+
+    def suggest(trial, name, dim):
+        if isinstance(dim, Categorical):
+            return trial.suggest_categorical(name, dim.choices)
+        if isinstance(dim, Integer):
+            return trial.suggest_int(name, dim.lower, dim.upper)
+        return trial.suggest_float(
+            name, dim.lower, dim.upper, log=dim.distribution == "log-uniform"
+        )
+
+    # CV order and timings remain visible to the catalog, and TPE can learn
+    # from each completed trial before asking for the next one.
+    for _ in range(problem.generations + 1):
+        handles = []
+        for _ in problem.initial_population:
+            trial = study.ask()
+            candidate = [
+                suggest(trial, name, dim)
+                for name, dim in zip(problem.parameter_names, problem.dimensions, strict=True)
+            ]
+            ((loss, handle),) = evaluate([candidate])
+            study.tell(trial, loss)
+            handles.append(handle)
+        report(handles)
+
+
+def is_mask_case(case):
+    return case.startswith(("sparse", "linear")) or case in ("cancer", "wine-mask")
+
+
+def make_search(case, backend, variant, seed, cache, pilot, proposal_budget, public_refit):
     classification = not case.startswith(("diabetes", "linear", "friedman"))
-    masks = case.startswith(("sparse", "linear")) or case in ("cancer", "wine-mask")
+    masks = is_mask_case(case)
     if case.startswith(("sparse", "calibration-cls")):
         difficulty = {
             "sparse-easy": (1.6, 0.01),
@@ -72,7 +156,9 @@ def measure(case, backend, variant, seed, cache, pilot, target=32):
             random_state=30_000 + seed,
         )
     elif case == "friedman":
-        X, y = make_friedman1(n_samples=300, n_features=24, noise=1.5, random_state=40_000 + seed)
+        X, y = make_friedman1(
+            n_samples=300, n_features=24, noise=1.5, random_state=_MAX_DATA_SEED_OFFSET + seed
+        )
     elif case.startswith("diabetes"):
         X, y = load_diabetes(return_X_y=True, scaled=False)
     elif case in ("wine", "wine-mask"):
@@ -90,17 +176,23 @@ def measure(case, backend, variant, seed, cache, pilot, target=32):
         model = Ridge(alpha=0.1)
     elif case == "diabetes-svr":
         model = make_pipeline(StandardScaler(), SVR())
-    engine = backend
+    engine = {"random": random_search, "tpe": tpe_search}.get(backend, backend)
     prob = 0.8
     if pilot:
         if backend == "cmaes":
+            from sklearn_genetic._cmaes_backend import optimize as cmaes
+
             engine = partial(cmaes, sigma=float(variant))
         elif backend == "nevergrad":
+            from sklearn_genetic._nevergrad_backend import optimize as nevergrad
+
             engine = partial(nevergrad, strategy=variant)
         elif backend == "pymoo":
+            from sklearn_genetic._pymoo_backend import optimize as pymoo
+
             prob, engine = float(variant), pymoo
     size = 8
-    generations = target // size - 1
+    generations = proposal_budget // size - 1
     options = dict(
         estimator=model,
         cv=(StratifiedKFold if classification else KFold)(3, shuffle=True, random_state=seed),
@@ -112,7 +204,7 @@ def measure(case, backend, variant, seed, cache, pilot, target=32):
         generations=generations,
         crossover_probability=prob,
         use_cache=cache,
-        refit=False,
+        refit=public_refit,
         verbose=False,
     )
     if masks:
@@ -137,6 +229,28 @@ def measure(case, backend, variant, seed, cache, pilot, target=32):
             ),
         )
         search = GASearchCV(param_grid=grid, **options)
+    return search, X, y, hold_X, hold_y, scoring, masks
+
+
+def measure(
+    case,
+    backend,
+    variant,
+    seed,
+    cache,
+    pilot,
+    target=32,
+    *,
+    public_refit=False,
+    proposal_budget=None,
+    stop_at_budget=False,
+):
+    if proposal_budget is None:
+        proposal_budget = 2 * target if stop_at_budget else target
+    search, X, y, hold_X, hold_y, scoring, masks = make_search(
+        case, backend, variant, seed, cache, pilot, proposal_budget, public_refit
+    )
+    callbacks = CVBudgetStopping(target) if stop_at_budget else None
     trace = []
     cv_seconds = 0
     cv_calls = 0
@@ -162,24 +276,36 @@ def measure(case, backend, variant, seed, cache, pilot, target=32):
         stack.enter_context(patch("sklearn_genetic.genetic_search.cross_validate", clock_cv))
         stack.enter_context(patch.object(type(search), "_evaluate_individual", tracked))
         start = perf_counter()
-        search.fit(X, y)
+        search.fit(X, y, callbacks=callbacks)
         total = perf_counter() - start
     if not trace or not cv_calls == len(trace) == search.fit_stats_["cross_validate_calls"]:
         raise RuntimeError(f"CV count mismatch: {case}, {backend}, {seed}")
-    return (trace, model, X, y, hold_X, hold_y, scoring, masks, search, total)
+    if stop_at_budget and cv_calls > target:
+        raise RuntimeError(f"CV budget exceeded: {case}, {backend}, {seed}")
+    return (trace, search.estimator, X, y, hold_X, hold_y, scoring, masks, search, total)
+
+
+def prefix_winner(run, budget):
+    trace, _, _, _, _, _, _, masks, _, _ = run
+    return max(trace[:budget], key=lambda row: (row[0], -sum(row[1]) if masks else 0))
+
+
+def holdout_score(run, coords):
+    _, model, X, y, hold_X, hold_y, scoring, masks, search, _ = run
+    model = clone(model)
+    if masks:
+        columns = np.asarray(coords, dtype=bool)
+        X, hold_X = X[:, columns], hold_X[:, columns]
+    else:
+        model.set_params(**dict(zip(search.param_grid, coords, strict=True)))
+    return get_scorer(scoring)(model.fit(X, y), hold_X, hold_y), X.shape[1]
 
 
 def summarize(run, budget):
-    trace, model, X, y, hold_X, hold_y, scoring, masks, search, total = run
+    trace, _, _, y, _, hold_y, scoring, masks, search, total = run
     observed = trace[:budget]
-    best, coords, _, _ = max(observed, key=lambda x: (x[0], -sum(x[1]) if masks else 0))
-    if masks:
-        mask = np.array(coords, dtype=bool)
-        X, hold_X = X[:, mask], hold_X[:, mask]
-    else:
-        model = clone(model).set_params(**dict(zip(search.space.parameters, coords)))
-    model.fit(X, y)
-    held_out = get_scorer(scoring)(model, hold_X, hold_y)
+    best, coords, _, _ = prefix_winner(run, budget)
+    held_out, selected = holdout_score(run, coords)
     if scoring == "balanced_accuracy":
         baseline = 1.0 / len(np.unique(y))
         skill = (held_out - baseline) / (1 - baseline)
@@ -201,61 +327,273 @@ def summarize(run, budget):
         holdout=held_out,
         holdout_baseline=baseline,
         holdout_skill=skill,
-        selected=X.shape[1] if masks else "",
+        selected=selected if masks else "",
         prefix_ms=1000 * elapsed,
         prefix_outside_cv_ms=1000 * (elapsed - cv_time),
         full_outside_cv_ms=1000 * (total - trace[-1][3]),
         full_ms=1000 * total,
+        full_search_ms=1000 * search.search_time_,
+    )
+
+
+def prefix_scores(run, calls, refits):
+    if not calls:
+        return {"best_cv": None, "holdout": None, "elapsed_ms": None}
+    best, coords, _, _ = prefix_winner(run, calls)
+    if coords not in refits:
+        refits[coords] = holdout_score(run, coords)[0]
+    return dict(best_cv=best, holdout=refits[coords], elapsed_ms=1000 * run[0][calls - 1][2])
+
+
+def _prefix_checkpoint_fields(run, checkpoints, available, refits, *, prefix=""):
+    fields = {}
+    for calls in checkpoints:
+        scores = prefix_scores(run, calls if calls <= available else 0, refits)
+        fields.update({f"{prefix}cv_{calls}_{key}": value for key, value in scores.items()})
+    return fields
+
+
+def comparison_checkpoints(run, cohort, target, deadlines, refits=None, *, cv_checkpoints=()):
+    trace = run[0]
+    if refits is None:
+        refits = {}
+    _, coords, _, _ = prefix_winner(run, cohort["cv_calls"])
+    refits[coords] = cohort["holdout"]
+
+    scores = prefix_scores(run, target if len(trace) >= target else 0, refits)
+    fields = {f"target_{key}": val for key, val in scores.items()}
+    fields.update(_prefix_checkpoint_fields(run, cv_checkpoints, len(trace), refits))
+    for deadline in deadlines:
+        calls = sum(elapsed * 1000 <= deadline for _, _, elapsed, _ in trace[:target])
+        fields[f"time_{deadline}ms_cv_calls"] = calls
+        scores = prefix_scores(run, calls, refits)
+        fields.update({f"time_{deadline}ms_{key}": val for key, val in scores.items()})
+    return fields
+
+
+def _budget_status(search, calls, target):
+    if calls == target:
+        return "target_reached"
+    if search.search_space_exhausted_:
+        return "space_exhausted"
+    return "below_target"
+
+
+def pair_comparisons(
+    runs, engines, references, target, refits, *, stopped=False, cv_checkpoints=()
+):
+    """Compare each engine and reference at their largest shared prefix up to target."""
+    for engine in engines:
+        for reference in references:
+            budget = min(target, len(runs[engine][0]), len(runs[reference][0]))
+            row = dict(
+                backend=engine,
+                reference=reference,
+                matched_cv_calls=budget,
+                completed_target=budget == target,
+            )
+            row.update({f"cv_{calls}_completed": budget >= calls for calls in cv_checkpoints})
+            for side, name in (("backend", engine), ("reference", reference)):
+                run = runs[name]
+                run_refits = refits.setdefault(name, {})
+                scores = prefix_scores(run, budget, run_refits)
+                row[f"{side}_cv_calls"] = len(run[0])
+                row[f"{side}_best_cv"] = scores["best_cv"]
+                row[f"{side}_prefix_holdout"] = scores["holdout"]
+                row[f"{side}_prefix_ms"] = scores["elapsed_ms"]
+                row.update(
+                    _prefix_checkpoint_fields(
+                        run, cv_checkpoints, budget, run_refits, prefix=f"{side}_"
+                    )
+                )
+                if stopped:
+                    search, total = run[-2:]
+                    row[f"{side}_budget_status"] = _budget_status(search, len(run[0]), target)
+                    row[f"{side}_fit_ms"] = 1000 * total
+                    row[f"{side}_search_ms"] = 1000 * search.search_time_
+                    row[f"{side}_refit_ms"] = 1000 * search.refit_time_ if search.refit else None
+            yield row
+
+
+def _selected_coordinates(search, masks):
+    if masks:
+        return tuple(search.get_support())
+    return tuple(search.best_params_[name] for name in search.param_grid)
+
+
+def summarize_stopped_search(run, target):
+    trace, _, _, _, hold_X, hold_y, scoring, masks, search, _ = run
+    coords = _selected_coordinates(search, masks)
+    held_out = (
+        get_scorer(scoring)(search, hold_X, hold_y)
+        if search.refit
+        else holdout_score(run, coords)[0]
+    )
+    return dict(
+        completed_target=len(trace) == target,
+        budget_status=_budget_status(search, len(trace), target),
+        returned_cv=search.best_score_,
+        returned_holdout=held_out,
+        returned_matches_trace_winner=coords == prefix_winner(run, len(trace))[1],
+    )
+
+
+def summarize_public_refit(run, budget):
+    trace, _, _, _, hold_X, hold_y, scoring, masks, search, _ = run
+    coords = _selected_coordinates(search, masks)
+    return dict(
+        public_holdout=get_scorer(scoring)(search, hold_X, hold_y),
+        public_cv=search.best_score_,
+        public_selected=int(sum(coords)) if masks else "",
+        public_winner_in_prefix=any(candidate == coords for _, candidate, *_ in trace[:budget]),
+        public_refit_ms=1000 * search.refit_time_,
     )
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--pilot", action="store_true")
+    parser.add_argument(
+        "--cases",
+        nargs="+",
+        choices=(*_CATALOG_CASES, *_PILOT_CASES),
+        help="Run the selected datasets and tasks",
+    )
+    parser.add_argument(
+        "--engines",
+        nargs="+",
+        choices=_ENGINE_NAMES,
+        help="Run only these optimization engines, in addition to requested references",
+    )
+    parser.add_argument(
+        "--seeds", nargs="+", type=int, help="Use these seeds for data splits and searches"
+    )
     parser.add_argument("--budget", type=int, choices=(32, 96), default=32)
+    parser.add_argument(
+        "--stop-at-budget",
+        action="store_true",
+        help="Stop each fit at the specified number of fresh search CV calls",
+    )
+    parser.add_argument(
+        "--proposal-budget",
+        type=int,
+        help="Nominal proposal count used to set the generation limit; defaults to twice the CV target when capped",
+    )
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument(
+        "--public-refit",
+        action="store_true",
+        help="Also score the winner from the fitted estimator's public prediction API",
+    )
+    parser.add_argument("--references", nargs="+", choices=("random", "tpe"), default=[])
+    parser.add_argument(
+        "--pairs-output", type=Path, help="Write matched engine/reference CV prefixes to a CSV"
+    )
+    parser.add_argument("--time-ms", nargs="+", type=int, default=[])
+    parser.add_argument(
+        "--cv-checkpoints",
+        nargs="+",
+        type=int,
+        default=[],
+        help="Record additional score and time checkpoints at these fresh CV call counts",
+    )
     args = parser.parse_args()
-    engines = (
-        (
-            [("nevergrad", v) for v in ("TwoPointsDE", "OnePlusOne")]
-            + [("cmaes", v) for v in (".15", ".25", ".4")]
-            + [("pymoo", v) for v in (".5", ".8", "1")]
-        )
-        if args.pilot
-        else [(k, "default") for k in ("deap", "scipy", "nevergrad", "cmaes", "pymoo")]
-    )
-    seeds = (7, 19, 31) if args.pilot else (41, 59, 73, 97, 113)
-    cases = (
-        ("wine", "wine-mask", "calibration-cls", "linear-calibration")
-        if args.pilot
-        else (
-            "tumor-params",
-            "cancer",
-            "diabetes",
-            "diabetes-svr",
-            "sparse-easy",
-            "sparse-hard",
-            "linear-easy",
-            "linear-hard",
-            "friedman",
-        )
-    )
+    proposal_budget = args.proposal_budget
+    if proposal_budget is None:
+        proposal_budget = 2 * args.budget if args.stop_at_budget else args.budget
+    if proposal_budget < args.budget or proposal_budget % 8:
+        parser.error("--proposal-budget must be a multiple of 8 and at least --budget")
+    references = list(dict.fromkeys(args.references))
+    deadlines = sorted(set(args.time_ms))
+    if any(ms <= 0 for ms in deadlines):
+        parser.error("--time-ms needs positive milliseconds")
+    checkpoints = sorted(set(args.cv_checkpoints))
+    if any(not 1 <= calls <= args.budget for calls in checkpoints):
+        parser.error("--cv-checkpoints must be between 1 and --budget")
+    if args.pilot and references:
+        parser.error("--references compares the default engines; omit --pilot")
+    if args.pairs_output is not None and not references:
+        parser.error("--pairs-output requires --references")
+    variants = _PILOT_VARIANTS if args.pilot else dict.fromkeys(_ENGINE_NAMES, ("default",))
+    engine_names = list(dict.fromkeys(args.engines or variants))
+    if any(engine not in variants for engine in engine_names):
+        parser.error(f"--pilot can only use these engines: {', '.join(_PILOT_VARIANTS)}")
+    engines = [(engine, variant) for engine in engine_names for variant in variants[engine]]
+    default_seeds = (7, 19, 31) if args.pilot else (41, 59, 73, 97, 113)
+    seeds = list(dict.fromkeys(args.seeds or default_seeds))
+    max_seed = np.iinfo(np.uint32).max - _MAX_DATA_SEED_OFFSET
+    if any(seed < 0 or seed > max_seed for seed in seeds):
+        parser.error(f"--seeds must be between 0 and {max_seed}")
+    cases = list(dict.fromkeys(args.cases or (_PILOT_CASES if args.pilot else _CATALOG_CASES)))
+    if "tpe" in references:
+        if all(map(is_mask_case, cases)):
+            parser.error("TPE needs at least one tuning case")
+        if find_spec("optuna") is None:
+            parser.error("Install sklearn-genetic-opt[benchmark] for the TPE reference")
     partial_path = args.output.with_suffix(args.output.suffix + ".partial")
+    pairs_path = None
+    if args.pairs_output is not None:
+        pairs_path = args.pairs_output.with_suffix(args.pairs_output.suffix + ".partial")
+        outputs = (args.output, partial_path, args.pairs_output, pairs_path)
+        if len({path.resolve() for path in outputs}) != len(outputs):
+            parser.error(
+                "--output and --pairs-output need distinct paths, including .partial files"
+            )
     count = 0
+    cohort_completions = Counter()
+    pair_completions = Counter()
     writer = None
-    with threadpool_limits(1), partial_path.open("w", newline="") as out:
+    pair_writer = None
+    with threadpool_limits(1), ExitStack() as files:
+        if args.stop_at_budget:
+            # Generation callbacks can report progress while fit is running.
+            files.enter_context(redirect_stdout(sys.stderr))
+        out = files.enter_context(partial_path.open("w", newline=""))
+        pairs_out = files.enter_context(pairs_path.open("w", newline="")) if pairs_path else None
         # Pay import and solver setup costs once outside the timed runs.
-        for engine, variant in engines:
+        for engine, variant in [*engines, *((name, "reference") for name in references)]:
             measure("wine", engine, variant, 3, False, args.pilot)
         for cache in ((False,) if args.pilot else (False, True)):
             for case in cases:
+                active_references = [
+                    name for name in references if name != "tpe" or not is_mask_case(case)
+                ]
+                active = [*engines, *((name, "reference") for name in active_references)]
                 for i, seed in enumerate(seeds):
-                    order = engines[i % len(engines) :] + engines[: i % len(engines)]
+                    offset = i % len(active)
+                    order = active[offset:] + active[:offset]
                     runs = [
-                        (name, v, measure(case, name, v, seed, cache, args.pilot, args.budget))
+                        (
+                            name,
+                            v,
+                            measure(
+                                case,
+                                name,
+                                v,
+                                seed,
+                                cache,
+                                args.pilot,
+                                args.budget,
+                                public_refit=args.public_refit,
+                                proposal_budget=proposal_budget,
+                                stop_at_budget=args.stop_at_budget,
+                            ),
+                        )
                         for name, v in order
                     ]
+                    refits = {}
                     budget = min(args.budget, *(len(run[0]) for _, _, run in runs))
+                    if references:
+                        cohort_completions[cache, budget == args.budget] += 1
+                        call_counts = {name: len(run[0]) for name, _, run in runs}
+                        for engine, _ in engines:
+                            for reference in active_references:
+                                key = (cache, engine, reference)
+                                shared = min(call_counts[engine], call_counts[reference])
+                                pair_completions[(*key, "eligible")] += 1
+                                pair_completions[(*key, "complete")] += shared >= args.budget
+                                for calls in checkpoints:
+                                    pair_completions[(*key, calls)] += shared >= calls
                     for backend, variant, run in runs:
                         row = dict(
                             case=case,
@@ -266,34 +604,98 @@ def main():
                             variant=variant,
                             **summarize(run, budget),
                         )
+                        if args.public_refit:
+                            row.update(summarize_public_refit(run, budget))
+                        if args.stop_at_budget:
+                            row.update(summarize_stopped_search(run, args.budget))
+                        if references or deadlines or checkpoints:
+                            row.update(
+                                comparison_checkpoints(
+                                    run,
+                                    row,
+                                    args.budget,
+                                    deadlines,
+                                    refits.setdefault(backend, {}),
+                                    cv_checkpoints=checkpoints,
+                                )
+                            )
                         if writer is None:
                             writer = csv.DictWriter(out, fieldnames=list(row), lineterminator="\n")
                             writer.writeheader()
                         writer.writerow(row)
                         count += 1
+                    if pairs_out is not None:
+                        runs_by_name = {name: run for name, _, run in runs}
+                        for pair in pair_comparisons(
+                            runs_by_name,
+                            (name for name, _ in engines),
+                            active_references,
+                            args.budget,
+                            refits,
+                            stopped=args.stop_at_budget,
+                            cv_checkpoints=checkpoints,
+                        ):
+                            row = dict(
+                                case=case, target=args.budget, seed=seed, cache=cache, **pair
+                            )
+                            if pair_writer is None:
+                                pair_writer = csv.DictWriter(
+                                    pairs_out, fieldnames=list(row), lineterminator="\n"
+                                )
+                                pair_writer.writeheader()
+                            pair_writer.writerow(row)
+                        pairs_out.flush()
                     out.flush()
     partial_path.replace(args.output)
-    print(
-        json.dumps(
-            dict(
-                python=platform.python_version(),
-                platform=platform.platform(),
-                packages={
-                    p: version(p)
-                    for p in (
-                        "scikit-learn",
-                        "numpy",
-                        "deap",
-                        "scipy",
-                        "nevergrad",
-                        "cmaes",
-                        "pymoo",
-                    )
-                },
-                rows=count,
-            )
-        )
+    if pairs_path is not None:
+        pairs_path.replace(args.pairs_output)
+    packages = ["scikit-learn", "numpy", "deap", "scipy"]
+    packages.extend(engine for engine in _PILOT_VARIANTS if engine in engine_names)
+    if "tpe" in references:
+        packages.append("optuna")
+    metadata = dict(
+        python=platform.python_version(),
+        platform=platform.platform(),
+        packages={package: version(package) for package in packages},
+        rows=count,
     )
+    if args.stop_at_budget or args.proposal_budget is not None:
+        metadata.update(
+            evaluation_mode="capped" if args.stop_at_budget else "prefix",
+            proposal_budget=proposal_budget,
+            target_cv_calls=args.budget,
+        )
+    if checkpoints:
+        metadata.update(cv_checkpoints=checkpoints, target_cv_calls=args.budget)
+    if references:
+        metadata["target_cv_calls"] = args.budget
+        metadata["cohorts"] = [
+            dict(
+                cache=cache,
+                complete=cohort_completions[cache, True],
+                eligible=cohort_completions[cache, True] + cohort_completions[cache, False],
+            )
+            for cache in (False, True)
+        ]
+        metadata["pairs"] = [
+            dict(
+                cache=cache,
+                backend=engine,
+                reference=reference,
+                complete=pair_completions[cache, engine, reference, "complete"],
+                eligible=pair_completions[cache, engine, reference, "eligible"],
+            )
+            for cache in (False, True)
+            for engine, _ in engines
+            for reference in references
+        ]
+        if checkpoints:
+            for row in metadata["pairs"]:
+                key = (row["cache"], row["backend"], row["reference"])
+                row["completed_by_cv_calls"] = {
+                    calls: pair_completions[(*key, calls)] for calls in checkpoints
+                }
+    print(json.dumps(metadata))
 
 
 if __name__ == "__main__":

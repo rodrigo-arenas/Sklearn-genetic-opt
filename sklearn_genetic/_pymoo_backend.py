@@ -26,12 +26,11 @@ def optimize(problem, evaluate, report):
         report([handle for _, handle in evaluate(problem.initial_population)])
         return
     size = len(problem.initial_population)
-    initial = [space.encode(row) for row in problem.initial_population]
     prob = problem.crossover_probability
     binary = problem.task == "features"
     if binary:
         model = Problem(n_var=len(space.axes), xl=0, xu=1, vtype=bool)
-        pop = Population.new(X=np.asarray(initial, dtype=bool))
+        pop = Population.new(X=np.asarray(problem.initial_population, dtype=bool))
         solver = GA(
             pop_size=size,
             sampling=pop,
@@ -40,6 +39,7 @@ def optimize(problem, evaluate, report):
             eliminate_duplicates=False,
         )
     else:
+        initial = [space.encode(row) for row in problem.initial_population]
         variables = {}
         for i, (kind, upper) in enumerate(space.axes):
             if kind == "choice":
@@ -69,8 +69,10 @@ def optimize(problem, evaluate, report):
         if gen == 0:
             rows = problem.initial_population
         elif binary:
-            rows = [space.decode(x) for x in trials.get("X")]
-            trials.set("X", np.asarray(rows, dtype=bool))
+            masks = space.decode_masks(trials.get("X"))
+            # Each uint8 byte is one repaired bit. The evaluator can reuse these tuples.
+            rows = [tuple(mask.tobytes()) for mask in masks]
+            trials.set("X", masks.astype(bool))
         else:
             rows = [space.decode([x[i] for i in variables]) for x in trials.get("X")]
         results = evaluate(rows)
