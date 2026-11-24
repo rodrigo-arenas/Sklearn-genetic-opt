@@ -1085,7 +1085,7 @@ class _FinalSelectionMixin:
             selected_params=None,
             candidates=candidate_results,
         )
-        started_at = time.monotonic()
+        started_at = time.perf_counter()
         try:
             cv_splits = self._final_selection_splits()
             reused = (
@@ -1118,7 +1118,7 @@ class _FinalSelectionMixin:
                     }
                 )
         finally:
-            selection["time_seconds"] = time.monotonic() - started_at
+            selection["time_seconds"] = time.perf_counter() - started_at
 
         valid_results = [item for item in candidate_results if np.isfinite(item["score"])]
         if not valid_results:
@@ -2066,9 +2066,9 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
 
             refit_params = self._refit_metadata(best_estimator)
             targets = self._target_args(self.y_)
-            refit_start_time = time.monotonic()
+            refit_start_time = time.perf_counter()
             best_estimator.fit(self.X_, *targets, **refit_params)
-            self.refit_time_ = time.monotonic() - refit_start_time
+            self.refit_time_ = time.perf_counter() - refit_start_time
             self.fit_counts_["refit_fits"] = 1
 
             self.best_estimator_ = self.estimator_ = best_estimator
@@ -3106,11 +3106,11 @@ class GAFeatureSelectionCV(
 
             refit_params = self._refit_metadata(best_estimator)
             targets = self._target_args(self.y_)
-            refit_start_time = time.monotonic()
+            refit_start_time = time.perf_counter()
             best_estimator.fit(
                 self._select_feature_columns(best_features), *targets, **refit_params
             )
-            self.refit_time_ = time.monotonic() - refit_start_time
+            self.refit_time_ = time.perf_counter() - refit_start_time
             self.fit_counts_["refit_fits"] = 1
 
             self.best_estimator_ = self.estimator_ = best_estimator

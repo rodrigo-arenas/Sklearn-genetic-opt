@@ -169,9 +169,10 @@ larger than the number of returned fold scores. See the
 
 ### Fit time by phase
 
-These elapsed times are in seconds and use a monotonic clock on both search
-estimators. Use [`plot_fit_work(unit="seconds")`](./plots#plot-fit-work) to chart
-the recorded phases.
+These elapsed times are in seconds. Both search estimators and the optimizer
+catalog measure durations with the same high-resolution clock, `time.perf_counter()`.
+Use [`plot_fit_work(unit="seconds")`](./plots#plot-fit-work) to chart the recorded
+phases.
 
 | Field | Phase measured |
 | --- | --- |

@@ -3,7 +3,7 @@ import pickle
 from copy import copy
 from dataclasses import fields
 from numbers import Integral
-from time import monotonic
+from time import perf_counter
 
 import numpy as np
 import pandas as pd
@@ -383,7 +383,7 @@ class GeneticEstimatorMixin:
 
     def _run_optimizer(self, optimizer, runtime, checkpoint, context):
         previous_calls = self.fit_stats_.get("cross_validate_calls", 0)
-        started_at = monotonic()
+        started_at = perf_counter()
         try:
             if optimizer is not None:
                 from ._backend_runtime import run_optimizer
@@ -402,7 +402,7 @@ class GeneticEstimatorMixin:
                     data_hash=context,
                 )
         finally:
-            self.search_time_ = monotonic() - started_at
+            self.search_time_ = perf_counter() - started_at
 
         calls = self.fit_stats_["cross_validate_calls"] - previous_calls
         self.fit_counts_ = {

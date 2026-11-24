@@ -145,7 +145,7 @@ for upgrade guidance and links to the API examples.
 - Both estimators expose `search_time_` when the optimizer returns or raises.
   It measures elapsed search seconds from the current `fit`, including callbacks
   and any optimizer checkpoint replay. Search, finalist validation, and refit
-  durations use a monotonic clock.
+  durations use the same high-resolution elapsed clock as the optimizer catalog.
 - `plot_fit_work(unit="seconds")` and `SearchPlotter.fit_work(unit="seconds")`
   chart elapsed search, finalist validation, and refit time. Phases without a
   saved duration are marked `No timing`.

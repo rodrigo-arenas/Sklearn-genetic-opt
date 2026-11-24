@@ -1634,11 +1634,11 @@ def test_fit_phase_durations_use_elapsed_clock(task, engine, monkeypatch):
         pytest.importorskip(engine)
     X, y = load_iris(return_X_y=True)
     search_elapsed = iter((2.0, 9.5))
-    monkeypatch.setattr(_base, "monotonic", search_elapsed.__next__)
+    monkeypatch.setattr(_base, "perf_counter", search_elapsed.__next__)
     wall = iter((100.0, 90.0, 170.0, 150.0))
     elapsed = iter((10.0, 13.75, 14.0, 14.125))
     monkeypatch.setattr(
-        genetic_search, "time", SimpleNamespace(time=wall.__next__, monotonic=elapsed.__next__)
+        genetic_search, "time", SimpleNamespace(time=wall.__next__, perf_counter=elapsed.__next__)
     )
     result = search(
         task,
@@ -2039,7 +2039,7 @@ def test_candidate_fit_failure_preserves_search_time_and_raises_the_original_err
     if engine != "deap":
         pytest.importorskip(engine)
     ticks = iter((1.0, 3.5))
-    monkeypatch.setattr(_base, "monotonic", ticks.__next__)
+    monkeypatch.setattr(_base, "perf_counter", ticks.__next__)
     model = _cv_failure_search(task, engine, error_score="raise")
     with pytest.raises(ValueError, match="^fixture estimator rejects this candidate$"):
         model.fit(*load_iris(return_X_y=True))
@@ -5165,7 +5165,7 @@ def test_fit_counts_measure_only_current_work_after_checkpoint_resume(
     if backend != "deap":
         pytest.importorskip(backend)
     search_elapsed = iter((1.0, 8.0, 11.0, 11.125))
-    monkeypatch.setattr(_base, "monotonic", search_elapsed.__next__)
+    monkeypatch.setattr(_base, "perf_counter", search_elapsed.__next__)
     X, y = load_iris(return_X_y=True)
     checkpoint = ModelCheckpoint(tmp_path / "counts.pkl")
     model = search(
