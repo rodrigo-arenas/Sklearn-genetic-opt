@@ -96,11 +96,12 @@ def test_homepage_links_to_released_pages():
 
     assert "The GA finds better hyperparameters than a grid search" not in homepage
     assert "Joint hyperparameter + feature search in one step" not in homepage
-    assert re.search(
-        r'<a\b[^>]*href="/versions/[^/]+/tutorials/budgeted-optimizer-search"'
-        r"[^>]*>Budget and Resume a Search</a>",
+    tutorial_link = re.search(
+        r'<a\b[^>]*href="/versions/[^/]+/tutorials/budgeted-optimizer-search"' r"[^>]*>(.*?)</a>",
         homepage,
+        re.DOTALL,
     )
+    assert tutorial_link and "Budget and Resume a Search" in tutorial_link[1]
     for page, label in [
         ("guide/basic-usage", "Run Your First Search"),
         ("benchmarks/optimizer-catalog", "Compare Optimizers"),
