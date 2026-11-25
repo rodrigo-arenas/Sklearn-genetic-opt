@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "docs:dev": "vitepress dev .",
-    "docs:build": "vitepress build .",
+    "docs:build": "node --max-old-space-size=4096 ./node_modules/vitepress/bin/vitepress.js build .",
     "docs:preview": "vitepress preview .",
     "docs:check-links": "python scripts/check_links.py",
     "examples:generate": "python scripts/build_docs.py",
