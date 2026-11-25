@@ -16,7 +16,7 @@ This example combines `sklearn-genetic-opt`'s built-in `MLflowConfig` integratio
 | Level | What is logged |
 |-------|----------------|
 | Parent run | Dataset inputs, optimizer settings, best parameters, holdout metrics, `fit_stats_`, fitted best estimator |
-| Nested candidate run (per candidate) | Hyperparameter values, cross-validation score (via `MLflowConfig`) |
+| Nested candidate run (per fresh evaluation) | Hyperparameter values, cross-validation score (via `MLflowConfig`) |
 
 ## Setup
 
@@ -79,7 +79,7 @@ test_dataset = mlflow.data.from_pandas(
 
 ## Configure the Search
 
-`MLflowConfig` is passed to `log_config` — it automatically creates nested candidate runs during `search.fit`.
+`MLflowConfig` is passed to `log_config` — it logs each fresh evaluation during `search.fit`. The parent opened below makes those runs children of the same search.
 
 ```python
 param_grid = {
@@ -247,13 +247,13 @@ mlflow ui --backend-store-uri sqlite:///mlflow3_tracking.db
 
 In the UI you will see:
 - A parent run for the full search with optimizer settings and holdout metrics
-- A nested child run for **each evaluated candidate** with its parameters and CV score
+- A nested child run for each fresh CV evaluation with its parameters and `score`; cache hits do not create another run
 
 ## Practical Notes
 
 - Use a parent run for the overall search and nested runs for candidate-level details.
 - Log datasets with `mlflow.log_input` so future readers know which data context produced the model.
-- Keep `save_models=False` in `MLflowConfig` if candidate-level model artifacts are too heavy; log only the final `best_estimator_` from the parent run.
+- Keep `save_models=False` for score comparisons. The candidate estimator passed to the logger is not the fitted estimator from a CV fold. To save a model for inference, log the refitted `best_estimator_` from the parent run as shown above.
 - Use logged-model tags for lifecycle metadata such as `stage`, validation metrics, owner, and optimizer settings.
 - For remote tracking, replace `TRACKING_URI` with your MLflow tracking server URI.
 

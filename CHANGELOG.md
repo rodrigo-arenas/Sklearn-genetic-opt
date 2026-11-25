@@ -5,6 +5,8 @@ for upgrade guidance and links to the API examples.
 
 ## Unreleased
 
+## 0.17.0
+
 ### Feature selection
 
 - `GAFeatureSelectionCV(preserve_dataframe=True)` gives the wrapped estimator

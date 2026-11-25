@@ -36,6 +36,18 @@ def test_is_internal_relative(target, expected):
     assert check_links._is_internal_relative(target) is expected
 
 
+def test_link_checker_discovers_frozen_docs(tmp_path, monkeypatch):
+    for version in ("latest", "0.16", "0.17", "notes", "1.2.3"):
+        (tmp_path / version).mkdir()
+    source = tmp_path / "0.17" / "release-notes.md"
+    source.write_text("[missing guide](./missing)", encoding="utf-8")
+    discovered = check_links.find_version_dirs(tmp_path)
+    assert [folder.name for folder in discovered] == ["0.16", "0.17", "latest"]
+    monkeypatch.setattr(check_links, "VERSION_DIRS", discovered)
+    monkeypatch.setattr(check_links, "ROOT_DOCS", [])
+    assert check_links.check() == [(source, "./missing")]
+
+
 def test_resolves(tmp_path):
     # Build a small docs tree.
     (tmp_path / "guide").mkdir()

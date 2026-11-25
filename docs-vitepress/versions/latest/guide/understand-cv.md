@@ -61,12 +61,12 @@ gen  nevals  fitness  fitness_std  fitness_best  fitness_max  fitness_min  div  
 | Column | Meaning |
 |--------|---------|
 | `gen` | Generation number |
-| `nevals` | Individuals evaluated this generation (may be less than `population_size` if cache hits occur) |
+| `nevals` | Candidates processed by the engine this generation; cached proposals need not trigger a fresh cross-validation call. Read `cross_validate_calls` for cumulative fresh candidate evaluations |
 | `fitness` | Average CV score across the population |
 | `fitness_std` | Standard deviation of the finite objective scores across candidates in the population |
-| `fitness_best` | Best score found so far across all generations |
-| `fitness_max` | Best score in this generation |
-| `fitness_min` | Worst score in this generation |
+| `fitness_best` | Best score retained in the optimizer archive. Use `history["fitness_best_observed"]` for the best finite score seen, even if the candidate was discarded |
+| `fitness_max` | Highest finite population score (best only when maximizing) |
+| `fitness_min` | Lowest finite population score (best when minimizing) |
 | `div` | Mean probability that two distinct population members disagree at a coordinate |
 | `unique` | Unique individual ratio — fraction of distinct individuals in the population |
 | `stag` | Stagnation generations — consecutive generations without improvement in `fitness_best` |

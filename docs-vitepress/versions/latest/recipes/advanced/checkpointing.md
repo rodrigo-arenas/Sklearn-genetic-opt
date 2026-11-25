@@ -160,10 +160,18 @@ resumed = clone(search).fit(X_train, y_train, callbacks=[checkpoint])
 print("Additional CV calls", resumed.fit_counts_["search_cv_calls"])
 ```
 
-For these four engines, keep the training rows and targets in the same order,
+:::warning Finish an in-progress search before upgrading
+SciPy, pymoo, Nevergrad and CatCMAwM require the same installed version of
+`sklearn-genetic-opt` as the one that wrote the checkpoint, even if all other
+package versions match. To finish a 0.16.0 run, resume it in its original
+0.16.0 environment. To run it on 0.17.0 instead, start a new search with a
+new checkpoint path and keep the original file. DEAP uses a different format;
+do not assume its checkpoints are portable across arbitrary versions either.
+:::
+
+For these four engines, keep the Python environment and dependencies unchanged. Keep the training rows and targets in the same order,
 along with the original splits, fit metadata, scorer, model, seed, population
-size, generation budget and solver options. Use the same Python environment
-and dependency versions. If you configured the adapter with `functools.partial`,
+size, generation budget and solver options. If you configured the adapter with `functools.partial`,
 recreate it with the same adapter function and keyword arguments. A stopping
 callback starts a fresh lifecycle on the next fit. Leave the previous timer
 or stopping condition out if you want to finish the original budget.

@@ -73,12 +73,12 @@ limit of eight columns. The fitted selector applies its mask during prediction.
 Choose an optimizer
 -------------------
 
-Version 0.16.0 includes DEAP by default and supports four optional engines.
+DEAP is included by default. Four additional engines are available as extras.
 Install the extra for the engine you want. For example, to use pymoo:
 
 .. code-block:: bash
 
-   python -m pip install "sklearn-genetic-opt[pymoo]==0.16.0"
+   python -m pip install "sklearn-genetic-opt[pymoo]>=0.16.0"
 
 Change one parameter on either estimator to run the same experiment with a
 different engine. Cloning keeps the earlier result available for comparison.
@@ -113,11 +113,10 @@ live plotting, early stopping and resuming from a completed generation.
 The `engine reference`_ lists supported domains, controls and checkpoint
 requirements. To integrate another optimizer, see the `plugin protocol`_.
 
-How do they compare? Across five held-out splits, pymoo had the lowest mean
-RMSE on both synthetic linear-regression feature-selection tasks. DEAP had
-the lowest mean RMSE when tuning a tree on Friedman #1. The `benchmarks`_
-compare nine workloads at matched counts of actual CV calls and include
-overhead, raw measurements and commands to reproduce the runs.
+How do they compare? The `benchmarks`_ compare the bundled optimizers at
+matched counts of fresh CV calls, using separate held-out scores. No single
+engine wins on every workload; choose the search space, metric and budget
+before comparing engines on your own data.
 
 Inspect a fitted search
 -----------------------
@@ -131,6 +130,18 @@ network search progressed and which candidates finished near the top.
    :width: 720
    :target: https://sklearngeneticopt.rodrigo-arenas.com/versions/0.16/guide/basic-usage
 
+What changed in 0.17.0
+----------------------
+
+* Cap new cross-validation calls with ``CVBudgetStopping`` and see fresh,
+  reused and refit work separately in ``fit_counts_``. The `budget and resume tutorial`_
+  shows how to save work across sessions.
+* Keep pandas column names and dtypes in feature selection with
+  ``preserve_dataframe=True``, or seed the search using
+  ``PopulationConfig(warm_start_masks=...)``.
+* Diagnose a run with per-fold and finalist score plots, phase timings and
+  clearer errors for invalid folds, failed fits and unreadable checkpoints.
+
 Go further
 ----------
 
@@ -142,8 +153,8 @@ Cite sklearn-genetic-opt
 ------------------------
 
 If you use the library in research, cite the version used in your experiment.
-For version 0.16.0, cite Rodrigo Arenas (2026), *sklearn-genetic-opt*
-(version 0.16.0) [Computer software]. The `software citation`_ contains the
+For version 0.17.0, cite Rodrigo Arenas (2026), *sklearn-genetic-opt*
+(version 0.17.0) [Computer software]. The `software citation`_ contains the
 machine-readable metadata. For BibTeX, use:
 
 .. code-block:: bibtex
@@ -152,8 +163,8 @@ machine-readable metadata. For BibTeX, use:
      author  = {Arenas, Rodrigo},
      title   = {{sklearn-genetic-opt}},
      year    = {2026},
-     version = {0.16.0},
-     url     = {https://pypi.org/project/sklearn-genetic-opt/0.16.0/}
+     version = {0.17.0},
+     url     = {https://pypi.org/project/sklearn-genetic-opt/0.17.0/}
    }
 
 .. |release| image:: https://img.shields.io/pypi/v/sklearn-genetic-opt
@@ -179,4 +190,5 @@ machine-readable metadata. For BibTeX, use:
 .. _plot gallery: https://sklearngeneticopt.rodrigo-arenas.com/versions/0.16/examples/plotting-gallery
 .. _contributor guide: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/CONTRIBUTING.md
 .. _release notes: https://sklearngeneticopt.rodrigo-arenas.com/versions/0.16/release-notes
-.. _software citation: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/0.16.0/CITATION.cff
+.. _budget and resume tutorial: https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/tutorials/budgeted-optimizer-search
+.. _software citation: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/CITATION.cff

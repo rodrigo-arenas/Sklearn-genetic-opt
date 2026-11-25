@@ -350,7 +350,11 @@ Missing keys are fine — they're filled by sampling. Check your config keys aga
 
 ## Multi-Metric: `best_params_` Is Not What I Expected
 
-With a multi-metric scoring dict, `GASearchCV` optimizes the `refit` metric during the evolutionary search. `best_params_` and `best_score_` always refer to the `refit` metric.
+First distinguish the metric guiding the search from the rule selecting its winner:
+
+- With `refit="roc_auc"`, the search optimizes that named metric. With `refit=False` or a callable, set `objective_metric` to the metric to optimize.
+- `best_params_` describes the selected row at `best_index_`. A callable can pick a different row from the one ranked first on the objective. In this case there is no `best_score_`; inspect, for example, `search.cv_results_["mean_test_roc_auc"][search.best_index_]`.
+- When finalist validation is enabled, `best_score_` comes from that validation and can differ from the search score recorded in `cv_results_`.
 
 To inspect what the best configuration would be for a different metric:
 
@@ -369,9 +373,7 @@ See [Multi-Metric Optimization](./multi-metric) for a full example.
 `plot_fitness_evolution` and `plot_search_space` require seaborn:
 
 ```bash
-pip install sklearn-genetic-opt[all]
-# or just seaborn:
-pip install seaborn
+python -m pip install "sklearn-genetic-opt[plot]"
 ```
 
 Post-fit plots read generation history, candidate records or fitted results, depending on the plot. Setting `verbose=False` only changes printed output. Use [LivePlot](../api/plots#during-fitting) to see progress during fitting.

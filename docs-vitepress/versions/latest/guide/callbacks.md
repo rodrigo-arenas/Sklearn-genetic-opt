@@ -260,7 +260,9 @@ print(logbook)
 Saves a snapshot at a reported generation. DEAP stores its historical continuation state.
 SciPy, pymoo, Nevergrad and CatCMAwM resume from a completed generation when
 you pass the same checkpoint path to `fit` again with the same data, settings
-and environment. Older shared-runtime snapshots with `resumable=False` remain
+and environment, including the exact `sklearn-genetic-opt` version that wrote
+the snapshot. Before upgrading, finish that run in its original environment
+or use a new checkpoint path for a fresh search. Older shared-runtime snapshots with `resumable=False` remain
 readable for inspection. See the [resume recipe](../recipes/advanced/checkpointing)
 and the [optional plugin protocol](../api/algorithms#callbacks-and-checkpoints).
 Use a fresh path for an independent run and load only trusted snapshots.

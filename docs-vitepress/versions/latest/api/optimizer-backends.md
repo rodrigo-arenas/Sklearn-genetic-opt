@@ -135,7 +135,9 @@ ones resolved by the cache.
   entries with the same rank. At capacity, a candidate must outrank the
   last entry to enter. Finding the insertion point uses binary search.
 - To resume any catalog engine, pass the same checkpoint path to a new `fit`
-  with the same data, settings and environment. For SciPy and pymoo, replay
+  with the same data, settings and environment. SciPy, pymoo, Nevergrad and
+  CatCMAwM check the exact `sklearn-genetic-opt` version too: [finish the old
+  run before upgrading or start a new checkpoint](../recipes/advanced/checkpointing#resume-an-alternative-engine). For SciPy and pymoo, replay
   uses recorded results for completed generations. Native solver state serves
   the same purpose for Nevergrad and CatCMAwM. A partially evaluated generation
   may repeat CV. A completed finite search resumes without evaluating new
