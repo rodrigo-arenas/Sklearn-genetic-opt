@@ -9,6 +9,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 import xml.etree.ElementTree as ET
 from urllib.error import HTTPError
 from urllib.parse import urlparse
@@ -431,3 +432,42 @@ def test_built_site_publishes_indexnow_key():
     key = (DOCS / ".vitepress" / "dist" / "indexnow-key.txt").read_text(encoding="utf-8")
     assert re.fullmatch(r"[a-zA-Z0-9-]{8,128}\n?", key)
     assert key == (DOCS / "public" / "indexnow-key.txt").read_text(encoding="utf-8")
+
+
+_BUILD_DOCS_SCRIPT = Path(__file__).with_name("build_docs.py")
+
+
+def _build_docs_help_text() -> str:
+    """Run the public docs-builder CLI with ``--help`` and return its stdout."""
+    proc = subprocess.run(
+        [sys.executable, str(_BUILD_DOCS_SCRIPT), "--help"],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert proc.returncode == 0, proc.stderr
+    return proc.stdout
+
+
+def test_build_docs_check_help_describes_actual_behavior():
+    """``build_docs.py --check`` help must describe what the flag actually does.
+
+    ``--check`` executes the selected generators end to end and reports
+    failures; it does not byte-diff generated pages against committed
+    files, and running it may write generated output. The old help text
+    claimed the opposite ("Fail if any committed page differs from the
+    generated output"), which implied a read-only diff mode that does
+    not exist. Compare whitespace-normalised text so the test does not
+    depend on exact line wrapping.
+    """
+    normalized = " ".join(_build_docs_help_text().split()).lower()
+
+    assert "run the selected generators" in normalized
+    assert "report" in normalized and "fail" in normalized
+    assert "does not compare generated" in normalized
+    assert "may write generated output" in normalized
+
+    # The old, misleading wording must be gone.
+    assert "differs from the generated output" not in normalized
+    assert "dry-run" not in normalized
+    assert "dry run" not in normalized
