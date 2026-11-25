@@ -190,5 +190,5 @@ machine-readable metadata. For BibTeX, use:
 .. _plot gallery: https://sklearngeneticopt.rodrigo-arenas.com/versions/0.16/examples/plotting-gallery
 .. _contributor guide: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/CONTRIBUTING.md
 .. _release notes: https://sklearngeneticopt.rodrigo-arenas.com/versions/0.16/release-notes
-.. _budget and resume tutorial: https://sklearngeneticopt.rodrigo-arenas.com/versions/latest/tutorials/budgeted-optimizer-search
+.. _budget and resume tutorial: https://sklearngeneticopt.rodrigo-arenas.com/versions/0.17/tutorials/budgeted-optimizer-search
 .. _software citation: https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/CITATION.cff
