@@ -44,7 +44,7 @@ GASearchCV(
 | `estimator` | estimator | — | A scikit-learn estimator with a `fit` method |
 | `param_grid` | dict | — | Mapping from parameter name to `Integer`, `Continuous`, or `Categorical` |
 | `scoring` | str, callable, list, tuple or dict | `None` | Metric(s) to evaluate. `None` uses default scoring. A standalone callable returns one numeric score per fold. Use [named scorers](../guide/multi-metric) for multiple metrics. |
-| `cv` | int, CV splitter, iterable or `None` | `3` | Cross-validation strategy, including for [outlier detection](../guide/outliers#choose-validation-folds) |
+| `cv` | int, CV splitter, iterable or `None` | `3` | Cross-validation strategy, including for [outlier detection](../guide/outliers#choose-validation-folds). See [explicit fold validation](../tutorials/optimizer-backends#validate-explicit-cv-splits). |
 | `refit` | bool, str or callable | `True` | Refit the selected candidate. With multiple metrics, pass a metric name or a [refit function](../guide/advanced-optimizer-control#choose-a-refit-candidate-with-a-function) and `objective_metric`. |
 | `objective_metric` | str or `None`, keyword-only | `None` | Search objective for multiple metrics with `refit=False` or callable `refit` |
 | `verbose` | bool | `True` | Print the generation log |
@@ -92,10 +92,12 @@ order.
 |-----------|-------------|
 | `best_index_` | Row in `cv_results_` for the selected candidate, including with `refit=False` |
 | `best_params_` | Parameters from the selected candidate row |
-| `best_score_` | Mean CV objective score for the selected candidate. Uses the finalist score when finalist validation runs. With callable refit, read the score from the selected row. |
+| `best_score_` | Mean CV objective score for the selected candidate. Uses the finalist score when finalist validation runs and retains extended NumPy precision when available. With callable refit, read the score from the selected row. |
 | `best_estimator_` | Estimator fitted with `best_params_` on the full training data after a successful refit |
 | `search_time_` | [Elapsed search seconds until the optimizer returned or raised](./optimizer-backends#fit-time-by-phase) |
-| `refit_time_` | Elapsed seconds for the full-data refit, measured with a monotonic clock |
+| `search_interrupted_` | Whether the optimizer raised and its [recorded search work](./optimizer-backends#fit-work-by-phase) is a lower bound |
+| `refit_time_` | Elapsed seconds of the successful full-data refit |
+| `refit_failure_time_` | [Elapsed seconds of the full-data refit phase when it raises](./optimizer-backends#fit-time-by-phase) |
 | `cv_results_` | Dict with per-candidate results, compatible with `pd.DataFrame` |
 | `history` | Dictionary of lists aligned by generation. At position `i`, `history["fitness_best"][i]` is the best search score after `history["cross_validate_calls"][i]` cumulative candidate evaluations. |
 | `logbook` | Compatibility view of per-candidate records, materialized on access for shared-runtime engines, in `logbook.chapters["parameters"]` |

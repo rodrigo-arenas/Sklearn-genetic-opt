@@ -11,7 +11,11 @@ from sklearn.exceptions import NotFittedError
 from sklearn.tree import DecisionTreeClassifier
 
 from .._base import history_record, reset_adapters
-from .._telemetry import population_fitness_stats
+from .._telemetry import (
+    _population_diversity,
+    feature_population_diversity,
+    population_fitness_stats,
+)
 from ..callbacks import CVBudgetStopping, ModelCheckpoint, TimerStopping
 from ..evaluation import create_fit_stats, evaluate_population, evaluation_context, record_fit_stats
 from ..genetic_search import GAFeatureSelectionCV, GASearchCV
@@ -65,7 +69,7 @@ def test_fold_reuse_keeps_shared_positions_and_matches_reordered_folds_by_value(
     assert model._matching_search_folds([reordered, duplicate, first, *remaining]) == {
         0: 2,
         1: 0,
-        2: 0,
+        2: 1,
         4: 4,
     }
 
@@ -221,11 +225,11 @@ def test_validated_feature_batches_preserve_optimizer_and_estimator_hooks(
     evaluate = _backend_runtime.evaluate_population
     evaluate_with_repair = GAFeatureSelectionCV.evaluate_population
 
-    def record_fast(estimator, individuals, cache_record_key):
+    def record_fast(estimator, individuals, cache_record_key, **kwargs):
         if not fast_batches:
             assert all(row is mask for row, mask in zip(individuals, initial_masks, strict=True))
         fast_batches.append(len(individuals))
-        return evaluate(estimator, individuals, cache_record_key)
+        return evaluate(estimator, individuals, cache_record_key, **kwargs)
 
     def record_custom(estimator, individuals):
         assert all(type(row) is list for row in individuals)
@@ -996,16 +1000,17 @@ def test_evaluate_population_deduplicates_updates_cache_and_fit_stats(record_key
     assert estimator.fit_stats_["duplicate_candidates"] == 1
     assert estimator.fit_stats_["cross_validate_calls"] == 2
     assert keys == [(1,), (1,), (2,)]
-    assert recorded_keys[0] is recorded_keys[1]
+    assert recorded_keys == [(1,), (2,)]
 
     fitnesses = evaluate_population(
         estimator,
-        individuals=[[2], [3], [3], [1]],
+        individuals=[[2], [3], [3], [1], [2]],
         cache_record_key=record_key,
     )
-    assert fitnesses == [[2], [3], [3], [1]]
-    assert estimator.fit_stats_["evaluated_candidates"] == 7
-    assert estimator.fit_stats_["cache_hits"] == 2
+    assert fitnesses == [[2], [3], [3], [1], [2]]
+    assert recorded_keys == [(1,), (2,), (2,), (3,), (1,)]
+    assert estimator.fit_stats_["evaluated_candidates"] == 8
+    assert estimator.fit_stats_["cache_hits"] == 3
     assert estimator.fit_stats_["duplicate_candidates"] == 2
     assert estimator.fit_stats_["cross_validate_calls"] == 3
 
@@ -1047,7 +1052,7 @@ def test_serial_population_copies_each_candidate_at_evaluation(use_cache):
 
 
 @pytest.mark.parametrize("use_cache", [False, True])
-@pytest.mark.parametrize("limit", ["calls", "timer"])
+@pytest.mark.parametrize("limit", ["calls", "timer", "both_calls", "both_timer"])
 @pytest.mark.parametrize("record_key", ["current_generation_params", "current_generation_features"])
 def test_evaluate_population_copies_only_dispatched_candidates(use_cache, limit, record_key):
     copied = []
@@ -1086,12 +1091,16 @@ def test_evaluate_population_copies_only_dispatched_candidates(use_cache, limit,
         cache_keys.append(candidate[0])
         return candidate[0]
 
-    rows = [0, 1, 1, 2, 3, 2, 4, 0] if use_cache else [1, 2, 3, 4, 5]
+    rows = [0, 1, 1, 2, 3, 2, 4, 0, 5, 0, 6] if use_cache else [1, 2, 3, 4, 5]
     candidates = Population(Candidate([value]) for value in rows)
-    callback = CVBudgetStopping(2) if limit == "calls" else StopAfterDispatches(1)
+    callbacks = []
+    if limit != "timer":
+        callbacks.append(CVBudgetStopping(5 if limit == "both_timer" else 2))
+    if limit != "calls":
+        callbacks.append(StopAfterDispatches(1))
     cache = {0: {"fitness": [0], record_key: {"value": 0}}} if use_cache else {}
     estimator = SimpleNamespace(
-        callbacks=[callback],
+        callbacks=callbacks,
         use_cache=use_cache,
         fitness_cache=cache,
         logbook=tools.Logbook(),
@@ -1105,13 +1114,16 @@ def test_evaluate_population_copies_only_dispatched_candidates(use_cache, limit,
 
     with evaluation_context(estimator):
         fitnesses = evaluate_population(estimator, candidates, record_key)
+        assert estimator._evaluation_budget_exhausted == (limit in {"timer", "both_timer"})
 
     accepted = rows[:6] if use_cache else rows[:3]
     assert evaluated == copied == [1, 2, 3]
     if use_cache:
         # Include the first fresh proposal beyond the limit to find the end
         # of the reusable prefix without inspecting the rest of the batch.
-        assert cache_keys == (rows[:7] if limit == "calls" else rows)
+        # The timer can win after keys for the next dispatch are prepared.
+        checked = 9 if limit in {"timer", "both_timer"} else 7
+        assert cache_keys == rows[:checked]
     else:
         assert accessed == evaluated
         assert cache_keys == []
@@ -1122,6 +1134,32 @@ def test_evaluate_population_copies_only_dispatched_candidates(use_cache, limit,
     assert estimator.fit_stats_["skipped_invalid_candidates"] == 1
     assert estimator.fit_stats_["cache_hits"] == int(use_cache)
     assert estimator.fit_stats_["duplicate_candidates"] == 2 * int(use_cache)
+
+
+def test_spent_cv_budget_with_timer_prepares_only_the_leading_cached_rows():
+    keys = []
+
+    def record_key(row):
+        keys.append(row[0])
+        return row[0]
+
+    estimator = SimpleNamespace(
+        callbacks=[TimerStopping(60), CVBudgetStopping(1)],
+        use_cache=True,
+        fitness_cache={0: {"fitness": [0], "current_generation_params": {"value": 0}}},
+        logbook=tools.Logbook(),
+        fit_stats_=create_fit_stats(),
+        _individual_key=record_key,
+    )
+    rows = [[0], [0], [1], [0], [2]]
+    with evaluation_context(estimator):
+        estimator.fit_stats_["cross_validate_calls"] = 1
+        fitnesses = evaluate_population(estimator, rows, "current_generation_params")
+
+    assert keys == [0, 0, 1]
+    assert rows == fitnesses == [[0], [0]]
+    assert estimator.fit_stats_["cache_hits"] == 2
+    assert estimator.fit_stats_["cross_validate_calls"] == 1
 
 
 def test_record_fit_stats_accumulates_counts():
@@ -1175,10 +1213,15 @@ def test_rank_scores_orders_finite_scores_descending_for_maximization():
     assert list(ranks) == [2, 1, 3]
 
 
-def test_rank_scores_breaks_ties_with_deterministic_min_method():
-    ranks = _rank_scores([0.9, 0.9, 0.5])
-
-    assert list(ranks) == [1, 1, 3]
+@pytest.mark.parametrize(
+    "scores, expected",
+    [
+        ([0.9, 0.9, 0.5], [1, 1, 3]),
+        ([0.5] * 64 + [0.9] + [0.5] * 64, [2] * 64 + [1] + [2] * 64),
+    ],
+)
+def test_rank_scores_breaks_ties_with_deterministic_min_method(scores, expected):
+    np.testing.assert_array_equal(_rank_scores(scores), expected)
 
 
 def test_rank_scores_supports_minimization_metrics():
@@ -1209,6 +1252,7 @@ def test_rank_scores_with_all_nan_does_not_crash():
             [0.5, np.nan, -1e308, 0.5, np.inf, 1e308, -np.inf, -0.0, 0.0],
             [7, 2, 1, 8, 5, 3, 9, 2, 4],
         ),
+        ([0.5, -1e308, 0.5, 1e308, -0.0, 0.0], [7, 1, 8, 3, 2, 4]),
         ([np.nan, np.inf, -np.inf], [4, 1, 7]),
     ],
 )
@@ -1218,6 +1262,29 @@ def test_rank_scores_counts_reused_rows_for_ties_and_nonfinite_scores(maximize, 
     first = np.cumsum(counts) - counts
     actual = _rank_scores(scores, maximize, counts=counts)
     np.testing.assert_array_equal(actual, expanded[first])
+
+
+@pytest.mark.parametrize("maximize", [False, True])
+@pytest.mark.parametrize("weighted", [False, True])
+def test_fully_tied_finite_scores_keep_nonfinite_rows_last_without_sorting(
+    maximize, weighted, monkeypatch
+):
+    from sklearn_genetic.utils import cv_scores
+
+    scores = np.resize([0.0, np.nan, -0.0, np.inf, -np.inf], 200)
+    finite = np.isfinite(scores)
+    counts = np.arange(len(scores), dtype=int) % 4 + 1 if weighted else None
+    finite_count = counts[finite].sum() if weighted else finite.sum()
+
+    def unexpected_sort(*args, **kwargs):
+        pytest.fail("a single finite score does not need sorting")
+
+    with monkeypatch.context() as replacements:
+        replacements.setattr(cv_scores, "rankdata", unexpected_sort)
+        replacements.setattr(np, "argsort", unexpected_sort)
+        ranks = _rank_scores(scores, maximize, counts=counts)
+
+    np.testing.assert_array_equal(ranks, np.where(finite, 1, finite_count + 1))
 
 
 def test_ranked_cv_columns_match_for_reused_training_scores_and_failed_rows():
@@ -1307,6 +1374,31 @@ def test_feature_cv_results_preserve_mask_counts_ranks_and_scalar_types():
     assert all(actual is original for actual, original in zip(results["features"], masks))
 
 
+def test_legacy_invalid_feature_mask_scores_are_hidden_when_formatting_results():
+    from sklearn_genetic.utils.cv_scores import create_feature_selection_cv_results_
+
+    masks = np.array([[True, True], [True, False]])
+    scores = np.array([[-100000.0, -100000.0], [-1000000.0, -1000000.0]])
+    records = [
+        dict(
+            features=mask,
+            cv_scores=row,
+            test_score=row,
+            train_score=row,
+            fit_time=np.zeros(2),
+            score_time=np.zeros(2),
+        )
+        for mask, row in zip(masks, scores, strict=True)
+    ]
+    results = create_feature_selection_cv_results_(records, True, ["score"], mask_limit=1)
+    np.testing.assert_array_equal(results["skipped_invalid_mask"], [True, False])
+    np.testing.assert_array_equal(results["all_fits_failed"], [False, False])
+    for subset in ("train", "test"):
+        np.testing.assert_array_equal(results[f"mean_{subset}_score"], [np.nan, -1000000])
+        np.testing.assert_array_equal(results[f"rank_{subset}_score"], [2, 1])
+    np.testing.assert_array_equal(records[0]["test_score"], [-100000, -100000])
+
+
 def test_repeated_feature_cv_rows_count_each_shared_boolean_mask_once(monkeypatch):
     from sklearn_genetic.utils.cv_scores import create_feature_selection_cv_results_
 
@@ -1336,6 +1428,41 @@ def test_repeated_feature_cv_rows_count_each_shared_boolean_mask_once(monkeypatc
     assert list(map(type, result["n_features"])) == list(map(type, reference["n_features"]))
     assert all(actual is original for actual, original in zip(result["features"], masks))
     assert counted_masks == [id(boolean_masks[2]), id(original), id(boolean_masks[1])]
+
+
+@pytest.mark.parametrize("sizes", [(0, 1, 7, 1), (0, 1, 512, 1), (-2, 0, 7, 7), (0, 0.5, 2, 2)])
+def test_feature_count_ranks_preserve_minimum_ties_in_long_histories(sizes, monkeypatch):
+    from scipy.stats import rankdata
+    from sklearn_genetic.utils import cv_scores
+
+    masks = [
+        np.ones(size, dtype=bool) if type(size) is int and size >= 0 else [size] for size in sizes
+    ] * 64
+    scores = np.array([0.5, 0.8])
+    records = [
+        dict(
+            features=mask,
+            cv_scores=scores,
+            test_score=scores,
+            fit_time=scores,
+            score_time=scores,
+        )
+        for mask in masks
+    ]
+    counted = []
+    bincount = np.bincount
+
+    def track_counts(values):
+        counted.append(values)
+        return bincount(values)
+
+    monkeypatch.setattr(np, "bincount", track_counts)
+    result = cv_scores.create_feature_selection_cv_results_(records, False, ["score"])
+    expected = list(sizes) * 64
+    assert result["n_features"] == expected
+    np.testing.assert_array_equal(result["rank_n_features"], rankdata(expected, method="min"))
+    eligible = all(type(size) is int and 0 <= size <= len(records) for size in sizes)
+    assert len(counted) == int(eligible)
 
 
 def test_feature_shortlist_keeps_the_denser_distinct_tie_in_a_large_history(monkeypatch):
@@ -1399,8 +1526,9 @@ def test_fully_tied_parameters_keep_row_order_without_sorting(monkeypatch):
 
 
 @pytest.mark.parametrize(("width", "batch"), [(20, True), (4096, True), (32768, False)])
+@pytest.mark.parametrize("cache_rows", [False, True])
 def test_fully_tied_masks_pack_denser_candidates_and_keep_first_occurrences(
-    width, batch, monkeypatch
+    width, batch, cache_rows, monkeypatch
 ):
     estimator = GAFeatureSelectionCV(DecisionTreeClassifier(), final_selection_top_k=3)
     estimator.refit_metric = "score"
@@ -1408,9 +1536,84 @@ def test_fully_tied_masks_pack_denser_candidates_and_keep_first_occurrences(
     dense = np.zeros(width, dtype=bool)
     dense[: width // 2] = True
     shifted = np.roll(dense, 1)
-    masks = [*sparse, dense, shifted] + [dense] * 2043
+    masks = [*sparse, dense, shifted, dense.copy()] + [dense] * 2042
     estimator.cv_results_ = {
         "rank_test_score": np.ones(len(masks), dtype=int),
+        "features": masks,
+        "n_features": [int(np.count_nonzero(mask)) for mask in masks],
+    }
+    if cache_rows:
+        estimator.fit_stats_ = {"unique_candidates": 6}
+    packbits = np.packbits
+    packed = []
+
+    def observe(values, axis=None):
+        packed.append((axis, 1 if axis is None else len(values)))
+        return packbits(values, axis=axis)
+
+    monkeypatch.setattr(np, "packbits", observe)
+    assert estimator._top_candidate_indices() == [0, 1, 4]
+    assert sum(count for _, count in packed) == (6 if cache_rows else len(masks))
+    assert sum(count for axis, count in packed if axis == 1) == (
+        len(masks) - 3 if batch and not cache_rows else 0
+    )
+
+
+@pytest.mark.parametrize("width", [512, 4096, 32768])
+@pytest.mark.parametrize("custom_key", [False, True])
+def test_feature_shortlist_packs_shared_masks_only_at_first_occurrence(
+    width, custom_key, monkeypatch
+):
+    estimator = GAFeatureSelectionCV(DecisionTreeClassifier(), final_selection_top_k=3)
+    estimator.refit_metric = "score"
+    first, second, third = np.eye(3, width, dtype=bool)
+    masks = [first] * 1024 + [first.copy(), second, third]
+    estimator.fit_stats_ = {"unique_candidates": 4}
+    estimator.cv_results_ = {
+        "rank_test_score": np.ones(len(masks), dtype=int),
+        "features": masks,
+        "n_features": np.ones(len(masks), dtype=int),
+    }
+    if custom_key:
+        original = estimator._finalist_key
+        estimator._finalist_key = lambda index: (index, original(index))
+    packbits = np.packbits
+    packed = []
+
+    def observe(mask, *args, **kwargs):
+        packed.append(id(mask))
+        return packbits(mask, *args, **kwargs)
+
+    monkeypatch.setattr(np, "packbits", observe)
+    if custom_key:
+        assert estimator._top_candidate_indices() == [0, 1, 2]
+        assert packed == [id(first)] * 3
+    else:
+        assert estimator._top_candidate_indices() == [0, 1025, 1026]
+        assert packed == [id(mask) for mask in masks[1023:]]
+
+
+@pytest.mark.parametrize("width", [128, 4096, 32768])
+@pytest.mark.parametrize("flat", [False, True])
+@pytest.mark.parametrize("custom_key", [False, True])
+def test_large_tied_feature_cutoff_packs_only_the_densest_native_masks(
+    width, flat, custom_key, monkeypatch
+):
+    estimator = GAFeatureSelectionCV(DecisionTreeClassifier(), final_selection_top_k=3)
+    estimator.refit_metric = "score"
+    middle = np.arange(width) < width // 4
+    dense = np.arange(width) < width // 2
+    shifted = np.roll(dense, 1)
+    masks = [*np.eye(3, width, dtype=bool), *([middle] * 2041)]
+    first_dense = len(masks)
+    masks.extend([dense, shifted, dense.copy(), shifted.copy()])
+    ranks = np.ones(len(masks), dtype=int)
+    if not flat:
+        # A denser mask with a worse score cannot enter the tied group.
+        masks.append(np.ones(width, dtype=bool))
+        ranks = np.append(ranks, len(masks))
+    estimator.cv_results_ = {
+        "rank_test_score": ranks,
         "features": masks,
         "n_features": [int(np.count_nonzero(mask)) for mask in masks],
     }
@@ -1418,13 +1621,52 @@ def test_fully_tied_masks_pack_denser_candidates_and_keep_first_occurrences(
     packed = []
 
     def observe(values, axis=None):
-        if axis == 1:
-            packed.append(len(values))
+        packed.append(1 if axis is None else len(values))
         return packbits(values, axis=axis)
 
-    monkeypatch.setattr(np, "packbits", observe)
-    assert estimator._top_candidate_indices() == [0, 1, 4]
-    assert sum(packed) == (len(masks) - 3 if batch else 0)
+    if custom_key:
+        # A custom key can identify masks of different densities as duplicates.
+        original = estimator._finalist_key
+        estimator._finalist_key = lambda index: original(index) if index < 3 else "alias"
+        assert estimator._top_candidate_indices() == [0, 1, 3]
+    else:
+        monkeypatch.setattr(np, "packbits", observe)
+        assert estimator._top_candidate_indices() == [0, 1, first_dense + 1]
+        assert sum(packed) == 7
+
+
+@pytest.mark.parametrize("prior_denser_finalist", [False, True])
+def test_tied_feature_cutoff_keeps_distinct_masks_with_duplicate_largest_keys(
+    prior_denser_finalist,
+):
+    estimator = GAFeatureSelectionCV(DecisionTreeClassifier(), final_selection_top_k=3)
+    estimator.refit_metric = "score"
+    width = 64
+    sparse = np.eye(3, width, dtype=bool)
+    dense = np.arange(width) < width // 2
+    if prior_denser_finalist:
+        middle = np.arange(width) < width // 4
+        initial = [dense, *sparse[:2]]
+        ranks = [1] + [2] * 1026
+    else:
+        # Legacy non-Boolean rows can share a key with a different recorded size.
+        middle = dense.astype(float) * 0.5
+        initial = list(sparse)
+        ranks = [1] * 1027
+    masks = [*initial, *([middle] * 1023), dense.copy()]
+    estimator.cv_results_ = {
+        "rank_test_score": ranks,
+        "features": masks,
+        "n_features": [mask.sum() for mask in masks],
+    }
+    assert estimator._top_candidate_indices() == [0, 1, 3]
+
+
+@pytest.mark.parametrize("gene", [-1, 2, 255, 256, 2**100, True, np.int64(1), 0.5])
+def test_wide_feature_diversity_uses_generic_values_for_non_native_genes(gene):
+    population = [[0] * 32, [gene] + [0] * 31, [1] + [0] * 31]
+
+    assert feature_population_diversity(population) == _population_diversity(population)
 
 
 @pytest.mark.parametrize("dtype", [np.float32, np.float64])
@@ -1455,6 +1697,8 @@ def test_row_statistics_match_individual_reductions(dtype, legacy, missing):
     rows = [
         np.array([0.25, np.nan if missing else -0.0, 0.75], dtype=dtype),
         np.array([0.1, 0.2, 0.3], dtype=dtype),
+        # The deviation stays positive when the folds differ by one ULP.
+        np.array([1024, np.nextafter(dtype(1024), dtype(1025)), 1024], dtype=dtype),
     ]
     if legacy:
         rows.append([0.25, 0.5, 0.75])
@@ -1470,6 +1714,20 @@ def test_row_statistics_match_individual_reductions(dtype, legacy, missing):
             assert type(deviation) is type(expected_std)
             np.testing.assert_equal(average, expected_mean)
             np.testing.assert_equal(deviation, expected_std)
+
+
+@pytest.mark.parametrize("dtype", [np.float16, np.float32, np.float64, np.longdouble])
+def test_short_score_mean_preserves_dtype_and_extreme_value_handling(dtype):
+    from sklearn_genetic.utils._score_statistics import score_mean
+
+    largest = np.finfo(dtype).max
+    with np.errstate(over="raise", invalid="raise"):
+        ordinary = score_mean(np.array([0.25, 0.75], dtype=dtype))
+        assert type(ordinary) is dtype and ordinary == 0.5
+        assert score_mean(np.array([largest, largest], dtype=dtype)) == largest
+        assert np.isnan(score_mean(np.array([largest, np.nan, -largest], dtype=dtype)))
+        with pytest.raises(FloatingPointError):
+            score_mean(np.array([np.inf, -np.inf], dtype=dtype))
 
 
 @pytest.mark.parametrize("dtype", [np.float32, np.float64])
@@ -1492,6 +1750,24 @@ def test_row_statistics_keep_extreme_scores_and_failed_rows_separate(dtype, lega
         assert average == scalar(mean(expected))
         assert deviation == pytest.approx(scalar(pstdev(expected)), rel=1e-7, abs=0)
     assert np.isnan(averages[3]) and np.isnan(deviations[3])
+
+
+@pytest.mark.parametrize(
+    "size, unique, eligible", [(63, 1, False), (64, 16, True), (67, 17, False)]
+)
+def test_reused_score_rows_groups_by_identity_at_the_cutoff(size, unique, eligible):
+    from sklearn_genetic.utils.cv_scores import _reused_score_rows
+
+    distinct = [np.ones(2) for _ in range(unique)]
+    positions = tuple(index % unique for index in range(size))
+    rows = [distinct[position] for position in positions]
+    representatives, index = _reused_score_rows(rows, 2)
+    if eligible:
+        assert index == positions
+        assert all(before is after for before, after in zip(distinct, representatives, strict=True))
+    else:
+        assert representatives is rows
+        assert index is None
 
 
 @pytest.mark.parametrize("dtype", [np.float32, np.float64])

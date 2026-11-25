@@ -190,13 +190,31 @@ selection it draws a mask size uniformly from one through the feature limit,
 then chooses that many columns uniformly without replacement. Optuna TPE runs
 on tuning tasks and can update its model after each CV result.
 
-The optional `--pairs-output` CSV has one row per engine, reference, task, seed
-and cache setting. `matched_cv_calls` gives the largest shared count of actual
+With `--references`, the optional `--pairs-output` CSV has one row per engine,
+reference, task, seed and cache setting. `matched_cv_calls` gives the largest shared count of actual
 CV calls up to the target. This count depends only on the two runs in the row.
 Filter `completed_target` to compare pairs at the full target. For each side,
 `*_best_cv` gives the best CV score at the matched count, `*_prefix_holdout`
 scores that candidate on the test split after refitting on the training split,
 and `*_prefix_ms` measures the search time to return the matched CV result.
+
+### Compare pairs of optimization backends
+
+Use `--pairs-output` with at least two default engines to compare them
+directly. Omit `--references` to write one row for each unordered engine
+pair, task, seed, and cache setting. In this mode `reference` names the
+second engine in the pair.
+
+```bash
+python -m benchmarks.benchmark_optimizer_catalog --cases diabetes wine-mask --engines deap scipy pymoo --seeds 41 --budget 32 --cv-checkpoints 8 32 --output engines32.csv --pairs-output engine-pairs32.csv
+```
+
+The main CSV still reports the CV prefix shared by the whole group.
+The pairs CSV uses each pair's own shared prefix, so an engine that stops
+early affects its own pairs. Filter `completed_target` for comparisons
+at the requested budget and check the JSON completion counts for each
+pair before aggregating scores. Keep the held-out scores in
+`*_prefix_holdout` separate from the search CV scores in `*_best_cv`.
 
 ### Compare several CV budgets in one run
 
@@ -212,7 +230,8 @@ For a checkpoint at 32 calls, the main CSV reports `cv_32_best_cv`,
 `cv_32_holdout`, and `cv_32_elapsed_ms`. The holdout score comes from refitting
 that prefix's CV winner on the training partition. The elapsed time stops
 when the 32nd CV result returns. A run that ends before that call has blank
-values for the checkpoint.
+values for the checkpoint. If the run reaches 32 calls and none produced
+a finite score, the elapsed time is reported and the quality fields are blank.
 
 In the pairs CSV, filter `cv_32_completed` before comparing the `backend_cv_32_*`
 and `reference_cv_32_*` columns. Both sides need 32 calls for any of those score
@@ -319,12 +338,18 @@ realized count in the group if an engine finishes sooner. Each call fits three
 folds. DEAP uses the default `eaMuPlusLambda`. Variation and survival can give
 it a different natural evaluation count from the other engines. We also run with
 the cache enabled to measure reuse; distinct proposals, duplicate evaluations
-and cache hits are recorded separately. The first highest-CV candidate wins ties,
-with smaller masks preferred for equal CV. We refit that candidate once on the
-training data and score it on the held-out partition.
+and cache hits are recorded separately. Non-finite scores consume their CV
+calls and are ineligible for prefix selection. At the highest finite score,
+the search prefers smaller masks and then the earliest observation. The
+harness refits that candidate on the training data and scores it on the held-out
+partition. `finite_cv_calls` counts finite scores in the reported prefix and
+`first_finite_cv_call` gives the call number of the first finite score.
 
-`prefix_ms` ends when the last matching CV result becomes available. Its
+`prefix_ms` ends when the last matching candidate CV call returns. Its
 non-CV component includes proposal generation and bookkeeping to that point.
+The harness keeps the built-in candidate evaluators active and links each
+timed call to its recorded candidate. Cache hits add no trace point.
+The metadata for these runs records `trace_timing: candidate_cv_return`.
 `full_search_ms` measures the entire optimizer run using
 [`search_time_`](../api/optimizer-backends#fit-time-by-phase), including population
 setup, candidate evaluation, callbacks, and the last population update. This
@@ -332,8 +357,8 @@ field is available in CSVs generated with the current harness.
 `full_ms` covers the entire call to `fit`, and `full_outside_cv_ms` subtracts the
 measured search CV time from that total. Both clocks stop before the separate
 refit used to score the prefix winner on holdout. `mean_running_best` averages
-the best score seen after each real evaluation. This captures how quickly the
-engine found good candidates.
+the best finite score after each real call, starting at `first_finite_cv_call`.
+A later non-finite result keeps the last finite best in the average.
 
 **Check the fitted estimator.** Add `--public-refit` to also call `fit` with
 `refit=True` and score the estimator's predictions on the same holdout.

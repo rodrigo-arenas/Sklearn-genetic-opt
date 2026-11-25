@@ -220,13 +220,19 @@ def feature_population_diversity(population):
     counts = np.zeros(width, dtype=np.int64)
     distinct = set()
     for mask in population:
-        if (
-            len(mask) != width
-            or not all(map(is_, map(type, mask), repeat(int)))
-            or not set(mask) <= {0, 1}
-        ):
+        if len(mask) != width or not all(map(is_, map(type, mask), repeat(int))):
             return _population_diversity(population)
-        row = np.frombuffer(bytes(iter(mask)), dtype=np.uint8)
+        try:
+            mask_type = type(mask)
+            encoded = (
+                bytearray(mask) if mask_type is list or mask_type is tuple else bytes(iter(mask))
+            )
+        except ValueError:
+            return _population_diversity(population)
+        # Validate the same byte buffer used for counting and packing the mask.
+        if encoded.count(b"\x00") + encoded.count(b"\x01") != width:
+            return _population_diversity(population)
+        row = np.frombuffer(encoded, dtype=np.uint8)
         counts += row
         distinct.add(np.packbits(row).tobytes())
 

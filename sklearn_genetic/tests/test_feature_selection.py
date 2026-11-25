@@ -14,7 +14,7 @@ from sklearn.base import (
     is_outlier_detector,
 )
 from sklearn.datasets import load_iris, load_diabetes
-from sklearn.exceptions import DataConversionWarning, NotFittedError
+from sklearn.exceptions import DataConversionWarning, FitFailedWarning, NotFittedError
 from sklearn.linear_model import SGDClassifier
 from sklearn.ensemble import IsolationForest
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
@@ -660,7 +660,11 @@ def test_wide_sparse_feature_evaluation_reuses_cache_keys(layout, n_jobs, native
     decoded = []
 
     def tracked(buffer, *args, **kwargs):
-        if type(buffer) is bytes and len(buffer) == width and kwargs.get("dtype") is bool:
+        if (
+            isinstance(buffer, (bytes, bytearray))
+            and len(buffer) == width
+            and kwargs.get("dtype") is bool
+        ):
             decoded.append(buffer)
         return original(buffer, *args, **kwargs)
 
@@ -801,6 +805,211 @@ def test_supervised_selection_preserves_supported_nan(backend, refit):
             selector.predict(held_out), selector.best_estimator_.predict(expected)
         )
         assert selector.score(held_out, y_test) == selector.best_estimator_.score(expected, y_test)
+
+
+@pytest.mark.parametrize("backend", ["deap", "scipy", "nevergrad", "cmaes", "pymoo"])
+@pytest.mark.parametrize("layout", ["dense", "csr", "csc"])
+@pytest.mark.parametrize("refit", [False, True])
+def test_feature_selection_passes_missing_values_to_pipeline_imputer(backend, layout, refit):
+    from sklearn.impute import SimpleImputer
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.pipeline import Pipeline, make_pipeline
+
+    if backend != "deap":
+        pytest.importorskip(backend)
+    X, y = load_iris(return_X_y=True)
+    train, held_out, y_train, y_test = train_test_split(
+        X, y, test_size=0.25, random_state=31, stratify=y
+    )
+    train[::11] = np.nan
+    held_out[::7] = np.nan
+    prepared = SimpleImputer(strategy="median")
+    if not refit:
+        prepared = Pipeline([("skip", "passthrough"), ("imputer", prepared)])
+    model = make_pipeline(prepared, LogisticRegression(max_iter=300))
+    if layout != "dense":
+        train = sparse.csr_matrix(train).asformat(layout)
+        inputs = sparse.csr_matrix(held_out).asformat(layout)
+    else:
+        inputs = held_out
+    selector = GAFeatureSelectionCV(
+        model,
+        optimizer_backend=backend,
+        cv=2,
+        population_size=6,
+        generations=0,
+        max_features=2,
+        random_state=31,
+        n_jobs=1,
+        verbose=False,
+        refit=refit,
+        error_score="raise",
+    ).fit(train, y_train)
+
+    support = selector.get_support()
+    expected = held_out[:, support]
+    selected = selector.transform(inputs)
+    restored = selector.inverse_transform(selected)
+    assert np.isnan(expected).any()
+    assert sparse.issparse(selected) == (layout != "dense")
+    assert sparse.issparse(restored) == (layout != "dense")
+    if layout != "dense":
+        assert selected.format == "csr"
+        selected = selected.toarray()
+        restored = restored.toarray()
+    np.testing.assert_array_equal(selected, expected)
+    reconstructed = np.zeros_like(held_out)
+    reconstructed[:, support] = expected
+    np.testing.assert_array_equal(restored, reconstructed)
+    if refit:
+        np.testing.assert_array_equal(
+            selector.predict(inputs), selector.best_estimator_.predict(inputs[:, support])
+        )
+        assert selector.score(inputs, y_test) == selector.best_estimator_.score(
+            inputs[:, support], y_test
+        )
+
+
+def test_feature_selection_keeps_nan_validation_inside_the_pipeline():
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.pipeline import make_pipeline
+    from sklearn.preprocessing import StandardScaler
+
+    X, y = load_iris(return_X_y=True)
+    X[::11] = np.nan
+    selector = GAFeatureSelectionCV(
+        make_pipeline(StandardScaler(with_mean=False), LogisticRegression()),
+        cv=2,
+        population_size=4,
+        generations=0,
+        n_jobs=1,
+        random_state=31,
+        verbose=False,
+        error_score="raise",
+    )
+    with pytest.raises(ValueError, match="LogisticRegression does not accept missing values"):
+        selector.fit(sparse.csc_matrix(X), y)
+
+
+@pytest.mark.parametrize("container", [sparse.csc_matrix, sparse.csc_array])
+@pytest.mark.parametrize("custom_transform", [False, True])
+def test_transform_csc_converts_only_selected_columns(container, custom_transform, monkeypatch):
+    from sklearn.feature_selection import SelectorMixin
+
+    class CSRSelector(GAFeatureSelectionCV):
+        def _transform(self, X):
+            assert X.format == "csr"
+            return super()._transform(X)
+
+    X, y = load_iris(return_X_y=True)
+    selector_type = CSRSelector if custom_transform else GAFeatureSelectionCV
+    selector = selector_type(
+        DecisionTreeClassifier(random_state=0),
+        cv=2,
+        population_size=4,
+        generations=0,
+        max_features=2,
+        n_jobs=1,
+        random_state=0,
+        verbose=False,
+        refit=False,
+    ).fit(X, y)
+    large = np.tile(X, (80, 1))
+    large[::121, :] = np.nan
+    data = container(large)
+    expected = SelectorMixin.transform(selector, data)
+    tocsr = container.tocsr
+    converted_shapes = []
+
+    def record_conversion(matrix, *args, **kwargs):
+        converted_shapes.append(matrix.shape)
+        return tocsr(matrix, *args, **kwargs)
+
+    monkeypatch.setattr(container, "tocsr", record_conversion)
+    result = selector.transform(data)
+    assert converted_shapes == [data.shape if custom_transform else expected.shape]
+    assert type(result) is type(expected)
+    assert result.dtype == expected.dtype
+    np.testing.assert_array_equal(result.indptr, expected.indptr)
+    np.testing.assert_array_equal(result.indices, expected.indices)
+    np.testing.assert_array_equal(result.data, expected.data)
+    np.testing.assert_array_equal(data.toarray(), large)
+
+
+def test_transform_csc_still_validates_discarded_columns_and_output_mode():
+    from sklearn.linear_model import LogisticRegression
+
+    X, y = load_iris(return_X_y=True)
+    selector = GAFeatureSelectionCV(
+        LogisticRegression(),
+        cv=2,
+        population_size=4,
+        generations=0,
+        max_features=2,
+        n_jobs=1,
+        random_state=0,
+        verbose=False,
+        refit=False,
+    ).fit(X, y)
+    large = np.tile(X, (80, 1))
+    large[0, np.flatnonzero(~selector.get_support())[0]] = np.nan
+    with pytest.raises(ValueError, match="Input X contains NaN"):
+        selector.transform(sparse.csc_matrix(large))
+    selector.set_output(transform="pandas")
+    with pytest.raises(ValueError, match="scipy sparse matrix"):
+        selector.transform(sparse.csc_matrix(np.tile(X, (80, 1))))
+
+
+@pytest.mark.parametrize(
+    "container", [sparse.csc_matrix, sparse.csc_array, sparse.csr_matrix, sparse.csr_array]
+)
+def test_inverse_transform_rebuilds_sparse_pointers_directly(container, monkeypatch):
+    from sklearn import config_context, get_config
+    from sklearn.feature_selection import SelectorMixin
+
+    X, y = load_iris(return_X_y=True)
+    selector = GAFeatureSelectionCV(
+        DecisionTreeClassifier(random_state=0),
+        cv=2,
+        population_size=4,
+        generations=0,
+        max_features=2,
+        n_jobs=1,
+        random_state=0,
+        verbose=False,
+        refit=False,
+    ).fit(X, y)
+    selected = X[:20, selector.get_support()].copy()
+    selected[0, 0] = np.nan
+    selected[3, 0] = 0
+    reduced = container(selected)
+    configs = [{"sparse_interface": kind} for kind in ("spmatrix", "sparray")]
+    if "sparse_interface" not in get_config():
+        configs = [{}]
+    check_array = genetic_search.check_array
+    validated_shapes = []
+
+    def record_validation(data, *args, **kwargs):
+        validated_shapes.append(data.shape)
+        return check_array(data, *args, **kwargs)
+
+    for config in configs:
+        with config_context(**config):
+            expected = SelectorMixin.inverse_transform(selector, reduced)
+            with monkeypatch.context() as changes:
+                changes.setattr(genetic_search, "check_array", record_validation)
+                actual = selector.inverse_transform(reduced)
+            assert not validated_shapes
+            assert type(actual) is type(expected)
+            assert actual.shape == expected.shape and actual.dtype == expected.dtype
+            for name in ("indptr", "indices", "data"):
+                observed, reference = getattr(actual, name), getattr(expected, name)
+                assert observed.dtype == reference.dtype
+                np.testing.assert_array_equal(observed, reference)
+                source = getattr(reduced, name)
+                assert np.shares_memory(observed, source) == np.shares_memory(reference, source)
+            with pytest.raises(ValueError, match="different shape"):
+                selector.inverse_transform(container(np.zeros((5, reduced.shape[1] + 1))))
 
 
 def test_inverse_transform_keeps_dense_validation_for_strict_estimators():
@@ -2434,6 +2643,128 @@ def test_prediction_methods_require_refitted_winner(method, fitted_without_refit
         getattr(selector, method)(*args)
 
 
+class _UnrepairedMaskSelector(GAFeatureSelectionCV):
+    def _repair_individual(self, individual):
+        return individual
+
+    def _initialize_population(self):
+        return [self.toolbox._individual_type(mask) for mask in self.proposals]
+
+
+@pytest.mark.parametrize("criteria", ["max", "min"])
+@pytest.mark.parametrize(
+    "final_selection,max_features", [(False, 1), (True, None), ("reuse_folds", 1)]
+)
+def test_skipped_masks_cannot_outrank_large_finite_scores(criteria, final_selection, max_features):
+    proposals = [[0, 0, 0], [0, 0, 1]]
+    if max_features is not None:
+        proposals.insert(1, [1, 1, 0])
+
+    def score(estimator, X, y):
+        assert X.shape[1] == 1
+        return -1e6 if criteria == "max" else 1e6
+
+    X = np.arange(90).reshape(-1, 3)
+    selector = _UnrepairedMaskSelector(
+        DecisionTreeRegressor(random_state=7),
+        cv=2,
+        max_features=max_features,
+        scoring=score,
+        criteria=criteria,
+        population_size=len(proposals),
+        generations=0,
+        final_selection=final_selection,
+        final_selection_top_k=3,
+        error_score="raise",
+        n_jobs=1,
+        verbose=False,
+        random_state=7,
+    )
+    selector.proposals = proposals
+    selector.fit(X, X[:, 0])
+
+    valid = len(proposals) - 1
+    assert selector.best_index_ == valid
+    assert selector.best_score_ == (-1e6 if criteria == "max" else 1e6)
+    np.testing.assert_array_equal(selector.get_support(), proposals[valid])
+    assert selector.fit_stats_["skipped_invalid_candidates"] == valid
+    assert selector.fit_counts_["search_cv_calls"] == 1
+    assert selector.fit_counts_["refit_fits"] == 1
+    assert selector.cv_results_["skipped_invalid_mask"].tolist() == [True] * valid + [False]
+    assert np.isnan(selector.cv_results_["mean_test_score"][:-1]).all()
+    assert selector.cv_results_["rank_test_score"][valid] == 1
+    if final_selection:
+        assert [row["index"] for row in selector.final_selection_results_["candidates"]] == [valid]
+        assert selector.fit_counts_["finalist_fold_fits"] == (2 if final_selection is True else 0)
+
+
+@pytest.mark.parametrize("refit,final_selection", [(False, False), (True, False), (True, True)])
+def test_skipped_masks_do_not_hide_failure_of_every_attempted_mask(refit, final_selection):
+    class RejectSearchFolds(DecisionTreeRegressor):
+        def fit(self, X, y, **kwargs):
+            if len(X) < 30:
+                raise ValueError("fixture estimator needs the full training set")
+            return super().fit(X, y, **kwargs)
+
+    X = np.arange(90).reshape(-1, 3)
+    selector = _UnrepairedMaskSelector(
+        RejectSearchFolds(random_state=7),
+        cv=2,
+        max_features=1,
+        refit=refit,
+        final_selection=final_selection,
+        population_size=4,
+        generations=0,
+        error_score=-1.0,
+        n_jobs=1,
+        verbose=False,
+        random_state=7,
+    )
+    selector.proposals = [[0, 0, 0], [0, 0, 1], [1, 1, 0], [0, 0, 1]]
+    with (
+        pytest.warns(FitFailedWarning, match="fixture estimator needs the full training set"),
+        pytest.raises(ValueError, match="All search candidates failed to fit"),
+    ):
+        selector.fit(X, X[:, 0])
+
+    results = selector.cv_results_
+    np.testing.assert_array_equal(results["all_fits_failed"], [False, True, False, True])
+    np.testing.assert_array_equal(results["skipped_invalid_mask"], [True, False, True, False])
+    assert np.isnan(results["mean_test_score"]).all()
+    assert selector.history["finite_fitness_count"] == [0]
+    assert selector.fit_counts_["search_cv_calls"] == 1
+    assert selector.fit_counts_["search_fold_fits"] == 2
+    assert selector.fit_counts_["finalist_cv_calls"] == 0
+    assert selector.fit_counts_["refit_fits"] == 0
+    assert not hasattr(selector, "best_index_")
+    with pytest.raises(NotFittedError):
+        check_is_fitted(selector)
+
+
+@pytest.mark.parametrize("all_skipped", [False, True])
+def test_skipped_masks_raise_before_an_invalid_refit(all_skipped):
+    X = np.arange(90).reshape(-1, 3)
+    selector = _UnrepairedMaskSelector(
+        DecisionTreeRegressor(random_state=7),
+        cv=2,
+        max_features=1,
+        refit=lambda _: 0,
+        population_size=2,
+        generations=0,
+        n_jobs=1,
+        verbose=False,
+        random_state=7,
+    )
+    selector.proposals = [[0, 0, 0], [1, 1, 0] if all_skipped else [0, 0, 1]]
+    message = (
+        "Every feature mask was skipped" if all_skipped else "refit callable selected a skipped"
+    )
+    with pytest.raises(ValueError, match=message):
+        selector.fit(X, X[:, 0])
+    assert selector.fit_counts_["refit_fits"] == 0
+    assert selector.cv_results_["skipped_invalid_mask"].tolist() == [True, all_skipped]
+
+
 @pytest.mark.parametrize("criteria", ["max", "min"])
 @pytest.mark.parametrize(
     "proxy_scores,final_scores,top_k,expected_counts,max_features",
@@ -2697,6 +3028,23 @@ def test_subsample_cv_rejects_invalid_splits(splits):
         subsample_cv(splits, 0.5)
 
 
+@pytest.mark.parametrize(
+    "size, fraction, message",
+    [
+        (0, 1.0, "cv_splits fold 2 has no training rows"),
+        (1, 0.25, "train_size leaves no training rows in fold 2"),
+    ],
+)
+@pytest.mark.parametrize("stratified", [False, True])
+def test_subsample_cv_identifies_folds_without_training_rows(size, fraction, message, stratified):
+    from sklearn_genetic import subsample_cv
+
+    splits = [(np.arange(8), [8, 9]), (np.arange(size), [1, 2])]
+    labels = np.arange(10) % 2 if stratified else None
+    with pytest.raises(ValueError, match=message):
+        subsample_cv(splits, fraction, stratify=labels, random_state=4)
+
+
 def test_subsample_cv_rejects_loss_of_rare_class():
     from sklearn_genetic import subsample_cv
 
@@ -2941,7 +3289,12 @@ def test_final_selection_reuse_trains_only_missing_folds(features, complete_over
     np.testing.assert_array_equal(optimized.predict(X), baseline.predict(X))
 
 
-def test_finalist_fit_counts_include_a_partial_attempt_followed_by_full_validation():
+@pytest.mark.parametrize(
+    ("cached_score", "expected"),
+    [(0.5, (1, 1, 1)), (1.0, (2, 2, 0))],
+    ids=["fractional-reuse", "integral-float-recovery"],
+)
+def test_finalist_fit_counts_for_mixed_scores(cached_score, expected):
     train, test = np.arange(12), np.arange(12, 24)
     preliminary = [(test, train)]
     fits = []
@@ -2952,7 +3305,7 @@ def test_finalist_fit_counts_include_a_partial_attempt_followed_by_full_validati
             return super().fit(X, y)
 
     def mixed_score(model, X, y):
-        return 2**53 + 1 if X[0, 0] else 0.5
+        return 2**53 + 1 if X[0, 0] else cached_score
 
     rows = np.arange(24)
     search = GAFeatureSelectionCV(
@@ -2971,10 +3324,13 @@ def test_finalist_fit_counts_include_a_partial_attempt_followed_by_full_validati
     ).fit(np.column_stack([rows, rows]), rows % 2)
 
     counts = search.fit_counts_
-    assert counts["finalist_cv_calls"] == 2
-    assert counts["finalist_fold_fits"] == 3
-    assert counts["finalist_reused_folds"] == 0
-    assert len(fits) == counts["search_fold_fits"] + 3 + counts["refit_fits"]
+    calls, fold_fits, reused = expected
+    assert counts["finalist_cv_calls"] == calls
+    assert counts["finalist_fold_fits"] == fold_fits
+    assert counts["finalist_reused_folds"] == reused
+    assert len(fits) == counts["search_fold_fits"] + fold_fits + counts["refit_fits"]
+    (candidate,) = search.final_selection_results_["candidates"]
+    assert candidate["cv_scores"] == np.asarray([cached_score, 2**53 + 1]).tolist()
 
 
 def test_finalist_reuse_checks_all_indices_when_test_fold_keys_collide():
@@ -3041,9 +3397,12 @@ def test_final_selection_reuse_preserves_split_and_score_contracts(case):
     rows = np.arange(24)
     X = np.column_stack([rows, rows])
     if case in ("malformed", "error_score"):
-        with pytest.raises(
-            ValueError, match="too many values to unpack" if case == "malformed" else "error_score"
-        ):
+        message = (
+            "^final_selection_cv fold 1 must contain exactly two selectors"
+            if case == "malformed"
+            else "error_score"
+        )
+        with pytest.raises(ValueError, match=message):
             search.fit(X, rows % 2)
     else:
         search.fit(X, rows % 2)

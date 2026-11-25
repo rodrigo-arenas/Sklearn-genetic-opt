@@ -1,15 +1,18 @@
 """CatCMA with Margin for continuous, integer and unordered coordinates."""
 
-from math import frexp, isfinite, ldexp
+from math import frexp, ldexp
+from sys import float_info
 
 import numpy as np
 
 from ._mixed_space import MixedSpace
 from ._optimizer_checkpoint import native_checkpoint, report_native
 from .config import EvolutionConfig
+from .utils._score_statistics import is_finite_score
 
 # Leave headroom for the continuous boundary penalty's covariance and step-size factors.
 _LOSS_EXPONENT_LIMIT = 500
+_MAX_DOUBLE_LOSS_EXPONENT = float_info.max_exp - _LOSS_EXPONENT_LIMIT
 
 
 @native_checkpoint("cmaes")
@@ -70,8 +73,9 @@ def optimize(problem, evaluate, report, *, sigma=0.25, _state=None):
                 rows.append(space.decode(coords))
         results = evaluate(rows)
         losses = [loss for loss, _ in results]
-        if real:
-            losses, loss_exponent = _scale_continuous_losses(solver, losses, loss_exponent)
+        if real or integer:
+            # Both Gaussian parts of CatCMAwM store a double-precision loss history.
+            losses, loss_exponent = _scale_numeric_losses(solver, losses, loss_exponent)
         if not real or _continuous_update_ready(losses, penalty_initialized):
             solver.tell(list(zip(trials, losses, strict=True)))
             penalty_initialized = bool(real)
@@ -83,19 +87,29 @@ def optimize(problem, evaluate, report, *, sigma=0.25, _state=None):
         )
 
 
-def _scale_continuous_losses(solver, losses, exponent):
-    largest = max((abs(loss) for loss in losses if isfinite(loss)), default=0.0)
-    required = frexp(largest)[1] - _LOSS_EXPONENT_LIMIT
-    if required > exponent:
+def _downscale_losses(values, shift, *, extended):
+    if extended or any(isinstance(value, np.longdouble) for value in values):
+        with np.errstate(under="ignore"):
+            return np.ldexp(np.asarray(values, dtype=np.longdouble), -shift).tolist()
+    return [ldexp(value, -shift) for value in values]
+
+
+def _scale_numeric_losses(solver, losses, exponent):
+    largest = max((abs(loss) for loss in losses if is_finite_score(loss)), default=0.0)
+    _, power = np.frexp(largest) if isinstance(largest, np.longdouble) else frexp(largest)
+    new_exponent = max(exponent, int(power) - _LOSS_EXPONENT_LIMIT)
+    # A later batch can contain double scores after the scale has grown past
+    # the double range. Widen them before moving them into the solver's units.
+    extended = new_exponent > _MAX_DOUBLE_LOSS_EXPONENT
+    if new_exponent > exponent:
         # CatCMAwM 0.13 uses this history to price future boundary penalties.
         # Earlier spreads must be in the same units as the next call to tell.
-        solver._iqhist_values[:] = [
-            ldexp(spread, exponent - required) for spread in solver._iqhist_values
-        ]
-        exponent = required
-    if exponent:
-        losses = [ldexp(loss, -exponent) for loss in losses]
-    return losses, exponent
+        solver._iqhist_values[:] = _downscale_losses(
+            solver._iqhist_values, new_exponent - exponent, extended=extended
+        )
+    if new_exponent:
+        losses = _downscale_losses(losses, new_exponent, extended=extended)
+    return losses, new_exponent
 
 
 def _continuous_update_ready(losses, penalty_initialized):

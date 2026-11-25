@@ -5,7 +5,7 @@ from _nbgen import Notebook
 nb = Notebook(
     path="tutorials/optimizer-backends.md",
     title="Switch optimization backends in a scikit-learn search",
-    description="Compare optimization backends at a fixed cross-validation budget, select features and resume from a generation checkpoint.",
+    description="Compare DEAP, SciPy, Nevergrad, CatCMAwM and pymoo at a fixed cross-validation budget, diagnose fold errors and resume from checkpoints.",
     intro="Use the same folds and scorer when changing engines. This walkthrough uses all five named backends and keeps a test partition for the final model.",
 )
 
@@ -223,10 +223,14 @@ Serial evaluation prepares one row at a time, and the standard population
 worker pool keeps a bounded number of rows in flight.
 For fresh feature selection runs, pymoo, Nevergrad and CatCMAwM can reuse
 the immutable initial masks until dispatch.
-With a CV budget and no timer, it checks cache keys only through the first
-proposal that would need another CV call. Reusable scores before that
-proposal still appear in order. With caching disabled, there are no cache
-lookups. The recorded masks reflect the proposals completed.
+With a CV budget, cache key checks stop at or before the first proposal
+that would exceed the remaining call budget, including with an active timer.
+With a timer, the evaluator checks cache keys in dispatch-sized batches
+within the remaining CV budget, including a lookahead to the next fresh
+candidate.
+Reusable scores in the completed prefix appear in order. Cache lookups
+require caching to be enabled. The recorded masks reflect the proposals
+completed.
 When comparing runtime, keep the data, folds, seeds and worker settings fixed.
 Compare the observed CV counts and record held-out scores separately.
 `cv_results_["mean_fit_time"]` and `cv_results_["mean_score_time"]` summarize
@@ -291,6 +295,15 @@ for a deterministic estimator. `cv_calls` counts actual calls for a finalist,
 and `fold_fits` counts each new estimator fit in those calls. `reused_folds`
 counts the search scores that contributed to the final score. If a partial
 evaluation requires a retry, `fold_fits` includes both attempts.
+With mixed numeric scores, reuse depends on whether combining the values
+preserves the precision of fresh validation. See
+[score reuse and precision](../guide/advanced-optimizer-control#reuse-scores-from-matching-folds).
+Finalist comparisons and reported scores retain an extended NumPy dtype
+when the scorer and platform provide it.
+For feature selection, cached repeats of a mask count as one shortlist candidate.
+At a large tied cutoff, the selector can restrict packing to the largest
+eligible masks and keep their first-occurrence order.
+See [how tied and cached masks count toward the shortlist](../guide/advanced-optimizer-control#how-many-finalists-fit-my-compute-budget).
 """)
 nb.code("""
     search_folds = list(folds.split(X_train, y_train))
@@ -359,6 +372,222 @@ nb.code("""
     print("New finalist fold fits", repeat_run.fit_counts_["finalist_fold_fits"])
 """)
 nb.md("""
+Reordering a complete set of folds also preserves each saved occurrence.
+All finalists share one ordering of the saved scores and keep their numeric dtype.
+Here a deterministic scorer scales accuracy by `1e20` to demonstrate that case.
+""")
+nb.code("""
+    def scaled_accuracy(estimator, X, y):
+        return estimator.score(X, y) * 1e20
+
+    reordered = clone(search).set_params(
+        cv=repeated_folds,
+        final_selection_cv=[repeated_folds[1], repeated_folds[0], repeated_folds[2]],
+        scoring=scaled_accuracy, final_selection="reuse_folds",
+        final_selection_top_k=2, error_score="raise",
+    ).fit(X_train, y_train, callbacks=CVBudgetStopping(4))
+    counts = reordered.fit_counts_
+    print("Reused scores", counts["finalist_reused_folds"])
+    print("New finalist fold fits", counts["finalist_fold_fits"])
+""")
+nb.md("""
+### Reuse large integer scores with new folds
+
+A custom scorer can return integer totals that exceed the exact range of
+double-precision floats. This example adds a large offset to the number of
+correct predictions on two search folds and returns a fractional score on a
+third, new fold. The search stores the original integers. Finalist validation
+combines them with the new score using the numeric dtype of a fresh run.
+""")
+nb.code("""
+    import numpy as np
+
+    positions = np.arange(len(y_train))
+    integer_folds = [(positions[:-size], positions[-size:]) for size in (12, 14)]
+    extra_fold = (positions[:-16], positions[-16:])
+
+    def integer_total(estimator, X, y):
+        correct = int(np.count_nonzero(estimator.predict(X) == y))
+        if len(y) == 16:
+            return correct + 0.25
+        return 2**54 + 2 * correct + 1
+
+    integer_template = clone(search).set_params(
+        cv=integer_folds, final_selection_cv=[*integer_folds, extra_fold],
+        scoring=integer_total, final_selection_top_k=1, population_size=4,
+        generations=0, use_cache=False, error_score="raise",
+    )
+    full_validation = clone(integer_template).set_params(final_selection=True).fit(X_train, y_train)
+    reused_validation = clone(integer_template).set_params(final_selection="reuse_folds").fit(
+        X_train, y_train
+    )
+    full_row = full_validation.final_selection_results_["candidates"][0]
+    reused_row = reused_validation.final_selection_results_["candidates"][0]
+    assert full_row["cv_scores"] == reused_row["cv_scores"]
+    print("Full validation fold fits", full_row["fold_fits"])
+    print("New fold fits with reuse", reused_row["fold_fits"])
+    print("Reused scores", reused_row["reused_folds"])
+""")
+nb.md("""
+### Reuse very large floating-point scores from a subset
+
+Here the scorer uses a floating-point scale above the range of a NumPy
+integer. Every finalist fold matches a search fold. A retained finite
+score with magnitude above `2**64` establishes that the subset needs
+floating-point precision. For extended NumPy precision, the subset must
+also retain a score outside the precision or range of a Python float.
+""")
+nb.code("""
+    def scaled_accuracy(estimator, X, y):
+        return (1.0 + float(np.mean(estimator.predict(X) == y))) * 2.0**90
+
+    float_template = clone(integer_template).set_params(
+        cv=[*integer_folds, extra_fold],
+        final_selection_cv=integer_folds[::-1],
+        scoring=scaled_accuracy,
+    )
+    fresh_float = clone(float_template).set_params(final_selection=True).fit(X_train, y_train)
+    reused_float = clone(float_template).set_params(final_selection="reuse_folds").fit(
+        X_train, y_train
+    )
+    fresh_row = fresh_float.final_selection_results_["candidates"][0]
+    reused_row = reused_float.final_selection_results_["candidates"][0]
+    assert fresh_row["cv_scores"] == reused_row["cv_scores"]
+    assert fresh_float.best_score_ == reused_float.best_score_
+    print("Fresh finalist fold fits", fresh_row["fold_fits"])
+    print("New finalist fold fits with reuse", reused_row["fold_fits"])
+    print("Reused scores", reused_row["reused_folds"])
+""")
+nb.md("""
+### Reuse double-precision scores with a new fold
+
+The search stores two accuracy scores in a `float64` array. Finalist
+validation shares these folds and adds one fold whose scorer uses a much
+larger scale. The new score already uses double precision, so the saved
+accuracy scores can be reused in the same array.
+""")
+nb.code("""
+    def fold_scaled_accuracy(estimator, X, y):
+        accuracy = float(np.mean(estimator.predict(X) == y))
+        return (1.0 + accuracy) * 2.0**90 if len(y) == 16 else accuracy
+
+    partial_template = clone(integer_template).set_params(scoring=fold_scaled_accuracy)
+    fresh_partial = clone(partial_template).set_params(final_selection=True).fit(X_train, y_train)
+    reused_partial = clone(partial_template).set_params(final_selection="reuse_folds").fit(
+        X_train, y_train
+    )
+    fresh_row = fresh_partial.final_selection_results_["candidates"][0]
+    reused_row = reused_partial.final_selection_results_["candidates"][0]
+    assert fresh_row["cv_scores"] == reused_row["cv_scores"]
+    assert reused_row["fold_fits"] == 1
+    print("Fresh finalist fold fits", fresh_row["fold_fits"])
+    print("New fold fits with reuse", reused_row["fold_fits"])
+    print("Reused scores", reused_row["reused_folds"])
+""")
+nb.md("""
+### Reuse scores when a new fold needs extended precision
+
+The new fold can also establish an extended dtype. The matching folds
+still have small scores that can be combined exactly with the new score.
+If only a discarded search fold used extended precision, the saved array's
+dtype alone cannot establish the precision of the finalist's scores.
+""")
+nb.code("""
+    def extended_fold_accuracy(estimator, X, y):
+        accuracy = float(np.mean(estimator.predict(X) == y))
+        if len(y) == 16:
+            scaled = np.ldexp(np.longdouble(1.0 + accuracy), 90)
+            return np.nextafter(scaled, np.longdouble(np.inf))
+        return accuracy
+
+    extended_template = clone(partial_template).set_params(scoring=extended_fold_accuracy)
+    fresh_extended = clone(extended_template).set_params(final_selection=True).fit(
+        X_train, y_train
+    )
+    reused_extended = clone(extended_template).set_params(final_selection="reuse_folds").fit(
+        X_train, y_train
+    )
+    fresh_row = fresh_extended.final_selection_results_["candidates"][0]
+    reused_row = reused_extended.final_selection_results_["candidates"][0]
+    assert fresh_row["cv_scores"] == reused_row["cv_scores"]
+    assert type(fresh_extended.best_score_) is type(reused_extended.best_score_)
+    print("New finalist fold fits", reused_row["fold_fits"])
+    print("Reused scores", reused_row["reused_folds"])
+""")
+nb.md("""
+### Recover precision after excluding a search fold
+
+Only the discarded search fold uses extended precision in this example.
+Finalist validation keeps the new double-precision score and can fit the
+matching fold again to recover its original type.
+""")
+nb.code("""
+    def discarded_precision_accuracy(estimator, X, y):
+        accuracy = float(np.mean(estimator.predict(X) == y))
+        return np.longdouble(accuracy) if len(y) == 14 else accuracy
+
+    new_fold = (positions[:-18], positions[-18:])
+    recovered_template = clone(partial_template).set_params(
+        cv=[*integer_folds, extra_fold],
+        final_selection_cv=[integer_folds[0], new_fold],
+        scoring=discarded_precision_accuracy,
+    )
+    full_recovery = clone(recovered_template).set_params(final_selection=True).fit(X_train, y_train)
+    partial_recovery = clone(recovered_template).set_params(final_selection="reuse_folds").fit(
+        X_train, y_train
+    )
+    full_row = full_recovery.final_selection_results_["candidates"][0]
+    partial_row = partial_recovery.final_selection_results_["candidates"][0]
+    assert full_row["cv_scores"] == partial_row["cv_scores"]
+    assert all(type(value) is float for value in partial_row["cv_scores"])
+    print("Finalist fold fits", partial_row["fold_fits"])
+""")
+nb.md("""
+### Preserve integer scores when a fractional fold is excluded
+
+This scorer returns counts on two folds and a fractional score on a third.
+The search collects the three scores as floats. The finalist stage selects
+only the two counting folds. It evaluates those folds to recover the counts
+as integers.
+""")
+nb.code("""
+    def count_or_fraction(estimator, X, y):
+        correct = int(np.count_nonzero(estimator.predict(X) == y))
+        return correct + 0.25 if len(y) == 16 else correct
+
+    counts_template = clone(integer_template).set_params(
+        cv=[*integer_folds, extra_fold],
+        final_selection_cv=integer_folds,
+        scoring=count_or_fraction,
+        final_selection="reuse_folds",
+    )
+    counts_result = counts_template.fit(X_train, y_train)
+    counts_row = counts_result.final_selection_results_["candidates"][0]
+    assert all(type(value) is int for value in counts_row["cv_scores"])
+    print("Finalist score types", [type(value).__name__ for value in counts_row["cv_scores"]])
+    print("Finalist fold fits", counts_row["fold_fits"])
+""")
+nb.md("""
+Add a new counting fold to the finalist stage. Validation fits it once,
+then fits only the two matching folds to recover the original integer
+types. The result matches a full three-fold validation in the same order.
+""")
+nb.code("""
+    new_count_fold = (positions[:-18], positions[-18:])
+    counts_with_new = clone(counts_template).set_params(
+        final_selection_cv=[integer_folds[1], new_count_fold, integer_folds[0]],
+    )
+    full_counts = clone(counts_with_new).set_params(final_selection=True).fit(X_train, y_train)
+    reused_counts = counts_with_new.fit(X_train, y_train)
+    full_row = full_counts.final_selection_results_["candidates"][0]
+    reused_row = reused_counts.final_selection_results_["candidates"][0]
+    assert full_row["cv_scores"] == reused_row["cv_scores"]
+    assert all(type(value) is int for value in reused_row["cv_scores"])
+    assert reused_row["fold_fits"] == 3
+    print("Finalist CV calls", reused_row["cv_calls"])
+    print("Finalist fold fits", reused_row["fold_fits"])
+""")
+nb.md("""
 ### Reuse folds defined by Boolean masks
 
 A fold can also identify its rows with a Boolean mask per partition.
@@ -366,6 +595,9 @@ The two masks have one entry per training row. A mask selects rows in
 dataset order. Deterministic scores can be reused across masks and positional
 indices when both identify the same rows in the same order.
 Negative positions count from the end of the training dataset.
+Keep each selector homogeneous. A finalist list or tuple with both Boolean
+values and integer positions needs fresh validation under scikit-learn's
+indexing rules.
 """)
 nb.code("""
     import numpy as np
@@ -398,18 +630,21 @@ nb.md("""
 ## Validate explicit CV splits
 
 Supply at least one train/test pair when setting `cv` or `final_selection_cv`
-to an explicit collection of folds. An empty search collection raises before
-candidate evaluation. Before evaluating candidates, the search checks that
-each explicit list, tuple, or array fold provides a training selector and a
-validation selector. These checks apply to lists and tuples supplied to
-`cv` and `final_selection_cv`. The same check identifies
-out-of-range positions and wrong-length Boolean masks in one-dimensional
-selectors. The error names the fold that needs correction.
+to an iterable or splitter. For folds represented as lists, tuples, or arrays,
+the search checks the pair and checks one-dimensional row selectors for
+out-of-range positions and wrong-length Boolean masks. NumPy selectors
+must have an integer or Boolean dtype. Errors identify the
+setting and fold, plus the training or validation partition when applicable.
+For `cv` and explicit finalist lists or tuples, these checks run before the
+candidate search. For a finalist generator or splitter, they run when finalist
+validation collects its folds.
 """)
 nb.code("""
     for invalid_splits in (
         {"cv": []},
         {"cv": [(search_folds[0][0], [len(y_train)])]},
+        {"cv": iter([(search_folds[0][0], [len(y_train)])])},
+        {"cv": [(search_folds[0][0], search_folds[0][1].astype(float))]},
         {"final_selection": True, "final_selection_cv": []},
         {"final_selection": True, "final_selection_cv": [(search_folds[0][0],)]},
         {"final_selection": True,
@@ -421,7 +656,7 @@ nb.code("""
         except (ValueError, IndexError) as error:
             print(error)
         else:
-            raise AssertionError("Expected an empty fold list to raise")
+            raise AssertionError("Expected an invalid fold configuration to raise")
 
     one_fold = list(folds.split(X_train, y_train))[:1]
     single = clone(search).set_params(cv=one_fold)
@@ -488,6 +723,10 @@ If a callback stops DEAP at a generation boundary, the search skips local
 refinement. The model can still validate finalists and refit. Here a spread
 threshold of 1.0 deliberately triggers on the first pair of generation
 scores because balanced accuracy ranges from zero to one.
+Use `metric="fitness_best_observed"` to base a stopping decision on the
+best CV score seen so far, including discarded candidates. Score-based
+callbacks accept finite extended-precision history scores on platforms
+that support them. See the [callback API reference](../api/callbacks).
 """)
 nb.code("""
     from sklearn_genetic.callbacks import DeltaThreshold
@@ -501,7 +740,11 @@ nb.code("""
         final_selection=True,
         final_selection_top_k=2,
     )
-    early.fit(X_train, y_train, callbacks=DeltaThreshold(1.0, generations=2))
+    early.fit(
+        X_train,
+        y_train,
+        callbacks=DeltaThreshold(1.0, generations=2, metric="fitness_best_observed"),
+    )
     print("Reported generations", early.history["gen"])
     print("Local refinement candidates", early.fit_stats_["local_refinement_candidates"])
     print("Finalist CV calls", early.fit_counts_["finalist_cv_calls"])
@@ -548,8 +791,10 @@ A custom optimizer first evaluates mask A, then proposes A, B, B and A in a
 second batch. Both occurrences of A in that batch use the previously cached
 score. The first B uses a new CV call and the second B shares its result.
 The five candidate rows therefore include two fresh calls, two cache hits
-and one duplicate coalesced within a batch. Both searches reuse a key for
-equivalent proposals in a batch and record every completed proposal in order.
+and one duplicate coalesced within a batch. Both searches share a cached
+result lookup for equivalent proposals and record each completed row in order.
+Here each repetition of B supplies the same immutable tuple, so the runtime
+can also reuse its mask validation and skip hashing it again.
 For hyperparameter search, the cache key uses sorted parameter names.
 The candidate table preserves the parameter order from the search grid.
 """)
@@ -800,6 +1045,31 @@ nb.code("""
     ga = clone(selector).set_params(crossover_probability=0.7)
 """)
 nb.md("""
+### Use extended-precision scores with SciPy
+
+SciPy compares double-precision losses. Two scores from a custom
+`numpy.longdouble` scorer can tie in the solver on platforms with extended
+precision. CV results, the candidate archive and finalist selection use
+the original score. Configure `stop_on_convergence=False` to continue
+through equal solver losses up to the search budget.
+""")
+nb.code("""
+    from sklearn_genetic.backends import scipy_optimizer
+
+    def closely_spaced_score(estimator, X, y):
+        low = np.longdouble(1)
+        return np.nextafter(low, np.longdouble(2)) if estimator.max_depth > 1 else low
+
+    precise_search = clone(search).set_params(
+        optimizer_backend=scipy_optimizer(stop_on_convergence=False),
+        param_grid={"max_depth": Integer(1, 3)}, scoring=closely_spaced_score,
+        cv=2, population_size=8, generations=2, use_cache=False,
+    ).fit(X_train, y_train)
+    print("Generations", precise_search.history["gen"])
+    print("Candidate CV calls", precise_search.fit_counts_["search_cv_calls"])
+    assert precise_search.best_score_ == precise_search.history["fitness_best_observed"][-1]
+""")
+nb.md("""
 ## Run binary feature selection with CatCMAwM
 
 CatCMAwM uses two categories per feature. The adapter builds the starting
@@ -817,6 +1087,92 @@ nb.md("""
 Use the [CatCMAwM reference](../api/algorithms#catcma-with-margin) for supported
 coordinates and checkpoint behavior. When timing a wider feature search, keep the
 splits, seed and observed number of CV calls fixed.
+""")
+nb.md("""
+### Scale large losses in CatCMAwM
+
+On numeric axes, CatCMAwM rescales large losses and its saved boundary
+penalty spreads before updating the distribution. This example uses a
+power-of-two scale outside the range of a Python float where NumPy supports
+it. Reported scores stay in the original units. The exponent is saved with
+the solver for checkpoint resume.
+""")
+nb.code("""
+    exponent = 2000 if np.finfo(np.longdouble).maxexp > 2000 else 1023
+
+    def large_loss(estimator, X, y):
+        unit = np.longdouble(2 * estimator.ccp_alpha - 1)
+        return np.ldexp(unit, exponent)
+
+    wide_search = clone(search).set_params(
+        optimizer_backend="cmaes",
+        param_grid={"ccp_alpha": Continuous(0.0, 1.0), "max_depth": Integer(2, 6)},
+        scoring=large_loss, criteria="min", cv=2, population_size=8,
+        generations=2, use_cache=False, error_score="raise",
+        final_selection="reuse_folds", final_selection_top_k=2,
+    ).fit(X_train, y_train)
+    print("Generations", wide_search.history["gen"])
+    print("Candidate CV calls", wide_search.fit_counts_["search_cv_calls"])
+    assert wide_search.best_score_ == wide_search.history["fitness_best_observed"][-1]
+""")
+nb.md("""
+### Plot extreme finalist scores
+
+`plot_finalist_scores` uses the same scale for search CV and finalist CV.
+The horizontal axis gives the divisor when it rescales extreme finite
+scores. The star identifies the finalist selected for refit. Read
+`final_selection_results_` for the scores in their original units.
+""")
+nb.code(
+    """
+    from sklearn_genetic.plots import plot_finalist_scores
+
+    plot_finalist_scores(wide_search)
+    """,
+    output=False,
+)
+nb.figure(
+    "optimizer_extreme_finalist_scores.png",
+    "Search and finalist scores on a shared scaled axis, with the selected finalist marked by a star",
+    caption="The plotted coordinates divide the original scores by the power of two in the axis label.",
+)
+nb.md("""
+### Plot extreme fitness over CV calls
+
+This plot shows the best observed score and the population mean on one
+scale. It applies the divisor shown on the vertical axis before averaging
+the two-generation windows. The original scores remain in `wide_search.history`.
+""")
+nb.code(
+    """
+    plot_fitness_evolution(
+        wide_search, metrics=["fitness_best_observed", "fitness"], x="cv_calls", window=2
+    )
+    """,
+    output=False,
+)
+nb.figure(
+    "optimizer_extreme_fitness_evolution.png",
+    "Scaled best-observed fitness and population mean across 24 cross-validation calls",
+    caption="Both fitness series use the divisor in the vertical axis label.",
+)
+nb.md("""
+### Monitor extreme fitness during fitting
+
+`LivePlot` uses the same vertical scale with generations on the horizontal axis. If a later
+generation changes the scale, the callback redraws earlier points on the
+same lines and updates the axis label. The fitted history keeps the
+original scores.
+""")
+nb.code("""
+    from matplotlib import pyplot as plt
+    from sklearn_genetic.plots import LivePlot
+
+    live = LivePlot(metrics=("fitness_best_observed", "fitness"))
+    monitored = clone(wide_search).fit(X_train, y_train, callbacks=live)
+    print("Plotted generations", list(live.ax.lines[0].get_xdata()))
+    assert monitored.history == wide_search.history
+    plt.close(live.ax.figure)
 """)
 nb.md("""
 ## Route training and scoring weights to parallel candidates
@@ -1032,10 +1388,16 @@ nb.code("""
     print("Attempted fold fits", invalid_depths.fit_counts_["search_fold_fits"])
 """)
 nb.md("""
+For feature selection, `skipped_invalid_mask` marks rows that never reached CV.
+If every attempted mask fails, the selector raises before finalist validation
+or refitting and keeps both flags in `cv_results_`. See
+[CV troubleshooting](../guide/troubleshooting#all-fits-failed).
+
 ### Inspect an optimizer error
 
 Set `error_score="raise"` to surface the original estimator error. Read
 `search_time_` after catching it to see how long the optimizer ran.
+`fit_counts_` keeps the CV work recorded up to the error.
 """)
 nb.code("""
     fail_fast = clone(depths).set_params(error_score="raise")
@@ -1050,6 +1412,72 @@ nb.code("""
         raise AssertionError("Expected the invalid depth to raise")
 """)
 nb.md("""
+This callback raises after one completed generation. The example prints
+the recorded CV calls and fold fits. The count plot marks search work as
+a lower bound because work in an interrupted CV call can go unreported.
+""")
+nb.code("""
+    from sklearn_genetic.callbacks import BaseCallback
+
+    class FailAfterFirstReport(BaseCallback):
+        def on_step(self, record=None, logbook=None, estimator=None):
+            raise RuntimeError("example stops after one generation")
+
+    interrupted_search = clone(search).set_params(population_size=6, generations=1)
+    try:
+        interrupted_search.fit(X_train, y_train, callbacks=FailAfterFirstReport())
+    except RuntimeError as error:
+        if str(error) != "example stops after one generation":
+            raise
+    else:
+        raise AssertionError("Expected the report callback to raise")
+
+    print("Search interrupted", interrupted_search.search_interrupted_)
+    print("Recorded CV calls", interrupted_search.fit_counts_["search_cv_calls"])
+    print("Recorded fold fits", interrupted_search.fit_counts_["search_fold_fits"])
+""")
+nb.md("""
+A failure inside a batch can leave completed evaluations that have already
+returned their scores. This scorer raises on the seventh fold, after two
+three-fold candidate evaluations finish. `fit_counts_` includes those two
+evaluations. `fit_stats_` tracks published search counters, and a checkpoint
+resumes its saved search state.
+""")
+nb.code("""
+    scored_folds = []
+
+    def score_until_batch_error(estimator, X, y):
+        scored_folds.append(len(y))
+        if len(scored_folds) == 7:
+            raise RuntimeError("example interrupts the third candidate")
+        return balanced_accuracy_score(y, estimator.predict(X))
+
+    interrupted_batch = clone(search).set_params(
+        cv=3, population_size=6, generations=0, scoring=score_until_batch_error,
+        error_score="raise", use_cache=False, n_jobs=1,
+    )
+    try:
+        interrupted_batch.fit(X_train, y_train)
+    except RuntimeError as error:
+        if str(error) != "example interrupts the third candidate":
+            raise
+    else:
+        raise AssertionError("Expected the scorer to interrupt the batch")
+
+    print("Confirmed CV calls", interrupted_batch.fit_counts_["search_cv_calls"])
+    print("Confirmed fold fits", interrupted_batch.fit_counts_["search_fold_fits"])
+    print("Recorded CV calls", interrupted_batch.fit_stats_["cross_validate_calls"])
+""")
+nb.md("""
+With `parallel_backend="population"` and the built-in worker threads, a later
+proposal can finish while the optimizer is waiting for an earlier one that
+raises. The fit-work count includes those completed CV calls once the workers
+have shut down. It remains a lower bound on fold fits because a failing
+candidate can run folds before its evaluation raises. If batch preparation
+or result recording raises, `fit_counts_` includes the completed CV calls
+from that batch once each. See the
+[fit-work counters](../api/optimizer-backends#fit-work-by-phase).
+
 ## Inspect finalist validation without a winner
 
 This example makes the scorer return `NaN` on the smaller validation
@@ -1096,6 +1524,125 @@ nb.figure(
     "Search and finalist scores with two unavailable finalist evaluations",
     caption="Search scores remain visible for both finalists.",
 )
+nb.md("""
+### Inspect an interrupted finalist
+
+An exception can stop a finalist partway through its folds. This controlled
+scorer lets the first finalist finish and raises on the second fold of the
+next finalist. Use one worker so the order of the calls is reproducible.
+The interrupted CV call counts toward the work of the fit. The fold count
+uses completed CV calls, since the exception does not report how many folds
+ran in the interrupted call.
+""")
+nb.code("""
+    finalist_scores_seen = []
+
+    def score_until_interrupted(estimator, X, y):
+        if len(y) < len(y_train) // 3:
+            finalist_scores_seen.append(len(y))
+            if len(finalist_scores_seen) == 6:
+                raise RuntimeError("example interrupts the second finalist")
+        return balanced_accuracy_score(y, estimator.predict(X))
+
+    interrupted = clone(failed_finalists).set_params(scoring=score_until_interrupted, n_jobs=1)
+    try:
+        interrupted.fit(X_train, y_train)
+    except RuntimeError as error:
+        if str(error) != "example interrupts the second finalist":
+            raise
+    else:
+        raise AssertionError("Expected an interrupted finalist")
+
+    work = interrupted.fit_counts_
+    failure = interrupted.final_selection_results_["failed_candidate"]
+    print("Finalist CV calls", work["finalist_cv_calls"])
+    print("Known finalist fold fits", work["finalist_fold_fits"])
+    print("Interrupted candidate row", failure["index"])
+    print("CV calls for that row", failure["cv_calls"])
+""")
+nb.md("""
+Earlier finalist results are available in
+`interrupted.final_selection_results_["candidates"]`.
+The finalist score plot labels the interrupted row and shows its search
+score. This also works when validation stops on the first finalist.
+""")
+nb.code(
+    """
+    plot_finalist_scores(interrupted)
+    """,
+    output=False,
+)
+nb.figure(
+    "optimizer_interrupted_finalist_scores.png",
+    "Two finalist rows, with search and finalist scores for the first row and a search score on the interrupted row",
+    caption="The interrupted row shows its search CV score. The earlier finalist shows scores from both stages.",
+)
+nb.md("""
+The fit-work plot marks the known finalist fold count with `≥`.
+""")
+nb.code(
+    """
+    from sklearn_genetic.plots import plot_fit_work
+
+    plot_fit_work(interrupted)
+    """,
+    output=False,
+)
+nb.figure(
+    "optimizer_interrupted_finalist_fit_work.png",
+    "Fit-work bars with the finalist count labeled at least four folds",
+    caption="Four finalist fold fits are confirmed. The interrupted CV call may have run further folds.",
+)
+nb.md("""
+In seconds mode, the same plot labels **Finalist validation (failed)**
+and shows the elapsed time recorded in the failed phase.
+The status is also available as `final_selection_results_["failed"]`.
+""")
+nb.code(
+    """
+    plot_fit_work(interrupted, unit="seconds")
+    """,
+    output=False,
+)
+nb.figure(
+    "optimizer_interrupted_finalist_time.png",
+    "Elapsed fit time showing failed finalist validation and no refit timing",
+    caption="The finalist validation bar shows time spent before the exception.",
+)
+nb.md("""
+## Inspect a failed full-data refit
+
+The estimator in this example accepts the smaller CV training folds and
+raises when it receives the full training set. After catching the error,
+read `refit_failure_time_` to see how long the refit phase ran.
+The fit-work plot labels this phase **Full-data refit (failed)**.
+""")
+nb.code("""
+    class RejectFullTrainingSet(DecisionTreeClassifier):
+        def fit(self, X, y, **fit_params):
+            if len(y) == len(y_train):
+                raise ValueError("example rejects the full training set")
+            return super().fit(X, y, **fit_params)
+
+    failed_refit = clone(search).set_params(
+        estimator=RejectFullTrainingSet(random_state=7),
+        population_size=2, generations=0, n_jobs=1, error_score="raise",
+    )
+    try:
+        failed_refit.fit(X_train, y_train)
+    except ValueError as error:
+        if str(error) != "example rejects the full training set":
+            raise
+        print(error)
+    else:
+        raise AssertionError("Expected the full-data refit to raise")
+
+    print("Completed refits", failed_refit.fit_counts_["refit_fits"])
+    print("Elapsed time recorded", failed_refit.refit_failure_time_ >= 0)
+    elapsed_refit = plot_fit_work(failed_refit, unit="seconds")
+    print(elapsed_refit.get_yticklabels()[-1].get_text())
+    plt.close(elapsed_refit.figure)
+""")
 nb.md("""
 ## Diagnose an undefined objective
 

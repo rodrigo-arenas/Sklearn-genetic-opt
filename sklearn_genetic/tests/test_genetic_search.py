@@ -140,6 +140,61 @@ def test_cv_results_dataframe(search_type, multimetric):
     pd.testing.assert_frame_equal(pd.DataFrame(search.cv_results_), before)
 
 
+@pytest.mark.parametrize("top_k", [None, 64])
+@pytest.mark.parametrize("stored_as_array", [False, True])
+def test_cv_results_dataframe_reuses_mask_conversion_with_independent_lists(
+    top_k, stored_as_array, monkeypatch
+):
+    from .. import _base
+
+    first = (1, 0, 0, 0)
+    second = (0, 1, 0, 0)
+
+    def optimize(problem, evaluate, report):
+        results = evaluate([first, second] * 40)
+        report([handle for _, handle in results[:2]])
+
+    search = GAFeatureSelectionCV(
+        DecisionTreeClassifier(random_state=17),
+        cv=2,
+        population_size=8,
+        generations=9,
+        optimizer_backend=optimize,
+        random_state=17,
+        use_cache=True,
+        n_jobs=1,
+        verbose=False,
+    ).fit(X_train[:48, :4], y_train[:48])
+    masks = search.cv_results_["features"]
+    assert len(masks) == 80 and len({id(mask) for mask in masks}) == 2
+    if stored_as_array:
+        masks = search.cv_results_["features"] = np.stack(masks)
+
+    conversions = []
+    original_list = list
+
+    def counted_list(values):
+        if type(values) is np.ndarray and values.dtype == bool:
+            conversions.append(id(values))
+        return original_list(values)
+
+    monkeypatch.setattr(_base, "list", counted_list, raising=False)
+    result = search.cv_results_dataframe(columns="params", top_k=top_k, preserve_index=True)
+    lists = [row["features"] for row in result["params"]]
+    assert len(lists) == (top_k or 80)
+    expected_conversions = len(lists) if stored_as_array else 2
+    assert len(conversions) == len(set(conversions)) == expected_conversions
+    assert len({id(values) for values in lists}) == len(lists)
+    for i, values in zip(result.index, lists, strict=True):
+        assert values == list(masks[i])
+        assert all(type(value) is np.bool_ for value in values)
+    expected = list(masks[result.index[0]])
+    lists[0][0] = not lists[0][0]
+    for index, values in zip(result.index[1:], lists[1:], strict=True):
+        assert values == list(masks[index])
+    assert list(masks[result.index[0]]) == expected
+
+
 @pytest.mark.parametrize("ordered", [False, True])
 def test_short_cv_list_selects_stable_rows_without_sorting_the_entire_history(monkeypatch, ordered):
     rng = np.random.default_rng(17)

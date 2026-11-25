@@ -184,17 +184,21 @@ def test_score_callbacks_wait_for_finite_values(unavailable, criteria):
 
 
 @pytest.mark.parametrize("criteria", ["min", "max"])
-def test_score_callbacks_can_use_observed_fitness_with_legacy_history(criteria):
+@pytest.mark.parametrize("extended", [False, True], ids=["double", "extended"])
+def test_score_callbacks_can_use_observed_fitness_with_legacy_history(criteria, extended):
+    if extended and np.finfo(np.longdouble).maxexp <= 1026:
+        pytest.skip("requires extended exponent range")
     metric = "fitness_best_observed"
     search = SimpleNamespace(criteria=criteria)
     direction = 1 if criteria == "max" else -1
-    target = direction * 0.8
-    old = {"fitness_best": direction * 0.4}
+    scale = np.ldexp(np.longdouble(1), 1025) if extended else 1.0
+    target = direction * 0.8 * scale
+    old = {"fitness_best": direction * 0.4 * scale}
     reached = {**old, metric: target}
 
     threshold = ThresholdStopping(target, metric=metric)
     assert not threshold(logbook=[old], estimator=search)
-    assert not threshold(record={**old, metric: direction * 0.6}, estimator=search)
+    assert not threshold(record={**old, metric: direction * 0.6 * scale}, estimator=search)
     assert threshold(record=reached, estimator=search)
     assert threshold(logbook=[old, reached], estimator=search)
 

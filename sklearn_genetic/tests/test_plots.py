@@ -124,6 +124,15 @@ def test_plot_fit_work_reports_observed_fits_and_reused_scores(task):
     finally:
         plt.close(ax.figure)
 
+    budget_ax = plot_fitness_evolution(search, metric="fitness_best_observed", x="fold_fits")
+    try:
+        (line,) = budget_ax.lines
+        assert line.get_xdata()[-1] == search.fit_counts_["search_fold_fits"] == 12
+        np.testing.assert_array_equal(line.get_ydata(), search.history["fitness_best_observed"])
+        assert budget_ax.get_xlabel() == "Search CV fold fits"
+    finally:
+        plt.close(budget_ax.figure)
+
     elapsed_ax = plot_fit_work(search, unit="seconds")
     try:
         assert [bar.get_width() for bar in elapsed_ax.patches] == [
@@ -218,6 +227,56 @@ def test_plot_fit_work_rejects_unknown_unit():
         plot_fit_work(SimpleNamespace(), unit="minutes")
 
 
+def test_plot_fit_work_marks_finalist_counts_as_a_lower_bound_after_an_error():
+    from matplotlib import pyplot as plt
+
+    model = SimpleNamespace(
+        fit_counts_={
+            "search_fold_fits": 8,
+            "finalist_fold_fits": 2,
+            "refit_fits": 0,
+            "finalist_reused_folds": 0,
+        },
+        final_selection_results_={
+            "enabled": True,
+            "time_seconds": 0.125,
+            "failed_candidate": {"cv_calls": 1},
+        },
+    )
+    ax = plot_fit_work(model)
+    try:
+        assert [text.get_text() for text in ax.texts] == ["8", "≥2", "0", "0"]
+        ax.figure.canvas.draw()
+    finally:
+        plt.close(ax.figure)
+    elapsed_ax = plot_fit_work(model, unit="seconds")
+    try:
+        assert elapsed_ax.get_yticklabels()[1].get_text() == "Finalist validation (failed)"
+        assert elapsed_ax.patches[1].get_width() == 0.125
+    finally:
+        plt.close(elapsed_ax.figure)
+
+
+def test_plot_fit_work_marks_search_counts_as_a_lower_bound_after_an_error():
+    from matplotlib import pyplot as plt
+
+    model = SimpleNamespace(
+        fit_counts_={
+            "search_fold_fits": 8,
+            "finalist_fold_fits": 0,
+            "refit_fits": 0,
+            "finalist_reused_folds": 0,
+        },
+        search_interrupted_=True,
+    )
+    ax = plot_fit_work(model)
+    try:
+        assert [text.get_text() for text in ax.texts] == ["≥8", "0", "0", "0"]
+        ax.figure.canvas.draw()
+    finally:
+        plt.close(ax.figure)
+
+
 def test_plot_fit_work_can_plot_search_time_after_optimizer_error():
     from matplotlib import pyplot as plt
 
@@ -231,8 +290,33 @@ def test_plot_fit_work_can_plot_search_time_after_optimizer_error():
         plt.close(ax.figure)
 
 
+@pytest.mark.parametrize("duration", [0.0, 0.25])
+def test_plot_fit_work_labels_and_times_a_failed_refit(duration):
+    from matplotlib import pyplot as plt
+
+    model = SimpleNamespace(
+        fit_counts_={
+            "search_fold_fits": 8,
+            "finalist_fold_fits": 0,
+            "refit_fits": 0,
+            "finalist_reused_folds": 0,
+        },
+        search_time_=0.5,
+        refit_failure_time_=duration,
+    )
+    for unit, expected in (("count", 0.0), ("seconds", duration)):
+        ax = plot_fit_work(model, unit=unit)
+        try:
+            assert ax.get_yticklabels()[2].get_text() == "Full-data refit (failed)"
+            assert ax.patches[2].get_width() == expected
+            assert ax.texts[2].get_text() == ("0" if unit == "count" else f"{duration:.3g} s")
+            ax.figure.canvas.draw()
+        finally:
+            plt.close(ax.figure)
+
+
 @pytest.mark.parametrize("task", ["parameters", "features"])
-@pytest.mark.parametrize("unavailable", ["none", "first", "both", "raises"])
+@pytest.mark.parametrize("unavailable", ["none", "first", "both", "raises", "first_raises"])
 def test_plot_finalist_scores_shows_results_and_winner_when_available(task, unavailable):
     from matplotlib import pyplot as plt
 
@@ -242,12 +326,12 @@ def test_plot_finalist_scores_shows_results_and_winner_when_available(task, unav
         simple = estimator.max_depth == 1 if task == "parameters" else X.shape[1] == 1
         if len(X) == 20:
             return 0.9 if simple else 0.8
+        if (simple and unavailable == "first_raises") or (not simple and unavailable == "raises"):
+            raise RuntimeError("fixture interrupts finalist validation")
         if unavailable == "both":
             return np.nan
         if simple:
             return np.nan if unavailable == "first" else 0.6
-        if unavailable == "raises":
-            raise RuntimeError("fixture interrupts finalist validation")
         return 0.95
 
     def optimize(problem, evaluate, report):
@@ -270,6 +354,8 @@ def test_plot_finalist_scores_shows_results_and_winner_when_available(task, unav
         error_score="raise",
         random_state=19,
     )
+    if unavailable == "first_raises":
+        options.update(scoring={"fixture_objective": score}, refit="fixture_objective")
     tree = DecisionTreeRegressor(random_state=19)
     if task == "parameters":
         search = GASearchCV(
@@ -282,31 +368,54 @@ def test_plot_finalist_scores_shows_results_and_winner_when_available(task, unav
     if unavailable == "both":
         with pytest.raises(ValueError, match="All final-selection candidates"):
             search.fit(X_fit, y_fit)
-    elif unavailable == "raises":
+    elif unavailable in {"raises", "first_raises"}:
         with pytest.raises(RuntimeError, match="fixture interrupts finalist validation"):
             search.fit(X_fit, y_fit)
     else:
         search.fit(X_fit, y_fit)
     results = search.final_selection_results_
     assert results["original_best_index"] == 0
+    failed = unavailable in {"both", "raises", "first_raises"}
+    assert results.get("failed", False) is failed
+    elapsed_ax = plot_fit_work(search, unit="seconds")
+    try:
+        label = "Finalist validation (failed)" if failed else "Finalist validation"
+        assert elapsed_ax.get_yticklabels()[1].get_text() == label
+        assert elapsed_ax.patches[1].get_width() == results["time_seconds"]
+    finally:
+        plt.close(elapsed_ax.figure)
 
     figure, ax = plt.subplots(layout="constrained")
     try:
         assert SearchPlotter(search).finalist_scores(ax=ax) is ax
-        if unavailable in {"both", "raises"}:
+        if failed:
             assert results["selected_index"] is None
             assert not hasattr(search, "best_estimator_")
             assert search.fit_counts_["refit_fits"] == 0
-            completed = 2 if unavailable == "both" else 1
-            assert search.fit_counts_["finalist_cv_calls"] == completed
+            completed = len(results["candidates"])
+            expected_completed = {"both": 2, "raises": 1, "first_raises": 0}
+            assert completed == expected_completed[unavailable]
+            assert search.fit_counts_["finalist_cv_calls"] == completed + (unavailable != "both")
             assert search.fit_counts_["finalist_fold_fits"] == 4 * completed
             labels = [tick.get_text() for tick in ax.get_yticklabels()]
-            expected = (
-                ["Row 0\nsearch winner, finalist CV unavailable", "Row 1\nfinalist CV unavailable"]
-                if unavailable == "both"
-                else ["Row 0\nsearch winner"]
-            )
-            assert labels == expected
+            expected_labels = {
+                "both": [
+                    "Row 0\nsearch winner, finalist CV unavailable",
+                    "Row 1\nfinalist CV unavailable",
+                ],
+                "raises": ["Row 0\nsearch winner", "Row 1\nfinalist CV interrupted"],
+                "first_raises": ["Row 0\nsearch winner, finalist CV interrupted"],
+            }
+            assert labels == expected_labels[unavailable]
+            search_marks, final_marks = ax.collections
+            expected_search = [0.9] if unavailable == "first_raises" else [0.9, 0.8]
+            np.testing.assert_allclose(search_marks.get_offsets()[:, 0], expected_search)
+            expected_final = [0.6] if unavailable == "raises" else []
+            np.testing.assert_allclose(final_marks.get_offsets()[:, 0], expected_final)
+            if unavailable != "both":
+                assert "score" not in results["failed_candidate"]
+            if unavailable == "first_raises":
+                assert ax.get_xlabel() == "Mean CV score (fixture objective)"
             assert "Selected finalist" not in ax.get_legend_handles_labels()[1]
             figure.canvas.draw()
             return
@@ -335,6 +444,43 @@ def test_plot_finalist_scores_explains_missing_finalist_validation():
         plot_finalist_scores(evolved_estimator)
 
 
+@pytest.mark.parametrize("exponent", [1023, 2000, -2000])
+def test_plot_finalist_scores_rescales_extreme_finite_scores(exponent):
+    from matplotlib import pyplot as plt
+
+    dtype = np.float64 if exponent == 1023 else np.longdouble
+    limits = np.finfo(dtype)
+    if not limits.minexp < exponent < limits.maxexp:
+        pytest.skip("requires extended exponent range")
+    values = np.ldexp(np.array([0.5, -0.75, 0.875], dtype=dtype), exponent)
+    model = SimpleNamespace(
+        cv_results_={"mean_test_score": values[:2]},
+        final_selection_results_={
+            "original_best_index": 0,
+            "selected_index": 0,
+            "candidates": [
+                {"index": 0, "original_score": values[0], "score": values[2]},
+                {"index": 1, "original_score": values[1], "score": np.nan},
+            ],
+        },
+    )
+    with np.errstate(over="raise", invalid="raise"):
+        ax = plot_finalist_scores(model)
+    try:
+        search, finalists, winner = ax.collections
+        np.testing.assert_array_equal(search.get_offsets()[:, 0], [0.5, -0.75])
+        assert len(finalists.get_offsets()) == 0
+        np.testing.assert_array_equal(winner.get_offsets()[:, 0], [0.875])
+        assert ax.get_xlabel() == f"Mean CV score (score) / $2^{{{exponent}}}$"
+        assert [tick.get_text() for tick in ax.get_yticklabels()] == [
+            "Row 0\nsearch winner",
+            "Row 1\nfinalist CV unavailable",
+        ]
+        ax.figure.canvas.draw()
+    finally:
+        plt.close(ax.figure)
+
+
 def test_plot_evolution():
     plot = plot_fitness_evolution(evolved_estimator)
     assert plot.get_xlabel() == "Generation"
@@ -361,6 +507,79 @@ def test_plot_evolution():
         plot_fitness_evolution(evolved_estimator, kind="scatter")
 
 
+@pytest.mark.parametrize("exponent", [1023, 2000, -2000])
+def test_fitness_evolution_scales_before_smoothing_and_keeps_cost_gaps(exponent):
+    from matplotlib import pyplot as plt
+
+    limits = np.finfo(np.longdouble)
+    if not limits.minexp < exponent < limits.maxexp:
+        pytest.skip("requires extended exponent range")
+    best = np.ldexp(np.array([0.5, 0.625, 0.75, 0.875], dtype=np.longdouble), exponent)
+    mean = np.ldexp(np.array([-0.75, 0.5, np.nan, -0.625], dtype=np.longdouble), exponent)
+    estimator = SimpleNamespace(
+        history={
+            "gen": [0, 1, 2, 3],
+            "cross_validate_calls": [2, None, 6, 8],
+            "fitness_best_observed": best,
+            "fitness": [[value, value] for value in mean],
+            "partial": [False, False, False, True],
+        },
+    )
+    with np.errstate(over="raise", invalid="raise"):
+        ax = plot_fitness_evolution(
+            estimator,
+            metrics=["fitness_best_observed", "fitness"],
+            x="cv_calls",
+            kind="step",
+            window=2,
+        )
+    try:
+        assert ax.get_ylabel() == f"Fitness (score) / $2^{{{exponent}}}$"
+        for line in ax.lines:
+            np.testing.assert_array_equal(line.get_xdata(), [2, np.nan, 6, 8])
+        np.testing.assert_array_equal(ax.lines[0].get_ydata(), [0.5, np.nan, 0.625, 0.8125])
+        np.testing.assert_array_equal(ax.lines[1].get_ydata(), [-0.75, np.nan, np.nan, -0.625])
+        np.testing.assert_array_equal(ax.collections[0].get_offsets(), [[8, 0.8125]])
+        ax.figure.canvas.draw()
+    finally:
+        plt.close(ax.figure)
+
+
+def test_fitness_evolution_scale_uses_only_generations_with_known_cost():
+    from matplotlib import pyplot as plt
+
+    if np.finfo(np.longdouble).maxexp <= 2000:
+        pytest.skip("requires extended exponent range")
+    estimator = SimpleNamespace(
+        history={
+            "gen": [0, 1, 2],
+            "cross_validate_calls": [2, None, 8],
+            "fitness_best": [0.25, np.ldexp(np.longdouble(1), 2000), 0.5],
+        }
+    )
+    ax = plot_fitness_evolution(estimator, x="cv_calls")
+    try:
+        assert ax.get_ylabel() == "Fitness (score)"
+        np.testing.assert_array_equal(ax.lines[0].get_ydata(), [0.25, np.nan, 0.5])
+    finally:
+        plt.close(ax.figure)
+
+
+def test_fitness_evolution_keeps_headroom_for_large_rolling_windows():
+    from matplotlib import pyplot as plt
+
+    estimator = SimpleNamespace(
+        history={"gen": list(range(32)), "fitness_best": [np.ldexp(0.875, 1020)] * 32}
+    )
+    ax = plot_fitness_evolution(estimator, window=32)
+    try:
+        assert ax.get_ylabel() == "Fitness (score) / $2^{1020}$"
+        np.testing.assert_array_equal(ax.lines[0].get_ydata(), np.full(32, 0.875))
+        ax.figure.canvas.draw()
+    finally:
+        plt.close(ax.figure)
+
+
 def test_fitness_evolution_uses_cv_calls_and_keeps_repeated_budgets():
     from matplotlib import pyplot as plt
 
@@ -383,18 +602,20 @@ def test_fitness_evolution_uses_cv_calls_and_keeps_repeated_budgets():
 
 
 @pytest.mark.parametrize("kind", ["line", "area", "step", "bar"])
-def test_fitness_cv_axis_breaks_between_generations_with_unknown_cost(kind):
+@pytest.mark.parametrize(("x", "scale"), [("cv_calls", 1), ("fold_fits", 3)])
+def test_fitness_cv_axis_breaks_between_generations_with_unknown_cost(kind, x, scale):
     from matplotlib import pyplot as plt
     from matplotlib.path import Path
 
     estimator = SimpleNamespace(
+        n_splits_=3,
         history={
             "gen": [0, 1, 2, 3, 4, 5],
             "cross_validate_calls": [None, 4, None, 8, 8, None],
             "fitness": [0.05, 0.3, 0.95, 0.6, 0.8, 0.99],
-        }
+        },
     )
-    ax = plot_fitness_evolution(estimator, metric="fitness", x="cv_calls", kind=kind, window=2)
+    ax = plot_fitness_evolution(estimator, metric="fitness", x=x, kind=kind, window=2)
     try:
         if kind == "bar":
             np.testing.assert_allclose(
@@ -402,14 +623,16 @@ def test_fitness_cv_axis_breaks_between_generations_with_unknown_cost(kind):
             )
         else:
             (line,) = ax.lines
-            np.testing.assert_array_equal(line.get_xdata(), [4, np.nan, 8, 8])
+            np.testing.assert_array_equal(
+                line.get_xdata(), [4 * scale, np.nan, 8 * scale, 8 * scale]
+            )
             np.testing.assert_allclose(line.get_ydata(), [0.3, np.nan, 0.45, 0.7])
             moves = [
                 vertices
                 for vertices, code in line.get_path().iter_segments()
                 if code == Path.MOVETO
             ]
-            np.testing.assert_allclose(moves, [[4, 0.3], [8, 0.45]])
+            np.testing.assert_allclose(moves, [[4 * scale, 0.3], [8 * scale, 0.45]])
             if kind == "area":
                 assert len(ax.collections[0].get_paths()) == 2
     finally:
@@ -417,21 +640,23 @@ def test_fitness_cv_axis_breaks_between_generations_with_unknown_cost(kind):
 
 
 @pytest.mark.parametrize("kind", ["line", "area", "step", "bar"])
-def test_fitness_plot_marks_partial_rows_at_their_plot_positions(kind):
+@pytest.mark.parametrize("x", ["cv_calls", "fold_fits"])
+def test_fitness_plot_marks_partial_rows_at_their_plot_positions(kind, x):
     from matplotlib import pyplot as plt
     from matplotlib.collections import PathCollection
 
     estimator = SimpleNamespace(
+        n_splits_=np.int64(3),
         history={
             "gen": [0, 1, 2, 3, 4],
             "cross_validate_calls": [None, 4, 4, 8, 12],
             "fitness_best_observed": [0.4, 0.5, 0.7, np.nan, 0.8],
             "fitness": [0.3, 0.4, 0.6, np.nan, 0.65],
             "partial": [True, False, True, True, False],
-        }
+        },
     )
     metrics = ["fitness_best_observed", "fitness"]
-    ax = plot_fitness_evolution(estimator, metrics=metrics, x="cv_calls", kind=kind, window=2)
+    ax = plot_fitness_evolution(estimator, metrics=metrics, x=x, kind=kind, window=2)
     try:
         markers = [artist for artist in ax.collections if isinstance(artist, PathCollection)]
         assert len(markers) == 2
@@ -440,7 +665,7 @@ def test_fitness_plot_marks_partial_rows_at_their_plot_positions(kind):
                 bar = ax.containers[i][1]
                 expected = [bar.get_x() + bar.get_width() / 2, bar.get_height()]
             else:
-                expected = [4, ax.lines[i].get_ydata()[1]]
+                expected = [12 if x == "fold_fits" else 4, ax.lines[i].get_ydata()[1]]
             np.testing.assert_allclose(marker.get_offsets(), [expected])
         assert ax.get_legend_handles_labels()[1].count("Partial generation") == 1
     finally:
@@ -510,6 +735,16 @@ def test_fitness_evolution_requires_recorded_cv_counts(counts):
         plot_fitness_evolution(estimator, x="cv_calls")
     with pytest.raises(ValueError, match="x must be one of"):
         plot_fitness_evolution(estimator, x="unsupported")
+
+
+@pytest.mark.parametrize("n_splits", [None, 0, 2.5, True])
+def test_fitness_fold_axis_requires_the_recorded_split_count(n_splits):
+    estimator = SimpleNamespace(
+        n_splits_=n_splits,
+        history={"gen": [0], "fitness_best": [0.5], "cross_validate_calls": [4]},
+    )
+    with pytest.raises(ValueError, match="positive n_splits_"):
+        plot_fitness_evolution(estimator, x="fold_fits")
 
 
 def test_generation_plot_shows_gap_for_older_rows_without_finite_counts():
@@ -670,15 +905,23 @@ def test_candidate_rankings_reject_all_failed_candidates():
 
 
 @pytest.mark.parametrize("kind", ["hpo", "features"])
-def test_live_plot_receives_both_searches_generation_history(kind, tmp_path, monkeypatch):
+@pytest.mark.parametrize("extended", [False, True], ids=["ordinary", "extended"])
+def test_live_plot_receives_both_searches_generation_history(kind, extended, tmp_path, monkeypatch):
     from matplotlib import pyplot as plt
     from ..plots import LivePlot
+
+    if extended and np.finfo(np.longdouble).maxexp <= 2001:
+        pytest.skip("requires extended exponent range")
+
+    def extended_score(estimator, X, y):
+        size = estimator.max_depth if kind == "hpo" else X.shape[1]
+        return np.ldexp(np.longdouble(size) / 16, 2000)
 
     monkeypatch.setattr(plt, "pause", lambda interval: None)
     callback = LivePlot(save_path=tmp_path / "training.png")
     common = dict(
         cv=2,
-        scoring="neg_mean_squared_error",
+        scoring=extended_score if extended else "neg_mean_squared_error",
         population_size=4,
         generations=1,
         random_state=7,
@@ -689,12 +932,64 @@ def test_live_plot_receives_both_searches_generation_history(kind, tmp_path, mon
         GASearchCV(DecisionTreeRegressor(), param_grid={"max_depth": Integer(1, 3)}, **common)
         if kind == "hpo"
         else GAFeatureSelectionCV(DecisionTreeRegressor(), **common)
-    ).fit(X[:40], y[:40], callbacks=callback)
+    )
+    try:
+        with np.errstate(over="raise", invalid="raise"):
+            search.fit(X[:40], y[:40], callbacks=callback)
+        assert (tmp_path / "training.png").is_file()
+        assert list(callback.ax.lines[0].get_xdata()) == search.history["gen"]
+        ydata = search.history["fitness_best"]
+        if extended:
+            largest = max(
+                abs(value) for field in callback.metrics for value in search.history[field]
+            )
+            exponent = int(np.frexp(largest)[1])
+            np.testing.assert_array_equal(
+                callback.ax.lines[0].get_ydata(), np.ldexp(ydata, -exponent)
+            )
+            assert callback.ax.get_ylabel() == f"Fitness (score) / $2^{{{exponent}}}$"
+            assert np.isfinite(search.best_score_) and search.best_score_ > np.finfo(float).max
+        else:
+            assert list(callback.ax.lines[0].get_ydata()) == ydata
+    finally:
+        if callback.ax is not None:
+            plt.close(callback.ax.figure)
 
-    assert (tmp_path / "training.png").is_file()
-    assert list(callback.ax.lines[0].get_xdata()) == search.history["gen"]
-    assert list(callback.ax.lines[0].get_ydata()) == search.history["fitness_best"]
-    plt.close("all")
+
+def test_live_plot_updates_the_scale_of_previous_points_and_resets_after_refit():
+    from matplotlib import pyplot as plt
+    from ..plots import LivePlot, plot_generation_metrics
+
+    if np.finfo(np.longdouble).maxexp <= 2001:
+        pytest.skip("requires extended exponent range")
+    live = LivePlot()
+    rows = [{"gen": 0, "fitness_best": 0.75, "fitness": 0.25}]
+    snapshot = None
+    try:
+        live.on_step(logbook=rows)
+        assert live.ax.get_ylabel() == "Fitness (score)"
+        first_lines = tuple(live.ax.lines)
+        best, average = np.ldexp(np.array([0.875, 0.625], dtype=np.longdouble), 2000)
+        rows.append({"gen": 1, "fitness_best": best, "fitness": [average, np.nan]})
+        with np.errstate(over="raise", invalid="raise"):
+            live.on_step(logbook=rows)
+            snapshot = plot_generation_metrics(rows)
+        assert tuple(live.ax.lines) == first_lines
+        assert live.ax.get_ylabel() == snapshot.get_ylabel() == "Fitness (score) / $2^{2000}$"
+        for line, expected in zip(live.ax.lines, ([0.0, 0.875], [0.0, 0.625]), strict=True):
+            np.testing.assert_array_equal(line.get_ydata(), expected)
+        for live_line, static_line in zip(live.ax.lines, snapshot.lines, strict=True):
+            np.testing.assert_array_equal(live_line.get_ydata(), static_line.get_ydata())
+
+        live.on_start()
+        live.on_step(logbook=rows[:1])
+        assert live.ax.get_ylabel() == "Fitness (score)"
+        np.testing.assert_array_equal(live.ax.lines[0].get_ydata(), [0.75])
+    finally:
+        if live.ax is not None:
+            plt.close(live.ax.figure)
+        if snapshot is not None:
+            plt.close(snapshot.figure)
 
 
 def test_live_plot_preserves_axes_and_refreshes_final_generation():
@@ -1201,6 +1496,89 @@ def test_plot_cv_scores_and_candidate_rankings():
         plot_cv_scores(evolved_estimator, kind="hist")
 
 
+@pytest.mark.parametrize("exponent", [1023, 2000, -2000])
+def test_candidate_plots_scale_means_and_standard_deviations_together(exponent):
+    from matplotlib import pyplot as plt
+
+    dtype = np.float64 if exponent == 1023 else np.longdouble
+    limits = np.finfo(dtype)
+    if not limits.minexp < exponent < limits.maxexp:
+        pytest.skip("requires extended exponent range")
+    means = np.array([0.5, -0.75, 0.5], dtype=dtype)
+    deviations = np.array([0.25, 0.875, 0.125], dtype=dtype)
+    search = SimpleNamespace(
+        criteria="min",
+        cv_results_={
+            "mean_test_score": list(np.ldexp(means, exponent)),
+            "std_test_score": list(np.ldexp(deviations, exponent)),
+        },
+    )
+    figure, (bars, ranking) = plt.subplots(nrows=2)
+    try:
+        with np.errstate(over="raise", invalid="raise"):
+            plot_candidate_scores(search, top_k=3, ax=bars)
+            plot_candidate_rankings(search, top_k=3, ax=ranking)
+            figure.canvas.draw()
+        order = [1, 0, 2]
+        expected = means[order]
+        np.testing.assert_array_equal([bar.get_width() for bar in bars.patches], expected)
+        np.testing.assert_array_equal(ranking.lines[0].get_xdata(), expected)
+        assert [tick.get_text() for tick in ranking.get_yticklabels()] == [
+            "#1 candidate 1",
+            "#2 candidate 0",
+            "#3 candidate 2",
+        ]
+        for path, mean, deviation in zip(
+            ranking.collections[0].get_segments(), expected, deviations[order], strict=True
+        ):
+            np.testing.assert_array_equal(path[:, 0], [mean - deviation, mean + deviation])
+        assert bars.get_xlabel() == f"Mean CV score (score) / $2^{{{exponent}}}$"
+        assert ranking.get_xlabel() == f"(Mean CV score (score) ± 1 fold SD) / $2^{{{exponent}}}$"
+    finally:
+        plt.close(figure)
+
+
+@pytest.mark.parametrize(
+    "kind, exponent, ranked",
+    [
+        ("strip", 2000, True),
+        ("strip", -2000, True),
+        ("box", 1023, False),
+        ("violin", 700, False),
+        ("violin", -700, False),
+    ],
+)
+def test_cv_score_distributions_scale_extreme_finite_scores(kind, exponent, ranked):
+    from matplotlib import pyplot as plt
+
+    dtype = np.longdouble if ranked else np.float64
+    limits = np.finfo(dtype)
+    if not limits.minexp < exponent < limits.maxexp:
+        pytest.skip("requires extended exponent range")
+    raw = np.ldexp(np.array([[0.5, 0.75], [-0.875, -0.625]], dtype=dtype), exponent)
+    search = SimpleNamespace(
+        cv_results_={
+            "mean_test_score": list(raw.mean(axis=1)),
+            "split0_test_score": list(raw[:, 0]),
+            "split1_test_score": list(raw[:, 1]),
+        }
+    )
+    figure, ax = plt.subplots()
+    try:
+        with np.errstate(over="raise", invalid="raise"):
+            plot_cv_scores(search, candidate_indices=None if ranked else [1, 0], kind=kind, ax=ax)
+            figure.canvas.draw()
+        assert ax.get_ylabel() == f"Fold score (score) / $2^{{{exponent}}}$"
+        if kind == "strip":
+            for points, row in zip(ax.collections, raw, strict=True):
+                np.testing.assert_array_equal(points.get_offsets()[:, 1], np.ldexp(row, -exponent))
+        elif kind == "violin":
+            assert len(ax.collections) == 2
+            assert all(np.isfinite(body.get_paths()[0].vertices).all() for body in ax.collections)
+    finally:
+        plt.close(figure)
+
+
 def test_fold_score_plot_matches_metric_and_retains_missing_values():
     from matplotlib import pyplot as plt
 
@@ -1229,6 +1607,42 @@ def test_fold_score_plot_matches_metric_and_retains_missing_values():
     finally:
         for ax in (previous, ranked, picked):
             plt.close(ax.figure)
+
+
+@pytest.mark.parametrize("exponent", [1023, 2000, -2000])
+def test_fold_score_plot_scales_extreme_scores_without_masking_them(exponent):
+    from matplotlib import pyplot as plt
+
+    dtype = np.float64 if exponent == 1023 else np.longdouble
+    limits = np.finfo(dtype)
+    if not limits.minexp < exponent < limits.maxexp:
+        pytest.skip("requires extended exponent range")
+    scores = np.ldexp(np.array([0.5, -0.75, 0.875], dtype=dtype), exponent)
+    search = SimpleNamespace(
+        cv_results_={
+            "split0_test_score": np.array([scores[0], scores[2], limits.max, limits.max]),
+            "split1_test_score": np.array([scores[1], np.inf, limits.max, limits.max]),
+            "all_fits_failed": [False, False, True, False],
+            "skipped_invalid_mask": [False, False, False, True],
+        }
+    )
+    figure, ax = plt.subplots()
+    try:
+        with np.errstate(over="raise", invalid="raise"):
+            plot_cv_fold_scores(search, candidate_indices=[0, 1, 2, 3], ax=ax)
+            figure.canvas.draw()
+        plotted = ax.images[0].get_array()
+        np.testing.assert_array_equal(
+            plotted.mask, [[False, False], [False, True], [True, True], [True, True]]
+        )
+        np.testing.assert_array_equal(plotted.compressed(), [0.5, -0.75, 0.875])
+        assert figure.axes[1].get_ylabel() == f"Fold score (score) / $2^{{{exponent}}}$"
+        marks = {item.get_label(): item.get_offsets() for item in ax.collections}
+        np.testing.assert_array_equal(marks["Non-finite score"], [[1, 1]])
+        np.testing.assert_array_equal(marks["All fits failed"], [[0, 2], [1, 2]])
+        np.testing.assert_array_equal(marks["Skipped before CV"], [[0, 3], [1, 3]])
+    finally:
+        plt.close(figure)
 
 
 def test_fold_score_plot_uses_stable_prefix_for_a_long_rank_history(monkeypatch):
@@ -1407,6 +1821,33 @@ def test_cv_score_plot_checks_explicit_rows_with_no_finite_scores(
             plot_cv_scores(search, candidate_indices=indices)
 
 
+def test_fold_score_plots_distinguish_skipped_masks_and_failed_fits():
+    from matplotlib import pyplot as plt
+
+    search = SimpleNamespace(
+        cv_results_={
+            "split0_test_score": [np.nan, np.nan, np.nan, 0.8],
+            "split1_test_score": [0.7, np.nan, np.nan, 0.9],
+            "n_features": [2, 1, 0, 2],
+            "all_fits_failed": [False, True, False, False],
+            "skipped_invalid_mask": [False, False, True, False],
+        }
+    )
+    order = [2, 1, 0, 3]
+    heatmap = plot_cv_fold_scores(search, candidate_indices=order)
+    distribution = plot_cv_scores(search, candidate_indices=order, kind="strip")
+    try:
+        marks = {item.get_label(): item.get_offsets() for item in heatmap.collections}
+        np.testing.assert_array_equal(marks["Skipped before CV"], [[0, 0], [1, 0]])
+        np.testing.assert_array_equal(marks["All fits failed"], [[0, 1], [1, 1]])
+        np.testing.assert_array_equal(marks["Non-finite score"], [[0, 2]])
+        labels = [tick.get_text().splitlines()[-1] for tick in distribution.get_xticklabels()]
+        assert labels[:3] == ["Skipped before CV", "All fits failed", "1/2 finite folds"]
+    finally:
+        plt.close(heatmap.figure)
+        plt.close(distribution.figure)
+
+
 def test_cv_score_plot_marks_a_feature_mask_that_failed_to_fit():
     from matplotlib import pyplot as plt
     from sklearn.exceptions import FitFailedWarning
@@ -1442,6 +1883,38 @@ def test_cv_score_plot_marks_a_feature_mask_that_failed_to_fit():
         assert len(ax.collections[0].get_offsets()) == 2
     finally:
         plt.close(ax.figure)
+
+
+def test_feature_search_overview_uses_diagnostics_when_every_mask_is_skipped():
+    from matplotlib import pyplot as plt
+
+    class EmptyMaskSelector(GAFeatureSelectionCV):
+        def _repair_individual(self, individual):
+            return individual
+
+        def _initialize_population(self):
+            return [self.toolbox._individual_type([0, 0])] * 2
+
+    search = EmptyMaskSelector(
+        DecisionTreeRegressor(random_state=7),
+        cv=2,
+        population_size=2,
+        generations=0,
+        n_jobs=1,
+        random_state=7,
+        verbose=False,
+    )
+    with pytest.raises(ValueError, match="Every feature mask was skipped"):
+        search.fit(X_train[:12, :2], y_train[:12])
+    axes = plot_search_overview(search)
+    try:
+        panel = axes[1, 1]
+        assert panel.get_title().startswith("All feature masks skipped")
+        assert [text.get_text() for text in panel.get_legend().get_texts()] == ["Skipped before CV"]
+        assert panel.images[0].get_array().mask.all()
+        panel.figure.canvas.draw()
+    finally:
+        plt.close(axes[0, 0].figure)
 
 
 def test_plot_search_overview():

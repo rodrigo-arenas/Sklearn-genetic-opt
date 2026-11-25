@@ -55,6 +55,28 @@ def _short_cv_positions(ranks, top_k):
     return np.concatenate((ordered, tied))
 
 
+def _feature_mask_parameters(masks, unique_candidates):
+    if not unique_candidates or len(masks) < max(64, 4 * unique_candidates):
+        return [{"features": list(mask)} for mask in masks]
+
+    converted = {}
+    params = []
+    for mask in masks:
+        identity = id(mask)
+        cached = converted.get(identity)
+        if cached is None:
+            values = list(mask)
+            if type(mask) is np.ndarray and mask.ndim == 1 and mask.dtype == bool:
+                # Keep the array alive if the iterable yields temporary views.
+                converted[identity] = (mask, values)
+        else:
+            # Exported rows must remain independently editable.
+            _, template = cached
+            values = template.copy()
+        params.append({"features": values})
+    return params
+
+
 def generation_history(records):
     """Build the public column-wise history from generation rows, including legacy gaps."""
     fields = (
@@ -109,6 +131,7 @@ class GeneticEstimatorMixin:
         "_hof",
         "_optimizer_snapshot",
         "_population_pool",
+        "_unrecorded_search_cv_calls",
     }
 
     # Contract for the two serialization paths (see #297):
@@ -242,6 +265,7 @@ class GeneticEstimatorMixin:
             "fit_counts_",
             "fit_stats_",
             "search_time_",
+            "search_interrupted_",
             "search_space_exhausted_",
             "feature_names_in_",
             "_preserved_dataframe_",
@@ -258,6 +282,7 @@ class GeneticEstimatorMixin:
             "best_estimator_",
             "estimator_",
             "refit_time_",
+            "refit_failure_time_",
             "best_params_",
             "best_features_",
             "support_",
@@ -384,6 +409,8 @@ class GeneticEstimatorMixin:
     def _run_optimizer(self, optimizer, runtime, checkpoint, context):
         previous_calls = self.fit_stats_.get("cross_validate_calls", 0)
         started_at = perf_counter()
+        self._unrecorded_search_cv_calls = 0
+        completed = False
         try:
             if optimizer is not None:
                 from ._backend_runtime import run_optimizer
@@ -401,18 +428,23 @@ class GeneticEstimatorMixin:
                     bool(checkpoint),
                     data_hash=context,
                 )
+            completed = True
         finally:
             self.search_time_ = perf_counter() - started_at
-
-        calls = self.fit_stats_["cross_validate_calls"] - previous_calls
-        self.fit_counts_ = {
-            "search_cv_calls": calls,
-            "search_fold_fits": calls * len(self._cv_splits),
-            "finalist_cv_calls": 0,
-            "finalist_fold_fits": 0,
-            "finalist_reused_folds": 0,
-            "refit_fits": 0,
-        }
+            self.search_interrupted_ = not completed
+            calls = self.fit_stats_.get("cross_validate_calls", 0) - previous_calls
+            unrecorded = self.__dict__.pop("_unrecorded_search_cv_calls", 0)
+            if self.search_interrupted_:
+                # A portable resume can fail before restoring the saved counters.
+                calls = max(0, calls) + unrecorded
+            self.fit_counts_ = {
+                "search_cv_calls": calls,
+                "search_fold_fits": calls * len(self._cv_splits),
+                "finalist_cv_calls": 0,
+                "finalist_fold_fits": 0,
+                "finalist_reused_folds": 0,
+                "refit_fits": 0,
+            }
         return result
 
     def __getattr__(self, name):
@@ -490,7 +522,8 @@ class GeneticEstimatorMixin:
             if masks is not None:
                 masks = [masks[i] for i in positions]
         if masks is not None:
-            results["params"] = [{"features": list(mask)} for mask in masks]
+            stats = getattr(self, "fit_stats_", None) or {}
+            results["params"] = _feature_mask_parameters(masks, stats.get("unique_candidates"))
         if preserve_index:
             results.index.name = "candidate_index"
         if top_k is None:

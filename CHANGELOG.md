@@ -11,12 +11,43 @@ for upgrade guidance and links to the API examples.
   pandas columns with their names and dtypes in CV, finalist validation,
   refit and prediction. This supports fold-local preprocessing such as a
   `ColumnTransformer` with dtype-based selectors.
+- `GAFeatureSelectionCV` lets a pipeline's first active step handle
+  missing feature values, including sparse data passed to `SimpleImputer`.
+- For large CSC inputs that retain at most half their columns,
+  `GAFeatureSelectionCV.transform` converts only the selected columns to CSR.
+- Sparse `inverse_transform` reconstructs the CSC column pointers directly
+  for SciPy CSR and CSC inputs.
 - `PopulationConfig(warm_start_masks=...)` lets `GAFeatureSelectionCV` try
   known feature subsets first on all five built-in backends. Each fresh search
   evaluates those masks on its own CV splits.
 
 ### Cross-validation
 
+- Explicit CV folds report the setting, fold, partition, and dtype when
+  a NumPy selector uses a dtype other than integer or Boolean.
+- Failed finalist validation records its status and elapsed time, including
+  failures while preparing folds or when every finalist score is non-finite.
+  The elapsed fit-work plot labels the failed phase.
+- `subsample_cv` identifies the fold if its training partition is empty
+  or the requested fraction would leave it with zero training rows.
+- Search ranks and finalist comparisons retain extended floating-point
+  precision from custom scorers, including in reported scores.
+- Finalist validation can reuse a subset of matching folds with very large
+  finite scores when a retained score establishes the floating-point dtype.
+- Finalist validation reuses small scores saved as `float64` when new folds
+  already produce a `float64` array with large scores, avoiding repeat fits.
+- Finalist validation can combine small saved scores with large new
+  `longdouble` scores. A discarded search fold alone cannot establish
+  extended precision for the finalist's score array.
+- Finalist validation preserves integer scores when a discarded fold caused
+  promotion to floating point. Small saved integers can also be reused when
+  newly evaluated folds establish the floating-point dtype.
+- When recovering original score types, finalist validation can keep new
+  integer or Boolean scores and fit only the remaining folds.
+- Finalist validation can also keep small new `float64` scores while
+  recovering the types of matching folds stored in extended precision.
+- Generation history and score-based stopping callbacks recognize finite
+  NumPy extended-precision scores beyond the range of a Python float.
 - Categorical matching compares object-array contents recursively when
   resolving copied estimator configurations. Nested arrays can match and
   choices with different scalar types retain their strict matching priority.
@@ -28,6 +59,9 @@ for upgrade guidance and links to the API examples.
   used to produce their saved scores.
 - `GASearchCV` publishes the refitted estimator only after a successful
   full-data fit. A failed refit leaves the recorded CV results available.
+- Both estimators expose the elapsed time of a failed full-data refit as
+  `refit_failure_time_`. The fit-work plot labels failed refits and shows
+  their elapsed time in seconds mode.
 - Feature selectors in pipelines can receive groups automatically when only
   the active finalist splitter requests them.
 - Finalist validation preserves each recorded fold score when the two
@@ -36,6 +70,11 @@ for upgrade guidance and links to the API examples.
   `final_selection="reuse_folds"`, including when the other stage uses the
   same ordered row positions. Valid negative positions also match their
   equivalent row positions.
+- When comparing separately supplied folds, finalist validation evaluates
+  the fold afresh if either the search or finalist selector mixes integer
+  positions and Boolean values in a list or tuple.
+- Finalist validation scores folds with custom selector containers afresh.
+  Score reuse compares plain NumPy arrays, lists, and tuples.
 - Both estimators accept a custom `split(X, y)` method alongside an active
   search or finalist splitter that accepts `groups`.
 - A `GASearchCV` group alias supplies its search and finalist splitters in
@@ -47,7 +86,8 @@ for upgrade guidance and links to the API examples.
   split. An empty finalist list or tuple is rejected before candidate search.
 - Explicit `cv` and `final_selection_cv` lists and tuples report malformed
   train/test pairs, out-of-range positions and wrong-length Boolean masks
-  before candidate search.
+  before candidate search. Other iterables and splitters report the same
+  errors before scoring the folds they yield.
 - Both estimators report a configuration error when a callable scorer
   returns multiple scores. Use a dictionary of named scorers to track
   multiple metrics.
@@ -87,11 +127,14 @@ for upgrade guidance and links to the API examples.
 - `GAFeatureSelectionCV` accepts multi-output regression and multilabel
   targets when the wrapped estimator supports them. Estimators such as
   `MultiOutputRegressor` receive a two-dimensional target even with one column.
-- CatCMAwM rescales very large continuous losses and prior boundary-penalty
-  spreads together. The solver checkpoint retains the scale and
-  `cv_results_` continues to report the original scores.
-- SciPy preserves the ordering of extreme finite losses across generations.
-  Its stopping check handles very large plateaus and distinguishes tiny
+- CatCMAwM rescales very large losses on continuous and integer axes,
+  including finite values outside the range of a Python float. Earlier
+  boundary penalties and later losses use the same scale. Checkpoints
+  retain the scale, and `cv_results_` reports the original scores.
+- SciPy matches survivors using the solver's double-precision loss and
+  retains original scores for CV results and the candidate archive. Finite
+  losses outside the solver's range use its nearest finite boundary.
+  The stopping check handles very large plateaus and distinguishes tiny
   unequal losses. Replay verifies saved generations before applying the check.
 - Both search estimators preserve the mean and dispersion of extreme finite
   fold scores in `cv_results_`. Search and finalist selection use the same
@@ -125,8 +168,23 @@ for upgrade guidance and links to the API examples.
 
 ### Fit diagnostics
 
+- `plot_finalist_scores` shows finite scores near or beyond the range of
+  Matplotlib's coordinates using a shared, labeled power-of-two scale.
+- `plot_fitness_evolution` applies the same scaling to extreme fitness
+  histories before smoothing, preserving cost gaps and partial markers.
+- `LivePlot` and `plot_generation_metrics` scale extreme fitness scores.
+  Live updates rescale earlier points on the same lines when needed.
+- `plot_cv_fold_scores` uses a labeled color scale for extreme finite
+  test scores and retains the markers for missing scores and unavailable rows.
+- `plot_cv_scores` preserves extreme finite scores in candidate rankings and
+  uses a labeled scale for box, violin and strip plots.
+- `plot_candidate_scores` and `plot_candidate_rankings` display extreme
+  finite CV means on a labeled scale. Ranking error bars use the same units
+  as the plotted means.
 - Both searches retain `cv_results_` and `history` when every candidate
   fails to fit. The search raises before finalist validation or refit.
+  Feature selection raises the same error when every attempted mask fails
+  and the remaining masks were skipped.
 - Automatic finalist selection keeps completed evaluations and elapsed time
   when validation raises. The result has no selected finalist in this case,
   and `plot_finalist_scores` can show the recorded evaluations.
@@ -231,6 +289,8 @@ for upgrade guidance and links to the API examples.
   before candidate CV. NumPy unsigned integer counts work across engines.
 - External optimizers reuse candidate keys when maintaining a top-k
   hyperparameter archive with multiple entries.
+- The shared optimizer archive uses binary search for insertion, preserving
+  candidate order when ranks tie.
 - `TimerStopping`, `ThresholdStopping`, and `DeltaThreshold` raise a
   configuration error for `NaN` limits or thresholds.
 - `TimerStopping` measures elapsed search time with a monotonic clock so
@@ -279,10 +339,17 @@ for upgrade guidance and links to the API examples.
   resume, and counts reused finalist fold scores separately.
 - Finalist validation narrows potential reusable folds by their validation
   indices before comparing every index. When search and finalist validation
-  share the same arrays, the matcher skips repeated index comparisons.
+  share the same NumPy array, list, or tuple, the matcher converts the
+  selector once and skips the repeated comparison.
 
 ### Checkpoint compatibility
 
+- Optimizer resumes validate the saved best score and generation counters before
+  starting fresh CV. Errors name the checkpoint file and invalid telemetry field.
+- Optimizer resumes report malformed fingerprints or an invalid saved search
+  problem before hashing the current training data.
+- Resuming from saved CV splits checks fold pairs, row bounds and mask lengths
+  before fitting new candidates, including with older DEAP snapshots.
 - Bundled optimizer resumes identify malformed generation records, mismatched
   candidate counts, and invalid solver state before starting new CV.
 - `ModelCheckpoint(every_n_generations=N)` can space out snapshot writes. Its
@@ -338,13 +405,28 @@ for upgrade guidance and links to the API examples.
 
 ### Search performance
 
+- Feature selection skips repeated comparisons of shared cached masks
+  when locating the archived winner in a long search history.
+- Both searches use the original score array and return its ranks directly
+  when every CV score is finite.
+- Both searches reuse the computed mean when summarizing the standard
+  deviation of ordinary `float64` fold scores and finite CV timings.
+- Both searches compute the mean of short, ordinary CV score vectors
+  without allocating a separate absolute-value array.
+- Both searches keep the independent fold arrays produced by standard
+  `KFold`, `StratifiedKFold`, and `GroupKFold` splitters.
+- `TimerStopping` prepares cache keys in dispatch-sized batches, including
+  when `CVBudgetStopping` also limits the number of fresh evaluations.
+  Cache hits before the first unfinished proposal are recorded in order.
+- Wide feature masks backed by integer lists or tuples use a faster byte
+  conversion for binary validation, diversity and distinct-mask counts.
 - pymoo passes repaired feature masks to the evaluator as immutable integer
   tuples, avoiding an intermediate list for each proposal.
 - Optimizer adapters can pass feature masks as tuples of Python integers.
   The runtime reuses the tuple and validates repeated references once per batch.
 - On sparse inputs with at least 4,096 columns, native feature evaluation
-  can build a writable Boolean mask directly from the tuple prepared for
-  a cache lookup.
+  uses a `bytearray` to build a writable Boolean mask from the cache
+  lookup tuple.
 - `GASearchCV` can use prepared candidate rows directly in batches with
   native integer dimensions and the standard repair hooks.
 - CV fold heatmaps reuse the stable rank cutoff for short lists from long
@@ -423,10 +505,46 @@ for upgrade guidance and links to the API examples.
   and replaying checkpoints. The saved signatures and evaluations remain compatible.
 - Finalist validation can combine cached small integers with large integers
   from new folds without repeating the full validation.
+- Finalist validation can combine saved fractional scores with large integer
+  scores from new folds when the combined scores use floating-point precision.
 - Finalist validation can reuse a subset of large integer scores when every
   requested fold matches and the search retained an integer score array.
-- Finalist validation can reuse the original score array, including large
-  scores, when every search fold matches one-to-one in the original order.
+- When the search retained an integer score array, finalist validation can
+  combine its large integer scores with scores from new folds.
+- Interrupted finalist validation records the attempted CV call and candidate
+  row. The fit-work plot marks known finalist fold fits as a lower bound.
+- If the optimizer raises, `fit_counts_` retains newly recorded search CV
+  work and the fit-work plot marks its fold count as a lower bound.
+  The count includes results returned by an interrupted batch, including
+  evaluations that finish out of order in the built-in worker pool.
+  It also includes completed CV calls when preparing a later dispatch or
+  recording the batch results raises.
+- The finalist score plot identifies the interrupted candidate and shows
+  its search score even when validation stops on the first finalist.
+- Finalist validation uses each original score array when its folds match
+  the complete search sequence or a permutation, including repeated folds.
+  All finalists share the same ordering and retain the saved numeric dtype.
+- When many feature proposals reuse evaluations, finalist selection packs
+  each shared cached mask at most once per shortlist or tied cutoff scan.
+- At a large tied cutoff, feature selection can pack only the largest eligible
+  Boolean masks when looking for a denser replacement.
+- `plot_fitness_evolution(x="fold_fits")` shows cumulative search fold fits
+  for comparing runs with different numbers of CV splits.
+- The optimizer catalog times candidate CV without replacing the built-in
+  evaluators, so integer and sparse-mask evaluation keep their optimized paths.
+- The optimizer catalog can export pairs of built-in engines at their shared
+  CV budgets, with holdout scores and completion counts for each pair.
+- The optimizer catalog counts CV calls with non-finite scores toward the
+  budget and reports quality from finite candidates only.
+- Skipped feature masks have missing CV scores and cannot become finalists
+  or be refitted, even when valid scores have large magnitude.
+- Fold score plots distinguish masks skipped before CV from estimator failures.
+  The search overview displays recorded scores when feature selection ends
+  without a selected mask.
+- Feature selection computes size ranks from a bounded count of mask sizes
+  in long histories, preserving tied ranks and candidate order.
+- Feature-selection DataFrame exports reuse shared mask conversions while
+  keeping an independently editable mask list in every `params` row.
 - Finalist validation can reuse a matching fold with an undefined `NaN`
   score and keeps finalists with undefined mean scores ineligible.
 - DEAP fitness sharing packs wide binary feature masks and computes each
@@ -437,8 +555,11 @@ for upgrade guidance and links to the API examples.
   complete ties and falling back when more distinct candidates are needed.
 - Cached CV score ranks use the multiplicity of each shared summary,
   preserving tied ranks while sorting fewer values.
+- Long CV result histories with a single finite score value compute ranks
+  without sorting. Candidate multiplicity still determines the non-finite rank.
 - When many candidates reuse cached scores, `cv_results_` summarizes the
   shared fold arrays once and restores the original row order for both searches.
+  Grouping the shared arrays now takes one pass and uses less temporary memory.
   Feature selection also reuses the counts of shared Boolean masks.
 - `scipy_optimizer(stop_on_convergence=False)` lets either search continue
   through equal population losses, subject to generation, coverage and
@@ -469,6 +590,10 @@ for upgrade guidance and links to the API examples.
   selected features once during repair.
 - Both search estimators reuse each proposal's cache key within its batch and
   reduce the score statistics in `cv_results_` in bounded NumPy batches.
+- Repeated proposals share one persistent cache lookup when the batch records
+  their candidate rows.
+- The backend runtime reuses validation of repeated immutable feature masks
+  to skip rehashing when they share the same cache key object.
 - Both search estimators reuse those batches to populate per-fold score columns
   in `cv_results_`, reducing formatting time for long or many-fold searches.
 - Both search estimators reuse worker threads across parallel candidate batches

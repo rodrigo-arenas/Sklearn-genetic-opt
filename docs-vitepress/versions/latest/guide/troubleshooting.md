@@ -103,7 +103,9 @@ records `NaN` scores for that candidate and ranks it below candidates that fit.
 If every candidate fails to fit, the search raises before selecting a winner.
 With numeric `error_score`, it keeps `cv_results_`, `history` and
 `fit_counts_` available for inspection. Failed fits still count toward the
-CV budget.
+CV budget. In feature selection, this also applies when every attempted mask
+fails and the remaining masks were skipped. The `skipped_invalid_mask` column
+identifies the masks that never reached CV.
 
 Filter `cv_results_["all_fits_failed"]` to find the affected configurations or
 masks by row. Partial fit failures and non-finite scores from fitted estimators
@@ -123,6 +125,9 @@ replacement score on failed folds. Set `error_score="raise"` on your search
 to get the original exception and identify the parameter combination, feature
 subset or data constraint that caused the failure. If the exception ends the
 optimizer run, `search_time_` records the elapsed seconds up to that point.
+`fit_counts_` includes completed CV results already returned by an
+interrupted batch. With `search_interrupted_=True`, those values are lower
+bounds. Checkpoints continue to track the search work that has been recorded.
 See [how to read the duration after an error](../tutorials/optimizer-backends#inspect-an-optimizer-error).
 
 ## Finalist validation ends without a winner
@@ -130,9 +135,21 @@ See [how to read the duration after an error](../tutorials/optimizer-backends#in
 When all finalist scores are non-finite, `fit` raises before the final refit.
 `final_selection_results_["candidates"]` still contains each completed
 finalist evaluation and its per-fold scores. `selected_index` is `None`.
+For any failure in automatic finalist validation, check
+`final_selection_results_["failed"]` and `final_selection_results_["time_seconds"]`.
+Use `plot_fit_work(search, unit="seconds")` to see how long the failed
+phase ran. If the error occurred while preparing the folds, the search
+scores are still available in `cv_results_`.
 If validation raises during a candidate, earlier completed evaluations
-remain available. Use `plot_finalist_scores(search)` to inspect them.
-See the [finalist diagnostic example](../tutorials/optimizer-backends#inspect-finalist-validation-without-a-winner).
+remain available. Inspect `final_selection_results_["failed_candidate"]`
+for the interrupted row, parameters, CV calls, and known fold fits.
+`fit_counts_["finalist_cv_calls"]` includes the interrupted call. The known
+fold count is a lower bound because the interrupted call can have run some
+folds before raising.
+Use `plot_finalist_scores(search)` to see the completed evaluations and the
+interrupted row. It can show the search score even if the first finalist
+raises. Use `plot_fit_work(search)` for the fold counts. See the
+[interrupted validation example](../tutorials/optimizer-backends#inspect-an-interrupted-finalist).
 
 ## Refit fails after cross-validation
 
@@ -141,6 +158,10 @@ cross-validation folds. `fit` propagates the original error. The search
 keeps its `cv_results_` and any completed finalist scores so you can inspect
 the selected configuration. `fit_counts_["refit_fits"]` is zero and
 `best_estimator_` becomes available only after a successful refit.
+
+Read `refit_failure_time_` for the elapsed seconds before the error, or use
+`plot_fit_work(search, unit="seconds")` to see it alongside the other phases.
+See the [failed-refit example](../tutorials/optimizer-backends#inspect-a-failed-full-data-refit).
 
 If finalist validation completed, use
 [`plot_finalist_scores(search)`](../api/plots#plot-finalist-scores) to compare
@@ -272,7 +293,7 @@ After fitting, `search.fit_stats_` is a dictionary with evaluation counters:
     "cross_validate_calls":        310,  # actual CV calls made
     "cache_hits":                  110,  # scores reused from cache
     "duplicate_candidates":          0,  # repeats coalesced within a batch
-    "skipped_invalid_candidates":    0,  # invalid candidates penalized before CV
+    "skipped_invalid_candidates":    0,  # invalid candidates skipped before CV
     "population_parallel_batches":  21,
     "population_serial_batches":     0,
     "random_immigrants":            12,  # injected by diversity control
@@ -285,7 +306,9 @@ Key ratios to check:
 - With caching enabled, add `cache_hits` and `duplicate_candidates` and divide
   by `evaluated_candidates` to see the share of proposals that reused a score.
 - `skipped_invalid_candidates` counts candidates skipped before starting CV.
-  A failed fold handled by `error_score` still belongs to a CV call.
+  If a feature mask is skipped, `cv_results_["skipped_invalid_mask"]`
+  identifies its row. A failed fold handled by `error_score` still belongs
+  to a CV call.
 - `random_immigrants > 0` — diversity control was triggered at least once.
 
 `fit_stats_` includes the search history restored from a checkpoint. For work

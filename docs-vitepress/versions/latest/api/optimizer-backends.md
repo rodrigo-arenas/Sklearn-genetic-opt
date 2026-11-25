@@ -73,9 +73,18 @@ proposals that share a fresh evaluation in their batch. `cache_hits` counts
 proposals whose score was already cached before the batch, including every
 repeat of those proposals in that batch. Each completed proposal keeps its
 own row in `cv_results_`. Equivalent proposals share one key during batch
-evaluation. The persistent cache retains value-based keys for resuming a search.
+evaluation and one cached result lookup when the batch records their rows.
+The persistent cache retains value-based keys for resuming a search.
+For a feature mask supplied more than once as the same immutable tuple, the
+engine can also skip hashing the key again within the batch.
 Hyperparameter keys sort pairs by name after resolving categorical values.
 Candidate result columns follow the declared grid order.
+In long histories with frequent cache reuse, result assembly can group
+shared fold-score arrays in one pass. Each row keeps its original position
+and contributes to tied ranks.
+When every finite score in a long result column is the same, the formatter
+assigns rank 1 directly. Non-finite scores take the rank after all finite
+candidate rows.
 With caching disabled, `unique_candidates` counts
 fresh evaluations, including repeated configurations. See the
 [worked cache example](../tutorials/optimizer-backends#read-both-cache-counters-in-one-batch).
@@ -121,6 +130,10 @@ ones resolved by the cache.
 - Use `cv_results_` for per-candidate scores, `history` for per-generation
   metrics, and `fitness_best_observed` in [LivePlot](./plots) to follow the best
   finite primary score seen so far. The archive considers discarded candidates too.
+- The shared optimizer archive keeps up to `keep_top_k` distinct candidates
+  in rank order. A new candidate admitted to the archive goes ahead of
+  entries with the same rank. At capacity, a candidate must outrank the
+  last entry to enter. Finding the insertion point uses binary search.
 - To resume any catalog engine, pass the same checkpoint path to a new `fit`
   with the same data, settings and environment. For SciPy and pymoo, replay
   uses recorded results for completed generations. Native solver state serves
@@ -147,15 +160,16 @@ call to `fit`:
 
 | Key | Work measured |
 | --- | --- |
-| `search_cv_calls` | Fresh candidate cross-validation calls during search |
-| `search_fold_fits` | Estimator fits across the search CV folds |
-| `finalist_cv_calls` | Cross-validation calls during finalist selection |
-| `finalist_fold_fits` | Fresh estimator fits during finalist validation, including any repeated folds |
+| `search_cv_calls` | Fresh candidate cross-validation calls confirmed during search |
+| `search_fold_fits` | Estimator fits across the confirmed search CV calls |
+| `finalist_cv_calls` | Cross-validation calls started during finalist selection |
+| `finalist_fold_fits` | Known fresh estimator fits during finalist validation, including any repeated folds |
 | `finalist_reused_folds` | Finalist fold scores taken from search results |
-| `refit_fits` | One full-data fit with `refit` enabled, zero otherwise |
+| `refit_fits` | One completed full-data refit, zero otherwise |
 
-Add the two `*_fold_fits` values and `refit_fits` to obtain the total fit
-work. Reused fold scores and cache hits cost zero fresh fits. On resume,
+For a completed fit, add the two `*_fold_fits` values and `refit_fits` to
+obtain the total fit work. Reused fold scores and cache hits cost zero
+fresh fits. On resume,
 `fit_counts_` measures work done by that call. Use
 `fit_stats_["cross_validate_calls"]` for cumulative search CV calls.
 When `history` contains `partial`, check the flag on each row to identify
@@ -166,6 +180,16 @@ For one finalist, read `cv_calls`, `fold_fits`, and `reused_folds` from its entr
 in `final_selection_results_["candidates"]`. A retry can make `fold_fits`
 larger than the number of returned fold scores. See the
 [per-finalist example](../tutorials/optimizer-backends#inspect-actual-work-for-each-finalist).
+If an exception interrupts a finalist CV call, the call counts toward
+`finalist_cv_calls`. The partial fold count is unavailable, so
+`finalist_fold_fits` reports a lower bound. Inspect
+`final_selection_results_["failed_candidate"]` for the row index, parameters,
+started calls, and known fold fits for the interrupted finalist. See the
+[interrupted validation example](../tutorials/optimizer-backends#inspect-an-interrupted-finalist).
+
+Failed automatic validation sets `final_selection_results_["failed"]` to
+`True`, including when fold preparation raises or all finalist scores are
+non-finite. Completed finalist rows and their scores remain available.
 
 ### Fit time by phase
 
@@ -179,10 +203,25 @@ phases.
 | `search_time_` | Optimizer run, including population setup, candidate CV, and callbacks |
 | `final_selection_results_["time_seconds"]` | Automatic finalist validation, including the time to prepare its folds and reuse scores |
 | `refit_time_` | Successful full-data estimator fit |
+| `refit_failure_time_` | Time until the full-data refit phase raised |
+
+After a refit error, `plot_fit_work(search, unit="seconds")` labels the failed
+phase and shows its elapsed time. See the
+[failed-refit example](../tutorials/optimizer-backends#inspect-a-failed-full-data-refit).
 
 `search_time_` is recorded when the optimizer returns or raises, including with
-`refit=False`. If an error ends the search, the elapsed time measures work up to
-that error. `fit_counts_` is published once the optimizer returns successfully.
+`refit=False`. If an error ends the optimizer run, `search_interrupted_` is
+true and `fit_counts_` retains confirmed search calls and fold fits from
+that invocation, including completed candidate results from an interrupted
+batch. If preparing a later dispatch or recording its results raises,
+`fit_counts_` includes each completed CV call once. When the built-in
+population thread pool handles a batch, the counts also include
+later proposals whose evaluations return before or during worker shutdown.
+Counts are lower bounds because an interrupted evaluation can perform work
+before returning a result. `fit_stats_` tracks the optimizer's published
+counters. Checkpoints retain their saved search state. An ordinary budget
+stop returns successfully with
+`search_interrupted_=False`.
 On resume, the timer covers the current optimizer run, including any replay it
 performs. Run `fit` to populate `search_time_` on an estimator saved with an
 older version. Time the entire `fit` call to include input validation, search
