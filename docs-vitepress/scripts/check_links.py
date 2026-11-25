@@ -28,10 +28,19 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-VERSION_DIRS = [
-    ROOT / "docs-vitepress" / "versions" / "latest",
-    ROOT / "docs-vitepress" / "versions" / "0.13",
-]
+
+
+def find_version_dirs(versions_root: Path) -> list[Path]:
+    if not versions_root.is_dir():
+        return []
+    return sorted(
+        path
+        for path in versions_root.iterdir()
+        if path.is_dir() and (path.name == "latest" or re.fullmatch(r"\d+\.\d+", path.name))
+    )
+
+
+VERSION_DIRS = find_version_dirs(ROOT / "docs-vitepress" / "versions")
 ROOT_DOCS = [
     ROOT / "README.rst",
     ROOT / "CONTRIBUTING.md",

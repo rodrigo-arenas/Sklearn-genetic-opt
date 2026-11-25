@@ -1,6 +1,6 @@
 ---
 title: "Log Every Hyperparameter Search Candidate to MLflow"
-description: "Recipe to use MlflowCallback to log every GASearchCV candidate as a child run, with parameter and metric tracking."
+description: "Track evaluated GASearchCV candidates in MLflow with MLflowConfig, group runs under a parent, and log the winner separately."
 ---
 
 :::warning Development version
@@ -13,13 +13,13 @@ You are reading the **latest (development)** docs. For stable documentation, see
 
 ## What This Solves
 
-You want every evaluated hyperparameter configuration tracked in MLflow — not just the best one. `MlflowCallback` logs each candidate as a child run automatically.
+Compare candidate hyperparameters and cross-validation scores under a single
+MLflow parent run. The built-in logger is `MLflowConfig`, passed as
+`log_config` to the search, not as a callback to `fit`.
 
 :::info Prerequisites
-```bash
-pip install sklearn-genetic-opt[mlflow]
-```
-Start the MLflow tracking server (or use the default local `./mlruns` directory).
+Install the tracking extra with `python -m pip install "sklearn-genetic-opt[mlflow]"`.
+This example writes to a local SQLite database and does not need a server.
 :::
 
 ## Recipe
@@ -27,78 +27,56 @@ Start the MLflow tracking server (or use the default local `./mlruns` directory)
 ```python
 import mlflow
 from sklearn.datasets import load_breast_cancer
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import StratifiedKFold, train_test_split
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
 
-from sklearn_genetic import GASearchCV, EvolutionConfig, RuntimeConfig
-from sklearn_genetic.callbacks import MlflowCallback
-from sklearn_genetic.space import Categorical, Continuous, Integer
+from sklearn_genetic import GASearchCV
+from sklearn_genetic.mlflow_log import MLflowConfig
+from sklearn_genetic.space import Integer
 
 X, y = load_breast_cancer(return_X_y=True)
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, stratify=y, random_state=42
 )
-
-param_grid = {
-    "n_estimators": Integer(50, 300),
-    "max_depth":    Integer(3, 20),
-    "max_features": Continuous(0.1, 1.0),
-    "class_weight": Categorical([None, "balanced"]),
-}
-
-cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
-
-ga = GASearchCV(
-    estimator=RandomForestClassifier(random_state=42, n_jobs=-1),
-    param_grid=param_grid,
-    scoring="roc_auc",
-    cv=cv,
-    evolution_config=EvolutionConfig(population_size=15, generations=10, elitism=True),
-    runtime_config=RuntimeConfig(n_jobs=-1, verbose=True),
-    random_state=42,
+tracking_uri = "sqlite:///search-tracking.db"
+mlflow.set_tracking_uri(tracking_uri)
+logger = MLflowConfig(
+    tracking_uri=tracking_uri,
+    experiment="tree-tuning",
+    run_name="candidate",
+)
+search = GASearchCV(
+    DecisionTreeClassifier(random_state=42),
+    param_grid={"max_depth": Integer(2, 12)},
+    cv=3, scoring="roc_auc",
+    population_size=5, generations=1,
+    n_jobs=1, random_state=42, verbose=False,
+    log_config=logger,
 )
 
-# Start an MLflow parent run
-with mlflow.start_run(run_name="rf-genetic-search"):
-    mlflow.log_params({
-        "population_size": 15,
-        "generations": 10,
-        "scoring": "roc_auc",
-    })
-
-    ga.fit(
-        X_train, y_train,
-        callbacks=[MlflowCallback()],  # logs each candidate as a child run
-    )
-
-    # Log final best result
-    mlflow.log_metric("best_cv_roc_auc", ga.best_score_)
-    mlflow.log_metric("test_roc_auc", ga.score(X_test, y_test))
-    mlflow.log_params(ga.best_params_)
-
-print("Best CV ROC AUC:", round(ga.best_score_, 4))
-print("MLflow UI: mlflow ui --port 5000")
+with mlflow.start_run(run_name="tree-search") as parent:
+    search.fit(X_train, y_train)
+    mlflow.log_params(search.best_params_)
+    mlflow.log_metric("best_cv_roc_auc", search.best_score_)
+    mlflow.log_metric("test_roc_auc", search.score(X_test, y_test))
+    print("Parent run ID:", parent.info.run_id)
 ```
 
 ## What Gets Logged
 
-Each child run captures:
-- All hyperparameter values tried
-- The CV score for that candidate
-- The generation number
+Expand `tree-search` in the MLflow UI. Each child named `candidate` records
+the parameters and a metric named `score` (the mean CV objective). Cached
+repeats do not create extra runs. Fold scores and generation numbers are not
+logged automatically. The parent metrics exist because the example writes
+them explicitly.
 
-The parent run captures:
-- Your search config (population, generations, scoring)
-- Best CV score and test score
-- Best hyperparameter values
+To inspect the database from the directory where you ran the example:
 
-## Key Points
-
-- **Nested runs**: `MlflowCallback` creates child runs under the active parent `mlflow.start_run()`. Start a parent run first.
-- **No parent run**: If you call `ga.fit()` outside a `with mlflow.start_run()` block, the callback creates a new top-level run per candidate.
-- **MLflow UI**: `mlflow ui` in the project directory opens the experiment browser at `http://localhost:5000`.
+```bash
+mlflow ui --backend-store-uri sqlite:///search-tracking.db
+```
 
 ## See Also
 
-- [MLflow Integration Guide](../../guide/mlflow) — full MLflow setup with experiment names and tracking URI
-- [MLflow Experiment Tracking Example](../../examples/mlflow-tracking) — annotated example
+- [MLflow API](../../api/mlflow) for tags and candidate model artifacts
+- [MLflow experiment tracking example](../../examples/mlflow-tracking) to log the refitted winner and its dataset

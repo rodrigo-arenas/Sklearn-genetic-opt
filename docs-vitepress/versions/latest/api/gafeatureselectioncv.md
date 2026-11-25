@@ -11,17 +11,19 @@ You are reading the **latest (dev)** docs. For the stable version, see [stable](
 
 Genetic algorithm wrapper-based feature selection with cross-validation.
 
-`GAFeatureSelectionCV` selects a subset of columns from the input data that maximises the cross-validation score of the given estimator. After fitting, it exposes `support_` (a boolean mask of selected features) and behaves as a fitted scikit-learn estimator for prediction.
+`GAFeatureSelectionCV` selects a subset of columns from the input data using the cross-validation score of the given estimator. The default objective is maximization; set `criteria="min"` for a loss you supply as a positive value. After fitting, it exposes `support_` (a boolean mask of selected features) and behaves as a fitted scikit-learn estimator for prediction.
 
 ## Common constructor arguments
 
 ```python
+import numpy as np
 from sklearn_genetic import GAFeatureSelectionCV
 
 GAFeatureSelectionCV(
     estimator,
     cv=3,
     scoring=None,
+    max_features=None,
     refit=True,
     verbose=True,
     keep_top_k=1,
@@ -34,6 +36,7 @@ GAFeatureSelectionCV(
     runtime_config=None,
     optimization_config=None,
     optimizer_backend="deap",
+    objective_metric=None,
     preserve_dataframe=False,
 )
 ```
@@ -48,6 +51,8 @@ GAFeatureSelectionCV(
 | `scoring` | str, callable, list, tuple or dict | `None` | Metric(s) to evaluate. `None` uses default scoring. A standalone callable returns one numeric score per fold. Use [named scorers](../guide/multi-metric) for multiple metrics. |
 | `refit` | bool, str or callable | `True` | Refit the selected mask. With multiple metrics, pass a metric name or a [refit function](../guide/advanced-optimizer-control#choose-a-refit-candidate-with-a-function) and `objective_metric`. |
 | `objective_metric` | str or `None`, keyword-only | `None` | Search objective for multiple metrics with `refit=False` or callable `refit` |
+| `max_features` | int or `None` | `None` | Maximum number of selected columns per mask. By default all input columns are eligible; a nonempty subset is still required. |
+| `return_train_score` | bool | `False` | Include training-fold scores in `cv_results_`. |
 | `preserve_dataframe` | bool, keyword-only | `False` | Pass selected pandas columns with their names and dtypes to the wrapped estimator during search, finalist validation, refit and prediction. |
 | `verbose` | bool | `True` | Print the generation log |
 | `keep_top_k` | int | `1` | Number of hall-of-fame individuals to keep across generations |
@@ -64,7 +69,7 @@ GAFeatureSelectionCV(
 
 Each fresh `fit` recomputes candidate scores for the supplied data and scoring settings.
 Caching avoids repeated evaluations within that fit; explicit checkpoint resumes retain
-saved evaluations. Both elitist and non-elitist searches use tournament selection, so
+saved evaluations. With DEAP, both elitist and non-elitist tournament selection support signed scores, so
 negative scores and `criteria="min"` remain meaningful. Scikit-learn's negative loss
 scorers normally use the default `criteria="max"`.
 
@@ -123,7 +128,7 @@ search. See the [warm-start example](../examples/warm-start-feature-selection).
 |-----------|-------------|
 | `support_` | Boolean mask — `True` for selected features |
 | `best_index_` | Row in `cv_results_` for the selected mask, including with `refit=False` when that row is available |
-| `best_score_` | Mean CV objective score of the selected mask. Uses the finalist score when finalist validation runs and retains extended NumPy precision when available. With callable refit, read the score from the selected row. |
+| `best_score_` | Mean CV objective score of the selected mask. Uses the finalist score when finalist validation runs and retains extended NumPy precision when available. Not set with callable refit; use the objective column of the row at `best_index_`. |
 | `best_estimator_` | Estimator fitted with the selected features on the full training data when refitting is enabled |
 | `search_time_` | [Elapsed search seconds until the optimizer returned or raised](./optimizer-backends#fit-time-by-phase) |
 | `search_interrupted_` | Whether the optimizer raised and its [recorded search work](./optimizer-backends#fit-work-by-phase) is a lower bound |
@@ -131,7 +136,7 @@ search. See the [warm-start example](../examples/warm-start-feature-selection).
 | `refit_failure_time_` | [Elapsed seconds of the full-data refit phase when it raises](./optimizer-backends#fit-time-by-phase) |
 | `classes_` | Class labels when the selected estimator is a refitted classifier |
 | `cv_results_` | Dict with per-candidate results |
-| `history` | Dictionary of lists aligned by generation. Pair `history["cross_validate_calls"]` with `history["fitness_best"]` to track the best search score against the number of mask evaluations. |
+| `history` | Dictionary of lists aligned by generation. Pair `cross_validate_calls` with `fitness_best_observed` for the best finite score from any evaluated mask, or `fitness_best` for the best archived score. |
 | `logbook` | Compatibility view of per-candidate records, materialized on access for shared-runtime engines, in `logbook.chapters["parameters"]` |
 | `fit_stats_` | Evaluation counters |
 | `fit_counts_` | [Fresh fits and reused finalist folds by phase](./optimizer-backends#fit-work-by-phase) in the most recent call to `fit` |
@@ -147,7 +152,7 @@ See [plotting score against evaluation cost](./plots#quick-diagnostic-overview) 
 | Method | Description |
 |--------|-------------|
 | `fit(X, y=None, callbacks=None, groups=None, **fit_params)` | Run the genetic feature selection |
-| `cv_results_dataframe(preserve_index=False, columns=None, top_k=None)` | Return ranked feature masks as a pandas DataFrame |
+| `cv_results_dataframe(*, preserve_index=False, columns=None, top_k=None)` | Return ranked feature masks as a pandas DataFrame |
 | `transform(X)` | Return `X` with only the selected features |
 | `inverse_transform(X)` | Restore the original feature count by inserting zeros in removed columns |
 | `get_support(indices=False)` | Return the mask or indices of selected features |
@@ -173,7 +178,7 @@ See the [multi-output regression example](../examples/multi-output-feature-selec
 
 For raw categorical columns, use an estimator that accepts two-dimensional
 categorical input or a pipeline that starts with a compatible encoder.
-The search passes each candidate subset to the pipeline as an array of
+By default, the search passes each candidate subset to the pipeline as an array of
 selected columns. See [feature selection with OneHotEncoder](../examples/categorical-feature-selection).
 
 Feature selection requires the original input columns. If the estimator

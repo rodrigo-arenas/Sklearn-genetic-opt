@@ -19,9 +19,7 @@ Requires MLflow: `pip install sklearn-genetic-opt[mlflow]`.
 
 Configures MLflow logging for a `GASearchCV` or `GAFeatureSelectionCV` run. Pass an instance to the `log_config` parameter of the search estimator.
 
-Each call to `fit` creates:
-- One **parent run** for the full search (with `run_name` and `tags`)
-- One **child run** per evaluated candidate (with parameters and CV score)
+The logger opens a run for each fresh candidate evaluation and writes candidate parameters and the CV objective as `score`. The runs are nested only when an active parent is present; `fit` does not itself open a parent.
 
 ```python
 MLflowConfig(
@@ -40,10 +38,10 @@ MLflowConfig(
 |-----------|------|---------|-------------|
 | `tracking_uri` | str | — | Address of the MLflow tracking server (e.g., `"http://localhost:5000"`) |
 | `experiment` | str | — | Name of the MLflow experiment. Created if it doesn't exist |
-| `run_name` | str | — | Name for the parent run (stored as a `mlflow.runName` tag) |
-| `save_models` | bool | `False` | Log the fitted estimator as an artifact for each candidate run |
+| `run_name` | str | — | Name used for each candidate run |
+| `save_models` | bool | `False` | Log the configured candidate estimator, not one of the fitted CV-fold clones |
 | `registry_uri` | str | None | Address of the MLflow model registry server |
-| `tags` | dict | None | Dictionary of tag name → value applied to the parent run |
+| `tags` | dict | None | Tags applied to the active run when the configuration is constructed; with no active run, MLflow can start one |
 
 ### Usage
 
@@ -54,8 +52,7 @@ mlflow_config = MLflowConfig(
     tracking_uri="http://localhost:5000",
     experiment="my-experiment",
     run_name="RF hyperparameter search",
-    save_models=True,
-    tags={"team": "ml", "dataset": "breast_cancer"},
+    save_models=False,
 )
 
 search = GASearchCV(
@@ -63,12 +60,13 @@ search = GASearchCV(
     param_grid=your_param_grid,
     cv=your_cv,
     scoring="roc_auc",
-    evolution_config=...,
     log_config=mlflow_config,  # <-- pass here
 )
 
 search.fit(X_train, y_train)
 ```
+
+To group candidate runs, explicitly start a parent run in the same experiment around `fit`. To save a fitted model, log `search.best_estimator_` after a successful refit. The [runnable recipe](../recipes/integrations/mlflow-logging) uses a local SQLite database.
 
 ## See Also
 

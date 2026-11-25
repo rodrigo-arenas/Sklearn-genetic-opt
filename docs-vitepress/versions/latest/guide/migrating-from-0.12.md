@@ -85,7 +85,7 @@ When `diversity_control=True`, the optimizer monitors `genotype_diversity` each 
 
 ### What to do
 
-**Option A — Accept the new defaults (recommended).** Your search will be more robust against premature convergence. `fit_stats_["random_immigrants"]` tells you how many times the control triggered.
+**Option A — Accept the new defaults (recommended).** `fit_stats_["random_immigrants"]` counts individuals introduced, not how often the control triggered. Count triggered generations with `sum(bool(value) for value in search.history["diversity_control_triggered"])`.
 
 **Option B — Disable diversity control to match 0.12 behavior exactly:**
 

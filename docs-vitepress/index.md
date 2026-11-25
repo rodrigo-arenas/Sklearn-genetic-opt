@@ -2,7 +2,7 @@
 layout: home
 title: "sklearn-genetic-opt | scikit-learn Tuning & Feature Selection"
 titleTemplate: false
-description: "Tune scikit-learn hyperparameters with GASearchCV and select features with GAFeatureSelectionCV. Install the Python package and compare five optimization backends."
+description: "Tune scikit-learn hyperparameters with GASearchCV, select features with GAFeatureSelectionCV, and compare optimizers at a fixed cross-validation budget."
 
 hero:
   name: sklearn-genetic-opt

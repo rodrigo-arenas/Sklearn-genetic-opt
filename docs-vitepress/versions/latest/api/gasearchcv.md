@@ -11,11 +11,12 @@ You are reading the **latest (dev)** docs. For the stable version, see [stable](
 
 Genetic algorithm hyperparameter search for scikit-learn estimators.
 
-`GASearchCV` implements the scikit-learn estimator interface and follows the same patterns as `GridSearchCV` and `RandomizedSearchCV`. After calling `fit`, it exposes `best_params_`, `best_score_`, `cv_results_`, `predict`, `predict_proba`, and `score`.
+`GASearchCV` implements the scikit-learn estimator interface and follows the same patterns as `GridSearchCV` and `RandomizedSearchCV`. After a successful search, inspect `best_params_` and `cv_results_`. With refitting enabled, use `score` and the prediction methods supported by the wrapped estimator.
 
 ## Common constructor arguments
 
 ```python
+import numpy as np
 from sklearn_genetic import GASearchCV
 
 GASearchCV(
@@ -33,6 +34,7 @@ GASearchCV(
     runtime_config=None,
     optimization_config=None,
     optimizer_backend="deap",
+    objective_metric=None,
 )
 ```
 
@@ -77,7 +79,7 @@ drawing the same categorical value.
 
 Each fresh `fit` recomputes candidate scores for the supplied data and scoring settings.
 Caching avoids repeated evaluations within that fit; explicit checkpoint resumes retain
-saved evaluations. Both elitist and non-elitist searches use tournament selection, so
+saved evaluations. With DEAP, both elitist and non-elitist tournament selection support signed scores, so
 negative scores and `criteria="min"` remain meaningful. Scikit-learn's negative loss
 scorers normally use the default `criteria="max"`.
 
@@ -92,14 +94,14 @@ order.
 |-----------|-------------|
 | `best_index_` | Row in `cv_results_` for the selected candidate, including with `refit=False` |
 | `best_params_` | Parameters from the selected candidate row |
-| `best_score_` | Mean CV objective score for the selected candidate. Uses the finalist score when finalist validation runs and retains extended NumPy precision when available. With callable refit, read the score from the selected row. |
+| `best_score_` | Mean CV objective score for the selected candidate. Uses the finalist score when finalist validation runs and retains extended NumPy precision when available. Not set with callable refit; use the objective column of the row at `best_index_`. |
 | `best_estimator_` | Estimator fitted with `best_params_` on the full training data after a successful refit |
 | `search_time_` | [Elapsed search seconds until the optimizer returned or raised](./optimizer-backends#fit-time-by-phase) |
 | `search_interrupted_` | Whether the optimizer raised and its [recorded search work](./optimizer-backends#fit-work-by-phase) is a lower bound |
 | `refit_time_` | Elapsed seconds of the successful full-data refit |
 | `refit_failure_time_` | [Elapsed seconds of the full-data refit phase when it raises](./optimizer-backends#fit-time-by-phase) |
 | `cv_results_` | Dict with per-candidate results, compatible with `pd.DataFrame` |
-| `history` | Dictionary of lists aligned by generation. At position `i`, `history["fitness_best"][i]` is the best search score after `history["cross_validate_calls"][i]` cumulative candidate evaluations. |
+| `history` | Dictionary of lists aligned by generation. Pair `cross_validate_calls` with `fitness_best_observed` for the best finite score evaluated so far (including discarded candidates), or `fitness_best` for the best archived score. |
 | `logbook` | Compatibility view of per-candidate records, materialized on access for shared-runtime engines, in `logbook.chapters["parameters"]` |
 | `fit_stats_` | Dict with evaluation counters (cache hits, skipped candidates, etc.) |
 | `fit_counts_` | [Fresh fits and reused finalist folds by phase](./optimizer-backends#fit-work-by-phase) in the most recent call to `fit` |
@@ -112,10 +114,10 @@ See [plotting score against evaluation cost](./plots#quick-diagnostic-overview) 
 | Method | Description |
 |--------|-------------|
 | `fit(X, y=None, callbacks=None, groups=None, **fit_params)` | Run the genetic search |
-| `cv_results_dataframe(preserve_index=False, columns=None, top_k=None)` | Return ranked candidates as a pandas DataFrame |
+| `cv_results_dataframe(*, preserve_index=False, columns=None, top_k=None)` | Return ranked candidates as a pandas DataFrame |
 | `predict(X)` | Predict using `best_estimator_` |
 | `predict_proba(X)` | Predict class probabilities (if estimator supports it) |
-| `score(X, y)` | Score using `best_estimator_` |
+| `score(X, y=None, **params)` | Evaluate the refitted estimator using the configured scorer, or the search objective with multiple scorers. Scorer metadata requires metadata routing. |
 | `get_params()` / `set_params()` | Standard sklearn estimator interface |
 
 Pass `y` if the estimator or a step in a scikit-learn `Pipeline` requires a

@@ -366,7 +366,7 @@ Grid Search
 
 ### Random Search
 
-Random search lets us sample continuous distributions and explore a much larger space in the same number of evaluations.
+Random search lets us sample continuous distributions. Here it evaluates 30 candidates; the smaller grid above evaluated 18.
 
 ```python
 from sklearn.model_selection import RandomizedSearchCV
@@ -417,6 +417,7 @@ Random Search
 
 ```python
 from sklearn_genetic import GASearchCV, EvolutionConfig, PopulationConfig, RuntimeConfig
+from sklearn_genetic.callbacks import CVBudgetStopping
 from sklearn_genetic.space import Categorical, Continuous, Integer
 
 param_grid_ga = {
@@ -433,7 +434,7 @@ ga_search = GASearchCV(
     scoring="accuracy",
     evolution_config=EvolutionConfig(
         population_size=10,
-        generations=5,    # 10 × 5 = ~50 evaluations, cached duplicates skipped
+        generations=5,    # generation limit; the callback caps fresh CV calls
     ),
     population_config=PopulationConfig(initializer="smart"),
     runtime_config=RuntimeConfig(n_jobs=-1, verbose=False),
@@ -441,25 +442,16 @@ ga_search = GASearchCV(
 )
 
 t0 = time.perf_counter()
-ga_search.fit(X_train, y_train)
+ga_search.fit(X_train, y_train, callbacks=CVBudgetStopping(max_cv_calls=30))
 ga_time = time.perf_counter() - t0
 
 y_pred_ga = ga_search.predict(X_test)
 print(f"Genetic Search (GASearchCV)")
-print(f"  Candidates evaluated: {ga_search.fit_stats_['evaluated_candidates']}")
+print(f"  Candidates evaluated: {ga_search.fit_stats_['cross_validate_calls']}")
 print(f"  Best CV accuracy:     {ga_search.best_score_:.4f}")
 print(f"  Test accuracy:        {accuracy_score(y_test, y_pred_ga):.4f}")
 print(f"  Time:                 {ga_time:.1f}s")
 print(f"  Best params:          {ga_search.best_params_}")
-```
-
-```text
-Genetic Search (GASearchCV)
-  Candidates evaluated: 48
-  Best CV accuracy:     0.9792
-  Test accuracy:        0.9822
-  Time:                 9.7s
-  Best params:          {'n_estimators': 423, 'max_depth': None, 'min_samples_leaf': 1, 'max_features': 0.5831}
 ```
 
 ### Results comparison
@@ -475,19 +467,11 @@ print(f"{'Random Search':<20} {random_search.best_score_:>12.4f} "
       f"{len(random_search.cv_results_['mean_test_score']):>12}")
 print(f"{'Genetic Search':<20} {ga_search.best_score_:>12.4f} "
       f"{accuracy_score(y_test, y_pred_ga):>14.4f} "
-      f"{ga_search.fit_stats_['evaluated_candidates']:>12}")
-```
-
-```text
-Method               CV Accuracy  Test Accuracy  Evaluations
---------------------------------------------------------------
-Grid Search               0.9718         0.9778           18
-Random Search             0.9762         0.9800           30
-Genetic Search            0.9792         0.9822           48
+      f"{ga_search.fit_stats_['cross_validate_calls']:>12}")
 ```
 
 :::info Interpreting these results
-No single method wins on every dataset. On this example the genetic search finds a slightly better configuration, but with more evaluations. The advantage of genetic search grows on datasets with stronger parameter interactions and larger search spaces — the digits dataset with 4 parameters is intentionally simple to keep these examples fast to run.
+Use the measured counts and elapsed times rather than multiplying population size by generations. The GA and random search each have a ceiling of 30 fresh candidate CV calls, not 30 individual model fits. The GA can stop below its ceiling; an additional full-data refit is outside that budget. The parameter distributions are not identical, so a difference on this split is not evidence that one optimizer is generally better.
 :::
 
 ---
@@ -542,7 +526,7 @@ The first 10 evaluations recovered most of the gain. The next 20 added very litt
 from sklearn_genetic.callbacks import ConsecutiveStopping
 
 # Stop if the best score doesn't improve for 3 consecutive generations
-early_stop = ConsecutiveStopping(generations=3, metric="fitness_best")
+early_stop = ConsecutiveStopping(generations=3, metric="fitness_best_observed")
 
 ga_search_with_stop = GASearchCV(
     estimator=RandomForestClassifier(random_state=42),
@@ -556,16 +540,11 @@ ga_search_with_stop = GASearchCV(
 )
 
 ga_search_with_stop.fit(X_train, y_train, callbacks=early_stop)
-print(f"Stopped at generation: {len(ga_search_with_stop.history)}")
+print(f"Stopped at generation: {ga_search_with_stop.history['gen'][-1]}")
 print(f"Best CV accuracy:      {ga_search_with_stop.best_score_:.4f}")
 ```
 
-```text
-Stopped at generation: 6
-Best CV accuracy:      0.9792
-```
-
-The search stopped 14 generations early once it confirmed the score was no longer improving.
+The final entry of `history["gen"]` reports the generation reached. Initialization is generation 0. If the best observed score keeps improving, the run can reach the generation limit without triggering the callback.
 
 ---
 

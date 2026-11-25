@@ -75,7 +75,7 @@ Recipes are short, copy-paste ready solutions to specific problems. Each recipe 
 
 | Recipe | What it solves |
 |--------|---------------|
-| [Log Every Candidate to MLflow](./integrations/mlflow-logging) | `MlflowCallback`, nested runs, param logging |
+| [Log Every Candidate to MLflow](./integrations/mlflow-logging) | `MLflowConfig`, nested runs, candidate parameters |
 | [Parallelize with Joblib](./integrations/joblib-parallel) | `n_jobs`, `loky` vs `threading` backend |
 | [Run in a Jupyter Notebook](./integrations/jupyter-notebook) | `verbose=True`, tqdm progress, plot inline |
 

@@ -1,6 +1,6 @@
 ---
-title: Release Notes
-description: Changelog for sklearn-genetic-opt.
+title: Release Notes and Upgrade Guide
+description: Learn what changed in sklearn-genetic-opt 0.17, including cross-validation budgets, checkpoint recovery, pandas feature selection, and fit diagnostics.
 ---
 
 :::warning Development version
@@ -9,7 +9,32 @@ You are reading the **latest (dev)** docs. For the stable version, see [stable](
 
 # Release Notes
 
-## Unreleased
+## 0.17.0
+
+### Upgrade from 0.16
+
+Existing calls can keep DEAP and their existing optimizer configuration. Use
+new controls explicitly where they help. Python support and the bundled
+optimizer catalog are unchanged.
+
+- Budget **search** CV with `CVBudgetStopping`. A CV call evaluates one
+  candidate across its folds. Finalist validation and the full-data refit
+  are separate; inspect `fit_counts_` and `plot_fit_work` for actual work.
+- If you use callable scoring with multiple metrics, provide a dictionary
+  of named scorers. With callable `refit` or `refit=False`, name the search
+  objective with `objective_metric` in a multi-metric search.
+- Use the same data, row order, CV splits, metadata-routing setting and
+  compatible dependencies when resuming a trusted checkpoint. The SciPy,
+  Nevergrad, CatCMAwM and pymoo checkpoints require the same exact package
+  version that created them. Finish those 0.16.0 runs in their original
+  environment or start a fresh checkpoint after upgrading. Do not overwrite
+  the original snapshot to force a resume. Stored progress-only files are
+  readable but cannot resume a search.
+- A search with no successful candidate fits now stops before refit. Retain
+  `cv_results_` and history to diagnose what failed; do not treat a numeric
+  `error_score` as evidence of a successful fit.
+
+### Feature selection, tuning and diagnostics
 
 `GAFeatureSelectionCV(preserve_dataframe=True)` can pass
 [named, typed columns](./examples/categorical-feature-selection#route-columns-by-dtype)
@@ -17,10 +42,26 @@ to a scikit-learn pipeline during CV and prediction.
 
 `GAFeatureSelectionCV` can [start from known feature subsets](./examples/warm-start-feature-selection)
 through `PopulationConfig(warm_start_masks=...)`. All five built-in backends
-score the seeds on the current CV splits.
+score the seeds on the current CV splits. Feature selection also supports
+fold-local missing-value imputation, multi-output targets with compatible
+estimators, and sparse transforms. See the
+[sparse feature selection tutorial](./tutorials/sparse-feature-selection).
+
+Search and finalist CV honor scikit-learn metadata routing for groups and
+weights. Finalist fold reuse falls back to fresh evaluation when custom or
+mixed selectors cannot be safely compared. The [CV guide](./guide/understand-cv)
+and [finalist selection guide](./guide/advanced-optimizer-control) explain why
+search and validation scores can differ.
+
+Inspect phases in seconds or fresh fits with `plot_fit_work`, per-fold
+scores with `plot_cv_fold_scores`, and search versus finalist scores with
+`plot_finalist_scores`. The [plot API](./api/plots) shows inputs and
+limitations, including interrupted fits.
 
 [Saved candidate records](./api/callbacks#logbooksaver) use the row position
 in `cv_results_` as their index, including proposals resolved by the cache.
+
+### Budgeted runs and performance
 
 Both search estimators reuse local worker threads across parallel candidate
 batches, look up cached proposals with less work, and assemble `cv_results_`

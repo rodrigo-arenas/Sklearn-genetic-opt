@@ -32,7 +32,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 )
 
 ga = GASearchCV(
-    estimator=RandomForestClassifier(random_state=42, n_jobs=-1),
+    estimator=RandomForestClassifier(random_state=42, n_jobs=1),
     param_grid={
         "n_estimators": Integer(50, 300),
         "max_depth":    Integer(3, 20),
@@ -51,7 +51,7 @@ ga = GASearchCV(
 
 callback = ConsecutiveStopping(
     generations=5,          # stop if best score doesn't improve for 5 generations
-    metric="fitness_best",  # track the running best (not generation mean)
+    metric="fitness_best_observed",  # track the running best (not generation mean)
 )
 
 ga.fit(X_train, y_train, callbacks=[callback])
@@ -64,7 +64,8 @@ print(f"Best CV ROC AUC: {ga.best_score_:.4f}")
 
 | `metric=` | What it tracks |
 |-----------|---------------|
-| `"fitness_best"` | Best score seen so far (highest ROC AUC in this example) |
+| `"fitness_best_observed"` | Best finite score from any evaluated candidate (highest ROC AUC here), including discarded proposals |
+| `"fitness_best"` | Best score retained in the archive |
 | `"fitness"` | Current generation mean score |
 | `"fitness_std"` | Standard deviation of current generation scores |
 
@@ -76,7 +77,7 @@ from sklearn_genetic.callbacks import ConsecutiveStopping, TimerStopping
 ga.fit(
     X_train, y_train,
     callbacks=[
-        ConsecutiveStopping(generations=5, metric="fitness_best"),
+        ConsecutiveStopping(generations=5, metric="fitness_best_observed"),
         TimerStopping(total_seconds=120),   # also stop if search takes > 2 min
     ]
 )
@@ -85,8 +86,8 @@ ga.fit(
 ## Key Points
 
 - **`generations=50` as upper limit**: Set a generous max — early stopping will end it sooner in practice.
-- **`"fitness_best"` vs `"fitness"`**: `"fitness_best"` tracks the highest score for maximization and the lowest score for minimization; the search stops when the *best-ever* score stalls. `"fitness"` tracks the current generation mean, which can oscillate.
-- **Multiple callbacks**: Both are checked after each generation. The search stops when any callback signals completion.
+- **`"fitness_best_observed"` vs `"fitness"`**: `"fitness_best_observed"` tracks the highest score for maximization and the lowest score for minimization; the search stops when the *best-ever* score stalls. `"fitness"` tracks the current generation mean, which can oscillate.
+- **Multiple callbacks**: A plateau or a time limit can stop the search. A time limit cannot cancel a model fit already running.
 
 ## See Also
 
