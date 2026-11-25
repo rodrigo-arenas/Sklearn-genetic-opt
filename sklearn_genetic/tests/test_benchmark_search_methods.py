@@ -1,7 +1,16 @@
+import csv
+import json
 import sys
+from importlib.metadata import PackageNotFoundError
+from itertools import groupby
 from pathlib import Path
+from runpy import run_path
 
+import numpy as np
 import pytest
+from sklearn.tree import DecisionTreeClassifier
+
+from sklearn_genetic import GAFeatureSelectionCV
 
 # benchmark_search_methods.py does `from benchmark_fit import ...` (a bare,
 # sibling-relative import meant for running the script directly, where Python
@@ -11,6 +20,619 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "benchmarks"))
 
 from benchmarks.benchmark_search_methods import comparison_key, print_comparison_table  # noqa: E402
+
+
+def test_catalog_separates_prefix_holdout_from_the_public_winner():
+    from benchmarks.benchmark_optimizer_catalog import (
+        pair_comparisons,
+        summarize,
+        summarize_public_refit,
+        summarize_stopped_search,
+    )
+
+    def both_masks(problem, evaluate, report):
+        report([handle for _, handle in evaluate([[1, 0], [0, 1]])])
+
+    y = np.tile([0, 1], 4)
+    X = np.column_stack((y, y))
+    hold_X = np.array([[0, 1], [1, 0]])
+    hold_y = np.array([0, 1])
+    model = DecisionTreeClassifier(random_state=5)
+    search = GAFeatureSelectionCV(
+        model,
+        cv=2,
+        scoring="balanced_accuracy",
+        max_features=1,
+        optimizer_backend=both_masks,
+        population_size=2,
+        generations=0,
+        keep_top_k=2,
+        random_state=5,
+        verbose=False,
+    ).fit(X, y)
+    trace = [
+        (score, tuple(mask), 0, 0)
+        for score, mask in zip(
+            search.cv_results_["mean_test_score"], search.cv_results_["features"], strict=True
+        )
+    ]
+    run = (trace, model, X, y, hold_X, hold_y, "balanced_accuracy", True, search, 0)
+
+    assert summarize(run, 1)["holdout"] == 1
+    public = summarize_public_refit(run, 1)
+    assert public["public_cv"] == 1
+    assert public["public_holdout"] == 0
+    assert not public["public_winner_in_prefix"]
+    stopped = summarize_stopped_search(run, 2)
+    assert stopped == {
+        "completed_target": True,
+        "budget_status": "target_reached",
+        "returned_cv": 1,
+        "returned_holdout": 0,
+        "returned_matches_trace_winner": False,
+    }
+    assert not summarize_stopped_search(run, 3)["completed_target"]
+    short = (trace[:1], *run[1:])
+    pairs = pair_comparisons({"short": short, "reference": run}, ["short"], ["reference"], 2, {})
+    assert next(pairs)["reference_prefix_holdout"] == 1
+
+
+@pytest.mark.parametrize("task", ["parameters", "features"])
+@pytest.mark.filterwarnings("ignore:invalid value encountered in subtract:RuntimeWarning")
+def test_catalog_keeps_nonfinite_cv_calls_in_budgets_and_uses_finite_winners(task, monkeypatch):
+    from benchmarks import benchmark_optimizer_catalog as catalog
+    from sklearn_genetic import GASearchCV
+    from sklearn_genetic.space import Integer
+
+    values = (np.nan, np.inf, -np.inf, 0.5, np.nan, 0.9, 0.4)
+    n_candidates = len(values)
+    masks = task == "features"
+    y = np.tile([0, 1], 6)
+    X = y[:, None] + 10 * np.arange(n_candidates)
+    proposals = (
+        np.eye(n_candidates, dtype=int).tolist()
+        if masks
+        else [[i + 1] for i in range(n_candidates)]
+    )
+
+    def objective(estimator, X, y):
+        index = X[0, 0] // 10 if masks else estimator.max_depth - 1
+        return values[index]
+
+    def optimize(problem, evaluate, report):
+        report([handle for _, handle in evaluate(proposals)])
+
+    def make_search(*args):
+        model = DecisionTreeClassifier(random_state=3)
+        options = dict(
+            cv=2,
+            scoring=objective,
+            optimizer_backend=optimize,
+            population_size=n_candidates,
+            generations=0,
+            random_state=3,
+            verbose=False,
+            use_cache=False,
+            refit=False,
+        )
+        search = (
+            GAFeatureSelectionCV(model, max_features=1, **options)
+            if masks
+            else GASearchCV(model, param_grid={"max_depth": Integer(1, n_candidates)}, **options)
+        )
+        return search, X[:8], y[:8], X[8:], y[8:], "balanced_accuracy", masks
+
+    monkeypatch.setattr(catalog, "make_search", make_search)
+    run = catalog.measure("custom", "custom", "default", 3, False, False, n_candidates)
+    trace, search = run[0], run[-2]
+    assert len(trace) == search.fit_counts_["search_cv_calls"] == n_candidates
+    np.testing.assert_array_equal([row[0] for row in trace], values)
+
+    prefix = catalog.summarize(run, 3)
+    assert prefix["cv_calls"] == 3
+    assert prefix["finite_cv_calls"] == 0
+    assert prefix["best_cv"] is prefix["holdout"] is prefix["mean_running_best"] is None
+    assert prefix["prefix_ms"] == 1000 * trace[2][2]
+    full = catalog.summarize(run, n_candidates)
+    assert full["best_cv"] == full["best_first_eight"] == 0.9
+    assert full["holdout"] == 1.0
+    assert full["first_best_call"] == 6
+    assert full["first_finite_cv_call"] == 4
+    assert full["finite_cv_calls"] == 3
+    assert full["mean_running_best"] == pytest.approx((0.5 + 0.5 + 0.9 + 0.9) / 4)
+
+    fields = catalog.comparison_checkpoints(run, prefix, 8, [], cv_checkpoints=(3, 4, 7, 8))
+    assert fields["cv_3_best_cv"] is fields["cv_3_holdout"] is None
+    assert fields["cv_3_elapsed_ms"] == prefix["prefix_ms"]
+    assert fields["cv_4_best_cv"] == 0.5
+    assert fields["cv_7_holdout"] == 1.0
+    assert fields["cv_8_elapsed_ms"] is None
+
+    pair = next(
+        catalog.pair_comparisons(
+            {"engine": run, "reference": run}, ["engine"], ["reference"], 3, {}
+        )
+    )
+    assert pair["completed_target"]
+    assert pair["backend_best_cv"] is pair["reference_prefix_holdout"] is None
+    assert pair["backend_prefix_ms"] == prefix["prefix_ms"]
+
+    with pytest.warns(UserWarning, match="No candidate has a finite mean CV score"):
+        invalid_run = catalog.measure(
+            "custom", "custom", "default", 3, False, False, 3, stop_at_budget=True
+        )
+    stopped = catalog.summarize_stopped_search(invalid_run, 3)
+    assert stopped == {
+        "completed_target": True,
+        "budget_status": "target_reached",
+        "returned_cv": None,
+        "returned_holdout": None,
+        "returned_matches_trace_winner": None,
+    }
+
+
+@pytest.mark.parametrize("cache", [False, True])
+def test_catalog_public_cv_uses_selected_observation_when_a_mask_repeats(monkeypatch, cache):
+    from benchmarks import benchmark_optimizer_catalog as catalog
+
+    def make_search(case, engine, variant, seed, cache, pilot, proposal_budget, public_refit):
+        y = np.tile([0, 1], 4)
+        X = np.column_stack((y, y + 10))
+        repeated_scores = iter((0.75, 0.75, 1.0, 1.0))
+
+        def objective(estimator, X, y):
+            return next(repeated_scores) if X[0, 0] < 10 else 0.5
+
+        def optimize(problem, evaluate, report):
+            report([handle for _, handle in evaluate([[1, 0], [1, 0], [0, 1]])])
+
+        search = GAFeatureSelectionCV(
+            DecisionTreeClassifier(random_state=seed),
+            cv=2,
+            scoring=objective,
+            max_features=1,
+            optimizer_backend=optimize,
+            population_size=3,
+            generations=0,
+            use_cache=cache,
+            refit=public_refit,
+            random_state=seed,
+            n_jobs=1,
+            verbose=False,
+        )
+        hold_X = np.array([[0, 11], [1, 10]])
+        hold_y = np.array([0, 1])
+        return search, X, y, hold_X, hold_y, "balanced_accuracy", True
+
+    monkeypatch.setattr(catalog, "make_search", make_search)
+    run = catalog.measure(
+        "wine-mask", "deap", "default", 41, cache, False, target=3, public_refit=True
+    )
+    trace, search = run[0], run[-2]
+    assert len(trace) == search.fit_counts_["search_cv_calls"] == (2 if cache else 3)
+    assert search.best_score_ == 0.75
+
+    prefix = catalog.summarize(run, len(trace))
+    assert prefix["best_cv"] == (0.75 if cache else 1.0)
+    public = catalog.summarize_public_refit(run, len(trace))
+    stopped = catalog.summarize_stopped_search(run, 3)
+    assert public["public_cv"] == stopped["returned_cv"] == search.best_score_
+    assert public["public_holdout"] == stopped["returned_holdout"] == 1.0
+    assert public["public_winner_in_prefix"]
+
+
+@pytest.mark.parametrize(
+    "case, backend, variant, public_refit",
+    [
+        ("wine", "deap", "default", False),
+        ("wine-mask", "deap", "default", True),
+        ("wine", "random", "reference", True),
+        ("wine-mask", "random", "reference", False),
+    ],
+)
+def test_catalog_can_stop_at_a_fresh_cv_budget(case, backend, variant, public_refit):
+    from benchmarks.benchmark_optimizer_catalog import measure, summarize_stopped_search
+
+    reference = measure(case, backend, variant, 41, False, False, 9, proposal_budget=32)
+    capped = measure(
+        case,
+        backend,
+        variant,
+        41,
+        False,
+        False,
+        9,
+        public_refit=public_refit,
+        proposal_budget=32,
+        stop_at_budget=True,
+    )
+    assert len(reference[0]) > 9
+    assert len(capped[0]) == capped[-2].fit_counts_["search_cv_calls"] == 9
+    assert capped[-2].fit_counts_["refit_fits"] == int(public_refit)
+    assert [row[:2] for row in capped[0]] == [row[:2] for row in reference[0][:9]]
+    assert capped[-1] >= capped[0][-1][2]
+    summary = summarize_stopped_search(capped, 9)
+    assert summary["completed_target"]
+    assert summary["budget_status"] == "target_reached"
+    assert summary["returned_cv"] == capped[-2].best_score_
+    assert 0 <= summary["returned_holdout"] <= 1
+
+
+@pytest.mark.parametrize("case", ["wine", "wine-mask"])
+def test_capped_catalog_distinguishes_confirmed_coverage_from_an_early_return(case, monkeypatch):
+    from benchmarks import benchmark_optimizer_catalog as catalog
+    from sklearn_genetic.space import Integer
+
+    original = catalog.make_search
+
+    def make_finite(*args, **kwargs):
+        search, X, y, hold_X, hold_y, scoring, masks = original(*args, **kwargs)
+        if masks:
+            search.set_params(max_features=1)
+            X, hold_X = X[:, :2], hold_X[:, :2]
+        else:
+            search.set_params(param_grid={"max_depth": Integer(1, 2)})
+        return search, X, y, hold_X, hold_y, scoring, masks
+
+    monkeypatch.setattr(catalog, "make_search", make_finite)
+    target = 32
+    runs = {
+        engine: catalog.measure(case, engine, variant, 41, True, False, target, stop_at_budget=True)
+        for engine, variant in (("deap", "default"), ("random", "reference"))
+    }
+    assert len(runs["deap"][0]) == len(runs["random"][0]) == 2
+    assert runs["deap"][-2].search_space_exhausted_
+    assert not runs["random"][-2].search_space_exhausted_
+    assert (
+        catalog.summarize_stopped_search(runs["deap"], target)["budget_status"] == "space_exhausted"
+    )
+    assert (
+        catalog.summarize_stopped_search(runs["random"], target)["budget_status"] == "below_target"
+    )
+    pair = next(catalog.pair_comparisons(runs, ["deap"], ["random"], target, {}, stopped=True))
+    assert not pair["completed_target"]
+    assert pair["matched_cv_calls"] == 2
+    assert pair["backend_budget_status"] == "space_exhausted"
+    assert pair["reference_budget_status"] == "below_target"
+
+
+@pytest.mark.parametrize("proposal_budget", ["24", "33"])
+def test_catalog_rejects_a_proposal_budget_below_the_target_or_off_batch(
+    proposal_budget,
+    monkeypatch,
+    tmp_path,
+    capsys,
+):
+    from benchmarks.benchmark_optimizer_catalog import main
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "benchmark_optimizer_catalog",
+            "--stop-at-budget",
+            "--budget",
+            "32",
+            "--proposal-budget",
+            proposal_budget,
+            "--output",
+            str(tmp_path / "capped.csv"),
+        ],
+    )
+    with pytest.raises(SystemExit, match="2"):
+        main()
+    assert (
+        "--proposal-budget must be a multiple of 8 and at least --budget" in capsys.readouterr().err
+    )
+
+
+@pytest.mark.parametrize("capped", [False, True])
+def test_catalog_cli_runs_selected_cases_engines_and_seeds(monkeypatch, tmp_path, capsys, capped):
+    from benchmarks import benchmark_optimizer_catalog as catalog
+
+    def package_version(name):
+        if name in {"nevergrad", "cmaes", "pymoo"}:
+            raise PackageNotFoundError(name)
+        return "test-version"
+
+    output = tmp_path / "subset.csv"
+    pairs = tmp_path / "pairs.csv"
+    mode = ["--stop-at-budget"] if capped else []
+    monkeypatch.setattr(catalog, "version", package_version)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "benchmark_optimizer_catalog",
+            "--cases",
+            "wine",
+            "wine-mask",
+            "wine",
+            "--engines",
+            "deap",
+            "deap",
+            "--seeds",
+            "107",
+            "107",
+            "--references",
+            "random",
+            "--cv-checkpoints",
+            "32",
+            "8",
+            "8",
+            "--output",
+            str(output),
+            "--pairs-output",
+            str(pairs),
+            *mode,
+        ],
+    )
+    catalog.main()
+
+    with output.open(newline="") as file:
+        rows = list(csv.DictReader(file))
+    with pairs.open(newline="") as file:
+        paired = list(csv.DictReader(file))
+    metadata = json.loads(capsys.readouterr().out)
+    assert metadata["rows"] == len(rows) == 8
+    assert metadata["trace_timing"] == "candidate_cv_return"
+    assert len(paired) == 4
+    assert metadata["cv_checkpoints"] == [8, 32]
+    for group in metadata["pairs"]:
+        subset = [row for row in paired if row["cache"] == str(group["cache"])]
+        assert group["completed_by_cv_calls"] == {
+            str(calls): sum(row[f"cv_{calls}_completed"] == "True" for row in subset)
+            for calls in (8, 32)
+        }
+    assert all(float(row["cv_8_best_cv"]) == float(row["best_first_eight"]) for row in rows)
+    assert all(0 < float(row["full_search_ms"]) <= float(row["full_ms"]) for row in rows)
+    assert set(metadata["packages"]) == {"scikit-learn", "numpy", "deap", "scipy"}
+    assert {row["backend"] for row in rows} == {"deap", "random"}
+    assert {row["backend"] for row in paired} == {"deap"}
+    assert {row["reference"] for row in paired} == {"random"}
+    assert {(row["case"], row["seed"], row["cache"]) for row in paired} == {
+        ("wine", "107", "False"),
+        ("wine", "107", "True"),
+        ("wine-mask", "107", "False"),
+        ("wine-mask", "107", "True"),
+    }
+    assert all(0 < int(row["matched_cv_calls"]) <= 32 for row in paired)
+    assert all(row["backend_prefix_holdout"] and row["reference_prefix_holdout"] for row in paired)
+    if capped:
+        statuses = {
+            (row["case"], row["cache"], row["backend"]): row["budget_status"] for row in rows
+        }
+        for row in paired:
+            for side in ("backend", "reference"):
+                assert (
+                    row[f"{side}_budget_status"] == statuses[row["case"], row["cache"], row[side]]
+                )
+                assert 0 < float(row[f"{side}_search_ms"]) <= float(row[f"{side}_fit_ms"])
+                assert row[f"{side}_refit_ms"] == ""
+
+
+@pytest.mark.parametrize(
+    "extra, message",
+    [
+        (["--pilot", "--engines", "deap"], "--pilot can only use"),
+        (["--seeds", "-1"], "--seeds must be between"),
+        (["--seeds", "4294967295"], "--seeds must be between"),
+        (["--cv-checkpoints", "0"], "--cv-checkpoints must be between 1 and --budget"),
+        (["--cv-checkpoints", "33"], "--cv-checkpoints must be between 1 and --budget"),
+        (["--cases", "cancer", "--references", "tpe"], "TPE needs at least one tuning case"),
+    ],
+)
+def test_catalog_rejects_invalid_subset_before_opening_outputs(
+    extra, message, monkeypatch, tmp_path, capsys
+):
+    from benchmarks.benchmark_optimizer_catalog import main
+
+    output = tmp_path / "invalid.csv"
+    monkeypatch.setattr(
+        sys, "argv", ["benchmark_optimizer_catalog", "--output", str(output), *extra]
+    )
+    with pytest.raises(SystemExit, match="2"):
+        main()
+    assert message in capsys.readouterr().err
+    assert list(tmp_path.iterdir()) == []
+
+
+@pytest.mark.parametrize("case", ["wine", "wine-mask"])
+def test_catalog_random_reference_uses_shared_folds_and_real_cv_budget(case):
+    from benchmarks.benchmark_optimizer_catalog import comparison_checkpoints, measure, summarize
+
+    baseline = measure(case, "deap", "default", 41, False, False, 16)
+    random = measure(case, "random", "reference", 41, False, False, 16)
+    assert len(random[0]) == random[-2].fit_stats_["cross_validate_calls"] == 16
+    assert [row[:2] for row in baseline[0][:8]] == [row[:2] for row in random[0][:8]]
+    for before, after in zip(baseline[-2]._cv_splits, random[-2]._cv_splits, strict=True):
+        np.testing.assert_equal(before, after)
+
+    cohort = summarize(random, 8)
+    reached = comparison_checkpoints(random, cohort, 16, [10_000_000])
+    assert reached["target_best_cv"] == max(row[0] for row in random[0])
+    assert reached["time_10000000ms_cv_calls"] == 16
+    assert reached["time_10000000ms_holdout"] == reached["target_holdout"]
+
+    incomplete = comparison_checkpoints(
+        random, cohort, 32, [10_000_000], cv_checkpoints=(8, 16, 32)
+    )
+    assert incomplete["target_holdout"] is None
+    assert incomplete["time_10000000ms_cv_calls"] == 16
+    assert incomplete["cv_8_best_cv"] == cohort["best_cv"]
+    assert incomplete["cv_16_holdout"] == reached["target_holdout"]
+    assert incomplete["cv_32_best_cv"] is incomplete["cv_32_holdout"] is None
+
+
+@pytest.mark.parametrize(
+    ("case", "guard"),
+    [
+        ("wine", "_uses_prepared_integer_evaluation"),
+        ("wine-mask", "_uses_cached_feature_mask"),
+    ],
+)
+def test_catalog_measure_preserves_native_eval_paths(monkeypatch, case, guard):
+    from scipy.sparse import csr_matrix, hstack
+
+    from benchmarks import benchmark_optimizer_catalog as catalog
+    from sklearn_genetic import genetic_search
+    from sklearn_genetic.space import Integer
+
+    make_search = catalog.make_search
+
+    def with_native_case(*args):
+        search, X, y, hold_X, hold_y, scoring, masks = make_search(*args)
+        if masks:
+
+            def wide(X):
+                return hstack(
+                    [csr_matrix(X), csr_matrix((len(X), 4096 - X.shape[1]))], format="csr"
+                )
+
+            X, hold_X = wide(X), wide(hold_X)
+        else:
+            search.set_params(
+                param_grid={"max_depth": Integer(2, 12), "min_samples_leaf": Integer(1, 12)}
+            )
+        return search, X, y, hold_X, hold_y, scoring, masks
+
+    guarded = getattr(genetic_search, guard)
+    native = []
+
+    def record(*args):
+        active = guarded(*args)
+        native.append(active)
+        return active
+
+    monkeypatch.setattr(catalog, "make_search", with_native_case)
+    monkeypatch.setattr(genetic_search, guard, record)
+    run = catalog.measure(case, "deap", "default", 41, True, False, 8, stop_at_budget=True)
+
+    assert native and all(native)
+    trace, search = run[0], run[-2]
+    assert len(trace) == search.fit_stats_["cross_validate_calls"] == 8
+    assert all(0 <= cv_time <= elapsed for _, _, elapsed, cv_time in trace)
+
+
+@pytest.mark.parametrize("case", ["wine", "wine-mask"])
+@pytest.mark.parametrize("target", [16, 32])
+def test_catalog_pair_comparison_matches_each_pair_independently(case, target):
+    from benchmarks.benchmark_optimizer_catalog import (
+        measure,
+        pair_comparisons,
+        summarize,
+        summarize_public_refit,
+    )
+
+    deap = measure(case, "deap", "default", 41, False, False, 16, public_refit=True)
+    reference = measure(case, "random", "reference", 41, False, False, 16, public_refit=True)
+    short = measure(case, "deap", "default", 41, False, False, 8, public_refit=True)
+    runs = {"deap": deap, "short": short, "random": reference}
+    pairs = {
+        row["backend"]: row
+        for row in pair_comparisons(
+            runs, ["deap", "short"], ["random"], target, {}, cv_checkpoints=(8, 16)
+        )
+    }
+    assert pairs["deap"]["matched_cv_calls"] == 16
+    assert pairs["deap"]["completed_target"] == (target == 16)
+    assert pairs["short"]["matched_cv_calls"] == 8
+    assert not pairs["short"]["completed_target"]
+    assert pairs["short"]["cv_8_completed"] and pairs["deap"]["cv_16_completed"]
+    assert not pairs["short"]["cv_16_completed"]
+    assert pairs["short"]["reference_cv_16_best_cv"] is None
+    for backend, prefix in [("deap", 16), ("short", 8)]:
+        for side, run in [("backend", runs[backend]), ("reference", reference)]:
+            expected = summarize(run, prefix)
+            row = pairs[backend]
+            assert row[f"{side}_cv_calls"] == len(run[0])
+            assert row[f"{side}_best_cv"] == expected["best_cv"]
+            assert row[f"{side}_prefix_holdout"] == expected["holdout"]
+            assert row[f"{side}_prefix_ms"] == expected["prefix_ms"]
+            assert row[f"{side}_cv_{prefix}_best_cv"] == expected["best_cv"]
+            assert row[f"{side}_cv_{prefix}_holdout"] == expected["holdout"]
+            assert row[f"{side}_cv_{prefix}_elapsed_ms"] == expected["prefix_ms"]
+    stopped_pair = next(pair_comparisons(runs, ["deap"], ["random"], target, {}, stopped=True))
+    for side, run in [("backend", deap), ("reference", reference)]:
+        search, total = run[-2:]
+        assert stopped_pair[f"{side}_fit_ms"] == 1000 * total
+        assert stopped_pair[f"{side}_search_ms"] == 1000 * search.search_time_
+        assert stopped_pair[f"{side}_refit_ms"] == 1000 * search.refit_time_
+
+
+def test_catalog_cli_pairs_engines_without_a_reference(monkeypatch, tmp_path, capsys):
+    from benchmarks import benchmark_optimizer_catalog as catalog
+
+    pytest.importorskip("scipy", minversion="1.15")
+    pytest.importorskip("pymoo")
+    measure = catalog.measure
+
+    def with_short_engine(case, engine, *args, **kwargs):
+        run = measure(case, engine, *args, **kwargs)
+        return (run[0][:8], *run[1:]) if engine == "scipy" else run
+
+    output = tmp_path / "catalog.csv"
+    pairs = tmp_path / "pairs.csv"
+    monkeypatch.setattr(catalog, "measure", with_short_engine)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "catalog",
+            "--cases",
+            "wine",
+            "--engines",
+            "deap",
+            "scipy",
+            "pymoo",
+            "--seeds",
+            "41",
+            "--budget",
+            "32",
+            "--cv-checkpoints",
+            "8",
+            "32",
+            "--output",
+            str(output),
+            "--pairs-output",
+            str(pairs),
+        ],
+    )
+    catalog.main()
+    metadata = json.loads(capsys.readouterr().out.strip().splitlines()[-1])
+    with pairs.open(newline="") as stream:
+        rows = list(csv.DictReader(stream))
+    expected = {("deap", "scipy"), ("deap", "pymoo"), ("scipy", "pymoo")}
+    assert len(rows) == len(metadata["pairs"]) == 6
+    assert {(row["backend"], row["reference"]) for row in rows} == expected
+    uncached = {(row["backend"], row["reference"]): row for row in rows if row["cache"] == "False"}
+    full = uncached["deap", "pymoo"]
+    short = uncached["deap", "scipy"]
+    assert full["completed_target"] == full["cv_32_completed"] == "True"
+    assert short["matched_cv_calls"] == "8"
+    assert short["completed_target"] == short["cv_32_completed"] == "False"
+    assert short["backend_cv_32_holdout"] == ""
+    counts = {
+        (row["backend"], row["reference"]): row for row in metadata["pairs"] if not row["cache"]
+    }
+    assert counts["deap", "pymoo"]["completed_by_cv_calls"] == {"8": 1, "32": 1}
+    assert counts["deap", "scipy"]["completed_by_cv_calls"] == {"8": 1, "32": 0}
+
+
+def test_forward_feature_benchmark_compares_distinct_extensions_at_equal_budget():
+    runner = (
+        Path(__file__).resolve().parents[2] / "benchmarks/results/performance-v2/known-support.py"
+    )
+    result = run_path(str(runner))["run_pair"](2101, interaction=True, forward=True)
+    history = result["forward"]["proposals"]
+    assert len({tuple(p["columns"]) for p in history}) == len(result["genetic"]["proposals"]) == 24
+    parent = set()
+    for size, candidates in groupby(history, key=lambda p: len(p["columns"])):
+        candidates = list(candidates)
+        assert size == len(parent) + 1
+        assert all(parent < set(p["columns"]) for p in candidates)
+        parent = set(max(candidates, key=lambda p: p["cv"])["columns"])
+    assert [len(p["columns"]) for p in history] == [1] * 16 + [2] * 8
 
 
 def _summary(*, scenario="scenario_a", method="ga", n_jobs=1, fit_seconds_mean=1.0):

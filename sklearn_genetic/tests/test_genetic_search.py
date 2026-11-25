@@ -5,7 +5,9 @@ from sklearn.datasets import load_digits, load_diabetes
 from sklearn.ensemble import IsolationForest
 from sklearn.linear_model import SGDClassifier
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import ParameterGrid, cross_val_score, train_test_split
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_is_fitted
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.cluster import KMeans
@@ -13,7 +15,6 @@ from sklearn.metrics import accuracy_score, balanced_accuracy_score
 from sklearn.metrics import make_scorer
 
 import numpy as np
-import os
 import pandas as pd
 
 from .. import (
@@ -94,15 +95,216 @@ def test_cv_results_dataframe(search_type, multimetric):
     assert np.isfinite(before[f"mean_test_{metric}"]).all()
     assert np.isfinite(before[f"std_test_{metric}"]).all()
 
-    expected = before.iloc[sorted(range(len(before)), key=ranks.iloc.__getitem__)].reset_index(
-        drop=True
-    )
+    expected = before.iloc[sorted(range(len(before)), key=ranks.iloc.__getitem__)].copy()
     if search_type is GAFeatureSelectionCV:
         assert "params" not in before
         expected["params"] = [{"features": list(mask)} for mask in expected["features"]]
 
-    pd.testing.assert_frame_equal(search.cv_results_dataframe(), expected)
+    pd.testing.assert_frame_equal(search.cv_results_dataframe(), expected.reset_index(drop=True))
+    pd.testing.assert_frame_equal(
+        search.cv_results_dataframe(preserve_index=True), expected.rename_axis("candidate_index")
+    )
+    columns = [
+        f"std_test_{metric}",
+        "n_features" if search_type is GAFeatureSelectionCV else "params",
+    ]
+    pd.testing.assert_frame_equal(
+        search.cv_results_dataframe(columns=columns),
+        expected.loc[:, columns].reset_index(drop=True),
+    )
+    pd.testing.assert_frame_equal(
+        search.cv_results_dataframe(columns=("params", *columns), preserve_index=True),
+        expected.loc[:, ["params", *columns]].rename_axis("candidate_index"),
+    )
+    pd.testing.assert_frame_equal(
+        search.cv_results_dataframe(columns=f"rank_test_{metric}"),
+        expected.loc[:, [f"rank_test_{metric}"]].reset_index(drop=True),
+    )
+    shortlist_columns = [f"mean_test_{metric}", "params"]
+    for limit in (np.int64(3), len(expected) + 1):
+        shortlist = search.cv_results_dataframe(
+            columns=shortlist_columns, top_k=limit, preserve_index=True
+        )
+        pd.testing.assert_frame_equal(
+            shortlist, expected.loc[:, shortlist_columns].head(limit).rename_axis("candidate_index")
+        )
+        shortlist.iloc[0, 0] = -999.0
+    pd.testing.assert_frame_equal(
+        search.cv_results_dataframe(top_k=4), expected.head(4).reset_index(drop=True)
+    )
+    for limit in (0, -1, True, 1.5, "3"):
+        with pytest.raises(ValueError, match="top_k must be a positive integer"):
+            search.cv_results_dataframe(top_k=limit)
+    with pytest.raises(KeyError, match="unknown"):
+        search.cv_results_dataframe(columns=["unknown"])
     pd.testing.assert_frame_equal(pd.DataFrame(search.cv_results_), before)
+
+
+@pytest.mark.parametrize("top_k", [None, 64])
+@pytest.mark.parametrize("stored_as_array", [False, True])
+def test_cv_results_dataframe_reuses_mask_conversion_with_independent_lists(
+    top_k, stored_as_array, monkeypatch
+):
+    from .. import _base
+
+    first = (1, 0, 0, 0)
+    second = (0, 1, 0, 0)
+
+    def optimize(problem, evaluate, report):
+        results = evaluate([first, second] * 40)
+        report([handle for _, handle in results[:2]])
+
+    search = GAFeatureSelectionCV(
+        DecisionTreeClassifier(random_state=17),
+        cv=2,
+        population_size=8,
+        generations=9,
+        optimizer_backend=optimize,
+        random_state=17,
+        use_cache=True,
+        n_jobs=1,
+        verbose=False,
+    ).fit(X_train[:48, :4], y_train[:48])
+    masks = search.cv_results_["features"]
+    assert len(masks) == 80 and len({id(mask) for mask in masks}) == 2
+    if stored_as_array:
+        masks = search.cv_results_["features"] = np.stack(masks)
+
+    conversions = []
+    original_list = list
+
+    def counted_list(values):
+        if type(values) is np.ndarray and values.dtype == bool:
+            conversions.append(id(values))
+        return original_list(values)
+
+    monkeypatch.setattr(_base, "list", counted_list, raising=False)
+    result = search.cv_results_dataframe(columns="params", top_k=top_k, preserve_index=True)
+    lists = [row["features"] for row in result["params"]]
+    assert len(lists) == (top_k or 80)
+    expected_conversions = len(lists) if stored_as_array else 2
+    assert len(conversions) == len(set(conversions)) == expected_conversions
+    assert len({id(values) for values in lists}) == len(lists)
+    for i, values in zip(result.index, lists, strict=True):
+        assert values == list(masks[i])
+        assert all(type(value) is np.bool_ for value in values)
+    expected = list(masks[result.index[0]])
+    lists[0][0] = not lists[0][0]
+    for index, values in zip(result.index[1:], lists[1:], strict=True):
+        assert values == list(masks[index])
+    assert list(masks[result.index[0]]) == expected
+
+
+@pytest.mark.parametrize("ordered", [False, True])
+def test_short_cv_list_selects_stable_rows_without_sorting_the_entire_history(monkeypatch, ordered):
+    rng = np.random.default_rng(17)
+    ranks = rng.integers(8, 100, size=4096)
+    ranks[::19] = 4
+    ranks[[133, 500, 2511]] = 1
+    if ordered:
+        ranks.sort()
+    search = GASearchCV(DecisionTreeClassifier(), param_grid={"max_depth": Integer(1, 8)})
+    search.refit_metric = "score"
+    search.cv_results_ = {
+        "rank_test_score": ranks,
+        "params": [{"max_depth": index % 8 + 1} for index in range(len(ranks))],
+    }
+    expected = search.cv_results_dataframe(preserve_index=True, columns="params").head(7)
+    sort = pd.Series.sort_values
+
+    def bounded_sort(series, *args, **kwargs):
+        assert len(series) < len(ranks)
+        return sort(series, *args, **kwargs)
+
+    monkeypatch.setattr(pd.Series, "sort_values", bounded_sort)
+    actual = search.cv_results_dataframe(top_k=7, preserve_index=True, columns="params")
+
+    pd.testing.assert_frame_equal(actual, expected)
+
+
+@pytest.mark.parametrize("search_type", [GASearchCV, GAFeatureSelectionCV])
+@pytest.mark.parametrize("model", ["classifier", "regressor", "pipeline"])
+@pytest.mark.parametrize("as_list", [False, True])
+def test_fit_requires_supervised_target_before_search(search_type, model, as_list):
+    samples = np.random.default_rng(0).normal(size=(24, 4))
+    estimator = (
+        DecisionTreeClassifier(random_state=0)
+        if model == "classifier"
+        else DecisionTreeRegressor(random_state=0)
+    )
+    prefix = ""
+    if model == "pipeline":
+        estimator = make_pipeline(StandardScaler(), estimator)
+        prefix = "decisiontreeregressor__"
+    options = {}
+    if search_type is GASearchCV:
+        options["param_grid"] = {
+            f"{prefix}max_depth": Integer(1, 4),
+            f"{prefix}min_samples_leaf": Integer(1, 3),
+        }
+    search = search_type(
+        estimator,
+        cv=2,
+        population_size=2,
+        generations=0,
+        verbose=False,
+        n_jobs=1,
+        random_state=0,
+        **options,
+    )
+
+    with pytest.raises(ValueError, match=rf"{type(estimator).__name__} requires y to be passed"):
+        search.fit(samples.tolist() if as_list else samples)
+
+    assert not hasattr(search, "fit_counts_")
+
+
+@pytest.mark.parametrize("search_type", [GASearchCV, GAFeatureSelectionCV])
+@pytest.mark.parametrize("layout", ["array", "list", "dataframe"])
+def test_fit_accepts_estimator_with_optional_target(search_type, layout):
+    class OptionalTargetTree(DecisionTreeRegressor):
+        def _more_tags(self):
+            return {**super()._more_tags(), "requires_y": False}
+
+        def __sklearn_tags__(self):
+            tags = super().__sklearn_tags__()
+            tags.target_tags.required = False
+            return tags
+
+        def fit(self, X):
+            return super().fit(X, np.zeros(len(X)))
+
+    def score(estimator, X):
+        return estimator.predict(X).mean()
+
+    samples = np.random.default_rng(0).normal(size=(24, 4))
+    if layout == "list":
+        samples = samples.tolist()
+    elif layout == "dataframe":
+        samples = pd.DataFrame(samples, columns=["a", "b", "c", "d"])
+    options = {}
+    if search_type is GASearchCV:
+        options["param_grid"] = {"max_depth": Integer(1, 4), "min_samples_leaf": Integer(1, 3)}
+    search = search_type(
+        OptionalTargetTree(random_state=0),
+        scoring=score,
+        cv=2,
+        population_size=2,
+        generations=0,
+        final_selection=True,
+        final_selection_cv=3,
+        final_selection_top_k=1,
+        verbose=False,
+        n_jobs=1,
+        random_state=0,
+        **options,
+    ).fit(samples)
+
+    assert search.fit_counts_["search_cv_calls"] > 0
+    assert search.fit_counts_["finalist_cv_calls"] == 1
+    assert search.y_ is None
+    assert search.best_score_ == 0.0
+    assert search.score(samples) == 0.0
 
 
 def test_outlier_search_accepts_list_without_target():
@@ -168,13 +370,26 @@ def test_dictionary_class_weight_categories(population_initializer, use_cache, f
         assert len(search.final_selection_results_["candidates"]) == 2
 
 
+def _parameter_grid_mean_scores(model, param_grid, X, y):
+    # GridSearchCV in scikit-learn 1.5 can error when formatting dictionary
+    # parameters as result columns. Score each candidate independently instead.
+    return [
+        (
+            params,
+            np.mean(
+                cross_val_score(clone(model).set_params(**params), X, y, cv=2, error_score="raise")
+            ),
+        )
+        for params in ParameterGrid(param_grid)
+    ]
+
+
 @pytest.mark.parametrize("use_cache", [False, True])
 @pytest.mark.parametrize(
     "callback_location", ["sibling", "dictionary", "set", "frozenset", "array"]
 )
 def test_dictionary_categories_preserve_local_callbacks(use_cache, callback_location):
     from sklearn.datasets import load_iris
-    from sklearn.model_selection import GridSearchCV
     from sklearn.pipeline import Pipeline
     from sklearn.preprocessing import FunctionTransformer
 
@@ -202,11 +417,12 @@ def test_dictionary_categories_preserve_local_callbacks(use_cache, callback_loca
     model = Pipeline(
         [("transform", FunctionTransformer()), ("model", DecisionTreeClassifier(random_state=0))]
     )
-    control = GridSearchCV(
+    control = _parameter_grid_mean_scores(
         model,
         {"transform__func": [transform], "transform__kw_args": kwargs, "model__max_depth": [1, 2]},
-        cv=2,
-    ).fit(samples, targets)
+        samples,
+        targets,
+    )
     search = GASearchCV(
         model,
         param_grid={
@@ -230,13 +446,13 @@ def test_dictionary_categories_preserve_local_callbacks(use_cache, callback_loca
     ).fit(samples, targets)
 
     for params, score in zip(search.cv_results_["params"], search.cv_results_["mean_test_score"]):
-        index = next(
-            i
-            for i, expected in enumerate(control.cv_results_["params"])
+        expected_score = next(
+            expected_score
+            for expected, expected_score in control
             if expected["model__max_depth"] == params["model__max_depth"]
             and (expected["transform__kw_args"] is None) == (params["transform__kw_args"] is None)
         )
-        assert score == pytest.approx(control.cv_results_["mean_test_score"][index])
+        assert score == pytest.approx(expected_score)
     assert search.best_estimator_["transform"].func is transform
     assert search.predict(samples).shape == targets.shape
 
@@ -249,7 +465,6 @@ def test_dictionary_categories_preserve_local_callbacks(use_cache, callback_loca
 def test_dictionary_array_categories(population_initializer, use_cache, optimizer_controls):
     from copy import deepcopy
     from sklearn.datasets import load_iris
-    from sklearn.model_selection import GridSearchCV
     from sklearn.pipeline import Pipeline
     from sklearn.preprocessing import FunctionTransformer
 
@@ -272,15 +487,13 @@ def test_dictionary_array_categories(population_initializer, use_cache, optimize
             ("model", DecisionTreeClassifier(random_state=0)),
         ]
     )
-    control = GridSearchCV(
-        model, {"transform__kw_args": kwargs, "model__max_depth": [1, 2]}, cv=2
-    ).fit(samples, targets)
+    control = _parameter_grid_mean_scores(
+        model, {"transform__kw_args": kwargs, "model__max_depth": [1, 2]}, samples, targets
+    )
     # Different array contents choose different features and produce distinct fitness.
     grid_scores = {
         columns_key(params["transform__kw_args"]): score
-        for params, score in zip(
-            control.cv_results_["params"], control.cv_results_["mean_test_score"]
-        )
+        for params, score in control
         if params["model__max_depth"] == 2
     }
     assert grid_scores[columns_key(kwargs[0])] != grid_scores[columns_key(kwargs[1])]
@@ -311,14 +524,14 @@ def test_dictionary_array_categories(population_initializer, use_cache, optimize
         for params in search.cv_results_["params"][: len(kwargs)]
     } == {columns_key(option) for option in kwargs}
     for params, score in zip(search.cv_results_["params"], search.cv_results_["mean_test_score"]):
-        index = next(
-            i
-            for i, expected in enumerate(control.cv_results_["params"])
+        expected_score = next(
+            expected_score
+            for expected, expected_score in control
             if expected["model__max_depth"] == params["model__max_depth"]
             and columns_key(expected["transform__kw_args"])
             == columns_key(params["transform__kw_args"])
         )
-        assert score == pytest.approx(control.cv_results_["mean_test_score"][index])
+        assert score == pytest.approx(expected_score)
     assert search.predict(samples).shape == targets.shape
 
 
@@ -330,7 +543,6 @@ def test_dictionary_category_order(population_initializer, use_cache, category_k
     from copy import deepcopy
     from sklearn.datasets import load_diabetes
     from sklearn.linear_model import Ridge
-    from sklearn.model_selection import GridSearchCV
     from sklearn.pipeline import Pipeline
     from sklearn.preprocessing import FunctionTransformer
 
@@ -345,14 +557,12 @@ def test_dictionary_category_order(population_initializer, use_cache, category_k
     if category_kind == "mixed":
         kwargs = [kwargs[0], OrderedDict(kwargs[0]), OrderedDict(kwargs[1])]
     model = Pipeline([("transform", FunctionTransformer(transform)), ("model", Ridge())])
-    control = GridSearchCV(model, {"transform__kw_args": kwargs, "model__alpha": [1, 2]}, cv=2).fit(
-        samples, targets
+    control = _parameter_grid_mean_scores(
+        model, {"transform__kw_args": kwargs, "model__alpha": [1, 2]}, samples, targets
     )
     grid_scores = {
         (tuple(params["transform__kw_args"].items()), params["model__alpha"]): score
-        for params, score in zip(
-            control.cv_results_["params"], control.cv_results_["mean_test_score"]
-        )
+        for params, score in control
     }
     assert grid_scores[(tuple(kwargs[0].items()), 1)] != grid_scores[(tuple(kwargs[-1].items()), 1)]
     search = GASearchCV(
@@ -386,16 +596,15 @@ def test_dictionary_category_order(population_initializer, use_cache, category_k
     assert len(search.final_selection_results_["candidates"]) == len(kwargs) * 2
     for params, score in zip(search.cv_results_["params"], search.cv_results_["mean_test_score"]):
         matches = [
-            i
-            for i, expected in enumerate(control.cv_results_["params"])
+            expected_score
+            for expected, expected_score in control
             if expected["model__alpha"] == params["model__alpha"]
             and type(expected["transform__kw_args"]) is type(params["transform__kw_args"])
             and tuple(expected["transform__kw_args"].items())
             == tuple(params["transform__kw_args"].items())
         ]
         assert len(matches) == 1
-        index = matches[0]
-        assert score == pytest.approx(control.cv_results_["mean_test_score"][index])
+        assert score == pytest.approx(matches[0])
 
 
 def test_default_n_jobs_is_none():
@@ -445,6 +654,50 @@ def test_search_default_omits_train_cv_scores():
     assert search.return_train_score is False
     assert "mean_train_score" not in search.cv_results_
     assert scored_rows and set(scored_rows) == {30}
+
+
+@pytest.mark.parametrize("slots", [4, 10])
+def test_uniform_categorical_priors_match_uniform_initialization(slots):
+    choices = list(range(2, 18, 2))
+    dimensions = [
+        Categorical(choices),
+        Categorical(choices, priors=[0.125] * 8),
+        Categorical(list(range(1, 17)), priors=[0, 0.125] * 8),
+    ]
+    candidates = []
+    for dimension in dimensions:
+        search = GASearchCV(
+            DecisionTreeClassifier(random_state=0),
+            param_grid={"min_samples_leaf": dimension, "ccp_alpha": Continuous(0.001, 0.01)},
+            cv=2,
+            population_size=slots,
+            generations=0,
+            random_state=42,
+            n_jobs=1,
+            verbose=False,
+        ).fit(X_train[:40], y_train[:40])
+        candidates.append(search.cv_results_["params"])
+    assert candidates[0] == candidates[1] == candidates[2]
+
+
+def test_smart_initialization_stratifies_nearly_equal_categorical_priors():
+    delta = 2**-24
+    priors = [0.125 + delta, 0.125 - delta] + [0.125] * 6
+    search = GASearchCV(
+        DecisionTreeClassifier(random_state=0),
+        param_grid={
+            "min_samples_leaf": Categorical(list(range(2, 10)), priors=priors),
+            "ccp_alpha": Continuous(0.001, 0.01),
+        },
+        cv=2,
+        population_size=4,
+        generations=0,
+        random_state=42,
+        n_jobs=1,
+        verbose=False,
+    ).fit(X_train[:40], y_train[:40])
+    # Each adjacent pair accounts for exactly one quarter of the total weight.
+    assert {(p["min_samples_leaf"] - 2) // 2 for p in search.cv_results_["params"]} == set(range(4))
 
 
 @pytest.mark.parametrize("kind", ["parameters", "features"])
@@ -523,6 +776,145 @@ def test_differential_evolution_rejects_small_population_before_evaluation(kind)
         search.fit(X_train[:40], y_train[:40])
 
 
+@pytest.mark.parametrize("fixed_position", [None, "first", "last"])
+def test_local_search_preserves_adjacent_large_integer_candidates(fixed_position):
+    from sklearn.dummy import DummyClassifier
+
+    lower = 2**53
+    majority = lower + 1
+    labels = np.array([majority, majority, lower] * 8, dtype=np.int64)
+    grid = {"constant": Integer(lower, majority)}
+    fixed = {"strategy": Categorical(["constant"])}
+    if fixed_position is not None:
+        grid = fixed | grid if fixed_position == "first" else grid | fixed
+    search = GASearchCV(
+        DummyClassifier(strategy="constant"),
+        param_grid=grid,
+        warm_start_configs=[{"constant": np.int64(majority)}] * 2,
+        population_initializer="random",
+        population_size=2,
+        generations=0,
+        local_search=True,
+        local_search_steps=1,
+        random_state=2,
+        scoring="accuracy",
+        cv=2,
+        n_jobs=1,
+        verbose=False,
+    ).fit(np.arange(len(labels)).reshape(-1, 1), labels)
+
+    assert [p["constant"] for p in search.cv_results_["params"]] == [majority, majority, lower]
+    assert search.fit_stats_["cross_validate_calls"] == 2
+    assert search.best_params_ == (
+        {"strategy": "constant", "constant": majority}
+        if fixed_position is not None
+        else {"constant": majority}
+    )
+    assert search.best_score_ == pytest.approx(2 / 3)
+
+
+def test_local_search_changes_category_between_fixed_numeric_bounds():
+    search = GASearchCV(
+        DecisionTreeClassifier(random_state=1),
+        param_grid={
+            "max_depth": Integer(3, 3),
+            "criterion": Categorical(["gini", "entropy"]),
+            "ccp_alpha": Continuous(0.1, 0.1),
+        },
+        warm_start_configs=[{"criterion": "gini"}] * 2,
+        population_initializer="random",
+        population_size=2,
+        generations=0,
+        local_search=True,
+        local_search_steps=8,
+        random_state=1,
+        scoring=lambda model, X, y: float(model.criterion == "gini"),
+        cv=2,
+        n_jobs=1,
+        verbose=False,
+    ).fit(X_train[:40], y_train[:40])
+    criteria = [p["criterion"] for p in search.cv_results_["params"]]
+    assert criteria == ["gini"] * 2 + ["entropy"] * 8
+
+
+def test_fixed_log_dimension_preserves_distinct_smart_candidates():
+    search = GASearchCV(
+        DecisionTreeClassifier(random_state=0),
+        param_grid={
+            "criterion": Categorical(["gini", "entropy"], priors=[0.75, 0.25]),
+            "ccp_alpha": Continuous(0.01, 0.01, distribution="log-uniform"),
+        },
+        warm_start_configs=[{"criterion": "gini", "ccp_alpha": 0.01}],
+        population_size=2,
+        generations=0,
+        random_state=2,
+        cv=2,
+        n_jobs=1,
+        verbose=False,
+    ).fit(X_train[:40], y_train[:40])
+    assert {(p["criterion"], p["ccp_alpha"]) for p in search.cv_results_["params"]} == {
+        ("gini", 0.01),
+        ("entropy", 0.01),
+    }
+    assert search.search_space_exhausted_
+
+
+@pytest.mark.parametrize("kind", ["parameters", "features"])
+@pytest.mark.parametrize(
+    "algorithm", ["eaSimple", "eaMuPlusLambda", "eaMuCommaLambda", "eaDifferentialEvolution"]
+)
+@pytest.mark.parametrize(
+    "refit, final_selection, proposals",
+    [(False, False, 1), (False, True, 1), (True, False, 5), (True, True, 5)],
+)
+def test_local_refinement_reports_finite_coverage(
+    kind, algorithm, refit, final_selection, proposals, monkeypatch
+):
+    from .. import algorithms
+
+    def next_neighbor(estimator, parent, cls):
+        if kind == "parameters":
+            return cls([5, "gini"])
+        masks = [tuple(row) for row in np.eye(5, dtype=int)]
+        return cls(next((row for row in masks if row not in estimator.fitness_cache), masks[0]))
+
+    monkeypatch.setattr(algorithms, "local_neighbor", next_neighbor)
+    model = DecisionTreeClassifier(random_state=17)
+    common = dict(
+        population_size=4,
+        generations=0,
+        cv=2,
+        scoring="accuracy",
+        n_jobs=1,
+        random_state=17,
+        verbose=False,
+        algorithm=algorithm,
+        use_cache=True,
+        local_search=True,
+        local_search_steps=5,
+        refit=refit,
+        final_selection=final_selection,
+        error_score="raise",
+    )
+    search = (
+        GASearchCV(
+            model,
+            param_grid={"max_depth": Integer(1, 5), "criterion": Categorical(["gini"])},
+            warm_start_configs=[{"max_depth": depth, "criterion": "gini"} for depth in range(1, 5)],
+            **common,
+        )
+        if kind == "parameters"
+        else genetic_search.GAFeatureSelectionCV(model, max_features=1, **common)
+    )
+    X = np.tile(np.arange(5), (40, 1)).astype(float)
+    y = np.tile([0, 1], 20)
+    search.fit(X, y)
+    assert search.search_space_exhausted_
+    assert search.fit_counts_["search_cv_calls"] == 5
+    assert search.fit_stats_["local_refinement_candidates"] == proposals
+    assert search.history["local_refinements"][-1] == proposals
+
+
 @pytest.mark.parametrize("kind", ["parameters", "features"])
 @pytest.mark.parametrize(
     "algorithm", ["eaSimple", "eaMuPlusLambda", "eaMuCommaLambda", "eaDifferentialEvolution"]
@@ -567,6 +959,7 @@ def test_search_stops_after_evaluating_entire_finite_space(kind, algorithm, use_
                 "max_depth": Integer(1, 2),
                 "criterion": Categorical(["gini", "entropy", "entropy"]),
                 "ccp_alpha": Continuous(0, 0),
+                "min_impurity_decrease": Continuous(0.01, 0.01, distribution="log-uniform"),
             },
             **common,
         )
@@ -578,8 +971,12 @@ def test_search_stops_after_evaluating_entire_finite_space(kind, algorithm, use_
     callback = Lifecycle()
     search.fit(X_small, y_small, callbacks=[callback])
     assert len(search.history["gen"]) == (1 if use_cache else 5)
+    cv_calls = search.history["cross_validate_calls"]
+    assert cv_calls == sorted(cv_calls)
+    assert cv_calls[-1] == search.fit_stats_["cross_validate_calls"]
     assert search.search_space_exhausted_ is use_cache
     space_size = 4 if kind == "parameters" else 2
+    assert cv_calls[0] == (space_size if use_cache else 12)
     if use_cache:
         assert search.fit_stats_["cross_validate_calls"] == space_size
     else:
@@ -867,6 +1264,52 @@ def test_gasearch_accepts_valid_error_score(error_score):
         assert estimator.error_score == error_score
 
 
+@pytest.mark.parametrize("fitness_sharing", [False, True])
+@pytest.mark.parametrize("nonfinite", [np.nan, np.inf])
+@pytest.mark.parametrize("criteria", ["max", "min"])
+def test_nonfinite_scoring_candidate_cannot_displace_valid_hpo_elite(
+    criteria, nonfinite, fitness_sharing
+):
+    iris = load_digits()
+    direction = 1 if criteria == "max" else -1
+    search = GASearchCV(
+        DecisionTreeClassifier(random_state=0),
+        param_grid={
+            "max_depth": Categorical([1, 2, 3]),
+            "min_samples_leaf": Integer(1, 10),
+        },
+        scoring=lambda estimator, X, y: (
+            direction * nonfinite if estimator.max_depth == 1 else direction * estimator.max_depth
+        ),
+        cv=2,
+        population_size=6,
+        generations=1,
+        criteria=criteria,
+        fitness_sharing=fitness_sharing,
+        random_state=3,
+        verbose=False,
+        n_jobs=1,
+    ).fit(iris.data[:60], iris.target[:60])
+
+    assert search.best_params_["max_depth"] == 3
+    assert search.history["fitness_best"][-1] == direction * 3
+    invalid_indices = [
+        index
+        for index, params in enumerate(search.cv_results_["params"])
+        if params["max_depth"] == 1
+    ]
+    assert invalid_indices
+    for index in invalid_indices:
+        for score in (
+            search.cv_results_["mean_test_score"][index],
+            *(search.cv_results_[f"split{split}_test_score"][index] for split in range(2)),
+        ):
+            if np.isnan(nonfinite):
+                assert np.isnan(score)
+            else:
+                assert score == direction * nonfinite
+
+
 def test_fit_param_check_skips_uninspectable_fit():
     class UninspectableEstimator:
         fit = object()
@@ -925,6 +1368,11 @@ def test_final_selection_can_replace_original_best_candidate(monkeypatch, duplic
         verbose=False,
     )
     estimator.refit_metric = "score"
+    estimator.fit_counts_ = {
+        "finalist_cv_calls": 0,
+        "finalist_fold_fits": 0,
+        "finalist_reused_folds": 0,
+    }
     estimator.cv_results_ = {
         "rank_test_score": np.array([1, 2, 3]),
         "mean_test_score": np.array([0.90, 0.89, 0.70]),
@@ -941,14 +1389,14 @@ def test_final_selection_can_replace_original_best_candidate(monkeypatch, duplic
             estimator.cv_results_["rank_test_score"]
         )
 
-    monkeypatch.setattr(estimator, "_final_selection_splits", lambda: ["split"])
+    monkeypatch.setattr(estimator, "_final_selection_splits", lambda: ["split-1", "split-2"])
 
-    def score_candidate(params, cv_splits):
-        if params["max_depth"] == 2:
-            return 0.95, np.array([0.94, 0.96])
-        return 0.80, np.array([0.79, 0.81])
+    def score_candidate(candidate, X, cv_splits, **kwargs):
+        scores = [0.94, 0.96] if candidate.max_depth == 2 else [0.79, 0.81]
+        return {"test_score": np.array(scores)}
 
-    monkeypatch.setattr(estimator, "_score_final_candidate", score_candidate)
+    estimator.X_ = X_train
+    monkeypatch.setattr(estimator, "_cross_validate_candidate", score_candidate)
 
     best_index, best_score, best_params = estimator._select_final_candidate()
 
@@ -971,20 +1419,25 @@ def test_final_selection_respects_criteria_min(monkeypatch):
         verbose=False,
     )
     estimator.refit_metric = "score"
+    estimator.fit_counts_ = {
+        "finalist_cv_calls": 0,
+        "finalist_fold_fits": 0,
+        "finalist_reused_folds": 0,
+    }
     estimator.cv_results_ = {
         "rank_test_score": np.array([2, 3, 1]),
         "mean_test_score": np.array([0.85, 0.70, 0.90]),
         "params": [{"max_depth": 1}, {"max_depth": 2}, {"max_depth": 3}],
     }
 
-    monkeypatch.setattr(estimator, "_final_selection_splits", lambda: ["split"])
+    monkeypatch.setattr(estimator, "_final_selection_splits", lambda: ["split-1", "split-2"])
 
-    def score_candidate(params, cv_splits):
-        if params["max_depth"] == 2:
-            return 0.65, np.array([0.64, 0.66])
-        return 0.95, np.array([0.94, 0.96])
+    def score_candidate(candidate, X, cv_splits, **kwargs):
+        scores = [0.64, 0.66] if candidate.max_depth == 2 else [0.94, 0.96]
+        return {"test_score": np.array(scores)}
 
-    monkeypatch.setattr(estimator, "_score_final_candidate", score_candidate)
+    estimator.X_ = X_train
+    monkeypatch.setattr(estimator, "_cross_validate_candidate", score_candidate)
 
     best_index, best_score, best_params = estimator._select_final_candidate()
 
@@ -1046,19 +1499,15 @@ def test_adaptive_selection_reduces_pressure_when_diversity_is_low():
     )
     estimator._register()
 
-    try:
-        estimator._last_generation_record = {
-            "unique_individual_ratio": 0.2,
-            "genotype_diversity": 0.2,
-            "stagnation_generations": 0,
-            "fitness_improved": False,
-        }
-        estimator.select(estimator._pop, 3)
+    estimator._last_generation_record = {
+        "unique_individual_ratio": 0.2,
+        "genotype_diversity": 0.2,
+        "stagnation_generations": 0,
+        "fitness_improved": False,
+    }
+    estimator.select(estimator._pop, 3)
 
-        assert estimator._selection_pressure_ == 2
-    finally:
-        del genetic_search.creator.FitnessMax
-        del genetic_search.creator.Individual
+    assert estimator._selection_pressure_ == 2
 
 
 def test_offspring_generation_replaces_parent_duplicates():
@@ -1078,29 +1527,26 @@ def test_offspring_generation_replaces_parent_duplicates():
     )
     estimator._register()
 
-    try:
-        parent = genetic_search.creator.Individual([1, "gini"])
-        offspring = [
-            genetic_search.creator.Individual([1, "gini"]),
-            genetic_search.creator.Individual([1, "gini"]),
-        ]
+    individual_type = type(estimator._pop[0])
+    parent = individual_type([1, "gini"])
+    offspring = [
+        individual_type([1, "gini"]),
+        individual_type([1, "gini"]),
+    ]
 
-        replacements = replace_duplicate_candidates(
-            offspring,
-            estimator.toolbox,
-            estimator,
-            reference_population=[parent],
-        )
+    replacements = replace_duplicate_candidates(
+        offspring,
+        estimator.toolbox,
+        estimator,
+        reference_population=[parent],
+    )
 
-        assert replacements == 2
-        assert all(
-            estimator._individual_key(individual) != estimator._individual_key(parent)
-            for individual in offspring
-        )
-        assert len({estimator._individual_key(individual) for individual in offspring}) == 2
-    finally:
-        del genetic_search.creator.FitnessMax
-        del genetic_search.creator.Individual
+    assert replacements == 2
+    assert all(
+        estimator._individual_key(individual) != estimator._individual_key(parent)
+        for individual in offspring
+    )
+    assert len({estimator._individual_key(individual) for individual in offspring}) == 2
 
 
 def test_smart_population_initializer_seeds_defaults_warm_starts_and_diversity():
@@ -1121,14 +1567,10 @@ def test_smart_population_initializer_seeds_defaults_warm_starts_and_diversity()
     estimator._register()
     population = [list(individual) for individual in estimator._pop]
 
-    try:
-        assert [3, "gini"] in population
-        assert [2, "entropy"] in population
-        assert len({tuple(individual) for individual in population}) == len(population)
-        assert {individual[1] for individual in population} == {"gini", "entropy"}
-    finally:
-        del genetic_search.creator.FitnessMax
-        del genetic_search.creator.Individual
+    assert [3, "gini"] in population
+    assert [2, "entropy"] in population
+    assert len({tuple(individual) for individual in population}) == len(population)
+    assert {individual[1] for individual in population} == {"gini", "entropy"}
 
 
 def test_integer_search_space_is_repaired_after_single_dimension_crossover():
@@ -1143,23 +1585,20 @@ def test_integer_search_space_is_repaired_after_single_dimension_crossover():
     )
     estimator._register()
 
-    try:
-        first = genetic_search.creator.Individual([1])
-        second = genetic_search.creator.Individual([3])
+    individual_type = type(estimator._pop[0])
+    first = individual_type([1])
+    second = individual_type([3])
 
-        for _ in range(25):
-            child_1, child_2 = estimator.mate(
-                genetic_search.creator.Individual(first),
-                genetic_search.creator.Individual(second),
-            )
+    for _ in range(25):
+        child_1, child_2 = estimator.mate(
+            individual_type(first),
+            individual_type(second),
+        )
 
-            assert isinstance(child_1[0], int)
-            assert isinstance(child_2[0], int)
-            assert 1 <= child_1[0] <= 3
-            assert 1 <= child_2[0] <= 3
-    finally:
-        del genetic_search.creator.FitnessMax
-        del genetic_search.creator.Individual
+        assert isinstance(child_1[0], int)
+        assert isinstance(child_2[0], int)
+        assert 1 <= child_1[0] <= 3
+        assert 1 <= child_2[0] <= 3
 
 
 def test_integer_search_space_fit_never_passes_float_to_estimator():
@@ -1177,6 +1616,10 @@ def test_integer_search_space_fit_never_passes_float_to_estimator():
     estimator.fit(X_train, y_train)
 
     assert isinstance(estimator.best_params_["max_depth"], int)
+
+    for value in (1.5, 2.5, 0, 4):
+        estimator.evaluate([value])
+    assert estimator.logbook.chapters["parameters"].select("max_depth")[-4:] == [2, 2, 1, 3]
 
 
 @pytest.mark.parametrize("algorithm", ["eaSimple", "eaMuPlusLambda", "eaMuCommaLambda"])
@@ -1304,6 +1747,7 @@ def test_evaluate_population_reuses_duplicate_individual_cache(monkeypatch, cont
 
 def test_evaluate_population_re_evaluates_duplicates_without_cache(monkeypatch):
     calls = []
+    constraints = [0] * X_train.shape[1]
 
     def fake_cross_validate(*args, **kwargs):
         calls.append(kwargs)
@@ -1323,7 +1767,7 @@ def test_evaluate_population_re_evaluates_duplicates_without_cache(monkeypatch):
         scoring="accuracy",
         population_size=2,
         generations=1,
-        param_grid={"max_depth": Integer(1, 3)},
+        param_grid={"monotonic_cst": Categorical([constraints])},
         verbose=False,
         use_cache=False,
     )
@@ -1340,7 +1784,7 @@ def test_evaluate_population_re_evaluates_duplicates_without_cache(monkeypatch):
     estimator._pop = []
     estimator.fit_stats_ = genetic_search._create_fit_stats()
 
-    fitnesses = estimator.evaluate_population([[2], [2]])
+    fitnesses = estimator.evaluate_population([[constraints], [constraints]])
 
     assert len(calls) == 2
     assert fitnesses[0] != fitnesses[1]
@@ -1786,8 +2230,7 @@ def test_wrong_get_item():
     with pytest.raises(Exception) as excinfo:
         value = evolved_estimator[0]
     assert (
-        str(excinfo.value)
-        == "This GASearchCV instance is not fitted yet or used refit=False. Call 'fit' with "
+        str(excinfo.value) == "This GASearchCV instance is not fitted yet. Call 'fit' with "
         "appropriate arguments before using this estimator."
     )
 
@@ -2114,7 +2557,7 @@ def test_expected_ga_schedulers():
     assert crossover_scheduler.current_value + mutation_scheduler.current_value <= 1
 
 
-def test_checkpoint_functionality():
+def test_checkpoint_functionality(tmp_path):
     clf = SGDClassifier(loss="modified_huber", fit_intercept=True)
     gen = 5
     evolved_estimator = GASearchCV(
@@ -2130,8 +2573,8 @@ def test_checkpoint_functionality():
             "average": Categorical([True, False]),
         },
     )
-    checkpoint_path = "test_checkpoint.pkl"
-    checkpoint = ModelCheckpoint(checkpoint_path=checkpoint_path)  # noqa
+    checkpoint_path = tmp_path / "checkpoint.pkl"
+    checkpoint = ModelCheckpoint(checkpoint_path=checkpoint_path)
     evolved_estimator.fit(X_train, y_train, callbacks=checkpoint)
 
     checkpoint_data = checkpoint.load()
@@ -2163,9 +2606,6 @@ def test_checkpoint_functionality():
     assert restored_estimator.scoring == test_estimator.scoring  # noqa
     assert restored_estimator.generations == test_estimator.generations  # noqa
 
-    if os.path.exists(checkpoint_path):
-        os.remove(checkpoint_path)
-
 
 def test_checkpoint_resume_restores_fitness_cache(tmp_path):
     """Resuming from a checkpoint restores the fitness cache (#299).
@@ -2195,6 +2635,10 @@ def test_checkpoint_resume_restores_fitness_cache(tmp_path):
         checkpoint_data = pickle.load(f)
     assert "runtime_state" in checkpoint_data
     saved_cache = checkpoint_data["runtime_state"]["fitness_cache"]
+    saved_counts = checkpoint_data["logbook"].select("cross_validate_calls")
+    assert (
+        saved_counts[-1] == checkpoint_data["runtime_state"]["fit_stats_"]["cross_validate_calls"]
+    )
     assert isinstance(saved_cache, dict) and len(saved_cache) > 0
 
     # Inject a sentinel entry, then confirm a resumed run restores it. The
@@ -2208,6 +2652,10 @@ def test_checkpoint_resume_restores_fitness_cache(tmp_path):
     resumed = build()
     resumed.fit(X_train, y_train, callbacks=ModelCheckpoint(checkpoint_path=checkpoint_path))
     assert sentinel_key in resumed.fitness_cache
+    counts = resumed.history["cross_validate_calls"]
+    assert counts[: len(saved_counts)] == saved_counts
+    assert counts == sorted(counts)
+    assert counts[-1] == resumed.fit_stats_["cross_validate_calls"]
 
 
 def test_checkpoint_resume_without_runtime_state_is_backward_compatible(tmp_path):
@@ -2233,6 +2681,8 @@ def test_checkpoint_resume_without_runtime_state_is_backward_compatible(tmp_path
     with open(checkpoint_path, "rb") as f:
         checkpoint_data = pickle.load(f)
     checkpoint_data.pop("runtime_state", None)
+    for record in checkpoint_data["logbook"]:
+        del record["cross_validate_calls"]
     with open(checkpoint_path, "wb") as f:
         pickle.dump(checkpoint_data, f)
 
@@ -2241,6 +2691,9 @@ def test_checkpoint_resume_without_runtime_state_is_backward_compatible(tmp_path
     # Resume must not crash and the estimator remains fitted/usable.
     assert isinstance(resumed.fitness_cache, dict)
     assert resumed.best_params_ is not None
+    counts = resumed.history["cross_validate_calls"]
+    assert counts[: len(checkpoint_data["logbook"])] == [None] * len(checkpoint_data["logbook"])
+    assert counts[-1] == resumed.fit_stats_["cross_validate_calls"]
 
 
 def test_random_state_makes_gasearch_reproducible():
@@ -2324,6 +2777,101 @@ def test_gasearch_final_selection_splits_use_groups():
     assert len(final_splits) == 4
     for train_idx, test_idx in final_splits:
         assert set(groups[train_idx]).isdisjoint(set(groups[test_idx]))
+
+
+@pytest.mark.parametrize("backend", ["deap", "scipy", "nevergrad", "cmaes", "pymoo"])
+@pytest.mark.parametrize("grouped_search", [False, True])
+def test_gasearch_routes_aliased_groups_within_outer_validation(backend, grouped_search):
+    import warnings
+
+    from sklearn import config_context
+    from sklearn.model_selection import GroupKFold, cross_validate
+    from sklearn.pipeline import make_pipeline
+
+    if backend != "deap":
+        pytest.importorskip(backend)
+    outer_groups = np.repeat(np.arange(6), 6)
+    rows = np.arange(len(outer_groups))
+    inner_groups = rows % 6
+    samples = np.column_stack((rows, rows % 3))
+    targets = rows % 2
+
+    with config_context(enable_metadata_routing=True):
+        search = GASearchCV(
+            DecisionTreeClassifier(random_state=31),
+            param_grid={"max_depth": Integer(1, 4), "min_samples_split": Integer(2, 4)},
+            cv=GroupKFold(2) if grouped_search else 2,
+            final_selection=True,
+            final_selection_top_k=2,
+            final_selection_cv=GroupKFold(3),
+            optimizer_backend=backend,
+            population_size=6,
+            generations=0,
+            random_state=31,
+            n_jobs=1,
+            verbose=False,
+            error_score="raise",
+        ).set_fit_request(groups="inner_groups")
+        with warnings.catch_warnings(record=True) as observed:
+            warnings.simplefilter("always")
+            result = cross_validate(
+                make_pipeline(search),
+                samples,
+                targets,
+                cv=GroupKFold(3),
+                params={"groups": outer_groups, "inner_groups": inner_groups},
+                return_estimator=True,
+                return_indices=True,
+                error_score="raise",
+            )
+
+    assert not any("groups parameter is ignored" in str(item.message) for item in observed)
+    for pipeline, train, test in zip(
+        result["estimator"], result["indices"]["train"], result["indices"]["test"], strict=True
+    ):
+        fitted = pipeline.steps[-1][1]
+        assert set(outer_groups[train]).isdisjoint(outer_groups[test])
+        np.testing.assert_array_equal(fitted.groups_, inner_groups[train])
+        if grouped_search:
+            for search_train, search_test in fitted._cv_splits:
+                assert set(inner_groups[train[search_train]]).isdisjoint(
+                    inner_groups[train[search_test]]
+                )
+        assert fitted.fit_counts_["finalist_fold_fits"] == 6
+        candidate = fitted.final_selection_results_["candidates"][0]
+        expected = cross_val_score(
+            clone(fitted.estimator).set_params(**candidate["params"]),
+            samples[train],
+            targets[train],
+            cv=GroupKFold(3),
+            groups=inner_groups[train],
+            error_score="raise",
+        )
+        np.testing.assert_array_equal(candidate["cv_scores"], expected)
+
+
+def test_gasearch_pipeline_keeps_implicit_group_splitter_request():
+    from sklearn import config_context
+    from sklearn.model_selection import GroupKFold
+    from sklearn.pipeline import make_pipeline
+
+    groups = np.arange(48) % 6
+    samples = X_train[: len(groups)]
+    targets = y_train[: len(groups)]
+    search = GASearchCV(
+        DecisionTreeClassifier(random_state=31),
+        param_grid={"max_depth": Integer(1, 4), "min_samples_split": Integer(2, 4)},
+        cv=GroupKFold(2),
+        population_size=4,
+        generations=0,
+        random_state=31,
+        n_jobs=1,
+        verbose=False,
+    )
+    with config_context(enable_metadata_routing=True):
+        make_pipeline(search).fit(samples, targets, groups=groups)
+    for train, test in search._cv_splits:
+        assert set(groups[train]).isdisjoint(groups[test])
 
 
 def test_fit_without_groups_keeps_old_style_custom_cv_working():
@@ -2557,14 +3105,15 @@ def test_smart_initialization_explores_independent_categories(weighted):
     assert repeated.cv_results_["params"] == params
 
 
-@pytest.mark.parametrize("weighted", [False, True])
-def test_smart_initialization_samples_beyond_category_prefix(weighted):
+@pytest.mark.parametrize(
+    "priors",
+    [None, [0] * 16 + [0.25] * 4, [0.0625] * 16 + [0] * 4, [0.0625] * 8 + [0] * 11 + [0.5]],
+)
+def test_smart_initialization_samples_beyond_category_prefix(priors):
     template = GASearchCV(
         DecisionTreeClassifier(random_state=0),
         param_grid={
-            "max_features": Categorical(
-                list(range(1, 21)), priors=([0] * 16 + [0.25] * 4) if weighted else None
-            ),
+            "max_features": Categorical(list(range(1, 21)), priors=priors),
             "ccp_alpha": Continuous(0.001, 0.01),
         },
         scoring=lambda model, X, y: float(model.max_features),
@@ -2578,16 +3127,18 @@ def test_smart_initialization_samples_beyond_category_prefix(weighted):
     from collections import Counter
 
     counts = Counter()
-    for seed in ([42] if weighted else range(20)):
+    for seed in range(20):
         search = clone(template).set_params(random_state=seed).fit(X_train[:40], y_train[:40])
         selected = [p["max_features"] for p in search.cv_results_["params"]]
         assert search.best_score_ > 4
-        assert len(set(selected)) == 4
+        if priors and priors[-1] == 0.5:
+            assert selected.count(20) == 2
+            assert len(set(selected)) == 3
+        else:
+            assert len(set(selected)) == 4
         counts.update(selected)
-    if weighted:
-        assert set(counts) == {17, 18, 19, 20}
-    else:
-        assert set(counts) == set(range(1, 21))
+    expected = {i for i, weight in enumerate(priors, 1) if weight} if priors else set(range(1, 21))
+    assert set(counts) == expected
 
 
 @pytest.mark.parametrize("kind", ["parameters", "features"])
@@ -2625,6 +3176,25 @@ def test_saturated_initial_population_avoids_impossible_unique_sampling(monkeypa
     assert search.history["population_size"] == [12]
     assert calls <= 12
     assert search.predict(data).shape == (40,)
+
+
+def test_feature_population_stays_full_when_retries_only_draw_one_mask(monkeypatch):
+    import random
+
+    monkeypatch.setattr(random, "sample", lambda values, k: list(values)[:k])
+    search = genetic_search.GAFeatureSelectionCV(
+        DecisionTreeClassifier(random_state=0),
+        population_size=12,
+        max_features=1,
+        generations=0,
+        cv=2,
+        n_jobs=1,
+        random_state=17,
+        verbose=False,
+    ).fit(X_train[:40, :2], y_train[:40])
+    assert search.fit_stats_["cross_validate_calls"] == 1
+    assert search.history["population_size"] == [12]
+    assert search.history["unique_individuals"] == [1]
 
 
 @pytest.mark.parametrize("kind,seed", [("parameters", 1), ("features", 3)])
@@ -2895,7 +3465,6 @@ def test_estimator_categories_preserve_parent_inheritance(algorithm, cloned, mon
 def test_timer_stops_candidate_batches_with_valid_results(
     kind, phase, use_cache, algorithm, n_jobs, backend, monkeypatch
 ):
-    from datetime import datetime, timedelta
     from threading import Lock
     from sklearn.datasets import load_iris
     from sklearn_genetic import GAFeatureSelectionCV
@@ -2907,11 +3476,6 @@ def test_timer_stops_candidate_batches_with_valid_results(
     lock = Lock()
     seconds_per_candidate = 6 if phase == "initial" else 2
 
-    class ControlledClock:
-        @staticmethod
-        def utcnow():
-            return datetime(2026, 1, 1) + timedelta(seconds=ticks[0])
-
     original_cv = genetic_search.cross_validate
 
     def timed_cv(*args, **kwargs):
@@ -2921,7 +3485,7 @@ def test_timer_stops_candidate_batches_with_valid_results(
             observed.append(float(np.mean(result["test_score"])))
         return result
 
-    monkeypatch.setattr(early_stoppers, "datetime", ControlledClock)
+    monkeypatch.setattr(early_stoppers, "monotonic", lambda: ticks[0])
     monkeypatch.setattr(genetic_search, "cross_validate", timed_cv)
     settings = dict(
         population_size=4,
@@ -2959,6 +3523,7 @@ def test_timer_stops_candidate_batches_with_valid_results(
         else (2 if phase == "initial" else (6 if n_jobs == 2 and backend == "population" else 5))
     )
     assert len(observed) == expected
+    assert search.history["cross_validate_calls"][-1] == expected
     assert search.fit_stats_["cross_validate_calls"] == expected
     assert search.fit_stats_["unique_candidates"] == expected
     assert search.fit_stats_["evaluated_candidates"] == len(search.cv_results_["mean_test_score"])
@@ -2969,6 +3534,28 @@ def test_timer_stops_candidate_batches_with_valid_results(
     assert search.fit_stats_["local_refinement_candidates"] == (
         expected - 4 if phase == "refinement" else 0
     )
+    if phase == "refinement":
+        assert "partial" not in search.history
+    else:
+        expected_partial = True
+        if phase == "later":
+            # Cached proposals can complete the generation at the deadline.
+            class NoDeadline(TimerStopping):
+                def _time_exceeded(self):
+                    return False
+
+            with monkeypatch.context() as scoped:
+                scoped.setattr(genetic_search, "cross_validate", original_cv)
+                complete = (
+                    clone(search)
+                    .set_params(generations=search.history["gen"][-1], local_search=False)
+                    .fit(data, target, callbacks=NoDeadline(10))
+                )
+            calls_to_complete = complete.history["cross_validate_calls"][-1]
+            assert expected <= calls_to_complete
+            expected_partial = expected < calls_to_complete
+        partial = search.history.get("partial", [False])[-1]
+        assert partial is expected_partial
     assert np.isfinite(search.cv_results_["mean_test_score"]).all()
     assert set(search.cv_results_["mean_test_score"]) <= set(observed)
     assert max(search.cv_results_["mean_test_score"]) == max(observed)
@@ -2997,3 +3584,43 @@ def test_timer_stops_candidate_batches_with_valid_results(
     expected_reuse = n_jobs if phase == "setup" else (2 if phase == "initial" else 4)
     assert len(observed) == expected_reuse
     assert search.fit_stats_["cross_validate_calls"] == expected_reuse
+
+
+def test_mutation_targets_variable_dimensions_in_a_mixed_grid(monkeypatch):
+    import random
+    from ..space.base import BaseDimension
+
+    class IncreasingDepth(BaseDimension):
+        depth = 2
+
+        def sample(self):
+            self.depth += 1
+            return self.depth
+
+    monkeypatch.setattr(genetic_search, "random", random.Random(71))
+    search = GASearchCV(
+        DecisionTreeClassifier(),
+        param_grid={
+            "min_samples_split": Integer(3, 3),
+            "ccp_alpha": Continuous(0.0, 0.1, random_state=71),
+            "criterion": Categorical(["gini"]),
+            "min_weight_fraction_leaf": Continuous(0.0, 0.0),
+            "max_depth": IncreasingDepth(),
+        },
+    )
+    individual = [3, 0.01, "gini", 0.0, 2]
+    changed = set()
+    for _ in range(12):
+        previous = individual.copy()
+        (individual,) = search.mutate(individual)
+        (position,) = [i for i, (old, new) in enumerate(zip(previous, individual)) if old != new]
+        changed.add(position)
+    assert changed == {1, 4}
+
+
+def test_mutation_preserves_an_entirely_fixed_grid():
+    search = GASearchCV(
+        DecisionTreeClassifier(),
+        param_grid={"max_depth": Integer(3, 3), "criterion": Categorical(["entropy"])},
+    )
+    assert search.mutate([3, "entropy"]) == [[3, "entropy"]]

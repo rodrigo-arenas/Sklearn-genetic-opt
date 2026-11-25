@@ -5,7 +5,15 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "sklearn-genetic-opt"
 dynamic = ["version"]
-description = "Scikit-learn models hyperparameter tuning and feature selection using evolutionary algorithms"
+description = "Cross-validated hyperparameter search and feature selection for scikit-learn with interchangeable optimizers"
+keywords = [
+    "scikit-learn",
+    "hyperparameter tuning",
+    "feature selection",
+    "genetic algorithms",
+    "evolutionary optimization",
+    "cross-validation",
+]
 readme = { file = "README.rst", content-type = "text/x-rst" }
 requires-python = ">=3.12"
 license = "MIT"
@@ -23,25 +31,36 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
 ]
 dependencies = [
-    "scikit-learn>=1.5.0",
-    "numpy>=1.26.0",
-    "deap>=1.4.0",
+    "scikit-learn>=1.5.0; python_version < '3.15'",
+    "numpy>=1.26.0; python_version < '3.15'",
+    "pandas>=1.3.0; python_version < '3.15'",
+    # First releases with CPython 3.15 wheels. SciPy is already installed by scikit-learn.
+    "scikit-learn>=1.9.1; python_version >= '3.15'",
+    "numpy>=2.5.2; python_version >= '3.15'",
+    "pandas>=3.0.6; python_version >= '3.15'",
+    "scipy>=1.18.1; python_version >= '3.15'",
+    "deap>=1.4.4",
     "tqdm>=4.60.0",
-    "pandas>=1.3.0",
 ]
 
+[project.entry-points."sklearn_genetic.optimizers"]
+nevergrad = "sklearn_genetic._nevergrad_backend:optimize"
+cmaes = "sklearn_genetic._cmaes_backend:optimize"
+pymoo = "sklearn_genetic._pymoo_backend:optimize"
+
 [project.optional-dependencies]
+nevergrad = ["nevergrad>=1.0.12,<2"]
+cmaes = ["cmaes>=0.13.1,<0.14"]
+pymoo = ["pymoo>=0.6.2,<0.7"]
+scipy = ["scipy>=1.15"]
 plot = [
     "seaborn>=0.13.2",
 ]
 mlflow = [
     "mlflow>=3.14.0",
-]
-tensorflow = [
-    "tensorflow>=2.21.0; python_version < '3.14'",
-    "tensorboard>=2.20.0,<2.21.0; python_version < '3.14'",
 ]
 test = [
     "pytest>=9.1.0",
@@ -61,28 +80,30 @@ lint = [
     "black>=26.5.1",
 ]
 benchmark = [
-    "scipy>=1.11.0",
+    "nevergrad>=1.0.12,<2",
+    "cmaes>=0.13.1,<0.14",
+    "pymoo>=0.6.2,<0.7",
+    "scipy>=1.15",
     "optuna>=4.0.0",
 ]
 all = [
+    "nevergrad>=1.0.12,<2",
+    "cmaes>=0.13.1,<0.14",
+    "pymoo>=0.6.2,<0.7",
+    "scipy>=1.15",
     "seaborn>=0.13.2",
     "mlflow>=3.14.0",
-    "tensorflow>=2.21.0; python_version < '3.14'",
-    "tensorboard>=2.20.0,<2.21.0; python_version < '3.14'",
 ]
 dev = [
     "pytest>=9.1.0",
     "pytest-cov>=7.1.0",
     "pytest-order>=1.5.0",
     "seaborn>=0.13.2",
-    "scipy>=1.11.0",
+    "scipy>=1.15",
     "mlflow>=3.14.0",
-    "tensorflow>=2.21.0; python_version < '3.14'",
-    "tensorboard>=2.20.0,<2.21.0; python_version < '3.14'",
     "build>=1.3.0",
     "twine>=6.2.0",
     "black>=26.5.1",
-    "scipy>=1.11.0",
     "optuna>=4.0.0",
 ]
 
@@ -90,6 +111,8 @@ dev = [
 Documentation = "https://sklearngeneticopt.rodrigo-arenas.com/"
 "Source Code" = "https://github.com/rodrigo-arenas/Sklearn-genetic-opt"
 "Bug Tracker" = "https://github.com/rodrigo-arenas/Sklearn-genetic-opt/issues"
+Changelog = "https://github.com/rodrigo-arenas/Sklearn-genetic-opt/blob/master/CHANGELOG.md"
+"Benchmark Scripts" = "https://github.com/rodrigo-arenas/Sklearn-genetic-opt/tree/master/benchmarks"
 
 [tool.setuptools.dynamic]
 version = { attr = "sklearn_genetic._version.__version__" }

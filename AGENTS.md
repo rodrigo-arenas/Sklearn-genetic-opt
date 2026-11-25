@@ -21,7 +21,7 @@ More specific `AGENTS.md` files, if added, apply within their directories.
 
 ## Python and scikit-learn contracts
 
-The package provides `GASearchCV` and `GAFeatureSelectionCV` using DEAP.
+The package provides `GASearchCV` and `GAFeatureSelectionCV` with DEAP by default. Other engines use the shared optimizer protocol in `sklearn_genetic.backends`.
 Changes to either estimator must preserve scikit-learn compatibility:
 
 - Keep constructor parameters compatible with `get_params`, `set_params` and

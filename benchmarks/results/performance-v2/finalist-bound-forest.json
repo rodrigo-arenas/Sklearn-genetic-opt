@@ -1,0 +1,200 @@
+[
+  {
+    "dataset": "load_iris",
+    "seed": 10251,
+    "full": {
+      "winner": 20,
+      "accuracy": 0.9533333333333334,
+      "fits": 40,
+      "seconds": 0.6247932999976911
+    },
+    "bounded": {
+      "winner": 20,
+      "accuracy": 0.9533333333333334,
+      "fits": 35,
+      "seconds": 0.5395252999733202
+    },
+    "block": {
+      "winner": 20,
+      "accuracy": 0.9533333333333334,
+      "fits": 40,
+      "seconds": 0.620275599998422
+    }
+  },
+  {
+    "dataset": "load_iris",
+    "seed": 10252,
+    "bounded": {
+      "winner": 38,
+      "accuracy": 0.9533333333333334,
+      "fits": 40,
+      "seconds": 0.6152358999825083
+    },
+    "block": {
+      "winner": 38,
+      "accuracy": 0.9533333333333334,
+      "fits": 40,
+      "seconds": 0.6173434999655001
+    },
+    "full": {
+      "winner": 38,
+      "accuracy": 0.9533333333333334,
+      "fits": 40,
+      "seconds": 0.5913567999959923
+    }
+  },
+  {
+    "dataset": "load_iris",
+    "seed": 10253,
+    "block": {
+      "winner": 3,
+      "accuracy": 0.9400000000000001,
+      "fits": 40,
+      "seconds": 0.6031855999608524
+    },
+    "full": {
+      "winner": 3,
+      "accuracy": 0.9400000000000001,
+      "fits": 40,
+      "seconds": 0.5872596999979578
+    },
+    "bounded": {
+      "winner": 3,
+      "accuracy": 0.9400000000000001,
+      "fits": 40,
+      "seconds": 0.6415774999768473
+    }
+  },
+  {
+    "dataset": "load_wine",
+    "seed": 10251,
+    "full": {
+      "winner": 21,
+      "accuracy": 0.9720634920634922,
+      "fits": 40,
+      "seconds": 0.6143623000243679
+    },
+    "bounded": {
+      "winner": 21,
+      "accuracy": 0.9720634920634922,
+      "fits": 33,
+      "seconds": 0.5445979000069201
+    },
+    "block": {
+      "winner": 21,
+      "accuracy": 0.9720634920634922,
+      "fits": 36,
+      "seconds": 0.6084485999890603
+    }
+  },
+  {
+    "dataset": "load_wine",
+    "seed": 10252,
+    "bounded": {
+      "winner": 13,
+      "accuracy": 0.9887301587301588,
+      "fits": 34,
+      "seconds": 0.5510929999873042
+    },
+    "block": {
+      "winner": 13,
+      "accuracy": 0.9887301587301588,
+      "fits": 34,
+      "seconds": 0.5361610000254586
+    },
+    "full": {
+      "winner": 13,
+      "accuracy": 0.9887301587301588,
+      "fits": 40,
+      "seconds": 0.6117067000013776
+    }
+  },
+  {
+    "dataset": "load_wine",
+    "seed": 10253,
+    "block": {
+      "winner": 14,
+      "accuracy": 0.9661904761904762,
+      "fits": 40,
+      "seconds": 0.6267646999913268
+    },
+    "full": {
+      "winner": 14,
+      "accuracy": 0.9661904761904762,
+      "fits": 40,
+      "seconds": 0.6280826999573037
+    },
+    "bounded": {
+      "winner": 14,
+      "accuracy": 0.9661904761904762,
+      "fits": 35,
+      "seconds": 0.5761344999773428
+    }
+  },
+  {
+    "dataset": "load_breast_cancer",
+    "seed": 10251,
+    "full": {
+      "winner": 14,
+      "accuracy": 0.9577705325260053,
+      "fits": 40,
+      "seconds": 0.7351141999824904
+    },
+    "bounded": {
+      "winner": 14,
+      "accuracy": 0.9577705325260053,
+      "fits": 40,
+      "seconds": 0.7693302999832667
+    },
+    "block": {
+      "winner": 14,
+      "accuracy": 0.9577705325260053,
+      "fits": 40,
+      "seconds": 0.7553182999836281
+    }
+  },
+  {
+    "dataset": "load_breast_cancer",
+    "seed": 10252,
+    "bounded": {
+      "winner": 33,
+      "accuracy": 0.9524763235522433,
+      "fits": 40,
+      "seconds": 0.8073222999810241
+    },
+    "block": {
+      "winner": 33,
+      "accuracy": 0.9524763235522433,
+      "fits": 40,
+      "seconds": 0.7752777999849059
+    },
+    "full": {
+      "winner": 33,
+      "accuracy": 0.9524763235522433,
+      "fits": 40,
+      "seconds": 0.7687892999965698
+    }
+  },
+  {
+    "dataset": "load_breast_cancer",
+    "seed": 10253,
+    "block": {
+      "winner": 11,
+      "accuracy": 0.9595714951094549,
+      "fits": 40,
+      "seconds": 0.8298519999952987
+    },
+    "full": {
+      "winner": 11,
+      "accuracy": 0.9595714951094549,
+      "fits": 40,
+      "seconds": 0.7765745999640785
+    },
+    "bounded": {
+      "winner": 11,
+      "accuracy": 0.9595714951094549,
+      "fits": 37,
+      "seconds": 0.7501240000128746
+    }
+  }
+]

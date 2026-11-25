@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from typing import Literal, Sequence
 
 import numpy as np
 
@@ -24,6 +25,7 @@ class PopulationConfig:
 
     initializer: str = "smart"
     warm_start_configs: list[dict] = field(default_factory=list)
+    warm_start_masks: Sequence[Sequence[bool | int] | np.ndarray] | np.ndarray | None = None
 
 
 @dataclass
@@ -59,6 +61,6 @@ class OptimizationConfig:
     fitness_sharing: bool = False
     sharing_radius: float = 0.2
     sharing_alpha: float = 1.0
-    final_selection: bool = False
+    final_selection: bool | Literal["reuse_folds"] = False
     final_selection_top_k: int = 3
     final_selection_cv: object = None

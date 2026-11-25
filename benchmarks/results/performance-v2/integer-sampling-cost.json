@@ -1,0 +1,178 @@
+{
+  "baseline": "63696a6fe750a6a092653220c0d5c8466aad9d41",
+  "python": "3.12.0",
+  "versions": {
+    "numpy": "2.5.3",
+    "scipy": "1.18.1",
+    "scikit-learn": "1.9.1"
+  },
+  "protocol": "Iris decision tree random_state=11, balanced accuracy, CV=2, 8 candidates, 2 generations, serial single thread. Integer ranges max_depth=[1,20], min_samples_leaf=[1,16], min_samples_split=[2,20], max_leaf_nodes=[2,40]. Each paired fit compares ordered params, mean_test_score and fit_stats_. Sampler timings are medians of five times 2,000 calls on [-8,1024], in milliseconds.",
+  "sampler_ms": {
+    "old": {
+      "None": 78.69090000167489,
+      "42": 74.39859997248277
+    },
+    "new": {
+      "None": 3.7631000159308314,
+      "42": 3.6191000253893435
+    }
+  },
+  "fit_pairs": [
+    {
+      "mode": "random",
+      "seed": 3,
+      "order": [
+        "old",
+        "new"
+      ],
+      "ms": {
+        "old": 217.3789999797009,
+        "new": 193.10550001682714
+      },
+      "cv_calls": 40
+    },
+    {
+      "mode": "random",
+      "seed": 3,
+      "order": [
+        "new",
+        "old"
+      ],
+      "ms": {
+        "new": 190.40209997911006,
+        "old": 196.59589999355376
+      },
+      "cv_calls": 40
+    },
+    {
+      "mode": "random",
+      "seed": 19,
+      "order": [
+        "old",
+        "new"
+      ],
+      "ms": {
+        "old": 205.9548000106588,
+        "new": 192.95539997983724
+      },
+      "cv_calls": 40
+    },
+    {
+      "mode": "random",
+      "seed": 19,
+      "order": [
+        "new",
+        "old"
+      ],
+      "ms": {
+        "new": 202.57009996566921,
+        "old": 205.49969997955486
+      },
+      "cv_calls": 40
+    },
+    {
+      "mode": "random",
+      "seed": 41,
+      "order": [
+        "old",
+        "new"
+      ],
+      "ms": {
+        "old": 200.20640001166612,
+        "new": 191.54799997340888
+      },
+      "cv_calls": 40
+    },
+    {
+      "mode": "random",
+      "seed": 41,
+      "order": [
+        "new",
+        "old"
+      ],
+      "ms": {
+        "new": 203.11499998206273,
+        "old": 201.64980000117794
+      },
+      "cv_calls": 40
+    },
+    {
+      "mode": "smart",
+      "seed": 3,
+      "order": [
+        "old",
+        "new"
+      ],
+      "ms": {
+        "old": 197.31979997595772,
+        "new": 195.7770999870263
+      },
+      "cv_calls": 40
+    },
+    {
+      "mode": "smart",
+      "seed": 3,
+      "order": [
+        "new",
+        "old"
+      ],
+      "ms": {
+        "new": 196.01020001573488,
+        "old": 194.59890003781766
+      },
+      "cv_calls": 40
+    },
+    {
+      "mode": "smart",
+      "seed": 19,
+      "order": [
+        "old",
+        "new"
+      ],
+      "ms": {
+        "old": 207.06099999370053,
+        "new": 219.19279999565333
+      },
+      "cv_calls": 40
+    },
+    {
+      "mode": "smart",
+      "seed": 19,
+      "order": [
+        "new",
+        "old"
+      ],
+      "ms": {
+        "new": 251.38289999449626,
+        "old": 233.94399997778237
+      },
+      "cv_calls": 40
+    },
+    {
+      "mode": "smart",
+      "seed": 41,
+      "order": [
+        "old",
+        "new"
+      ],
+      "ms": {
+        "old": 213.34639994893223,
+        "new": 220.51179996924475
+      },
+      "cv_calls": 40
+    },
+    {
+      "mode": "smart",
+      "seed": 41,
+      "order": [
+        "new",
+        "old"
+      ],
+      "ms": {
+        "new": 254.5280999620445,
+        "old": 212.54630002658814
+      },
+      "cv_calls": 40
+    }
+  ]
+}

@@ -1,0 +1,482 @@
+[
+  {
+    "task": "classification_lr",
+    "features": false,
+    "seed": 8711,
+    "full": {
+      "index": 6,
+      "cv": 0.9978976465814566,
+      "holdout": 0.989098532494759
+    },
+    "promoted": {
+      "index": 6,
+      "cv": 0.9978976465814566,
+      "holdout": 0.989098532494759
+    },
+    "first_five": {
+      "index": 6,
+      "cv": 0.9978976465814566,
+      "holdout": 0.989098532494759
+    }
+  },
+  {
+    "task": "classification_lr",
+    "features": true,
+    "seed": 8711,
+    "full": {
+      "index": 8,
+      "cv": 0.9982398672257162,
+      "holdout": 0.9859538784067087
+    },
+    "promoted": {
+      "index": 8,
+      "cv": 0.9982398672257162,
+      "holdout": 0.9859538784067087
+    },
+    "first_five": {
+      "index": 8,
+      "cv": 0.9982398672257162,
+      "holdout": 0.9859538784067087
+    }
+  },
+  {
+    "task": "classification_lr",
+    "features": false,
+    "seed": 8712,
+    "full": {
+      "index": 12,
+      "cv": 0.9936165776244901,
+      "holdout": 0.9985324947589098
+    },
+    "promoted": {
+      "index": 0,
+      "cv": 0.9923194078131692,
+      "holdout": 0.9976939203354298
+    },
+    "first_five": {
+      "index": 9,
+      "cv": 0.9931448795112825,
+      "holdout": 0.9983228511530399
+    }
+  },
+  {
+    "task": "classification_lr",
+    "features": true,
+    "seed": 8712,
+    "full": {
+      "index": 19,
+      "cv": 0.9912611866278939,
+      "holdout": 0.9972746331236897
+    },
+    "promoted": {
+      "index": 19,
+      "cv": 0.9912611866278939,
+      "holdout": 0.9972746331236897
+    },
+    "first_five": {
+      "index": 3,
+      "cv": 0.9891307961948558,
+      "holdout": 0.9962264150943396
+    }
+  },
+  {
+    "task": "classification_lr",
+    "features": false,
+    "seed": 8713,
+    "full": {
+      "index": 0,
+      "cv": 0.9933866459277294,
+      "holdout": 1.0
+    },
+    "promoted": {
+      "index": 0,
+      "cv": 0.9933866459277294,
+      "holdout": 1.0
+    },
+    "first_five": {
+      "index": 0,
+      "cv": 0.9933866459277294,
+      "holdout": 1.0
+    }
+  },
+  {
+    "task": "classification_lr",
+    "features": true,
+    "seed": 8713,
+    "full": {
+      "index": 20,
+      "cv": 0.9951557956312979,
+      "holdout": 1.0
+    },
+    "promoted": {
+      "index": 20,
+      "cv": 0.9951557956312979,
+      "holdout": 1.0
+    },
+    "first_five": {
+      "index": 20,
+      "cv": 0.9951557956312979,
+      "holdout": 1.0
+    }
+  },
+  {
+    "task": "classification_lr",
+    "features": false,
+    "seed": 8714,
+    "full": {
+      "index": 8,
+      "cv": 0.9942000011271162,
+      "holdout": 0.9970649895178197
+    },
+    "promoted": {
+      "index": 8,
+      "cv": 0.9942000011271162,
+      "holdout": 0.9970649895178197
+    },
+    "first_five": {
+      "index": 8,
+      "cv": 0.9942000011271162,
+      "holdout": 0.9970649895178197
+    }
+  },
+  {
+    "task": "classification_lr",
+    "features": true,
+    "seed": 8714,
+    "full": {
+      "index": 22,
+      "cv": 0.9937267532291877,
+      "holdout": 0.989517819706499
+    },
+    "promoted": {
+      "index": 22,
+      "cv": 0.9937267532291877,
+      "holdout": 0.989517819706499
+    },
+    "first_five": {
+      "index": 14,
+      "cv": 0.9933729796442821,
+      "holdout": 0.9966457023060796
+    }
+  },
+  {
+    "task": "classification_lr",
+    "features": false,
+    "seed": 8715,
+    "full": {
+      "index": 27,
+      "cv": 0.9951573454160186,
+      "holdout": 0.9911949685534591
+    },
+    "promoted": {
+      "index": 27,
+      "cv": 0.9951573454160186,
+      "holdout": 0.9911949685534591
+    },
+    "first_five": {
+      "index": 21,
+      "cv": 0.9948004722616712,
+      "holdout": 0.9918238993710692
+    }
+  },
+  {
+    "task": "classification_lr",
+    "features": true,
+    "seed": 8715,
+    "full": {
+      "index": 22,
+      "cv": 0.9949168470052523,
+      "holdout": 0.9924528301886792
+    },
+    "promoted": {
+      "index": 22,
+      "cv": 0.9949168470052523,
+      "holdout": 0.9924528301886792
+    },
+    "first_five": {
+      "index": 22,
+      "cv": 0.9949168470052523,
+      "holdout": 0.9924528301886792
+    }
+  },
+  {
+    "task": "classification_lr",
+    "features": false,
+    "seed": 8716,
+    "full": {
+      "index": 10,
+      "cv": 0.9935578266946192,
+      "holdout": 0.9968553459119497
+    },
+    "promoted": {
+      "index": 10,
+      "cv": 0.9935578266946192,
+      "holdout": 0.9968553459119497
+    },
+    "first_five": {
+      "index": 10,
+      "cv": 0.9935578266946192,
+      "holdout": 0.9968553459119497
+    }
+  },
+  {
+    "task": "classification_lr",
+    "features": true,
+    "seed": 8716,
+    "full": {
+      "index": 22,
+      "cv": 0.9940220576632628,
+      "holdout": 0.9958071278825996
+    },
+    "promoted": {
+      "index": 14,
+      "cv": 0.9894173654786862,
+      "holdout": 0.9970649895178197
+    },
+    "first_five": {
+      "index": 22,
+      "cv": 0.9940220576632628,
+      "holdout": 0.9958071278825996
+    }
+  },
+  {
+    "task": "regression_ridge",
+    "features": false,
+    "seed": 8711,
+    "full": {
+      "index": 8,
+      "cv": 0.4609262694107116,
+      "holdout": 0.4666231617778659
+    },
+    "promoted": {
+      "index": 0,
+      "cv": 0.45856311214995477,
+      "holdout": 0.4639564269281383
+    },
+    "first_five": {
+      "index": 8,
+      "cv": 0.4609262694107116,
+      "holdout": 0.4666231617778659
+    }
+  },
+  {
+    "task": "regression_ridge",
+    "features": true,
+    "seed": 8711,
+    "full": {
+      "index": 25,
+      "cv": 0.45323751324256245,
+      "holdout": 0.4335127700708926
+    },
+    "promoted": {
+      "index": 25,
+      "cv": 0.45323751324256245,
+      "holdout": 0.4335127700708926
+    },
+    "first_five": {
+      "index": 25,
+      "cv": 0.45323751324256245,
+      "holdout": 0.4335127700708926
+    }
+  },
+  {
+    "task": "regression_ridge",
+    "features": false,
+    "seed": 8712,
+    "full": {
+      "index": 27,
+      "cv": 0.4507294067031763,
+      "holdout": 0.5231849189625231
+    },
+    "promoted": {
+      "index": 5,
+      "cv": 0.4506878759366238,
+      "holdout": 0.5231835415014372
+    },
+    "first_five": {
+      "index": 10,
+      "cv": 0.4506883523051252,
+      "holdout": 0.5231835579252982
+    }
+  },
+  {
+    "task": "regression_ridge",
+    "features": true,
+    "seed": 8712,
+    "full": {
+      "index": 19,
+      "cv": 0.4220444145037775,
+      "holdout": 0.42392759662921287
+    },
+    "promoted": {
+      "index": 19,
+      "cv": 0.4220444145037775,
+      "holdout": 0.42392759662921287
+    },
+    "first_five": {
+      "index": 19,
+      "cv": 0.4220444145037775,
+      "holdout": 0.42392759662921287
+    }
+  },
+  {
+    "task": "regression_ridge",
+    "features": false,
+    "seed": 8713,
+    "full": {
+      "index": 15,
+      "cv": 0.46469575999760704,
+      "holdout": 0.5018209069500303
+    },
+    "promoted": {
+      "index": 14,
+      "cv": 0.4646576134832019,
+      "holdout": 0.5017304236226326
+    },
+    "first_five": {
+      "index": 9,
+      "cv": 0.464657921480874,
+      "holdout": 0.5017311413138781
+    }
+  },
+  {
+    "task": "regression_ridge",
+    "features": true,
+    "seed": 8713,
+    "full": {
+      "index": 11,
+      "cv": 0.44104836103825135,
+      "holdout": 0.4671002664178914
+    },
+    "promoted": {
+      "index": 11,
+      "cv": 0.44104836103825135,
+      "holdout": 0.4671002664178914
+    },
+    "first_five": {
+      "index": 11,
+      "cv": 0.44104836103825135,
+      "holdout": 0.4671002664178914
+    }
+  },
+  {
+    "task": "regression_ridge",
+    "features": false,
+    "seed": 8714,
+    "full": {
+      "index": 15,
+      "cv": 0.44001685674959745,
+      "holdout": 0.5580802918398515
+    },
+    "promoted": {
+      "index": 29,
+      "cv": 0.4398993691278328,
+      "holdout": 0.5568111115651975
+    },
+    "first_five": {
+      "index": 7,
+      "cv": 0.43990305506664046,
+      "holdout": 0.5568395681414643
+    }
+  },
+  {
+    "task": "regression_ridge",
+    "features": true,
+    "seed": 8714,
+    "full": {
+      "index": 17,
+      "cv": 0.4187311450312981,
+      "holdout": 0.5585681438223591
+    },
+    "promoted": {
+      "index": 17,
+      "cv": 0.4187311450312981,
+      "holdout": 0.5585681438223591
+    },
+    "first_five": {
+      "index": 17,
+      "cv": 0.4187311450312981,
+      "holdout": 0.5585681438223591
+    }
+  },
+  {
+    "task": "regression_ridge",
+    "features": false,
+    "seed": 8715,
+    "full": {
+      "index": 6,
+      "cv": 0.44376025564340804,
+      "holdout": 0.5772810261101786
+    },
+    "promoted": {
+      "index": 6,
+      "cv": 0.44376025564340804,
+      "holdout": 0.5772810261101786
+    },
+    "first_five": {
+      "index": 28,
+      "cv": 0.4437571883342727,
+      "holdout": 0.5772883680039864
+    }
+  },
+  {
+    "task": "regression_ridge",
+    "features": true,
+    "seed": 8715,
+    "full": {
+      "index": 14,
+      "cv": 0.4216687819412616,
+      "holdout": 0.5382225464306172
+    },
+    "promoted": {
+      "index": 14,
+      "cv": 0.4216687819412616,
+      "holdout": 0.5382225464306172
+    },
+    "first_five": {
+      "index": 14,
+      "cv": 0.4216687819412616,
+      "holdout": 0.5382225464306172
+    }
+  },
+  {
+    "task": "regression_ridge",
+    "features": false,
+    "seed": 8716,
+    "full": {
+      "index": 1,
+      "cv": 0.45121546205556984,
+      "holdout": 0.53860838453981
+    },
+    "promoted": {
+      "index": 2,
+      "cv": 0.4508321239594255,
+      "holdout": 0.538113108654918
+    },
+    "first_five": {
+      "index": 24,
+      "cv": 0.45109808372055016,
+      "holdout": 0.5384401704163903
+    }
+  },
+  {
+    "task": "regression_ridge",
+    "features": true,
+    "seed": 8716,
+    "full": {
+      "index": 16,
+      "cv": 0.42963633901213355,
+      "holdout": 0.4706430333078194
+    },
+    "promoted": {
+      "index": 16,
+      "cv": 0.42963633901213355,
+      "holdout": 0.4706430333078194
+    },
+    "first_five": {
+      "index": 16,
+      "cv": 0.42963633901213355,
+      "holdout": 0.4706430333078194
+    }
+  }
+]

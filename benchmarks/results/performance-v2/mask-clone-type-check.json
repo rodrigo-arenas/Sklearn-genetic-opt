@@ -1,0 +1,169 @@
+{
+  "baseline": "ce2e3b82085d425094b1fde141b6b25f731d7d00",
+  "python": "3.12.0",
+  "versions": {
+    "numpy": "2.5.3",
+    "scipy": "1.18.1",
+    "deap": "1.4.4",
+    "scikit-learn": "1.9.1"
+  },
+  "protocol": "In-process paired GAFeatureSelectionCV fits, substituting only the clone function from baseline. CSR scipy.sparse.random(128,width,density=.01,random_state=42); y=arange(128)%2. DummyClassifier, max_features=8, population_size=8, generations=2, cv=2, n_jobs=1, threadpool_limits(1). Compare all evaluated masks, mean CV scores, selected mask and cross_validate_calls. Wall time in milliseconds.",
+  "rows": [
+    {
+      "width": 32,
+      "seed": 9,
+      "order": [
+        "previous",
+        "updated"
+      ],
+      "ms": {
+        "previous": 148.0784000013955,
+        "updated": 151.55150002101436
+      },
+      "cv_calls": 39
+    },
+    {
+      "width": 32,
+      "seed": 9,
+      "order": [
+        "updated",
+        "previous"
+      ],
+      "ms": {
+        "updated": 126.66420004097745,
+        "previous": 150.35900002112612
+      },
+      "cv_calls": 39
+    },
+    {
+      "width": 32,
+      "seed": 13,
+      "order": [
+        "previous",
+        "updated"
+      ],
+      "ms": {
+        "previous": 123.24909999733791,
+        "updated": 119.53119997633621
+      },
+      "cv_calls": 40
+    },
+    {
+      "width": 32,
+      "seed": 13,
+      "order": [
+        "updated",
+        "previous"
+      ],
+      "ms": {
+        "updated": 119.05159999150783,
+        "previous": 113.31280000740662
+      },
+      "cv_calls": 40
+    },
+    {
+      "width": 32,
+      "seed": 21,
+      "order": [
+        "previous",
+        "updated"
+      ],
+      "ms": {
+        "previous": 117.12310003349558,
+        "updated": 113.47250000108033
+      },
+      "cv_calls": 39
+    },
+    {
+      "width": 32,
+      "seed": 21,
+      "order": [
+        "updated",
+        "previous"
+      ],
+      "ms": {
+        "updated": 112.59279999649152,
+        "previous": 111.80070001864806
+      },
+      "cv_calls": 39
+    },
+    {
+      "width": 8192,
+      "seed": 9,
+      "order": [
+        "previous",
+        "updated"
+      ],
+      "ms": {
+        "previous": 323.30519997049123,
+        "updated": 301.3209999771789
+      },
+      "cv_calls": 40
+    },
+    {
+      "width": 8192,
+      "seed": 9,
+      "order": [
+        "updated",
+        "previous"
+      ],
+      "ms": {
+        "updated": 305.4073000093922,
+        "previous": 313.8213999918662
+      },
+      "cv_calls": 40
+    },
+    {
+      "width": 8192,
+      "seed": 13,
+      "order": [
+        "previous",
+        "updated"
+      ],
+      "ms": {
+        "previous": 316.7113999952562,
+        "updated": 310.11739996029064
+      },
+      "cv_calls": 40
+    },
+    {
+      "width": 8192,
+      "seed": 13,
+      "order": [
+        "updated",
+        "previous"
+      ],
+      "ms": {
+        "updated": 299.4033999857493,
+        "previous": 304.6887000091374
+      },
+      "cv_calls": 40
+    },
+    {
+      "width": 8192,
+      "seed": 21,
+      "order": [
+        "previous",
+        "updated"
+      ],
+      "ms": {
+        "previous": 355.1922999904491,
+        "updated": 335.50210000248626
+      },
+      "cv_calls": 40
+    },
+    {
+      "width": 8192,
+      "seed": 21,
+      "order": [
+        "updated",
+        "previous"
+      ],
+      "ms": {
+        "updated": 326.78919995669276,
+        "previous": 340.01360001275316
+      },
+      "cv_calls": 40
+    }
+  ]
+}

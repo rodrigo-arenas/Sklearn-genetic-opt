@@ -1,9 +1,13 @@
-import { existsSync, readdirSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { defineConfig, HeadConfig } from 'vitepress'
 
 const GITHUB_PAGES_BASE = '/'
+const SITE = 'https://sklearngeneticopt.rodrigo-arenas.com'
+const PACKAGE_NAME = 'sklearn-genetic-opt'
+const REPOSITORY = 'https://github.com/rodrigo-arenas/Sklearn-genetic-opt'
+const PYPI = 'https://pypi.org/project/sklearn-genetic-opt/'
 const GA_TAG = process.env.GOOGLE_ANALYTICS_TAG
 const DOCS_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 
@@ -32,6 +36,11 @@ function stableCounterpart(relativePath: string) {
   if (!existsSync(join(DOCS_ROOT, 'versions', stableVersion, `${match[2]}.md`))) return undefined
   return `/versions/${stableVersion}/${match[2]}`.replace(/\/index$/, '/')
 }
+
+// Index this standalone tutorial while it is new. After it is released, use
+// the stable URL in search results and on the homepage.
+const budgetedTutorial = 'versions/latest/tutorials/budgeted-optimizer-search'
+const budgetedTutorialUrl = stableCounterpart(`${budgetedTutorial}.md`) ?? `/${budgetedTutorial}`
 
 const versionNavItems = [
   ...releaseVersions.map((version, index) => ({
@@ -148,6 +157,8 @@ function versionSidebar(versionPrefix: string) {
       collapsed: false,
       items: [
         { text: 'Overview',                                       link: `${versionPrefix}/tutorials/` },
+        ...pageItem(versionPrefix, 'Switch Optimization Backends', 'tutorials/optimizer-backends'),
+        ...pageItem(versionPrefix, 'Budget and Resume a Search', 'tutorials/budgeted-optimizer-search'),
         ...pageItem(versionPrefix, 'Random Forest Hyperparameter Tuning', 'tutorials/tune-random-forest'),
         ...pageItem(versionPrefix, 'Gradient Boosting Hyperparameter Tuning', 'tutorials/tune-gradient-boosting'),
         ...pageItem(versionPrefix, 'Logistic Regression Hyperparameter Tuning', 'tutorials/tune-logistic-regression'),
@@ -198,10 +209,12 @@ function versionSidebar(versionPrefix: string) {
         { text: 'MLflow', link: `${versionPrefix}/api/mlflow` },
         { text: 'Search Space', link: `${versionPrefix}/api/space` },
         ...pageItem(versionPrefix, 'Estimator Presets', 'api/presets'),
+        ...pageItem(versionPrefix, 'Optimizer Backends', 'api/optimizer-backends'),
         { text: 'Algorithms', link: `${versionPrefix}/api/algorithms` },
       ],
     },
     ...pageSection(versionPrefix, 'Benchmarks', 'benchmarks/', [
+      { text: 'Optimizer Backend Comparison', relativePath: 'benchmarks/optimizer-catalog' },
       { text: 'Bayesmark Comparison', relativePath: 'benchmarks/' },
     ]),
     ...pageSection(versionPrefix, 'Comparisons', 'comparisons/', [
@@ -229,7 +242,7 @@ function versionSidebar(versionPrefix: string) {
 }
 
 export default defineConfig({
-  title: 'sklearn-genetic-opt',
+  title: PACKAGE_NAME,
   description: 'Evolutionary hyperparameter tuning and feature selection for scikit-learn',
   base: GITHUB_PAGES_BASE,
   cleanUrls: true,
@@ -237,21 +250,57 @@ export default defineConfig({
   titleTemplate: ':title | sklearn-genetic-opt',
 
   sitemap: {
-    hostname: 'https://sklearngeneticopt.rodrigo-arenas.com',
+    hostname: SITE,
     transformItems: (items) => items.filter((item) => {
-      const path = new URL(item.url, 'https://sklearngeneticopt.rodrigo-arenas.com/').pathname
+      const path = new URL(item.url, SITE).pathname
       if (path === '/stable/') return false
       const version = path.match(/^\/versions\/([^/]+)\//)?.[1]
-      return !version || version === stableVersion
+      return !version || version === stableVersion || path === budgetedTutorialUrl
     }),
   },
 
   srcExclude: ['**/CLAUDE.md', '**/README.md'],
 
+  buildEnd({ outDir }) {
+    // Directory indexes also work on case-insensitive filesystems where
+    // GASearchCV.html would overwrite the canonical gasearchcv.html.
+    const latest = join(outDir, 'versions', 'latest')
+    for (const [oldPath, destination] of [
+      ['api/GASearchCV', 'api/gasearchcv'],
+      ['tutorials/callbacks', 'guide/callbacks'],
+    ]) {
+      const target = `/versions/latest/${destination}`
+      if (!existsSync(join(latest, `${destination}.html`))) {
+        throw new Error(`Missing legacy URL destination: ${target}`)
+      }
+      const output = join(latest, oldPath)
+      mkdirSync(output, { recursive: true })
+      writeFileSync(join(output, 'index.html'), `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="refresh" content="0; url=${target}">
+  <link rel="canonical" href="${SITE}${target}">
+  <title>Documentation moved | sklearn-genetic-opt</title>
+</head>
+<body><p>Continue to the <a href="${target}">updated documentation</a>.</p></body>
+</html>
+`)
+    }
+  },
+
   transformPageData(pageData) {
-    const base = 'https://sklearngeneticopt.rodrigo-arenas.com'
+    const base = SITE
     const ogImage = `${base}/brand/social-preview-1280x640.png`
-    const pageTitle = pageData.title
+    const release = pageData.relativePath.match(/^versions\/(\d+\.\d+)\/index\.md$/)?.[1]
+    if (release) {
+      pageData.title = `sklearn-genetic-opt ${release} Documentation`
+      pageData.description = `Released documentation for sklearn-genetic-opt ${release}. Find examples and API references for hyperparameter tuning and feature selection with scikit-learn.`
+      pageData.titleTemplate = false
+    }
+    const pageTitle = pageData.titleTemplate === false
+      ? pageData.title
+      : pageData.title
       ? `${pageData.title} | sklearn-genetic-opt`
       : 'sklearn-genetic-opt'
     const pageDescription =
@@ -268,39 +317,61 @@ export default defineConfig({
 
     pageData.frontmatter.head ??= []
     if (pageData.relativePath === 'stable/index.md' ||
-        (pageData.relativePath.startsWith('versions/latest/') && !counterpart)) {
+        (pageData.relativePath.startsWith('versions/latest/') && !counterpart &&
+         cleanPath !== budgetedTutorial)) {
       pageData.frontmatter.head.push(['meta', { name: 'robots', content: 'noindex,follow' }])
     }
     pageData.frontmatter.head.push(
       ['link', { rel: 'canonical',           href: pageUrl }],
       ['meta', { property: 'og:type',        content: 'website' }],
+      ['meta', { property: 'og:site_name',   content: PACKAGE_NAME }],
       ['meta', { property: 'og:title',       content: pageTitle }],
       ['meta', { property: 'og:description', content: pageDescription }],
       ['meta', { property: 'og:url',         content: pageUrl }],
       ['meta', { property: 'og:image',       content: ogImage }],
+      ['meta', { property: 'og:image:alt', content: 'sklearn-genetic-opt' }],
       ['meta', { name: 'twitter:card',        content: 'summary_large_image' }],
       ['meta', { name: 'twitter:title',       content: pageTitle }],
       ['meta', { name: 'twitter:description', content: pageDescription }],
       ['meta', { name: 'twitter:image',       content: ogImage }],
+      ['meta', { name: 'twitter:image:alt',   content: 'sklearn-genetic-opt' }],
     )
 
     if (pageData.relativePath === 'index.md') {
+      const budgetFeature = pageData.frontmatter.features?.find(
+        (feature: { link?: string }) => feature.link === `/${budgetedTutorial}`,
+      )
+      if (budgetFeature) budgetFeature.link = budgetedTutorialUrl
+      const packageId = `${pageUrl}#software`
       pageData.frontmatter.head.push([
         'script',
         { type: 'application/ld+json' },
         JSON.stringify({
           '@context': 'https://schema.org',
-          '@type': 'SoftwareApplication',
-          name: 'sklearn-genetic-opt',
-          description:
-            'Evolutionary hyperparameter tuning and feature selection for scikit-learn using genetic algorithms powered by DEAP.',
-          applicationCategory: 'DeveloperApplication',
-          operatingSystem: 'Linux, macOS, Windows',
-          programmingLanguage: 'Python',
-          url: `${base}/`,
-          license: 'https://opensource.org/licenses/MIT',
-          author: { '@type': 'Person', name: 'Rodrigo Arenas Gómez' },
-          offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+          '@graph': [
+            {
+              '@type': 'WebSite',
+              '@id': `${pageUrl}#website`,
+              name: PACKAGE_NAME,
+              url: pageUrl,
+              about: { '@id': packageId },
+            },
+            {
+              '@type': 'SoftwareApplication',
+              '@id': packageId,
+              name: PACKAGE_NAME,
+              description: pageDescription,
+              applicationCategory: 'DeveloperApplication',
+              operatingSystem: 'Linux, macOS, Windows',
+              runtimePlatform: 'Python',
+              url: pageUrl,
+              sameAs: [PYPI, REPOSITORY],
+              installUrl: PYPI,
+              license: 'https://opensource.org/licenses/MIT',
+              author: { '@type': 'Person', name: 'Rodrigo Arenas Gómez' },
+              offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+            },
+          ],
         }),
       ])
     }
@@ -308,13 +379,14 @@ export default defineConfig({
 
   head: [
     ['link', { rel: 'icon', type: 'image/png', sizes: '32x32', href: `${GITHUB_PAGES_BASE}brand/favicon-32.png` }],
+    ['link', { rel: 'icon', type: 'image/svg+xml', sizes: 'any', href: `${GITHUB_PAGES_BASE}brand/icon.svg` }],
     ['link', { rel: 'apple-touch-icon', sizes: '180x180', href: `${GITHUB_PAGES_BASE}brand/apple-touch-icon-180.png` }],
     ...gaHead,
   ],
 
   themeConfig: {
-    logo: '/brand/icon.svg',
-    siteTitle: 'sklearn-genetic-opt',
+    logo: { src: '/brand/logo-nav.svg', alt: 'sklearn-genetic-opt' },
+    siteTitle: false,
 
     nav: [
       { text: 'Home', link: '/' },
@@ -325,8 +397,8 @@ export default defineConfig({
       {
         text: 'Links',
         items: [
-          { text: 'GitHub', link: 'https://github.com/rodrigo-arenas/Sklearn-genetic-opt' },
-          { text: 'PyPI', link: 'https://pypi.org/project/sklearn-genetic-opt/' },
+          { text: 'GitHub', link: REPOSITORY },
+          { text: 'PyPI', link: PYPI },
         ],
       },
     ],
@@ -361,7 +433,7 @@ export default defineConfig({
       },
       {
         icon: packageIcon,
-        link: 'https://pypi.org/project/sklearn-genetic-opt/',
+        link: PYPI,
         ariaLabel: 'PyPI package',
       },
     ],

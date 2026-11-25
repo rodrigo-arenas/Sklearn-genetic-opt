@@ -1,0 +1,299 @@
+"""Generation statistics shared by optimization engines."""
+
+from collections import Counter
+from itertools import repeat
+from math import sqrt
+from operator import is_
+
+import numpy as np
+
+from .utils.tools import _hashable_key
+from .utils._score_statistics import scaled_score_moments, score_scale_limits
+
+POPULATION_FITNESS_FIELDS = ("fitness", "fitness_std", "fitness_max", "fitness_min")
+
+TELEMETRY_FIELDS = [
+    "fitness_best",
+    "population_size",
+    "unique_individuals",
+    "unique_individual_ratio",
+    "genotype_diversity",
+    "fitness_improvement",
+    "fitness_improved",
+    "stagnation_generations",
+    "best_generation",
+    "mutation_probability",
+    "selection_pressure",
+    "diversity_control_triggered",
+    "random_immigrants",
+    "duplicate_replacements",
+    "local_refinements",
+    "fitness_sharing_applied",
+    "mean_niche_count",
+    "max_niche_count",
+]
+
+
+VERBOSE_COLUMNS = [
+    ("gen", "gen", 4, "int"),
+    ("nevals", "evals", 5, "int"),
+    ("fitness", "avg", 13, "score"),
+    ("fitness_best", "best", 13, "score"),
+    ("genotype_diversity", "div", 7, "ratio"),
+    ("unique_individual_ratio", "unique", 7, "ratio"),
+    ("stagnation_generations", "stag", 5, "int"),
+    ("mutation_probability", "mut", 7, "ratio"),
+    ("selection_pressure", "sel", 5, "int"),
+    ("events", "events", 18, "text"),
+]
+
+
+def _format_verbose_value(value, value_type, width):
+    if value is None:
+        return "-".rjust(width)
+
+    if isinstance(value, (bool, np.bool_)):
+        return ("yes" if value else "no").rjust(width)
+
+    if value_type == "text":
+        return str(value)[:width].ljust(width)
+
+    if value_type == "int":
+        return f"{int(value):>{width}d}"
+
+    if value_type == "score":
+        return f"{float(value):>{width}.5f}"
+
+    if value_type == "ratio":
+        return f"{float(value):>{width}.3f}"
+
+    return str(value)[:width].rjust(width)
+
+
+def _verbose_events(record):
+    events = []
+
+    if record.get("diversity_control_triggered"):
+        events.append("div")
+
+    random_immigrants = record.get("random_immigrants", 0)
+    if random_immigrants:
+        events.append(f"imm={random_immigrants}")
+
+    duplicate_replacements = record.get("duplicate_replacements", 0)
+    if duplicate_replacements:
+        events.append(f"dup={duplicate_replacements}")
+
+    local_refinements = record.get("local_refinements", 0)
+    if local_refinements:
+        events.append(f"local={local_refinements}")
+
+    if record.get("fitness_sharing_applied"):
+        events.append("share")
+
+    return ",".join(events) if events else "-"
+
+
+def _print_verbose_record(gen, nevals, record, print_header=False):
+    display_record = {
+        "gen": gen,
+        "nevals": nevals,
+        "events": _verbose_events(record),
+        **record,
+    }
+
+    if print_header:
+        header = " ".join(label.rjust(width) for _, label, width, _ in VERBOSE_COLUMNS)
+        separator = " ".join("-" * width for _, _, width, _ in VERBOSE_COLUMNS)
+        print(header)
+        print(separator)
+
+    row = " ".join(
+        _format_verbose_value(display_record.get(key), value_type, width)
+        for key, _, width, value_type in VERBOSE_COLUMNS
+    )
+    print(row)
+
+
+def _individual_key(individual):
+    return _hashable_key(tuple(individual))
+
+
+def _is_fitness_improvement(candidate, best, primary_weight):
+    # Keep initial unavailable scores numeric for stopping callbacks, while
+    # allowing a later valid generation to recover from that NaN sentinel.
+    if best is None:
+        return True
+    if np.isnan(candidate):
+        return False
+    if np.isnan(best):
+        return True
+
+    if primary_weight >= 0:
+        return candidate > best
+
+    return candidate < best
+
+
+def _fitness_delta(candidate, best, primary_weight):
+    if best is None:
+        return 0.0
+    if np.isinf(candidate) and candidate == best:
+        return np.nan
+
+    # Retain an infinite diagnostic if the gap exceeds the score dtype's range.
+    with np.errstate(over="ignore"):
+        delta = candidate - best
+    return delta if primary_weight >= 0 else -delta
+
+
+def population_fitness_stats(fitnesses):
+    """Summarize finite primary scores while retaining column-wise reductions."""
+    scores = np.asarray(fitnesses)
+    finite = np.isfinite(scores[:, 0] if scores.size else scores)
+    count = int(finite.sum())
+    if not count:
+        return {**dict.fromkeys(POPULATION_FITNESS_FIELDS, np.nan), "finite_fitness_count": 0}
+    if count < len(scores):
+        scores = scores[finite]
+
+    maximum = np.max(scores, axis=0)[0]
+    minimum = np.min(scores, axis=0)[0]
+    scale = max(abs(maximum), abs(minimum)) if scores.dtype.kind == "f" else 0.0
+    _, lower, upper = score_scale_limits(scores.dtype) if scale else (0.0, 0.0, np.inf)
+    if scale and (scale < lower or scale >= upper / sqrt(count)):
+        average, deviation = scaled_score_moments(scores[:, 0], scale)
+    else:
+        average = np.mean(scores, axis=0)[0]
+        deviation = np.std(scores, axis=0)[0]
+    return {
+        "fitness": average,
+        "fitness_std": deviation,
+        "fitness_max": maximum,
+        "fitness_min": minimum,
+        "finite_fitness_count": count,
+    }
+
+
+def _population_diversity(population, space=None):
+    if space is not None and space._keyed_categories:
+        population = [space._keyed_population_values(individual) for individual in population]
+    population_size = len(population)
+    if population_size == 0:
+        return {
+            "population_size": 0,
+            "unique_individuals": 0,
+            "unique_individual_ratio": 0.0,
+            "genotype_diversity": 0.0,
+        }
+
+    unique_individuals = len({_individual_key(individual) for individual in population})
+    unique_individual_ratio = unique_individuals / population_size
+
+    if population_size == 1:
+        genotype_diversity = 0.0
+    else:
+        gene_diversities = []
+        for gene_values in zip(*population):
+            counts = Counter(_hashable_key(value) for value in gene_values)
+            # Probability that two distinct population members disagree at this
+            # gene. Unlike distinct-allele counts, this stays meaningful for
+            # binary/categorical genes as the population grows.
+            equal_pairs = sum(count * (count - 1) for count in counts.values())
+            gene_diversities.append(1 - equal_pairs / (population_size * (population_size - 1)))
+        genotype_diversity = float(np.mean(gene_diversities)) if gene_diversities else 0.0
+
+    return {
+        "population_size": population_size,
+        "unique_individuals": unique_individuals,
+        "unique_individual_ratio": unique_individual_ratio,
+        "genotype_diversity": genotype_diversity,
+    }
+
+
+def feature_population_diversity(population):
+    size = len(population)
+    if size < 2 or len(population[0]) <= 16:
+        return _population_diversity(population)
+
+    width = len(population[0])
+    counts = np.zeros(width, dtype=np.int64)
+    distinct = set()
+    for mask in population:
+        if len(mask) != width or not all(map(is_, map(type, mask), repeat(int))):
+            return _population_diversity(population)
+        try:
+            mask_type = type(mask)
+            encoded = (
+                bytearray(mask) if mask_type is list or mask_type is tuple else bytes(iter(mask))
+            )
+        except ValueError:
+            return _population_diversity(population)
+        # Validate the same byte buffer used for counting and packing the mask.
+        if encoded.count(b"\x00") + encoded.count(b"\x01") != width:
+            return _population_diversity(population)
+        row = np.frombuffer(encoded, dtype=np.uint8)
+        counts += row
+        distinct.add(np.packbits(row).tobytes())
+
+    pairs = size * (size - 1)
+    # Preserve the generic calculation's floating-point subtraction order.
+    equal_pairs = pairs - 2 * counts * (size - counts)
+    return {
+        "population_size": size,
+        "unique_individuals": len(distinct),
+        "unique_individual_ratio": len(distinct) / size,
+        "genotype_diversity": float(np.mean(1 - equal_pairs / pairs)),
+    }
+
+
+def complete_generation(record, state, gen, primary_weight, current_best, control_record=None):
+    if current_best is None:
+        fitness_improvement = 0.0
+        fitness_improved = False
+    elif _is_fitness_improvement(current_best, state["best_fitness"], primary_weight):
+        fitness_improvement = _fitness_delta(current_best, state["best_fitness"], primary_weight)
+        fitness_improved = True
+        state["best_fitness"] = current_best
+        state["best_generation"] = gen
+        state["stagnation_generations"] = 0
+    else:
+        fitness_improvement = _fitness_delta(current_best, state["best_fitness"], primary_weight)
+        fitness_improved = False
+        state["stagnation_generations"] += 1
+
+    record.update(
+        {
+            "fitness_best": state["best_fitness"],
+            "fitness_improvement": fitness_improvement,
+            "fitness_improved": fitness_improved,
+            "stagnation_generations": state["stagnation_generations"],
+            "best_generation": state["best_generation"],
+        }
+    )
+    record.update(
+        {
+            "mutation_probability": None,
+            "selection_pressure": None,
+            "diversity_control_triggered": False,
+            "random_immigrants": 0,
+            "duplicate_replacements": 0,
+            "local_refinements": 0,
+            "fitness_sharing_applied": False,
+            "mean_niche_count": 0.0,
+            "max_niche_count": 0.0,
+        }
+    )
+
+    if control_record is not None:
+        record.update(control_record)
+
+    return record
+
+
+def _new_telemetry_state():
+    return {
+        "best_fitness": None,
+        "best_generation": 0,
+        "stagnation_generations": 0,
+    }

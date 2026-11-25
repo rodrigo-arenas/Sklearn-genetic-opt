@@ -1,16 +1,11 @@
 ---
-title: "Isolation Forest Hyperparameter Tuning with Custom Scorers"
-description: "Tune IsolationForest hyperparameters with GASearchCV using a custom ROC-AUC scorer — including contamination, n_estimators, and max_features."
+title: "Tuning Isolation Forest With GASearchCV"
+description: "Tune IsolationForest's four key hyperparameters using a genetic algorithm on a labeled anomaly dataset with a custom score_samples scorer. Includes anomaly-score contour plots, a ROC curve, and a 3-way comparison."
 ---
 
 :::warning Development version
 This is the **latest (dev)** documentation. It may contain unreleased features or breaking changes. For the stable release, use [stable](/stable/).
 :::
-
-**Estimated reading time:** 18 minutes  
-**Difficulty:** Advanced  
-**Prerequisites:** [Getting Started with GASearchCV](../guide/basic-usage), basic outlier detection concepts  
-**Note:** Outlier detection requires custom scoring — see [Tuning Outlier Detection Models](../guide/outliers)
 
 # Tuning Isolation Forest With GASearchCV
 
@@ -227,10 +222,9 @@ sorted(param_grid)
 
 :::info `contamination` affects the threshold, not the score
 `contamination` determines the cut-off for `predict()` — it does not change
-`score_samples`. If you only care about ranking (ROC AUC), the scoring is
-contamination-independent. Including it in the search space is still valuable
-because a well-calibrated threshold improves `predict()`, which drives precision
-and recall.
+`score_samples`. ROC AUC therefore gives the search no signal for choosing
+`contamination`. If you need binary decisions, choose the threshold on
+validation data using a threshold-sensitive metric.
 :::
 
 ## Configure GASearchCV
@@ -303,16 +297,18 @@ ga_search.fit(X_train, y_train, callbacks=callbacks)
 ga_seconds = time.perf_counter() - started_at
 
 print(f"Best CV ROC AUC: {ga_search.best_score_:.4f}")
+print(f"Validation folds: {ga_search.n_splits_}")
 print(f"Search time:     {ga_seconds:.0f}s")
 print("Best params:")
 pprint(ga_search.best_params_)
 ```
 
 ```text
-INFO: TimerStopping callback met its criteria
+INFO: DeltaThreshold callback met its criteria
 INFO: Stopping the algorithm
-Best CV ROC AUC: 0.9239
-Search time:     127s
+Best CV ROC AUC: 0.9223
+Validation folds: 3
+Search time:     63s
 Best params:
 {'contamination': 0.1,
  'max_features': 1.0,
@@ -323,11 +319,11 @@ Best params:
 ### Evaluation Mechanics
 
 ```python
-print(ga_search.fit_stats_)
+print(ga_search.fit_counts_)
 ```
 
 ```text
-{'evaluated_candidates': 38, 'unique_candidates': 38, 'cross_validate_calls': 38, 'cache_hits': 0, 'duplicate_candidates': 0, 'skipped_invalid_candidates': 0, 'population_parallel_batches': 3, 'population_serial_batches': 0, 'random_immigrants': 0, 'local_refinement_candidates': 2}
+{'search_cv_calls': 86, 'search_fold_fits': 258, 'finalist_cv_calls': 0, 'finalist_fold_fits': 0, 'finalist_reused_folds': 0, 'refit_fits': 1}
 ```
 
 ### Generation Telemetry
@@ -341,8 +337,10 @@ history[[c for c in cols if c in history.columns]]
 
 ```text
    gen   fitness  fitness_max  fitness_std  unique_individual_ratio  genotype_diversity  stagnation_generations
-0    0  0.906656     0.923916     0.005961                 1.000000            1.000000                       0
-1    1  0.909998     0.923916     0.007358                 0.833333            0.613636                       2
+0    0  0.907353     0.922295     0.005068                 1.000000            1.000000                       0
+1    1  0.911202     0.922295     0.007036                 0.833333            0.882576                       1
+2    2  0.910622     0.922295     0.007361                 1.000000            0.893939                       2
+3    3  0.914348     0.922295     0.008668                 0.750000            0.765152                       4
 ```
 
 ## Fitness Evolution
@@ -365,9 +363,9 @@ ax.grid(alpha=0.25)
 fig.tight_layout()
 ```
 
-![Best, generation-max, and generation-mean CV ROC AUC across generations](/images/isolation_forest_fitness.png)
+![Best, generation-max, and generation-mean CV ROC AUC across generations](/images/isolation_forest_stratified_fitness.png)
 
-*Fitness (CV ROC AUC of the best individual) improves as the GA tunes the four IsolationForest hyperparameters.*
+*Best candidate CV ROC AUC by generation.*
 
 ## Anomaly Score Contour Plots
 
@@ -399,7 +397,7 @@ plt.suptitle("Anomaly Score Contour — Default vs. Tuned", fontsize=13, y=1.02)
 fig.tight_layout()
 ```
 
-![Side-by-side anomaly-score contour plots for the default and tuned IsolationForest](/images/isolation_forest_contours.png)
+![Side-by-side anomaly-score contour plots for the default and tuned IsolationForest](/images/isolation_forest_stratified_contours.png)
 
 *The tuned model keeps low scores inside the two normal clusters while concentrating high anomaly scores in the sparse outlier region.*
 
@@ -427,13 +425,14 @@ ax.legend()
 fig.tight_layout()
 ```
 
-![ROC curves for the default and GA-tuned IsolationForest](/images/isolation_forest_roc.png)
+![ROC curves for the default and GA-tuned IsolationForest](/images/isolation_forest_stratified_roc.png)
 
-*The GA-tuned curve sits above the default across most of the FPR range — a higher ROC AUC means better-ranked anomaly scores.*
+*ROC curves and AUC for both models on the held-out test set.*
 
 ## Compare with RandomizedSearchCV
 
 A 3-way comparison on the held-out test set, all using the same custom scorer.
+The two searches use the same three stratified folds and different search budgets.
 
 ```python
 randomized_search = RandomizedSearchCV(
@@ -471,8 +470,8 @@ print(comparison.to_string(index=False))
 ```text
                     name  roc_auc  avg_precision  outlier_precision  outlier_recall  best_cv_roc_auc  fit_seconds
 IsolationForest defaults   0.9431         0.8134             0.5361          0.8667              NaN          NaN
-      RandomizedSearchCV   0.9400         0.7681             0.3901          0.9167           0.9106          8.4
-              GASearchCV   0.9547         0.8252             0.6528          0.7833           0.9239        127.5
+      RandomizedSearchCV   0.9400         0.7681             0.3901          0.9167           0.9106          9.3
+              GASearchCV   0.9547         0.8252             0.6528          0.7833           0.9223         63.4
 ```
 
 ```python
@@ -486,9 +485,9 @@ GA vs default ROC AUC: +0.0116
 GA outlier recall: 0.78  (default 0.87)
 ```
 
-The GA tuning improves ranking quality (ROC AUC) over the default and calibrates
-`contamination` to the true anomaly rate, which directly lifts outlier recall in
-the binary `predict()` output.
+Compare ROC AUC for ranking and precision and recall for binary decisions.
+In this run the tuned model ranks anomalies better and has higher precision
+on the test set, with lower recall at its fitted threshold.
 
 ## Practical Notes
 
@@ -505,15 +504,14 @@ the binary `predict()` output.
 - **`max_samples`** has the most impact on model quality. Very small values
   (< 0.05) over-isolate dense clusters; values near 1.0 reduce ensemble
   diversity. The range `[0.05, 0.80]` covers the useful region.
-- **Warm-start `contamination`** near your best estimate of the true anomaly
-  rate to give the GA a good early candidate.
-- **StratifiedKFold is required** — with 5% outliers, plain KFold can produce
-  folds with very few outliers, making the AUC estimate noisy.
+- **Validate the decision threshold** with a metric that reflects your
+  precision and recall requirements.
+- **Stratify by known anomaly labels** — when anomalies are rare, stratification
+  helps each fold contain enough anomalies to estimate AUC.
 
 ## See Also
 
-- [Tuning Outlier Detection Models](../guide/outliers) — guide covering LocalOutlierFactor and IsolationForest
-- [Random Forest Hyperparameter Tuning](./tune-random-forest) — standard classification alternative
-- [Common Hyperparameter Tuning Mistakes](../guide/common-mistakes) — custom scorer pitfalls
-- [API: GASearchCV](../api/gasearchcv) — search CV parameters including error_score
-- [Plotting Gallery](../examples/plotting-gallery) — all available visualizations
+- [Outlier Detection guide](../guide/outliers) — minimal working example and gotchas
+- [Comprehensive Feature Selection](./feature-selection) — select informative features first
+- [Imbalanced Classification](./imbalanced-classification) — the related supervised problem
+- [GASearchCV API](../api/gasearchcv)

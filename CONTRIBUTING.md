@@ -47,9 +47,8 @@ Keep personal agent configuration local rather than duplicating project rules.
 
 ### Python environment
 
-sklearn-genetic-opt supports Python 3.12 and newer. Python 3.13 is a good
-default for local development because it can run the regular test suite and the
-TensorFlow/TensorBoard optional tests.
+CI tests CPython 3.12–3.15 on Linux, macOS, and Windows. It also tests
+scikit-learn 1.5.0 on Python 3.12 to keep the lower bound working.
 
 Create and activate a virtual environment, then install the project in editable
 mode with the development dependencies:
@@ -60,7 +59,8 @@ pip install -r dev-requirements.txt
 ```
 
 The `dev-requirements.txt` file is now a small wrapper around the dependency
-groups declared in `pyproject.toml`. You can also install only the dependency
+groups declared in `pyproject.toml`. Add the optional engine extras below to
+exercise the full catalog locally. You can also install only the dependency
 groups you need:
 
 ```bash
@@ -70,11 +70,8 @@ pip install -e .
 # Tests
 pip install -e ".[test,plot,mlflow]"
 
-# Tests with TensorBoard support
-pip install -e ".[test,plot,mlflow,tensorflow]"
-
-# Documentation Python helpers
-pip install -e ".[docs]"
+# Run backend tests or regenerate the backend tutorial
+pip install -e ".[test,docs,scipy,nevergrad,cmaes,pymoo]"
 
 # VitePress site dependencies
 npm --prefix docs-vitepress install
@@ -125,11 +122,53 @@ Run the test suite without coverage:
 pytest sklearn_genetic/
 ```
 
+Use pytest's `tmp_path` for checkpoints, serialized estimators and
+callback artifacts created by a test. This gives concurrent runs their
+own files even when launched from the same checkout. If you pass
+`--basetemp`, give each pytest process a separate directory.
+
 Run the coverage check used by CI:
 
 ```bash
 pytest sklearn_genetic/ --cov-fail-under=95 --cov=./ --cov-report=term-missing:skip-covered
 ```
+
+Run focused tests while you work:
+
+```bash
+# Install the test dependencies once. This is the test group alone: the plotting
+# and MLflow test modules need their own groups, see below.
+python -m pip install -e ".[test]"
+
+# One file: the scheduler tests
+pytest sklearn_genetic/schedules/tests/test_schedules.py
+
+# One test, chosen by name
+pytest sklearn_genetic/schedules/tests/test_schedules.py -k scheduler_reset
+
+# One test, by its node id
+pytest sklearn_genetic/schedules/tests/test_schedules.py::test_scheduler_reset
+```
+
+Substitute the file your change touches; the `-k` and node-id forms need the file
+to be named too. Pointing `pytest` at the whole package collects
+`sklearn_genetic/tests/test_plots.py` and `test_mlflow.py`, which import
+`matplotlib` and `mlflow`: without those groups collection fails and no test runs
+at all. If you would rather run the package-wide command, install the groups the
+modules need (`pip install -e ".[test,plot,mlflow]"`) or leave the modules out:
+
+```bash
+pytest sklearn_genetic/ -k scheduler_reset \
+  --ignore=sklearn_genetic/tests/test_plots.py \
+  --ignore=sklearn_genetic/tests/test_mlflow.py
+```
+
+A focused run is for the loop, and it is also what a pull request handoff needs:
+that is what `AGENTS.md`'s "Validation proportional to the change" asks for. The
+full suite and the coverage gate above belong to the merge or release step, and
+for a Markdown-only change neither runs: validate the formatting, the paths and
+the links instead. CI runs the whole suite and the coverage gate as part of
+merging, so they do not have to be repeated to open a pull request.
 
 Build the package and check the generated distribution metadata:
 
@@ -165,6 +204,29 @@ in [Google Search Console](https://search.google.com/search-console) and
 [Bing Webmaster Tools](https://www.bing.com/webmasters). Search visits alone do
 not establish whether a page is indexed.
 
+After each successful GitHub Pages deployment, `docs.yml` notifies Bing through
+[IndexNow](https://www.indexnow.org/documentation). The notification uses the
+deployed artifact's sitemap and HTML hashes: new or changed pages and URLs removed
+from the sitemap are submitted in batches of at most 10,000. Unchanged pages are
+skipped. The first run, or a missing GitHub Actions cache, submits the entire
+indexable sitemap. The cache is updated only after Bing accepts every batch;
+failed requests fail the notification job without rolling back the deployed site.
+Rerun failed jobs to retry the notification.
+
+The verification key in `docs-vitepress/public/indexnow-key.txt` is public by
+design and requires no repository secret or Bing login. Before sending, the
+script checks that the published key matches the deployed artifact. To rotate
+it, replace that file with a new 8–128 character key using letters, digits and
+dashes, then deploy. An HTTP 200 means URLs were received; HTTP 202 means key
+validation is pending. Neither guarantees indexing. Check receipt and indexing
+in [Bing Webmaster Tools](https://www.bing.com/webmasters).
+
+Preview the request locally after building the docs (no network or state writes):
+
+```powershell
+python docs-vitepress/scripts/submit_indexnow.py --site-dir docs-vitepress/.vitepress/dist --state .codex_tmp/indexnow-state.json --dry-run
+```
+
 Run a quick fit-performance benchmark smoke check:
 
 ```bash
@@ -185,6 +247,13 @@ such as diversity and stagnation, and model metrics. Prefer using the same
 machine, Python environment, random seed, and benchmark options when comparing
 results.
 
+Use `--final-selection --final-selection-top-k 2 --final-selection-cv-splits 3`
+to include a three-fold evaluation of up to two finalists for each estimator.
+`actual_cross_validate_calls_mean` counts candidate evaluations across search
+and finalist selection. `cv_fold_fits_mean` counts the individual folds in
+those evaluations. Elapsed fit time also includes the final full-data refit.
+Older benchmark reports can undercount CV work when finalist selection was enabled.
+
 If you have questions, you can open an issue (tag it as a question).
 
 We encourage you to follow these guidelines:
@@ -203,7 +272,7 @@ We encourage you to follow these guidelines:
 * The changes should come with their respective tests and documentation
 * Describe why you are proposing those changes
 * Please run Black to keep the formatting style.
-* Make sure all the tests are passing by running `pytest sklearn_genetic/` in the root of the project.
+* Run the checks proportional to your change, as [AGENTS.md](AGENTS.md) describes: the affected tests while you work, and the full suite with its coverage gate before a merge or a release. A Markdown-only change needs its formatting, paths and links checked, not the Python suite.
 * We can not merge if the tests fail.
 
 # Community Articles
@@ -220,5 +289,22 @@ Take into consideration:
 * Use the content title as the visible link text.
 * Include the author name or GitHub handle.
 * Keep the description short and focused on what the content teaches.
+
+## Optimizer integration and DEAP coupling
+
+Implement the [optimizer protocol](docs-vitepress/versions/latest/api/algorithms.md#optimizer-plugins)
+to add an engine in an independent package. Both estimators resolve the selected
+engine before loading a checkpoint. SciPy and the shipped Nevergrad, cmaes and pymoo entry points use the same protocol as external engines.
+
+| Responsibility | Owner | Extension guidance |
+| --- | --- | --- |
+| Proposals, convergence and solver RNG | The selected optimizer adapter | Convert decoded coordinates to the solver's representation and report survivor handles. |
+| Initial population and domains | `population.py` and `space/` | Reuse the supplied population, including warm starts. Validate engine-specific domain limits before requesting CV. |
+| Evaluation, cache, parallel jobs, scoring and refit | `evaluation.py` and the estimators | Call the batch evaluator. Preserve proposal order and separate handles even for identical candidates. |
+| Archive, history, plots and CV results | `_backend_runtime.py`, `_telemetry.py` and `utils/cv_scores.py` | The runtime consumes plain candidate records. Historical DEAP logbook and feature archive objects are constructed on explicit access for plugins. |
+| Catalog checkpoints | `_optimizer_checkpoint.py` and `_backend_runtime.py` | The runtime restores CV state at completed boundaries. Nevergrad and CatCMAwM save native state. SciPy and pymoo verify and replay recorded batches with saved replies. Third-party engines can supply opaque state and a `resume` method through the existing protocol. |
+| Legacy evolution and resume | `_deap_backend.py`, `algorithms.py`, `optimizer_control.py` and callbacks | DEAP owns its toolbox, weighted fitness, operators, checkpoint state and callback timing. |
+
+Use the [catalog benchmark](benchmarks/benchmark_optimizer_catalog.py) to compare all five engines at matched real CV budgets. The earlier [two-engine benchmark](benchmarks/benchmark_optimizer_backends.py) compares SciPy specifically against DEAP's differential evolution mode.
 
 ## Thank you for being part of this project!

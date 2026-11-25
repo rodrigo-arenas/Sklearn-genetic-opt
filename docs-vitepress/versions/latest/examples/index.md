@@ -22,12 +22,18 @@ Short, focused recipes — each example is self-contained and demonstrates a sin
 | [Comparing Search Methods](./sklearn-comparison) | Side-by-side: GASearchCV vs RandomizedSearchCV vs GridSearchCV |
 | [Advanced Random Forest Tuning](./advanced-rf) | Smart initialization, warm starts, diversity control, fitness sharing, local search, adaptive schedules |
 | [Pipeline Regression](./pipeline-regression) | Pipeline parameter naming, regression scorers, search visualization |
+| [Conditional Choices in a Pipeline](./conditional-pipeline-choices) | Encode each valid SVM kernel and parameter combination once |
+| [Hyperparameter Search with a Precomputed Kernel](./precomputed-kernel-search) | Fit an SVC on a square training kernel and score a rectangular test kernel |
+| [Custom Outlier Scoring Without Labels](./unlabeled-outlier-scoring) | Tune a detector and select features with the same unlabeled scorer |
 
 ## Feature Selection
 
 | Example | What it covers |
 |---------|---------------|
 | [Finding the Signal in 60 Columns](./feature-selection) | GAFeatureSelectionCV recovers the signal from a dataset that is two-thirds noise, beating the all-features baseline |
+| [Feature Selection for Multi-Output Regression](./multi-output-feature-selection) | Select one feature mask for multiple targets and report each target's test error |
+| [Feature Selection for Categorical Columns](./categorical-feature-selection) | Select raw columns with an encoder fitted inside each fold |
+| [Warm-Start Feature Selection](./warm-start-feature-selection) | Reuse a known feature subset and score it on a new batch |
 | [Advanced RF + Feature Selection](./advanced-rf#feature-selection-with-gafeatureselectioncv) | Feature selection after hyperparameter tuning |
 
 ## Multi-Metric and Refit

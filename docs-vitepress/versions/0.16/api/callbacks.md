@@ -1,0 +1,185 @@
+---
+title: Callbacks API
+description: API reference for stopping, progress, checkpoint, and legacy TensorBoard callbacks.
+---
+
+# Callbacks API
+
+```python
+from sklearn_genetic.callbacks import (
+    ThresholdStopping,
+    ConsecutiveStopping,
+    DeltaThreshold,
+    TimerStopping,
+    ProgressBar,
+    LogbookSaver,
+    ModelCheckpoint,
+    TensorBoard,
+    BaseCallback,
+)
+```
+
+Callbacks are passed to `fit(X, y, callbacks=[...])`. After each generation, `on_step` is called on every callback. If any callback returns `True` from `on_step`, the search stops at the end of that generation.
+
+Available metric names for stopping callbacks: `"fitness"`, `"fitness_std"`, `"fitness_best"`, `"fitness_max"`, `"fitness_min"`.
+
+## BaseCallback
+
+Base class for custom callbacks. Subclass and override the methods you need.
+
+```python
+class BaseCallback:
+    def on_start(self, estimator=None): ...      # called before generation 0
+    def on_step(self, record=None, logbook=None, estimator=None) -> bool: ...  # True = stop
+    def on_end(self, logbook=None, estimator=None): ...  # called after the last generation
+```
+
+`on_step` returning `True` stops the search. `False` (or `None`) continues.
+
+## ThresholdStopping
+
+Stops when the metric reaches or exceeds a target value.
+
+```python
+ThresholdStopping(threshold, metric="fitness")
+```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `threshold` | float | — | Stop when `metric ≥ threshold` |
+| `metric` | str | `"fitness"` | History column to watch |
+
+**Example:** stop when mean population accuracy exceeds 0.98:
+
+```python
+ThresholdStopping(threshold=0.98, metric="fitness_max")
+```
+
+## ConsecutiveStopping
+
+Compares the current value with each of the previous `N` values and stops if it improves on none of them. Score metrics follow the search criterion: lower values improve a minimizing search and higher values improve a maximizing search. For `fitness_std`, an increase in dispersion counts as improvement in either direction.
+
+```python
+ConsecutiveStopping(generations, metric="fitness")
+```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `generations` | int | — | Number of non-improving consecutive generations before stopping |
+| `metric` | str | `"fitness"` | History column to watch |
+
+**Example:** stop if `fitness_best` hasn't improved in 8 generations:
+
+```python
+ConsecutiveStopping(generations=8, metric="fitness_best")
+```
+
+## DeltaThreshold
+
+Stops when the spread (max − min) of the metric across the last `N` generations falls below a threshold — detects convergence.
+
+```python
+DeltaThreshold(threshold, generations=2, metric="fitness")
+```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `threshold` | float | — | Stop when `max(metric[-N:]) - min(metric[-N:]) ≤ threshold` |
+| `generations` | int | `2` | Window size |
+| `metric` | str | `"fitness"` | History column to watch |
+
+## TimerStopping
+
+Stops starting new candidate batches after the wall-clock limit. An in-flight
+cross-validation batch, final selection and refit can finish after the limit.
+At least one initial batch completes so the search can return a fitted model.
+
+```python
+TimerStopping(total_seconds)
+```
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `total_seconds` | float | Stop after this many elapsed seconds |
+
+## ProgressBar
+
+Displays a tqdm progress bar. No parameters required.
+
+```python
+ProgressBar()
+```
+
+## LogbookSaver
+
+Writes the per-candidate evaluation records with joblib after each generation. The saved object can be iterated to inspect each row. Use `ModelCheckpoint` for search snapshots.
+
+```python
+LogbookSaver(checkpoint_path)
+```
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `checkpoint_path` | str or Path | File path for the pickled logbook |
+
+Restore with:
+
+```python
+from joblib import load
+logbook = load("./logbook.pkl")
+```
+
+## ModelCheckpoint
+
+Saves a snapshot at a reported generation. DEAP stores its historical continuation state.
+SciPy, pymoo, Nevergrad and CatCMAwM resume from a completed generation when
+you pass the same checkpoint path to `fit` again with the same data, settings
+and environment. Older shared-runtime snapshots with `resumable=False` remain
+readable for inspection. See the [resume recipe](../recipes/advanced/checkpointing)
+and the [optional plugin protocol](../api/algorithms#callbacks-and-checkpoints).
+Use a fresh path for an independent run and load only trusted snapshots.
+
+```python
+ModelCheckpoint(checkpoint_path)
+```
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `checkpoint_path` | str or Path | File path for the checkpoint |
+
+Inspect a saved snapshot from either format:
+
+```python
+from sklearn_genetic.callbacks import ModelCheckpoint
+
+snapshot = ModelCheckpoint("./checkpoint.pkl").load()
+print(len(snapshot["logbook"]))  # generation records
+if "optimizer_checkpoint_version" in snapshot:
+    print(snapshot["backend"], snapshot["resumable"], len(snapshot["candidate_records"]))
+else:
+    print(snapshot["estimator_state"]["generations"])  # historical DEAP format
+```
+
+## Legacy TensorBoard callback
+
+`TensorBoard` remains available for existing integrations. It writes the five
+generation fitness metrics as TensorFlow scalars and requires a separate
+TensorFlow installation. Importing `sklearn_genetic.callbacks` does not import
+TensorFlow.
+
+```python
+TensorBoard(log_dir="./logs", run_id=None)
+```
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `log_dir` | str | Parent directory for summary files |
+| `run_id` | str or None | Subdirectory; defaults to a timestamp |
+
+For current workflows, use [`LivePlot`](./plots) and
+[`plot_search_overview`](./plots) with `sklearn-genetic-opt[plot]` instead.
+
+## See Also
+
+- [Callbacks Guide](../guide/callbacks) — usage examples and combining callbacks
+- [Custom Callbacks](../guide/custom-callback) — writing your own callback

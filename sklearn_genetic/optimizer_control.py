@@ -1,11 +1,12 @@
 import random
 from contextlib import contextmanager
-from math import comb
+from math import comb, isfinite
 
 import numpy as np
 
+from ._mixed_space import decode_real, encode_real, real_coordinate_interval
 from .space import Categorical, Continuous, Integer
-from .space.space import _same_config
+from .space.space import _category_types, _definite_equality, _nan_category_key, _same_config
 from .utils.tools import _hashable_key
 
 
@@ -194,13 +195,19 @@ def finite_search_space_size(estimator, limit):
         return None
     if hasattr(estimator, "space"):
         size = 1
-        for dimension in estimator.space.param_grid.values():
+        for name, dimension in estimator.space.param_grid.items():
             if isinstance(dimension, Integer):
                 size *= dimension.upper - dimension.lower + 1
             elif isinstance(dimension, Categorical):
-                choices = {_hashable_key(value) for value in dimension.choices}
-                if any(value != value for value in choices):
+                choices = {
+                    _nan_category_key(value) or _hashable_key(value) for value in dimension.choices
+                }
+                if any(not _definite_equality(value, value) for value in choices):
                     return None
+                if name in estimator.space._typed_categories:
+                    choices = {
+                        estimator.space._category_key(name, value) for value in dimension.choices
+                    }
                 size *= len(choices)
             elif isinstance(dimension, Continuous):
                 if dimension.lower != dimension.upper:
@@ -211,7 +218,7 @@ def finite_search_space_size(estimator, limit):
                 return None
         return size
     if hasattr(estimator, "n_features"):
-        maximum = estimator.max_features or estimator.n_features
+        maximum = int(estimator.max_features or estimator.n_features)
         size = 0
         for selected in range(1, maximum + 1):
             size += comb(estimator.n_features, selected)
@@ -221,22 +228,38 @@ def finite_search_space_size(estimator, limit):
     return None
 
 
+def mutable_dimensions(dimensions):
+    """Return positions and dimensions eligible for HPO variation."""
+    mutable = []
+    for index, dimension in enumerate(dimensions):
+        if isinstance(dimension, (Integer, Continuous)) and dimension.lower == dimension.upper:
+            continue
+        if isinstance(dimension, Categorical) and len(dimension.choices) == 1:
+            continue
+        mutable.append((index, dimension))
+    return mutable
+
+
 def differential_offspring(population, toolbox, estimator, crossover, mutation):
     """Deferred rand/1/bin trials, with mixed-domain and binary decoding."""
+    dimensions = tuple(estimator.space.param_grid.values()) if hasattr(estimator, "space") else ()
+    mutable = mutable_dimensions(dimensions)
+    variable = [index for index, _ in mutable]
+    real_intervals = {
+        index: real_coordinate_interval(dimension)
+        for index, dimension in mutable
+        if type(dimension) is Continuous
+    }
     offspring = []
     for index, target in enumerate(population):
         donors = random.sample(range(len(population) - 1), 3)
         a, b, c = [population[j + (j >= index)] for j in donors]
         trial = toolbox.clone(target)
-        forced = random.randrange(len(target))
+        forced = random.choice(variable) if variable else random.randrange(len(target))
         for gene in range(len(target)):
             if gene != forced and random.random() >= crossover:
                 continue
-            dimension = (
-                estimator.space[estimator.space.parameters[gene]]
-                if hasattr(estimator, "space")
-                else None
-            )
+            dimension = dimensions[gene] if dimensions else None
             if dimension is None:
                 trial[gene] = int(a[gene] + 0.8 * (b[gene] - c[gene]) >= 0.5)
             elif isinstance(dimension, Categorical):
@@ -244,23 +267,21 @@ def differential_offspring(population, toolbox, estimator, crossover, mutation):
             elif dimension.lower == dimension.upper:
                 trial[gene] = dimension.lower
             else:
-                log_scale = (
-                    isinstance(dimension, Continuous) and dimension.distribution == "log-uniform"
-                )
-                lower = np.log(dimension.lower) if log_scale else dimension.lower
-                upper = np.log(dimension.upper) if log_scale else dimension.upper
-                values = [
-                    np.log(parent[gene]) if log_scale else parent[gene] for parent in (a, b, c)
-                ]
-                units = [(value - lower) / (upper - lower) for value in values]
-                unit = float(np.clip(units[0] + 0.8 * (units[1] - units[2]), 0.0, 1.0))
-                if isinstance(dimension, Integer):
-                    trial[gene] = dimension.lower + int(
-                        round(unit * (dimension.upper - dimension.lower))
-                    )
+                lower, upper = dimension.lower, dimension.upper
+                continuous = isinstance(dimension, Continuous)
+                if continuous:
+                    interval = real_intervals.get(gene)
+                    units = [
+                        encode_real(dimension, parent[gene], interval=interval)
+                        for parent in (a, b, c)
+                    ]
                 else:
-                    value = lower + unit * (upper - lower)
-                    trial[gene] = float(np.exp(value) if log_scale else value)
+                    units = [(parent[gene] - lower) / (upper - lower) for parent in (a, b, c)]
+                unit = float(np.clip(units[0] + 0.8 * (units[1] - units[2]), 0.0, 1.0))
+                if continuous:
+                    trial[gene] = decode_real(dimension, unit, interval=interval)
+                else:
+                    trial[gene] = lower + int(round(unit * (upper - lower)))
         if random.random() < mutation:
             (trial,) = toolbox.mutate(trial)
         estimator._repair_individual(trial)
@@ -270,8 +291,7 @@ def differential_offspring(population, toolbox, estimator, crossover, mutation):
 
 
 def _bounded_integer_neighbor(dimension, value, radius):
-    value = int(round(float(value)))
-    value = int(np.clip(value, dimension.lower, dimension.upper))
+    value = dimension._round_and_clip(value)
     step = max(1, int(np.ceil((dimension.upper - dimension.lower) * radius)))
     lower = max(dimension.lower, value - step)
     upper = min(dimension.upper, value + step)
@@ -283,23 +303,48 @@ def _bounded_integer_neighbor(dimension, value, radius):
 
 
 def _bounded_continuous_neighbor(dimension, value, radius):
-    if dimension.distribution == "log-uniform" and dimension.lower > 0 and value > 0:
-        log_value = np.log(value)
-        log_span = (np.log(dimension.upper) - np.log(dimension.lower)) * radius
-        sampled = np.exp(random.uniform(log_value - log_span, log_value + log_span))
-    else:
-        span = (dimension.upper - dimension.lower) * radius
-        sampled = random.uniform(value - span, value + span)
+    lower, upper = dimension._sampling_bounds()
+    value, radius = float(value), float(radius)
+    if dimension.distribution == "log-uniform" and value > 0:
+        log_lower, log_upper = np.log(lower), np.log(upper)
+        if log_lower != log_upper:
+            log_value = np.log(value)
+            log_span = (log_upper - log_lower) * radius
+            sampled = random.uniform(log_value - log_span, log_value + log_span)
+            if sampled < log_lower:
+                return lower
+            if sampled > log_upper:
+                return upper
+            return dimension._clip_scalar(np.exp(sampled))
 
-    return float(np.clip(sampled, dimension.lower, dimension.upper))
+    width = upper - lower
+    span = width * radius
+    left, right = value - span, value + span
+    if isfinite(right - left):
+        sampled = random.uniform(left, right)
+    else:
+        unit = (value - lower) / width
+        draw = random.uniform(unit - radius, unit + radius)
+        sampled = lower + float(np.clip(draw, 0.0, 1.0)) * width
+
+    return dimension._clip_scalar(sampled)
 
 
 def _same_category(left, right):
-    if isinstance(left, (dict, list, tuple, np.ndarray)) or isinstance(
-        right, (dict, list, tuple, np.ndarray)
-    ):
-        return _same_config(left, right)
-    return left == right
+    if type(left) is not type(right):
+        return False
+    if isinstance(left, (dict, list, tuple, set, frozenset, np.ndarray)):
+        return _same_config(left, right, strict_types=True) and (
+            _category_types(left) == _category_types(right)
+        )
+    if left is right:
+        return True
+    nan_key = _nan_category_key(left)
+    return (
+        nan_key == _nan_category_key(right)
+        if nan_key is not None
+        else _definite_equality(left, right)
+    )
 
 
 def _categorical_neighbor(dimension, value):
@@ -309,9 +354,10 @@ def _categorical_neighbor(dimension, value):
 
 def _search_space_neighbor(estimator, parent):
     values = list(parent)
-    index = random.randrange(0, len(estimator.space))
-    parameter_name = estimator.space.parameters[index]
-    dimension = estimator.space[parameter_name]
+    mutable = mutable_dimensions(estimator.space.param_grid.values())
+    if not mutable:
+        return values
+    index, dimension = mutable[random.randrange(len(mutable))]
     value = values[index]
 
     if isinstance(dimension, Integer):
@@ -360,6 +406,10 @@ def fitness_sharing_enabled(estimator):
     return getattr(estimator, "fitness_sharing", False)
 
 
+def _distance_number(value):
+    return int(value) if isinstance(value, np.integer) else value
+
+
 def _search_space_distance(estimator, left, right):
     distances = []
 
@@ -370,7 +420,11 @@ def _search_space_distance(estimator, left, right):
 
         if isinstance(dimension, (Continuous, Integer)):
             span = dimension.upper - dimension.lower
-            distance = 0.0 if span == 0 else abs(left_value - right_value) / span
+            distance = (
+                abs(_distance_number(left_value) - _distance_number(right_value)) / span
+                if span
+                else 0.0
+            )
         elif isinstance(dimension, Categorical):
             distance = 0.0 if _same_category(left_value, right_value) else 1.0
         else:  # pragma: no cover
@@ -399,6 +453,24 @@ def sharing_value(distance, radius, alpha):
     return 1.0 - (distance / radius) ** alpha
 
 
+def _packed_niche_counts(values, radius, alpha):
+    size, width = values.shape
+    masks = [int.from_bytes(row) for row in np.packbits(values, axis=1)]
+    counts = [0.0] * size
+    for index, mask in enumerate(masks):
+        # Earlier rows already added their contributions in ascending order.
+        # Including this row and then the later rows preserves the same sums.
+        count = counts[index] + 1.0
+        for other in range(index + 1, size):
+            distance = (mask ^ masks[other]).bit_count() / width
+            if distance < radius:
+                contribution = float(1.0 - (distance / radius) ** alpha)
+                count += contribution
+                counts[other] += contribution
+        counts[index] = count
+    return counts
+
+
 def niche_counts(population, estimator):
     radius = estimator.sharing_radius
     alpha = estimator.sharing_alpha
@@ -409,13 +481,28 @@ def niche_counts(population, estimator):
     # Convert columns once and vectorize distances one row at a time. Keep
     # contribution accumulation ordered: reassociation can break selection ties.
     feature_values = np.asarray(population) if not hasattr(estimator, "space") else None
+    if (
+        feature_values is not None
+        and size >= 16
+        and feature_values.shape[1] >= 1024
+        and feature_values.dtype.kind in "biu"
+        and radius > 0
+        and alpha > 0
+        and feature_values.min() >= 0
+        and feature_values.max() <= 1
+    ):
+        return _packed_niche_counts(feature_values, radius, alpha)
+
     columns = []
     for index, values in enumerate(zip(*population)) if feature_values is None else []:
         dimension = estimator.space[estimator.space.parameters[index]]
         if isinstance(dimension, (Continuous, Integer)):
             # Preserve subtraction precision for Python integers, including
             # integer values supplied in a Continuous dimension.
-            columns.append((np.asarray(values, dtype=object), dimension.upper - dimension.lower))
+            numeric_values = np.fromiter(
+                (_distance_number(value) for value in values), dtype=object, count=size
+            )
+            columns.append((numeric_values, dimension.upper - dimension.lower))
         else:
             columns.append((np.fromiter(values, dtype=object, count=size), None))
 
@@ -464,13 +551,35 @@ def _shared_primary_fitness(population, counts):
     primary_weight = population[0].fitness.weights[0]
     sign = 1.0 if primary_weight >= 0 else -1.0
     utilities = [value * sign for value in primary_values]
-    minimum_utility = min(utilities)
+    finite_utilities = [utility for utility in utilities if np.isfinite(utility)]
+    if not finite_utilities:
+        return [individual.fitness.values for individual in population]
+    minimum_utility = min(finite_utilities)
     shift = -minimum_utility + 1e-12 if minimum_utility <= 0 else 0.0
+    half_shift = (
+        float(shift) / 2
+        if shift and not isfinite(float(max(finite_utilities)) + float(shift))
+        else 0.0
+    )
 
     shared_values = []
     for individual, utility, count in zip(population, utilities, counts):
-        shared_utility = (utility + shift) / count
-        shared_primary = (shared_utility - shift) * sign
+        if np.isfinite(utility):
+            if half_shift:
+                # An isolated candidate keeps its score. Halve both terms
+                # before adding to keep the crowded candidate's shift finite.
+                shared_utility = (
+                    utility
+                    if count == 1
+                    else (((float(utility) / 2 + half_shift) / count) - half_shift) * 2
+                )
+            else:
+                shared_utility = (utility + shift) / count - shift
+            shared_primary = shared_utility * sign
+        else:
+            # Preserve the worst sentinel; including it in the shift would
+            # turn every otherwise valid candidate's shared fitness into NaN.
+            shared_primary = individual.fitness.values[0]
         shared_values.append((shared_primary, *individual.fitness.values[1:]))
 
     return shared_values

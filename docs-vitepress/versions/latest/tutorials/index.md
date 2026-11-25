@@ -15,6 +15,14 @@ Step-by-step tutorials for common real-world scenarios. Each tutorial is self-co
 **Tutorials** are end-to-end walkthroughs of a complete real-world task — from raw data to a tuned, evaluated model. **[Examples](../examples/)** are shorter, focused recipes that each demonstrate a single feature you can drop into your own code.
 :::
 
+## Choose an optimizer
+
+[Switch optimization backends](./optimizer-backends) walks through both estimators,
+measuring actual CV calls, configuring individual solvers and resuming feature selection.
+
+[Budget and resume a search](./budgeted-optimizer-search) caps fresh candidate CV
+work across two sessions and shows which generation the checkpoint retains.
+
 ## scikit-learn Estimators
 
 | Tutorial | Difficulty | What it covers |

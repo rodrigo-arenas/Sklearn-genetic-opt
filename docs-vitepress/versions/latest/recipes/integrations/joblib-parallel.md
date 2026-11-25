@@ -1,6 +1,6 @@
 ---
 title: "Parallelize Hyperparameter Search with Joblib"
-description: "Recipe to configure GASearchCV parallelism using n_jobs and loky vs threading backends, with oversubscription avoidance."
+description: "Configure GASearchCV n_jobs and parallel_backend to parallelize candidates, CV folds, or estimator training with joblib."
 ---
 
 :::warning Development version
@@ -15,12 +15,17 @@ You are reading the **latest (development)** docs. For stable documentation, see
 
 `GASearchCV` uses joblib for parallelism. This recipe shows how to choose the right `n_jobs`, `parallel_backend`, and estimator-level `n_jobs` to avoid CPU oversubscription.
 
-## The Two Parallelism Modes
+## Choose Where to Use Worker Processes or Threads
 
-| `parallel_backend` | What parallelizes | Use when |
-|-------------------|-------------------|----------|
-| `"auto"` (default) or `"population"` | Evaluates multiple candidates at once | Estimator training is single-threaded, or estimator-level parallelism is disabled |
-| `"cv"` | Evaluates multiple CV folds at once | Estimator manages its own threads (XGBoost, LightGBM, CatBoost) |
+| Work to parallelize | Search settings | Estimator settings |
+| --- | --- | --- |
+| Candidate evaluations | `n_jobs>1` or `-1`, `parallel_backend="auto"` or `"population"` | One worker per fit |
+| CV folds | `n_jobs>1` or `-1`, `parallel_backend="cv"` | One worker per fit |
+| Estimator training | `n_jobs=1` | Multiple workers, if supported |
+
+With candidate parallelism, workers need distinct configurations that require
+CV. With fold parallelism, one candidate's folds can run at the same time.
+Both options pass the estimator's training configuration through to each fold.
 
 ## Recipe: sklearn Estimator (Use `"population"`)
 
@@ -74,7 +79,7 @@ ga = GASearchCV(
         tree_method="hist",
         eval_metric="logloss",
         random_state=42,
-        n_jobs=1,          # ← MUST be 1 for XGBoost/LightGBM/CatBoost
+        n_jobs=1,          # allocate workers to CV folds
     ),
     param_grid={
         "n_estimators": Integer(50, 200),
@@ -94,14 +99,14 @@ ga.fit(X_train, y_train)
 print("Best ROC AUC:", round(ga.best_score_, 4))
 ```
 
-## Key Points
-
-- **`n_jobs=-1`**: Uses all available cores.
-- **XGBoost/LightGBM/CatBoost**: Always set `n_jobs=1` (or `thread_count=1` for CatBoost) on the estimator. Use `parallel_backend="cv"`.
-- **RF/sklearn models**: Use `parallel_backend="population"` with `n_jobs=-1` on the search and `n_jobs=1` on the estimator to parallelize candidate evaluation without nested parallelism.
+Use `n_jobs=-1` to request the available workers at the chosen layer. Set a
+smaller explicit count to compare settings or share the machine with other
+jobs. Check the estimator's worker parameter, such as `n_jobs` for
+RandomForest and XGBoost or `thread_count` for CatBoost.
 
 ## See Also
 
 - [Advanced Optimizer Control](../../guide/advanced-optimizer-control) — full parallelism configuration
+- [Troubleshoot slow fits](../../guide/troubleshooting#search-is-slow)
 - [XGBoost Classifier Recipe](../classification/xgboost-classifier) — oversubscription fix
 - [LightGBM Classifier Recipe](../classification/lightgbm-classifier) — same fix for LightGBM

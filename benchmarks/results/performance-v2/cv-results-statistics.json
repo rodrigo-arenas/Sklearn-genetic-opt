@@ -1,0 +1,55 @@
+{
+  "baseline_commit": "9a89fc4e72556b9f9f8acacafb674d749942ff4a",
+  "optimized_source_sha256": "c82746c05a82e9378fc0650142447a2348b2e8b40f67f14364926f32e0b89ebc",
+  "environment": {
+    "python": "3.12.0",
+    "numpy": "2.5.3",
+    "scipy": "1.18.1",
+    "deap": "1.4.4",
+    "scikit-learn": "1.9.1"
+  },
+  "isolated_median_seconds": {
+    "GASearchCV": [
+      0.084744,
+      0.0362202
+    ],
+    "GAFeatureSelectionCV": [
+      0.0873448,
+      0.0349851
+    ]
+  },
+  "full_fit_seconds": {
+    "GASearchCV": {
+      "baseline": [
+        0.3551016,
+        0.3257774,
+        0.3346469,
+        0.2973346
+      ],
+      "optimized": [
+        0.3605139,
+        0.3465355,
+        0.4327288,
+        0.3239009
+      ]
+    },
+    "GAFeatureSelectionCV": {
+      "baseline": [
+        0.4331917,
+        0.4195058,
+        0.4454295,
+        0.5905072
+      ],
+      "optimized": [
+        0.4465282,
+        0.4137992,
+        0.4341918,
+        0.3991554
+      ]
+    }
+  },
+  "scripts": {
+    "profile_cv_results.py": "import sys, importlib.util, statistics, timeit\nfrom pathlib import Path\nfrom types import SimpleNamespace\nimport numpy as np\nfrom deap.tools import Logbook\nfrom sklearn_genetic.utils import cv_scores as new\nspec=importlib.util.spec_from_file_location(\"old\",Path(\".agent-runs/cv_before.py\"))\nold=importlib.util.module_from_spec(spec)\nspec.loader.exec_module(old)\nrng=np.random.default_rng(2603)\nfor heterogeneous in (False,True):\n    log=Logbook()\n    for i in range(512):\n        folds=5+int(heterogeneous and i%2==1)\n        row=rng.normal(size=folds)\n        times=rng.uniform(size=folds).astype(np.float32 if heterogeneous and i%3==0 else np.float64)\n        if i%3==0: times[0]=np.nan\n        if i%5==0: row[-1]=np.nan\n        log.record(parameters=dict(cv_scores=row,test_a=row,train_a=row[::-1],test_b=-row,train_b=-row[::-1],fit_time=times,score_time=times[::-1],depth=i%7,features=[1,i%2,0]))\n    for kind in (\"hpo\",\"features\"):\n        def run(mod):\n            if kind==\"hpo\": return mod.create_gasearch_cv_results_(log,SimpleNamespace(parameters=[\"depth\"]),True,[\"a\",\"b\"],False)\n            return mod.create_feature_selection_cv_results_(log,True,[\"a\",\"b\"],False)\n        a,b=run(old),run(new)\n        assert list(a)==list(b)\n        for k in a:\n            assert type(a[k])==type(b[k])\n            np.testing.assert_array_equal(a[k],b[k],strict=True)\n        if not heterogeneous:\n            old_t,new_t=[],[]\n            for j in range(5):\n                for mod,out in ([(old,old_t),(new,new_t)] if j%2==0 else [(new,new_t),(old,old_t)]):\n                    out.append(timeit.timeit(lambda:run(mod),number=1))\n            print(kind,'old',statistics.median(old_t),'new',statistics.median(new_t),flush=True)\nprint('column parity passed: uniform and mixed historical records',flush=True)\n",
+    "fit_cv_results.py": "import importlib.util, time, statistics\nfrom pathlib import Path\nfrom unittest.mock import patch\nimport numpy as np\nfrom sklearn.datasets import load_diabetes\nfrom sklearn.tree import DecisionTreeRegressor\nfrom threadpoolctl import threadpool_limits\nfrom sklearn_genetic import GASearchCV,GAFeatureSelectionCV,genetic_search\nfrom sklearn_genetic.space import Integer\nfrom sklearn_genetic.utils import cv_scores\nspec=importlib.util.spec_from_file_location(\"old\",Path(\".agent-runs/cv_before.py\"))\nold=importlib.util.module_from_spec(spec)\nspec.loader.exec_module(old)\nX,y=load_diabetes(return_X_y=True)\nwith threadpool_limits(1):\n    for cls,name in [(GASearchCV,\"create_gasearch_cv_results_\"),(GAFeatureSelectionCV,\"create_feature_selection_cv_results_\")]:\n        times=[[],[]]\n        for i in range(4):\n            expected=None\n            for j in ([0,1] if i%2==0 else [1,0]):\n                params={\"param_grid\":{\"max_depth\":Integer(1,12),\"min_samples_leaf\":Integer(1,10)}} if cls==GASearchCV else {}\n                search=cls(DecisionTreeRegressor(random_state=10),population_size=8,generations=3,cv=3,scoring=\"r2\",n_jobs=1,random_state=333+i,verbose=False,**params)\n                with patch.object(genetic_search,name,getattr((old,cv_scores)[j],name)):\n                    start=time.perf_counter()\n                    search.fit(X,y)\n                    times[j].append(time.perf_counter()-start)\n                result=(search.cv_results_,search.predict(X),search.fit_stats_[\"cross_validate_calls\"])\n                if expected is not None:\n                    assert list(result[0])==list(expected[0])\n                    for k in result[0]:\n                        if not k.endswith(\"_time\"): np.testing.assert_array_equal(result[0][k],expected[0][k],strict=True)\n                    np.testing.assert_array_equal(result[1],expected[1])\n                    assert result[2]==expected[2]\n                expected=result\n        print(cls.__name__,times, \"median old/new\",statistics.median(a/b for a,b in zip(*times)),flush=True)\n"
+  }
+}

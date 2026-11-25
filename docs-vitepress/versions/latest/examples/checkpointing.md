@@ -9,7 +9,7 @@ This is the **latest (dev)** documentation. It may contain unreleased features o
 
 # Checkpointing and Persistence
 
-Long-running searches should be able to write intermediate checkpoints, persist the fitted search object, and reload it later for inspection or prediction. This page runs a small real search and shows both persistence mechanisms end to end: a checkpoint callback that fires every generation, and `save` / `load` for the finished search.
+This example uses the default DEAP engine and its historical checkpoint format. See the [backend tutorial](../tutorials/optimizer-backends#select-features-and-inspect-progress) for a worked example of resuming feature selection with pymoo. Long-running searches should be able to write intermediate checkpoints, persist the fitted search object, and reload it later for inspection or prediction. This page runs a small real search and shows both persistence mechanisms end to end: a checkpoint callback that fires every generation, and `save` / `load` for the finished search.
 
 ## The Two Persistence Mechanisms
 
@@ -56,16 +56,11 @@ X_train, X_test, y_train, y_test = train_test_split(
 )
 cv = StratifiedKFold(n_splits=3, shuffle=True, random_state=42)
 
-artifact_dir = Path(tempfile.gettempdir()) / "ga_artifacts_docs"
-artifact_dir.mkdir(exist_ok=True)
+artifacts = tempfile.TemporaryDirectory()
+artifact_dir = Path(artifacts.name)
 checkpoint_path = artifact_dir / "rf_checkpoint.pkl"
 logbook_path = artifact_dir / "rf_logbook.pkl"
 saved_search_path = artifact_dir / "rf_search.pkl"
-print("Writing artifacts under:", artifact_dir)
-```
-
-```text
-Writing artifacts under: /tmp/ga_artifacts_docs
 ```
 
 ## Search Configuration
@@ -115,8 +110,8 @@ search = GASearchCV(
 
 ## Fit With Checkpointing
 
-The `ModelCheckpoint` callback prints a confirmation line each generation as it
-writes the checkpoint file.
+Each generation updates the checkpoint. After fitting, inspect the selected
+parameters and their cross-validation score.
 
 ```python
 search.fit(X_train, y_train, callbacks=callbacks)
@@ -126,18 +121,9 @@ print("Best CV ROC AUC:", round(search.best_score_, 4))
 ```
 
 ```text
-Checkpoint saved to /tmp/ga_artifacts_docs/rf_checkpoint.pkl
-Checkpoint saved to /tmp/ga_artifacts_docs/rf_checkpoint.pkl
-Checkpoint saved to /tmp/ga_artifacts_docs/rf_checkpoint.pkl
-Checkpoint saved to /tmp/ga_artifacts_docs/rf_checkpoint.pkl
-Checkpoint saved to /tmp/ga_artifacts_docs/rf_checkpoint.pkl
-Checkpoint saved to /tmp/ga_artifacts_docs/rf_checkpoint.pkl
-Checkpoint saved to /tmp/ga_artifacts_docs/rf_checkpoint.pkl
-INFO: ConsecutiveStopping callback met its criteria
-INFO: Stopping the algorithm
 
-Best params   : {'n_estimators': 43, 'max_depth': 6, 'min_samples_leaf': 2, 'max_features': 0.5419399092589539, 'criterion': 'entropy', 'class_weight': None}
-Best CV ROC AUC: 0.9888
+Best params   : {'n_estimators': 81, 'max_depth': 9, 'min_samples_leaf': 4, 'max_features': 0.43187019562301654, 'criterion': 'entropy', 'class_weight': None}
+Best CV ROC AUC: 0.9893
 ```
 
 ## Evaluate on the Test Set
@@ -155,40 +141,173 @@ pd.Series({
 
 ```text
                    test_score
-accuracy               0.9650
-balanced_accuracy      0.9567
-roc_auc                0.9954
+accuracy               0.9580
+balanced_accuracy      0.9512
+roc_auc                0.9966
 ```
 
 ## Inspect the Checkpoint Contents
 
-`ModelCheckpoint.load()` returns a dictionary with two keys: a lightweight
-`estimator_state` (the search *configuration*, not the fitted model) and the
-`logbook` captured up to the last completed generation.
+`ModelCheckpoint.load()` returns the search configuration, generation log and
+runtime state. The runtime state includes candidate records, evaluation
+counters and cached scores used when resuming.
 
 ```python
 checkpoint = ModelCheckpoint(checkpoint_path).load()
 
 print("checkpoint keys      :", sorted(checkpoint.keys()))
 print("generations in logbook:", len(checkpoint["logbook"]))
-print("estimator_state keys  :", sorted(checkpoint["estimator_state"].keys()))
+print("Candidate CV calls:", checkpoint["runtime_state"]["fit_stats_"]["cross_validate_calls"])
 ```
 
 ```text
-checkpoint keys      : ['estimator_state', 'logbook']
+checkpoint keys      : ['enable_metadata_routing', 'estimator_state', 'logbook', 'outlier_scoring_uses_fitted_detector', 'preserves_missing_outlier_target', 'runtime_state', 'stable_nan_categories', 'typed_categorical_identity']
 generations in logbook: 7
-estimator_state keys  : ['algorithm', 'crossover_probability', 'cv', 'diversity_control', 'diversity_mutation_boost', 'diversity_stagnation_generations', 'diversity_threshold', 'estimator', 'fitness_sharing', 'generations', 'local_search', 'local_search_radius', 'local_search_steps', 'local_search_top_k', 'mutation_probability', 'param_grid', 'population_size', 'random_immigrants_fraction', 'scoring', 'sharing_alpha', 'sharing_radius']
+Candidate CV calls: 127
 ```
 
 The `estimator_state` is intentionally small — it captures the search
 configuration so a run can be reconstructed, not the trained estimator. For the
 full fitted object, use `save` / `load` below.
 
+## Resume a search with metadata routing
+
+If the search used metadata routing, enable it for the resumed fit and
+pass the same training and scoring weights again. The checkpoint records
+this setting so that resuming with a different one cannot mix scores
+computed under different routing rules.
+
+```python
+from sklearn import config_context
+from sklearn.base import clone
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import make_scorer
+from sklearn_genetic.callbacks import CVBudgetStopping
+
+weighted_path = artifact_dir / "weighted.pkl"
+weighted_checkpoint = ModelCheckpoint(weighted_path)
+weights = np.where(y_train == 0, 2.0, 1.0)
+
+with config_context(enable_metadata_routing=True):
+    weighted_tree = DecisionTreeClassifier(random_state=42).set_fit_request(
+        sample_weight=True
+    )
+    weighted_score = make_scorer(accuracy_score).set_score_request(sample_weight=True)
+    weighted = GASearchCV(
+        weighted_tree, cv=cv, scoring=weighted_score,
+        param_grid={"max_depth": Integer(2, 8), "min_samples_leaf": Integer(1, 5)},
+        population_size=6, generations=1, random_state=42, n_jobs=1, verbose=False,
+    )
+    clone(weighted).fit(
+        X_train, y_train, sample_weight=weights,
+        callbacks=[weighted_checkpoint, CVBudgetStopping(6)],
+    )
+
+weighted_snapshot = weighted_checkpoint.load()
+saved_routing = weighted_snapshot["enable_metadata_routing"]
+with config_context(enable_metadata_routing=saved_routing):
+    resumed = clone(weighted).fit(
+        X_train, y_train, sample_weight=weights, callbacks=[weighted_checkpoint]
+    )
+print("Saved routing setting:", saved_routing)
+print("Fresh CV calls on resume:", resumed.fit_counts_["search_cv_calls"])
+```
+
+```text
+INFO: Stopping the algorithm
+Saved routing setting: True
+Fresh CV calls on resume: 13
+```
+
+## Recover a cumulative CV count
+
+A DEAP snapshot can retain its generation log without the runtime
+counters. This example creates a separate temporary copy with that
+structure. Resuming from it recovers the cumulative count from the last
+saved generation while observing a budget of three fresh CV calls.
+
+```python
+import pickle
+
+older_file = ModelCheckpoint(artifact_dir / "weighted-without-counters.pkl")
+older_snapshot = dict(weighted_snapshot)
+older_snapshot["runtime_state"] = dict(weighted_snapshot["runtime_state"])
+del older_snapshot["runtime_state"]["fit_stats_"]
+older_file.checkpoint_path.write_bytes(pickle.dumps(older_snapshot))
+
+with config_context(enable_metadata_routing=saved_routing):
+    recovered = clone(weighted).fit(
+        X_train, y_train, sample_weight=weights,
+        callbacks=[CVBudgetStopping(3), older_file],
+    )
+
+print("Saved CV calls:", older_snapshot["logbook"][-1]["cross_validate_calls"])
+print("Fresh CV calls:", recovered.fit_counts_["search_cv_calls"])
+print("Cumulative CV calls:", recovered.history["cross_validate_calls"][-1])
+```
+
+```text
+INFO: Stopping the algorithm
+Saved CV calls: 6
+Fresh CV calls: 3
+Cumulative CV calls: 9
+```
+
+## Resume after local refinement
+
+DEAP can evaluate neighbors of its best candidates after the last generation.
+When that refinement finishes, `ModelCheckpoint` updates the snapshot with
+those candidate scores, and `LogbookSaver` includes the additional rows in
+its file. Here a budget of seven CV calls leaves one call after the
+six-member starting population. The next fit restores all seven scores
+and can evaluate three more candidates.
+
+```python
+from joblib import load
+
+refined_checkpoint = ModelCheckpoint(artifact_dir / "refined.pkl")
+refined_log = LogbookSaver(artifact_dir / "refined-candidates.pkl.gz")
+tree_search = GASearchCV(
+    DecisionTreeClassifier(random_state=42),
+    param_grid={"max_depth": Integer(2, 8), "min_samples_leaf": Integer(1, 5)},
+    cv=cv, scoring="roc_auc", population_size=6, generations=0,
+    local_search=True, local_search_top_k=1, local_search_steps=2,
+    use_cache=False, random_state=42, n_jobs=1, refit=False, verbose=False,
+)
+refined = clone(tree_search).fit(
+    X_train, y_train, callbacks=[CVBudgetStopping(7), refined_checkpoint, refined_log]
+)
+print("Local refinement evaluations:", refined.fit_stats_["local_refinement_candidates"])
+print("CV calls retained in the checkpoint:", refined_checkpoint.resumable_cv_calls_)
+print("Candidate rows saved:", len(load(refined_log.checkpoint_path)))
+
+resumed = clone(tree_search).fit(
+    X_train, y_train, callbacks=[CVBudgetStopping(3), refined_checkpoint]
+)
+print("Fresh CV calls on resume:", resumed.fit_counts_["search_cv_calls"])
+print("Cumulative CV calls:", resumed.history["cross_validate_calls"][-1])
+```
+
+```text
+Local refinement evaluations: 1
+CV calls retained in the checkpoint: 7
+Candidate rows saved: 7
+INFO: Stopping the algorithm
+Fresh CV calls on resume: 3
+Cumulative CV calls: 10
+```
+
 ## Inspect the LogbookSaver Output
 
 `LogbookSaver` persists only the parameter chapter of the logbook using joblib,
 which is handy when you want the per-candidate parameter records without the
-rest of the checkpoint.
+rest of the checkpoint. A regular logbook file is replaced after the new
+snapshot has been written successfully. If the save fails, the last
+successful file is still readable with `joblib.load`.
+
+Each row's `index` is its position in `cv_results_`. When candidates
+reuse a cached score, each proposal still has a separate row. Use
+`preserve_index=True` to look up that position after sorting by rank.
 
 ```python
 import joblib
@@ -196,11 +315,17 @@ import joblib
 saved_logbook = joblib.load(logbook_path)
 print("records saved by LogbookSaver:", len(saved_logbook))
 print("fields per record           :", sorted(saved_logbook[0].keys()))
+ranked = search.cv_results_dataframe(
+    preserve_index=True, columns=["mean_test_score"]
+)
+row_index = saved_logbook[0]["index"]
+print("CV score of the first saved candidate:", round(ranked.loc[row_index, "mean_test_score"], 4))
 ```
 
 ```text
 records saved by LogbookSaver: 130
-fields per record           : ['class_weight', 'criterion', 'cv_scores', 'fit_time', 'index', 'max_depth', 'max_features', 'min_samples_leaf', 'n_estimators', 'score', 'score_time', 'test_score', 'train_score']
+fields per record           : ['class_weight', 'criterion', 'cv_scores', 'fit_time', 'index', 'max_depth', 'max_features', 'min_samples_leaf', 'n_estimators', 'score', 'score_time', 'test_score']
+CV score of the first saved candidate: 0.9881
 ```
 
 ## Save and Reload the Fitted Search
@@ -228,18 +353,14 @@ print("Restored best CV ROC AUC         :", round(restored_search.best_score_, 4
 ```
 
 ```text
-GASearchCV model successfully saved to /tmp/ga_artifacts_docs/rf_search.pkl
-GASearchCV model successfully loaded from /tmp/ga_artifacts_docs/rf_search.pkl
 Predictions identical to original: True
-Restored best CV ROC AUC         : 0.9888
+Restored best CV ROC AUC         : 0.9893
 ```
 
 The restored search reproduces the original predictions exactly.
 
 ```python
-import shutil
-
-shutil.rmtree(artifact_dir, ignore_errors=True)
+artifacts.cleanup()
 print("Cleaned up:", not artifact_dir.exists())
 ```
 
@@ -249,10 +370,8 @@ Cleaned up: True
 
 ## Practical Notes
 
-- Use `ModelCheckpoint` for progress recovery and audit trails during a fit; it
-  writes after every generation, so a crashed run loses at most one generation.
-- Reach for `LogbookSaver` when you only need the per-generation parameter
-  records (it is what `ModelCheckpoint` uses internally for the logbook).
+- Resume from the most recent successful write using the [checkpoint recipe](../recipes/advanced/checkpointing).
+- Reach for `LogbookSaver` when you only need the per-candidate parameter records.
 - Use `save` / `load` for fitted search objects that need to be reused for
   prediction or later analysis — they carry the fitted estimator, not just the
   configuration.

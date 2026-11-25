@@ -9,12 +9,34 @@ You are reading the **latest (dev)** docs. For the stable version, see [stable](
 
 # Tuning Outlier Detection Models: IsolationForest and LocalOutlierFactor
 
-`GASearchCV` supports scikit-learn outlier-detection estimators. These estimators fit on `X` only — they never see `y` during training — so the standard `scoring="roc_auc"` string cannot be used directly. Instead, you define a custom scorer that calls the estimator's anomaly scoring method and compares the result against ground-truth labels.
+`GASearchCV` and `GAFeatureSelectionCV` can evaluate scikit-learn outlier
+detectors on validation folds. Use a custom scorer to compare anomaly scores
+with known labels. For unlabeled samples, use the default scorer or define an
+objective for your application.
 
 ## Prerequisites
 
 - Completed [Basic Usage](./basic-usage)
-- Ground-truth labels for your anomalies (at minimum for evaluation; the estimator itself is unsupervised)
+- Ground-truth labels for the ROC AUC examples
+
+## Score unlabeled samples
+
+Call `search.fit(X_train)` or `selector.fit(X_train)` for an unlabeled training
+set. Pass labels as `y` when your validation scorer uses ground truth.
+For a new unlabeled search, the detector and scorer receive no target.
+A custom scorer can have the signature `(estimator, X)` or accept an
+optional third argument `y=None`. See the
+[executable example with both search classes](../examples/unlabeled-outlier-scoring).
+
+With `scoring=None`, the search scores each validation fold using the detector
+fitted on that fold's training rows. The default score is the mean of
+`score_samples(X)` or, when that method is unavailable, the mean of
+`decision_function(X)`. A detector that exposes only `predict` is scored by
+the fraction of predictions equal to `1` (inliers).
+
+Each candidate must expose at least one of these methods for unseen data.
+For `LocalOutlierFactor`, set `novelty=True`. If a checkpoint contains scores
+from the old `fit_predict` fallback, use a new checkpoint file for the search.
 
 ## The Custom Scorer Pattern
 
@@ -48,8 +70,29 @@ Two details matter:
 | `EllipticEnvelope` | `score_samples` | Also has `decision_function` |
 
 :::warning LocalOutlierFactor default mode cannot score new data
-Standard LOF (`novelty=False`) computes scores using the training neighbourhood. Calling `score_samples` on test data raises an error. Use `LocalOutlierFactor(novelty=True)` when you need to score unseen points — which is always the case inside cross-validation.
+Standard LOF (`novelty=False`) computes scores on its training rows. Use
+`LocalOutlierFactor(novelty=True)` to score each fold's unseen validation
+rows.
 :::
+
+## Choose validation folds
+
+`GASearchCV` and `GAFeatureSelectionCV` both accept a scikit-learn splitter or
+an iterable of train and validation indices in `cv`. With labeled anomalies,
+pass `StratifiedKFold` and supply the labels to `fit` so each validation fold
+has anomalies to score. If multiple rows come from the same device, patient,
+or other unit, use `GroupKFold` and pass its group labels as `groups` to `fit`
+to keep each group on one side of every split. With an integer or `None`, the
+search uses `KFold`.
+
+Checkpoint resumes keep the folds used to score saved candidates. Compatible
+older outlier checkpoints also retain the synthetic zero targets they used
+for unlabeled scoring. Use a new checkpoint path for target-free scoring or
+to change the splitter.
+
+After refit, call `GAFeatureSelectionCV.score(X_test, y_test)` to apply the
+configured scorer to held-out samples using the selected features. With the
+default anomaly scorer, pass just `X_test` to score unlabeled samples.
 
 ## IsolationForest Example
 

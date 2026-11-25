@@ -7,7 +7,7 @@ description: Development documentation for sklearn-genetic-opt — tracks the ma
 
 # sklearn-genetic-opt
 
-`sklearn-genetic-opt` adds evolutionary optimization tools to the scikit-learn workflow. It can tune hyperparameters with `GASearchCV` and select feature subsets with `GAFeatureSelectionCV` using algorithms powered by DEAP.
+`sklearn-genetic-opt` adds evolutionary optimization tools to the scikit-learn workflow. It can tune hyperparameters with `GASearchCV` and select feature subsets with `GAFeatureSelectionCV` with DEAP (default), SciPy, Nevergrad, CatCMAwM or pymoo. Follow the [backend tutorial](./tutorials/optimizer-backends) to switch engines.
 
 If the project helps your work, consider [starring it on GitHub](https://github.com/rodrigo-arenas/Sklearn-genetic-opt). It helps other practitioners find the library.
 
@@ -26,22 +26,24 @@ You are reading the **latest (development)** docs. This version tracks the `mast
 - Optional local search, diversity control, random immigrants, and fitness sharing.
 - Parallel candidate evaluation with `n_jobs` and `parallel_backend`.
 - Evaluation caching, optimizer telemetry through `history`, and fit-cost counters through `fit_stats_`.
-- Callbacks for early stopping, progress reporting, checkpoints, TensorBoard, and custom logic.
+- Callbacks for early stopping, progress reporting, checkpoints, live plots, and custom logic.
 - Plotting helpers plus MLflow 3 logging support.
 
-## Installation (dev)
+## Installation {#installation-dev}
 
-Install from the master branch:
-
-```bash
-pip install git+https://github.com/rodrigo-arenas/Sklearn-genetic-opt.git@master
-```
-
-Or install the released version:
+Install the released version from PyPI:
 
 ```bash
 pip install sklearn-genetic-opt
 ```
+
+:::warning Development version
+To try unreleased features documented on the development branch, install from `master`:
+
+```bash
+pip install git+https://github.com/rodrigo-arenas/Sklearn-genetic-opt.git@master
+```
+:::
 
 ## Quick Start
 
@@ -86,4 +88,7 @@ print(search.best_params_)
 
 - [When to Use](./guide/when-to-use)
 - [Basic Usage](./guide/basic-usage)
+- [Compare Optimization Backends at Matched CV Budgets](./benchmarks/optimizer-catalog)
+- [Compare Search and Finalist Scores](./examples/plotting-gallery#finalist-score-comparison)
+- [Compare Optuna TPE and GASearchCV](./comparisons/optuna-vs-sklearn-genetic-opt)
 - [Troubleshooting](./guide/troubleshooting)

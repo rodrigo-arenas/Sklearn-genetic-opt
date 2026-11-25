@@ -478,6 +478,10 @@ Why use a genetic algorithm for wrapper-based selection rather than RFE or exhau
 
 **Supports `keep_top_k` for stability analysis.** Instead of a single binary answer, `keep_top_k > 1` preserves the top-K masks found during the search. Comparing these shows which features appear consistently across all top solutions — these are the most reliable selections.
 
+The DEAP uniform crossover draws once for each column shared by both parent
+masks. The [seeded feature search example](../tutorials/optimizer-backends#repeat-a-seeded-deap-feature-search)
+shows how to compare the full sequence of masks at a fixed CV budget.
+
 ## Common Pitfalls
 
 **Data leakage via pre-search feature selection.** If you run `SelectKBest.fit_transform` on the full dataset before splitting, the test set's label information contaminates the feature scores. Always fit feature selectors inside a `Pipeline` or only on `X_train`.
@@ -504,7 +508,10 @@ X_test_sel  = selector.transform(X_test)
 ## See Also
 
 - [Feature Selection Tutorial](../tutorials/feature-selection) — full multi-stage workflow with grading against ground truth
+- [Feature Selection with SciPy Sparse Matrices](../tutorials/sparse-feature-selection) — fit, predict and score with CSR or CSC inputs
 - [Tuning scikit-learn Pipelines](./pipeline-tuning) — combine feature selection and model hyperparameters in a single Pipeline
 - [Common Hyperparameter Tuning Mistakes](./common-mistakes) — data leakage in feature selection
 - [API: GAFeatureSelectionCV](../api/gafeatureselectioncv) — full API reference including all config options
+- [Feature Selection for Multi-Output Regression](../examples/multi-output-feature-selection) — choose one feature set for multiple targets
+- [Feature Selection for Categorical Columns](../examples/categorical-feature-selection) — fit an encoder inside the search pipeline
 - [Examples: Feature Selection](../examples/feature-selection) — shorter self-contained recipe

@@ -34,12 +34,12 @@ const paths = [
     title: 'First Optimization',
     desc: 'New to genetic search? Learn to fit GASearchCV and inspect cross-validation results.',
     steps: [
-      { text: 'Installation', link: '/versions/0.14/guide/installation' },
-      { text: 'How hyperparameter optimization works', link: '/versions/0.14/guide/how-hyperparameter-optimization-works' },
-      { text: 'Tune a Random Forest (tutorial)', link: '/versions/0.14/tutorials/tune-random-forest' },
-      { text: 'Basic usage guide', link: '/versions/0.14/guide/basic-usage' },
+      { text: 'Installation', link: '/versions/0.16/guide/installation' },
+      { text: 'How hyperparameter optimization works', link: '/versions/0.16/guide/how-hyperparameter-optimization-works' },
+      { text: 'Tune a Random Forest (tutorial)', link: '/versions/0.16/tutorials/tune-random-forest' },
+      { text: 'Basic usage guide', link: '/versions/0.16/guide/basic-usage' },
     ],
-    cta: { text: 'Start the beginner path', link: '/versions/0.14/guide/installation' },
+    cta: { text: 'Start the beginner path', link: '/versions/0.16/guide/installation' },
   },
   {
     icon: '⚙️',
@@ -47,12 +47,13 @@ const paths = [
     title: 'Production Tuning',
     desc: 'You\'ve run a basic search. Now learn callbacks, parallel evaluation, MLflow logging, and pipelines.',
     steps: [
-      { text: 'Choosing the right search space', link: '/versions/0.14/guide/choosing-search-spaces' },
-      { text: 'Common tuning mistakes to avoid', link: '/versions/0.14/guide/common-mistakes' },
-      { text: 'Tune XGBoost / LightGBM', link: '/versions/0.14/tutorials/tune-xgboost' },
-      { text: 'Callbacks & early stopping', link: '/versions/0.14/guide/callbacks' },
+      { text: 'Choosing the right search space', link: '/versions/0.16/guide/choosing-search-spaces' },
+      { text: 'Common tuning mistakes to avoid', link: '/versions/0.16/guide/common-mistakes' },
+      { text: 'XGBoost hyperparameter tuning', link: '/versions/0.16/tutorials/tune-xgboost' },
+      { text: 'Isolation Forest hyperparameter tuning', link: '/versions/0.16/tutorials/isolation-forest' },
+      { text: 'Callbacks & early stopping', link: '/versions/0.16/guide/callbacks' },
     ],
-    cta: { text: 'Browse intermediate recipes', link: '/versions/0.14/recipes/' },
+    cta: { text: 'Browse intermediate recipes', link: '/versions/0.16/recipes/' },
   },
   {
     icon: '🏆',
@@ -60,12 +61,16 @@ const paths = [
     title: 'Evolutionary Mastery',
     desc: 'Deep-dive into GA mechanics, feature selection, custom operators, and multi-metric optimization.',
     steps: [
-      { text: 'Feature selection with GAFeatureSelectionCV', link: '/versions/0.14/tutorials/feature-selection' },
-      { text: 'Warm-start and custom initialization', link: '/versions/0.14/recipes/advanced/warm-start' },
-      { text: 'Benchmarks vs Optuna & random search', link: '/versions/0.14/benchmarks/' },
-      { text: 'API reference — all parameters', link: '/versions/0.14/api/gasearchcv' },
+      { text: 'Feature selection with GAFeatureSelectionCV', link: '/versions/0.16/tutorials/feature-selection' },
+      { text: 'Warm-start and custom initialization', link: '/versions/0.16/recipes/advanced/warm-start' },
+      { text: 'Switch optimization backends', link: '/versions/0.16/tutorials/optimizer-backends' },
+      { text: 'Compare five optimization backends', link: '/versions/0.16/benchmarks/optimizer-catalog' },
+      { text: 'Compare scikit-learn search methods', link: '/versions/0.16/examples/sklearn-comparison' },
+      { text: 'Compare Optuna and sklearn-genetic-opt', link: '/versions/0.16/comparisons/optuna-vs-sklearn-genetic-opt' },
+      { text: 'GASearchCV API reference', link: '/versions/0.16/api/gasearchcv' },
+      { text: 'GAFeatureSelectionCV API reference', link: '/versions/0.16/api/gafeatureselectioncv' },
     ],
-    cta: { text: 'View advanced recipes', link: '/versions/0.14/recipes/advanced/' },
+    cta: { text: 'View advanced recipes', link: '/versions/0.16/recipes/advanced/' },
   },
 ]
 </script>
@@ -168,6 +173,6 @@ const paths = [
 
 .path-cta:hover {
   background: var(--vp-c-brand-1);
-  color: white;
+  color: var(--vp-button-brand-text);
 }
 </style>

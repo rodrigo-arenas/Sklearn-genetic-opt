@@ -2,20 +2,18 @@ import logging
 import os
 import sys
 import time
-from copy import deepcopy
+from pathlib import Path
+from stat import S_IMODE, S_ISREG
+from tempfile import TemporaryDirectory
 from joblib import dump
 
 from tqdm.auto import tqdm
 
 from .base import BaseCallback
 from ..parameters import Metrics
+from ..evaluation import candidate_records
 
 logger = logging.getLogger(__name__)  # noqa
-
-try:
-    import tensorflow as tf
-except ModuleNotFoundError:  # noqa
-    tf = None  # noqa
 
 
 class ProgressBar(BaseCallback):
@@ -50,31 +48,75 @@ class ProgressBar(BaseCallback):
 
 
 class LogbookSaver(BaseCallback):
-    """
-    Saves the estimator.logbook parameter chapter object in a local file system.
+    """Save candidate records and replace a regular file only after a successful write.
+
+    Regular files also include rows collected during DEAP's final local refinement.
     """
 
     def __init__(self, checkpoint_path, **dump_options):
         """
         Parameters
         ----------
-        checkpoint_path: str
-            Location where checkpoint will be saved to
-        dump_options, str
-            Valid kwargs from joblib :class:`~joblib.dump`
+        checkpoint_path: str, os.PathLike or binary file
+            Destination for candidate records. A regular file path needs a
+            writable parent directory for atomic replacement.
+        dump_options: dict
+            Keyword arguments forwarded to joblib :func:`~joblib.dump`.
         """
 
         self.checkpoint_path = checkpoint_path
         self.dump_options = dump_options
 
-    def on_step(self, record=None, logbook=None, estimator=None):
-        try:
-            dump_logbook = deepcopy(estimator.logbook.chapters["parameters"])
-            dump(dump_logbook, self.checkpoint_path, **self.dump_options)
-        except Exception as e:
-            logger.error("Could not save the Logbook in the checkpoint")
+    def on_start(self, estimator=None):
+        self._last_path_attempt_rows = None
 
+    def on_step(self, record=None, logbook=None, estimator=None):
+        self._save(estimator)
         return False
+
+    def on_end(self, logbook=None, estimator=None):
+        if (
+            logbook
+            and logbook[-1].get("local_refinements")
+            and getattr(self, "_last_path_attempt_rows", None) is not None
+        ):
+            self._save(estimator, only_new_path_rows=True)
+
+    def _save(self, estimator, *, only_new_path_rows=False):
+        try:
+            records = candidate_records(estimator)
+            if only_new_path_rows and len(records) <= self._last_path_attempt_rows:
+                return
+            if isinstance(self.checkpoint_path, (str, os.PathLike)):
+                self._save_path(records, Path(self.checkpoint_path), only_new_path_rows)
+            elif not only_new_path_rows:
+                dump(records, self.checkpoint_path, **self.dump_options)
+        except Exception as error:
+            logger.error(
+                "Could not save the Logbook in the checkpoint %s: %s",
+                self.checkpoint_path,
+                error,
+            )
+
+    def _save_path(self, records, path, only_new_path_rows):
+        destination = path.resolve()
+        try:
+            mode = destination.stat().st_mode
+        except FileNotFoundError:
+            mode = None
+        if mode is not None and not S_ISREG(mode):
+            if not only_new_path_rows:
+                dump(records, path, **self.dump_options)
+            return
+
+        self._last_path_attempt_rows = len(records)
+        with TemporaryDirectory(dir=destination.parent) as directory:
+            # Keep the original name so joblib still selects compression by suffix.
+            temporary = Path(directory) / path.name
+            dump(records, temporary, **self.dump_options)
+            if mode is not None:
+                temporary.chmod(S_IMODE(mode))
+            temporary.replace(destination)
 
 
 class TensorBoard(BaseCallback):
@@ -90,11 +132,6 @@ class TensorBoard(BaseCallback):
             Subfolder where the data will be log, if None it will create a folder
             with the current datetime with format time.strftime("%Y_%m_%d-%H_%M_%S")
         """
-        if tf is None:
-            logger.error(
-                "Tensorflow not found, pip install tensorflow to use TensorBoard callback"
-            )  # noqa
-
         self.log_dir = log_dir
 
         if run_id is None:
@@ -105,6 +142,16 @@ class TensorBoard(BaseCallback):
         self.path = os.path.join(log_dir, self.run_id)
 
     def on_step(self, record=None, logbook=None, estimator=None):
+        try:
+            import tensorflow as tf
+        except ModuleNotFoundError as exc:
+            if exc.name != "tensorflow":
+                raise
+            raise ImportError(
+                "The legacy TensorBoard callback requires TensorFlow installed separately. "
+                "Use sklearn_genetic.plots.LivePlot for lightweight live charts."
+            ) from exc
+
         # Get the last metric value
         stats = logbook[-1]
 

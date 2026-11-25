@@ -240,6 +240,43 @@ Log-unif — best C:     0.7214  ROC-AUC: 0.9973
 `Continuous(0.0, 1.0, distribution="log-uniform")` is invalid because `log(0)` is undefined. Use a small positive number as the lower bound: `Continuous(1e-6, 1.0, distribution="log-uniform")`.
 :::
 
+### Start an integer search at several scales
+
+Use `Integer` to keep every whole number in the range eligible. Give the
+smart initializer a few explicit configurations to evaluate early. This
+example starts a tree search at depths 2, 8, and 32 while allowing any depth
+from 1 through 64 in the rest of the search.
+
+```python
+from sklearn.datasets import load_diabetes
+from sklearn.tree import DecisionTreeRegressor
+
+from sklearn_genetic import GASearchCV
+from sklearn_genetic.space import Integer
+
+X, y = load_diabetes(return_X_y=True)
+search = GASearchCV(
+    DecisionTreeRegressor(random_state=19),
+    param_grid={"max_depth": Integer(1, 64), "min_samples_leaf": Integer(1, 20)},
+    warm_start_configs=[
+        {"max_depth": depth, "min_samples_leaf": 2} for depth in (2, 8, 32)
+    ],
+    cv=3,
+    population_initializer="smart",
+    population_size=6,
+    generations=0,
+    random_state=19,
+    n_jobs=1,
+    verbose=False,
+).fit(X, y)
+print([row["max_depth"] for row in search.cv_results_["params"][:3]])
+```
+
+Set `generations` above zero to evolve beyond the initial population.
+Use `Categorical([2, 8, 32])` when those are the only allowed depths.
+See the [warm-start rules](#warm-starting-vs-cold-starting) for duplicate
+configurations and omitted values.
+
 ---
 
 ## Recommended Search Spaces by Estimator
@@ -477,7 +514,10 @@ Best params      : {'svc__C': 8.3241, 'svc__gamma': 0.0014, 'svc__kernel': 'rbf'
 
 ### Including `None` in a Categorical
 
-`None` is a valid choice in `Categorical` and is common for parameters like `max_depth` and `class_weight` that accept `None` as a meaningful value (unlimited depth, balanced weights):
+`None` is a valid choice in `Categorical`. For decision trees, `max_depth=None`
+allows the tree to grow without a depth limit. `class_weight=None` keeps the
+sample weights as provided. `class_weight="balanced"` weights classes inversely
+to their frequency.
 
 ```python
 from sklearn_genetic.space import Categorical
@@ -496,6 +536,15 @@ However, `Integer` and `Continuous` do not accept `None` as a bound. If you want
 # Right: use Categorical when None must be an option
 "max_depth": Categorical([None, 5, 10, 15, 20]),
 ```
+
+### Category types and repeated evaluations
+
+For a decision tree's per-split feature search, `max_features=1` sets the
+limit to one feature and `max_features=1.0` uses the full feature count.
+Declare both as [`Categorical` choices](../api/space#categorical)
+when you want to search both settings. Their types keep their CV results
+separate when the search reuses cached evaluations. See the
+[CV and cache counters](troubleshooting#search-is-slow) to measure that reuse.
 
 ### Integer bounds are inclusive on both ends
 
@@ -552,13 +601,19 @@ What to look for:
 
 ## Warm Starting vs Cold Starting
 
-By default, `GASearchCV` generates an entirely random initial population (optionally improved with Latin hypercube sampling via `PopulationConfig(initializer="smart")`). If you already know a good configuration from a previous search or domain knowledge, you can seed the population with it.
+`GASearchCV` uses `"smart"` initialization by default. You can seed its initial
+population with configurations from previous searches or domain knowledge.
+Use `PopulationConfig(initializer="random")` to fill the slots that remain
+after your warm starts with independent samples from the search space.
 
 **Warm starting with known-good configs:**
 
 ```python
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import StratifiedKFold
+
 from sklearn_genetic import GASearchCV, EvolutionConfig, PopulationConfig, RuntimeConfig
-from sklearn_genetic.space import Categorical, Continuous, Integer
+from sklearn_genetic.space import Categorical, Integer
 
 # Known-good configuration from a previous manual search
 warm_start_configs = [
@@ -587,7 +642,32 @@ search = GASearchCV(
 
 **Smart initialization (`initializer="smart"`):**
 
-The default cold start uses Latin hypercube sampling to produce a diverse, well-spread initial population. This is almost always better than a purely random initial population and is the recommended setting. Warm start configs are *added* to the smart-initialized population, not used instead of it.
+Smart initialization reads the warm starts in the order supplied. It fills
+omitted values by sampling and skips duplicate completed candidates. When a
+duplicate leaves a slot open, the next warm start can fill it. Once it has
+`population_size` distinct candidates, it ignores the rest of the list.
+The comparison uses the values sent to cross-validation. Two inputs that
+round to the same `Continuous` value or resolve to the same estimator-valued
+category count as one candidate.
+If slots remain after the warm starts, it tries the estimator's defaults when
+all search parameters fall inside the space. It then uses Latin hypercube
+sampling for numeric values and stratified sampling for categorical values,
+with random draws if deduplication leaves slots open.
+Use [partial warm starts](../recipes/advanced/warm-start#seed-categorical-and-numeric-combinations)
+to seed specific combinations across dimensions.
+An integer with equal bounds, such as `Integer(2, 2)`, keeps that value in
+every candidate. See the
+[fixed-parameter example](../tutorials/optimizer-backends#keep-an-integer-parameter-fixed).
+For `Continuous(..., distribution="log-uniform")`, the initializer spreads the
+samples in log space and decodes them to the original parameter bounds.
+SciPy, Nevergrad, CMA-ES, pymoo and DEAP's `eaDifferentialEvolution` also use
+logarithmic coordinates for proposals along these dimensions. If two bounds
+round to the same logarithm, the coordinate uses linear interpolation within
+the original interval. Candidate tables and fitted estimators use values in
+the units of the original parameter.
+
+Random initialization uses up to the first `population_size` warm starts,
+including repetitions.
 
 **When to use each:**
 
@@ -599,7 +679,10 @@ The default cold start uses Latin hypercube sampling to produce a diverse, well-
 | Strong domain knowledge about good values | `warm_start_configs` from prior knowledge |
 
 :::tip Warm-start configs must be within the search space bounds
-A warm-start config is silently skipped if any value is out of bounds for its dimension or not in the `choices` list for a `Categorical`. Verify your configs against `list(search.param_grid.keys())` and the declared bounds before fitting. See [Troubleshooting](./troubleshooting#warm-start-configs-are-ignored).
+Each warm-start config used to build the population is checked at fit time.
+A key outside `param_grid`, an `Integer` or `Continuous` value outside its
+bounds, or a value absent from a `Categorical` dimension's choices raises
+`ValueError`. See [Troubleshooting](./troubleshooting#warm-start-config-errors).
 :::
 
 ---

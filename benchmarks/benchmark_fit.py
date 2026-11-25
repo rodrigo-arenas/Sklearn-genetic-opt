@@ -28,6 +28,7 @@ import time
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
+from threading import Lock
 from typing import Any, Callable
 
 import numpy as np
@@ -76,15 +77,21 @@ class Scenario:
 @dataclass
 class FitCounters:
     cross_validate_calls: int = 0
+    cv_fold_fits: int = 0
 
 
 @contextmanager
 def count_cross_validate_calls(counters: FitCounters):
     original_cross_validate = genetic_search.cross_validate
 
+    lock = Lock()
+
     def counted_cross_validate(*args, **kwargs):
-        counters.cross_validate_calls += 1
-        return original_cross_validate(*args, **kwargs)
+        result = original_cross_validate(*args, **kwargs)
+        with lock:
+            counters.cross_validate_calls += 1
+            counters.cv_fold_fits += len(result["fit_time"])
+        return result
 
     genetic_search.cross_validate = counted_cross_validate
     try:
@@ -264,6 +271,29 @@ def make_cv(scenario: Scenario, cv_splits: int, random_state: int):
     return KFold(n_splits=cv_splits, shuffle=True, random_state=random_state)
 
 
+def benchmark_optimization_config(final_selection, final_selection_top_k, final_selection_cv):
+    return OptimizationConfig(
+        local_search=True,
+        local_search_top_k=2,
+        local_search_steps=1,
+        local_search_radius=0.15,
+        diversity_control=True,
+        diversity_threshold=0.25,
+        diversity_stagnation_generations=4,
+        diversity_mutation_boost=1.5,
+        random_immigrants_fraction=0.10,
+        adaptive_selection=True,
+        selection_pressure_min=2,
+        selection_pressure_max=5,
+        offspring_diversity_retries=3,
+        fitness_sharing=True,
+        sharing_radius=0.35,
+        final_selection=final_selection,
+        final_selection_top_k=final_selection_top_k,
+        final_selection_cv=final_selection_cv,
+    )
+
+
 def build_gasearch(
     *,
     scenario: Scenario,
@@ -293,25 +323,8 @@ def build_gasearch(
         return_train_score=False,
         use_cache=use_cache,
     )
-    optimization_config = OptimizationConfig(
-        local_search=True,
-        local_search_top_k=2,
-        local_search_steps=1,
-        local_search_radius=0.15,
-        diversity_control=True,
-        diversity_threshold=0.25,
-        diversity_stagnation_generations=4,
-        diversity_mutation_boost=1.5,
-        random_immigrants_fraction=0.10,
-        adaptive_selection=True,
-        selection_pressure_min=2,
-        selection_pressure_max=5,
-        offspring_diversity_retries=3,
-        fitness_sharing=True,
-        sharing_radius=0.35,
-        final_selection=final_selection,
-        final_selection_top_k=final_selection_top_k,
-        final_selection_cv=final_selection_cv,
+    optimization_config = benchmark_optimization_config(
+        final_selection, final_selection_top_k, final_selection_cv
     )
     return GASearchCV(
         estimator=scenario.estimator_builder(random_state),
@@ -337,6 +350,9 @@ def build_feature_selector(
     population_initializer: str,
     max_features: int,
     use_cache: bool = True,
+    final_selection: bool = False,
+    final_selection_top_k: int = 3,
+    final_selection_cv=None,
 ) -> GAFeatureSelectionCV:
     evolution_config = EvolutionConfig(
         population_size=population_size,
@@ -352,22 +368,8 @@ def build_feature_selector(
         return_train_score=False,
         use_cache=use_cache,
     )
-    optimization_config = OptimizationConfig(
-        local_search=True,
-        local_search_top_k=2,
-        local_search_steps=1,
-        local_search_radius=0.15,
-        diversity_control=True,
-        diversity_threshold=0.25,
-        diversity_stagnation_generations=4,
-        diversity_mutation_boost=1.5,
-        random_immigrants_fraction=0.10,
-        adaptive_selection=True,
-        selection_pressure_min=2,
-        selection_pressure_max=5,
-        offspring_diversity_retries=3,
-        fitness_sharing=True,
-        sharing_radius=0.35,
+    optimization_config = benchmark_optimization_config(
+        final_selection, final_selection_top_k, final_selection_cv
     )
     return GAFeatureSelectionCV(
         estimator=scenario.estimator_builder(random_state),
@@ -457,7 +459,8 @@ def summarize_fit_mechanics(estimator, counters: FitCounters) -> dict[str, int]:
         stats = fallback_fit_mechanics(estimator, counters)
 
     summary = dict(stats)
-    summary["actual_cross_validate_calls"] = summary["cross_validate_calls"]
+    summary["actual_cross_validate_calls"] = counters.cross_validate_calls
+    summary["cv_fold_fits"] = counters.cv_fold_fits
     summary["duplicate_or_cache_reuses"] = summary["cache_hits"] + summary["duplicate_candidates"]
     summary["fitness_cache_size"] = len(getattr(estimator, "fitness_cache", {}))
     return summary
@@ -549,6 +552,9 @@ def run_one_benchmark(
         "generalization_gap": metric_gap(train_metrics, test_metrics),
     }
 
+    if hasattr(estimator, "fit_counts_"):
+        result["fit_counts"] = dict(estimator.fit_counts_)
+
     final_selection_results = getattr(estimator, "final_selection_results_", None)
     if final_selection_results is not None:
         result.update(
@@ -623,6 +629,7 @@ def aggregate_results(results: list[dict[str, Any]]) -> list[dict[str, Any]]:
             "actual_cross_validate_calls_mean": float(
                 np.mean([item["actual_cross_validate_calls"] for item in items])
             ),
+            "cv_fold_fits_mean": mean_optional(items, "cv_fold_fits"),
             "cache_hits_mean": float(np.mean([item["cache_hits"] for item in items])),
             "duplicate_candidates_mean": float(
                 np.mean([item["duplicate_candidates"] for item in items])
@@ -707,6 +714,7 @@ def print_summary_table(summaries: list[dict[str, Any]]) -> None:
         "runs",
         "fit_seconds_mean",
         "actual_cross_validate_calls_mean",
+        "cv_fold_fits_mean",
         "cache_hits_mean",
         "duplicate_candidates_mean",
         "duplicate_or_cache_reuses_mean",
@@ -1033,6 +1041,9 @@ def main() -> None:
                                         n_jobs=n_jobs,
                                         parallel_backend=parallel_backend,
                                         population_initializer=population_initializer,
+                                        final_selection=args.final_selection,
+                                        final_selection_top_k=args.final_selection_top_k,
+                                        final_selection_cv=args.final_selection_cv_splits,
                                         max_features=max(2, X_train.shape[1] // 3),
                                         use_cache=args.use_cache,
                                     ),

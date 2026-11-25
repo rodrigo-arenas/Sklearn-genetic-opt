@@ -9,7 +9,7 @@ from ..algorithms import eaDifferentialEvolution, eaMuCommaLambda, eaMuPlusLambd
 from ..callbacks import ConsecutiveStopping, DeltaThreshold
 from ..callbacks.base import BaseCallback
 from ..evaluation import create_fit_stats
-from ..optimizer_control import shared_fitness
+from ..optimizer_control import individual_distance, niche_counts, shared_fitness, sharing_value
 from ..schedules.schedulers import ConstantAdapter
 from ..space import Categorical, Continuous, Integer, Space
 
@@ -161,22 +161,30 @@ def test_differential_evolution_replaces_only_improved_targets(
         (Categorical([0.2, 0.4, 0.6, 0.8]), [0.2, 0.4, 0.6, 0.8], [0.4, 0.2, 0.2, 0.2]),
     ],
 )
+@pytest.mark.parametrize("fixed_columns", [False, True])
 def test_differential_evolution_uses_deferred_distinct_donors(
-    simple_toolbox, monkeypatch, dimension, parents, trials
+    simple_toolbox, monkeypatch, dimension, parents, trials, fixed_columns
 ):
-    # For a one-dimensional space, CR=0 must still force the donor coordinate.
+    # With one variable coordinate, CR=0 must still force that donor coordinate.
     # Excluding the target maps samples [0, 1, 2] to the three other parents.
-    population = [creator.IndividualAlgorithmTest([x]) for x in parents]
+    grid = {"x": dimension}
+    if fixed_columns:
+        grid = {"fixed": Categorical(["a"]), **grid, "constant": Continuous(2, 2)}
+    gene = list(grid).index("x")
+    population = [
+        creator.IndividualAlgorithmTest(["a", x, 2] if fixed_columns else [x]) for x in parents
+    ]
     evaluated = []
 
     def evaluate(individual):
-        evaluated.append(individual[0])
-        return (individual[0],)
+        evaluated.append(individual[gene])
+        return (individual[gene],)
 
     simple_toolbox.register("evaluate", evaluate)
     monkeypatch.setattr(random, "sample", lambda values, k: list(values)[:k])
+    monkeypatch.setattr(random, "randrange", lambda n: 0)
     estimator = SimpleNamespace(
-        space=Space({"x": dimension}),
+        space=Space(grid),
         _repair_individual=lambda individual: individual,
         elitism=False,
     )
@@ -192,7 +200,7 @@ def test_differential_evolution_uses_deferred_distinct_donors(
         estimator=estimator,
     )
     assert evaluated == pytest.approx(parents + trials)
-    assert [ind[0] for ind in result] == pytest.approx(
+    assert [ind[gene] for ind in result] == pytest.approx(
         [max(parent, trial) for parent, trial in zip(parents, trials)]
     )
 
@@ -296,6 +304,33 @@ def test_verbose_output_uses_compact_generation_summary(simple_toolbox, capsys):
 
     table_lines = [line for line in output.splitlines() if line.strip()]
     assert len({len(line) for line in table_lines}) == 1
+
+
+def test_easimple_growing_elite_archive_respects_population_budget(simple_toolbox):
+    population = [creator.IndividualAlgorithmTest([0]) for _ in range(4)]
+    mutations = iter(range(1, 20))
+
+    def mutate(individual):
+        individual[0] = next(mutations)
+        return (individual,)
+
+    simple_toolbox.register("mutate", mutate)
+    archive = tools.HallOfFame(3)
+    final, log, _ = eaSimple(
+        population,
+        simple_toolbox,
+        cxpb=ConstantAdapter(0, 0, 0),
+        mutpb=ConstantAdapter(1, 1, 0),
+        ngen=3,
+        halloffame=archive,
+        callbacks=[],
+        verbose=False,
+        estimator=SimpleNamespace(elitism=True),
+    )
+
+    assert log.select("population_size") == [4, 4, 4, 4]
+    assert log.select("nevals") == [4, 3, 1, 1]
+    assert max(ind[0] for ind in final) == archive[0][0] == 5
 
 
 def test_algorithm_records_monotonic_best_fitness(simple_toolbox):
@@ -479,11 +514,36 @@ def test_shared_fitness_temporarily_penalizes_crowded_niches(simple_toolbox):
     assert isolated.fitness.values == (10,)
 
 
+@pytest.mark.parametrize("weight", [1.0, -1.0])
+def test_shared_fitness_keeps_nonfinite_candidate_below_finite_candidates(weight):
+    fitness_type = type("Fitness", (base.Fitness,), {"weights": (weight,)})
+
+    class Individual(list):
+        def __init__(self, genes):
+            super().__init__(genes)
+            self.fitness = fitness_type()
+
+    population = []
+    for value, score in [(0, -weight * np.inf), (1, weight * -1e15), (2, weight * 1.0)]:
+        individual = Individual([value, value, value, value])
+        individual.fitness.values = (score,)
+        population.append(individual)
+
+    estimator = SimpleNamespace(
+        fitness_sharing=True,
+        sharing_radius=0.25,
+        sharing_alpha=1.0,
+    )
+    original = [item.fitness.values for item in population]
+    with shared_fitness(population, estimator):
+        assert all(not np.isnan(item.fitness.values[0]) for item in population)
+        assert tools.selBest(population, 1)[0] is population[2]
+    assert [item.fitness.values for item in population] == original
+
+
 @pytest.mark.parametrize("mixed", [False, True])
 @pytest.mark.parametrize("radius, alpha", [(0.25, 1.0), (0.8, 2.0)])
 def test_shared_fitness_matches_pairwise_reference(simple_toolbox, mixed, radius, alpha):
-    from ..optimizer_control import individual_distance, sharing_value
-
     values = (
         [[1, 0.1, ("a", 1), 2], [3, 0.5, None, 2], [1, 0.1, ("a", 1), 2], [5, 1.0, None, 2]]
         if mixed
@@ -513,9 +573,42 @@ def test_shared_fitness_matches_pairwise_reference(simple_toolbox, mixed, radius
     assert [item.fitness.values[0] for item in population] == [1.0, 2.0, 3.0, 4.0]
 
 
+@pytest.mark.parametrize("nonbinary", [False, True])
+def test_wide_feature_niche_counts_match_scalar_distances(nonbinary):
+    width = 1025
+    values = np.zeros((18, width), dtype=int)
+    for index, row in enumerate(values):
+        row[: 1 + index % 5] = 1
+        row[-1] = index % 2
+    if nonbinary:
+        values[0, 0] = 2
+    population = values.tolist()
+    radius, alpha = np.longdouble(4 / width), np.longdouble("1.3")
+    estimator = SimpleNamespace(sharing_radius=radius, sharing_alpha=alpha)
+    expected = [
+        np.cumsum(
+            [
+                sharing_value(individual_distance(estimator, row, other), radius, alpha)
+                for other in population
+            ],
+            dtype=float,
+        )[-1]
+        for row in population
+    ]
+    assert niche_counts(population, estimator) == expected
+
+
 @pytest.mark.parametrize(
     "kind",
-    ["large_integer", "continuous_integer", "unsigned_integer", "nan_category", "list_category"],
+    [
+        "large_integer",
+        "continuous_integer",
+        "unsigned_integer",
+        "signed_integer",
+        "matching_nan_category",
+        "distinct_nan_category",
+        "list_category",
+    ],
 )
 def test_shared_fitness_preserves_dimension_equality(simple_toolbox, kind):
     if kind in {"large_integer", "continuous_integer"}:
@@ -524,10 +617,12 @@ def test_shared_fitness_preserves_dimension_equality(simple_toolbox, kind):
     elif kind == "unsigned_integer":
         values = [np.uint64(1), np.uint64(2)]
         dimension = Integer(0, 10)
-    elif kind == "nan_category":
-        value = float("nan")
-        values = [value, value]
-        dimension = Categorical([value, "other"])
+    elif kind == "signed_integer":
+        values = [np.int64(-(2**63)), np.int64(2**63 - 1)]
+        dimension = Integer(-(2**63), 2**63 - 1)
+    elif kind in {"matching_nan_category", "distinct_nan_category"}:
+        values = [float("nan"), float("nan" if kind == "matching_nan_category" else "-nan")]
+        dimension = Categorical(values)
     else:
         values = [[1], [2]]
         dimension = Categorical(values)
@@ -537,9 +632,17 @@ def test_shared_fitness_preserves_dimension_equality(simple_toolbox, kind):
     estimator = SimpleNamespace(
         space=Space({"x": dimension}), fitness_sharing=True, sharing_radius=0.5, sharing_alpha=1.0
     )
-    with shared_fitness(population, estimator):
-        expected = [10.0, 10.0 / 1.8] if kind == "unsigned_integer" else [10.0, 10.0]
-        assert [item.fitness.values[0] for item in population] == expected
+    expected = {
+        "unsigned_integer": [10.0 / 1.8] * 2,
+        "matching_nan_category": [5.0, 5.0],
+    }
+    with np.errstate(over="raise"), shared_fitness(population, estimator):
+        assert [item.fitness.values[0] for item in population] == expected.get(kind, [10.0, 10.0])
+    if kind in {"unsigned_integer", "signed_integer"}:
+        expected_distance = 0.1 if kind == "unsigned_integer" else 1.0
+        with np.errstate(over="raise"):
+            assert individual_distance(estimator, *population) == expected_distance
+            assert individual_distance(estimator, *reversed(population)) == expected_distance
 
 
 def test_shared_fitness_preserves_selection_ties(simple_toolbox):

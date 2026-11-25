@@ -1,0 +1,19 @@
+{
+  "python": "3.12.14",
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "packages": {
+    "scikit-learn": "1.9.1",
+    "numpy": "2.5.5",
+    "deap": "1.4.4",
+    "scipy": "1.18.1",
+    "nevergrad": "1.0.12",
+    "cmaes": "0.13.1",
+    "pymoo": "0.6.2"
+  },
+  "engine_commit": "6c6f39fabcf5b7475f3cfc3e177e2e8fe6ffec43",
+  "cpu": "Intel Xeon Platinum 8573C",
+  "n_jobs": 1,
+  "native_thread_limit": 1,
+  "pilot_rows": 192,
+  "comparison_rows": 900
+}

@@ -7,11 +7,11 @@ description: "A multi-stage walkthrough: build a noisy high-dimensional dataset,
 This is the **latest (dev)** documentation. It may contain unreleased features or breaking changes. For the stable release, use [stable](/stable/).
 :::
 
+# Comprehensive GA Feature Selection
+
 **Estimated reading time:** 20 minutes  
 **Difficulty:** Advanced  
 **Prerequisites:** [Getting Started with GASearchCV](../guide/basic-usage), basic sklearn Pipeline knowledge
-
-# Comprehensive GA Feature Selection
 
 Choosing which of *n* columns to keep is a search over `2ⁿ` subsets — far beyond any grid or random sweep. `GAFeatureSelectionCV` evolves the on/off mask directly, and because it scores *whole subsets* it can account for redundancy and interaction between columns, not just each column in isolation.
 
@@ -194,8 +194,10 @@ print(f"Selected {int(selector.support_.sum())} of {n_features} features")
 ```
 
 ```text
-Best CV balanced accuracy: 0.8024
-Selected 32 of 60 features
+INFO: DeltaThreshold callback met its criteria
+INFO: Stopping the algorithm
+Best CV balanced accuracy: 0.8335
+Selected 36 of 60 features
 ```
 
 ## Stage 4 — Grade the Mask Against the Truth
@@ -215,10 +217,10 @@ print(f"  noise leaked  : {int((~is_signal[support]).sum())}")
 ```
 
 ```text
-Selected 32 of 60 features
-  signal kept   : 17 / 20
-  noise dropped : 25 / 40
-  noise leaked  : 15
+Selected 36 of 60 features
+  signal kept   : 18 / 20
+  noise dropped : 22 / 40
+  noise leaked  : 18
 ```
 
 ### The support mask
@@ -281,11 +283,11 @@ print(f"while using only {n_selected} of {n_features} columns "
 
 ```text
           strategy  n_features  cv_balanced_acc  accuracy  balanced_accuracy
-   All 60 features          60           0.7625     0.800             0.8001
-GA-selected subset          32           0.8024     0.835             0.8350
+   All 60 features          60           0.7625    0.8000             0.8001
+GA-selected subset          36           0.8335    0.8617             0.8616
 
-Genetic feature selection lifts KNN holdout balanced accuracy by +0.0349
-while using only 32 of 60 columns (53% of the inputs).
+Genetic feature selection lifts KNN holdout balanced accuracy by +0.0615
+while using only 36 of 60 columns (60% of the inputs).
 ```
 
 ## Stage 6 — Does the Win Transfer? (SVC robustness check)
@@ -311,8 +313,8 @@ print(transfer.to_string(index=False))
 
 ```text
   model  all_features  selected  delta
-    KNN        0.8001    0.8350 0.0349
-SVC-RBF        0.8633    0.8733 0.0100
+    KNN        0.8001    0.8616 0.0615
+SVC-RBF        0.8633    0.8833 0.0200
 ```
 
 ### Before / after feature-count and accuracy
@@ -353,22 +355,26 @@ guided the search — the selected columns are genuine, model-agnostic signal.
 
 `fit_stats_` reports the evaluation accounting; `history` carries the
 per-generation convergence and diversity signals.
+`genotype_diversity` measures how often two members of the current
+population disagree about whether to include a column, averaged over all
+input columns. `unique_individual_ratio` is the fraction of distinct masks.
+See [how to read optimizer telemetry](../guide/advanced-optimizer-control#reading-optimizer-telemetry).
 
 ```python
 print(pd.Series(selector.fit_stats_).to_string())
 ```
 
 ```text
-evaluated_candidates           986
-unique_candidates              986
-cross_validate_calls           986
+evaluated_candidates           696
+unique_candidates              696
+cross_validate_calls           696
 cache_hits                       0
 duplicate_candidates             0
 skipped_invalid_candidates       0
-population_parallel_batches     22
-population_serial_batches        0
-random_immigrants              100
-local_refinement_candidates      2
+population_parallel_batches      0
+population_serial_batches       15
+random_immigrants                0
+local_refinement_candidates      0
 ```
 
 ```python
@@ -380,11 +386,11 @@ history[[c for c in cols if c in history.columns]].tail()
 
 ```text
     gen   fitness  fitness_best  genotype_diversity  unique_individual_ratio  stagnation_generations
-16   16  0.735777      0.790190            0.043478                 0.750000                       1
-17   17  0.727760      0.790190            0.043478                 0.791667                       2
-18   18  0.723373      0.802352            0.043478                 0.875000                       0
-19   19  0.722615      0.802352            0.043478                 0.875000                       1
-20   20  0.738935      0.802352            0.042754                 0.750000                       3
+10   10  0.744261      0.833464            0.444444                 0.833333                       1
+11   11  0.758310      0.833464            0.386715                 0.791667                       2
+12   12  0.746178      0.833464            0.435628                 0.833333                       3
+13   13  0.753500      0.833464            0.426087                 0.833333                       4
+14   14  0.745896      0.833464            0.451932                 0.750000                       5
 ```
 
 ## Practical Notes

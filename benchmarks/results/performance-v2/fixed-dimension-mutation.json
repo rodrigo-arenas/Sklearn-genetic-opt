@@ -1,0 +1,456 @@
+{
+  "baseline_commit": "76d6b819e79964752b4cde01e169588b46029523",
+  "python": "3.12.0",
+  "versions": {
+    "scikit-learn": "1.9.1",
+    "numpy": "2.5.3",
+    "deap": "1.4.4"
+  },
+  "rows": [
+    {
+      "task": "classification_lr",
+      "seed": 1701,
+      "diversity": true,
+      "baseline": {
+        "initial": [
+          1.0,
+          17.431183691441166,
+          0.0008517464591339559,
+          0.8112589211609431,
+          0.004005597495291306,
+          0.21679223946075687
+        ],
+        "mutation_calls": 6,
+        "unchanged_mutations": 5,
+        "replacements": 35,
+        "distinct": 42,
+        "proposals": 42,
+        "holdout": 0.9989517819706499
+      },
+      "current": {
+        "initial": [
+          1.0,
+          17.431183691441166,
+          0.0008517464591339559,
+          0.8112589211609431,
+          0.004005597495291306,
+          0.21679223946075687
+        ],
+        "mutation_calls": 6,
+        "unchanged_mutations": 0,
+        "replacements": 30,
+        "distinct": 42,
+        "proposals": 42,
+        "holdout": 0.9989517819706499
+      }
+    },
+    {
+      "task": "classification_lr",
+      "seed": 1701,
+      "diversity": false,
+      "baseline": {
+        "initial": [
+          1.0,
+          17.431183691441166,
+          0.0008517464591339559,
+          0.8112589211609431,
+          0.004005597495291306,
+          0.21679223946075687
+        ],
+        "mutation_calls": 5,
+        "unchanged_mutations": 5,
+        "replacements": 0,
+        "distinct": 6,
+        "proposals": 37,
+        "holdout": 0.9989517819706499
+      },
+      "current": {
+        "initial": [
+          1.0,
+          17.431183691441166,
+          0.0008517464591339559,
+          0.8112589211609431,
+          0.004005597495291306,
+          0.21679223946075687
+        ],
+        "mutation_calls": 4,
+        "unchanged_mutations": 0,
+        "replacements": 0,
+        "distinct": 10,
+        "proposals": 39,
+        "holdout": 0.9989517819706499
+      }
+    },
+    {
+      "task": "classification_lr",
+      "seed": 1702,
+      "diversity": true,
+      "baseline": {
+        "initial": [
+          1.0,
+          0.4655972975333406,
+          0.06933558368174333,
+          0.0014571975019231195,
+          0.003968070877816014,
+          38.00018515577124
+        ],
+        "mutation_calls": 5,
+        "unchanged_mutations": 5,
+        "replacements": 36,
+        "distinct": 42,
+        "proposals": 42,
+        "holdout": 0.9960167714884696
+      },
+      "current": {
+        "initial": [
+          1.0,
+          0.4655972975333406,
+          0.06933558368174333,
+          0.0014571975019231195,
+          0.003968070877816014,
+          38.00018515577124
+        ],
+        "mutation_calls": 6,
+        "unchanged_mutations": 0,
+        "replacements": 30,
+        "distinct": 42,
+        "proposals": 42,
+        "holdout": 0.9960167714884696
+      }
+    },
+    {
+      "task": "classification_lr",
+      "seed": 1702,
+      "diversity": false,
+      "baseline": {
+        "initial": [
+          1.0,
+          0.4655972975333406,
+          0.06933558368174333,
+          0.0014571975019231195,
+          0.003968070877816014,
+          38.00018515577124
+        ],
+        "mutation_calls": 5,
+        "unchanged_mutations": 4,
+        "replacements": 0,
+        "distinct": 7,
+        "proposals": 39,
+        "holdout": 0.9960167714884696
+      },
+      "current": {
+        "initial": [
+          1.0,
+          0.4655972975333406,
+          0.06933558368174333,
+          0.0014571975019231195,
+          0.003968070877816014,
+          38.00018515577124
+        ],
+        "mutation_calls": 5,
+        "unchanged_mutations": 0,
+        "replacements": 0,
+        "distinct": 11,
+        "proposals": 39,
+        "holdout": 0.9960167714884696
+      }
+    },
+    {
+      "task": "classification_lr",
+      "seed": 1703,
+      "diversity": true,
+      "baseline": {
+        "initial": [
+          1.0,
+          13.306617095499835,
+          0.014650657486102406,
+          0.1695179187436489,
+          1.9081646356592676,
+          0.00029091241828594293
+        ],
+        "mutation_calls": 6,
+        "unchanged_mutations": 4,
+        "replacements": 34,
+        "distinct": 42,
+        "proposals": 42,
+        "holdout": 0.9966457023060796
+      },
+      "current": {
+        "initial": [
+          1.0,
+          13.306617095499835,
+          0.014650657486102406,
+          0.1695179187436489,
+          1.9081646356592676,
+          0.00029091241828594293
+        ],
+        "mutation_calls": 6,
+        "unchanged_mutations": 0,
+        "replacements": 30,
+        "distinct": 42,
+        "proposals": 42,
+        "holdout": 0.9966457023060796
+      }
+    },
+    {
+      "task": "classification_lr",
+      "seed": 1703,
+      "diversity": false,
+      "baseline": {
+        "initial": [
+          1.0,
+          13.306617095499835,
+          0.014650657486102406,
+          0.1695179187436489,
+          1.9081646356592676,
+          0.00029091241828594293
+        ],
+        "mutation_calls": 6,
+        "unchanged_mutations": 4,
+        "replacements": 0,
+        "distinct": 8,
+        "proposals": 37,
+        "holdout": 0.9966457023060796
+      },
+      "current": {
+        "initial": [
+          1.0,
+          13.306617095499835,
+          0.014650657486102406,
+          0.1695179187436489,
+          1.9081646356592676,
+          0.00029091241828594293
+        ],
+        "mutation_calls": 6,
+        "unchanged_mutations": 0,
+        "replacements": 0,
+        "distinct": 12,
+        "proposals": 37,
+        "holdout": 0.9966457023060796
+      }
+    },
+    {
+      "task": "regression_ridge",
+      "seed": 1701,
+      "diversity": true,
+      "baseline": {
+        "initial": [
+          1.0,
+          0.004378515379968225,
+          0.12718825504605585,
+          0.9180913592794867,
+          0.00020377902765052745,
+          28.034322417665585
+        ],
+        "mutation_calls": 7,
+        "unchanged_mutations": 5,
+        "replacements": 34,
+        "distinct": 42,
+        "proposals": 42,
+        "holdout": 0.5299438842771341
+      },
+      "current": {
+        "initial": [
+          1.0,
+          0.004378515379968225,
+          0.12718825504605585,
+          0.9180913592794867,
+          0.00020377902765052745,
+          28.034322417665585
+        ],
+        "mutation_calls": 9,
+        "unchanged_mutations": 0,
+        "replacements": 27,
+        "distinct": 42,
+        "proposals": 42,
+        "holdout": 0.5299438842771341
+      }
+    },
+    {
+      "task": "regression_ridge",
+      "seed": 1701,
+      "diversity": false,
+      "baseline": {
+        "initial": [
+          1.0,
+          0.004378515379968225,
+          0.12718825504605585,
+          0.9180913592794867,
+          0.00020377902765052745,
+          28.034322417665585
+        ],
+        "mutation_calls": 3,
+        "unchanged_mutations": 3,
+        "replacements": 0,
+        "distinct": 6,
+        "proposals": 37,
+        "holdout": 0.5299438842771341
+      },
+      "current": {
+        "initial": [
+          1.0,
+          0.004378515379968225,
+          0.12718825504605585,
+          0.9180913592794867,
+          0.00020377902765052745,
+          28.034322417665585
+        ],
+        "mutation_calls": 6,
+        "unchanged_mutations": 0,
+        "replacements": 0,
+        "distinct": 12,
+        "proposals": 39,
+        "holdout": 0.5299438842771341
+      }
+    },
+    {
+      "task": "regression_ridge",
+      "seed": 1702,
+      "diversity": true,
+      "baseline": {
+        "initial": [
+          1.0,
+          0.4655972975333406,
+          0.00015588989696260517,
+          0.011744636622453893,
+          91.94294661965814,
+          0.03187229428990636
+        ],
+        "mutation_calls": 6,
+        "unchanged_mutations": 5,
+        "replacements": 35,
+        "distinct": 42,
+        "proposals": 42,
+        "holdout": 0.4892136284847408
+      },
+      "current": {
+        "initial": [
+          1.0,
+          0.4655972975333406,
+          0.00015588989696260517,
+          0.011744636622453893,
+          91.94294661965814,
+          0.03187229428990636
+        ],
+        "mutation_calls": 7,
+        "unchanged_mutations": 0,
+        "replacements": 29,
+        "distinct": 42,
+        "proposals": 42,
+        "holdout": 0.4892136284847408
+      }
+    },
+    {
+      "task": "regression_ridge",
+      "seed": 1702,
+      "diversity": false,
+      "baseline": {
+        "initial": [
+          1.0,
+          0.4655972975333406,
+          0.00015588989696260517,
+          0.011744636622453893,
+          91.94294661965814,
+          0.03187229428990636
+        ],
+        "mutation_calls": 7,
+        "unchanged_mutations": 6,
+        "replacements": 0,
+        "distinct": 7,
+        "proposals": 38,
+        "holdout": 0.48061251660119997
+      },
+      "current": {
+        "initial": [
+          1.0,
+          0.4655972975333406,
+          0.00015588989696260517,
+          0.011744636622453893,
+          91.94294661965814,
+          0.03187229428990636
+        ],
+        "mutation_calls": 6,
+        "unchanged_mutations": 0,
+        "replacements": 0,
+        "distinct": 12,
+        "proposals": 39,
+        "holdout": 0.4892136284847408
+      }
+    },
+    {
+      "task": "regression_ridge",
+      "seed": 1703,
+      "diversity": true,
+      "baseline": {
+        "initial": [
+          1.0,
+          0.8395907786591325,
+          0.015999916318632807,
+          0.12909783913278589,
+          0.0006748629898915166,
+          23.204249108364742
+        ],
+        "mutation_calls": 4,
+        "unchanged_mutations": 4,
+        "replacements": 36,
+        "distinct": 42,
+        "proposals": 42,
+        "holdout": 0.5236408667347441
+      },
+      "current": {
+        "initial": [
+          1.0,
+          0.8395907786591325,
+          0.015999916318632807,
+          0.12909783913278589,
+          0.0006748629898915166,
+          23.204249108364742
+        ],
+        "mutation_calls": 5,
+        "unchanged_mutations": 0,
+        "replacements": 31,
+        "distinct": 42,
+        "proposals": 42,
+        "holdout": 0.5236408667347441
+      }
+    },
+    {
+      "task": "regression_ridge",
+      "seed": 1703,
+      "diversity": false,
+      "baseline": {
+        "initial": [
+          1.0,
+          0.8395907786591325,
+          0.015999916318632807,
+          0.12909783913278589,
+          0.0006748629898915166,
+          23.204249108364742
+        ],
+        "mutation_calls": 2,
+        "unchanged_mutations": 2,
+        "replacements": 0,
+        "distinct": 6,
+        "proposals": 37,
+        "holdout": 0.5236408667347441
+      },
+      "current": {
+        "initial": [
+          1.0,
+          0.8395907786591325,
+          0.015999916318632807,
+          0.12909783913278589,
+          0.0006748629898915166,
+          23.204249108364742
+        ],
+        "mutation_calls": 5,
+        "unchanged_mutations": 0,
+        "replacements": 0,
+        "distinct": 11,
+        "proposals": 37,
+        "holdout": 0.5236408667347441
+      }
+    }
+  ],
+  "reproduction_script": "import ast\nimport json\nimport platform\nimport random\nimport subprocess\nimport sys\nfrom pathlib import Path\nfrom importlib.metadata import version\n\nfrom sklearn.metrics import get_scorer\nfrom sklearn.model_selection import train_test_split\nfrom threadpoolctl import threadpool_limits\n\nsys.path.insert(0, str(Path.cwd()))\nfrom benchmarks.benchmark_fit import SCENARIOS, make_cv\nfrom sklearn_genetic import GASearchCV\nfrom sklearn_genetic.space import Categorical, Continuous, Integer\n\nbaseline = subprocess.check_output([\"git\", \"rev-parse\", \"76d6b81\"], text=True).strip()\npath = \"sklearn_genetic/genetic_search.py\"\nsource = subprocess.check_output([\"git\", \"show\", f\"{baseline}:{path}\"], text=True)\nmethod = next(\n    fn\n    for cls in ast.parse(source).body\n    if getattr(cls, \"name\", \"\") == \"GASearchCV\"\n    for fn in cls.body\n    if getattr(fn, \"name\", \"\") == \"mutate\"\n)\nexec(compile(ast.Module(body=[method], type_ignores=[]), path, \"exec\"), globals())\n\n\nclass BaselineSearch(GASearchCV):\n    mutate = mutate\n\n\nclass CountMutations:\n    calls = 0\n    unchanged = 0\n\n    def mutate(self, individual):\n        before = tuple(individual)\n        result = super().mutate(individual)\n        self.calls += 1\n        self.unchanged += before == tuple(individual)\n        return result\n\n\nclass ObservedBaseline(CountMutations, BaselineSearch):\n    pass\n\n\nclass ObservedCurrent(CountMutations, GASearchCV):\n    pass\n\n\ndef paired(task, seed, diversity):\n    sc = SCENARIOS[task]\n    X, y = sc.loader()\n    classification = sc.task == \"classification\"\n    Xtr, Xte, ytr, yte = train_test_split(\n        X, y, test_size=0.25, random_state=seed, stratify=y if classification else None\n    )\n    folds = list(make_cv(sc, 3, seed).split(Xtr, ytr))\n    prefix = \"clf__\" if classification else \"ridge__\"\n    name = prefix + (\"C\" if classification else \"alpha\")\n    rows = []\n    for cls in (ObservedBaseline, ObservedCurrent):\n        pipeline = sc.estimator_builder(seed)\n        defaults = pipeline.get_params()\n        grid = {\n            name: Continuous(1e-4, 100, distribution=\"log-uniform\"),\n            prefix + \"fit_intercept\": Categorical([True]),\n            prefix + \"tol\": Continuous(defaults[prefix + \"tol\"], defaults[prefix + \"tol\"]),\n        }\n        if classification:\n            grid[prefix + \"max_iter\"] = Integer(\n                defaults[prefix + \"max_iter\"], defaults[prefix + \"max_iter\"]\n            )\n        else:\n            grid[prefix + \"solver\"] = Categorical([defaults[prefix + \"solver\"]])\n        search = cls(\n            pipeline,\n            param_grid=grid,\n            cv=folds,\n            scoring=sc.scoring,\n            population_size=6,\n            generations=3,\n            diversity_control=diversity,\n            random_state=seed,\n            n_jobs=1,\n            verbose=False,\n            error_score=\"raise\",\n        )\n        search.fit(Xtr, ytr)\n        values = [params[name] for params in search.cv_results_[\"params\"]]\n        assert len(set(values)) == search.fit_stats_[\"cross_validate_calls\"]\n        rows.append(\n            dict(\n                initial=values[:6],\n                mutation_calls=search.calls,\n                unchanged_mutations=search.unchanged,\n                replacements=sum(search.history[\"duplicate_replacements\"]),\n                distinct=len(set(values)),\n                proposals=len(values),\n                holdout=float(get_scorer(sc.scoring)(search.best_estimator_, Xte, yte)),\n            )\n        )\n    assert rows[0][\"initial\"] == rows[1][\"initial\"]\n    return dict(task=task, seed=seed, diversity=diversity, baseline=rows[0], current=rows[1])\n\n\nwith threadpool_limits(1):\n    rows = [\n        paired(task, seed, diversity)\n        for task in (\"classification_lr\", \"regression_ridge\")\n        for seed in (1701, 1702, 1703)\n        for diversity in (True, False)\n    ]\nprint(\n    json.dumps(\n        dict(\n            baseline_commit=baseline,\n            python=platform.python_version(),\n            versions={p: version(p) for p in (\"scikit-learn\", \"numpy\", \"deap\")},\n            rows=rows,\n            reproduction_script=Path(__file__).read_text(encoding=\"utf-8\"),\n        ),\n        indent=2,\n    )\n)\n"
+}

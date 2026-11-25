@@ -29,6 +29,10 @@ nb = Notebook(
         "mask and fitness history — all from real execution."
     ),
     intro=(
+        "**Estimated reading time:** 20 minutes  \n"
+        "**Difficulty:** Advanced  \n"
+        "**Prerequisites:** [Getting Started with GASearchCV](../guide/basic-usage), "
+        "basic sklearn Pipeline knowledge\n\n"
         "Choosing which of *n* columns to keep is a search over `2ⁿ` subsets — far "
         "beyond any grid or random sweep. `GAFeatureSelectionCV` evolves the on/off "
         "mask directly, and because it scores *whole subsets* it can account for "
@@ -358,6 +362,10 @@ nb.md("""
 
     `fit_stats_` reports the evaluation accounting; `history` carries the
     per-generation convergence and diversity signals.
+    `genotype_diversity` measures how often two members of the current
+    population disagree about whether to include a column, averaged over all
+    input columns. `unique_individual_ratio` is the fraction of distinct masks.
+    See [how to read optimizer telemetry](../guide/advanced-optimizer-control#reading-optimizer-telemetry).
     """)
 
 nb.code("""
@@ -397,6 +405,14 @@ nb.md("""
       controls applied to hyperparameter tuning
     - [GAFeatureSelectionCV API](../api/gafeatureselectioncv) — every parameter
     - [Plotting Gallery](../examples/plotting-gallery) — every plotting helper
+
+    ## See Also
+
+    - [Random Forest Hyperparameter Tuning](./tune-random-forest) — tune the estimator used in feature selection
+    - [Tuning scikit-learn Pipelines](../guide/pipeline-tuning) — combine preprocessing + feature selection + model
+    - [Common Hyperparameter Tuning Mistakes](../guide/common-mistakes) — data leakage in feature selection
+    - [API: GAFeatureSelectionCV](../api/gafeatureselectioncv) — full API reference
+    - [Examples: Feature Selection](../examples/feature-selection) — shorter recipe version
     """)
 
 nb.write()

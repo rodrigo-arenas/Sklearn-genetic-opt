@@ -1,0 +1,265 @@
+{
+  "source_commit": "e95683daf58751773a9854067fcfa0ed6af2f188",
+  "python": "3.12.0",
+  "versions": {
+    "numpy": "2.5.3",
+    "scipy": "1.18.1",
+    "deap": "1.4.4",
+    "scikit-learn": "1.9.1"
+  },
+  "rows": [
+    {
+      "task": "Diabetes",
+      "seed": 1301,
+      "method": "linear",
+      "cv": -2952.204615014123,
+      "holdout": -3276.0714633976,
+      "metric": "neg_mean_squared_error",
+      "params": {
+        "ridge__alpha": 30.09324484998851
+      },
+      "seconds": 0.2584224000456743,
+      "candidates": 30,
+      "proposals": 30
+    },
+    {
+      "task": "Diabetes",
+      "seed": 1301,
+      "method": "log",
+      "cv": -2952.204615014123,
+      "holdout": -3276.0714633976,
+      "metric": "neg_mean_squared_error",
+      "params": {
+        "ridge__alpha": 30.09324484998851
+      },
+      "seconds": 0.24966310005402192,
+      "candidates": 30,
+      "proposals": 30
+    },
+    {
+      "task": "Diabetes",
+      "seed": 1302,
+      "method": "log",
+      "cv": -2897.2948929122254,
+      "holdout": -3317.918336348393,
+      "metric": "neg_mean_squared_error",
+      "params": {
+        "ridge__alpha": 6.835548228046455
+      },
+      "seconds": 0.25353559997165576,
+      "candidates": 30,
+      "proposals": 30
+    },
+    {
+      "task": "Diabetes",
+      "seed": 1302,
+      "method": "linear",
+      "cv": -2897.2948929122254,
+      "holdout": -3317.918336348393,
+      "metric": "neg_mean_squared_error",
+      "params": {
+        "ridge__alpha": 6.835548228046455
+      },
+      "seconds": 0.24396240001078695,
+      "candidates": 30,
+      "proposals": 30
+    },
+    {
+      "task": "Diabetes",
+      "seed": 1303,
+      "method": "linear",
+      "cv": -2931.5886586962224,
+      "holdout": -3300.9371907948725,
+      "metric": "neg_mean_squared_error",
+      "params": {
+        "ridge__alpha": 22.567455267630226
+      },
+      "seconds": 0.25282399996649474,
+      "candidates": 30,
+      "proposals": 30
+    },
+    {
+      "task": "Diabetes",
+      "seed": 1303,
+      "method": "log",
+      "cv": -2934.1375865172645,
+      "holdout": -3312.942941521504,
+      "metric": "neg_mean_squared_error",
+      "params": {
+        "ridge__alpha": 17.49396651266652
+      },
+      "seconds": 0.24836840003263205,
+      "candidates": 30,
+      "proposals": 30
+    },
+    {
+      "task": "Wine",
+      "seed": 1301,
+      "method": "linear",
+      "cv": 0.9774410774410774,
+      "holdout": 0.9777777777777777,
+      "metric": "accuracy",
+      "params": {
+        "logisticregression__C": 1.0
+      },
+      "seconds": 0.536424599995371,
+      "candidates": 30,
+      "proposals": 30
+    },
+    {
+      "task": "Wine",
+      "seed": 1301,
+      "method": "log",
+      "cv": 0.9774410774410774,
+      "holdout": 0.9777777777777777,
+      "metric": "accuracy",
+      "params": {
+        "logisticregression__C": 1.0
+      },
+      "seconds": 0.5293208999792114,
+      "candidates": 30,
+      "proposals": 30
+    },
+    {
+      "task": "Wine",
+      "seed": 1302,
+      "method": "log",
+      "cv": 0.9850168350168351,
+      "holdout": 0.9555555555555556,
+      "metric": "accuracy",
+      "params": {
+        "logisticregression__C": 0.010047027251059666
+      },
+      "seconds": 0.5051402999670245,
+      "candidates": 30,
+      "proposals": 30
+    },
+    {
+      "task": "Wine",
+      "seed": 1302,
+      "method": "linear",
+      "cv": 0.9850168350168351,
+      "holdout": 0.9555555555555556,
+      "metric": "accuracy",
+      "params": {
+        "logisticregression__C": 0.010047027251059666
+      },
+      "seconds": 0.5197078999481164,
+      "candidates": 30,
+      "proposals": 30
+    },
+    {
+      "task": "Wine",
+      "seed": 1303,
+      "method": "linear",
+      "cv": 0.9848484848484849,
+      "holdout": 0.9777777777777777,
+      "metric": "accuracy",
+      "params": {
+        "logisticregression__C": 1.0
+      },
+      "seconds": 0.5348877999931574,
+      "candidates": 30,
+      "proposals": 30
+    },
+    {
+      "task": "Wine",
+      "seed": 1303,
+      "method": "log",
+      "cv": 0.9848484848484849,
+      "holdout": 0.9777777777777777,
+      "metric": "accuracy",
+      "params": {
+        "logisticregression__C": 1.0
+      },
+      "seconds": 0.5317562000127509,
+      "candidates": 30,
+      "proposals": 30
+    },
+    {
+      "task": "Breast Cancer",
+      "seed": 1301,
+      "method": "linear",
+      "cv": 0.9616634866793866,
+      "holdout": 0.9755765199161426,
+      "metric": "balanced_accuracy",
+      "params": {
+        "svc__gamma": 0.0164636699998595
+      },
+      "seconds": 0.741182099969592,
+      "candidates": 30,
+      "proposals": 30
+    },
+    {
+      "task": "Breast Cancer",
+      "seed": 1301,
+      "method": "log",
+      "cv": 0.9616634866793866,
+      "holdout": 0.9755765199161426,
+      "metric": "balanced_accuracy",
+      "params": {
+        "svc__gamma": 0.0164636699998595
+      },
+      "seconds": 0.7646865000133403,
+      "candidates": 30,
+      "proposals": 30
+    },
+    {
+      "task": "Breast Cancer",
+      "seed": 1302,
+      "method": "log",
+      "cv": 0.9604621581513674,
+      "holdout": 0.9811320754716981,
+      "metric": "balanced_accuracy",
+      "params": {
+        "svc__gamma": 0.035583344872163275
+      },
+      "seconds": 0.7147756000049412,
+      "candidates": 30,
+      "proposals": 30
+    },
+    {
+      "task": "Breast Cancer",
+      "seed": 1302,
+      "method": "linear",
+      "cv": 0.9604621581513674,
+      "holdout": 0.9811320754716981,
+      "metric": "balanced_accuracy",
+      "params": {
+        "svc__gamma": 0.035583344872163275
+      },
+      "seconds": 0.7185327999759465,
+      "candidates": 30,
+      "proposals": 30
+    },
+    {
+      "task": "Breast Cancer",
+      "seed": 1303,
+      "method": "linear",
+      "cv": 0.9383789131510141,
+      "holdout": 0.9567085953878407,
+      "metric": "balanced_accuracy",
+      "params": {
+        "svc__gamma": 0.004413086266316294
+      },
+      "seconds": 0.7690368000185117,
+      "candidates": 30,
+      "proposals": 30
+    },
+    {
+      "task": "Breast Cancer",
+      "seed": 1303,
+      "method": "log",
+      "cv": 0.9383789131510141,
+      "holdout": 0.9567085953878407,
+      "metric": "balanced_accuracy",
+      "params": {
+        "svc__gamma": 0.004413086266316294
+      },
+      "seconds": 0.7548407000140287,
+      "candidates": 30,
+      "proposals": 30
+    }
+  ],
+  "reproduction_script": "from pathlib import Path\nimport json, math, platform, subprocess, sys, time, warnings\nfrom importlib.metadata import version\nfrom unittest.mock import patch\n\nfrom deap.tools import cxSimulatedBinaryBounded\nfrom sklearn.datasets import load_diabetes, load_wine, load_breast_cancer\nfrom sklearn.linear_model import Ridge, LogisticRegression\nfrom sklearn.metrics import get_scorer\nfrom sklearn.model_selection import KFold, StratifiedKFold, train_test_split\nfrom sklearn.pipeline import make_pipeline\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.svm import SVC\nfrom sklearn_genetic import GASearchCV\nfrom sklearn_genetic.space import Continuous\nfrom threadpoolctl import threadpool_limits\n\ndef log_mate(self, first, second):\n    dim = self.space[self.space.parameters[0]]\n    before = [math.log(first[0]), math.log(second[0])]\n    a, b = cxSimulatedBinaryBounded([before[0]], [before[1]], eta=10,\n                                   low=math.log(dim.lower), up=math.log(dim.upper))\n    for individual, allele, original in zip((first, second), (a[0], b[0]), before):\n        if allele != original:\n            individual[0] = math.exp(allele)\n        self._repair_individual(individual)\n    return first, second\n\ndef run():\n    rows=[]\n    tasks=[(\"Diabetes\",load_diabetes,Ridge(),\"ridge__alpha\",1e-4,1e4,\"neg_mean_squared_error\"),\n           (\"Wine\",load_wine,LogisticRegression(max_iter=1000),\"logisticregression__C\",1e-4,1e4,\"accuracy\"),\n           (\"Breast Cancer\",load_breast_cancer,SVC(),\"svc__gamma\",1e-6,1e1,\"balanced_accuracy\")]\n    with threadpool_limits(1):\n        for name,load,model,param,lower,upper,metric in tasks:\n            X,y=load(return_X_y=True)\n            for seed in (1301,1302,1303):\n                classification = name != \"Diabetes\"\n                train,test=train_test_split(range(len(y)),test_size=.25,random_state=seed,\n                                            stratify=y if classification else None)\n                cv=(StratifiedKFold if classification else KFold)(3,shuffle=True,random_state=seed)\n                folds=list(cv.split(X[train],y[train]))\n                initial=None\n                for method in ([\"linear\",\"log\"] if seed%2 else [\"log\",\"linear\"]):\n                    with patch.object(GASearchCV,\"mate\",log_mate if method==\"log\" else GASearchCV.mate):\n                        search=GASearchCV(make_pipeline(StandardScaler(),model),param_grid={\n                            param:Continuous(lower,upper,distribution=\"log-uniform\")},\n                            population_size=6,generations=2,cv=folds,n_jobs=1,random_state=seed,\n                            scoring=metric,verbose=False,error_score=\"raise\")\n                        start=time.perf_counter()\n                        search.fit(X[train],y[train])\n                        seconds=time.perf_counter()-start\n                    first=list(search.cv_results_[\"params\"][:6])\n                    assert initial is None or initial==first\n                    initial=first\n                    rows.append(dict(task=name,seed=seed,method=method,cv=float(search.best_score_),\n                                     holdout=float(get_scorer(metric)(search.best_estimator_,X[test],y[test])),\n                                     metric=metric,params=search.best_params_,seconds=seconds,\n                                     candidates=search.fit_stats_[\"cross_validate_calls\"],\n                                     proposals=search.fit_stats_[\"evaluated_candidates\"]))\n    return rows\n\nwith warnings.catch_warnings():\n    warnings.filterwarnings(\"ignore\",message=\"Warning, only one parameter was provided.*\")\n    rows=run()\nresult=dict(source_commit=subprocess.check_output([\"git\",\"rev-parse\",\"HEAD\"],text=True).strip(),\n            python=platform.python_version(),versions={p:version(p) for p in (\"numpy\",\"scipy\",\"deap\",\"scikit-learn\")},\n            rows=rows,reproduction_script=Path(__file__).read_text(encoding=\"utf-8\"))\nPath(sys.argv[1]).write_text(json.dumps(result,allow_nan=False,indent=2)+\"\\n\",encoding=\"utf-8\")\n"
+}

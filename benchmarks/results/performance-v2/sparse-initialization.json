@@ -1,0 +1,266 @@
+[
+  {
+    "width": 16,
+    "seed": 8301,
+    "methods": {
+      "FourColumnStart": {
+        "candidates": 42,
+        "full_fit_seconds": 0.20329999999376014,
+        "holdout": {
+          "6": 0.8982199618113494,
+          "24": 0.8982856385739255
+        },
+        "first_target_by_24": 4
+      },
+      "TwoColumnStart": {
+        "candidates": 41,
+        "full_fit_seconds": 0.19376389996614307,
+        "holdout": {
+          "6": 0.4567830172293661,
+          "24": 0.8980736690954126
+        },
+        "first_target_by_24": 15
+      },
+      "GAFeatureSelectionCV": {
+        "candidates": 42,
+        "full_fit_seconds": 0.19271820003632456,
+        "holdout": {
+          "6": 0.43160254590190106,
+          "24": 0.8980736690954126
+        },
+        "first_target_by_24": 9
+      }
+    }
+  },
+  {
+    "width": 16,
+    "seed": 8302,
+    "methods": {
+      "GAFeatureSelectionCV": {
+        "candidates": 41,
+        "full_fit_seconds": 0.20281940000131726,
+        "holdout": {
+          "6": -0.01663215609941937,
+          "24": 0.3788818507519103
+        },
+        "first_target_by_24": null
+      },
+      "FourColumnStart": {
+        "candidates": 40,
+        "full_fit_seconds": 0.18319370003882796,
+        "holdout": {
+          "6": 0.45648156245318927,
+          "24": 0.4493209259100802
+        },
+        "first_target_by_24": null
+      },
+      "TwoColumnStart": {
+        "candidates": 42,
+        "full_fit_seconds": 0.1919136000215076,
+        "holdout": {
+          "6": -0.023855919275658666,
+          "24": 0.8797060843842462
+        },
+        "first_target_by_24": 13
+      }
+    }
+  },
+  {
+    "width": 16,
+    "seed": 8303,
+    "methods": {
+      "FourColumnStart": {
+        "candidates": 41,
+        "full_fit_seconds": 0.1942282000090927,
+        "holdout": {
+          "6": 0.3853787041972966,
+          "24": 0.3853787041972966
+        },
+        "first_target_by_24": null
+      },
+      "TwoColumnStart": {
+        "candidates": 41,
+        "full_fit_seconds": 0.18830380000872537,
+        "holdout": {
+          "6": 0.38387184554538323,
+          "24": 0.8784686046833614
+        },
+        "first_target_by_24": 23
+      },
+      "GAFeatureSelectionCV": {
+        "candidates": 42,
+        "full_fit_seconds": 0.19387590000405908,
+        "holdout": {
+          "6": 0.3814335036366342,
+          "24": 0.8836011138920353
+        },
+        "first_target_by_24": 21
+      }
+    }
+  },
+  {
+    "width": 16,
+    "seed": 8304,
+    "methods": {
+      "GAFeatureSelectionCV": {
+        "candidates": 41,
+        "full_fit_seconds": 0.1963401999673806,
+        "holdout": {
+          "6": 0.8975522044147305,
+          "24": 0.8979948775787899
+        },
+        "first_target_by_24": 6
+      },
+      "FourColumnStart": {
+        "candidates": 42,
+        "full_fit_seconds": 0.1926382000092417,
+        "holdout": {
+          "6": 0.8985042285733884,
+          "24": 0.8985042285733884
+        },
+        "first_target_by_24": 6
+      },
+      "TwoColumnStart": {
+        "candidates": 42,
+        "full_fit_seconds": 0.19502749998355284,
+        "holdout": {
+          "6": 0.45285202024392746,
+          "24": 0.44407482941272547
+        },
+        "first_target_by_24": null
+      }
+    }
+  },
+  {
+    "width": 64,
+    "seed": 8301,
+    "methods": {
+      "FourColumnStart": {
+        "candidates": 42,
+        "full_fit_seconds": 0.1964618000201881,
+        "holdout": {
+          "6": 0.4661386584349978,
+          "24": 0.41609067810134337
+        },
+        "first_target_by_24": null
+      },
+      "TwoColumnStart": {
+        "candidates": 42,
+        "full_fit_seconds": 0.19174829998519272,
+        "holdout": {
+          "6": 0.4676347720016688,
+          "24": 0.4720335325048086
+        },
+        "first_target_by_24": null
+      },
+      "GAFeatureSelectionCV": {
+        "candidates": 42,
+        "full_fit_seconds": 0.19511299999430776,
+        "holdout": {
+          "6": -0.007340003346403279,
+          "24": -0.05197039162031758
+        },
+        "first_target_by_24": null
+      }
+    }
+  },
+  {
+    "width": 64,
+    "seed": 8302,
+    "methods": {
+      "GAFeatureSelectionCV": {
+        "candidates": 42,
+        "full_fit_seconds": 0.21089679998112842,
+        "holdout": {
+          "6": -0.02000738624178222,
+          "24": -0.02000738624178222
+        },
+        "first_target_by_24": null
+      },
+      "FourColumnStart": {
+        "candidates": 42,
+        "full_fit_seconds": 0.19238630001200363,
+        "holdout": {
+          "6": 0.37974467417525604,
+          "24": 0.36003663861613044
+        },
+        "first_target_by_24": null
+      },
+      "TwoColumnStart": {
+        "candidates": 42,
+        "full_fit_seconds": 0.19591020001098514,
+        "holdout": {
+          "6": 0.3788070415371827,
+          "24": 0.3788818507519103
+        },
+        "first_target_by_24": null
+      }
+    }
+  },
+  {
+    "width": 64,
+    "seed": 8303,
+    "methods": {
+      "FourColumnStart": {
+        "candidates": 42,
+        "full_fit_seconds": 0.19576249999227002,
+        "holdout": {
+          "6": 0.38324683869758036,
+          "24": 0.8837673323980964
+        },
+        "first_target_by_24": 22
+      },
+      "TwoColumnStart": {
+        "candidates": 42,
+        "full_fit_seconds": 0.19853380002314225,
+        "holdout": {
+          "6": 0.38559546386806853,
+          "24": 0.37186741965072656
+        },
+        "first_target_by_24": null
+      },
+      "GAFeatureSelectionCV": {
+        "candidates": 42,
+        "full_fit_seconds": 0.20926129998406395,
+        "holdout": {
+          "6": -0.014431656938194148,
+          "24": 0.3800387572300359
+        },
+        "first_target_by_24": null
+      }
+    }
+  },
+  {
+    "width": 64,
+    "seed": 8304,
+    "methods": {
+      "GAFeatureSelectionCV": {
+        "candidates": 41,
+        "full_fit_seconds": 0.1955862000468187,
+        "holdout": {
+          "6": 0.4509261674442133,
+          "24": 0.4509261674442133
+        },
+        "first_target_by_24": null
+      },
+      "FourColumnStart": {
+        "candidates": 42,
+        "full_fit_seconds": 0.19844430004013702,
+        "holdout": {
+          "6": 0.44441399630302236,
+          "24": 0.8967832509893053
+        },
+        "first_target_by_24": 23
+      },
+      "TwoColumnStart": {
+        "candidates": 42,
+        "full_fit_seconds": 0.19212000002153218,
+        "holdout": {
+          "6": 0.44854079329624474,
+          "24": 0.4509261674442133
+        },
+        "first_target_by_24": null
+      }
+    }
+  }
+]

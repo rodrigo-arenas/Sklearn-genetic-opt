@@ -1,0 +1,378 @@
+[
+  {
+    "dataset": "airfoil",
+    "sha256": "74c75fd71783f1e6b71f8a622b993dc592897a97cd689c5090a07147a1b097b3",
+    "groups": 106,
+    "target": 0.45,
+    "runs": [
+      {
+        "policy": "genetic",
+        "seed": 10011,
+        "ran_genetic": true,
+        "folds": 42,
+        "cv": 0.4626899700271711,
+        "reached": true,
+        "seconds": 0.12442190002184361,
+        "holdout": 0.4654569863534349
+      },
+      {
+        "policy": "univariate",
+        "seed": 10011,
+        "ran_genetic": true,
+        "folds": 45,
+        "cv": 0.4626899700271711,
+        "reached": true,
+        "seconds": 0.1366085999761708,
+        "holdout": 0.4654569863534349
+      },
+      {
+        "policy": "residual",
+        "seed": 10011,
+        "ran_genetic": false,
+        "folds": 3,
+        "cv": 0.4531929377788866,
+        "reached": true,
+        "seconds": 0.02052299998467788,
+        "holdout": 0.47364546533551355
+      },
+      {
+        "policy": "genetic",
+        "seed": 10012,
+        "ran_genetic": true,
+        "folds": 42,
+        "cv": 0.45251957859105785,
+        "reached": true,
+        "seconds": 0.11404320003930479,
+        "holdout": 0.5527372381716582
+      },
+      {
+        "policy": "residual",
+        "seed": 10012,
+        "ran_genetic": true,
+        "folds": 45,
+        "cv": 0.45251957859105785,
+        "reached": true,
+        "seconds": 0.13249420002102852,
+        "holdout": 0.5527372381716582
+      },
+      {
+        "policy": "univariate",
+        "seed": 10012,
+        "ran_genetic": true,
+        "folds": 45,
+        "cv": 0.45251957859105785,
+        "reached": true,
+        "seconds": 0.13056420005159453,
+        "holdout": 0.5527372381716582
+      },
+      {
+        "policy": "univariate",
+        "seed": 10013,
+        "ran_genetic": false,
+        "folds": 3,
+        "cv": 0.4768722266344554,
+        "reached": true,
+        "seconds": 0.014115999976638705,
+        "holdout": 0.36929483235292426
+      },
+      {
+        "policy": "genetic",
+        "seed": 10013,
+        "ran_genetic": true,
+        "folds": 48,
+        "cv": 0.4962094551599769,
+        "reached": true,
+        "seconds": 0.12968169996747747,
+        "holdout": 0.3503876329948745
+      },
+      {
+        "policy": "residual",
+        "seed": 10013,
+        "ran_genetic": false,
+        "folds": 3,
+        "cv": 0.49620945515997655,
+        "reached": true,
+        "seconds": 0.020910500024911016,
+        "holdout": 0.3503876329948745
+      },
+      {
+        "policy": "univariate",
+        "seed": 10014,
+        "ran_genetic": true,
+        "folds": 48,
+        "cv": 0.46375161379701485,
+        "reached": true,
+        "seconds": 0.14589339995291084,
+        "holdout": 0.48183774782374866
+      },
+      {
+        "policy": "residual",
+        "seed": 10014,
+        "ran_genetic": true,
+        "folds": 48,
+        "cv": 0.46375161379701485,
+        "reached": true,
+        "seconds": 0.13965480000479147,
+        "holdout": 0.48183774782374866
+      },
+      {
+        "policy": "genetic",
+        "seed": 10014,
+        "ran_genetic": true,
+        "folds": 45,
+        "cv": 0.46375161379701485,
+        "reached": true,
+        "seconds": 0.14944930002093315,
+        "holdout": 0.48183774782374866
+      },
+      {
+        "policy": "residual",
+        "seed": 10015,
+        "ran_genetic": false,
+        "folds": 3,
+        "cv": 0.4568578362139272,
+        "reached": true,
+        "seconds": 0.022565599996596575,
+        "holdout": 0.4461098562244339
+      },
+      {
+        "policy": "genetic",
+        "seed": 10015,
+        "ran_genetic": true,
+        "folds": 36,
+        "cv": 0.46765209951484216,
+        "reached": true,
+        "seconds": 0.09946579998359084,
+        "holdout": 0.4798252956475998
+      },
+      {
+        "policy": "univariate",
+        "seed": 10015,
+        "ran_genetic": true,
+        "folds": 39,
+        "cv": 0.46765209951484216,
+        "reached": true,
+        "seconds": 0.11204799998085946,
+        "holdout": 0.4798252956475998
+      },
+      {
+        "policy": "residual",
+        "seed": 10016,
+        "ran_genetic": false,
+        "folds": 3,
+        "cv": 0.48904442005604504,
+        "reached": true,
+        "seconds": 0.02177390002179891,
+        "holdout": 0.3342390180942989
+      },
+      {
+        "policy": "univariate",
+        "seed": 10016,
+        "ran_genetic": false,
+        "folds": 3,
+        "cv": 0.4720150666061804,
+        "reached": true,
+        "seconds": 0.01388410001527518,
+        "holdout": 0.3587571078135475
+      },
+      {
+        "policy": "genetic",
+        "seed": 10016,
+        "ran_genetic": true,
+        "folds": 18,
+        "cv": 0.48904442005604487,
+        "reached": true,
+        "seconds": 0.05170369998086244,
+        "holdout": 0.3342390180942989
+      }
+    ]
+  },
+  {
+    "dataset": "yacht",
+    "sha256": "00dfecc0fc01ddd4c90b558a3ac11b246df8ebcfea130724223475a9a67f0ea1",
+    "groups": 22,
+    "target": 0.45,
+    "runs": [
+      {
+        "policy": "genetic",
+        "seed": 10011,
+        "ran_genetic": true,
+        "folds": 18,
+        "cv": 0.6590157885612139,
+        "reached": true,
+        "seconds": 0.049583899963181466,
+        "holdout": 0.6470848515703936
+      },
+      {
+        "policy": "univariate",
+        "seed": 10011,
+        "ran_genetic": false,
+        "folds": 3,
+        "cv": 0.658440749427261,
+        "reached": true,
+        "seconds": 0.013690899999346584,
+        "holdout": 0.6491245129293974
+      },
+      {
+        "policy": "residual",
+        "seed": 10011,
+        "ran_genetic": false,
+        "folds": 3,
+        "cv": 0.6595685481010479,
+        "reached": true,
+        "seconds": 0.01941350003471598,
+        "holdout": 0.6491708822085707
+      },
+      {
+        "policy": "genetic",
+        "seed": 10012,
+        "ran_genetic": true,
+        "folds": 18,
+        "cv": 0.6533224380955427,
+        "reached": true,
+        "seconds": 0.048911299963947386,
+        "holdout": 0.6620398994300878
+      },
+      {
+        "policy": "residual",
+        "seed": 10012,
+        "ran_genetic": false,
+        "folds": 3,
+        "cv": 0.6544158337029717,
+        "reached": true,
+        "seconds": 0.02026999997906387,
+        "holdout": 0.6613038949180267
+      },
+      {
+        "policy": "univariate",
+        "seed": 10012,
+        "ran_genetic": false,
+        "folds": 3,
+        "cv": 0.6538933120642131,
+        "reached": true,
+        "seconds": 0.013811299984809011,
+        "holdout": 0.6615653880260478
+      },
+      {
+        "policy": "univariate",
+        "seed": 10013,
+        "ran_genetic": false,
+        "folds": 3,
+        "cv": 0.6534106048672842,
+        "reached": true,
+        "seconds": 0.014874699991196394,
+        "holdout": 0.6642709795181008
+      },
+      {
+        "policy": "genetic",
+        "seed": 10013,
+        "ran_genetic": true,
+        "folds": 18,
+        "cv": 0.6534367071449886,
+        "reached": true,
+        "seconds": 0.05209130002185702,
+        "holdout": 0.6643445279565986
+      },
+      {
+        "policy": "residual",
+        "seed": 10013,
+        "ran_genetic": false,
+        "folds": 3,
+        "cv": 0.6534057129708969,
+        "reached": true,
+        "seconds": 0.019757699978072196,
+        "holdout": 0.6641529736250202
+      },
+      {
+        "policy": "univariate",
+        "seed": 10014,
+        "ran_genetic": false,
+        "folds": 3,
+        "cv": 0.6558960995832228,
+        "reached": true,
+        "seconds": 0.013407799997366965,
+        "holdout": 0.6574887578278701
+      },
+      {
+        "policy": "residual",
+        "seed": 10014,
+        "ran_genetic": false,
+        "folds": 3,
+        "cv": 0.655854523518251,
+        "reached": true,
+        "seconds": 0.020110099983867258,
+        "holdout": 0.6575035675717518
+      },
+      {
+        "policy": "genetic",
+        "seed": 10014,
+        "ran_genetic": true,
+        "folds": 18,
+        "cv": 0.6563169585683332,
+        "reached": true,
+        "seconds": 0.04822019999846816,
+        "holdout": 0.6567463316213284
+      },
+      {
+        "policy": "residual",
+        "seed": 10015,
+        "ran_genetic": false,
+        "folds": 3,
+        "cv": 0.6564097472743956,
+        "reached": true,
+        "seconds": 0.020085500029381365,
+        "holdout": 0.6580641416953221
+      },
+      {
+        "policy": "genetic",
+        "seed": 10015,
+        "ran_genetic": true,
+        "folds": 18,
+        "cv": 0.6554804597549945,
+        "reached": true,
+        "seconds": 0.05516009998973459,
+        "holdout": 0.6575588432542608
+      },
+      {
+        "policy": "univariate",
+        "seed": 10015,
+        "ran_genetic": false,
+        "folds": 3,
+        "cv": 0.6562608456208784,
+        "reached": true,
+        "seconds": 0.015483599971048534,
+        "holdout": 0.6584063032396298
+      },
+      {
+        "policy": "residual",
+        "seed": 10016,
+        "ran_genetic": false,
+        "folds": 3,
+        "cv": 0.6392216807979,
+        "reached": true,
+        "seconds": 0.022451299999374896,
+        "holdout": 0.6574562514739855
+      },
+      {
+        "policy": "univariate",
+        "seed": 10016,
+        "ran_genetic": false,
+        "folds": 3,
+        "cv": 0.6562255602723723,
+        "reached": true,
+        "seconds": 0.014444299973547459,
+        "holdout": 0.6575087153319701
+      },
+      {
+        "policy": "genetic",
+        "seed": 10016,
+        "ran_genetic": true,
+        "folds": 18,
+        "cv": 0.6559471155221993,
+        "reached": true,
+        "seconds": 0.052162300038617104,
+        "holdout": 0.6547399719486053
+      }
+    ]
+  }
+]

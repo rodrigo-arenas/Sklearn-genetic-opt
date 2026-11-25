@@ -8,8 +8,8 @@
     "docs:build": "vitepress build .",
     "docs:preview": "vitepress preview .",
     "docs:check-links": "python scripts/check_links.py",
-    "examples:generate": "python scripts/run-python-examples.py",
-    "examples:check": "python scripts/run-python-examples.py --check"
+    "examples:generate": "python scripts/build_docs.py",
+    "examples:check": "python scripts/build_docs.py --check"
   },
   "devDependencies": {
     "vitepress": "^1.6.3"

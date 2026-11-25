@@ -7,11 +7,9 @@ description: "Step-by-step introduction to GASearchCV for hyperparameter optimiz
 This is the **latest (dev)** documentation. It may contain unreleased features or breaking changes. For the stable release, use [stable](/stable/).
 :::
 
-**Estimated reading time:** 15 minutes  
-**Difficulty:** Beginner  
-**Prerequisites:** Python, pip, basic sklearn knowledge (`train_test_split`, classifiers)
-
 # Getting Started with GASearchCV: Hyperparameter Tuning and Feature Selection
+
+**Estimated reading time:** 15 minutes. **Difficulty:** Beginner.
 
 This page walks through the two workflows you will use most:
 
@@ -20,11 +18,13 @@ This page walks through the two workflows you will use most:
 
 Every code block below is executed to build this page, so what you copy is exactly what ran — including the outputs and figures.
 
+This walkthrough uses the default DEAP engine. To keep the same estimator and CV workflow while changing optimizers, follow [Switch optimization backends](../tutorials/optimizer-backends).
+
 ## Prerequisites
 
 - `sklearn-genetic-opt` installed (`pip install sklearn-genetic-opt`)
 - Optional plotting extra for the figures: `pip install sklearn-genetic-opt[plot]`
-- Basic familiarity with scikit-learn's `fit` / `predict` API
+- Basic familiarity with Python, pip, `train_test_split`, and classifiers' `fit` / `predict` API
 
 ## Hyperparameter Tuning
 
@@ -103,8 +103,8 @@ print(f"Best parameters  : {search.best_params_}")
 ```
 
 ```text
-Best CV accuracy : 0.9584
-Best parameters  : {'hidden_layer_sizes': (64,), 'alpha': 0.00027470715996250945, 'learning_rate_init': 0.003590489008293675, 'activation': 'relu', 'batch_size': 70}
+Best CV accuracy : 0.9634
+Best parameters  : {'hidden_layer_sizes': (64,), 'alpha': 5.664055981885377e-05, 'learning_rate_init': 0.007059082353376892, 'activation': 'relu', 'batch_size': 81}
 ```
 
 After fitting, `GASearchCV` behaves like any fitted scikit-learn estimator —
@@ -116,7 +116,7 @@ print(f"Holdout accuracy : {accuracy_score(y_test, y_pred):.4f}")
 ```
 
 ```text
-Holdout accuracy : 0.9579
+Holdout accuracy : 0.9495
 ```
 
 ### Reading the evolution
@@ -129,7 +129,7 @@ columns explain how the population improved and how diverse it stayed:
 | `gen` | generation number |
 | `fitness` | mean CV score in the generation |
 | `fitness_best` | best CV score found so far |
-| `genotype_diversity` | 1.0 = diverse, 0.0 = converged |
+| `genotype_diversity` | Mean probability that two distinct population members disagree at a coordinate |
 | `unique_individual_ratio` | fraction of distinct configurations |
 | `stagnation_generations` | consecutive generations without improvement |
 
@@ -143,13 +143,13 @@ print(history[["gen", "fitness", "fitness_best", "genotype_diversity",
 
 ```text
  gen  fitness  fitness_best  genotype_diversity  unique_individual_ratio  stagnation_generations
-   0 0.753325      0.946800            0.685714                    1.000                       0
-   1 0.932253      0.946800            0.485714                    0.875                       1
-   2 0.943890      0.955112            0.314286                    0.750                       0
-   3 0.945449      0.955112            0.371429                    0.750                       1
-   4 0.948462      0.955112            0.314286                    0.750                       2
-   5 0.951995      0.955112            0.314286                    0.750                       3
-   6 0.953242      0.958437            0.228571                    0.625                       0
+   0 0.833437      0.949293            0.864286                    1.000                       0
+   1 0.916667      0.950956            0.742857                    0.750                       0
+   2 0.951372      0.951787            0.321429                    0.375                       0
+   3 0.949190      0.959268            0.507143                    0.625                       0
+   4 0.955528      0.960931            0.485714                    0.750                       0
+   5 0.959892      0.963425            0.328571                    0.375                       0
+   6 0.957918      0.963425            0.321429                    0.500                       1
 ```
 
 `fit_stats_` summarizes what the search actually spent — useful for spotting
@@ -162,9 +162,9 @@ for key, value in search.fit_stats_.items():
 
 ```text
 evaluated_candidates: 104
-unique_candidates: 102
-cross_validate_calls: 102
-cache_hits: 2
+unique_candidates: 100
+cross_validate_calls: 100
+cache_hits: 4
 duplicate_candidates: 0
 skipped_invalid_candidates: 0
 population_parallel_batches: 7
@@ -180,23 +180,20 @@ score climbing over generations, and `plot_search_overview` gives a compact
 diagnostic dashboard.
 
 ```python
-import matplotlib.pyplot as plt
 from sklearn_genetic.plots import plot_search_overview
 
-plot_search_overview(search, top_k=6)
-plt.tight_layout()
+overview = plot_search_overview(search, top_k=6)
 ```
 
-![Search overview dashboard: convergence, diversity, optimizer events, and top candidates](/images/basic_usage_search_overview.png)
+![Search overview dashboard: convergence, diversity, optimizer events, and top candidates](/images/basic_usage_mlp_search_overview.png)
 
 ```python
 from sklearn_genetic.plots import plot_parameter_evolution
 
-plot_parameter_evolution(search, parameters=["alpha", "learning_rate_init", "batch_size"])
-plt.tight_layout()
+evolution = plot_parameter_evolution(search, parameters=["alpha", "learning_rate_init", "batch_size"])
 ```
 
-![How sampled values of alpha, learning rate, and batch size evolved over evaluations](/images/basic_usage_parameter_evolution.png)
+![How sampled values of alpha, learning rate, and batch size evolved over evaluations](/images/basic_usage_mlp_parameter_evolution.png)
 
 ## Feature Selection
 
@@ -241,9 +238,8 @@ print(f"Holdout accuracy : {accuracy_score(yte, selector.predict(Xte)):.4f}")
 ```
 
 ```text
-Selected 3 of 14 features:
+Selected 2 of 14 features:
   - sepal length (cm)
-  - sepal width (cm)
   - petal length (cm)
 Holdout accuracy : 0.9800
 ```
@@ -254,21 +250,26 @@ Iris measurements and drops most of the noise columns. Visualize the mask:
 ```python
 from sklearn_genetic.plots import plot_feature_selection
 
-plot_feature_selection(selector, feature_names=feature_names)
-plt.tight_layout()
+mask_plot = plot_feature_selection(selector, feature_names=feature_names)
 ```
 
-![Selected-feature mask over the four Iris features plus ten noise columns](/images/basic_usage_feature_selection.png)
+![Selected-feature mask over the four Iris features plus ten noise columns](/images/basic_usage_iris_mask.png)
 
 ## Tips & Gotchas
 
+- Pass the training targets to `search.fit(X_train, y_train)` and
+  `selector.fit(Xtr, ytr)`. Models that require targets raise an
+  error before cross-validation when the target is omitted. For
+  [unlabeled outlier detection](./outliers#score-unlabeled-samples), call
+  `fit(X_train)`.
 - Set `RuntimeConfig(verbose=True)` to watch the per-generation log live.
 - `PopulationConfig(initializer="smart")` is strongly recommended — it usually
   finds better solutions faster than a purely random start.
 - If `accuracy` is already near 1.0 on your data, switch to a more
   discriminative metric (e.g. `roc_auc`, `balanced_accuracy`).
 - Check `fit_stats_["skipped_invalid_candidates"]` after fitting — a non-zero
-  value means some sampled configurations raised errors during `fit`.
+  value counts candidates dropped before CV. For feature selection, use
+  `cv_results_["skipped_invalid_mask"]` to locate the affected rows.
 
 ## See Also
 

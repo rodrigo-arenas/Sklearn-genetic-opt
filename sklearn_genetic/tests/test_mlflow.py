@@ -158,10 +158,7 @@ def test_runs(mlflow_resources, mlflow_run):
     assert len(runs) >= 1 and evolved_estimator.best_params_["min_weight_fraction_leaf"]
 
 
-def test_mlflow_artifacts(mlflow_resources, mlflow_run):
-    import os
-    import mlflow
-
+def test_mlflow_artifacts(mlflow_resources, mlflow_run, tmp_path):
     _, client = mlflow_resources
     run_id = mlflow_run[0]
 
@@ -169,15 +166,12 @@ def test_mlflow_artifacts(mlflow_resources, mlflow_run):
     if mlflow.active_run():
         mlflow.end_run()
 
-    # Create a dummy artifact file
-    with open("dummy.txt", "w") as f:
-        f.write("dummy model content")
+    artifact = tmp_path / "dummy.txt"
+    artifact.write_text("dummy model content", encoding="utf-8")
 
     # Log the artifact to the 'model' directory
     with mlflow.start_run(run_id=run_id):
-        mlflow.log_artifact("dummy.txt", artifact_path="model")
-
-    os.remove("dummy.txt")  # Clean up file
+        mlflow.log_artifact(str(artifact), artifact_path="model")
 
     # Check that the artifact exists
     artifacts = client.list_artifacts(run_id)
