@@ -20,6 +20,8 @@ This example combines `sklearn-genetic-opt`'s built-in `MLflowConfig` integratio
 
 ## Setup
 
+Install the tracking extra and serializer with `python -m pip install "sklearn-genetic-opt[mlflow]" skops`.
+
 ```python
 from pprint import pprint
 import warnings
@@ -142,6 +144,8 @@ search = GASearchCV(
 
 The parent run holds the overall search summary. Nested candidate runs are created automatically by `MLflowConfig` during `search.fit`.
 
+The example uses `skops` and explicitly trusts the tree type used by the Random Forest trained here. Apply that allowlist only to models you trained or artifacts from a trusted source.
+
 ```python
 callbacks = [
     DeltaThreshold(threshold=0.0005, generations=5, metric="fitness_best"),
@@ -198,6 +202,8 @@ with mlflow.start_run(run_name="ga-random-forest-search") as parent_run:
         name="best_estimator",
         model_id=logged_model.model_id,
         input_example=X_test.head(5),
+        serialization_format="skops",
+        skops_trusted_types=["sklearn.tree._tree.Tree"],
         params=search.best_params_,
         tags={"optimizer": "GASearchCV", "dataset": "breast_cancer"},
         model_type="classifier",
