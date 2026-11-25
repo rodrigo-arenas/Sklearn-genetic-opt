@@ -6,7 +6,7 @@ from pathlib import Path
 from statistics import mean, pstdev
 import subprocess
 from textwrap import dedent
-from threading import get_ident
+from threading import Event, get_ident
 import sys
 import warnings
 
@@ -949,6 +949,89 @@ def test_first_population_ranks_extreme_scores_of_both_signs(task, engine, crite
 
 @pytest.mark.parametrize("task", ["parameters", "features"])
 @pytest.mark.parametrize("criteria", ["min", "max"])
+@pytest.mark.parametrize(
+    "mode", ["fresh", "fresh_range", "reuse", "partial", "refit", "report", "callable"]
+)
+def test_search_and_finalist_results_keep_extended_score_precision(task, criteria, mode):
+    if np.finfo(np.longdouble).nmant <= np.finfo(float).nmant:
+        pytest.skip("requires extended precision")
+    magnitude = np.longdouble(1)
+    if mode == "fresh_range":
+        if np.finfo(np.longdouble).maxexp <= 1026:
+            pytest.skip("requires extended exponent range")
+        magnitude = np.ldexp(magnitude, 1025)
+    toward = magnitude * 2
+    lower = np.nextafter(magnitude, toward)
+    upper = np.nextafter(lower, toward)
+    initial, winner = (lower, upper) if criteria == "max" else (upper, lower)
+    assert float(initial) == float(winner)
+    fresh = mode in {"fresh", "fresh_range"}
+
+    X, y = load_iris(return_X_y=True)
+    candidates = [(1,), (2,)] if task == "parameters" else [(1, 0, 0, 0), (1, 1, 0, 0)]
+    options = {"param_grid": {"max_depth": Integer(1, 2)}} if task == "parameters" else {}
+
+    def optimize(problem, evaluate, report):
+        report([handle for _, handle in evaluate(candidates)])
+
+    def score(estimator, X, y):
+        if fresh and len(X) == 75:
+            return 1.0
+        size = estimator.max_depth if task == "parameters" else estimator.n_features_in_
+        return winner if size == 2 else initial
+
+    model = search(
+        task,
+        **options,
+        optimizer_backend=optimize,
+        population_size=2,
+        generations=0,
+        scoring=score,
+        criteria=criteria,
+        error_score="raise",
+    )
+    if fresh:
+        model.set_params(cv=KFold(2), final_selection=True, final_selection_cv=KFold(3))
+    elif mode == "reuse":
+        model.set_params(final_selection="reuse_folds")
+    elif mode == "partial":
+        folds = list(KFold(3).split(X, y))
+        model.set_params(
+            cv=folds[:2],
+            final_selection="reuse_folds",
+            final_selection_cv=[folds[0], folds[2]],
+        )
+    elif mode == "report":
+        model.set_params(refit=False)
+    elif mode == "callable":
+        model.set_params(refit=lambda _: 1)
+
+    model.fit(X, y)
+    assert model.best_index_ == 1
+    if not fresh:
+        np.testing.assert_array_equal(model.cv_results_["rank_test_score"], [2, 1])
+    if mode != "callable":
+        assert type(model.best_score_) is np.longdouble
+        assert model.best_score_ == winner
+    if (
+        fresh
+        or mode in {"reuse", "partial", "callable"}
+        or (mode == "refit" and task == "parameters")
+    ):
+        selected = model.final_selection_results_
+        assert selected["selected_score"] == winner
+        if fresh:
+            assert type(selected["original_best_score"]) is float
+        if mode in ("reuse", "partial"):
+            reused = 4 if mode == "reuse" else 2
+            assert model.fit_counts_["finalist_reused_folds"] == reused
+            assert (
+                next(row["score"] for row in selected["candidates"] if row["index"] == 1) == winner
+            )
+
+
+@pytest.mark.parametrize("task", ["parameters", "features"])
+@pytest.mark.parametrize("criteria", ["min", "max"])
 def test_fitness_sharing_handles_extreme_scores_in_public_search(task, criteria):
     def scorer(estimator, X, y):
         size = estimator.max_depth if task == "parameters" else estimator.n_features_in_
@@ -973,8 +1056,15 @@ def test_fitness_sharing_handles_extreme_scores_in_public_search(task, criteria)
 @pytest.mark.parametrize("task", ["parameters", "features"])
 @pytest.mark.parametrize("engine", ["deap", "custom"])
 @pytest.mark.parametrize("criteria", ["min", "max"])
-def test_extreme_score_improvements_keep_generation_and_stop_history(task, engine, criteria):
-    winner = -1e308 if criteria == "min" else 1e308
+@pytest.mark.parametrize("extended", [False, True], ids=["double", "extended"])
+def test_extreme_score_improvements_keep_generation_and_stop_history(
+    task, engine, criteria, extended
+):
+    if extended and np.finfo(np.longdouble).maxexp <= 1027:
+        pytest.skip("requires extended exponent range")
+    size = np.ldexp(np.longdouble(1), 1026) if extended else 1e308
+    winner = -size if criteria == "min" else size
+    improvement = 2 * size if extended else np.inf
     generation = 0
 
     class Advance(BaseCallback):
@@ -1024,7 +1114,7 @@ def test_extreme_score_improvements_keep_generation_and_stop_history(task, engin
 
     assert model.history["gen"] == [0, 1, 2]
     assert model.history["fitness_best_observed"] == [-winner, winner, winner]
-    assert model.history["fitness_improvement"] == [0.0, np.inf, 0.0]
+    assert model.history["fitness_improvement"] == [0.0, improvement, 0.0]
     assert model.history["fitness_improved"] == [True, True, False]
     assert model.best_score_ == winner
 
@@ -1209,21 +1299,31 @@ def test_cmaes_continues_after_a_batch_of_failed_candidates(failed_generation):
     assert len(model.predict(X)) == len(y)
 
 
-def _scaled_continuous_score(estimator, X, y, *, exponent):
-    return ldexp(2 * estimator.ccp_alpha - 1, exponent)
+def _scaled_numeric_score(estimator, X, y, *, exponent, integer_only=False):
+    unit = (estimator.max_depth - 4) / 2 if integer_only else 2 * estimator.ccp_alpha - 1
+    return np.ldexp(np.longdouble(unit), exponent) if exponent >= 1024 else ldexp(unit, exponent)
 
 
 @pytest.mark.parametrize("criteria", ["min", "max"])
-def test_cmaes_learns_from_extreme_continuous_losses_at_equal_cv_budget(criteria):
+@pytest.mark.parametrize("integer_only", [False, True], ids=["continuous", "integer"])
+@pytest.mark.parametrize("exponent", [1023, 2000], ids=["double", "extended"])
+def test_cmaes_learns_from_extreme_numeric_losses_at_equal_cv_budget(
+    criteria, integer_only, exponent
+):
     pytest.importorskip("cmaes")
+    if np.finfo(np.longdouble).maxexp <= exponent:
+        pytest.skip("requires extended exponent range")
     X, y = load_iris(return_X_y=True)
+    space = {"max_depth": Integer(2, 6)}
+    if not integer_only:
+        space = {"ccp_alpha": Continuous(0.0, 1.0), **space}
 
     def fit(exponent):
         return search(
             "parameters",
             optimizer_backend="cmaes",
-            param_grid={"ccp_alpha": Continuous(0.0, 1.0), "max_depth": Integer(2, 6)},
-            scoring=partial(_scaled_continuous_score, exponent=exponent),
+            param_grid=space,
+            scoring=partial(_scaled_numeric_score, exponent=exponent, integer_only=integer_only),
             criteria=criteria,
             generations=4,
             use_cache=False,
@@ -1231,7 +1331,7 @@ def test_cmaes_learns_from_extreme_continuous_losses_at_equal_cv_budget(criteria
 
     with np.errstate(over="raise", invalid="raise"):
         reference = fit(0)
-        extreme = fit(1023)
+        extreme = fit(exponent)
 
     assert reference.fit_counts_ == extreme.fit_counts_
     assert extreme.fit_counts_["search_cv_calls"] == 30
@@ -1239,12 +1339,15 @@ def test_cmaes_learns_from_extreme_continuous_losses_at_equal_cv_budget(criteria
     np.testing.assert_array_equal(
         extreme.cv_results_["rank_test_score"], reference.cv_results_["rank_test_score"]
     )
-    assert extreme.best_score_ == ldexp(reference.best_score_, 1023)
+    assert extreme.best_score_ == np.ldexp(np.longdouble(reference.best_score_), exponent)
     np.testing.assert_array_equal(extreme.predict(X), reference.predict(X))
 
 
-def test_cmaes_rescales_earlier_penalties_when_extreme_losses_appear_late(monkeypatch):
+@pytest.mark.parametrize("exponent", [1023, 2000], ids=["double", "extended"])
+def test_cmaes_rescales_earlier_penalties_when_extreme_losses_appear_late(monkeypatch, exponent):
     cmaes = pytest.importorskip("cmaes")
+    if np.finfo(np.longdouble).maxexp <= exponent:
+        pytest.skip("requires extended exponent range")
     tell = cmaes.CatCMAwM.tell
     traces = []
     generation = 0
@@ -1255,7 +1358,7 @@ def test_cmaes_rescales_earlier_penalties_when_extreme_losses_appear_late(monkey
             generation = logbook[-1]["gen"] + 1
 
     def scorer(estimator, X, y):
-        return _scaled_continuous_score(estimator, X, y, exponent=1023 if generation >= 2 else 0)
+        return _scaled_numeric_score(estimator, X, y, exponent=exponent if generation == 2 else 0)
 
     def tracked(solver, solutions):
         before = solver._iqhist_values.copy()
@@ -1281,22 +1384,30 @@ def test_cmaes_rescales_earlier_penalties_when_extreme_losses_appear_late(monkey
     assert len(previous) == 1 and previous[0] > 0
     rebased, solver_losses, _ = traces[1]
     raw_losses = model.cv_results_["mean_test_score"][12:18]
-    exponent = int(
+    applied_exponent = int(
         np.frexp(max(map(abs, raw_losses)))[1] - np.frexp(max(map(abs, solver_losses)))[1]
     )
-    assert exponent > 0
-    np.testing.assert_array_equal(solver_losses, np.ldexp(raw_losses, -exponent))
-    np.testing.assert_array_equal(rebased, np.ldexp(previous, -exponent))
+    assert applied_exponent > 0
+    np.testing.assert_array_equal(solver_losses, np.ldexp(raw_losses, -applied_exponent))
+    if exponent >= 1024:
+        previous = np.asarray(previous, dtype=np.longdouble)
+        last_losses = np.asarray(model.cv_results_["mean_test_score"][18:24], dtype=np.longdouble)
+        assert np.any(np.asarray(traces[2][1]) != 0)
+        np.testing.assert_array_equal(traces[2][1], np.ldexp(last_losses, -applied_exponent))
+    np.testing.assert_array_equal(rebased, np.ldexp(previous, -applied_exponent))
 
 
-def test_cmaes_resumes_a_checkpoint_with_scaled_continuous_losses(tmp_path):
+@pytest.mark.parametrize("exponent", [1023, 2000], ids=["double", "extended"])
+def test_cmaes_resumes_a_checkpoint_with_scaled_continuous_losses(tmp_path, exponent):
     pytest.importorskip("cmaes")
+    if np.finfo(np.longdouble).maxexp <= exponent:
+        pytest.skip("requires extended exponent range")
     X, y = load_iris(return_X_y=True)
     model = search(
         "parameters",
         optimizer_backend="cmaes",
         param_grid={"ccp_alpha": Continuous(0.0, 1.0), "max_depth": Integer(2, 6)},
-        scoring=partial(_scaled_continuous_score, exponent=1023),
+        scoring=partial(_scaled_numeric_score, exponent=exponent),
         generations=4,
         use_cache=False,
     )
@@ -1563,6 +1674,62 @@ def test_all_finalist_fit_failures_keep_cv_diagnostics(task, engine):
 
 
 @pytest.mark.parametrize("task", ["parameters", "features"])
+@pytest.mark.parametrize(
+    "engine", ["deap", pytest.param("scipy", marks=requires_scipy_backend), *BACKENDS]
+)
+@pytest.mark.parametrize("failure_type", [ValueError, KeyboardInterrupt])
+def test_interrupted_finalist_counts_the_cv_call_and_known_fold_fits(task, engine, failure_type):
+    if engine != "deap":
+        pytest.importorskip(engine)
+
+    attempted = []
+    failure = failure_type("fixture interrupts the second finalist")
+
+    class InterruptFinalist(DecisionTreeClassifier):
+        def fit(self, X, y, sample_weight=None, check_input=True):
+            if len(X) >= 50:
+                attempted.append(len(X))
+                if len(attempted) == 4:
+                    raise failure
+            return super().fit(X, y, sample_weight=sample_weight, check_input=check_input)
+
+    X, y = load_iris(return_X_y=True)
+    full = list(StratifiedKFold(2, shuffle=True, random_state=19).split(X, y))
+    pilot = subsample_cv(full, 0.4, stratify=y, random_state=19)
+    model = search(
+        task,
+        optimizer_backend=engine,
+        final_selection=True,
+        final_selection_cv=full,
+        final_selection_top_k=2,
+        generations=0,
+        error_score="raise",
+    ).set_params(estimator=InterruptFinalist(random_state=19), cv=pilot)
+
+    with pytest.raises(failure_type, match="fixture interrupts the second finalist") as error:
+        model.fit(X, y)
+
+    assert error.value is failure
+    assert attempted == [75, 75, 75, 75]
+    assert model.fit_counts_["finalist_cv_calls"] == 2
+    assert model.fit_counts_["finalist_fold_fits"] == 2
+    assert model.fit_counts_["refit_fits"] == 0
+    results = model.final_selection_results_
+    assert results["selected_index"] is None
+    assert results["time_seconds"] >= 0
+    (completed,) = results["candidates"]
+    assert (completed["cv_calls"], completed["fold_fits"]) == (1, 2)
+    interrupted = results["failed_candidate"]
+    index = interrupted["index"]
+    assert index != completed["index"]
+    assert (interrupted["cv_calls"], interrupted["fold_fits"]) == (1, 0)
+    if task == "parameters":
+        assert interrupted["params"] == model.cv_results_["params"][index]
+    else:
+        assert interrupted["params"]["features"] == tuple(model.cv_results_["features"][index])
+
+
+@pytest.mark.parametrize("task", ["parameters", "features"])
 @pytest.mark.parametrize("undefined_fold", ["reused", "fresh"])
 def test_finalist_fold_reuse_keeps_undefined_scores_without_retrying(task, undefined_fold):
     X, y = load_iris(return_X_y=True)
@@ -1661,6 +1828,30 @@ def test_fit_phase_durations_use_elapsed_clock(task, engine, monkeypatch):
     assert not hasattr(result, "search_time_")
 
 
+@pytest.mark.parametrize("selector_type", [np.array, list, tuple])
+def test_finalist_fold_comparison_converts_each_shared_selector_once(selector_type, monkeypatch):
+    from types import SimpleNamespace
+
+    from sklearn_genetic import genetic_search
+
+    train = selector_type([0, 1, 2])
+    test = selector_type([False, False, False, True])
+    calls = []
+
+    def asarray(selector):
+        calls.append(selector)
+        return np.asarray(selector)
+
+    monkeypatch.setattr(
+        genetic_search,
+        "np",
+        SimpleNamespace(asarray=asarray, ndarray=np.ndarray, array_equal=np.array_equal),
+    )
+    fold = (train, test)
+    assert genetic_search._FinalSelectionMixin._same_fold(fold, fold, 4)
+    assert len(calls) == 2 and calls[0] is train and calls[1] is test
+
+
 @pytest.mark.parametrize("task", ["parameters", "features"])
 @pytest.mark.parametrize("score_kind", ["integer", "float", "mixed"])
 def test_finalist_reuses_original_score_array_when_all_folds_match(task, score_kind):
@@ -1706,7 +1897,134 @@ def test_finalist_reuses_original_score_array_when_all_folds_match(task, score_k
 
 
 @pytest.mark.parametrize("task", ["parameters", "features"])
-@pytest.mark.parametrize("final_cv", ["shared", "positions", "masks"])
+@pytest.mark.parametrize("partition", ["training", "validation"])
+@pytest.mark.parametrize("container", [list, tuple])
+def test_finalist_reuse_respects_sklearn_mixed_selector_behavior(task, partition, container):
+    X, y = load_iris(return_X_y=True)
+    rows = np.arange(len(X))
+    rest = rows[3:]
+    mixed = container([False, 1, np.bool_(True), 2])
+    positions = np.array([0, 1, 1, 2])
+    if partition == "training":
+        # Keep representatives of all iris classes in the small training fold.
+        rows = np.ravel(np.column_stack((rows[:50], rows[50:100], rows[100:])))
+        X, y = X[rows], y[rows]
+        search_fold, final_fold = (positions, rest), (mixed, rest)
+    else:
+        search_fold, final_fold = (rest, positions), (rest, mixed)
+    template = search(
+        task, final_selection=True, final_selection_top_k=1, error_score="raise"
+    ).set_params(cv=[search_fold], final_selection_cv=[final_fold])
+    reused = clone(template).set_params(final_selection="reuse_folds")
+
+    try:
+        template.fit(X, y, callbacks=CVBudgetStopping(1))
+    except ValueError as error:
+        assert template.fit_counts_["search_cv_calls"] == 1
+        with pytest.raises(ValueError) as actual:
+            reused.fit(X, y, callbacks=CVBudgetStopping(1))
+        assert str(actual.value) == str(error)
+    else:
+        reused.fit(X, y, callbacks=CVBudgetStopping(1))
+        assert reused.fit_counts_ == template.fit_counts_
+        assert reused.fit_counts_["finalist_fold_fits"] == 1
+        assert reused.fit_counts_["finalist_reused_folds"] == 0
+        assert reused.best_score_ == template.best_score_
+        np.testing.assert_array_equal(reused.predict(X), template.predict(X))
+
+
+class _TupleWithArrayView(tuple):
+    def __array__(self, dtype=None, copy=None):
+        return np.array([0, 1, 2], dtype=dtype)
+
+
+@pytest.mark.parametrize("task", ["parameters", "features"])
+@pytest.mark.parametrize("custom_stage", ["search", "finalists"])
+@pytest.mark.parametrize("extra_search_fold", [False, True])
+def test_finalist_fold_does_not_reuse_a_custom_selector_by_its_array_view(
+    task, custom_stage, extra_search_fold
+):
+    rows = np.arange(35)
+    X, y = np.column_stack((rows, 8 - rows)), rows % 2
+    train = rows[10:]
+    plain, custom = rows[:3], _TupleWithArrayView((6, 7, 8))
+    search_folds = [(train, custom if custom_stage == "search" else plain)]
+    if extra_search_fold:
+        # Exercise the fold lookup as well as the equal-length comparison.
+        search_folds.insert(0, (train, rows[3:6]))
+    final_folds = [(train, custom if custom_stage == "finalists" else plain)]
+    _assert_finalist_recomputes_fold(task, X, y, search_folds, final_folds)
+
+
+@pytest.mark.parametrize("task", ["parameters", "features"])
+@pytest.mark.parametrize("container", [list, tuple])
+@pytest.mark.parametrize("extra_search_fold", [False, True])
+def test_finalist_fold_recomputes_a_mixed_search_selector(task, container, extra_search_fold):
+    import pandas as pd
+
+    rows = np.arange(35)
+    labels = rows.copy()
+    # In some sklearn versions, the mixed sequence indexes the dataframe
+    # by label. The integer array always indexes by position.
+    labels[[0, 1, 6, 7]] = labels[[6, 7, 0, 1]]
+    X = pd.DataFrame({"left": rows, "right": 8 - rows}, index=labels)
+    y = rows % 2
+    train = rows[10:]
+    search_folds = [(train, container([False, True, 0, 1]))]
+    if extra_search_fold:
+        search_folds.insert(0, (train, rows[3:6]))
+    final_folds = [(train, np.array([0, 1, 0, 1]))]
+    _assert_finalist_recomputes_fold(task, X, y, search_folds, final_folds, preserve_dataframe=True)
+
+
+def _assert_finalist_recomputes_fold(
+    task, X, y, search_folds, final_folds, *, preserve_dataframe=False
+):
+    def optimize(problem, evaluate, report):
+        proposals = [(1,), (2,)] if task == "parameters" else [(1, 0), (0, 1)]
+        report([handle for _, handle in evaluate(proposals)])
+
+    def score(estimator, X, y):
+        col = estimator.max_depth - 1 if task == "parameters" else 0
+        return float(np.asarray(X)[:, col].mean()) + 0.25
+
+    options = dict(
+        cv=search_folds,
+        final_selection=True,
+        final_selection_cv=final_folds,
+        final_selection_top_k=2,
+        scoring=score,
+        error_score="raise",
+        optimizer_backend=optimize,
+        n_jobs=1,
+        random_state=99,
+        population_size=2,
+        generations=0,
+        verbose=False,
+    )
+    estimator = DecisionTreeClassifier(random_state=99)
+    if task == "parameters":
+        model = GASearchCV(estimator, param_grid={"max_depth": Integer(1, 2)}, **options)
+    else:
+        model = GAFeatureSelectionCV(
+            estimator, max_features=1, preserve_dataframe=preserve_dataframe, **options
+        )
+    fresh = clone(model).fit(X, y)
+    reused = model.set_params(final_selection="reuse_folds").fit(X, y)
+
+    assert reused.best_index_ == fresh.best_index_
+    assert reused.best_score_ == fresh.best_score_
+    assert reused.fit_counts_ == fresh.fit_counts_
+    assert reused.fit_counts_["finalist_fold_fits"] == 2
+    assert reused.fit_counts_["finalist_reused_folds"] == 0
+    np.testing.assert_equal(
+        reused.final_selection_results_["candidates"], fresh.final_selection_results_["candidates"]
+    )
+    np.testing.assert_array_equal(reused.predict(X), fresh.predict(X))
+
+
+@pytest.mark.parametrize("task", ["parameters", "features"])
+@pytest.mark.parametrize("final_cv", ["shared", "positions", "masks", "reordered", "extra"])
 @pytest.mark.parametrize(
     "engine", ["deap", pytest.param("scipy", marks=requires_scipy_backend), *BACKENDS]
 )
@@ -1739,7 +2057,13 @@ def test_finalist_reuse_preserves_each_occurrence_of_repeated_folds(task, final_
         "shared": None,
         "positions": [(train.copy(), test.copy()) for train, test in folds],
         "masks": [(row_mask(train), row_mask(test)) for train, test in folds],
+        "reordered": [second, first, first],
+        "extra": [second, first, first, first, first],
     }[final_cv]
+    expected_scores = {
+        "reordered": [0.5, 0.25, 1.0],
+        "extra": [0.5, 0.25, 1.0, 0.25, 1.0],
+    }.get(final_cv, [0.25, 0.5, 1.0])
     options = dict(
         optimizer_backend=engine,
         generations=0,
@@ -1758,14 +2082,14 @@ def test_finalist_reuse_preserves_each_occurrence_of_repeated_folds(task, final_
 
     finalists = model.final_selection_results_
     assert finalists["selected_index"] == finalists["original_best_index"] == model.best_index_
-    assert model.best_score_ == pytest.approx((0.25 + 0.5 + 1.0) / 3)
-    assert finalists["candidates"][0]["cv_scores"] == [0.25, 0.5, 1.0]
-    assert finalists["candidates"][1]["cv_scores"] == [0.5, 0.5, 0.5]
+    assert model.best_score_ == pytest.approx(np.mean(expected_scores))
+    assert finalists["candidates"][0]["cv_scores"] == expected_scores
+    assert finalists["candidates"][1]["cv_scores"] == [0.5] * len(expected_scores)
     assert visits == 3
     assert model.fit_counts_["search_cv_calls"] == 2
     assert model.fit_counts_["finalist_cv_calls"] == 0
     assert model.fit_counts_["finalist_fold_fits"] == 0
-    assert model.fit_counts_["finalist_reused_folds"] == 6
+    assert model.fit_counts_["finalist_reused_folds"] == 2 * len(expected_scores)
     if task == "parameters":
         assert model.best_params_["max_depth"] == 2
         columns, depth = [0, 1], 2
@@ -1774,6 +2098,65 @@ def test_finalist_reuse_preserves_each_occurrence_of_repeated_folds(task, final_
         columns, depth = [0], None
     expected = clone(model.estimator).set_params(max_depth=depth).fit(X[:, columns], y)
     np.testing.assert_array_equal(model.predict(X_test), expected.predict(X_test[:, columns]))
+
+
+@pytest.mark.parametrize("task", ["parameters", "features"])
+@pytest.mark.parametrize("engine", ["deap", "pymoo"])
+@pytest.mark.parametrize("score_kind", ["fractional", "integers", "large_float", "mixed_integers"])
+@pytest.mark.parametrize("repeat_fold", [False, True])
+def test_finalist_reuses_scores_when_all_folds_are_reordered(task, engine, score_kind, repeat_fold):
+    if engine != "deap":
+        pytest.importorskip(engine)
+    X, y = load_iris(return_X_y=True)
+    rows = np.arange(len(X))
+    folds = [(rows[:-size], rows[-size:]) for size in (12, 14, 16)]
+    final_folds = [folds[2], folds[0], folds[1]]
+    if repeat_fold:
+        folds.append(folds[0])
+        final_folds.append(folds[0])
+
+    def score(estimator, X, y):
+        complexity = estimator.max_depth if task == "parameters" else X.shape[1]
+        if score_kind == "fractional":
+            return 0.01 * (len(X) + complexity)
+        if score_kind == "integers":
+            return len(X) * complexity
+        if score_kind == "large_float":
+            return (0.35 + 0.01 * (len(X) + complexity)) * 1e308
+        if len(X) == 12:
+            return 2**63 + 2 * complexity + 1
+        return -(2**54 + 2 * complexity + 1) if len(X) == 14 else 2**54 + 2 * complexity + 1
+
+    template = search(
+        task,
+        optimizer_backend=engine,
+        scoring=score,
+        generations=0,
+        final_selection=True,
+        final_selection_cv=final_folds,
+        final_selection_top_k=2,
+        error_score="raise",
+    ).set_params(cv=folds)
+    fresh = clone(template).fit(X, y, callbacks=CVBudgetStopping(6))
+    reused = template.set_params(final_selection="reuse_folds").fit(
+        X, y, callbacks=CVBudgetStopping(6)
+    )
+
+    assert reused.best_index_ == fresh.best_index_
+    assert reused.best_score_ == fresh.best_score_
+    np.testing.assert_array_equal(reused.predict(X), fresh.predict(X))
+    expected = fresh.final_selection_results_["candidates"]
+    actual = reused.final_selection_results_["candidates"]
+    assert expected and len(expected) == len(actual)
+    for before, after in zip(expected, actual, strict=True):
+        assert before["index"] == after["index"]
+        assert before["cv_scores"] == after["cv_scores"]
+        assert all(type(a) is type(b) for a, b in zip(before["cv_scores"], after["cv_scores"]))
+        assert after["reused_folds"] == len(final_folds)
+    assert reused.fit_counts_["search_cv_calls"] == fresh.fit_counts_["search_cv_calls"] == 6
+    assert reused.fit_counts_["finalist_cv_calls"] == 0
+    assert reused.fit_counts_["finalist_fold_fits"] == 0
+    assert reused.fit_counts_["finalist_reused_folds"] == fresh.fit_counts_["finalist_fold_fits"]
 
 
 @pytest.mark.parametrize("task", ["parameters", "features"])
@@ -1820,8 +2203,80 @@ def test_finalist_reuses_exact_large_integer_scores_in_a_subset(task, integer_ra
 
 
 @pytest.mark.parametrize("task", ["parameters", "features"])
+@pytest.mark.parametrize(
+    "score_kind",
+    ["double", "extended", "extended-range", "extended-only-in-search", "integer-at-ceiling"],
+)
+def test_finalist_reuses_large_scores_when_the_subset_retains_the_float_dtype(task, score_kind):
+    if score_kind.startswith("extended") and (
+        np.finfo(np.longdouble).nmant <= np.finfo(float).nmant
+    ):
+        pytest.skip("requires extended precision")
+    if score_kind == "extended-range" and np.finfo(np.longdouble).maxexp <= 1030:
+        pytest.skip("requires extended exponent range")
+
+    X, y = load_iris(return_X_y=True)
+    rows = np.arange(len(X))
+    folds = [(rows[:-size], rows[-size:]) for size in (12, 14, 16)]
+    final_folds = [folds[2], folds[1]]
+
+    def score(estimator, X, y):
+        complexity = estimator.max_depth if task == "parameters" else X.shape[1]
+        if score_kind == "integer-at-ceiling":
+            return 0.25 if len(X) == 12 else 2**64 - 2 * complexity - len(X) - 1
+        scale = complexity + len(X) / 128
+        scale = -scale if len(X) == 14 else scale
+        if score_kind == "extended-range":
+            return np.ldexp(np.longdouble(scale), 1026)
+        value = scale * 2.0**90
+        if score_kind == "extended" or (score_kind == "extended-only-in-search" and len(X) == 12):
+            return np.nextafter(np.longdouble(value), np.longdouble(np.inf))
+        return value
+
+    template = search(
+        task,
+        scoring=score,
+        generations=0,
+        final_selection=True,
+        final_selection_cv=final_folds,
+        final_selection_top_k=2,
+        error_score="raise",
+    ).set_params(cv=folds)
+    fresh = clone(template).fit(X, y)
+    reused = template.set_params(final_selection="reuse_folds").fit(X, y)
+
+    assert reused.best_index_ == fresh.best_index_
+    assert reused.best_score_ == fresh.best_score_
+    np.testing.assert_array_equal(reused.predict(X), fresh.predict(X))
+    expected = fresh.final_selection_results_["candidates"]
+    actual = reused.final_selection_results_["candidates"]
+    assert expected and len(expected) == len(actual)
+    matched = len(final_folds) if score_kind in {"double", "extended", "extended-range"} else 0
+    for before, after in zip(expected, actual, strict=True):
+        assert before["index"] == after["index"]
+        assert before["score"] == after["score"]
+        assert before["cv_scores"] == after["cv_scores"]
+        assert all(type(a) is type(b) for a, b in zip(before["cv_scores"], after["cv_scores"]))
+        assert after["reused_folds"] == matched
+    assert reused.fit_counts_["finalist_fold_fits"] == (len(final_folds) - matched) * len(actual)
+
+
+@pytest.mark.parametrize("task", ["parameters", "features"])
 @pytest.mark.parametrize("large_value", [-(2**54 + 1), 2**63 + 1])
-def test_finalist_combines_exact_integer_scores_from_search_and_new_folds(task, large_value):
+@pytest.mark.parametrize(
+    "large_fold_sizes, new_score",
+    [
+        pytest.param((18,), "integer", id="large-new-score"),
+        pytest.param((12, 14, 16), "integer", id="large-saved-with-new-integer"),
+        pytest.param((12, 14, 16), "float", id="large-saved-with-new-float"),
+        pytest.param((14, 16), "object", id="large-saved-with-object-score"),
+    ],
+)
+def test_finalist_combines_exact_integer_scores_from_search_and_new_folds(
+    task, large_value, large_fold_sizes, new_score
+):
+    from fractions import Fraction
+
     X, y = load_iris(return_X_y=True)
     rows = np.arange(len(X))
     folds = [(rows[:-size], rows[-size:]) for size in (12, 14, 16)]
@@ -1829,7 +2284,13 @@ def test_finalist_combines_exact_integer_scores_from_search_and_new_folds(task, 
 
     def score(estimator, X, y):
         complexity = estimator.max_depth if task == "parameters" else X.shape[1]
-        return large_value + 2 * complexity if len(X) == 18 else -len(X) * complexity
+        if len(X) in large_fold_sizes:
+            return large_value + 2 * complexity + 2 * len(X)
+        value = -len(X) * complexity
+        if new_score == "object":
+            # An integer search array cannot recover this original Boolean type.
+            return True if len(X) == 12 else Fraction(4 * value + 1, 4)
+        return value + 0.25 if new_score == "float" else value
 
     template = search(
         task,
@@ -1855,8 +2316,10 @@ def test_finalist_combines_exact_integer_scores_from_search_and_new_folds(task, 
         assert all(type(a) is type(b) for a, b in zip(before["cv_scores"], after["cv_scores"]))
 
     counts = reused.fit_counts_
-    assert counts["finalist_cv_calls"] == counts["finalist_fold_fits"] == len(actual)
-    assert counts["finalist_reused_folds"] == 2 * len(actual)
+    calls, fits, matched = (2, 4, 0) if new_score == "object" else (1, 1, 2)
+    assert counts["finalist_cv_calls"] == calls * len(actual)
+    assert counts["finalist_fold_fits"] == fits * len(actual)
+    assert counts["finalist_reused_folds"] == matched * len(actual)
 
 
 @pytest.mark.parametrize("task", ["parameters", "features"])
@@ -1990,7 +2453,19 @@ def test_finalist_matches_narrow_signed_indices_and_checks_bounds(invalid):
 
 
 @pytest.mark.parametrize("task", ["parameters", "features"])
-def test_finalist_reports_all_fold_fits_when_partial_reuse_retries(task):
+@pytest.mark.parametrize(
+    ("search_score", "offset"),
+    [
+        ("integral_float", 2**53),
+        ("integral_float", 2**63),
+        ("promoted_integer", 2**53),
+        ("promoted_integer", 2**63),
+        ("fractional", 2**53),
+        ("fractional", -(2**54)),
+        ("fractional", 2**63),
+    ],
+)
+def test_finalist_preserves_score_types_and_counts_for_partial_reuse(task, search_score, offset):
     X, y = load_iris(return_X_y=True)
     rows = np.arange(len(X))
     search_folds = [(rows[:-size], rows[-size:]) for size in (12, 14, 16)]
@@ -1998,7 +2473,11 @@ def test_finalist_reports_all_fold_fits_when_partial_reuse_retries(task):
 
     def score(estimator, X, y):
         complexity = estimator.max_depth if task == "parameters" else X.shape[1]
-        return 2**53 + 2 * complexity + 1 if len(X) == 18 else float(complexity)
+        if len(X) == 18:
+            return offset + 2 * complexity + 1
+        if search_score == "promoted_integer":
+            return 0.25 if len(X) == 14 else complexity
+        return float(complexity) + (0.25 if search_score == "fractional" else 0)
 
     template = search(
         task,
@@ -2013,18 +2492,241 @@ def test_finalist_reports_all_fold_fits_when_partial_reuse_retries(task):
     reused = template.set_params(final_selection="reuse_folds").fit(X, y)
 
     assert reused.best_index_ == fresh.best_index_
+    assert reused.best_score_ == fresh.best_score_
     np.testing.assert_array_equal(reused.predict(X), fresh.predict(X))
     expected = fresh.final_selection_results_["candidates"]
     actual = reused.final_selection_results_["candidates"]
     counts = reused.fit_counts_
-    assert counts["finalist_cv_calls"] == 2 * len(actual)
-    assert counts["finalist_fold_fits"] == 4 * len(actual)
-    assert counts["finalist_reused_folds"] == 0
+    calls, fits, matches = (1, 1, 2) if search_score == "fractional" else (2, 3, 0)
+    assert counts["finalist_cv_calls"] == calls * len(actual)
+    assert counts["finalist_fold_fits"] == fits * len(actual)
+    assert counts["finalist_reused_folds"] == matches * len(actual)
     for before, after in zip(expected, actual, strict=True):
         assert before["index"] == after["index"]
         assert before["cv_scores"] == after["cv_scores"]
+        assert all(type(a) is type(b) for a, b in zip(before["cv_scores"], after["cv_scores"]))
         assert (before["cv_calls"], before["fold_fits"]) == (1, 3)
-        assert (after["cv_calls"], after["fold_fits"], after["reused_folds"]) == (2, 4, 0)
+        assert (after["cv_calls"], after["fold_fits"], after["reused_folds"]) == (
+            calls,
+            fits,
+            matches,
+        )
+
+
+@pytest.mark.parametrize("task", ["parameters", "features"])
+@pytest.mark.parametrize(
+    "search_score", ["double", "integer", "promoted_integer", "promoted_double"]
+)
+def test_finalist_reuses_small_saved_scores_with_large_new_doubles(task, search_score):
+    if search_score == "promoted_double" and np.dtype(np.longdouble) == np.dtype(float):
+        pytest.skip("requires extended precision")
+
+    X, y = load_iris(return_X_y=True)
+    rows = np.arange(len(X))
+    search_folds = [(rows[:-size], rows[-size:]) for size in (12, 14, 16)]
+    final_folds = [search_folds[2], (rows[:-18], rows[-18:]), search_folds[0]]
+
+    def score(estimator, X, y):
+        complexity = estimator.max_depth if task == "parameters" else X.shape[1]
+        if len(X) == 18:
+            return float(complexity) * 2.0**90
+        if search_score == "integer":
+            return complexity
+        if search_score == "promoted_integer" and len(X) != 14:
+            return -complexity
+        value = complexity + len(X) / 64
+        return np.longdouble(value) if search_score == "promoted_double" and len(X) == 14 else value
+
+    template = search(
+        task,
+        scoring=score,
+        generations=0,
+        final_selection=True,
+        final_selection_top_k=2,
+        final_selection_cv=final_folds,
+        error_score="raise",
+    ).set_params(cv=search_folds)
+    fresh = clone(template).fit(X, y)
+    reused = template.set_params(final_selection="reuse_folds").fit(X, y)
+
+    assert reused.best_index_ == fresh.best_index_
+    assert reused.best_score_ == fresh.best_score_
+    np.testing.assert_array_equal(reused.predict(X), fresh.predict(X))
+    expected = fresh.final_selection_results_["candidates"]
+    actual = reused.final_selection_results_["candidates"]
+    assert expected and len(expected) == len(actual)
+    calls, fits, matches = (2, 4, 0) if search_score == "promoted_double" else (1, 1, 2)
+    for before, after in zip(expected, actual, strict=True):
+        assert before["index"] == after["index"]
+        assert before["score"] == after["score"]
+        assert before["cv_scores"] == after["cv_scores"]
+        assert all(type(value) is float for value in after["cv_scores"])
+        assert (after["cv_calls"], after["fold_fits"], after["reused_folds"]) == (
+            calls,
+            fits,
+            matches,
+        )
+    counts = reused.fit_counts_
+    assert counts["finalist_cv_calls"] == calls * len(actual)
+    assert counts["finalist_fold_fits"] == fits * len(actual)
+    assert counts["finalist_reused_folds"] == matches * len(actual)
+
+
+@pytest.mark.parametrize("task", ["parameters", "features"])
+@pytest.mark.parametrize(
+    "precision",
+    [
+        "discarded_only",
+        "discarded_only_with_new_fold",
+        "retained",
+        "new",
+        "discarded_and_new",
+        "new_mixed_small_scores",
+        "new_mixed_large_scores",
+    ],
+)
+def test_finalist_reuse_requires_evidence_for_extended_precision(task, precision):
+    if np.finfo(np.longdouble).nmant <= np.finfo(float).nmant:
+        pytest.skip("requires extended precision")
+
+    X, y = load_iris(return_X_y=True)
+    rows = np.arange(len(X))
+    search_folds = [(rows[:-size], rows[-size:]) for size in (12, 14, 16)]
+    final_folds = [search_folds[2], search_folds[0]]
+    if precision != "discarded_only":
+        final_folds.insert(1, (rows[:-18], rows[-18:]))
+    if precision.startswith("new_mixed"):
+        final_folds.insert(2, (rows[:-20], rows[-20:]))
+
+    def score(estimator, X, y):
+        complexity = estimator.max_depth if task == "parameters" else X.shape[1]
+        value = float(complexity)
+        if precision.startswith("new_mixed"):
+            if len(X) in (12, 16):
+                return np.longdouble(value)
+            if len(X) == 18:
+                return (
+                    2**53 + 2 * complexity + 1
+                    if precision == "new_mixed_large_scores"
+                    else complexity
+                )
+            return value + 0.125
+        if len(X) == 18 and precision in ("new", "discarded_and_new"):
+            return np.nextafter(np.ldexp(np.longdouble(value), 90), np.longdouble(np.inf))
+        if len(X) == 16 and precision == "retained":
+            return np.nextafter(np.longdouble(value), np.longdouble(np.inf))
+        if len(X) == 14 and precision.startswith("discarded"):
+            return np.longdouble(value)
+        return np.nextafter(value, np.inf) if len(X) == 16 else value
+
+    model = search(
+        task,
+        scoring=score,
+        generations=0,
+        final_selection=True,
+        final_selection_cv=final_folds,
+        final_selection_top_k=2,
+        error_score="raise",
+    ).set_params(cv=search_folds)
+    fresh = clone(model).fit(X, y)
+    reused = model.set_params(final_selection="reuse_folds").fit(X, y)
+
+    assert reused.best_index_ == fresh.best_index_
+    assert reused.best_score_ == fresh.best_score_
+    assert type(reused.best_score_) is type(fresh.best_score_)
+    np.testing.assert_array_equal(reused.predict(X), fresh.predict(X))
+    expected = fresh.final_selection_results_["candidates"]
+    actual = reused.final_selection_results_["candidates"]
+    assert expected and len(expected) == len(actual)
+    reuse_counts = {
+        "discarded_only": (1, 2, 0),
+        "discarded_only_with_new_fold": (2, 3, 0),
+        "retained": (1, 1, 2),
+        "new": (1, 1, 2),
+        "discarded_and_new": (1, 1, 2),
+        "new_mixed_small_scores": (2, 4, 0),
+        "new_mixed_large_scores": (2, 6, 0),
+    }
+    for before, after in zip(expected, actual, strict=True):
+        assert before["index"] == after["index"]
+        assert before["score"] == after["score"]
+        assert before["cv_scores"] == after["cv_scores"]
+        assert all(type(a) is type(b) for a, b in zip(before["cv_scores"], after["cv_scores"]))
+        assert (after["cv_calls"], after["fold_fits"], after["reused_folds"]) == reuse_counts[
+            precision
+        ]
+
+
+@pytest.mark.parametrize("task", ["parameters", "features"])
+@pytest.mark.parametrize(
+    "case",
+    [
+        "subset",
+        "new_integer",
+        "new_boolean",
+        "new_signed_group",
+        "new_unsigned_and_boolean",
+        "retained_fraction",
+        "new_float",
+    ],
+)
+def test_finalist_matches_original_scalar_types_after_dropping_a_fractional_fold(task, case):
+    X, y = load_iris(return_X_y=True)
+    rows = np.arange(len(X))
+    search_folds = [(rows[:-size], rows[-size:]) for size in (12, 14, 16)]
+    final_folds = [search_folds[2], search_folds[0]]
+    if case != "subset":
+        final_folds.insert(1, (rows[:-18], rows[-18:]))
+    if case in ("new_signed_group", "new_unsigned_and_boolean"):
+        final_folds[2:2] = [(rows[:-size], rows[-size:]) for size in (20, 22)]
+
+    def score(estimator, X, y):
+        complexity = estimator.max_depth if task == "parameters" else X.shape[1]
+        if len(X) == 14 or (len(X) == 16 and case == "retained_fraction"):
+            return complexity + 0.25
+        if case == "new_signed_group" and len(X) in (18, 20, 22):
+            return True if len(X) == 20 else -(2**54 + 2 * complexity + len(X) + 1)
+        if case == "new_unsigned_and_boolean":
+            return 2**63 + 2 * complexity + 1 if len(X) in (18, 22) else False
+        if len(X) == 18 and case == "new_float":
+            return float(complexity)
+        if len(X) == 18 and case == "new_boolean":
+            return True
+        return complexity + len(X)
+
+    model = search(
+        task,
+        scoring=score,
+        generations=0,
+        final_selection=True,
+        final_selection_cv=final_folds,
+        final_selection_top_k=2,
+        error_score="raise",
+    ).set_params(cv=search_folds)
+    fresh = clone(model).fit(X, y)
+    reused = model.set_params(final_selection="reuse_folds").fit(X, y)
+
+    assert reused.best_index_ == fresh.best_index_
+    assert reused.best_score_ == fresh.best_score_
+    np.testing.assert_array_equal(reused.predict(X), fresh.predict(X))
+    expected = fresh.final_selection_results_["candidates"]
+    actual = reused.final_selection_results_["candidates"]
+    assert expected and len(expected) == len(actual)
+    counts = {
+        "subset": (1, 2, 0),
+        "new_integer": (2, 3, 0),
+        "new_boolean": (2, 3, 0),
+        "new_signed_group": (2, 5, 0),
+        "new_unsigned_and_boolean": (2, 8, 0),
+        "retained_fraction": (1, 1, 2),
+        "new_float": (1, 1, 2),
+    }
+    for before, after in zip(expected, actual, strict=True):
+        assert before["index"] == after["index"]
+        assert before["score"] == after["score"]
+        assert before["cv_scores"] == after["cv_scores"]
+        assert all(type(a) is type(b) for a, b in zip(before["cv_scores"], after["cv_scores"]))
+        assert (after["cv_calls"], after["fold_fits"], after["reused_folds"]) == counts[case]
 
 
 @pytest.mark.parametrize("task", ["parameters", "features"])
@@ -2034,19 +2736,390 @@ def test_finalist_reports_all_fold_fits_when_partial_reuse_retries(task):
 def test_candidate_fit_failure_preserves_search_time_and_raises_the_original_error(
     task, engine, monkeypatch
 ):
-    from sklearn_genetic import _base
+    from sklearn_genetic import _base, genetic_search
 
     if engine != "deap":
         pytest.importorskip(engine)
     ticks = iter((1.0, 3.5))
     monkeypatch.setattr(_base, "perf_counter", ticks.__next__)
+    evaluate_cv = genetic_search.cross_validate
+    completed = []
+
+    def count_cv(*args, **kwargs):
+        result = evaluate_cv(*args, **kwargs)
+        completed.append(len(result["fit_time"]))
+        return result
+
+    monkeypatch.setattr(genetic_search, "cross_validate", count_cv)
     model = _cv_failure_search(task, engine, error_score="raise")
     with pytest.raises(ValueError, match="^fixture estimator rejects this candidate$"):
         model.fit(*load_iris(return_X_y=True))
     assert model.search_time_ == 2.5
-    assert not hasattr(model, "fit_counts_")
+    assert model.search_interrupted_
+    assert model.fit_counts_["search_cv_calls"] == len(completed)
+    assert model.fit_counts_["search_fold_fits"] == sum(completed)
     with pytest.raises(NotFittedError):
         check_is_fitted(model)
+
+
+@pytest.mark.parametrize("task", ["parameters", "features"])
+@pytest.mark.parametrize(
+    "engine, resume",
+    [
+        ("deap", False),
+        pytest.param("scipy", False, marks=requires_scipy_backend),
+        *((engine, False) for engine in BACKENDS),
+        ("deap", True),
+        ("pymoo", True),
+    ],
+)
+def test_search_error_preserves_newly_recorded_cv_work(task, engine, resume, tmp_path, monkeypatch):
+    from sklearn_genetic import genetic_search
+
+    if engine != "deap":
+        pytest.importorskip(engine)
+    failure = RuntimeError("fixture interrupts after a completed generation")
+
+    class FailAfterGeneration(BaseCallback):
+        def on_step(self, record=None, logbook=None, estimator=None):
+            raise failure
+
+    X, y = load_iris(return_X_y=True)
+    model = search(task, optimizer_backend=engine, use_cache=False, error_score="raise")
+    callbacks = [FailAfterGeneration()]
+    saved_calls = 0
+    if resume:
+        checkpoint = ModelCheckpoint(tmp_path / "interrupted.pkl")
+        first = clone(model).fit(X, y, callbacks=[CVBudgetStopping(6), checkpoint])
+        saved_calls = first.fit_stats_["cross_validate_calls"]
+        callbacks.append(checkpoint)
+    evaluate_cv = genetic_search.cross_validate
+    observed = []
+
+    def count_cv(*args, **kwargs):
+        result = evaluate_cv(*args, **kwargs)
+        observed.append(len(result["fit_time"]))
+        return result
+
+    monkeypatch.setattr(genetic_search, "cross_validate", count_cv)
+    with pytest.raises(RuntimeError, match="fixture interrupts") as error:
+        model.fit(X, y, callbacks=callbacks)
+    assert error.value is failure
+    assert observed
+    assert model.search_interrupted_
+    assert model.fit_stats_["cross_validate_calls"] == saved_calls + len(observed)
+    assert model.fit_counts_["search_cv_calls"] == len(observed)
+    assert model.fit_counts_["search_fold_fits"] == sum(observed)
+    assert model.fit_counts_["finalist_cv_calls"] == model.fit_counts_["refit_fits"] == 0
+    with pytest.raises(NotFittedError):
+        check_is_fitted(model)
+
+    model.fit(X, y, callbacks=CVBudgetStopping(6))
+    assert not model.search_interrupted_
+    assert model.fit_counts_["search_cv_calls"] == 6
+
+
+def test_search_error_before_checkpoint_restore_has_no_fresh_work(tmp_path, monkeypatch):
+    from sklearn_genetic import _backend_runtime
+
+    pytest.importorskip("pymoo")
+    X, y = load_iris(return_X_y=True)
+    model = search("parameters", optimizer_backend="pymoo", use_cache=False)
+    checkpoint = ModelCheckpoint(tmp_path / "before-restore.pkl")
+    clone(model).fit(X, y, callbacks=[CVBudgetStopping(6), checkpoint])
+    assert checkpoint.load()["fit_stats"]["cross_validate_calls"] == 6
+
+    def fail(*args, **kwargs):
+        raise RuntimeError("fixture interrupts setup before restore")
+
+    monkeypatch.setattr(_backend_runtime, "run_optimizer", fail)
+    with pytest.raises(RuntimeError, match="fixture interrupts setup"):
+        model.fit(X, y, callbacks=checkpoint)
+    assert model.search_interrupted_
+    assert model.fit_counts_["search_cv_calls"] == model.fit_counts_["search_fold_fits"] == 0
+
+
+@pytest.mark.parametrize("task", ["parameters", "features"])
+@pytest.mark.parametrize(
+    "engine, resume",
+    [
+        ("deap", False),
+        pytest.param("scipy", False, marks=requires_scipy_backend),
+        *((engine, False) for engine in BACKENDS),
+        ("deap", True),
+        ("pymoo", True),
+    ],
+)
+def test_search_error_counts_returned_cv_from_an_unrecorded_batch(
+    task, engine, resume, tmp_path, monkeypatch
+):
+    from sklearn_genetic import genetic_search
+
+    if engine != "deap":
+        pytest.importorskip(engine)
+    X, y = load_iris(return_X_y=True)
+    model = search(task, optimizer_backend=engine, use_cache=False, error_score="raise")
+    callbacks = []
+    saved_calls = 0
+    if resume:
+        checkpoint = ModelCheckpoint(tmp_path / "interrupted-batch.pkl")
+        clone(model).fit(X, y, callbacks=[CVBudgetStopping(6), checkpoint])
+        saved_calls = checkpoint.load()["logbook"][-1]["cross_validate_calls"]
+        snapshot = checkpoint.checkpoint_path.read_bytes()
+        callbacks = [CVBudgetStopping(6), checkpoint]
+
+    cross_validate = genetic_search.cross_validate
+    observed = []
+    failure = RuntimeError("fixture interrupts the third CV call")
+
+    def fail_third_cv(*args, **kwargs):
+        if len(observed) == 2:
+            raise failure
+        result = cross_validate(*args, **kwargs)
+        observed.append(len(result["fit_time"]))
+        return result
+
+    monkeypatch.setattr(genetic_search, "cross_validate", fail_third_cv)
+    with pytest.raises(RuntimeError, match="fixture interrupts the third CV call") as error:
+        model.fit(X, y, callbacks=callbacks)
+    assert error.value is failure
+    assert model.search_interrupted_
+    assert observed == [2, 2]
+    assert model.fit_counts_["search_cv_calls"] == len(observed)
+    assert model.fit_counts_["search_fold_fits"] == sum(observed)
+    assert model.fit_stats_["cross_validate_calls"] == saved_calls
+    assert "_unrecorded_search_cv_calls" not in vars(model)
+    if resume:
+        assert checkpoint.checkpoint_path.read_bytes() == snapshot
+
+
+def test_search_error_counts_results_delivered_before_a_threaded_candidate_fails(monkeypatch):
+    from joblib import parallel_backend
+    from sklearn_genetic import genetic_search
+
+    def optimize(problem, evaluate, report):
+        evaluate([(1, 1, 0, 0), (0, 1, 1, 0), (1, 0, 0, 0)])
+
+    cross_validate = genetic_search.cross_validate
+
+    def reject_single_feature(estimator, X, *args, **kwargs):
+        if X.shape[1] == 1:
+            raise RuntimeError("fixture interrupts the third candidate")
+        return cross_validate(estimator, X, *args, **kwargs)
+
+    monkeypatch.setattr(genetic_search, "cross_validate", reject_single_feature)
+    model = search(
+        "features",
+        optimizer_backend=optimize,
+        population_size=3,
+        generations=0,
+        n_jobs=2,
+        parallel_backend="population",
+        error_score="raise",
+    )
+    with (
+        parallel_backend("threading"),
+        pytest.raises(RuntimeError, match="fixture interrupts the third candidate"),
+    ):
+        model.fit(*load_iris(return_X_y=True))
+
+    assert model.search_interrupted_
+    assert model.fit_counts_["search_cv_calls"] == 2
+    assert model.fit_counts_["search_fold_fits"] == 4
+    assert model.fit_stats_["cross_validate_calls"] == 0
+
+
+@pytest.mark.parametrize("task", ["parameters", "features"])
+@pytest.mark.parametrize("error_type", [RuntimeError, KeyboardInterrupt])
+def test_interrupted_parallel_search_counts_cv_completed_out_of_order(
+    task, error_type, monkeypatch
+):
+    from joblib import parallel_backend
+    from sklearn_genetic import genetic_search
+
+    X, y = load_iris(return_X_y=True)
+    candidates = (
+        [(1,), (2,), (3,)] if task == "parameters" else [(1, 1, 0, 0), (1, 0, 0, 0), (0, 1, 1, 0)]
+    )
+    failure = error_type("fixture interrupts the middle candidate")
+    later_finished = Event()
+    cross_validate = genetic_search.cross_validate
+
+    def optimize(problem, evaluate, report):
+        evaluate(candidates)
+
+    def interrupt_middle(estimator, values, *args, **kwargs):
+        if task == "parameters":
+            fail, later = estimator.max_depth == 2, estimator.max_depth == 3
+        else:
+            fail = values.shape[1] == 1
+            later = np.array_equal(values[:, 0], X[:, 1])
+        if fail:
+            assert later_finished.wait(timeout=10), "the later CV call did not finish"
+            raise failure
+        result = cross_validate(estimator, values, *args, **kwargs)
+        if later:
+            later_finished.set()
+        return result
+
+    monkeypatch.setattr(genetic_search, "cross_validate", interrupt_middle)
+    model = search(
+        task,
+        **({"param_grid": {"max_depth": Integer(1, 3)}} if task == "parameters" else {}),
+        optimizer_backend=optimize,
+        population_size=3,
+        generations=0,
+        n_jobs=2,
+        parallel_backend="population",
+        error_score="raise",
+    )
+    with parallel_backend("threading"), pytest.raises(error_type) as interrupted:
+        model.fit(X, y)
+
+    assert interrupted.value is failure
+    assert model.search_interrupted_
+    assert model.fit_counts_["search_cv_calls"] == 2
+    assert model.fit_counts_["search_fold_fits"] == 4
+    assert model.fit_stats_["cross_validate_calls"] == 0
+    assert "_population_pool" not in vars(model)
+    with pytest.raises(NotFittedError):
+        check_is_fitted(model)
+
+
+@pytest.mark.parametrize("task", ["parameters", "features"])
+@pytest.mark.parametrize("n_jobs", [1, 2])
+@pytest.mark.parametrize("failure_source", ["cache_key", "timer"])
+def test_later_dispatch_preparation_error_preserves_confirmed_cv_work(
+    task, n_jobs, failure_source, monkeypatch
+):
+    from joblib import parallel_backend
+    from sklearn_genetic import genetic_search
+
+    if task == "parameters":
+        candidates = [(1,), (2,), (3,), (4,)]
+        options = {"param_grid": {"max_depth": Integer(1, 4)}}
+    else:
+        candidates = [(1, 0, 0, 0), (0, 1, 0, 0), (0, 0, 1, 0), (0, 0, 0, 1)]
+        options = {}
+    failure = RuntimeError(f"fixture interrupts {failure_source} preparation")
+    observed = []
+    cross_validate = genetic_search.cross_validate
+
+    def optimize(problem, evaluate, report):
+        evaluate(candidates)
+
+    def count_cv(*args, **kwargs):
+        result = cross_validate(*args, **kwargs)
+        observed.append(len(result["fit_time"]))
+        return result
+
+    class FailingTimer(TimerStopping):
+        def _time_exceeded(self):
+            raise failure
+
+    monkeypatch.setattr(genetic_search, "cross_validate", count_cv)
+    model = search(
+        task,
+        **options,
+        optimizer_backend=optimize,
+        population_size=4,
+        generations=0,
+        n_jobs=n_jobs,
+        parallel_backend="population",
+        error_score="raise",
+    )
+    if failure_source == "cache_key":
+        original_key = model._individual_key
+
+        def fail_later_key(row):
+            if tuple(row) == candidates[n_jobs + 1]:
+                raise failure
+            return original_key(row)
+
+        monkeypatch.setattr(model, "_individual_key", fail_later_key)
+        timer = TimerStopping(60)
+    else:
+        timer = FailingTimer(60)
+
+    with parallel_backend("threading"), pytest.raises(RuntimeError) as interrupted:
+        model.fit(*load_iris(return_X_y=True), callbacks=timer)
+
+    assert interrupted.value is failure
+    assert observed == [2] * n_jobs
+    assert model.search_interrupted_
+    assert model.fit_counts_["search_cv_calls"] == len(observed)
+    assert model.fit_counts_["search_fold_fits"] == sum(observed)
+    assert model.fit_stats_["cross_validate_calls"] == 0
+    assert not model._candidate_rows
+    assert "_population_pool" not in vars(model)
+
+
+@pytest.mark.parametrize("task", ["parameters", "features"])
+@pytest.mark.parametrize("use_cache", [False, True])
+@pytest.mark.parametrize("publication", ["rows", "counters"])
+def test_result_publication_error_keeps_all_completed_cv_counts(
+    task, use_cache, publication, monkeypatch
+):
+    from sklearn_genetic import evaluation, genetic_search
+
+    if task == "parameters":
+        first, second, last = (1,), (2,), (3,)
+        options = {"param_grid": {"max_depth": Integer(1, 3)}}
+    else:
+        first, second, last = (1, 0, 0, 0), (0, 1, 0, 0), (0, 0, 1, 0)
+        options = {}
+    failure = RuntimeError("fixture interrupts result publication")
+    observed = []
+    cross_validate = genetic_search.cross_validate
+
+    def optimize(problem, evaluate, report):
+        evaluate([first, second, first, last])
+
+    def count_cv(*args, **kwargs):
+        result = cross_validate(*args, **kwargs)
+        observed.append(len(result["fit_time"]))
+        return result
+
+    monkeypatch.setattr(genetic_search, "cross_validate", count_cv)
+    if publication == "rows":
+        record_candidate = evaluation.record_candidate
+
+        def fail_while_recording(estimator, record):
+            if estimator._candidate_rows:
+                raise failure
+            return record_candidate(estimator, record)
+
+        monkeypatch.setattr(evaluation, "record_candidate", fail_while_recording)
+    else:
+        record_stats = evaluation.record_fit_stats
+
+        def fail_after_counting(*args, **kwargs):
+            record_stats(*args, **kwargs)
+            raise failure
+
+        monkeypatch.setattr(evaluation, "record_fit_stats", fail_after_counting)
+
+    model = search(
+        task,
+        **options,
+        optimizer_backend=optimize,
+        population_size=4,
+        generations=0,
+        use_cache=use_cache,
+        error_score="raise",
+    )
+    with pytest.raises(RuntimeError) as interrupted:
+        model.fit(*load_iris(return_X_y=True))
+
+    assert interrupted.value is failure
+    assert observed == [2] * (3 if use_cache else 4)
+    assert model.search_interrupted_
+    assert model.fit_counts_["search_cv_calls"] == len(observed)
+    assert model.fit_counts_["search_fold_fits"] == sum(observed)
+    assert model.fit_stats_["cross_validate_calls"] == (
+        0 if publication == "rows" else len(observed)
+    )
+    assert len(model._candidate_rows) == (1 if publication == "rows" else 4)
 
 
 @pytest.mark.parametrize(
@@ -4457,6 +5530,77 @@ def test_feature_refit_reports_the_archived_evaluation(fold_means, masks, expect
     np.testing.assert_equal(model.get_support(), masks[expected])
 
 
+@pytest.mark.parametrize("score,expected", [(0.8, 128), (0.7, 129)])
+def test_archived_feature_row_checks_scores_before_reusing_mask_comparisons(score, expected):
+    from types import SimpleNamespace
+
+    target = np.array([True, False, False])
+    other = np.array([False, True, False])
+    rows = [{"features": target, "score": 0.3}, {"features": other, "score": 0.8}] * 64 + [
+        {"features": target, "score": 0.8},
+        {"features": target, "score": 0.95},
+        {"features": target, "score": 0.8},
+    ]
+    search = SimpleNamespace(
+        refit_metric="score",
+        fit_stats_={"unique_candidates": 2},
+        cv_results_={
+            "mean_test_score": [row["score"] for row in rows],
+            "rank_test_score": [*([68, 2] * 64), 2, 1, 2],
+        },
+    )
+    assert (
+        GAFeatureSelectionCV._archived_feature_row(search, rows, score, target.copy()) == expected
+    )
+
+
+@pytest.mark.parametrize("task", ["features", "parameters"])
+@pytest.mark.parametrize("criteria", ["min", "max"])
+def test_large_optimizer_archive_preserves_equal_score_order(task, criteria):
+    X, y = load_iris(return_X_y=True)
+    population = [*range(24), 24, 2, 25]
+    scores = [*(i % 4 for i in range(24)), 2, 3, 0]
+    direction = 1 if criteria == "max" else -1
+    fold_scores = iter(direction * score for score in scores for _ in range(2))
+
+    def scorer(estimator, X, y):
+        return next(fold_scores)
+
+    def optimize(problem, evaluate, report):
+        report([handle for _, handle in evaluate(candidates)])
+
+    if task == "features":
+        X = np.tile(X[:, :1], (1, 26))
+        masks = [tuple(int(column == index) for column in range(26)) for index in range(26)]
+        candidates = [masks[index] for index in population]
+        options = {}
+    else:
+        candidates = [(index + 1,) for index in population]
+        options = {"param_grid": {"max_depth": Integer(1, 26)}}
+    model = search(
+        task,
+        optimizer_backend=optimize,
+        population_size=len(candidates),
+        generations=0,
+        keep_top_k=24,
+        use_cache=False,
+        criteria=criteria,
+        scoring=scorer,
+        **options,
+    ).fit(X, y)
+
+    # New equal-ranked elites enter first, unless they tie the filled archive's
+    # last entry. An already archived candidate cannot replace its first score.
+    order = [*range(23, 2, -4), 24, *range(22, 1, -4), *range(21, 0, -4), *range(20, 0, -4)]
+    archive_indices = (
+        [mask.index(1) for mask in model._hof]
+        if task == "features"
+        else [depth - 1 for (depth,) in model._hof]
+    )
+    assert archive_indices == order
+    assert model.fit_counts_["search_cv_calls"] == len(candidates)
+
+
 @pytest.mark.parametrize("task", ["features", "parameters"])
 @pytest.mark.parametrize(
     "select, error",
@@ -4530,6 +5674,43 @@ def test_unused_finalist_cv_does_not_block_search(task, final_selection, refit):
     assert result.fit_counts_["finalist_cv_calls"] == 0
 
 
+@pytest.mark.parametrize("task", ["features", "parameters"])
+@pytest.mark.parametrize("splitter", [KFold, StratifiedKFold, GroupKFold])
+def test_standard_cv_keeps_the_independent_arrays_created_by_split(task, splitter, monkeypatch):
+    from sklearn_genetic import genetic_search
+
+    X, y = load_iris(return_X_y=True)
+    cv = splitter(3)
+    fit_params = {"groups": np.arange(len(X)) // 5} if splitter is GroupKFold else {}
+    expected_folds = list(cv.split(X, y, **fit_params))
+    original_copy = genetic_search.deepcopy
+    fold_copies = []
+
+    def track_copy(value, *args, **kwargs):
+        if (
+            type(value) is tuple
+            and len(value) == 2
+            and all(type(row) is np.ndarray for row in value)
+        ):
+            fold_copies.append(value)
+        return original_copy(value, *args, **kwargs)
+
+    monkeypatch.setattr(genetic_search, "deepcopy", track_copy)
+    result = search(
+        task,
+        generations=0,
+        final_selection="reuse_folds",
+        final_selection_cv=splitter(3),
+        final_selection_top_k=2,
+        error_score="raise",
+    ).set_params(cv=cv)
+    result.fit(X, y, **fit_params)
+    assert not fold_copies
+    np.testing.assert_equal(result._cv_splits, expected_folds)
+    assert result.fit_counts_["finalist_reused_folds"] == 6
+    assert result.fit_counts_["finalist_fold_fits"] == 0
+
+
 class _BufferReusingCV:
     def __init__(self, folds):
         self.folds = folds
@@ -4546,7 +5727,7 @@ class _BufferReusingCV:
 
 
 @pytest.mark.parametrize("task", ["features", "parameters"])
-@pytest.mark.parametrize("cv_input", ["splitter", "iterator"])
+@pytest.mark.parametrize("cv_input", ["splitter", "iterator", "replaced_method"])
 @pytest.mark.parametrize("final_selection", [True, "reuse_folds"])
 @pytest.mark.parametrize("phase", ["search", "finalists"])
 def test_cross_validation_preserves_indices_from_reused_buffers(
@@ -4558,6 +5739,10 @@ def test_cross_validation_preserves_indices_from_reused_buffers(
 
     def source(splits):
         cv = _BufferReusingCV(splits)
+        if cv_input == "replaced_method":
+            native = KFold(len(splits))
+            native.split = cv.split
+            return native
         return cv if cv_input == "splitter" else cv.split()
 
     model = search(
@@ -4822,6 +6007,14 @@ def test_empty_cv_reports_the_input_option_before_scoring_its_folds(
 
     expected = [2] if cv_option == "final_selection_cv" and source != "list" else []
     assert calls == expected
+    if expected:
+        results = model.final_selection_results_
+        assert results["failed"] is True
+        assert results["time_seconds"] >= 0.0
+        assert results["selected_index"] is None
+        assert results["candidates"] == []
+        assert "failed_candidate" not in results
+        assert model.fit_counts_["finalist_cv_calls"] == 0
 
 
 @pytest.mark.parametrize("task", ["features", "parameters"])
@@ -4913,6 +6106,128 @@ def test_malformed_explicit_cv_fold_is_rejected_before_search(
         model.fit(X, y, callbacks=CVBudgetStopping(1))
 
     assert not calls
+
+
+@pytest.mark.parametrize("task", ["features", "parameters"])
+@pytest.mark.parametrize("cv_option", ["cv", "final_selection_cv"])
+@pytest.mark.parametrize("dtype", [np.float64, object])
+def test_invalid_cv_array_selector_dtype_is_rejected_before_search(
+    task, cv_option, dtype, monkeypatch
+):
+    from sklearn_genetic import genetic_search
+
+    X, y = load_iris(return_X_y=True)
+    train, test = next(StratifiedKFold(2).split(X, y))
+    model = search(task, final_selection=True, error_score="raise").set_params(
+        **{cv_option: [(train, test), (train, test.astype(dtype))]}
+    )
+    monkeypatch.setattr(
+        genetic_search, "cross_validate", lambda *args, **kwargs: pytest.fail("unexpected CV")
+    )
+    with pytest.raises(
+        ValueError,
+        match=rf"^{cv_option} fold 2 validation selector must use an integer or Boolean dtype",
+    ):
+        model.fit(X, y, callbacks=CVBudgetStopping(1))
+
+
+@pytest.mark.parametrize("task", ["features", "parameters"])
+@pytest.mark.parametrize("source", ["generator", "splitter"])
+@pytest.mark.parametrize("cv_option", ["cv", "final_selection_cv"])
+@pytest.mark.parametrize(
+    ("damage", "exception", "detail"),
+    [
+        ("pair", ValueError, "must contain exactly two"),
+        ("index", IndexError, "training indices"),
+        ("mask", IndexError, "validation mask"),
+        ("dtype", ValueError, "training selector must use an integer or Boolean dtype"),
+    ],
+)
+def test_invalid_generated_folds_fail_before_scoring_their_stage(
+    task, source, cv_option, damage, exception, detail, monkeypatch
+):
+    from sklearn_genetic import genetic_search
+
+    X, y = load_iris(return_X_y=True)
+    train, test = next(StratifiedKFold(2).split(X, y))
+    invalid = {
+        "pair": (train,),
+        "index": (np.append(train, len(X)), test),
+        "mask": (train, np.ones(len(X) + 1, dtype=bool)),
+        "dtype": (train.astype(float), test),
+    }[damage]
+    folds = [(train, test), invalid]
+
+    class Splitter:
+        def split(self, X, y=None, groups=None):
+            return iter(folds)
+
+    model = search(task, final_selection=True).set_params(
+        **{cv_option: iter(folds) if source == "generator" else Splitter()}
+    )
+    original = genetic_search.cross_validate
+    calls = []
+
+    def counted(*args, **kwargs):
+        assert kwargs["cv"] is model._cv_splits and cv_option == "final_selection_cv"
+        calls.append(len(kwargs["cv"]))
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(genetic_search, "cross_validate", counted)
+    with pytest.raises(exception, match=rf"^{cv_option} fold 2 {detail}"):
+        model.fit(X, y, callbacks=CVBudgetStopping(1))
+
+    assert calls == ([2] if cv_option == "final_selection_cv" else [])
+
+
+@pytest.mark.parametrize("task", ["parameters", "features"])
+@pytest.mark.parametrize("field", ["cv_splits", "search_cv_splits", "outlier_cv_splits"])
+@pytest.mark.parametrize(
+    ("damage", "error", "message"),
+    [
+        ("container", ValueError, "must contain materialized"),
+        ("empty", ValueError, "must provide at least one"),
+        ("pair", ValueError, "fold 2 must contain exactly two"),
+        ("index", IndexError, "fold 2 training indices"),
+        ("mask", IndexError, "fold 2 validation mask"),
+    ],
+)
+def test_resume_rejects_malformed_saved_search_folds_before_cv(
+    task, field, damage, error, message, tmp_path, monkeypatch
+):
+    from sklearn_genetic import genetic_search
+
+    engine = "pymoo" if field == "cv_splits" else "deap"
+    if engine == "pymoo":
+        pytest.importorskip(engine)
+    X, y = load_iris(return_X_y=True)
+    folds = list(StratifiedKFold(2).split(X, y))
+    model = search(task, optimizer_backend=engine, use_cache=False).set_params(cv=folds)
+    checkpoint = ModelCheckpoint(tmp_path / "splits.pkl")
+    clone(model).fit(X, y, callbacks=[CVBudgetStopping(6), checkpoint])
+    snapshot = checkpoint.load()
+    target = snapshot if engine == "pymoo" else snapshot["runtime_state"]
+    if field == "outlier_cv_splits":
+        target[field] = target.pop("search_cv_splits")
+    if damage == "container":
+        target[field] = None
+    elif damage == "empty":
+        target[field] = []
+    elif damage == "pair":
+        target[field][1] = (folds[1][0],)
+    elif damage == "index":
+        target[field][1] = (np.array([len(X)]), folds[1][1])
+    else:
+        target[field][1] = (folds[1][0], np.array([True, False]))
+    contents = pickle.dumps(snapshot)
+    checkpoint.checkpoint_path.write_bytes(contents)
+
+    monkeypatch.setattr(
+        genetic_search, "cross_validate", lambda *args, **kwargs: pytest.fail("unexpected CV")
+    )
+    with pytest.raises(error, match=rf"^checkpoint {field} {message}"):
+        clone(model).fit(X, y, callbacks=checkpoint)
+    assert checkpoint.checkpoint_path.read_bytes() == contents
 
 
 @pytest.mark.parametrize("task", ["features", "parameters"])

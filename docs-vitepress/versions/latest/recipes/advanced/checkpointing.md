@@ -250,9 +250,12 @@ for an example with two compute sessions and a partial generation.
 | `candidate_records` and `generation boundary` | The number of saved candidate rows must match the sum of the evaluation counts in the logbook. |
 | `solver_state` and `generation boundary` | The replay journal or native solver state must match the last completed generation. |
 | `solver_state` and `unreadable data` | The native solver payload could not be decoded in the active environment. |
+| `telemetry` or a `telemetry.*` field | The saved best score must be a real number or `None`, and the best generation and stagnation counts must be nonnegative integers. |
+| `context` or `problem` | The checkpoint needs data and configuration fingerprints and the saved definition of a parameter or feature search. |
+| `cv_splits`, `search_cv_splits`, or `outlier_cv_splits` | The file needs materialized train/test pairs. Row indices must be in bounds and Boolean masks must match the training row count. |
 
-These diagnostics apply to the bundled alternative engines. `fit` raises
-before starting fresh CV and preserves the existing file. Resume from an
+`fit` raises before starting fresh CV and preserves the existing file. The
+telemetry and configuration checks also apply to resumable third-party optimizers. Resume from an
 earlier checkpoint you trust, or start an independent search with a new path.
 
 ## See Also

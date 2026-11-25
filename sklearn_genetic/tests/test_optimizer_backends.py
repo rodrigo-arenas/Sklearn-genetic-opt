@@ -165,7 +165,10 @@ def test_repeated_fit_without_refit_discards_the_previous_winner(kind, backend):
     "backend",
     ["deap", pytest.param("scipy", marks=requires_scipy_backend), "nevergrad", "cmaes", "pymoo"],
 )
-def test_refit_error_keeps_cv_records_without_publishing_a_partial_estimator(kind, backend):
+@pytest.mark.parametrize("error_type", [ValueError, KeyboardInterrupt])
+def test_refit_error_keeps_cv_records_without_publishing_a_partial_estimator(
+    kind, backend, error_type
+):
     if backend != "deap":
         pytest.importorskip(backend)
     X, y = load_iris(return_X_y=True)
@@ -176,7 +179,7 @@ def test_refit_error_keeps_cv_records_without_publishing_a_partial_estimator(kin
         def fit(self, X, y, **fit_params):
             super().fit(X, y, **fit_params)
             if reject_full_fit and len(X) == full_train_size:
-                raise ValueError("refit failed after creating fitted state")
+                raise error_type("refit failed after creating fitted state")
             return self
 
     model = search(
@@ -194,9 +197,11 @@ def test_refit_error_keeps_cv_records_without_publishing_a_partial_estimator(kin
     counts = model.fit_counts_.copy()
     reject_full_fit = True
 
-    with pytest.raises(ValueError, match="refit failed after creating fitted state"):
+    with pytest.raises(error_type, match="refit failed after creating fitted state"):
         model.fit(X, y)
     assert model.fit_counts_ == {**counts, "refit_fits": 0}
+    assert np.isfinite(model.refit_failure_time_)
+    assert model.refit_failure_time_ >= 0.0
     np.testing.assert_array_equal(model.cv_results_["mean_test_score"], scores)
     assert model.final_selection_results_["candidates"]
     for name in ("best_estimator_", "estimator_", "refit_time_"):
@@ -208,6 +213,8 @@ def test_refit_error_keeps_cv_records_without_publishing_a_partial_estimator(kin
 
     reject_full_fit = False
     np.testing.assert_array_equal(model.fit(X, y).predict(X), predictions)
+    assert not hasattr(model, "refit_failure_time_")
+    assert model.fit_counts_["refit_fits"] == 1
 
 
 @pytest.mark.parametrize("kind", ["parameters", "features"])
@@ -592,16 +599,20 @@ def test_identical_scipy_survivors_keep_separate_handles():
 
 
 @requires_scipy_backend
-def test_scipy_finds_a_valid_trial_after_several_all_invalid_populations():
+@pytest.mark.parametrize("extended", [False, True])
+def test_scipy_finds_a_valid_trial_after_several_all_invalid_populations(extended):
     from sklearn_genetic._scipy_backend import run_scipy
 
+    if extended and np.finfo(np.longdouble).maxexp <= 1026:
+        pytest.skip("requires extended exponent range")
+    valid_loss = np.ldexp(np.longdouble(1), 1025) if extended else 0.0
     reports = []
     batches = []
 
     def evaluate(rows):
         batch = len(batches)
         batches.append(rows)
-        return [(np.inf if batch < 3 else 0.0, (batch, index)) for index in range(len(rows))]
+        return [(np.inf if batch < 3 else valid_loss, (batch, index)) for index in range(len(rows))]
 
     with np.errstate(over="raise", invalid="raise"):
         run_scipy(
@@ -617,6 +628,45 @@ def test_scipy_finds_a_valid_trial_after_several_all_invalid_populations():
     assert [len(rows) for rows in batches] == [6] * 4
     assert [len(report) for report in reports] == [6] * 4
     assert set(reports[-1]) == {(3, index) for index in range(6)}
+
+
+@requires_scipy_backend
+@pytest.mark.parametrize("kind", ["parameters", "features"])
+@pytest.mark.parametrize("criteria", ["min", "max"])
+@pytest.mark.parametrize("extended_range", [False, True], ids=["precision", "range"])
+def test_scipy_continues_with_extended_scores(kind, criteria, extended_range):
+    if np.finfo(np.longdouble).nmant <= np.finfo(float).nmant:
+        pytest.skip("requires extended precision")
+    if extended_range and np.finfo(np.longdouble).maxexp <= 1026:
+        pytest.skip("requires extended exponent range")
+    magnitude = np.ldexp(np.longdouble(1), 1025) if extended_range else np.longdouble(1)
+    low = np.nextafter(magnitude, magnitude * 2)
+    high = np.nextafter(low, magnitude * 2)
+
+    def scorer(estimator, X, y):
+        size = estimator.max_depth if kind == "parameters" else X.shape[1]
+        return high if size > 1 else low
+
+    model = search(
+        kind,
+        optimizer_backend=scipy_optimizer(stop_on_convergence=False),
+        scoring=scorer,
+        criteria=criteria,
+        use_cache=False,
+        error_score="raise",
+        final_selection="reuse_folds",
+        final_selection_top_k=2,
+    )
+    with np.errstate(over="raise", invalid="raise"):
+        model.fit(*load_iris(return_X_y=True))
+
+    winner = low if criteria == "min" else high
+    assert model.history["gen"] == [0, 1, 2]
+    assert model.history["fitness_best_observed"] == [winner] * 3
+    assert model.fit_counts_["search_cv_calls"] == 18
+    assert model.fit_counts_["finalist_fold_fits"] == 0
+    assert type(model.best_score_) is np.longdouble
+    assert model.best_score_ == winner
 
 
 def _tied_score(estimator, X, y):
@@ -830,7 +880,10 @@ def test_backend_validates_alternative_masks_after_initial_population():
 
 
 @pytest.mark.parametrize("override", [False, True])
-def test_plugin_validates_repeated_canonical_tuple_once_per_batch(override, monkeypatch):
+@pytest.mark.parametrize("same_tuple", [True, False])
+def test_plugin_validates_repeated_canonical_tuple_once_per_batch(
+    override, same_tuple, monkeypatch
+):
     from sklearn_genetic import _backend_runtime
 
     original = _backend_runtime._valid_feature_mask
@@ -842,9 +895,10 @@ def test_plugin_validates_repeated_canonical_tuple_once_per_batch(override, monk
 
     monkeypatch.setattr(_backend_runtime, "_valid_feature_mask", check)
     first, repeated = (1, 0, 0, 0), (0, 1, 0, 0)
+    last = repeated if same_tuple else tuple(list(repeated))
 
     def optimize(problem, evaluate, report):
-        responses = evaluate([list(first), repeated, repeated])
+        responses = evaluate([list(first), repeated, last])
         report([handle for _, handle in responses])
 
     class ObservingSelector(GAFeatureSelectionCV):
@@ -864,7 +918,7 @@ def test_plugin_validates_repeated_canonical_tuple_once_per_batch(override, monk
         verbose=False,
     ).fit(*load_iris(return_X_y=True))
 
-    assert checked == [first, repeated]
+    assert checked == ([first, repeated] if same_tuple else [first, repeated, repeated])
     assert model.fit_counts_["search_cv_calls"] == 2
     assert model.fit_stats_["duplicate_candidates"] == 1
     np.testing.assert_array_equal(model.cv_results_["features"], [first, repeated, repeated])
@@ -1242,16 +1296,17 @@ def test_logbook_saver_keeps_previous_output_on_partial_write(
 
 @pytest.mark.parametrize("kind", ["parameters", "features"])
 @pytest.mark.parametrize("n_jobs", [1, 2])
-def test_timer_stops_inside_batch_before_refit(kind, n_jobs, tmp_path):
+@pytest.mark.parametrize("use_cache", [False, True])
+def test_timer_stops_inside_batch_before_refit(kind, n_jobs, use_cache, tmp_path):
     class Expired(TimerStopping):
         def _time_exceeded(self):
             return True
 
     X, y = load_iris(return_X_y=True)
     checkpoint = ModelCheckpoint(tmp_path / "partial.pkl")
-    est = search(kind, optimizer_backend=_ResumableOptimizer(), use_cache=False, n_jobs=n_jobs).fit(
-        X, y, callbacks=[Expired(1), checkpoint]
-    )
+    est = search(
+        kind, optimizer_backend=_ResumableOptimizer(), use_cache=use_cache, n_jobs=n_jobs
+    ).fit(X, y, callbacks=[Expired(1), checkpoint])
     assert est.history["partial"] == [True]
     assert est.history["population_size"] == [n_jobs]
     assert est.fit_stats_["cross_validate_calls"] == n_jobs
@@ -1426,6 +1481,90 @@ def test_incomplete_optimizer_checkpoint_names_missing_field(field, kind, tmp_pa
     with pytest.raises(ValueError, match=r"Invalid search checkpoint.*incomplete\.pkl") as error:
         model.fit(X, y, callbacks=checkpoint)
 
+    assert field in str(error.value)
+    assert checkpoint.checkpoint_path.read_bytes() == contents
+
+
+@pytest.mark.parametrize("kind", ["parameters", "features"])
+@pytest.mark.parametrize("backend", ["pymoo", pytest.param(_ResumableOptimizer(), id="plugin")])
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("telemetry", None),
+        ("best_fitness", None),
+        ("best_fitness", [0.5]),
+        ("best_generation", True),
+        ("stagnation_generations", -1),
+    ],
+)
+def test_invalid_optimizer_checkpoint_telemetry_fails_before_cv(
+    kind, backend, field, value, tmp_path, monkeypatch
+):
+    from sklearn_genetic import genetic_search
+
+    if backend == "pymoo":
+        pytest.importorskip(backend)
+    X, y = load_iris(return_X_y=True)
+    model = search(kind, optimizer_backend=backend, use_cache=False)
+    checkpoint = ModelCheckpoint(tmp_path / "telemetry.pkl")
+    clone(model).fit(X, y, callbacks=[CVBudgetStopping(6), checkpoint])
+    snapshot = checkpoint.load()
+    if field == "telemetry":
+        snapshot[field] = value
+    elif value is None:
+        del snapshot["telemetry"][field]
+    else:
+        snapshot["telemetry"][field] = value
+    contents = pickle.dumps(snapshot)
+    checkpoint.checkpoint_path.write_bytes(contents)
+
+    monkeypatch.setattr(
+        genetic_search, "cross_validate", lambda *args, **kwargs: pytest.fail("unexpected CV")
+    )
+    with pytest.raises(ValueError, match=r"Invalid search checkpoint.*telemetry\.pkl") as error:
+        clone(model).fit(X, y, callbacks=checkpoint)
+    assert (field if field == "telemetry" else f"telemetry.{field}") in str(error.value)
+    assert checkpoint.checkpoint_path.read_bytes() == contents
+
+
+@pytest.mark.parametrize("kind", ["parameters", "features"])
+@pytest.mark.parametrize("backend", ["pymoo", pytest.param(_ResumableOptimizer(), id="plugin")])
+@pytest.mark.parametrize(
+    "damage", ["null context", "short context", "fingerprint", "problem", "task"]
+)
+def test_malformed_optimizer_checkpoint_configuration_fails_before_hashing(
+    kind, backend, damage, tmp_path, monkeypatch
+):
+    from dataclasses import replace
+
+    from sklearn_genetic import _backend_runtime
+
+    if backend == "pymoo":
+        pytest.importorskip(backend)
+    X, y = load_iris(return_X_y=True)
+    model = search(kind, optimizer_backend=backend, use_cache=False)
+    checkpoint = ModelCheckpoint(tmp_path / "configuration.pkl")
+    clone(model).fit(X, y, callbacks=[CVBudgetStopping(6), checkpoint])
+    snapshot = checkpoint.load()
+    if damage == "task":
+        snapshot["problem"] = replace(snapshot["problem"], task=None)
+    elif damage == "problem":
+        snapshot["problem"] = {}
+    elif damage == "null context":
+        snapshot["context"] = None
+    elif damage == "short context":
+        snapshot["context"] = snapshot["context"][:2]
+    else:
+        snapshot["context"] = (0, *snapshot["context"][1:])
+    contents = pickle.dumps(snapshot)
+    checkpoint.checkpoint_path.write_bytes(contents)
+
+    monkeypatch.setattr(
+        _backend_runtime, "training_data_hash", lambda *_: pytest.fail("unexpected input hashing")
+    )
+    with pytest.raises(ValueError, match=r"Invalid search checkpoint.*configuration\.pkl") as error:
+        clone(model).fit(X, y, callbacks=checkpoint)
+    field = "problem" if damage in ("problem", "task") else "context"
     assert field in str(error.value)
     assert checkpoint.checkpoint_path.read_bytes() == contents
 

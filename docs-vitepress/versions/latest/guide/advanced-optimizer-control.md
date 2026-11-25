@@ -1,6 +1,6 @@
 ---
 title: "Advanced Optimizer Control: Diversity, Fitness Sharing, and Local Search"
-description: Control population diversity, enable fitness sharing and local search refinement, and interpret optimizer telemetry to improve genetic algorithm hyperparameter search.
+description: Control population diversity, refine candidates with local search, and validate finalists for scikit-learn hyperparameter tuning and feature selection.
 ---
 
 <script setup>
@@ -186,7 +186,7 @@ plt.show()
 |-------|---------|
 | `finite_fitness_count` | Population members with a finite primary score. Compare with `population_size`. |
 | `unique_individual_ratio` | Fraction of distinct individuals. Low → population collapsed |
-| `genotype_diversity` | Average per-gene diversity. Low → structurally similar candidates |
+| `genotype_diversity` | Average probability that two different population members disagree at a coordinate |
 | `stagnation_generations` | Generations since `fitness_best` last improved |
 | `diversity_control_triggered` | Whether diversity control fired this generation |
 | `random_immigrants` | Number of random candidates injected |
@@ -194,6 +194,11 @@ plt.show()
 | `fitness_sharing_applied` | Whether niche-aware selection was active |
 | `mean_niche_count` / `max_niche_count` | Crowding during selection |
 | `local_refinements` | Neighbor candidates evaluated by local search (usually non-zero only in the final row) |
+
+For feature selection, each coordinate is the decision to include an input
+column. Diversity includes every member of the current population, including
+repeated masks. The selector computes this statistic from masks one at a time
+on wide inputs.
 
 Population mean, standard deviation, minimum and maximum use the finite
 primary scores. A generation with zero finite scores reports `NaN` for
@@ -313,6 +318,12 @@ Start simple and add controls based on telemetry:
 
 Both searches can explore using fewer training rows per CV fold, then re-evaluate a small number of distinct finalists on the original folds. `subsample_cv` changes only the training indices; every validation row stays in place. The evolutionary operators continue to select and generate candidates using these cheaper scores.
 
+`subsample_cv` names the fold if its training partition is empty. Check the
+original CV splits when this happens. The helper rounds the retained
+training count down, so increase `train_size` if sampling would leave any
+fold with zero training rows. For stratified sampling, also retain every
+class present in that fold's original training rows.
+
 Use a separate outer test set to measure whether the speed/quality tradeoff suits your data:
 
 ```python
@@ -365,6 +376,8 @@ Use [the finalist score plot](../examples/plotting-gallery#finalist-score-compar
 to compare the two scores for each candidate and identify the row chosen
 for refit.
 
+### Reuse scores from matching folds
+
 For a deterministic estimator, preprocessing pipeline and scorer, use
 `final_selection="reuse_folds"` and `error_score="raise"` when the search and
 finalist validation share folds. Both training and validation indices
@@ -376,15 +389,24 @@ training and validation. Negative indices count from the end of the training
 dataset, so `-1` matches the last row. Reuse requires valid row positions.
 See the
 [Boolean mask example](../tutorials/optimizer-backends#reuse-folds-defined-by-boolean-masks).
+Score reuse compares plain NumPy arrays, lists, and tuples. Folds with
+custom selector containers or subclasses are scored afresh using the
+installed scikit-learn version's indexing rules.
+Use either integer positions or a full Boolean mask in each selector.
+When comparing separately supplied folds, a mixed list or tuple on either
+side requires a fresh finalist fit. Some scikit-learn versions can interpret
+a mixed sequence differently from an integer array when indexing a DataFrame.
 An explicit finalist splitter or iterable must yield at least one fold. An
 empty list or tuple raises before the search starts.
-In a list or tuple passed to either `cv` or `final_selection_cv`, each fold
-given as a list, tuple, or NumPy array must contain one training selector and
-one validation selector. The search checks this before evaluating candidates.
-It also checks
-one-dimensional NumPy arrays, lists, and tuples for out-of-range positions
-and wrong-length masks. The error identifies the fold and, for a bad
-selector, its partition. See the
+Folds supplied as lists, tuples, or NumPy arrays must contain one training
+selector and one validation selector. NumPy selectors must have an integer
+or Boolean dtype. A one-dimensional selector in any of these forms must
+contain valid row positions or a Boolean mask with one entry per row.
+These checks apply to folds yielded by iterables and splitters
+as well. The error names the setting, the fold number and, for a bad selector,
+the partition. Search folds and explicit finalist lists or tuples are checked
+before candidate evaluation. Other finalist iterables and splitters are
+checked when their folds are collected for finalist validation. See the
 [split validation example](../tutorials/optimizer-backends#validate-explicit-cv-splits).
 The matcher can recognize shared index arrays without comparing their
 contents again. Explicitly supplied folds are checked by their ordered
@@ -400,14 +422,67 @@ Reuse can carry over an undefined `NaN` score. A finalist with an undefined
 mean score remains ineligible.
 When every search fold matches one-to-one in the original order, finalist
 validation reuses the original score array and preserves its numeric dtype.
-Each occurrence of a repeated fold keeps the score at its original position.
+When the search and final validation share the same training or validation
+selector, the matcher converts that NumPy array, list, or tuple once per comparison.
+In the original order, each occurrence of a repeated fold keeps its
+corresponding score. In a reordered sequence, matching occurrences are reused
+in the order they appeared in the search. If finalist validation requests more
+copies, the matcher cycles through those scores again.
 See the [repeated-fold example](../tutorials/optimizer-backends#preserve-repeated-folds-in-the-same-order).
-Finalist validation can also reuse a reordered subset containing large integers when the
-search stored the scores in an integer array. A subset with large scores
-stored as floats triggers fresh validation to recover any rounded integers.
+When finalist CV contains every occurrence from the search in a different
+order, finalist validation calculates the ordering once and applies it to each
+candidate's stored score array. This retains the original numeric dtype, including
+when scores are large.
+Finalist validation can reuse a subset of large integers when the search
+stored the scores in an integer array. It combines those exact integers with
+new integer or floating-point scores and infers the dtype as fresh validation
+would. Scores stored as Python objects can require a retry. Large scores
+stored as floats may require fresh validation to recover rounded integers.
+See the
+[large integer score example](../tutorials/optimizer-backends#reuse-large-integer-scores-with-new-folds).
+If every finalist fold matches a search fold, a retained finite score
+with magnitude above `2**64` can establish the floating-point dtype of the
+subset. For extended precision, the score must also lose precision or
+range when converted to a Python float. See the
+[large floating-point score example](../tutorials/optimizer-backends#reuse-very-large-floating-point-scores-from-a-subset).
+When the new folds already produce a `float64` score array, finalist
+validation can combine large new scores with saved integer or `float64`
+values whose magnitudes are below `2**53`. The combined array stays in
+double precision.
+See the [example with a new fold](../tutorials/optimizer-backends#reuse-double-precision-scores-with-a-new-fold).
+New folds scored in extended precision can also establish the combined array's
+dtype when the saved scores are small and were stored as integers, doubles,
+or in the same extended dtype. If only the search array uses extended
+precision, a retained small value must lose precision when converted to a
+Python float for the wider dtype to carry over. If it cannot infer the wider
+dtype, finalist validation can fit the matching folds again. It keeps newly
+computed `float64` scores of magnitude below `2**53` because any integers
+promoted to those values still fit exactly. Large new scores can require a
+complete evaluation to recover integers that were rounded on promotion. See the
+[precision recovery example](../tutorials/optimizer-backends#recover-precision-after-excluding-a-search-fold).
 When matching scores are stored as small integers and the new folds also
 produce an integer array, validation can combine them even when the new
 integers are large.
+A retained fractional double-precision score can also allow reuse when the
+new folds produce an integer array. The fraction determines that the combined
+scores use floating-point precision, as in fresh validation. An integer-valued score
+stored as a float can come from an integer promoted during search. If the
+finalist folds supply no evidence for a floating-point dtype, validation
+evaluates the matching folds to recover their original score types. It can
+keep already computed integer or Boolean scores from new folds when the
+recovered scores can be combined exactly. Multiple new folds collected as
+unsigned integers can hide Boolean scores, so validation evaluates the
+complete list again if the original types are still ambiguous. See the
+[integer score example](../tutorials/optimizer-backends#preserve-integer-scores-when-a-fractional-fold-is-excluded).
+
+When a custom scorer supplies extended NumPy precision such as
+`numpy.longdouble`, search ranks and finalist comparisons use the precision
+retained by cross-validation. `best_score_` and finalist score fields retain
+that precision on platforms that support it. Ordinary double-precision
+scores are exposed as Python floats. The mean of a short CV score vector
+uses a lower-overhead check for ordinary values. When all scores are finite
+and their sum could overflow, the mean uses a range-preserving reduction.
+
 When [resuming from a checkpoint](../recipes/advanced/checkpointing), the
 five bundled backends can reuse matching fold scores from the saved search.
 DEAP requires a verified training-data fingerprint
@@ -447,7 +522,14 @@ The same counters work for `GAFeatureSelectionCV` and for searches that produce 
 
 When several masks tie at that cutoff, the shortlist considers each distinct
 mask once at that score. A later cache hit for one of those masks leaves the
-finalists in place.
+finalists in place. When many rows reuse cached evaluations, feature selection
+can skip packing a shared Boolean mask again while filling the shortlist or
+checking denser masks at a tied cutoff. The scan follows the original row
+order within each score and mask size.
+
+On a large tied cutoff, the selector can restrict mask packing to the
+largest size group. Distinctness and the order of first occurrences within
+that group still determine which candidate reaches finalist validation.
 
 In 24 paired comparisons on Breast Cancer (logistic regression) and Diabetes (Ridge), reducing the shortlist from eight to five saved 12 fold fits in every pair. Mean end-to-end time fell by 15–23% across the four dataset/search combinations. Mean held-out ROC AUC for feature selection on Breast Cancer stayed at 0.993501, while mean held-out R² for Diabetes hyperparameter search went from 0.527600 to 0.527351. Each comparison used six outer splits per dataset and a single worker. <a :href="shortlistTimingsUrl" download="shortlist-fit-times.json">Download per-split timings, finalist lists and holdout scores (JSON)</a>.
 
@@ -496,6 +578,62 @@ chosen_cv_score = chosen["mean_test_balanced_accuracy"]
 Both search estimators expose the chosen row as `best_index_` and fit that
 candidate on all training data. The preserved index lets you use
 `.loc[search.best_index_]` directly in the rank-sorted table.
+
+### Refit the best observed feature mask
+
+With `use_cache=False`, a stochastic model or scorer can give a repeated
+feature mask different scores. Standard refit without finalist validation
+follows the elite archive, which can keep an earlier observation. When
+several rows match a finite archived score for the same mask, the first
+matching row supplies `best_index_`. Use a callable to choose the
+highest-ranked finite observation directly from
+`cv_results_`. This example prefers smaller masks at equal ranks. The
+rank column already reflects the configured search direction.
+
+```python
+import numpy as np
+from sklearn.datasets import load_breast_cancer
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+
+from sklearn_genetic import GAFeatureSelectionCV
+
+
+def best_observed_mask(results):
+    usable = np.isfinite(results["mean_test_score"]) & ~results["all_fits_failed"]
+    eligible = np.flatnonzero(usable)
+    if eligible.size == 0:
+        raise ValueError("No feature mask has a finite search CV score.")
+    ranks = np.asarray(results["rank_test_score"])[eligible]
+    sizes = np.asarray(results["n_features"])[eligible]
+    return int(eligible[np.lexsort((sizes, ranks))[0]])
+
+
+X, y = load_breast_cancer(return_X_y=True)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, stratify=y, test_size=0.25, random_state=42
+)
+selector = GAFeatureSelectionCV(
+    RandomForestClassifier(n_estimators=16, n_jobs=1),
+    cv=3,
+    scoring="balanced_accuracy",
+    use_cache=False,
+    refit=best_observed_mask,
+    population_size=6,
+    generations=2,
+    random_state=42,
+    n_jobs=1,
+    verbose=False,
+).fit(X_train, y_train)
+
+print(selector.cv_results_["mean_test_score"][selector.best_index_])
+print(selector.score(X_test, y_test))
+```
+
+Callable refit reads the recorded scores and runs one full-training fit.
+Use the selected row for its CV score. A high score from one repeat can
+reflect training randomness. For a decision based on fresh finalist
+scores, use `final_selection=True` with standard refit.
 
 ### Break an exact CV tie by fold dispersion
 

@@ -300,6 +300,11 @@ search.fit(X, y, callbacks=callback)
 
 Install with `pip install 'sklearn-genetic-opt[plot]'`. The initial population is generation 0. Each completed generation updates the same lines, including the last one before early stopping. A resumed search includes the recorded generations from its checkpoint. Local refinement can update the final point during `on_end`.
 
+When all selected fields are fitness metrics, very large or very small
+scores share a power-of-two divisor shown on the vertical axis. A later
+generation can update that scale for the entire chart. The logbook and
+fitted history retain the original scores.
+
 The example uses `fitness_best_observed` for the best finite primary score among all candidates evaluated through the generation, including discarded offspring and repeated evaluations. The default `fitness_best` follows the elite archive, which can retain an older score for an identical configuration. Older checkpoints show a gap where the observed series was never recorded. On resume, the new series uses the candidate records available in the checkpoint and new evaluations. The dashed line (`fitness`) is the current population mean. Use `fitness_min` or `fitness_max` for the current population extremes. A negative sklearn scorer keeps its sign. A multi-metric search tracks its refit objective. Fitness may include search penalties.
 
 - **Desktop**. Select a GUI backend such as QtAgg or TkAgg before importing pyplot. The callback processes window events between generations. A long CV evaluation can leave the window unchanged until that generation completes.

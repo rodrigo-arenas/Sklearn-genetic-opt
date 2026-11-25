@@ -1,6 +1,8 @@
 from collections.abc import Iterable
+from contextlib import contextmanager
 from copy import deepcopy
 import inspect
+from itertools import chain
 from math import isnan
 from numbers import Integral
 import random
@@ -9,9 +11,10 @@ import warnings
 
 import numpy as np
 import pandas as pd
-from scipy.sparse import issparse
+from scipy.sparse import csc_array, csc_matrix, csr_array, csr_matrix, issparse
+from sklearn import get_config
 from sklearn.base import clone
-from sklearn.model_selection import check_cv, cross_validate
+from sklearn.model_selection import GroupKFold, KFold, StratifiedKFold, check_cv, cross_validate
 from sklearn.base import is_classifier, is_regressor, BaseEstimator, MetaEstimatorMixin
 from sklearn.pipeline import Pipeline
 
@@ -142,6 +145,11 @@ from .optimizer_control import (
 )
 
 from .config import EvolutionConfig, OptimizationConfig, PopulationConfig, RuntimeConfig
+
+# The override receives scikit-learn's output wrapper as well. Delegate to
+# the inherited implementation underneath that wrapper to apply it once.
+_SELECTOR_TRANSFORM = getattr(SelectorMixin.transform, "__wrapped__", SelectorMixin.transform)
+_CSC_TRANSFORM_MIN_ENTRIES = 16_384
 
 
 def _allows_nan(estimator):
@@ -309,6 +317,11 @@ def _evolution_score(score, criteria_sign):
     return score
 
 
+def _reported_score(score):
+    # NumPy returns its own scalar when a Python float would narrow it.
+    return score.item() if isinstance(score, np.floating) else float(score)
+
+
 def _normalize_cached_fitness(cache, criteria_sign):
     # Checkpoints made before non-finite fitness was penalized can still hold
     # raw NaN/Inf values. Convert only the evolutionary fitness on restore;
@@ -410,6 +423,21 @@ def _can_combine_fold_scores(values):
     return all(abs(value) < 2**53 or isnan(value) for value in map(float, values))
 
 
+def _has_fold_dtype_evidence(dtype, fresh, saved):
+    if dtype.kind != "f" or (len(fresh) and fresh.dtype == dtype):
+        return True
+    # A discarded fold can be the only reason the stored array used floats
+    # or extended precision. Small retained values must prove the promotion.
+    if dtype.itemsize <= np.dtype(float).itemsize:
+        return any(not float(score).is_integer() for score in saved)
+    return any(np.isfinite(score) and score != float(score) for score in saved)
+
+
+_NATIVE_CV_SPLIT_METHODS = tuple(
+    (splitter, splitter.split) for splitter in (KFold, StratifiedKFold, GroupKFold)
+)
+
+
 def _cv_split_count(splits, parameter):
     count = len(splits)
     if count == 0:
@@ -431,6 +459,11 @@ def _validate_explicit_folds(folds, n_samples, *, parameter):
         for partition, rows in zip(("training", "validation"), fold, strict=True):
             if type(rows) not in (list, tuple, np.ndarray):
                 continue
+            if type(rows) is np.ndarray and rows.dtype.kind not in "biu":
+                raise ValueError(
+                    f"{label} {partition} selector must use an integer or Boolean dtype, "
+                    f"got {rows.dtype}"
+                )
             try:
                 rows = np.asarray(rows)
             except (TypeError, ValueError):
@@ -451,6 +484,11 @@ def _validate_explicit_folds(folds, n_samples, *, parameter):
                 )
 
 
+def _is_plain_fold_selector(rows):
+    row_type = type(rows)
+    return row_type is np.ndarray or row_type is list or row_type is tuple
+
+
 def _matching_row_indices(indices, n_samples):
     if indices.ndim != 1 or n_samples is None:
         return indices
@@ -463,6 +501,20 @@ def _matching_row_indices(indices, n_samples):
             indices = indices.astype(np.intp, copy=True)
             indices[indices < 0] += n_samples
     return indices
+
+
+def _distinct_mask_rows(features, indices):
+    """Yield the first row for each shared Boolean mask in this scan."""
+    seen = {}
+    for index in indices:
+        mask = features[index]
+        identity = id(mask)
+        if identity in seen:
+            continue
+        if type(mask) is np.ndarray and mask.dtype == bool:
+            # Keep the array alive even if an indexed container returns a view.
+            seen[identity] = mask
+        yield index
 
 
 class _FinalSelectionMixin:
@@ -497,7 +549,15 @@ class _FinalSelectionMixin:
 
     def _set_search_history(self, log):
         self.history = generation_history(log)
-        if self.cv_results_["all_fits_failed"].all():
+        failed = self.cv_results_["all_fits_failed"]
+        skipped = self.cv_results_.get("skipped_invalid_mask")
+        if skipped is not None:
+            if skipped.all():
+                raise ValueError(
+                    "Every feature mask was skipped. Inspect skipped_invalid_mask in cv_results_."
+                )
+            failed = failed[~skipped]
+        if failed.all():
             raise ValueError(
                 "All search candidates failed to fit. Set error_score='raise' to debug."
             )
@@ -599,10 +659,16 @@ class _FinalSelectionMixin:
             return
 
         features = self.cv_results_["features"]
+        unique = getattr(self, "fit_stats_", {}).get("unique_candidates", len(indices))
+        if 4 * unique <= len(indices):
+            # Cached rows can share a Boolean array. Its first row is the only
+            # one that can add a new key when scanning the tied rank.
+            indices = list(_distinct_mask_rows(features, indices))
         first = features[indices[0]]
         # Wider masks leave too few rows per batch to amortize the copy.
         if (
-            type(first) is not np.ndarray
+            len(indices) < 128
+            or type(first) is not np.ndarray
             or first.ndim != 1
             or first.dtype != bool
             or not 0 < first.size <= 4096
@@ -629,11 +695,18 @@ class _FinalSelectionMixin:
         ranks = np.asarray(self.cv_results_[f"rank_test_{self.refit_metric}"])
         counts = self.cv_results_.get("n_features")
         limit = int(self.final_selection_top_k)
-        rows = None
+        skipped = self.cv_results_.get("skipped_invalid_mask")
+        full_rows = np.flatnonzero(~skipped) if skipped is not None else None
+        rows = full_rows
         flat = False
-        if ranks.size >= _FINALIST_PREFIX_MIN_ROWS:
+        if rows is None and ranks.size >= _FINALIST_PREFIX_MIN_ROWS:
             flat = ranks[0] == ranks[-1] and np.all(ranks == ranks[0])
-        if not flat and ranks.size >= _FINALIST_PREFIX_MIN_ROWS and 8 * limit < ranks.size:
+        if (
+            rows is None
+            and not flat
+            and ranks.size >= _FINALIST_PREFIX_MIN_ROWS
+            and 8 * limit < ranks.size
+        ):
             unique = getattr(self, "fit_stats_", {}).get("unique_candidates", ranks.size)
             if 2 * unique >= ranks.size:
                 # Keep the complete cutoff rank, including ties. A short prefix
@@ -654,19 +727,32 @@ class _FinalSelectionMixin:
                 eligible_counts = counts if rows is None else np.asarray(counts)[rows]
                 order = np.lexsort((eligible_counts, eligible_ranks))
             candidates = order if rows is None else rows[order]
-            for index in candidates[start:]:
+            window = candidates[start:]
+            if (
+                counts is not None
+                and len(window) >= 128
+                and 4 * getattr(self, "fit_stats_", {}).get("unique_candidates", len(window))
+                <= len(window)
+                and not hasattr(self, "space")
+                and getattr(self._finalist_key, "__func__", None)
+                is _FinalSelectionMixin._finalist_key
+            ):
+                # Stop scanning as soon as the shortlist is full. Independent
+                # arrays still go through the value comparison below.
+                window = _distinct_mask_rows(self.cv_results_["features"], window)
+            for index in window:
                 key = self._finalist_key(index)
                 if key not in seen:
                     seen.add(key)
                     indices.append(index)
                     if len(indices) == limit:
                         break
-            if rows is None or len(indices) == limit:
+            if rows is full_rows or len(indices) == limit:
                 break
             # Every prefix rank is complete. A full sort can resume after it
             # with the same selected indices and duplicate keys.
             start = len(rows)
-            rows = None
+            rows = full_rows
         if counts is not None and len(indices) > 1 and ranks[indices[-2]] == ranks[indices[-1]]:
             # A flat proxy must not reserve every tied slot for sparse masks.
             # Keep the smallest finalist and include a denser mask at the same
@@ -680,7 +766,32 @@ class _FinalSelectionMixin:
                 tied = candidates[start:end]
             if len(tied) >= 128:
                 sizes = np.asarray(counts)
-                denser = tied[sizes[tied] > sizes[cutoff]]
+                tied_sizes = sizes[tied]
+                largest_size = tied_sizes[-1]
+                cutoff_size = sizes[cutoff]
+                denser = tied[tied_sizes > cutoff_size]
+                widest_start = tied_sizes.searchsorted(largest_size, side="left")
+                # Check mask types only when this can save substantial packing.
+                if (
+                    largest_size > cutoff_size
+                    and 2 * (len(tied) - widest_start) <= len(denser)
+                    and 4 * getattr(self, "fit_stats_", {}).get("unique_candidates", len(denser))
+                    > len(denser)
+                    and sizes[indices].max() <= cutoff_size
+                    and not hasattr(self, "space")
+                    and getattr(self._finalist_key, "__func__", None)
+                    is _FinalSelectionMixin._finalist_key
+                    and getattr(self._mask_finalist_keys, "__func__", None)
+                    is _FinalSelectionMixin._mask_finalist_keys
+                ):
+                    features = self.cv_results_["features"]
+                    if all(
+                        type(mask) is np.ndarray and mask.dtype == bool
+                        for mask in map(features.__getitem__, chain(indices, denser))
+                    ):
+                        # A Boolean mask's exact key determines its size.
+                        # The largest group supplies the replacement here.
+                        denser = tied[widest_start:]
             else:
                 denser = [index for index in tied if counts[index] > counts[cutoff]]
             for index, key in self._mask_finalist_keys(denser):
@@ -692,13 +803,16 @@ class _FinalSelectionMixin:
         return indices
 
     def _final_selection_splits(self):
-        if self.final_selection_cv is None:
+        cv = self.final_selection_cv
+        if cv is None:
             return self._cv_splits
 
         splits = self._materialize_cv_splits(
-            self.final_selection_cv, classifier=_is_classifier(self.estimator), other_cv=self.cv
+            cv, classifier=_is_classifier(self.estimator), other_cv=self.cv
         )
         _cv_split_count(splits, "final_selection_cv")
+        if not isinstance(cv, Integral) and type(cv) not in (list, tuple):
+            _validate_explicit_folds(splits, _num_samples(self.X_), parameter="final_selection_cv")
         return splits
 
     def _materialize_cv_splits(self, cv, *, classifier, copy_indices=True, other_cv=None):
@@ -724,6 +838,16 @@ class _FinalSelectionMixin:
             ):
                 groups_kwargs = {}
             folds = split(self.X_, self.y_, **groups_kwargs)
+            if (
+                copy_indices
+                and explicit
+                and any(
+                    type(cv) is splitter and getattr(split, "__func__", None) is method
+                    for splitter, method in _NATIVE_CV_SPLIT_METHODS
+                )
+            ):
+                # These splitters yield independent training and validation arrays.
+                return list(folds)
         # A caller-provided splitter can overwrite the previous split on next().
         # The splitters created from int/None already yield independent arrays.
         return list(map(deepcopy, folds)) if copy_indices and explicit else list(folds)
@@ -738,6 +862,7 @@ class _FinalSelectionMixin:
             # As in feature search, cross_validate clones the template for each fold.
             X = self._select_feature_columns(np.asarray(params["features"], dtype=bool))
 
+        self.fit_counts_["finalist_cv_calls"] += 1
         cv_results = self._cross_validate_candidate(
             local_estimator,
             X,
@@ -745,10 +870,10 @@ class _FinalSelectionMixin:
             n_jobs=self.n_jobs,
             return_train_score=False,
         )
-        self.fit_counts_["finalist_cv_calls"] += 1
+        # An exception can interrupt dispatch, leaving the fold count unknown.
         self.fit_counts_["finalist_fold_fits"] += len(cv_splits)
         cv_scores = cv_results[f"test_{self.refit_metric}"]
-        return float(score_mean(cv_scores)), cv_scores
+        return _reported_score(score_mean(cv_scores)), cv_scores
 
     def _constant_cv_scores(self, score, n_splits, return_train_score):
         subsets = ("test", "train") if return_train_score else ("test",)
@@ -823,6 +948,18 @@ class _FinalSelectionMixin:
         router = self._fit_metadata_router(estimator, self.scorer_)
         return process_routing(router, "fit", **params).estimator.fit
 
+    @contextmanager
+    def _measure_refit(self):
+        started = time.perf_counter()
+        try:
+            yield
+        except (Exception, KeyboardInterrupt):
+            self.refit_failure_time_ = time.perf_counter() - started
+            raise
+        else:
+            self.refit_time_ = time.perf_counter() - started
+            self.fit_counts_["refit_fits"] = 1
+
     def _target_args(self, y):
         if y is None and getattr(self, "y_", ()) is None:
             return ()
@@ -834,12 +971,16 @@ class _FinalSelectionMixin:
         self._save_outlier_cv_splits = (
             outlier and self.cv is not None and not isinstance(self.cv, int)
         )
+        parameter = "cv"
         if checkpoint is not None and optimizer is not None:
             splits = checkpoint["cv_splits"]
+            parameter = "checkpoint cv_splits"
         elif "search_cv_splits" in runtime:
             splits = runtime["search_cv_splits"]
+            parameter = "checkpoint search_cv_splits"
         elif "outlier_cv_splits" in runtime:
             splits = runtime["outlier_cv_splits"]
+            parameter = "checkpoint outlier_cv_splits"
         else:
             cv = self.cv
             if checkpoint is not None and self._save_outlier_cv_splits:
@@ -852,21 +993,30 @@ class _FinalSelectionMixin:
                 copy_indices=self._copy_cv_indices,
                 other_cv=self.final_selection_cv if self.refit and self.final_selection else None,
             )
-            if type(cv) in (list, tuple):
+            if cv is not None and not isinstance(cv, Integral):
                 _validate_explicit_folds(splits, _num_samples(self.X_), parameter="cv")
             # Keep the historical fold materialization for old DEAP checkpoints,
             # whose rows may already contain scores from aliased indices.
             if not self._copy_cv_indices and self.final_selection == "reuse_folds":
                 splits = deepcopy(splits)
-        self.n_splits_ = _cv_split_count(splits, "cv")
+        if parameter != "cv":
+            if not isinstance(splits, (list, tuple)):
+                raise ValueError(f"{parameter} must contain materialized train/test splits.")
+            _validate_explicit_folds(splits, _num_samples(self.X_), parameter=parameter)
+        self.n_splits_ = _cv_split_count(splits, parameter)
         self._cv_splits = splits
 
     @staticmethod
-    def _same_fold(left, right, n_samples):
-        left_train, left_test = left
-        right_train, right_test = right
-        for first, second in ((left_train, right_train), (left_test, right_test)):
-            first, second = np.asarray(first), np.asarray(second)
+    def _same_fold(final, search, n_samples):
+        final_train, final_test = final
+        search_train, search_test = search
+        for final_rows, search_rows in ((final_train, search_train), (final_test, search_test)):
+            if not (_is_plain_fold_selector(final_rows) and _is_plain_fold_selector(search_rows)):
+                # Array coercion can hide a custom container's actual indexing behavior.
+                return False
+            shared_selector = final_rows is search_rows
+            first = np.asarray(final_rows)
+            second = first if shared_selector else np.asarray(search_rows)
             if (
                 first.ndim != 1
                 or second.ndim != 1
@@ -874,6 +1024,18 @@ class _FinalSelectionMixin:
                 or second.dtype.kind not in "biu"
             ):
                 return False
+            if not shared_selector:
+                for rows, indices in ((final_rows, first), (search_rows, second)):
+                    if (
+                        type(rows) in (list, tuple)
+                        and indices.dtype.kind in "iu"
+                        and any(
+                            type(rows[index]) in (bool, np.bool_)
+                            for index in np.flatnonzero((indices == 0) | (indices == 1))
+                        )
+                    ):
+                        # sklearn may index a mixed sequence differently from its array.
+                        return False
             first_is_mask = first.dtype.kind == "b"
             if first_is_mask == (second.dtype.kind == "b"):
                 if first is second or np.array_equal(first, second):
@@ -893,6 +1055,8 @@ class _FinalSelectionMixin:
     @staticmethod
     def _test_indices_key(fold, n_samples):
         _, test = fold
+        if not _is_plain_fold_selector(test):
+            return None
         test = np.asarray(test)
         if test.ndim != 1 or test.dtype.kind not in "biu":
             return None
@@ -933,55 +1097,130 @@ class _FinalSelectionMixin:
         for index, fold in enumerate(search_splits):
             key = self._test_indices_key(fold, n_samples)
             if key is not None:
-                sources.setdefault(key, []).append(index)
+                sources.setdefault(key, {})[index] = None
 
         reused = {}
         for position, fold in enumerate(final_splits):
             key = self._test_indices_key(fold, n_samples)
-            for source in sources.get(key, ()):
+            candidates = sources.get(key, ())
+            for source in candidates:
                 if self._same_fold(fold, search_splits[source], n_samples):
-                    reused[position] = source
                     break
+            else:
+                continue
+            reused[position] = source
+            if len(candidates) > 1:
+                # Cycle through matching occurrences in their search order.
+                candidates[source] = candidates.pop(source)
         return reused
 
-    def _score_final_folds(self, index, params, splits, reused, missing):
-        if (
-            reused
-            and len(reused) == len(self._cv_splits) == len(splits)
-            and all(position == source for position, source in reused.items())
-        ):
-            # The same aggregation would preserve the search array's dtype,
-            # including any promotions that occurred across folds.
+    def _score_final_folds(self, index, params, splits, reused, missing, *, full_order=None):
+        if full_order is not None:
+            # A complete set of matches retains the folds that determined the
+            # score dtype, including mixed integers promoted to floats.
             values = np.asarray(candidate_records(self)[index][f"test_{self.refit_metric}"])
-            return float(score_mean(values)), values, len(splits)
+            values = values[full_order]
+            return _reported_score(score_mean(values)), values, len(splits)
 
         scores = [None] * len(splits)
         for position, source in reused.items():
             scores[position] = self.cv_results_[f"split{source}_test_{self.refit_metric}"][index]
 
         fresh = ()
-        if reused and _can_combine_fold_scores(scores[i] for i in reused):
+        recover_matches = False
+        safe_to_combine = bool(reused) and _can_combine_fold_scores(scores[i] for i in reused)
+        if safe_to_combine:
             fresh = self._score_final_candidate(params, missing)[1] if missing else ()
-            if _can_combine_fold_scores(fresh):
+            small_fresh = _can_combine_fold_scores(fresh)
+            combine_fresh = small_fresh
+            double = np.dtype(float)
+            if (
+                not combine_fresh
+                and fresh.dtype.kind == "f"
+                and fresh.dtype.itemsize >= double.itemsize
+            ):
+                # Small integers and values stored as double or wider are
+                # exact. Reuse them if they cannot widen the type established
+                # by the new folds.
+                search_scores = candidate_records(self)[index][f"test_{self.refit_metric}"]
+                search_dtype = np.asarray(search_scores).dtype
+                combine_fresh = search_dtype.kind in "biu" or search_dtype in (double, fresh.dtype)
+            # A saved fractional value (or NaN) requires floating-point
+            # aggregation. Large new integers round as they would in fresh CV.
+            if combine_fresh or (
+                fresh.dtype.kind in "iu"
+                and any(
+                    type(score) in (float, np.float64) and not score.is_integer()
+                    for score in scores
+                )
+            ):
                 remaining = iter(fresh)
                 ordered = np.asarray(
                     [next(remaining) if score is None else score for score in scores]
                 )
-                return float(score_mean(ordered)), ordered, len(reused)
-        if reused and (not missing or (len(fresh) and np.asarray(fresh).dtype.kind in "iu")):
+                if _has_fold_dtype_evidence(ordered.dtype, fresh, (scores[i] for i in reused)):
+                    return _reported_score(score_mean(ordered)), ordered, len(reused)
+            # A multi-fold unsigned group can hide Boolean scores. A double
+            # group can hide rounded integers unless all values are small.
+            recover_matches = bool(missing) and (
+                fresh.dtype.kind in "bi"
+                or (fresh.dtype.kind == "u" and len(fresh) == 1)
+                or (fresh.dtype == double and small_fresh)
+            )
+        if reused and (
+            not missing
+            or not safe_to_combine
+            or recover_matches
+            or np.asarray(fresh).dtype.kind in "biu"
+        ):
             values = np.asarray(candidate_records(self)[index][f"test_{self.refit_metric}"])
+            if not missing and values.dtype.kind == "f":
+                saved = values[[reused[i] for i in range(len(splits))]]
+                # Integer scores cannot have produced a finite value strictly
+                # beyond the uint64 range in a floating-point NumPy array.
+                # For extended precision, require a retained value that
+                # also cannot have come from a double promoted during search.
+                if any(
+                    np.isfinite(score)
+                    and abs(score) > 2.0**64
+                    and (saved.dtype == np.dtype(float) or score != float(score))
+                    for score in saved
+                ):
+                    return _reported_score(score_mean(saved)), saved, len(splits)
             if values.dtype.kind in "iu":
-                # Infer the final dtype from exact Python integers, as CV
-                # does when gathering scores from its folds.
-                remaining = iter(fresh)
-                ordered = np.asarray(
-                    [
-                        int(values[reused[i]]) if i in reused else int(next(remaining))
-                        for i in range(len(splits))
-                    ]
-                )
-                return float(score_mean(ordered)), ordered, len(reused)
-
+                # The search array retains exact integers. Infer the result dtype
+                # with the fresh scores just as CV does when gathering all folds.
+                if missing and not safe_to_combine:
+                    fresh = self._score_final_candidate(params, missing)[1]
+                fresh = np.asarray(fresh)
+                # Object results can expose scalar types lost in the search array.
+                if fresh.dtype.kind in "biuf":
+                    remaining = iter(fresh.tolist())
+                    ordered = np.asarray(
+                        [
+                            int(values[reused[i]]) if i in reused else next(remaining)
+                            for i in range(len(splits))
+                        ]
+                    )
+                    return _reported_score(score_mean(ordered)), ordered, len(reused)
+            if recover_matches and values.dtype.kind == "f":
+                # The new fold scores are exact. Refit only the matching
+                # folds to recover the types hidden by promotion during search.
+                matched_splits = [fold for i, fold in enumerate(splits) if i in reused]
+                recovered = self._score_final_candidate(params, matched_splits)[1]
+                if recovered.dtype.kind in "biuf" and _can_combine_fold_scores(recovered):
+                    # Infer the common dtype from scalars in finalist order,
+                    # as cross_validate does when gathering the scores.
+                    matched_scores = iter(recovered.tolist())
+                    new_scores = iter(fresh.tolist())
+                    ordered = np.asarray(
+                        [
+                            next(matched_scores) if i in reused else next(new_scores)
+                            for i in range(len(splits))
+                        ]
+                    )
+                    if ordered.dtype.kind in "biuf":
+                        return _reported_score(score_mean(ordered)), ordered, 0
         score, values = self._score_final_candidate(params, splits)
         return score, values, 0
 
@@ -1033,7 +1272,7 @@ class _FinalSelectionMixin:
             original_best_index = int(indices[0])
         elif original_best_index is None:
             original_best_index = self._best_ranked_index()
-        original_best_score = float(
+        original_best_score = _reported_score(
             self.cv_results_[f"mean_test_{self.refit_metric}"][original_best_index]
         )
         original_best_params = self._candidate_params_from_index(original_best_index)
@@ -1062,10 +1301,13 @@ class _FinalSelectionMixin:
             if not 0 <= selected_index < len(self.cv_results_[f"rank_test_{self.refit_metric}"]):
                 raise IndexError("refit callable returned an index outside cv_results_")
             selected_index = int(selected_index)
+            skipped = self.cv_results_.get("skipped_invalid_mask")
+            if skipped is not None and skipped[selected_index]:
+                raise ValueError("refit callable selected a skipped feature mask")
             selected_params = self._candidate_params_from_index(selected_index)
             self.final_selection_results_.update(
                 selected_index=selected_index,
-                selected_score=float(
+                selected_score=_reported_score(
                     self.cv_results_[f"mean_test_{self.refit_metric}"][selected_index]
                 ),
                 selected_params=selected_params,
@@ -1094,19 +1336,38 @@ class _FinalSelectionMixin:
                 else {}
             )
             missing = [fold for position, fold in enumerate(cv_splits) if position not in reused]
+            full_order = None
+            if reused and len(reused) == len(self._cv_splits) == len(cv_splits):
+                if all(position == source for position, source in reused.items()):
+                    full_order = slice(None)
+                elif len(set(reused.values())) == len(cv_splits):
+                    full_order = np.fromiter(
+                        (reused[position] for position in range(len(cv_splits))),
+                        dtype=np.intp,
+                        count=len(cv_splits),
+                    )
             counts = self.fit_counts_
             for index in indices:
                 params = self._candidate_params_from_index(index)
                 previous_calls = counts["finalist_cv_calls"]
                 previous_fits = counts["finalist_fold_fits"]
-                score, cv_scores, reuse_count = self._score_final_folds(
-                    index, params, cv_splits, reused, missing
-                )
+                try:
+                    score, cv_scores, reuse_count = self._score_final_folds(
+                        index, params, cv_splits, reused, missing, full_order=full_order
+                    )
+                except (Exception, KeyboardInterrupt):
+                    selection["failed_candidate"] = {
+                        "index": int(index),
+                        "cv_calls": counts["finalist_cv_calls"] - previous_calls,
+                        "fold_fits": counts["finalist_fold_fits"] - previous_fits,
+                        "params": params,
+                    }
+                    raise
                 counts["finalist_reused_folds"] += reuse_count
                 candidate_results.append(
                     {
                         "index": int(index),
-                        "original_score": float(
+                        "original_score": _reported_score(
                             self.cv_results_[f"mean_test_{self.refit_metric}"][index]
                         ),
                         "score": score,
@@ -1117,20 +1378,23 @@ class _FinalSelectionMixin:
                         "params": params,
                     }
                 )
+            valid_results = [item for item in candidate_results if np.isfinite(item["score"])]
+            if not valid_results:
+                raise ValueError("All final-selection candidates produced non-finite scores")
+            direction = -1 if self.criteria == "min" else 1
+            selected = max(
+                valid_results,
+                key=lambda item: (
+                    direction * item["score"],
+                    -sum(item["params"]["features"]) if not hasattr(self, "space") else 0,
+                ),
+            )
+        except (Exception, KeyboardInterrupt):
+            selection["failed"] = True
+            raise
         finally:
             selection["time_seconds"] = time.perf_counter() - started_at
 
-        valid_results = [item for item in candidate_results if np.isfinite(item["score"])]
-        if not valid_results:
-            raise ValueError("All final-selection candidates produced non-finite scores")
-        direction = -1 if self.criteria == "min" else 1
-        selected = max(
-            valid_results,
-            key=lambda item: (
-                direction * item["score"],
-                -sum(item["params"]["features"]) if not hasattr(self, "space") else 0,
-            ),
-        )
         selected_index = selected["index"]
         selected_score = selected["score"]
         selected_params = selected["params"]
@@ -1465,7 +1729,7 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
     best_index_ : int
         Row in ``cv_results_`` for the selected candidate, including with
         ``refit=False``.
-    best_score_ : float
+    best_score_ : float or numpy.floating
         Mean objective score of the selected candidate. Uses the finalist
         score when finalist validation runs. With callable refit, read the
         objective score from the selected row of ``cv_results_``.
@@ -1475,8 +1739,9 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
     n_splits_ : int
         The number of cross-validation splits (folds/iterations).
     refit_time_ : float
-        Seconds used for refitting the best model on the whole dataset.
-        This is present only if ``refit`` is not False.
+        Elapsed seconds of a successful full-data refit.
+    refit_failure_time_ : float
+        Elapsed seconds of the full-data refit phase when it raises.
     fit_stats_ : dict
         Counters collected during the last ``fit`` call. Includes evaluated
         candidates, unique candidates, cross-validation calls, cache hits,
@@ -2066,16 +2331,14 @@ class GASearchCV(_FinalSelectionMixin, GeneticEstimatorMixin, BaseSearchCV):
 
             refit_params = self._refit_metadata(best_estimator)
             targets = self._target_args(self.y_)
-            refit_start_time = time.perf_counter()
-            best_estimator.fit(self.X_, *targets, **refit_params)
-            self.refit_time_ = time.perf_counter() - refit_start_time
-            self.fit_counts_["refit_fits"] = 1
+            with self._measure_refit():
+                best_estimator.fit(self.X_, *targets, **refit_params)
 
             self.best_estimator_ = self.estimator_ = best_estimator
         else:
             self.best_index_ = self._best_ranked_index()
             self.best_params_ = self._candidate_params_from_index(self.best_index_)
-            self.best_score_ = float(
+            self.best_score_ = _reported_score(
                 self.cv_results_[f"mean_test_{self.refit_metric}"][self.best_index_]
             )
 
@@ -2438,7 +2701,7 @@ class GAFeatureSelectionCV(
     n_features_ : int
         Number of selected features in ``support_``, including after a search
         with ``refit=False``.
-    best_score_ : float
+    best_score_ : float or numpy.floating
         Mean search CV score for the selected mask, or its finalist CV score
         when finalist validation runs. Callable refit exposes the selected
         row instead of a separate best score.
@@ -2458,8 +2721,9 @@ class GAFeatureSelectionCV(
     n_features_in_ : int
         Number of input features seen during fit, before selection.
     refit_time_ : float
-        Seconds used for refitting the best model on the whole dataset.
-        This is present only if ``refit`` is not False.
+        Elapsed seconds of a successful full-data refit.
+    refit_failure_time_ : float
+        Elapsed seconds of the full-data refit phase when it raises.
     fit_stats_ : dict
         Counters collected during the last ``fit`` call. Includes evaluated
         candidates, unique candidates, cross-validation calls, cache hits,
@@ -2763,11 +3027,11 @@ class GAFeatureSelectionCV(
 
         return score, current_generation_params
 
-    def _penalized_feature_cv_results(self, score):
+    def _skipped_feature_cv_results(self):
         return {
             "fit_time": np.zeros(self.n_splits_),
             "score_time": np.zeros(self.n_splits_),
-            **self._constant_cv_scores(score, self.n_splits_, self.return_train_score),
+            **self._constant_cv_scores(np.nan, self.n_splits_, self.return_train_score),
         }
 
     def _select_feature_columns(self, mask):
@@ -2778,7 +3042,7 @@ class GAFeatureSelectionCV(
     def _evaluate_individual(self, individual, n_jobs=None, *, from_cache_key=False):
         # Both evaluation entry points repair the mask before cache lookup.
         if from_cache_key:
-            bool_individual = np.frombuffer(bytes(individual), dtype=bool).copy()
+            bool_individual = np.frombuffer(bytearray(individual), dtype=bool).copy()
         else:
             bool_individual = np.array(individual, dtype=bool)
 
@@ -2788,14 +3052,17 @@ class GAFeatureSelectionCV(
 
         max_features = getattr(self, "max_features", None)
 
-        if max_features and (n_selected_features > max_features or n_selected_features == 0):
-            score = -self.criteria_sign * 100000
-            cv_results = self._penalized_feature_cv_results(score)
+        if not n_selected_features or (
+            max_features is not None and n_selected_features > max_features
+        ):
+            current_generation_params["skipped_invalid_mask"] = True
+            cv_results = self._skipped_feature_cv_results()
             _, current_generation_params = self._build_feature_evaluation_record(
                 current_generation_params, cv_results
             )
 
-            fitness_result = [score, n_selected_features]
+            # Invalid masks also lose ties with valid masks whose CV is non-finite.
+            fitness_result = [_evolution_score(np.nan, self.criteria_sign), np.inf]
 
             return fitness_result, current_generation_params, False, True
 
@@ -2894,13 +3161,26 @@ class GAFeatureSelectionCV(
     def _archived_feature_row(self, records, archived_score, mask):
         means = self.cv_results_[f"mean_test_{self.refit_metric}"]
         finite = np.isfinite(archived_score)
+        checked = None
+        n_records = len(records)
+        if (
+            n_records >= 128
+            and 4 * self.fit_stats_.get("unique_candidates", n_records) <= n_records
+        ):
+            checked = set()
         for index, row in enumerate(records):
             score = row.get("score", means[index])
             # The archive treats every non-finite score as the same worst fitness.
-            if (score == archived_score or (not finite and not np.isfinite(score))) and (
-                np.array_equal(row["features"], mask)
-            ):
-                return index
+            if score == archived_score or (not finite and not np.isfinite(score)):
+                features = row["features"]
+                if checked is not None and type(features) is np.ndarray and features.dtype == bool:
+                    # Retain each score match's first row among shared cached masks.
+                    identity = id(features)
+                    if identity in checked:
+                        continue
+                    checked.add(identity)
+                if np.array_equal(features, mask):
+                    return index
 
         # Older checkpoints can have an archived score without its exact row.
         # Keep the selected mask and use its best available search result.
@@ -3064,12 +3344,16 @@ class GAFeatureSelectionCV(
         self._n_iterations = n_gen
 
         records = candidate_records(self)
+        check_masks = legacy_checkpoint is not None or self.fit_stats_.get(
+            "skipped_invalid_candidates"
+        )
         self.cv_results_ = create_feature_selection_cv_results_(
             records=records,
             return_train_score=self.return_train_score,
             metrics=self.metrics_list,
             greater_is_better=self.criteria == "max",
             unique_candidates=self.fit_stats_.get("unique_candidates"),
+            mask_limit=(self.max_features or self.n_features) if check_masks else None,
         )
 
         self._set_search_history(log)
@@ -3084,7 +3368,10 @@ class GAFeatureSelectionCV(
                 else self._feature_elites[0][0][1][0]
             )
             index = self._archived_feature_row(records, archived_score, best_features)
-            if index is not None and records[index]["fit_time"] is None:
+            skipped = self.cv_results_.get("skipped_invalid_mask")
+            if index is not None and (
+                records[index]["fit_time"] is None or (skipped is not None and skipped[index])
+            ):
                 index = int(self._top_candidate_indices()[0])
                 best_features = np.array(self.cv_results_["features"][index], dtype=bool)
 
@@ -3099,19 +3386,19 @@ class GAFeatureSelectionCV(
             best_features = np.asarray(selected["features"], dtype=bool)
         elif index is not None:
             self.best_index_ = index
-            self.best_score_ = float(self.cv_results_[f"mean_test_{self.refit_metric}"][index])
+            self.best_score_ = _reported_score(
+                self.cv_results_[f"mean_test_{self.refit_metric}"][index]
+            )
 
         if self.refit:
             best_estimator = clone(self.estimator)
 
             refit_params = self._refit_metadata(best_estimator)
             targets = self._target_args(self.y_)
-            refit_start_time = time.perf_counter()
-            best_estimator.fit(
-                self._select_feature_columns(best_features), *targets, **refit_params
-            )
-            self.refit_time_ = time.perf_counter() - refit_start_time
-            self.fit_counts_["refit_fits"] = 1
+            with self._measure_refit():
+                best_estimator.fit(
+                    self._select_feature_columns(best_features), *targets, **refit_params
+                )
 
             self.best_estimator_ = self.estimator_ = best_estimator
 
@@ -3127,7 +3414,9 @@ class GAFeatureSelectionCV(
         if validate_data is None:
             first = _feature_input_estimator(self.estimator)
             if first is not None:
-                input_types = _safe_tags(first, key="X_types")
+                inputs = _safe_tags(first)
+                tags["allow_nan"] = tags["allow_nan"] or inputs["allow_nan"]
+                input_types = inputs["X_types"]
                 if "2darray" in input_types:
                     text_types = [kind for kind in ("categorical", "string") if kind in input_types]
                     tags["X_types"] = ["2darray", *text_types]
@@ -3172,7 +3461,9 @@ class GAFeatureSelectionCV(
         )
         final = _feature_target_estimator(self.estimator)
         target = wrapped.target_tags if final is self.estimator else get_tags(final).target_tags
-        tags.input_tags.allow_nan = wrapped.input_tags.allow_nan
+        # The first pipeline step receives the selected raw values and can
+        # impute them before they reach a downstream estimator.
+        tags.input_tags.allow_nan = wrapped.input_tags.allow_nan or inputs.allow_nan
         tags.input_tags.sparse = wrapped.input_tags.sparse and not self.preserve_dataframe
         tags.input_tags.categorical = inputs.two_d_array and inputs.categorical
         tags.input_tags.string = inputs.two_d_array and inputs.string
@@ -3221,12 +3512,74 @@ class GAFeatureSelectionCV(
             )
         return self.best_features_
 
+    def transform(self, X):
+        """Keep the selected features, returning CSR for sparse input."""
+        if (
+            type(X) not in (csc_matrix, csc_array)
+            or X.nnz < _CSC_TRANSFORM_MIN_ENTRIES
+            or type(self) is not GAFeatureSelectionCV
+        ):
+            return _SELECTOR_TRANSFORM(self, X)
+
+        support = getattr(self, "best_features_", None)
+        if (
+            support is None
+            or getattr(self._transform, "__func__", None) is not SelectorMixin._transform
+            or 2 * np.count_nonzero(support) > support.size
+        ):
+            return _SELECTOR_TRANSFORM(self, X)
+
+        # Validate the entire matrix, including the columns that will be
+        # dropped. Keep CSC for column slicing and convert only the result.
+        options = {
+            "dtype": None,
+            "accept_sparse": "csc",
+            "reset": False,
+            _FINITE_CHECK: not _allows_nan(self),
+        }
+        if validate_data is None:
+            X = self._validate_data(X, **options)
+        else:
+            X = validate_data(self, X, **options)
+        reduced = self._transform(X)
+        return reduced.tocsr() if issparse(reduced) else reduced
+
     def inverse_transform(self, X):
         """Restore original column positions, filling removed columns with zeros.
 
         Dense inputs can contain NaN when the wrapped estimator supports it.
         """
-        if issparse(X) or not _allows_nan(self):
+        if issparse(X):
+            interface = get_config().get("sparse_interface")
+            if (
+                type(self) is not GAFeatureSelectionCV
+                or type(X) not in (csc_matrix, csc_array, csr_matrix, csr_array)
+                or X.ndim != 2
+                or X.shape[1] == 0
+                or interface not in (None, "spmatrix", "sparray")
+            ):
+                return super().inverse_transform(X)
+
+            support = self.get_support()
+            if type(support) is not np.ndarray or support.dtype != bool or support.ndim != 1:
+                return super().inverse_transform(X)
+            if X.shape[1] != support.sum():
+                raise ValueError("X has a different shape than during fitting.")
+
+            X = X.tocsc()
+            # Scatter stored column lengths into the output pointer buffer,
+            # then accumulate in place. Removed columns have length zero.
+            indptr = np.zeros(support.size + 1, dtype=np.result_type(X.indptr.dtype, np.int_))
+            indptr[1:][support] = np.diff(X.indptr)
+            np.cumsum(indptr, out=indptr)
+            storage = (X.data, X.indices, indptr)
+            shape = (X.shape[0], support.size)
+            if interface is None:
+                return csc_matrix(storage, shape=shape, dtype=X.dtype)
+            restored = csc_array(storage, shape=shape, dtype=X.dtype)
+            return csc_matrix(restored) if interface == "spmatrix" else restored
+
+        if not _allows_nan(self):
             return super().inverse_transform(X)
 
         support = self.get_support()

@@ -11,8 +11,8 @@ nb = Notebook(
     path="tutorials/sparse-feature-selection.md",
     title="Feature Selection with SciPy Sparse Matrices",
     description=(
-        "Use GAFeatureSelectionCV with SciPy CSR and CSC matrices. Select columns "
-        "on training data and evaluate the refitted scikit-learn classifier on held-out data."
+        "Use GAFeatureSelectionCV with SciPy CSR and CSC matrices, impute missing "
+        "values inside cross-validation, and evaluate the refitted classifier on held-out data."
     ),
     intro=(
         "Pass a SciPy sparse matrix to `GAFeatureSelectionCV` when the wrapped estimator "
@@ -69,11 +69,50 @@ nb.code("""
 
 nb.md("""
 When you only need the reduced data, `selector.transform(X_test_csc)` returns
-a CSR result using scikit-learn's transformer convention. See the
+a CSR result using scikit-learn's transformer convention. For large CSC
+inputs with a smaller selected subset, the selector validates the input,
+then slices the columns before converting the reduced block to CSR. See the
 [GAFeatureSelectionCV reference](../api/gafeatureselectioncv#methods) for supported
 prediction methods and sparse inputs.
 """)
 
+nb.md("""
+## Impute missing values inside feature selection
+
+Wrap `SimpleImputer` and the classifier in the estimator passed to the
+selector. The imputer learns replacement values from each candidate's
+training fold. The selected data still contain `NaN` if you call
+`transform` directly. During prediction, the refitted pipeline applies
+its imputer before the classifier. In a sparse matrix, implicit zeros
+are observed zeros and explicit `NaN` entries represent missing values.
+`inverse_transform` restores the original column positions in a CSC result.
+It preserves the missing values in the selected columns and adds implicit
+zeros for removed columns.
+""")
+nb.code("""
+    import numpy as np
+    from sklearn.impute import SimpleImputer
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.pipeline import make_pipeline
+
+    missing_train = csc_matrix(X_train)
+    missing_train.data[::31] = np.nan
+    test_rows = X_test[:8].copy()
+    test_rows[0] = np.nan
+    missing_test = csc_matrix(test_rows)
+    with_imputer = GAFeatureSelectionCV(
+        make_pipeline(SimpleImputer(strategy="median"), LogisticRegression(max_iter=300)),
+        cv=2, population_size=4, generations=0, max_features=12,
+        random_state=9, n_jobs=1, verbose=False, error_score="raise",
+    ).fit(missing_train, y_train)
+    selected = with_imputer.transform(missing_test)
+    assert np.isnan(selected.data).any()
+    restored = with_imputer.inverse_transform(selected)
+    assert restored.shape == missing_test.shape
+    print("Selected format", selected.format)
+    print("Restored format", restored.format)
+    print("Predictions", with_imputer.predict(missing_test).size)
+""")
 nb.md("""
 ## Use the selector in a sparse pipeline
 
@@ -138,6 +177,12 @@ Repeat the comparison on representative inputs and alternate which layout
 runs first. Check that both runs reach the same number of search CV calls
 and fold fits. These wall-clock times include the final refit. The held-out
 score is calculated separately after timing.
+
+To measure the effect of caching, rerun each layout with `use_cache=True`
+and the same seed and folds. On wide sparse inputs, standard evaluation
+can reuse the cache key to build the Boolean mask for a fresh CV evaluation.
+Compare the recorded candidates and actual CV calls alongside wall
+time. See [how to read the cache counters](./optimizer-backends#read-both-cache-counters-in-one-batch).
 """)
 
 nb.write()

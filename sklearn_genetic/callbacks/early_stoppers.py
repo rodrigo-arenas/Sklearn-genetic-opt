@@ -1,12 +1,13 @@
 from datetime import UTC, datetime
 from fractions import Fraction
-from math import inf, isfinite
+from math import inf
 from numbers import Integral, Real
 from operator import ge, index, le
 from time import monotonic
 
 import numpy as np
 
+from ..utils._score_statistics import is_finite_score
 from .validations import check_stats
 from .base import BaseCallback
 
@@ -37,10 +38,6 @@ def _validate_positive_numeric(value, parameter_name):
 def _at_least_as_good(metric, estimator):
     minimize = metric != "fitness_std" and getattr(estimator, "criteria", "max") == "min"
     return le if minimize else ge
-
-
-def _finite_score(value):
-    return value is not None and isfinite(value)
 
 
 def _as_fraction(value):
@@ -82,7 +79,9 @@ class ThresholdStopping(BaseCallback):
         else:
             raise ValueError("At least one of record or logbook parameters must be provided")
 
-        if _finite_score(stat) and _at_least_as_good(self.metric, estimator)(stat, self.threshold):
+        if is_finite_score(stat) and _at_least_as_good(self.metric, estimator)(
+            stat, self.threshold
+        ):
             print(f"INFO: {self.__class__.__name__} callback met its criteria")
             return True
         return False
@@ -125,7 +124,7 @@ class ConsecutiveStopping(BaseCallback):
 
             # Compare the current metric with the previous window.
             stats = [row.get(self.metric) for row in logbook[-window - 1 : -1]]
-            if not _finite_score(current_stat) or not all(map(_finite_score, stats)):
+            if not is_finite_score(current_stat) or not all(map(is_finite_score, stats)):
                 return False
 
             at_least_as_good = _at_least_as_good(self.metric, estimator)
@@ -171,7 +170,7 @@ class DeltaThreshold(BaseCallback):
                 return False
 
             stats = [row.get(self.metric) for row in logbook[-window:]]
-            if not all(map(_finite_score, stats)):
+            if not all(map(is_finite_score, stats)):
                 return False
 
             low, high = min(stats), max(stats)

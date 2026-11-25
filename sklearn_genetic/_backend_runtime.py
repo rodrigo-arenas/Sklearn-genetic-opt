@@ -241,12 +241,15 @@ class _SearchRun:
                     return
         elif key in keys:
             return
-        # Historical archives insert new distinct candidates ahead of equal scores.
-        index = next(
-            (i for i, elite in enumerate(self.elites) if self._rank(elite) <= rank),
-            len(self.elites),
-        )
-        self.elites.insert(index, observation)
+        # Find the first equal or worse rank in the best-first archive.
+        low, high = 0, len(self.elites)
+        while low < high:
+            middle = (low + high) // 2
+            if self._rank(self.elites[middle]) <= rank:
+                high = middle
+            else:
+                low = middle + 1
+        self.elites.insert(low, observation)
         if keys is not None:
             keys[key] = 1
             for removed in self.elites[keep:]:
@@ -265,7 +268,7 @@ class _SearchRun:
             and len(candidates) <= remaining
         ):
             # Truncation only needs a mutable outer list of immutable masks.
-            return list(candidates), True
+            return list(candidates), True, None
 
         width = len(self.problem.initial_population[0])
         features = self.problem.task == "features"
@@ -280,11 +283,18 @@ class _SearchRun:
         if not rows or len(rows) > remaining:
             raise ValueError("Expected a nonempty batch within the optimizer proposal budget")
         canonical_masks = features
-        validated_tuples = {}
+        validated_positions = {}
+        mask_repeats = None
         for index, row in enumerate(rows):
             immutable = type(row) is tuple
-            if immutable and validated_tuples.get(id(row)) is row:
-                continue
+            if immutable:
+                first = validated_positions.get(id(row))
+                if first is not None:
+                    if self.estimator.use_cache:
+                        if mask_repeats is None:
+                            mask_repeats = {}
+                        mask_repeats[index] = first
+                    continue
             if len(row) != width:
                 raise ValueError(f"Optimizer candidate must have {width} coordinates")
             if features:
@@ -296,8 +306,8 @@ class _SearchRun:
                 canonical_masks &= canonical
                 if immutable:
                     if canonical:
-                        # Keep an identity only for tuples of immutable Python integers.
-                        validated_tuples[id(row)] = row
+                        # The rows retain these immutable integer tuples during the scan.
+                        validated_positions[id(row)] = index
                     else:
                         rows[index] = list(row)
             elif not all(
@@ -305,7 +315,7 @@ class _SearchRun:
                 for dim, value in zip(self.problem.dimensions, row)
             ):
                 raise ValueError("Optimizer candidate is outside the parameter space")
-        return rows, canonical_masks
+        return rows, canonical_masks, mask_repeats
 
     def evaluate(self, candidates):
         from .genetic_search import _uses_native_feature_evaluation
@@ -320,7 +330,7 @@ class _SearchRun:
         if _evaluation_limit_reached(self.estimator):
             self._stop_at_evaluation_limit()
         remaining = self.problem.max_evaluations - self.evaluations
-        rows, canonical_masks = self._proposal_rows(candidates, remaining)
+        rows, canonical_masks, mask_repeats = self._proposal_rows(candidates, remaining)
         requested = len(rows)
         if (
             canonical_masks
@@ -328,7 +338,9 @@ class _SearchRun:
             and _uses_native_feature_evaluation(self.estimator)
         ):
             # The backend validated these integer bits against the active cap.
-            fitnesses = evaluate_population(self.estimator, rows, "current_generation_features")
+            fitnesses = evaluate_population(
+                self.estimator, rows, "current_generation_features", mask_repeats=mask_repeats
+            )
         else:
             if self.problem.task == "features":
                 # Repair and custom evaluators can edit each mask independently.

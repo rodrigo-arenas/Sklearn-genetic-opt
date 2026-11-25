@@ -28,6 +28,15 @@ This tutorial explains how `GASearchCV` evaluates candidate hyperparameters and 
 `scoring`
 : The metric used to evaluate each candidate. For classification: `"accuracy"`, `"roc_auc"`, `"f1"`. For regression: `"r2"`, `"neg_root_mean_squared_error"`. See [scikit-learn model evaluation](https://scikit-learn.org/stable/modules/model_evaluation.html) for the full list.
 
+## How searches use the folds
+
+Both search estimators materialize the folds before evaluating candidates.
+A fresh search keeps the independent arrays returned by standard `KFold`,
+`StratifiedKFold`, and `GroupKFold` splitters. The search copies each fold
+from a custom splitter before requesting the next one, so its buffers can
+be reused safely. The same rules apply to an explicit
+`final_selection_cv`.
+
 ## Evolutionary Algorithm Background
 
 A genetic algorithm is a metaheuristic optimization method inspired by natural selection. In sklearn-genetic-opt:
@@ -58,7 +67,7 @@ gen  nevals  fitness  fitness_std  fitness_best  fitness_max  fitness_min  div  
 | `fitness_best` | Best score found so far across all generations |
 | `fitness_max` | Best score in this generation |
 | `fitness_min` | Worst score in this generation |
-| `div` | Genotype diversity — fraction of distinct values per gene position (1.0 = fully diverse) |
+| `div` | Mean probability that two distinct population members disagree at a coordinate |
 | `unique` | Unique individual ratio — fraction of distinct individuals in the population |
 | `stag` | Stagnation generations — consecutive generations without improvement in `fitness_best` |
 | `events` | Optimizer interventions: `div` (diversity control), `imm=N` (N immigrants injected), `dup=N` (N duplicates replaced), `share` (fitness sharing applied) |
@@ -188,6 +197,12 @@ when it acts as a transformer with `refit=False`.
   `cv_results_["std_test_score"]` or `cv_results_["std_test_<metric>"]` for a named metric.
   The mean and standard deviation use the scorer's units, including for custom
   scorers with very large or very small finite values.
+  The standard deviation takes the square root of the mean squared deviation
+  from the fold mean (`ddof=0`). Compare it across candidates on the same splits.
+- Use `cv_results_["rank_test_score"]` or `cv_results_["rank_test_<metric>"]`
+  to compare positions, starting at 1. Tied scores share the first position in
+  their group. For a maximized metric, scores of 0.9, 0.9, and 0.8 get ranks 1, 1,
+  and 3. Repeated candidate rows count toward the next rank, including cache hits.
 - The `use_cache=True` option in `RuntimeConfig` is strongly recommended — it avoids re-evaluating previously seen configurations.
 
 ## See Also

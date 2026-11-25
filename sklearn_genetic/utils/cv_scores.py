@@ -20,7 +20,8 @@ def subsample_cv(cv_splits, train_size, *, stratify=None, random_state=None):
         Training indices must be one-dimensional integer arrays.
     train_size : float
         Fraction of each training fold to retain, in (0, 1]. A value of 1
-        preserves the original splits without sampling.
+        preserves the original splits without sampling. Every fold must
+        retain at least one training row after rounding down.
     stratify : array-like of shape (n_samples,), default=None
         Full target labels for stratified training subsampling. Use this for
         classification; leave it as None for regression. Sampling that drops
@@ -47,16 +48,24 @@ def subsample_cv(cv_splits, train_size, *, stratify=None, random_state=None):
     if labels is not None and labels.ndim != 1:
         raise ValueError("stratify must contain one-dimensional class labels")
     result = []
-    for train, validation in cv_splits:
+    for fold, (train, validation) in enumerate(cv_splits, start=1):
         train = np.asarray(train)
         if train.ndim != 1 or not np.issubdtype(train.dtype, np.integer):
             raise ValueError("cv_splits must contain one-dimensional integer training indices")
+        if not train.size:
+            raise ValueError(f"cv_splits fold {fold} has no training rows")
         if train_size < 1:
+            n_samples = int(train.size * train_size)
+            if not n_samples:
+                raise ValueError(
+                    f"train_size leaves no training rows in fold {fold}. "
+                    "Increase the training fraction."
+                )
             original_classes = None if labels is None else np.unique(labels[train])
             train = resample(
                 train,
                 replace=False,
-                n_samples=int(len(train) * train_size),
+                n_samples=n_samples,
                 stratify=None if labels is None else labels[train],
                 random_state=rng,
             )
@@ -99,33 +108,51 @@ def _rank_scores(scores, greater_is_better=True, *, counts=None):
     numpy.ndarray of int
         1-based ranks, where rank 1 is the best candidate and non-finite scores rank last.
     """
-    scores = np.asarray(scores, dtype=float)
+    scores = np.asarray(scores)
+    if scores.dtype.kind != "f":
+        scores = scores.astype(float)
     finite_mask = np.isfinite(scores)
+    n_finite = np.count_nonzero(finite_mask)
+    n_scores = scores.shape[0]
+    if not n_finite:
+        # All scores are non-finite. Keep a deterministic ranking.
+        return np.ones(n_scores, dtype=int)
 
-    ranks = np.empty(scores.shape[0], dtype=int)
+    all_finite = scores.ndim == 1 and n_finite == n_scores
+    finite_scores = scores if all_finite else scores[finite_mask]
+    if (
+        n_finite >= 64
+        and finite_scores[0] == finite_scores[-1]
+        and np.all(finite_scores == finite_scores[0])
+    ):
+        # A constant finite score only needs the weights for the missing ranks.
+        ranks = np.ones(n_scores, dtype=int)
+        if not all_finite:
+            finite_count = n_finite if counts is None else counts[finite_mask].sum()
+            ranks[~finite_mask] = finite_count + 1
+        return ranks
 
-    if finite_mask.any():
-        finite_scores = scores[finite_mask]
-        ordered = -finite_scores if greater_is_better else finite_scores
-        if counts is None:
-            ranks[finite_mask] = rankdata(ordered, method="min").astype(int)
-            ranks[~finite_mask] = finite_mask.sum() + 1
-        else:
-            weights = counts[finite_mask]
-            order = np.argsort(ordered)
-            ordered = ordered[order]
-            sorted_weights = weights[order]
-            sorted_ranks = np.cumsum(sorted_weights) - sorted_weights + 1
-            # Equal scores from different reductions must use the same rank.
-            sorted_ranks[1:][ordered[1:] == ordered[:-1]] = 0
-            distinct_ranks = np.empty_like(sorted_ranks)
-            distinct_ranks[order] = np.maximum.accumulate(sorted_ranks)
-            ranks[finite_mask] = distinct_ranks
-            ranks[~finite_mask] = weights.sum() + 1
+    ordered = -finite_scores if greater_is_better else finite_scores
+    if counts is None:
+        finite_ranks = rankdata(ordered, method="min")
     else:
-        # All scores are non-finite: keep a deterministic, non-crashing ranking.
-        ranks[:] = 1
+        weights = counts if all_finite else counts[finite_mask]
+        order = np.argsort(ordered)
+        ordered = ordered[order]
+        sorted_weights = weights[order]
+        sorted_ranks = np.cumsum(sorted_weights) - sorted_weights + 1
+        # Equal scores from different reductions must use the same rank.
+        sorted_ranks[1:][ordered[1:] == ordered[:-1]] = 0
+        finite_ranks = np.empty_like(sorted_ranks)
+        finite_ranks[order] = np.maximum.accumulate(sorted_ranks)
 
+    if all_finite:
+        return finite_ranks.astype(int, copy=False)
+
+    ranks = np.empty(n_scores, dtype=int)
+    ranks[finite_mask] = finite_ranks
+    finite_count = n_finite if counts is None else weights.sum()
+    ranks[~finite_mask] = finite_count + 1
     return ranks
 
 
@@ -186,12 +213,25 @@ def _add_cv_statistics(
         cv_results[f"std_{name}"] = deviations
 
 
+def _finite_float64_moments(matrix):
+    # Reuse the row means in the centered, two-pass population variance.
+    if not matrix.shape[1]:
+        return np.mean(matrix, axis=1), np.std(matrix, axis=1)
+    averages = matrix.mean(axis=1)
+    centered = matrix - averages[:, None]
+    np.multiply(centered, centered, out=centered)
+    deviations = centered.mean(axis=1)
+    np.sqrt(deviations, out=deviations)
+    return averages, deviations
+
+
 def _fold_score_moments(matrix):
     if matrix.dtype.kind == "f" and matrix.shape[1]:
         _, lower, upper = score_scale_limits(matrix.dtype)
         scales = np.max(np.abs(matrix), axis=1)
+        finite = np.isfinite(scales)
         extreme = ((scales > 0) & (scales < lower)) | (
-            (scales >= upper / sqrt(matrix.shape[1])) & np.isfinite(scales)
+            (scales >= upper / sqrt(matrix.shape[1])) & finite
         )
         if extreme.any():
             averages = np.empty(len(matrix), dtype=matrix.dtype)
@@ -203,6 +243,8 @@ def _fold_score_moments(matrix):
                 row, scale = matrix[index], scales[index]
                 averages[index], deviations[index] = scaled_score_moments(row, scale)
             return averages, deviations
+        if matrix.dtype == np.float64 and finite.all():
+            return _finite_float64_moments(matrix)
     return np.mean(matrix, axis=1), np.std(matrix, axis=1)
 
 
@@ -211,11 +253,20 @@ def _reused_score_rows(rows, n_splits):
         return rows, None
     # Cache hits share score arrays, even when the identical arrays appear
     # in different blocks. Equal values from separate evaluations stay separate.
-    identities = list(map(id, rows))
-    unique = dict(zip(identities, rows))
-    if 4 * len(unique) > len(rows):
-        return rows, None
-    distinct = list(unique.values())
+    limit = len(rows) // 4
+    by_identity = {}
+    distinct, positions = [], []
+    next_position = 0
+    for row in rows:
+        position = by_identity.setdefault(id(row), next_position)
+        if position == next_position:
+            # This identity is new. Once there are too many, counting the
+            # remaining rows cannot make the reuse path eligible.
+            if next_position == limit:
+                return rows, None
+            distinct.append(row)
+            next_position += 1
+        positions.append(position)
     dtype = getattr(distinct[0], "dtype", None)
     if not all(
         type(row) is np.ndarray
@@ -225,8 +276,7 @@ def _reused_score_rows(rows, n_splits):
         for row in distinct
     ):
         return rows, None
-    positions = dict(zip(unique, range(len(unique))))
-    return distinct, tuple(positions[identity] for identity in identities)
+    return distinct, tuple(positions)
 
 
 def _row_statistics(rows, n_splits, mean, std, *, split_scores=None, reuse_rows=False):
@@ -259,7 +309,7 @@ def _row_statistics(rows, n_splits, mean, std, *, split_scores=None, reuse_rows=
                 averages, spreads = _fold_score_moments(matrix)
             elif nan_aware and matrix.dtype == np.float64 and np.isfinite(matrix).all():
                 # Ordinary CV timings need no missing-value buffers or counts.
-                averages, spreads = np.mean(matrix, axis=1), np.std(matrix, axis=1)
+                averages, spreads = _finite_float64_moments(matrix)
             else:
                 averages, spreads = mean(matrix, axis=1), std(matrix, axis=1)
             means.extend(averages)
@@ -327,9 +377,69 @@ def _shared_feature_counts(masks):
     return counts
 
 
+def _rank_feature_counts(counts):
+    if len(counts) >= 128:
+        counts = np.asarray(counts)
+        if (
+            counts.ndim == 1
+            and counts.dtype.kind == "i"
+            and counts.min() >= 0
+            and counts.max() <= len(counts)
+        ):
+            # The number of smaller masks determines each minimum tied rank.
+            # Bound the histogram by the number of candidate rows.
+            frequency = np.bincount(counts)
+            ranks_by_size = np.cumsum(frequency) - frequency + 1
+            return ranks_by_size[counts].astype(int, copy=False)
+    return rankdata(counts, method="min").astype(int)
+
+
 def create_feature_selection_cv_results_(
-    records, return_train_score, metrics, greater_is_better=True, *, unique_candidates=None
+    records,
+    return_train_score,
+    metrics,
+    greater_is_better=True,
+    *,
+    unique_candidates=None,
+    mask_limit=None,
 ):
+    features = [row["features"] for row in records]
+    if unique_candidates is not None and len(features) >= max(64, 4 * unique_candidates):
+        n_features = _shared_feature_counts(features)
+    else:
+        n_features = [
+            (
+                np.int_(np.count_nonzero(mask))
+                if type(mask) is np.ndarray and mask.dtype.kind == "b"
+                else np.sum(mask)
+            )
+            for mask in features
+        ]
+    skipped = None
+    if mask_limit is not None:
+        invalid = np.fromiter(
+            (
+                row.get("skipped_invalid_mask", False) or not 1 <= count <= mask_limit
+                for row, count in zip(records, n_features, strict=True)
+            ),
+            dtype=bool,
+            count=len(records),
+        )
+        if invalid.any():
+            skipped = invalid
+            legacy_skipped = [
+                i for i in np.flatnonzero(skipped) if not records[i].get("skipped_invalid_mask")
+            ]
+            if legacy_skipped:
+                # Older checkpoints used a numeric penalty in the score columns.
+                fields = ["cv_scores", *(f"test_{metric}" for metric in metrics)]
+                if return_train_score:
+                    fields.extend(f"train_{metric}" for metric in metrics)
+                missing = dict.fromkeys(fields, np.full(len(records[0]["cv_scores"]), np.nan))
+                records = list(records)
+                for index in legacy_skipped:
+                    records[index] = {**records[index], **missing}
+
     cv_results = {}
     _add_cv_statistics(
         cv_results,
@@ -339,18 +449,12 @@ def create_feature_selection_cv_results_(
         greater_is_better,
         unique_candidates=unique_candidates,
     )
-    features = [row["features"] for row in records]
-    if unique_candidates is not None and len(features) >= max(64, 4 * unique_candidates):
-        cv_results["n_features"] = _shared_feature_counts(features)
-    else:
-        cv_results["n_features"] = [
-            (
-                np.int_(np.count_nonzero(mask))
-                if type(mask) is np.ndarray and mask.dtype.kind == "b"
-                else np.sum(mask)
-            )
-            for mask in features
-        ]
-    cv_results["rank_n_features"] = rankdata(cv_results["n_features"], method="min").astype(int)
+    if skipped is not None:
+        cv_results["skipped_invalid_mask"] = skipped
+        for name, ranks in cv_results.items():
+            if name.startswith("rank_"):
+                ranks[skipped] = 1 + ranks[~skipped].max(initial=0)
+    cv_results["n_features"] = n_features
+    cv_results["rank_n_features"] = _rank_feature_counts(n_features)
     cv_results["features"] = features
     return cv_results

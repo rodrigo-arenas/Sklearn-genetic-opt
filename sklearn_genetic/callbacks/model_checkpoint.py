@@ -1,8 +1,8 @@
 import logging
 import pickle
 import random
-from collections.abc import Mapping
-from numbers import Integral
+from collections.abc import Mapping, MutableMapping
+from numbers import Integral, Real
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
@@ -11,6 +11,7 @@ from sklearn import get_config
 from sklearn.utils.validation import _num_samples
 
 from .._optimizer_checkpoint import _is_nonnegative_count, resume_method, training_data_hash
+from ..backends import OptimizationProblem
 from ..evaluation import create_fit_stats
 from .base import BaseCallback
 from .early_stoppers import _validate_positive_integer
@@ -298,6 +299,46 @@ def _validate_optimizer_resume_fields(data, path):
     for name in required_counters:
         if name != "cross_validate_calls":
             _validate_counter(stats[name], path, f"fit_stats.{name}")
+    _validate_saved_telemetry(data["telemetry"], path)
+    _validate_saved_optimizer_configuration(data, path)
+
+
+def _validate_saved_optimizer_configuration(data, path):
+    context = data["context"]
+    if (
+        not isinstance(context, tuple)
+        or len(context) < 3
+        or not all(isinstance(fingerprint, str) for fingerprint in context[:2])
+        or (context[2] is not None and not isinstance(context[2], str))
+    ):
+        raise ValueError(
+            f"Invalid search checkpoint at {path}: context must contain data and configuration fingerprints."
+        )
+    problem = data["problem"]
+    if (
+        not isinstance(problem, OptimizationProblem)
+        or not isinstance(getattr(problem, "task", None), str)
+        or problem.task not in ("parameters", "features")
+    ):
+        raise ValueError(
+            f"Invalid search checkpoint at {path}: problem must describe a parameter or feature search."
+        )
+
+
+def _validate_saved_telemetry(telemetry, path):
+    if not isinstance(telemetry, MutableMapping):
+        raise ValueError(
+            f"Invalid search checkpoint at {path}: telemetry must be a mutable mapping."
+        )
+    if "best_fitness" not in telemetry:
+        raise ValueError(f"Invalid search checkpoint at {path}: missing telemetry.best_fitness.")
+    fitness = telemetry["best_fitness"]
+    if fitness is not None and not isinstance(fitness, Real):
+        raise ValueError(
+            f"Invalid search checkpoint at {path}: telemetry.best_fitness must be a real scalar or None."
+        )
+    for field in ("best_generation", "stagnation_generations"):
+        _validate_counter(telemetry.get(field), path, f"telemetry.{field}")
 
 
 def load_search_checkpoint(callbacks, optimizer):

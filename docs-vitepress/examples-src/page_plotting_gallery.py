@@ -21,13 +21,13 @@ nb = Notebook(
     path="examples/plotting-gallery.md",
     title="Plotting Gallery",
     description=(
-        "Plot scikit-learn genetic search results, including convergence, candidate scores, "
-        "fit counts, optimizer events, and selected features."
+        "Plot scikit-learn genetic search results, including fitness by fold-fit budget, "
+        "cross-validation fold distributions and failures, optimizer events, and selected features."
     ),
     intro=(
         "`sklearn-genetic-opt` ships diagnostic plot functions that read the "
         "metadata stored on a fitted search. This gallery fits real searches "
-        "and uses the recorded results to draw each figure. Follow the examples "
+        "and uses the recorded results to draw most figures. Follow the examples "
         "to inspect candidate scores, convergence, diversity, fit work, and the "
         "selected features."
     ),
@@ -551,6 +551,8 @@ nb.md("""
 
     `plot_candidate_rankings` compares the top candidates with their mean score and
     CV standard deviation as error bars.
+    When the score axis shows a power-of-two divisor, multiply the plotted means
+    and error-bar offsets by that factor to recover the score units.
     """)
 
 nb.code(
@@ -592,6 +594,8 @@ nb.figure(
 nb.md("""
     **What to look for:** prefer a candidate with a slightly lower mean but a tight
     fold distribution over a high-mean candidate whose folds are all over the place.
+    If the score axis shows a power-of-two divisor, multiply by it to read the
+    scores in their original units.
 
     ### Compare scores by fold
 
@@ -600,8 +604,9 @@ nb.md("""
     Each column is the same validation fold for every candidate. With `top_k`,
     tied test ranks keep evaluation order at the cutoff. Crosses mark
     non-finite scores, and outlined squares mark rows flagged as
-    `all_fits_failed`. The [overview example](#overview-without-finite-cv-means)
-    shows both markers.
+    `all_fits_failed`. Outlined diamonds mark [skipped feature masks](#identify-skipped-feature-masks).
+    For extreme finite scores, use the factor in the colorbar label to read
+    scores in their original units.
     """)
 nb.code(
     """
@@ -647,9 +652,8 @@ nb.md("""
     ## Feature-Selection Plots
 
     `plot_feature_selection` draws the boolean support mask chosen by
-    `GAFeatureSelectionCV`, and `plot_search_overview` swaps its candidate panel for
-    that mask when given a feature-selection estimator. We run a small selection
-    search on iris padded with noise columns.
+    `GAFeatureSelectionCV`. The search overview shows that mask when available.
+    We run a small selection search on iris padded with noise columns.
     """)
 
 nb.code("""
@@ -793,6 +797,85 @@ nb.figure(
     "Paired dot plot comparing search and finalist CV scores, with a star on the refitted row",
     fig=nb.ns["finalist_ax"].figure,
     caption="The open circle marks the search score. Squares and the star show the scores from finalist validation.",
+)
+
+nb.md("""
+    ## Compare searches at the same fold budget
+
+    Each CV call fits one model per search fold. Use `x="fold_fits"` to
+    compare recorded search work when that number differs across runs.
+    Here both searches perform 72 fold fits. Their ROC AUC curves come from
+    their respective validation splits. A shared held-out set gives both
+    winners the same data for a quality comparison.
+    """)
+
+nb.code("""
+    from sklearn.tree import DecisionTreeClassifier
+    from sklearn_genetic.callbacks import CVBudgetStopping
+
+    budget_figure, budget_axes = plt.subplots(
+        1, 2, figsize=(10, 4), sharex=True, sharey=True, layout="constrained"
+    )
+    for splits, calls, axis in zip((3, 6), (24, 12), budget_axes, strict=True):
+        budget_search = GASearchCV(
+            DecisionTreeClassifier(random_state=RANDOM_STATE),
+            cv=StratifiedKFold(splits, shuffle=True, random_state=RANDOM_STATE),
+            param_grid={"max_depth": Integer(1, 10), "min_samples_leaf": Integer(1, 12)},
+            scoring="roc_auc", population_size=4, generations=8,
+            random_state=RANDOM_STATE, use_cache=False, n_jobs=1, verbose=False,
+        ).fit(X_train, y_train, callbacks=CVBudgetStopping(calls))
+        counts = budget_search.fit_counts_
+        print(f"{splits} splits: {counts['search_cv_calls']} calls, "
+              f"{counts['search_fold_fits']} search fold fits, "
+              f"held-out ROC AUC {budget_search.score(X_test, y_test):.3f}")
+        assert counts["search_fold_fits"] == 72
+        plot_fitness_evolution(
+            budget_search, metric="fitness_best_observed", x="fold_fits",
+            kind="step", ax=axis, title=f"{splits}-fold CV",
+        )
+    """)
+nb.figure(
+    "generation_gallery_fold_budget.png",
+    "Two fitness curves on the same search fold-fit axis, one for three-fold and one for six-fold cross-validation",
+    fig=nb.ns["budget_figure"],
+    caption="The searches reach 72 fold fits after 24 and 12 candidate CV calls, respectively.",
+)
+
+nb.md("""
+    ## Identify skipped feature masks
+
+    When a search ends with every feature mask skipped, inspect
+    `selector.cv_results_["skipped_invalid_mask"]` and call
+    `plot_search_overview(selector)` to see the recorded rows. Use
+    `plot_cv_fold_scores(selector, candidate_indices=[0, 1, 2])` to inspect
+    specific rows when those positions exist. A diamond indicates a mask
+    discarded before cross-validation, a square indicates every estimator
+    fit failed, and a cross indicates a non-finite fold score.
+
+    This synthetic result table illustrates the three markers alongside a
+    fully scored candidate.
+    """)
+nb.code(
+    """
+    from types import SimpleNamespace
+
+    mask_example = SimpleNamespace(
+        cv_results_={
+            "split0_test_score": [np.nan, np.nan, np.nan, 0.81],
+            "split1_test_score": [np.nan, np.nan, 0.74, 0.78],
+            "split2_test_score": [np.nan, np.nan, 0.76, 0.83],
+            "skipped_invalid_mask": [True, False, False, False],
+            "all_fits_failed": [False, True, False, False],
+        }
+    )
+    plot_cv_fold_scores(mask_example, candidate_indices=[0, 1, 2, 3])
+    """,
+    output=False,
+)
+nb.figure(
+    "generation_gallery_skipped_masks.png",
+    "Fold score heatmap with diamonds for a skipped mask, squares for failed fits, and a cross for a missing score",
+    caption="Row 0 was skipped before CV, row 1 failed every fit, and row 2 has one non-finite score.",
 )
 
 nb.md("""

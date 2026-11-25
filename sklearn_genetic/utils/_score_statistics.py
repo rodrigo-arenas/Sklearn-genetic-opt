@@ -1,9 +1,17 @@
 """Stable reductions for extreme finite cross-validation and fitness scores."""
 
 from functools import cache
+from math import isfinite
 from statistics import mean
 
 import numpy as np
+
+
+def is_finite_score(value):
+    """Check finiteness without narrowing NumPy extended scores."""
+    if isinstance(value, np.longdouble):
+        return bool(np.isfinite(value))
+    return value is not None and isfinite(value)
 
 
 @cache
@@ -22,10 +30,15 @@ def score_mean(scores, *, scale=None):
     """Keep the mean of finite folds usable when their sum can overflow."""
     scores = np.asarray(scores)
     if scores.dtype.kind == "f" and scores.size > 1:
-        if scale is None:
-            scale = np.max(np.abs(scores))
         largest, _, _ = score_scale_limits(scores.dtype)
-        if scale >= largest / scores.size and np.isfinite(scale):
+        limit = largest / scores.size
+        if scale is None:
+            # A short vector can skip allocating an absolute-value array.
+            # A NaN skipped by max still propagates through the mean.
+            if scores.ndim == 1 and scores.size <= 16 and max(map(abs, scores.tolist())) < limit:
+                return scores.mean()
+            scale = np.max(np.abs(scores))
+        if scale >= limit and np.isfinite(scale):
             if scores.dtype.itemsize <= 8:
                 # Exact accumulation preserves cancellation as well as the range.
                 with np.errstate(under="ignore"):
@@ -33,7 +46,7 @@ def score_mean(scores, *, scale=None):
             _, exponent = np.frexp(scale)
             with np.errstate(under="ignore"):
                 return _restore_scaled_mean(np.ldexp(scores, -exponent), exponent)
-    return np.mean(scores)
+    return scores.mean()
 
 
 def scaled_score_moments(values, scale):

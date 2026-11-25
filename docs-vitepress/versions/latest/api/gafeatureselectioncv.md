@@ -44,7 +44,7 @@ GAFeatureSelectionCV(
 |-----------|------|---------|-------------|
 | `optimizer_backend` | str or callable, keyword-only | `"deap"` | Select `"deap"`, `"scipy"`, `"nevergrad"`, `"cmaes"`, `"pymoo"` or a plugin. See [backend settings and limits](./optimizer-backends) and the [tutorial](../tutorials/optimizer-backends). |
 | `estimator` | estimator | — | A scikit-learn estimator with a `fit` method |
-| `cv` | int, CV splitter, iterable or `None` | `3` | Cross-validation strategy, including for [outlier detection](../guide/outliers#choose-validation-folds) |
+| `cv` | int, CV splitter, iterable or `None` | `3` | Cross-validation strategy, including for [outlier detection](../guide/outliers#choose-validation-folds). See [explicit fold validation](../tutorials/optimizer-backends#validate-explicit-cv-splits). |
 | `scoring` | str, callable, list, tuple or dict | `None` | Metric(s) to evaluate. `None` uses default scoring. A standalone callable returns one numeric score per fold. Use [named scorers](../guide/multi-metric) for multiple metrics. |
 | `refit` | bool, str or callable | `True` | Refit the selected mask. With multiple metrics, pass a metric name or a [refit function](../guide/advanced-optimizer-control#choose-a-refit-candidate-with-a-function) and `objective_metric`. |
 | `objective_metric` | str or `None`, keyword-only | `None` | Search objective for multiple metrics with `refit=False` or callable `refit` |
@@ -123,10 +123,12 @@ search. See the [warm-start example](../examples/warm-start-feature-selection).
 |-----------|-------------|
 | `support_` | Boolean mask — `True` for selected features |
 | `best_index_` | Row in `cv_results_` for the selected mask, including with `refit=False` when that row is available |
-| `best_score_` | Mean CV objective score of the selected mask. Uses the finalist score when finalist validation runs. With callable refit, read the score from the selected row. |
+| `best_score_` | Mean CV objective score of the selected mask. Uses the finalist score when finalist validation runs and retains extended NumPy precision when available. With callable refit, read the score from the selected row. |
 | `best_estimator_` | Estimator fitted with the selected features on the full training data when refitting is enabled |
 | `search_time_` | [Elapsed search seconds until the optimizer returned or raised](./optimizer-backends#fit-time-by-phase) |
-| `refit_time_` | Elapsed seconds for refitting on the selected columns, measured with a monotonic clock |
+| `search_interrupted_` | Whether the optimizer raised and its [recorded search work](./optimizer-backends#fit-work-by-phase) is a lower bound |
+| `refit_time_` | Elapsed seconds of the successful refit on the selected columns |
+| `refit_failure_time_` | [Elapsed seconds of the full-data refit phase when it raises](./optimizer-backends#fit-time-by-phase) |
 | `classes_` | Class labels when the selected estimator is a refitted classifier |
 | `cv_results_` | Dict with per-candidate results |
 | `history` | Dictionary of lists aligned by generation. Pair `history["cross_validate_calls"]` with `history["fitness_best"]` to track the best search score against the number of mask evaluations. |
@@ -188,7 +190,13 @@ your wrapped estimator accepts for inference. See the
 [sparse feature selection tutorial](../tutorials/sparse-feature-selection).
 The selector reports the wrapped estimator's sparse input support through
 scikit-learn's estimator tags, including when it is a step in a pipeline.
+`transform` returns CSR for sparse inputs. For large CSC inputs that retain
+at most half the columns, it validates the entire input and converts only
+the selected columns to CSR.
 See the [sparse pipeline example](../tutorials/sparse-feature-selection#use-the-selector-in-a-sparse-pipeline).
+With caching enabled, standard evaluation on sparse inputs with at least
+4,096 columns can build an independently writable Boolean mask from the
+tuple already prepared for the cache lookup.
 For wide sparse training matrices, see how to
 [compare CSR and CSC at the same CV budget](../tutorials/sparse-feature-selection#compare-training-layouts-at-the-same-cv-budget).
 
@@ -201,9 +209,16 @@ pipeline whose final step makes predictions.
 For an estimator that advertises `allow_nan` through scikit-learn's tags,
 the selector preserves `NaN` in feature values during fit, transformation,
 prediction and scoring. The estimator still validates the selected data.
+For a scikit-learn `Pipeline`, the selector also checks the first active
+step's tag. This lets a step such as `SimpleImputer` handle missing values
+inside each cross-validation fit before passing the data to the classifier.
+See the [sparse example with imputation](../tutorials/sparse-feature-selection#impute-missing-values-inside-feature-selection).
 Supervised targets must contain valid values.
 `inverse_transform` preserves these values in the selected columns and
-inserts zeros for the removed columns.
+inserts zeros for the removed columns. Sparse inputs produce a CSC result.
+For CSR and CSC inputs, the selector reconstructs the sparse column index
+directly. The result follows scikit-learn's configured sparse interface
+when that setting is available.
 
 `set_output(transform="pandas")` controls the output of `transform`. By
 default, prediction and scoring pass selected columns as an array or sparse
@@ -220,15 +235,18 @@ required names can fail if a candidate drops one of those columns. See the
 
 `score(X, y)` evaluates the refitted estimator on new data. Read
 `cv_results_["features"][best_index_]` to find the selected mask in the search
-results. With standard refit or `refit=False`, the index follows the archived
-mask and score, including when several rows tie or repeat that mask. With a
-custom scorer that includes a feature-count penalty, `score(X, y)` includes it.
+results. Without finalist validation, standard refit and `refit=False`
+follow the archived mask and score, including when several rows tie or
+repeat that mask. When several rows match a finite archived score for the
+same mask, `best_index_` identifies the first matching row. With a custom scorer
+that includes a feature-count penalty, `score(X, y)` includes it.
 Calculate an unpenalized test metric separately when needed.
 
 With a callable `refit`, `final_selection_results_["original_best_index"]`
 identifies the row the standard refit would select when the archived mask is
 available in the search results. `selected_index` identifies the callable's
 choice and `changed` compares those row indices.
+See the [example that refits the best observed mask](../guide/advanced-optimizer-control#refit-the-best-observed-feature-mask).
 
 Pass `sample_weight` to `score` to weight the evaluation rows when the
 selected scorer accepts it. With metadata routing enabled, request an
@@ -251,16 +269,27 @@ for an example.
 searches and keeps evaluation order for tied ranks. Its `params` column contains
 each candidate's feature mask. It leaves `cv_results_` unchanged and also works
 after a fit with `refit=False`.
+In long histories with frequent cache reuse, the exporter can convert a
+shared Boolean mask once. Each `params` row still has its own editable list.
 The Boolean column `all_fits_failed` identifies masks whose estimator
 failed to fit every search fold. See the
 [CV troubleshooting guide](../guide/troubleshooting#all-fits-failed).
 With numeric `error_score`, the table and `history` remain available when
 every mask fails, even though `fit` raises.
+If evaluation skips an empty mask or one outside `max_features`,
+`cv_results_["skipped_invalid_mask"]` identifies the skipped rows. Their CV
+scores are `NaN` and they are ineligible for finalist selection and refit.
+The search raises with the diagnostics available when every mask is skipped.
+When at least one mask was evaluated, the search raises if every evaluated mask
+failed to fit every fold. The two Boolean columns distinguish skipped masks
+from failed evaluations.
 Use `cv_results_["n_features"]` for the size of each evaluated mask.
-`rank_n_features` ranks the sizes from smallest to largest, assigning tied
-sizes the same rank. In long histories with frequent cache reuse, the
-selector can count a shared Boolean mask once. Every completed proposal
-still has its own row and contributes to the ranks.
+`rank_n_features` is one plus the number of candidate rows with fewer
+selected features. Rows with the same size share the same rank.
+For long histories with a bounded range of sizes, the selector computes
+these ranks by counting rows at each size. When cached rows share a Boolean
+mask, the selector can count its selected features once. Every completed
+proposal has its own row and contributes to the ranks.
 
 Pass `columns` as a name or a list of names to build only those columns,
 in the requested order. Sorting still uses the selected test rank, and

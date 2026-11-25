@@ -1,7 +1,8 @@
 """Internal adapter for SciPy's vectorized differential evolution solver."""
 
 from collections import defaultdict
-from math import sqrt
+from math import copysign, inf, isfinite, sqrt
+from sys import float_info
 
 import numpy as np
 from scipy import __version__ as scipy_version
@@ -10,7 +11,7 @@ from scipy.optimize import differential_evolution
 from ._optimizer_checkpoint import replay_checkpoint
 from ._mixed_space import decode_real, encode_real, real_coordinate_interval
 from .space import Categorical, Continuous, Integer
-from .utils._score_statistics import score_scale_limits
+from .utils._score_statistics import is_finite_score, score_scale_limits
 
 
 class _EvaluationError(Exception):
@@ -138,10 +139,16 @@ def run_scipy(
         losses = []
         handles = []
         for row, (loss, handle) in zip(rows, results, strict=True):
-            loss = loss if np.isfinite(loss) else np.inf
-            evaluated[(row.tobytes(), loss)].append(handle)
+            # SciPy stores energies as doubles. Index handles by the exact
+            # value the solver will report, keeping infinity for invalid CV.
+            solver_loss = float(loss)
+            if not isfinite(solver_loss):
+                solver_loss = (
+                    copysign(float_info.max, solver_loss) if is_finite_score(loss) else inf
+                )
+            evaluated[(row.tobytes(), solver_loss)].append(handle)
             handles.append(handle)
-            losses.append(loss)
+            losses.append(solver_loss)
         if first_batch:
             if all(loss == np.inf for loss in losses):
                 retry_rows = rows.copy()
@@ -169,7 +176,7 @@ def run_scipy(
 
     try:
         # SciPy still computes raw moments for its convergence diagnostics.
-        # Survivor selection uses the original losses and the callback makes
+        # Survivor selection uses the double-precision losses and the callback makes
         # our stopping decision without those potentially overflowing moments.
         with np.errstate(over="ignore", under="ignore", invalid="ignore"):
             differential_evolution(

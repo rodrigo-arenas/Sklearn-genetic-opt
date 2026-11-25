@@ -10,6 +10,8 @@ from contextlib import ExitStack, redirect_stdout
 from functools import partial
 from importlib.metadata import version
 from importlib.util import find_spec
+from itertools import combinations, product
+from math import isfinite
 from pathlib import Path
 from time import perf_counter
 from unittest.mock import patch
@@ -29,13 +31,15 @@ from sklearn.metrics import get_scorer
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVR
-from sklearn.model_selection import KFold, StratifiedKFold, cross_validate, train_test_split
+from sklearn.model_selection import KFold, StratifiedKFold, train_test_split
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from threadpoolctl import threadpool_limits
 
 from sklearn_genetic import GAFeatureSelectionCV, GASearchCV
 from sklearn_genetic.callbacks import CVBudgetStopping
+from sklearn_genetic.evaluation import candidate_parameters, candidate_records
 from sklearn_genetic.space import Categorical, Continuous, Integer
+from sklearn_genetic.utils._score_statistics import score_mean
 
 _ENGINE_NAMES = ("deap", "scipy", "nevergrad", "cmaes", "pymoo")
 _PILOT_VARIANTS = {
@@ -251,43 +255,54 @@ def measure(
         case, backend, variant, seed, cache, pilot, proposal_budget, public_refit
     )
     callbacks = CVBudgetStopping(target) if stop_at_budget else None
-    trace = []
+    measured = []
     cv_seconds = 0
-    cv_calls = 0
-    original = type(search)._evaluate_individual
+    evaluate_cv = search._cross_validate_candidate
 
     def clock_cv(*args, **kwargs):
-        nonlocal cv_seconds, cv_calls
-        cv_calls += 1
+        nonlocal cv_seconds
         before = perf_counter()
-        result = cross_validate(*args, **kwargs)
-        cv_seconds += perf_counter() - before
+        result = evaluate_cv(*args, **kwargs)
+        finished = perf_counter()
+        cv_seconds += finished - before
+        measured.append((result[f"test_{search.refit_metric}"], finished - start, cv_seconds))
         return result
 
-    def tracked(self, candidate, *args, **kwargs):
-        result = original(self, candidate, *args, **kwargs)
-        if result[2]:
-            trace.append(
-                (float(result[1]["score"]), tuple(candidate), perf_counter() - start, cv_seconds)
-            )
-        return result
-
-    with ExitStack() as stack:
-        stack.enter_context(patch("sklearn_genetic.genetic_search.cross_validate", clock_cv))
-        stack.enter_context(patch.object(type(search), "_evaluate_individual", tracked))
+    # Keep the native candidate evaluator in place so its optimized paths run.
+    with patch.object(search, "_cross_validate_candidate", clock_cv):
         start = perf_counter()
         search.fit(X, y, callbacks=callbacks)
         total = perf_counter() - start
-    if not trace or not cv_calls == len(trace) == search.fit_stats_["cross_validate_calls"]:
+
+    cv_calls = len(measured)
+    if not cv_calls or cv_calls != search.fit_stats_["cross_validate_calls"]:
         raise RuntimeError(f"CV count mismatch: {case}, {backend}, {seed}")
     if stop_at_budget and cv_calls > target:
         raise RuntimeError(f"CV budget exceeded: {case}, {backend}, {seed}")
+
+    # Cache hits retain their original fold-score array. Link each measured
+    # call to its first candidate row and recover the coordinates sent to CV.
+    recorded = {}
+    for row in candidate_records(search):
+        recorded.setdefault(id(row["cv_scores"]), row)
+    trace = []
+    for fold_scores, elapsed, cv_time in measured:
+        row = recorded.pop(id(fold_scores), None)
+        if row is None:
+            raise RuntimeError(f"CV result missing its candidate record: {case}, {backend}, {seed}")
+        if masks:
+            coords = tuple(map(bool, row["features"]))
+        else:
+            params = candidate_parameters(row)
+            coords = tuple(params[name] for name in search.param_grid)
+        trace.append((float(row["score"]), coords, elapsed, cv_time))
     return (trace, search.estimator, X, y, hold_X, hold_y, scoring, masks, search, total)
 
 
 def prefix_winner(run, budget):
     trace, _, _, _, _, _, _, masks, _, _ = run
-    return max(trace[:budget], key=lambda row: (row[0], -sum(row[1]) if masks else 0))
+    candidates = (row for row in trace[:budget] if isfinite(row[0]))
+    return max(candidates, key=lambda row: (row[0], -sum(row[1]) if masks else 0), default=None)
 
 
 def holdout_score(run, coords):
@@ -304,14 +319,23 @@ def holdout_score(run, coords):
 def summarize(run, budget):
     trace, _, _, y, _, hold_y, scoring, masks, search, total = run
     observed = trace[:budget]
-    best, coords, _, _ = prefix_winner(run, budget)
-    held_out, selected = holdout_score(run, coords)
+    best = held_out = selected = first_best = first_finite = running_best = None
+    scores = np.asarray([row[0] for row in observed])
+    finite = np.isfinite(scores)
+    winner = prefix_winner(run, budget)
+    if winner is not None:
+        best, coords, _, _ = winner
+        held_out, selected = holdout_score(run, coords)
+        first_best = 1 + int(np.argmax(scores == best))
+        first_finite = 1 + int(np.argmax(finite))
+        best_so_far = np.maximum.accumulate(np.where(finite, scores, -np.inf))
+        running_best = float(score_mean(best_so_far[first_finite - 1 :]))
     if scoring == "balanced_accuracy":
         baseline = 1.0 / len(np.unique(y))
-        skill = (held_out - baseline) / (1 - baseline)
+        skill = (held_out - baseline) / (1 - baseline) if winner is not None else None
     else:
         baseline = -np.sqrt(np.mean((hold_y - np.mean(y)) ** 2))
-        skill = 1 - held_out / baseline
+        skill = 1 - held_out / baseline if winner is not None else None
     elapsed, cv_time = observed[-1][2:]
     return dict(
         cv_calls=budget,
@@ -319,11 +343,13 @@ def summarize(run, budget):
         full_proposals=search.fit_stats_["evaluated_candidates"],
         full_cache_hits=search.fit_stats_["cache_hits"],
         full_duplicates=search.fit_stats_["duplicate_candidates"],
-        first_best_call=1 + next(i for i, row in enumerate(observed) if row[0] == best),
+        finite_cv_calls=int(finite.sum()),
+        first_finite_cv_call=first_finite,
+        first_best_call=first_best,
         unique_prefix=len({x[1] for x in observed}),
         best_cv=best,
-        best_first_eight=max(x[0] for x in observed[:8]),
-        mean_running_best=np.maximum.accumulate([x[0] for x in observed]).mean(),
+        best_first_eight=max(scores[:8][finite[:8]], default=None),
+        mean_running_best=running_best,
         holdout=held_out,
         holdout_baseline=baseline,
         holdout_skill=skill,
@@ -339,10 +365,14 @@ def summarize(run, budget):
 def prefix_scores(run, calls, refits):
     if not calls:
         return {"best_cv": None, "holdout": None, "elapsed_ms": None}
-    best, coords, _, _ = prefix_winner(run, calls)
+    elapsed_ms = 1000 * run[0][calls - 1][2]
+    winner = prefix_winner(run, calls)
+    if winner is None:
+        return dict(best_cv=None, holdout=None, elapsed_ms=elapsed_ms)
+    best, coords, _, _ = winner
     if coords not in refits:
         refits[coords] = holdout_score(run, coords)[0]
-    return dict(best_cv=best, holdout=refits[coords], elapsed_ms=1000 * run[0][calls - 1][2])
+    return dict(best_cv=best, holdout=refits[coords], elapsed_ms=elapsed_ms)
 
 
 def _prefix_checkpoint_fields(run, checkpoints, available, refits, *, prefix=""):
@@ -357,8 +387,9 @@ def comparison_checkpoints(run, cohort, target, deadlines, refits=None, *, cv_ch
     trace = run[0]
     if refits is None:
         refits = {}
-    _, coords, _, _ = prefix_winner(run, cohort["cv_calls"])
-    refits[coords] = cohort["holdout"]
+    winner = prefix_winner(run, cohort["cv_calls"])
+    if winner is not None:
+        refits[winner[1]] = cohort["holdout"]
 
     scores = prefix_scores(run, target if len(trace) >= target else 0, refits)
     fields = {f"target_{key}": val for key, val in scores.items()}
@@ -379,40 +410,51 @@ def _budget_status(search, calls, target):
     return "below_target"
 
 
+def _comparison_names(engines, references, *, engine_pairs):
+    return combinations(engines, 2) if engine_pairs else product(engines, references)
+
+
 def pair_comparisons(
-    runs, engines, references, target, refits, *, stopped=False, cv_checkpoints=()
+    runs,
+    engines,
+    references,
+    target,
+    refits,
+    *,
+    stopped=False,
+    cv_checkpoints=(),
+    engine_pairs=False,
 ):
-    """Compare each engine and reference at their largest shared prefix up to target."""
-    for engine in engines:
-        for reference in references:
-            budget = min(target, len(runs[engine][0]), len(runs[reference][0]))
-            row = dict(
-                backend=engine,
-                reference=reference,
-                matched_cv_calls=budget,
-                completed_target=budget == target,
-            )
-            row.update({f"cv_{calls}_completed": budget >= calls for calls in cv_checkpoints})
-            for side, name in (("backend", engine), ("reference", reference)):
-                run = runs[name]
-                run_refits = refits.setdefault(name, {})
-                scores = prefix_scores(run, budget, run_refits)
-                row[f"{side}_cv_calls"] = len(run[0])
-                row[f"{side}_best_cv"] = scores["best_cv"]
-                row[f"{side}_prefix_holdout"] = scores["holdout"]
-                row[f"{side}_prefix_ms"] = scores["elapsed_ms"]
-                row.update(
-                    _prefix_checkpoint_fields(
-                        run, cv_checkpoints, budget, run_refits, prefix=f"{side}_"
-                    )
+    """Compare two optimizers at their largest shared prefix up to target."""
+    for engine, reference in _comparison_names(engines, references, engine_pairs=engine_pairs):
+        budget = min(target, len(runs[engine][0]), len(runs[reference][0]))
+        row = dict(
+            backend=engine,
+            reference=reference,
+            matched_cv_calls=budget,
+            completed_target=budget == target,
+        )
+        row.update({f"cv_{calls}_completed": budget >= calls for calls in cv_checkpoints})
+        for side, name in (("backend", engine), ("reference", reference)):
+            run = runs[name]
+            run_refits = refits.setdefault(name, {})
+            scores = prefix_scores(run, budget, run_refits)
+            row[f"{side}_cv_calls"] = len(run[0])
+            row[f"{side}_best_cv"] = scores["best_cv"]
+            row[f"{side}_prefix_holdout"] = scores["holdout"]
+            row[f"{side}_prefix_ms"] = scores["elapsed_ms"]
+            row.update(
+                _prefix_checkpoint_fields(
+                    run, cv_checkpoints, budget, run_refits, prefix=f"{side}_"
                 )
-                if stopped:
-                    search, total = run[-2:]
-                    row[f"{side}_budget_status"] = _budget_status(search, len(run[0]), target)
-                    row[f"{side}_fit_ms"] = 1000 * total
-                    row[f"{side}_search_ms"] = 1000 * search.search_time_
-                    row[f"{side}_refit_ms"] = 1000 * search.refit_time_ if search.refit else None
-            yield row
+            )
+            if stopped:
+                search, total = run[-2:]
+                row[f"{side}_budget_status"] = _budget_status(search, len(run[0]), target)
+                row[f"{side}_fit_ms"] = 1000 * total
+                row[f"{side}_search_ms"] = 1000 * search.search_time_
+                row[f"{side}_refit_ms"] = 1000 * search.refit_time_ if search.refit else None
+        yield row
 
 
 def _selected_coordinates(search, masks):
@@ -424,17 +466,19 @@ def _selected_coordinates(search, masks):
 def summarize_stopped_search(run, target):
     trace, _, _, _, hold_X, hold_y, scoring, masks, search, _ = run
     coords = _selected_coordinates(search, masks)
-    held_out = (
-        get_scorer(scoring)(search, hold_X, hold_y)
-        if search.refit
-        else holdout_score(run, coords)[0]
-    )
+    returned_cv = search.best_score_ if isfinite(search.best_score_) else None
+    held_out = None
+    if search.refit:
+        held_out = get_scorer(scoring)(search, hold_X, hold_y)
+    elif returned_cv is not None:
+        held_out = holdout_score(run, coords)[0]
+    winner = prefix_winner(run, len(trace))
     return dict(
         completed_target=len(trace) == target,
         budget_status=_budget_status(search, len(trace), target),
-        returned_cv=search.best_score_,
+        returned_cv=returned_cv,
         returned_holdout=held_out,
-        returned_matches_trace_winner=coords == prefix_winner(run, len(trace))[1],
+        returned_matches_trace_winner=coords == winner[1] if winner is not None else None,
     )
 
 
@@ -443,7 +487,7 @@ def summarize_public_refit(run, budget):
     coords = _selected_coordinates(search, masks)
     return dict(
         public_holdout=get_scorer(scoring)(search, hold_X, hold_y),
-        public_cv=search.best_score_,
+        public_cv=search.best_score_ if isfinite(search.best_score_) else None,
         public_selected=int(sum(coords)) if masks else "",
         public_winner_in_prefix=any(candidate == coords for _, candidate, *_ in trace[:budget]),
         public_refit_ms=1000 * search.refit_time_,
@@ -487,7 +531,9 @@ def main():
     )
     parser.add_argument("--references", nargs="+", choices=("random", "tpe"), default=[])
     parser.add_argument(
-        "--pairs-output", type=Path, help="Write matched engine/reference CV prefixes to a CSV"
+        "--pairs-output",
+        type=Path,
+        help="Write matched CV prefixes for engine pairs or engine/reference pairs to a CSV",
     )
     parser.add_argument("--time-ms", nargs="+", type=int, default=[])
     parser.add_argument(
@@ -512,13 +558,15 @@ def main():
         parser.error("--cv-checkpoints must be between 1 and --budget")
     if args.pilot and references:
         parser.error("--references compares the default engines; omit --pilot")
-    if args.pairs_output is not None and not references:
-        parser.error("--pairs-output requires --references")
     variants = _PILOT_VARIANTS if args.pilot else dict.fromkeys(_ENGINE_NAMES, ("default",))
     engine_names = list(dict.fromkeys(args.engines or variants))
     if any(engine not in variants for engine in engine_names):
         parser.error(f"--pilot can only use these engines: {', '.join(_PILOT_VARIANTS)}")
     engines = [(engine, variant) for engine in engine_names for variant in variants[engine]]
+    engine_pairs = args.pairs_output is not None and not references
+    if engine_pairs and (args.pilot or len(engine_names) < 2):
+        parser.error("Engine pairs require at least two default engines without --pilot")
+    pair_names = tuple(_comparison_names(engine_names, references, engine_pairs=engine_pairs))
     default_seeds = (7, 19, 31) if args.pilot else (41, 59, 73, 97, 113)
     seeds = list(dict.fromkeys(args.seeds or default_seeds))
     max_seed = np.iinfo(np.uint32).max - _MAX_DATA_SEED_OFFSET
@@ -583,17 +631,18 @@ def main():
                     ]
                     refits = {}
                     budget = min(args.budget, *(len(run[0]) for _, _, run in runs))
-                    if references:
+                    if pair_names:
                         cohort_completions[cache, budget == args.budget] += 1
                         call_counts = {name: len(run[0]) for name, _, run in runs}
-                        for engine, _ in engines:
-                            for reference in active_references:
-                                key = (cache, engine, reference)
-                                shared = min(call_counts[engine], call_counts[reference])
-                                pair_completions[(*key, "eligible")] += 1
-                                pair_completions[(*key, "complete")] += shared >= args.budget
-                                for calls in checkpoints:
-                                    pair_completions[(*key, calls)] += shared >= calls
+                        for engine, reference in pair_names:
+                            if reference not in call_counts:
+                                continue
+                            key = (cache, engine, reference)
+                            shared = min(call_counts[engine], call_counts[reference])
+                            pair_completions[(*key, "eligible")] += 1
+                            pair_completions[(*key, "complete")] += shared >= args.budget
+                            for calls in checkpoints:
+                                pair_completions[(*key, calls)] += shared >= calls
                     for backend, variant, run in runs:
                         row = dict(
                             case=case,
@@ -608,7 +657,7 @@ def main():
                             row.update(summarize_public_refit(run, budget))
                         if args.stop_at_budget:
                             row.update(summarize_stopped_search(run, args.budget))
-                        if references or deadlines or checkpoints:
+                        if pair_names or deadlines or checkpoints:
                             row.update(
                                 comparison_checkpoints(
                                     run,
@@ -634,6 +683,7 @@ def main():
                             refits,
                             stopped=args.stop_at_budget,
                             cv_checkpoints=checkpoints,
+                            engine_pairs=engine_pairs,
                         ):
                             row = dict(
                                 case=case, target=args.budget, seed=seed, cache=cache, **pair
@@ -658,6 +708,7 @@ def main():
         platform=platform.platform(),
         packages={package: version(package) for package in packages},
         rows=count,
+        trace_timing="candidate_cv_return",
     )
     if args.stop_at_budget or args.proposal_budget is not None:
         metadata.update(
@@ -667,7 +718,7 @@ def main():
         )
     if checkpoints:
         metadata.update(cv_checkpoints=checkpoints, target_cv_calls=args.budget)
-    if references:
+    if pair_names:
         metadata["target_cv_calls"] = args.budget
         metadata["cohorts"] = [
             dict(
@@ -686,8 +737,7 @@ def main():
                 eligible=pair_completions[cache, engine, reference, "eligible"],
             )
             for cache in (False, True)
-            for engine, _ in engines
-            for reference in references
+            for engine, reference in pair_names
         ]
         if checkpoints:
             for row in metadata["pairs"]:

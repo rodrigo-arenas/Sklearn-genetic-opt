@@ -97,6 +97,11 @@ print(search.best_params_, selector.get_support())
   coordinates, with ties resolved in column order. An empty mask selects the largest
   coordinate. SciPy compares scalar scores; the archive breaks score ties in favor
   of smaller masks. CV receives the decoded mask in every case.
+- SciPy compares losses in double precision. Finite losses outside its range
+  use the nearest finite boundary, and distinct extended-precision values can
+  tie in the solver. The candidate archive, CV results, and finalist selection
+  retain the original scores. See the
+  [extended-precision example](../tutorials/optimizer-backends#use-extended-precision-scores-with-scipy).
 - `parallel_backend` still selects fold or population evaluation. Both engines
   use the same scoring, cache, finalist selection, candidate records, plots and
   refit. Generation summaries describe survivors; the archive includes discarded
@@ -164,6 +169,12 @@ continues to describe the fraction of distinct complete candidates.
 
 This corrects the older distinct-allele normalization that made large feature
 populations appear collapsed. Custom diversity thresholds may need recalibration.
+
+For wide feature masks stored as plain integer lists or tuples, the diversity
+calculation converts each mask to a temporary byte buffer. It uses the
+same buffer to count disagreements and pack the mask for distinct-candidate
+counting.
+
 Local integer refinement now samples directly from the bounded neighborhood,
 excluding the parent's value when alternatives exist, with constant memory.
 
@@ -375,10 +386,13 @@ has a positive interquartile loss range. If a later batch has too few valid
 scores to compute the lower loss quartile, its scores stay in the search
 history and sampling continues with the previous distribution.
 
-When continuous proposals have very large finite losses, CatCMAwM's adapter
-rescales those losses and the saved penalty spreads by a power of two before
-updating the distribution. Checkpoints retain the scale for subsequent updates.
-The reported CV scores use the scorer's units.
+When continuous or integer proposals have very large finite losses, the
+adapter rescales those losses and the saved penalty spreads by a power of
+two. It can scale `numpy.longdouble` values outside the range of a Python
+float on platforms with extended precision. Later batches and resumed
+checkpoints continue in the same units, with a larger scale if needed.
+The reported CV scores use the scorer's units. See the
+[extended-range example](../tutorials/optimizer-backends#scale-large-losses-in-catcmawm).
 
 Use at least four individuals per generation. The same domain, callback,
 checkpoint and generation-history rules as Nevergrad apply. Full covariance costs

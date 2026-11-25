@@ -135,7 +135,7 @@ nb.md("""
     | `gen` | generation number |
     | `fitness` | mean CV score in the generation |
     | `fitness_best` | best CV score found so far |
-    | `genotype_diversity` | 1.0 = diverse, 0.0 = converged |
+    | `genotype_diversity` | Mean probability that two distinct population members disagree at a coordinate |
     | `unique_individual_ratio` | fraction of distinct configurations |
     | `stagnation_generations` | consecutive generations without improvement |
     """)
@@ -260,7 +260,8 @@ nb.md("""
     - If `accuracy` is already near 1.0 on your data, switch to a more
       discriminative metric (e.g. `roc_auc`, `balanced_accuracy`).
     - Check `fit_stats_["skipped_invalid_candidates"]` after fitting — a non-zero
-      value means some sampled configurations raised errors during `fit`.
+      value counts candidates dropped before CV. For feature selection, use
+      `cv_results_["skipped_invalid_mask"]` to locate the affected rows.
 
     ## See Also
 

@@ -35,7 +35,9 @@ Score-based stopping callbacks accept `"fitness"`, `"fitness_std"`,
 `"fitness_min"`. Use `"fitness_best_observed"` to include all finite candidate
 scores seen so far, including discarded offspring and repeated evaluations.
 A missing value in older history delays the decision until the required
-scores are available.
+scores are available. These callbacks also recognize finite
+`numpy.longdouble` history values beyond the range of a Python float on
+platforms with extended precision.
 
 `ThresholdStopping`, `DeltaThreshold`, and `TimerStopping` raise `ValueError`
 if you configure a threshold or time limit with `NaN`. Supply a defined value
@@ -123,9 +125,10 @@ Sets a hard limit on fresh candidate cross-validation calls in one fit.
 The search reserves calls before dispatching work in parallel and can stop
 partway through a generation. Each candidate scored over its folds uses one
 call. Cache hits and restored checkpoint results use no new calls.
-With a CV call budget and no timer, the evaluator stops preparing cache
-keys at the first proposal that would need an additional call. Cache
-hits before that proposal are still recorded in order.
+With a CV call budget, the evaluator prepares cache keys through at most
+the first proposal that would need an additional call. This also applies
+when a timer is active. Cache hits in the completed prefix are recorded in
+proposal order.
 When only one call remains at the start of a population batch, evaluation uses the
 calling thread for that candidate. With `parallel_backend="cv"`, the
 candidate's folds can still run in parallel.
@@ -155,6 +158,10 @@ Stops starting new candidate batches after the elapsed time limit. A monotonic
 clock measures search time across system clock adjustments. An in-flight
 cross-validation batch, final selection and refit can finish after the limit.
 A search without usable checkpoint results completes at least one initial batch.
+With caching and a timer, the evaluator prepares cache keys per dispatch
+and scans far enough to find the next fresh candidate. A CV call budget
+also limits the dispatch size. Reusable scores before the first unfinished
+candidate appear in proposal order.
 DEAP can return saved results when the deadline has already expired at resume.
 When the search records an interrupted generation, it marks it `partial=True`
 in `history`. DEAP leaves the previous history intact if the deadline prevents

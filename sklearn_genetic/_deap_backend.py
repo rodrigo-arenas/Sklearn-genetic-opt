@@ -3,7 +3,6 @@
 from copy import deepcopy
 import copyreg
 from functools import partial
-from math import isfinite
 from itertools import repeat
 from operator import is_
 
@@ -16,6 +15,7 @@ from ._telemetry import (
     population_fitness_stats,
 )
 from .optimizer_control import adaptive_tournament_size
+from .utils._score_statistics import is_finite_score
 from .utils.random import weighted_bool_individual
 from .utils.tools import cxUniform, mutFlipBit
 from .callbacks.early_stoppers import CVBudgetStopping, TimerStopping, _NATIVE_CV_BUDGET_START
@@ -335,7 +335,9 @@ def _best_observed_stat(records, minimize):
         nonlocal position, best
         for index in range(position, len(records)):
             score = records[index]["score"]
-            if isfinite(score) and (best is None or (score < best if minimize else score > best)):
+            if is_finite_score(score) and (
+                best is None or (score < best if minimize else score > best)
+            ):
                 best = score
         position = len(records)
         return float("nan") if best is None else best
