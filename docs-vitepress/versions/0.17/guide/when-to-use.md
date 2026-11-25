@@ -1,0 +1,91 @@
+---
+title: When to Use Genetic Algorithm Hyperparameter Search
+description: "Decide whether GASearchCV fits your problem: decision table, signs that genetic search helps, signs it won't, and a realistic 7-parameter example."
+---
+
+**Estimated reading time:** 5 minutes  
+**Difficulty:** Beginner  
+**Prerequisites:** Basic sklearn knowledge
+
+# When to Use Genetic Algorithm Hyperparameter Search
+
+This page helps you decide whether a genetic search is the right tool for your tuning problem and shows what a realistic setup looks like.
+
+## Prerequisites
+
+- Basic familiarity with scikit-learn's `GridSearchCV` or `RandomizedSearchCV`
+- `sklearn-genetic-opt` installed (`pip install sklearn-genetic-opt`)
+
+## Choosing a Search Method
+
+| Method | Best for | Trade-off |
+|--------|----------|-----------|
+| `GridSearchCV` | Small, fully discrete grids | Candidate count multiplies with each dimension. |
+| `RandomizedSearchCV` | A simple, strong baseline for larger spaces | Samples full configurations but does not use previous scores to guide later samples. |
+| `GASearchCV` | Comparing evolutionary search on mixed spaces | Population overhead and stochastic results; measure quality and wall time against a baseline. |
+
+Random search evaluates complete configurations, so it can discover parameter interactions. Genetic search also evaluates complete configurations, then recombines promising ones across generations. Neither method guarantees a better answer for every dataset or budget.
+
+## Signs That GA Will Help
+
+- **Enough evaluations for several generations.** A tiny budget may end before selection can guide the population.
+- **Known or suspected parameter interactions.** `learning_rate` × number of estimators, regularization strength × solver.
+- **Mixed parameter types.** Integers, floats, and categoricals in one search.
+- **Repeated candidates.** Caching can avoid scoring the same configuration twice.
+- **You want to narrow the space iteratively.** `plot_search_space` shows where the algorithm sampled.
+
+## Signs That GA Will Not Help
+
+- One or two continuous parameters.
+- Very fast evaluations with a large budget.
+- A fully discrete grid with few values.
+- A search budget too small to support multiple generations.
+
+## Example: Gradient Boosting With Seven Parameters
+
+```python
+from sklearn.datasets import load_breast_cancer
+from sklearn.ensemble import HistGradientBoostingClassifier
+from sklearn.model_selection import StratifiedKFold, train_test_split
+from sklearn.metrics import roc_auc_score
+
+from sklearn_genetic import EvolutionConfig, GASearchCV, PopulationConfig, RuntimeConfig
+from sklearn_genetic.space import Categorical, Continuous, Integer
+
+X, y = load_breast_cancer(return_X_y=True)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.25, stratify=y, random_state=42
+)
+
+param_grid = {
+    "learning_rate": Continuous(0.01, 0.3, distribution="log-uniform"),
+    "max_iter": Integer(50, 300),
+    "max_depth": Integer(2, 8),
+    "min_samples_leaf": Integer(5, 50),
+    "l2_regularization": Continuous(1e-6, 1.0, distribution="log-uniform"),
+    "max_features": Continuous(0.3, 1.0),
+    "max_leaf_nodes": Integer(15, 127),
+}
+
+search = GASearchCV(
+    estimator=HistGradientBoostingClassifier(random_state=42, early_stopping=False),
+    param_grid=param_grid,
+    cv=StratifiedKFold(n_splits=3, shuffle=True, random_state=42),
+    scoring="roc_auc",
+    evolution_config=EvolutionConfig(population_size=20, generations=15),
+    population_config=PopulationConfig(initializer="smart"),
+    runtime_config=RuntimeConfig(n_jobs=-1, parallel_backend="auto", use_cache=True),
+)
+
+search.fit(X_train, y_train)
+print("Best CV score:", round(search.best_score_, 4))
+print("Best parameters:", search.best_params_)
+```
+
+## See Also
+
+- [How Hyperparameter Optimization Works](./how-hyperparameter-optimization-works) — deep dive into all search strategies
+- [Grid Search vs Genetic Algorithms: Benchmark](../comparisons/grid-search-vs-genetic-algorithms) — honest comparison with numbers
+- [Getting Started with GASearchCV](./basic-usage) — start here if you've decided to try it
+- [Common Hyperparameter Tuning Mistakes](./common-mistakes) — common pitfalls to avoid
+- [Benchmarks](../benchmarks/) — real benchmark results vs Optuna and random search
