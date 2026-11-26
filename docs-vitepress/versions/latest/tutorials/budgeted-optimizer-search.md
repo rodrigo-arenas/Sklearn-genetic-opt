@@ -13,10 +13,15 @@ Split a `GASearchCV` run across two compute sessions. Each session gets a limit 
 
 ## Set up the search and fixed CV splits
 
-Use the development checkout of `sklearn-genetic-opt` with the pymoo extra
-installed (`python -m pip install -e '.[pymoo]'`). The code uses a temporary
-path for the example. Use a persistent path that both sessions can access
-for a real run. Start with a fresh file and load only trusted checkpoints.
+Install the published package with the pymoo extra on Python 3.12 or later.
+
+```bash
+python -m pip install "sklearn-genetic-opt[pymoo]>=0.17.0"
+```
+
+The code uses a temporary path for the example. Use a persistent path that
+both sessions can access for a real run. Start with a fresh file and load
+only trusted checkpoints.
 
 The test split stays outside model selection. Save the training row order,
 CV selectors, scorer, search settings, and dependency versions so the next
@@ -138,3 +143,11 @@ Held-out balanced accuracy: 0.901
 
 For a resume error, see the [checkpoint recipe](../recipes/advanced/checkpointing#diagnose-a-resume-error).
 To choose a backend, use the [matched-budget optimizer catalog](../benchmarks/optimizer-catalog).
+
+::: details Contributor setup
+From the repository root, install the development checkout with the pymoo extra.
+
+```bash
+python -m pip install -e '.[pymoo]'
+```
+:::
