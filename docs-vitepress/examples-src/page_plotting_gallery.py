@@ -15,7 +15,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from _nbgen import Notebook  # noqa: E402
+from _home_gallery import write_home_gallery  # noqa: E402
+from _nbgen import IMAGE_DIR, Notebook  # noqa: E402
 
 nb = Notebook(
     path="examples/plotting-gallery.md",
@@ -948,5 +949,6 @@ nb.md("""
     - [Advanced Optimizer Control](../guide/advanced-optimizer-control) — interpreting diversity and stagnation signals
     """)
 
+write_home_gallery(nb.ns["search"], IMAGE_DIR / "home-gallery")
 nb.write()
 print("ok plotting-gallery")

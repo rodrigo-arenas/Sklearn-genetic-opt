@@ -133,6 +133,22 @@ def test_homepage_links_to_released_pages():
         ), f"Homepage is missing the link {label!r} to {target}"
 
 
+def test_homepage_plot_previews_link_to_full_gallery_sections():
+    dist = DOCS / ".vitepress" / "dist"
+    homepage = (dist / "index.html").read_text(encoding="utf-8")
+    gallery = f"/versions/{RELEASES[-1]}/examples/plotting-gallery"
+    full_plots = (dist / f"{gallery.lstrip('/')}.html").read_text(encoding="utf-8")
+    cards = re.findall(
+        rf'<a\b[^>]*href="{re.escape(gallery)}#([^"]+)"[^>]*>(.*?)</a>', homepage, re.S
+    )
+    assert len({anchor for anchor, _ in cards}) == 6
+    for anchor, card in cards:
+        assert f'id="{anchor}"' in full_plots
+        preview = re.search(r'<img\b[^>]*src="([^"]+)"[^>]*>', card)
+        assert preview and re.search(r'\balt="[^"]+"', preview[0])
+        assert (dist / preview[1].lstrip("/")).is_file()
+
+
 def test_homepage_metadata_identifies_the_site_and_python_package():
     homepage = (DOCS / ".vitepress" / "dist" / "index.html").read_text(encoding="utf-8")
     title = unescape(re.search(r"<title>([^<]+)</title>", homepage).group(1))
