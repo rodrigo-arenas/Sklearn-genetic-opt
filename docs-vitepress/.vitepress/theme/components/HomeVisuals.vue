@@ -1,74 +1,86 @@
 <template>
-  <section class="home-section home-visuals">
+  <section class="home-section home-visuals" aria-labelledby="home-visuals-title">
     <div class="home-container">
-      <h2 class="section-title">See What You Get</h2>
+      <h2 id="home-visuals-title" class="section-title">Inside a genetic search</h2>
       <p class="section-subtitle">
-        Rich built-in visualizations — from fitness evolution to parameter interaction heatmaps.
+        Explore one random forest search on scikit-learn’s breast cancer dataset.
+        Open a chart for the full figure and Python example.
       </p>
 
       <div class="visuals-grid">
-        <div v-for="item in visuals" :key="item.title" class="visual-card">
-          <div class="visual-img-wrap">
-            <img
-              :src="item.src"
-              :alt="item.alt"
-              class="visual-img"
-              loading="lazy"
-            />
-          </div>
-          <div class="visual-caption">
-            <span class="visual-fn">{{ item.fn }}</span>
-            <p class="visual-title">{{ item.title }}</p>
-          </div>
-        </div>
+        <a
+          v-for="item in visuals"
+          :key="item.fn"
+          :href="gallery + '#' + item.anchor"
+          class="visual-card"
+        >
+          <h3 class="visual-title">{{ item.title }}</h3>
+          <img
+            :src="'/images/home-gallery/' + item.image + '.svg'"
+            :alt="item.alt"
+            class="visual-img"
+            width="324"
+            height="180"
+            loading="lazy"
+            decoding="async"
+          />
+          <span class="visual-caption">
+            <code>{{ item.fn }}()</code><span aria-hidden="true">→</span>
+          </span>
+        </a>
       </div>
 
       <div class="visuals-cta">
-        <a href="/versions/0.17/examples/plotting-gallery" class="visuals-link">
-          View the full plotting gallery →
-        </a>
+        <a :href="gallery" class="visuals-link">View the full plotting gallery →</a>
       </div>
     </div>
   </section>
 </template>
 
 <script setup>
+const gallery = '/versions/0.17/examples/plotting-gallery'
 const visuals = [
   {
-    src: '/images/plotting_gallery_fitness_evolution.png',
-    alt: 'Fitness evolution over generations',
-    fn: 'plot_fitness_evolution()',
-    title: 'Track score improvement across generations',
+    image: 'fitness',
+    title: 'Fitness by generation',
+    alt: 'Best observed ROC AUC rises and levels off. The population mean fluctuates below it.',
+    fn: 'plot_fitness_evolution',
+    anchor: 'fitness-evolution',
   },
   {
-    src: '/images/plotting_gallery_search_overview.png',
-    alt: 'Search overview dashboard',
-    fn: 'plot_search_overview()',
-    title: 'Full-run dashboard: diversity, stagnation, scores',
+    image: 'overview',
+    title: 'Search overview',
+    alt: 'Best cross-validation ROC AUC and total evaluations, with duplicate replacements by generation.',
+    fn: 'plot_search_overview',
+    anchor: 'overview-dashboard',
   },
   {
-    src: '/images/tune_xgboost_interaction.png',
-    alt: 'Parameter interaction heatmap for XGBoost',
-    fn: 'plot_search_space()',
-    title: 'Discover learning_rate × n_estimators interactions',
+    image: 'correlation',
+    title: 'Parameter correlations',
+    alt: 'Pearson correlations between the sampled tree count, depth, minimum split size and feature fraction.',
+    fn: 'plot_search_space',
+    anchor: 'search-space-exploration',
   },
   {
-    src: '/images/plotting_gallery_parameter_evolution.png',
-    alt: 'Parameter evolution over generations',
-    fn: 'plot_parameter_evolution()',
-    title: 'Watch each hyperparameter converge over time',
+    image: 'parameters',
+    title: 'Tree count by evaluation',
+    alt: 'Each point shows the number of trees in one evaluated forest, colored by mean cross-validation ROC AUC.',
+    fn: 'plot_parameter_evolution',
+    anchor: 'parameter-exploration-over-time',
   },
   {
-    src: '/images/plotting_gallery_diversity.png',
-    alt: 'Population diversity over generations',
-    fn: 'plot_diversity()',
-    title: 'Monitor genetic diversity and diversity control events',
+    image: 'diversity',
+    title: 'Population diversity',
+    alt: 'The proportion of unique individuals stays above the genotype diversity measure throughout the run.',
+    fn: 'plot_diversity',
+    anchor: 'focused-convergence-and-diversity',
   },
   {
-    src: '/images/plotting_gallery_score_landscape.png',
-    alt: 'Score landscape visualization',
-    fn: 'plot_score_landscape()',
-    title: 'Visualize score surface across parameter pairs',
+    image: 'landscape',
+    title: 'Score landscape',
+    alt: 'Sampled tree depths and minimum split sizes, colored by mean cross-validation ROC AUC.',
+    fn: 'plot_score_landscape',
+    anchor: 'score-landscapes',
   },
 ]
 </script>
@@ -80,53 +92,59 @@ const visuals = [
 
 .visuals-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1.25rem;
   margin-bottom: 2rem;
 }
 
 .visual-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   border: 1px solid var(--vp-c-divider);
-  border-radius: 10px;
-  overflow: hidden;
+  border-radius: 12px;
+  color: var(--vp-c-text-1);
   background: var(--vp-c-bg);
-  transition: border-color 0.2s;
 }
 
-.visual-card:hover {
-  border-color: var(--vp-c-brand-1);
-}
-
-.visual-img-wrap {
-  aspect-ratio: 16 / 10;
-  overflow: hidden;
-  background: #0d0f14;
+.visual-title {
+  margin: 0;
+  padding: 1rem 1.2rem 0.35rem;
+  font-size: 1.15rem;
+  font-weight: 650;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
 }
 
 .visual-img {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;
   display: block;
+  margin-block: auto 0;
 }
 
 .visual-caption {
-  padding: 0.75rem 1rem;
-}
-
-.visual-fn {
-  font-family: var(--vp-font-family-mono);
-  font-size: 0.72rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.55rem 1.2rem;
+  border-top: 1px solid var(--vp-c-divider);
+  background: var(--vp-c-bg-alt);
   color: var(--vp-c-brand-1);
-  display: block;
-  margin-bottom: 0.25rem;
 }
 
-.visual-title {
-  font-size: 0.82rem;
-  color: var(--vp-c-text-2);
-  margin: 0;
-  line-height: 1.4;
+.visual-caption code {
+  font-family: var(--vp-font-family-mono);
+  font-size: 0.8rem;
+}
+
+.visual-card:is(:hover, :focus-visible) {
+  border-color: var(--vp-c-brand-1);
+}
+
+.visual-card:focus-visible {
+  outline: 2px solid var(--vp-c-brand-1);
+  outline-offset: 3px;
 }
 
 .visuals-cta {
@@ -142,5 +160,13 @@ const visuals = [
 
 .visuals-link:hover {
   text-decoration: underline;
+}
+
+@media (max-width: 1023px) {
+  .visuals-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 679px) {
+  .visuals-grid { grid-template-columns: minmax(0, 1fr); }
 }
 </style>
