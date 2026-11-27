@@ -1,13 +1,13 @@
 ---
-title: "Grid Search vs Random Search vs Genetic Algorithms: A Benchmark"
-description: "Side-by-side benchmark of GridSearchCV, RandomizedSearchCV, and GASearchCV on the same dataset and budget — with honest results."
+title: "GridSearchCV vs RandomizedSearchCV vs GASearchCV"
+description: "Run GridSearchCV, RandomizedSearchCV and GASearchCV on the same split and budget, then compare test score, search cost, runtime and where the GA pays off."
 ---
 
 :::warning Development version
 This is the **latest (dev)** documentation. It may contain unreleased features or breaking changes. For the stable release, use [stable](/stable/).
 :::
 
-# Comparing GASearchCV With scikit-learn Search Methods
+# GridSearchCV vs RandomizedSearchCV vs GASearchCV
 
 This example puts `GASearchCV` next to scikit-learn's `RandomizedSearchCV` and `GridSearchCV` on **the same problem, the same budget, and the same train/test split**. The goal is not to crown one method universally best — it is to show you how to compare *solution quality*, *search cost*, and *runtime* honestly, and to make clear where an evolutionary search actually pays off.
 

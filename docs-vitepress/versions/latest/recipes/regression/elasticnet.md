@@ -1,6 +1,6 @@
 ---
 title: "Tune ElasticNet with Genetic Algorithms"
-description: "Copy-paste recipe to tune ElasticNet alpha and l1_ratio with log-uniform sampling using GASearchCV."
+description: "Copy-paste recipe to tune ElasticNet alpha and l1_ratio together with log-uniform sampling in a scaled Pipeline, scored by mean squared error in GASearchCV."
 ---
 
 :::warning Development version

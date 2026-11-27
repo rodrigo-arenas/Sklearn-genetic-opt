@@ -1,5 +1,5 @@
 ---
-title: Adaptive Mutation and Crossover Schedules for Better Convergence
+title: "Adaptive Mutation and Crossover Schedules"
 description: Use ExponentialAdapter, InverseAdapter, and PotentialAdapter to anneal mutation and crossover rates from exploration to exploitation during genetic search.
 ---
 

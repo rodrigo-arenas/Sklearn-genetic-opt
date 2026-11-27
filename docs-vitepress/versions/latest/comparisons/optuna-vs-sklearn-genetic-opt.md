@@ -1,5 +1,5 @@
 ---
-title: "Optuna vs sklearn-genetic-opt for scikit-learn Tuning"
+title: "Optuna vs sklearn-genetic-opt for scikit-learn"
 description: "Compare Optuna TPE and sklearn-genetic-opt for scikit-learn tuning. Run both at the same CV budget and review benchmark results and search-space tradeoffs."
 ---
 

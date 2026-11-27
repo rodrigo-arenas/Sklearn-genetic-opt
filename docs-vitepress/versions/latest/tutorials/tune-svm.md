@@ -1,6 +1,6 @@
 ---
-title: "SVM Hyperparameter Tuning (C, kernel, gamma) with scikit-learn"
-description: "Tune Support Vector Machine hyperparameters — C, gamma, kernel — using GASearchCV, with guidance on the RBF kernel's C-gamma interaction and comparison to GridSearchCV."
+title: "SVM Hyperparameter Tuning: C, kernel and gamma"
+description: "Tune SVC C, gamma and kernel with GASearchCV, scale features in a Pipeline, plot the RBF C-gamma interaction and compare the result with GridSearchCV."
 ---
 
 :::warning Development version

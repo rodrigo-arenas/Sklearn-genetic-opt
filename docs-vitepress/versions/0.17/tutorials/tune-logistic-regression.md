@@ -1,6 +1,6 @@
 ---
-title: "Logistic Regression Hyperparameter Tuning with scikit-learn and Genetic Algorithms"
-description: "Tune LogisticRegression hyperparameters — C, solver, penalty, max_iter — using GASearchCV, with a comparison to GridSearchCV and practical guidance on solver–penalty compatibility."
+title: "Logistic Regression Hyperparameter Tuning"
+description: "Tune LogisticRegression C, solver, penalty and max_iter with GASearchCV, check solver and penalty compatibility, and compare the result with GridSearchCV."
 ---
 
 **Estimated reading time:** 10 minutes

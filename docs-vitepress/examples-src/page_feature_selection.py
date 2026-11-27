@@ -19,11 +19,10 @@ from _nbgen import Notebook  # noqa: E402
 
 nb = Notebook(
     path="examples/feature-selection.md",
-    title="Feature Selection: Finding the Signal in 60 Columns",
+    title="Feature Selection: Finding Signal in 60 Columns",
     description=(
-        "Use GAFeatureSelectionCV to recover a compact, informative feature "
-        "subset from a dataset padded with redundant and noise columns, and beat "
-        "the all-features baseline by a wide margin."
+        "Recover the informative columns of a 60-feature dataset padded with redundant "
+        "and noise columns using GAFeatureSelectionCV, and compare with all features."
     ),
     intro=(
         "Feature selection is where evolutionary search has its cleanest, most "

@@ -1,5 +1,5 @@
 ---
-title: Cross-Validation in Genetic Algorithm Hyperparameter Search
+title: "How GASearchCV Uses Cross-Validation"
 description: How cross-validation interacts with evolutionary search, how to read the generation log, and how to interpret convergence plots.
 ---
 

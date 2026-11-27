@@ -21,9 +21,8 @@ nb = Notebook(
     path="examples/multi-metric.md",
     title="Multi-Metric Search on Imbalanced Data",
     description=(
-        "Track multiple scorers simultaneously, choose which metric drives the "
-        "refit, and inspect per-metric cv_results_ where the metrics genuinely "
-        "disagree about the best candidate."
+        "Track several scorers in one GASearchCV run on imbalanced data, choose the "
+        "metric that drives the refit, and compare the per-metric cv_results_ rankings."
     ),
     intro=(
         "Multi-metric search shines when your metrics *disagree*. On a balanced, "

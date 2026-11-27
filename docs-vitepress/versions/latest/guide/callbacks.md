@@ -1,5 +1,5 @@
 ---
-title: Early Stopping and Callbacks for Hyperparameter Search
+title: "Early Stopping and Callbacks in GASearchCV"
 description: Stop scikit-learn hyperparameter search at a score or loss threshold, detect convergence, track progress and save checkpoints with callbacks.
 ---
 

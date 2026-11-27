@@ -1,6 +1,6 @@
 ---
-title: "Tune Hyperparameters for RMSE (Root Mean Squared Error)"
-description: "Recipe to optimize hyperparameters for RMSE in regression using neg_root_mean_squared_error scorer."
+title: "Tune Hyperparameters for RMSE in Regression"
+description: "Recipe to tune a GradientBoostingRegressor for RMSE with the neg_root_mean_squared_error scorer, plus a make_scorer version for sklearn before 0.24."
 ---
 
 :::warning Development version

@@ -1,5 +1,5 @@
 ---
-title: "Getting Started with GASearchCV: Hyperparameter Tuning and Feature Selection"
+title: "Start Hyperparameter Tuning With GASearchCV"
 description: "Step-by-step introduction to GASearchCV for hyperparameter optimization and GAFeatureSelectionCV for feature selection, with complete runnable examples."
 ---
 
@@ -7,7 +7,7 @@ description: "Step-by-step introduction to GASearchCV for hyperparameter optimiz
 This is the **latest (dev)** documentation. It may contain unreleased features or breaking changes. For the stable release, use [stable](/stable/).
 :::
 
-# Getting Started with GASearchCV: Hyperparameter Tuning and Feature Selection
+# Start Hyperparameter Tuning With GASearchCV
 
 **Estimated reading time:** 15 minutes. **Difficulty:** Beginner.
 

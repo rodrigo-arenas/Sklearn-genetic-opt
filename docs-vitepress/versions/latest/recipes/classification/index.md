@@ -1,6 +1,6 @@
 ---
 title: Classification Recipes
-description: Copy-paste recipes for tuning classification estimators with GASearchCV.
+description: "Eight copy-paste GASearchCV recipes for classifiers: RandomForest, LogisticRegression, SVC, XGBoost, LightGBM, CatBoost, HistGradientBoosting and ExtraTrees."
 ---
 
 :::warning Development version

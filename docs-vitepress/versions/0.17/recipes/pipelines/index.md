@@ -1,6 +1,6 @@
 ---
 title: Pipeline Recipes
-description: Copy-paste recipes for tuning sklearn Pipelines with GASearchCV.
+description: "Four copy-paste recipes for tuning scikit-learn Pipelines with GASearchCV: preprocessing steps, ColumnTransformer, imputer strategy and polynomial degree."
 ---
 
 # Pipeline Recipes

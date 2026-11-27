@@ -1,6 +1,6 @@
 ---
 title: "Run Hyperparameter Search in a Jupyter Notebook"
-description: "Recipe to run GASearchCV in a Jupyter Notebook with tqdm progress bars and inline matplotlib plots."
+description: "Recipe to run GASearchCV in a Jupyter Notebook with tqdm notebook progress bars, inline matplotlib plots and handling of warnings from parallel workers."
 ---
 
 :::warning Development version

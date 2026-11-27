@@ -1,6 +1,6 @@
 ---
 title: MLflow API
-description: API reference for MLflowConfig — log sklearn-genetic-opt experiments to MLflow.
+description: "API reference for MLflowConfig: log GASearchCV and GAFeatureSelectionCV runs to MLflow by passing the config to the log_config parameter."
 ---
 
 :::warning Development version

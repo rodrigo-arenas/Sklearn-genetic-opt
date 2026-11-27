@@ -1,5 +1,5 @@
 ---
-title: "Tune a ColumnTransformer Pipeline with Genetic Algorithms"
+title: "Tune a ColumnTransformer Pipeline"
 description: "Recipe to tune hyperparameters in a Pipeline with mixed numeric and categorical features using ColumnTransformer."
 ---
 

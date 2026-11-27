@@ -13,8 +13,8 @@ nb = Notebook(
     path="examples/categorical-feature-selection.md",
     title="Feature Selection for Categorical Columns",
     description=(
-        "Select raw categorical columns with GAFeatureSelectionCV and a scikit-learn "
-        "pipeline that fits OneHotEncoder or a dtype-based ColumnTransformer inside each CV fold."
+        "Select raw categorical columns with GAFeatureSelectionCV, using a pipeline that "
+        "fits OneHotEncoder or a dtype-based ColumnTransformer in each CV fold."
     ),
     intro=(
         "Select whole input columns by putting a categorical encoder inside "

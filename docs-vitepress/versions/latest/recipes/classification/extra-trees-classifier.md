@@ -1,5 +1,5 @@
 ---
-title: "Tune ExtraTreesClassifier with Genetic Algorithms"
+title: "Tune ExtraTreesClassifier Hyperparameters"
 description: "Copy-paste recipe to tune ExtraTreesClassifier hyperparameters and understand how it differs from RandomForestClassifier."
 ---
 

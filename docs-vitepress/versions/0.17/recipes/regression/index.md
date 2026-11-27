@@ -1,6 +1,6 @@
 ---
 title: Regression Recipes
-description: Copy-paste recipes for tuning regression estimators with GASearchCV.
+description: "Six copy-paste recipes for tuning regression estimators with GASearchCV: RandomForest, XGBoost, LightGBM, CatBoost, SGDRegressor and ElasticNet."
 ---
 
 # Regression Recipes

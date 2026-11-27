@@ -1,6 +1,6 @@
 ---
 title: "Pipeline Regression Tuning"
-description: "Tune a scikit-learn Pipeline containing StandardScaler and GradientBoostingRegressor using GASearchCV — pipeline parameter naming, regression scorers, and search visualization."
+description: "Tune a StandardScaler and GradientBoostingRegressor Pipeline with GASearchCV on the diabetes dataset, using step__param names and a default-model baseline."
 ---
 
 :::warning Development version

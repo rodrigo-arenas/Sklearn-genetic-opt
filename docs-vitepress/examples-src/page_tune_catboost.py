@@ -15,11 +15,10 @@ from _nbgen import Notebook  # noqa: E402
 
 nb = Notebook(
     path="tutorials/tune-catboost.md",
-    title="Tuning CatBoost With GASearchCV",
+    title="CatBoost Hyperparameter Tuning With GASearchCV",
     description=(
-        "Optimize CatBoost's ordered-boosting hyperparameters (depth, "
-        "l2_leaf_reg, bagging_temperature, border_count, random_strength) with a "
-        "genetic algorithm, with a real baseline comparison."
+        "Tune 7 CatBoost hyperparameters, including depth, bagging_temperature and "
+        "border_count, with GASearchCV on a noisy dataset and compare with the defaults."
     ),
     intro=(
         "CatBoost uses *ordered boosting* and *symmetric trees*, which makes its "

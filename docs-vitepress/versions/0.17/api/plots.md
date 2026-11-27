@@ -1,6 +1,6 @@
 ---
 title: Plots
-description: Plot cross-validation fold scores, optimizer convergence, and feature selection with sklearn-genetic-opt.
+description: "Plot fitness evolution, cross-validation fold scores, optimizer convergence, diversity and feature selection results from a fitted sklearn-genetic-opt search."
 ---
 
 # Plots

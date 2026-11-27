@@ -1,6 +1,6 @@
 ---
 title: GAFeatureSelectionCV
-description: API reference for GAFeatureSelectionCV — genetic algorithm feature selection for scikit-learn estimators.
+description: "API reference for GAFeatureSelectionCV: genetic algorithm feature selection for scikit-learn estimators, with parameters, support_ and methods."
 ---
 
 :::warning Development version

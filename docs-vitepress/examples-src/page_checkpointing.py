@@ -19,9 +19,8 @@ nb = Notebook(
     path="examples/checkpointing.md",
     title="Checkpointing and Persistence",
     description=(
-        "Write per-generation checkpoints with the ModelCheckpoint callback, save "
-        "the logbook with LogbookSaver, and round-trip a fully fitted GASearchCV "
-        "with save / load — verified against real, captured output."
+        "Write per-generation checkpoints with ModelCheckpoint, save the logbook with "
+        "LogbookSaver, resume a search, and save and reload a fitted GASearchCV."
     ),
     intro=(
         "This example uses the default DEAP engine and its historical checkpoint format. "

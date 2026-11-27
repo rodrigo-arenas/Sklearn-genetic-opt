@@ -1,6 +1,6 @@
 ---
-title: "LightGBM Hyperparameter Tuning with Genetic Algorithms"
-description: "Tune 9 LightGBM hyperparameters including the num_leaves/max_depth interaction using GASearchCV, with scatter plots and baseline comparison."
+title: "LightGBM Hyperparameter Tuning With GASearchCV"
+description: "Tune 9 LGBMClassifier hyperparameters with GASearchCV on a noisy dataset, compare with LightGBM defaults, and plot the num_leaves / max_depth interaction."
 ---
 
 :::warning Development version
@@ -11,7 +11,7 @@ This is the **latest (dev)** documentation. It may contain unreleased features o
 **Difficulty:** Intermediate  
 **Prerequisites:** `pip install sklearn-genetic-opt lightgbm`
 
-# Tuning LightGBM With GASearchCV
+# LightGBM Hyperparameter Tuning With GASearchCV
 
 LightGBM grows trees **leaf-wise** rather than level-wise, which makes `num_leaves` its most important — and most dangerous — parameter. A large `num_leaves` with shallow `max_depth` is wasteful; a large `num_leaves` with deep trees overfits fast. This tutorial searches the joint space with `GASearchCV`, shows the real gain over LightGBM's defaults, and visualizes the `num_leaves` / `max_depth` interaction the search learns to respect.
 

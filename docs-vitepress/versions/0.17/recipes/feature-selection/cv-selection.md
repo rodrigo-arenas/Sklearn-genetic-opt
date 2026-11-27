@@ -1,6 +1,6 @@
 ---
 title: "Feature Selection with Per-Fold Cross-Validation"
-description: "Recipe to evaluate feature selection with a holdout or outer cross-validation folds."
+description: "Evaluate feature selection without leakage: keep a holdout set outside GAFeatureSelectionCV, or run the selector inside each outer fold with nested CV."
 ---
 
 # Feature Selection with Cross-Validation (Leakage-Free)

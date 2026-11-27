@@ -1,5 +1,5 @@
 ---
-title: "Feature Selection with a Custom Scorer (Feature-Count Penalty)"
+title: "Feature Selection with a Feature-Count Penalty"
 description: "Recipe to add a feature-count penalty to the feature selection objective — preferring parsimonious models when two feature sets score equally."
 ---
 

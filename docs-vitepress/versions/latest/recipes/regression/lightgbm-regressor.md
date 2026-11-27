@@ -1,6 +1,6 @@
 ---
 title: "Tune LGBMRegressor with Genetic Algorithms"
-description: "Copy-paste recipe to tune LightGBM for regression with RMSE scoring and min_child_samples guidance."
+description: "Copy-paste recipe to tune 9 LGBMRegressor hyperparameters with GASearchCV and RMSE scoring, including num_leaves and the leaf size set by min_child_samples."
 ---
 
 :::warning Development version

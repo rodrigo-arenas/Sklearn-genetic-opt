@@ -1,13 +1,13 @@
 ---
-title: "Tuning XGBoost With GASearchCV"
-description: "Optimize 9 interacting XGBoost hyperparameters with a genetic algorithm on a noisy dataset where the defaults overfit — with a real baseline comparison, interaction visualization, and feature importance."
+title: "XGBoost Hyperparameter Tuning With GASearchCV"
+description: "Tune 9 interacting XGBoost hyperparameters with GASearchCV on a noisy dataset where the defaults overfit, then compare with the baseline and random search."
 ---
 
 **Estimated reading time:** 20 minutes  
 **Difficulty:** Intermediate  
 **Prerequisites:** `pip install sklearn-genetic-opt xgboost`
 
-# Tuning XGBoost With GASearchCV
+# XGBoost Hyperparameter Tuning With GASearchCV
 
 XGBoost has around nine hyperparameters that interact non-linearly: the right `learning_rate` depends on `n_estimators`, which depends on `max_depth` and the regularization terms. Out of the box, XGBoost's defaults (a high `0.3` learning rate, 100 deep trees) **overfit noisy data**. This tutorial searches the joint space with `GASearchCV`, shows the real gain over the default model, and visualizes the interaction the search exploits.
 

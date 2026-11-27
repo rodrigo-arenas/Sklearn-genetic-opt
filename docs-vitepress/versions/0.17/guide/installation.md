@@ -1,6 +1,6 @@
 ---
 title: Installation
-description: Install sklearn-genetic-opt with pip or conda, with optional optimizer engines, plotting and MLflow.
+description: "Install sklearn-genetic-opt with pip or conda on Python 3.12 or later, add the optional optimizer engines, plotting and MLflow extras, and verify the setup."
 ---
 
 # Installation

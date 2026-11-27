@@ -16,11 +16,11 @@ from _nbgen import Notebook  # noqa: E402
 
 nb = Notebook(
     path="tutorials/tune-lightgbm.md",
-    title="Tuning LightGBM With GASearchCV",
+    title="LightGBM Hyperparameter Tuning With GASearchCV",
     description=(
-        "Optimize LightGBM's leaf-wise tree hyperparameters with a genetic "
-        "algorithm, with a real baseline comparison and a look at the "
-        "num_leaves / max_depth interaction."
+        "Tune 9 LGBMClassifier hyperparameters with GASearchCV on a noisy dataset, "
+        "compare with LightGBM defaults, and plot the num_leaves / max_depth "
+        "interaction."
     ),
     intro=(
         "LightGBM grows trees **leaf-wise** rather than level-wise, which makes "

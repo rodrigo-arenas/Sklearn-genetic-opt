@@ -1,6 +1,6 @@
 ---
 title: "Resume a Scikit-learn Search from a Checkpoint"
-description: "Resume a scikit-learn search with ModelCheckpoint. Recover saved CV scores, check partial generations and count new evaluations in GASearchCV or GAFeatureSelectionCV."
+description: "Resume GASearchCV or GAFeatureSelectionCV from a ModelCheckpoint file, recover saved CV scores, check partial generations and count new evaluations."
 ---
 
 :::warning Development version

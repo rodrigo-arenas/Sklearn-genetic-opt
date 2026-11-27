@@ -1,6 +1,6 @@
 ---
 title: Scoring Metrics Recipes
-description: Copy-paste recipes for optimizing GASearchCV with F1, ROC-AUC, balanced accuracy, MAE, and RMSE.
+description: "Five copy-paste recipes for tuning GASearchCV against one scoring metric: binary F1, ROC-AUC, balanced accuracy, MAE and RMSE, with scikit-learn scorers."
 ---
 
 :::warning Development version

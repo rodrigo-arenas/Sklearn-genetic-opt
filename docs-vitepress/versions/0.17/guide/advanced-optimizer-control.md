@@ -1,5 +1,5 @@
 ---
-title: "Advanced Optimizer Control: Diversity, Fitness Sharing, and Local Search"
+title: "Optimizer Control: Diversity and Local Search"
 description: Control population diversity, refine candidates with local search, and validate finalists for scikit-learn hyperparameter tuning and feature selection.
 ---
 

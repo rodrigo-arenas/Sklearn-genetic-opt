@@ -1,6 +1,6 @@
 ---
-title: Reproducibility and Checkpointing in Hyperparameter Optimization
-description: Make genetic algorithm hyperparameter searches reproducible with random_state, inspect candidate logs with LogbookSaver, and resume searches with ModelCheckpoint.
+title: "Reproducible Searches and Checkpointing"
+description: "Make genetic hyperparameter searches reproducible with random_state, inspect candidate logs with LogbookSaver, and resume searches with ModelCheckpoint."
 ---
 
 :::warning Development version

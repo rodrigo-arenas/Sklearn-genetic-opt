@@ -1,5 +1,5 @@
 ---
-title: "Tune SVC (Support Vector Classifier) with Genetic Algorithms"
+title: "Tune SVC (Support Vector Classifier)"
 description: "Copy-paste recipe to tune SVC hyperparameters C, kernel, and gamma using GASearchCV with mandatory StandardScaler in a Pipeline."
 ---
 

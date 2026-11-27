@@ -21,9 +21,8 @@ nb = Notebook(
     path="examples/pipeline-regression.md",
     title="Pipeline Regression Tuning",
     description=(
-        "Tune a scikit-learn Pipeline containing StandardScaler and "
-        "GradientBoostingRegressor using GASearchCV — pipeline parameter naming, "
-        "regression scorers, and search visualization."
+        "Tune a StandardScaler and GradientBoostingRegressor Pipeline with GASearchCV on "
+        "the diabetes dataset, using step__param names and a default-model baseline."
     ),
     intro=(
         "This example tunes a scikit-learn `Pipeline` with `GASearchCV`. Pipeline "

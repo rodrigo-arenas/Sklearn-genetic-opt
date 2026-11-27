@@ -1,6 +1,6 @@
 ---
 title: GASearchCV
-description: API reference for GASearchCV — genetic algorithm hyperparameter search for scikit-learn estimators.
+description: "API reference for GASearchCV: genetic algorithm hyperparameter search for scikit-learn estimators, with parameters, best_params_, cv_results_ and methods."
 ---
 
 # GASearchCV
