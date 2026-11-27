@@ -1,5 +1,5 @@
 ---
-title: "Hyperparameter Tuning Recipes: Copy-Paste Solutions"
+title: "Hyperparameter Tuning Recipes"
 description: "Quick, copy-paste ready hyperparameter tuning recipes for scikit-learn, XGBoost, LightGBM, CatBoost, and more. Each recipe solves one specific problem."
 ---
 

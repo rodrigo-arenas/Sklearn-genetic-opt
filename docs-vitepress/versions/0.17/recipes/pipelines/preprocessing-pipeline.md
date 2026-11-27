@@ -1,6 +1,6 @@
 ---
-title: "Tune a Preprocessing + Estimator Pipeline with Genetic Algorithms"
-description: "Recipe to tune hyperparameters inside a scikit-learn Pipeline using the stepname__paramname prefix pattern."
+title: "Tune a Preprocessing and Estimator Pipeline"
+description: "Recipe to tune an SVC and its scaler inside a scikit-learn Pipeline with stepname__paramname keys, keeping preprocessing inside CV to avoid data leakage."
 ---
 
 # Tune a Preprocessing + Estimator Pipeline

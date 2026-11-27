@@ -17,11 +17,11 @@ from _nbgen import Notebook  # noqa: E402
 
 nb = Notebook(
     path="examples/sklearn-comparison.md",
-    title="Comparing GASearchCV With scikit-learn Search Methods",
+    title="GridSearchCV vs RandomizedSearchCV vs GASearchCV",
     description=(
-        "A fully reproducible, side-by-side comparison of GASearchCV, "
-        "RandomizedSearchCV, and GridSearchCV on a rugged, mixed search space — "
-        "solution quality, search cost, and where the genetic algorithm earns its keep."
+        "Run GridSearchCV, RandomizedSearchCV and GASearchCV on the same split and "
+        "budget, then compare test score, search cost, runtime and where the GA pays "
+        "off."
     ),
     intro=(
         "This example puts `GASearchCV` next to scikit-learn's "

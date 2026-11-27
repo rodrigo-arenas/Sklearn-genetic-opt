@@ -1,5 +1,5 @@
 ---
-title: "Tune RandomForestRegressor with Genetic Algorithms"
+title: "Tune RandomForestRegressor Hyperparameters"
 description: "Copy-paste recipe to tune RandomForestRegressor for regression tasks with MAE scoring and min_samples_leaf guidance."
 ---
 

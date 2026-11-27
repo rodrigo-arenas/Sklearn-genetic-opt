@@ -1,6 +1,6 @@
 ---
 title: Config Objects
-description: API reference for EvolutionConfig, PopulationConfig, RuntimeConfig, and OptimizationConfig.
+description: "API reference for EvolutionConfig, PopulationConfig, RuntimeConfig and OptimizationConfig, which group advanced settings for both search estimators."
 ---
 
 :::warning Development version

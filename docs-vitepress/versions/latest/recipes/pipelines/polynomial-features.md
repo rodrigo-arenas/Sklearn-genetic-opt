@@ -1,5 +1,5 @@
 ---
-title: "Tune Polynomial Features Degree as a Hyperparameter"
+title: "Tune PolynomialFeatures Degree"
 description: "Recipe to search over PolynomialFeatures degree and interaction_only as pipeline hyperparameters with GASearchCV."
 ---
 

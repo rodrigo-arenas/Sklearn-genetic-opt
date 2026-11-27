@@ -1,6 +1,6 @@
 ---
 title: "Feature Selection for Categorical Columns"
-description: "Select raw categorical columns with GAFeatureSelectionCV and a scikit-learn pipeline that fits OneHotEncoder or a dtype-based ColumnTransformer inside each CV fold."
+description: "Select raw categorical columns with GAFeatureSelectionCV, using a pipeline that fits OneHotEncoder or a dtype-based ColumnTransformer in each CV fold."
 ---
 
 :::warning Development version

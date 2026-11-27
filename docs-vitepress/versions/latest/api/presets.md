@@ -1,6 +1,6 @@
 ---
 title: Estimator Presets
-description: Starter search spaces for common scikit-learn estimators.
+description: "Starter search spaces for RandomForest, HistGradientBoosting, LogisticRegression, SVC and XGBoost, with fast, balanced and wide profiles and Pipeline prefixes."
 ---
 
 :::warning Development version

@@ -1,5 +1,5 @@
 ---
-title: "Hyperparameter Optimization: Grid, Random, Bayesian, Genetic"
+title: "How Hyperparameter Optimization Works"
 description: "Compare grid search, random search, Bayesian and genetic optimization with Python examples, and learn when to use each."
 ---
 

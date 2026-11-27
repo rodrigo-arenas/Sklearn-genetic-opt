@@ -1,6 +1,6 @@
 ---
-title: "Tune Classifiers on Imbalanced Data: balanced_accuracy, ROC-AUC"
-description: "Hyperparameter tuning for imbalanced datasets with balanced_accuracy, ROC-AUC and class_weight. Runnable 95/5 example with GASearchCV."
+title: "Tune Classifiers on Imbalanced Data"
+description: "Tune class_weight with model hyperparameters on a 95/5 imbalanced dataset using balanced_accuracy, and compare with RandomizedSearchCV at a matched budget."
 ---
 
 :::warning Development version
@@ -11,7 +11,7 @@ This is the **latest (dev)** documentation. It may contain unreleased features o
 **Difficulty:** Intermediate  
 **Prerequisites:** [Getting Started with GASearchCV](../guide/basic-usage), basic imbalanced learning concepts
 
-# Imbalanced Classification With GASearchCV
+# Tune Classifiers on Imbalanced Data
 
 :::warning The accuracy trap
 A model that predicts the majority class for every input achieves **95% accuracy** on a 95/5 dataset while being completely useless for the minority class. Accuracy is a misleading metric for imbalanced problems. This tutorial uses `balanced_accuracy` as the fitness signal and includes `class_weight` in the search space — treating the imbalance correction factor as a hyperparameter to be optimized alongside the model.

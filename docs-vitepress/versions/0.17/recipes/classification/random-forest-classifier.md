@@ -1,5 +1,5 @@
 ---
-title: "Tune RandomForestClassifier with Genetic Algorithms"
+title: "Tune RandomForestClassifier Hyperparameters"
 description: "Copy-paste recipe to tune 7 RandomForestClassifier hyperparameters jointly using GASearchCV, including class_weight as a search parameter."
 ---
 

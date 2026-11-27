@@ -1,6 +1,6 @@
 ---
 title: "Tune Imputer Strategy as a Hyperparameter"
-description: "Recipe to search over mean, median, and most_frequent imputation strategies inside a scikit-learn Pipeline."
+description: "Recipe to search the mean, median and most_frequent SimpleImputer strategies together with classifier hyperparameters inside a scikit-learn Pipeline."
 ---
 
 # Tune Imputer Strategy as a Hyperparameter

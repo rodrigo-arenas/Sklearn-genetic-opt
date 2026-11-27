@@ -1,6 +1,6 @@
 ---
 title: "Tune Hyperparameters for ROC-AUC"
-description: "Recipe to optimize hyperparameters for ROC-AUC scoring with probability calibration guidance."
+description: "Recipe to tune a GradientBoostingClassifier for ROC-AUC with the sklearn roc_auc scorer in GASearchCV, and see which estimators need probability=True."
 ---
 
 :::warning Development version

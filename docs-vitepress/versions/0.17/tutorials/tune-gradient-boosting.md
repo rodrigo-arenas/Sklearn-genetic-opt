@@ -1,5 +1,5 @@
 ---
-title: "Tune HistGradientBoosting & GradientBoosting in scikit-learn"
+title: "Tune HistGradientBoosting and GradientBoosting"
 description: "Tune HistGradientBoostingClassifier and GradientBoostingClassifier with GASearchCV: search spaces, runnable code and a comparison of both."
 ---
 

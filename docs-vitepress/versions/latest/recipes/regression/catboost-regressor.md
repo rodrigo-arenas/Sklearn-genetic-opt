@@ -1,6 +1,6 @@
 ---
 title: "Tune CatBoostRegressor with Genetic Algorithms"
-description: "Copy-paste recipe to tune CatBoost for regression tasks including ordered boosting and bagging_temperature."
+description: "Copy-paste recipe to tune CatBoostRegressor depth, learning_rate, l2_leaf_reg, bagging_temperature and border_count with GASearchCV and RMSE scoring."
 ---
 
 :::warning Development version

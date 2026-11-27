@@ -1,5 +1,5 @@
 ---
-title: "Log Every Hyperparameter Search Candidate to MLflow"
+title: "Log Every Search Candidate to MLflow"
 description: "Track evaluated GASearchCV candidates in MLflow with MLflowConfig, group runs under a parent, and log the winner separately."
 ---
 

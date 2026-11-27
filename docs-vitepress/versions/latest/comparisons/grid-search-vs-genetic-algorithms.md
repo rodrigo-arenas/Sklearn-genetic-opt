@@ -1,6 +1,6 @@
 ---
-title: "Grid Search vs Random Search vs Bayesian vs Genetic Algorithms: Which Should You Use?"
-description: "A practical, benchmark-backed comparison of GridSearchCV, RandomizedSearchCV, Optuna (Bayesian), and GASearchCV (genetic) for hyperparameter optimization in Python."
+title: "Grid Search vs Random, Bayesian, Genetic Search"
+description: "Benchmark-backed comparison of GridSearchCV, RandomizedSearchCV, Optuna TPE and GASearchCV in Python, including the cases where each method wins."
 ---
 
 :::warning Development version

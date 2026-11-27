@@ -1,6 +1,6 @@
 ---
 title: "Tune XGBRegressor with Genetic Algorithms"
-description: "Copy-paste recipe to tune XGBoost for regression tasks with RMSE scoring and the n_jobs=1 CPU fix."
+description: "Copy-paste recipe to tune 9 XGBRegressor hyperparameters with GASearchCV and RMSE scoring, with the n_jobs=1 setting that avoids CPU oversubscription."
 ---
 
 :::warning Development version

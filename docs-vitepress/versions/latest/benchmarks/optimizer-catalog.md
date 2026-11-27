@@ -1,5 +1,5 @@
 ---
-title: scikit-learn Hyperparameter Tuning and Feature Selection Benchmarks
+title: "Hyperparameter Tuning Backend Benchmarks"
 description: Compare DEAP, SciPy, Nevergrad, CatCMAwM and pymoo for scikit-learn hyperparameter tuning and feature selection at the same cross-validation cost.
 ---
 

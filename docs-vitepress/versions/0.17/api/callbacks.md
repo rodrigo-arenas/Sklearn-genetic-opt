@@ -1,6 +1,6 @@
 ---
 title: Callbacks API
-description: API reference for stopping, progress, checkpoint, and legacy TensorBoard callbacks.
+description: "API reference for the stopping, progress and checkpoint callbacks: ThresholdStopping, ConsecutiveStopping, CVBudgetStopping, TimerStopping and more."
 ---
 
 # Callbacks API

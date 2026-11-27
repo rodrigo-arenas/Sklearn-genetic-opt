@@ -1,6 +1,6 @@
 ---
 title: "Tune XGBClassifier with Genetic Algorithms"
-description: "Copy-paste recipe to tune 9 XGBoost hyperparameters with GASearchCV. Includes the n_jobs=1 / parallel_backend='cv' fix for CPU oversubscription."
+description: "Copy-paste recipe to tune 9 XGBClassifier hyperparameters with GASearchCV, using n_jobs=1 and fold-level parallelism to avoid CPU oversubscription."
 ---
 
 :::warning Development version

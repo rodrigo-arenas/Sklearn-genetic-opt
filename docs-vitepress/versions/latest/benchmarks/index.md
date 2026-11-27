@@ -1,6 +1,6 @@
 ---
 title: Genetic search benchmarks for scikit-learn
-description: Compare GASearchCV, Optuna TPE and random search by candidate evaluations, fold fits and runtime. See held-out feature selection results for GAFeatureSelectionCV.
+description: "Compare GASearchCV, Optuna TPE and random search by candidate evaluations, fold fits and runtime, plus held-out feature selection results."
 ---
 <script setup>
 import holdoutResultsUrl from '../../../../benchmarks/results/performance-v2/holdout-by-budget.json?url'

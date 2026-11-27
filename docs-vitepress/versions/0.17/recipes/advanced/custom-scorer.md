@@ -1,6 +1,6 @@
 ---
-title: "Write a Custom Scoring Function for Hyperparameter Search"
-description: "Recipe to define a custom scorer using make_scorer or a callable for metrics not in sklearn's built-in scoring list."
+title: "Write a Custom Scorer for Hyperparameter Search"
+description: "Define a custom GASearchCV scorer with make_scorer, an (estimator, X, y) callable or an unsupervised metric when sklearn has no built-in scoring name for it."
 ---
 
 # Write a Custom Scoring Function

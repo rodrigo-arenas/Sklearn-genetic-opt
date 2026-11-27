@@ -23,10 +23,9 @@ nb = Notebook(
     path="tutorials/feature-selection.md",
     title="Comprehensive GA Feature Selection",
     description=(
-        "A multi-stage walkthrough: build a noisy high-dimensional dataset, evolve "
-        "a feature mask with GAFeatureSelectionCV, grade it against the known "
-        "ground truth, confirm the win on a second estimator, and read the support "
-        "mask and fitness history — all from real execution."
+        "Evolve a feature mask with GAFeatureSelectionCV on a noisy dataset with known "
+        "signal, grade it against the ground truth, and check the gain on a second "
+        "model."
     ),
     intro=(
         "**Estimated reading time:** 20 minutes  \n"

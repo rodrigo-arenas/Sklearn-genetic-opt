@@ -1,13 +1,13 @@
 ---
-title: "Feature Selection: Finding the Signal in 60 Columns"
-description: "Use GAFeatureSelectionCV to recover a compact, informative feature subset from a dataset padded with redundant and noise columns, and beat the all-features baseline by a wide margin."
+title: "Feature Selection: Finding Signal in 60 Columns"
+description: "Recover the informative columns of a 60-feature dataset padded with redundant and noise columns using GAFeatureSelectionCV, and compare with all features."
 ---
 
 :::warning Development version
 This is the **latest (dev)** documentation. It may contain unreleased features or breaking changes. For the stable release, use [stable](/stable/).
 :::
 
-# Feature Selection: Finding the Signal in 60 Columns
+# Feature Selection: Finding Signal in 60 Columns
 
 Feature selection is where evolutionary search has its cleanest, most reproducible advantage. Choosing which of *n* columns to keep is a search over `2ⁿ` subsets — for 60 features that is over **10¹⁸** combinations, far beyond any grid or random sweep. `GAFeatureSelectionCV` evolves the on/off mask directly, and because it scores whole subsets it can account for *redundancy and interaction* between columns, not just each column in isolation.
 

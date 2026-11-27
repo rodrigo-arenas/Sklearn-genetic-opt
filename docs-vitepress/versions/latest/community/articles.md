@@ -1,6 +1,6 @@
 ---
 title: Community Articles
-description: Community-written tutorials, external walkthroughs, and published research using sklearn-genetic-opt.
+description: "Community-written tutorials, external walkthroughs and published research that use sklearn-genetic-opt for hyperparameter tuning and feature selection."
 ---
 
 # Community Articles

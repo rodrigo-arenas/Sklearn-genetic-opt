@@ -18,12 +18,10 @@ from _nbgen import Notebook  # noqa: E402
 
 nb = Notebook(
     path="tutorials/imbalanced-classification.md",
-    title="Imbalanced Classification With GASearchCV",
+    title="Tune Classifiers on Imbalanced Data",
     description=(
-        "Handle a 95/5 class imbalance by tuning class_weight as a search "
-        "parameter alongside model hyperparameters, with balanced_accuracy as the "
-        "fitness signal. Includes confusion matrices and a matched-budget "
-        "comparison against RandomizedSearchCV."
+        "Tune class_weight with model hyperparameters on a 95/5 imbalanced dataset using "
+        "balanced_accuracy, and compare with RandomizedSearchCV at a matched budget."
     ),
     intro=(
         ":::warning The accuracy trap\n"

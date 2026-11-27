@@ -1,5 +1,5 @@
 ---
-title: "Tune Hyperparameters for MAE (Mean Absolute Error)"
+title: "Tune Hyperparameters for MAE in Regression"
 description: "Recipe to optimize hyperparameters for MAE in regression, with the negated scorer pattern and result interpretation."
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: "Stop Hyperparameter Search After a Time Budget"
-description: "Recipe to use TimerStopping callback to limit GASearchCV to a fixed wall-clock time budget."
+description: "Recipe to stop GASearchCV after a wall-clock budget with TimerStopping, combine it with plateau detection, and leave time for final selection and refit."
 ---
 
 # Stop After a Time Budget

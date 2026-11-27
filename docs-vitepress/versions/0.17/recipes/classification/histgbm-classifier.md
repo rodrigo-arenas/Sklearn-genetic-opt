@@ -1,6 +1,6 @@
 ---
-title: "Tune HistGradientBoostingClassifier with Genetic Algorithms"
-description: "Copy-paste recipe to tune scikit-learn's HistGradientBoostingClassifier including max_leaf_nodes and l2_regularization."
+title: "Tune HistGradientBoostingClassifier"
+description: "Copy-paste recipe to tune the scikit-learn HistGradientBoostingClassifier with GASearchCV, including max_leaf_nodes, learning_rate and l2_regularization."
 ---
 
 # Tune HistGradientBoostingClassifier

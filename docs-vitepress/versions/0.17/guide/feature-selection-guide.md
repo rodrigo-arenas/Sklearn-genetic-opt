@@ -1,6 +1,6 @@
 ---
-title: "Feature Selection Methods: Wrapper, Filter, and Embedded Compared"
-description: "Compare filter methods (SelectKBest), embedded methods (LASSO, feature_importances_), and wrapper methods (GAFeatureSelectionCV) — with Python examples and guidance on when to use each."
+title: "Filter, Wrapper and Embedded Feature Selection"
+description: "Compare filter (SelectKBest), embedded (LASSO, feature_importances_) and wrapper (GAFeatureSelectionCV) feature selection in sklearn, with Python examples."
 ---
 
 **Estimated reading time:** 12 minutes

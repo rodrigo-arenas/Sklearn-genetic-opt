@@ -1,5 +1,5 @@
 ---
-title: "Hyperparameter Tuning Tutorials: Random Forest, XGBoost, LightGBM, and More"
+title: "Hyperparameter Tuning Tutorials"
 description: "End-to-end hyperparameter tuning tutorials for scikit-learn models, XGBoost, LightGBM, CatBoost, and more — using genetic algorithms with sklearn-genetic-opt."
 ---
 

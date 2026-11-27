@@ -1,6 +1,6 @@
 ---
-title: "Common Hyperparameter Tuning Mistakes (and How to Avoid Them)"
-description: "The 10 most common mistakes in hyperparameter optimization — overfitting the validation set, data leakage, wrong metrics, bad search spaces — with concrete fixes."
+title: "Common Hyperparameter Tuning Mistakes"
+description: "Ten hyperparameter tuning mistakes, including validation overfitting, data leakage in pipelines and the wrong metric for imbalanced data, each with a fix."
 ---
 
 # Common Hyperparameter Tuning Mistakes (and How to Avoid Them)

@@ -18,11 +18,10 @@ from _nbgen import Notebook  # noqa: E402
 
 nb = Notebook(
     path="tutorials/isolation-forest.md",
-    title="Tuning Isolation Forest With GASearchCV",
+    title="Isolation Forest Hyperparameter Tuning",
     description=(
-        "Tune IsolationForest's four key hyperparameters using a genetic algorithm "
-        "on a labeled anomaly dataset with a custom score_samples scorer. Includes "
-        "anomaly-score contour plots, a ROC curve, and a 3-way comparison."
+        "Tune IsolationForest hyperparameters (contamination, max_samples, max_features, "
+        "n_estimators) with GASearchCV and a custom ROC-AUC scorer on score_samples."
     ),
     intro=(
         "`IsolationForest` has four hyperparameters that interact in non-obvious "

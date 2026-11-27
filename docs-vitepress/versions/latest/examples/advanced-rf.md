@@ -1,13 +1,13 @@
 ---
-title: "Random Forest Advanced Tuning: Smart Init, Warm Starts, Diversity Control"
-description: "Use all of sklearn-genetic-opt's advanced features — smart initialization, warm starts, diversity control, fitness sharing, local search — on a Random Forest."
+title: "Advanced Random Forest Tuning"
+description: "Tune a RandomForestClassifier with smart initialization, warm starts, diversity control, fitness sharing and local search, then read the search telemetry."
 ---
 
 :::warning Development version
 This is the **latest (dev)** documentation. It may contain unreleased features or breaking changes. For the stable release, use [stable](/stable/).
 :::
 
-# Random Forest Advanced Tuning: Smart Init, Warm Starts, Diversity Control
+# Advanced Random Forest Tuning
 
 This example is a guided tour of the *advanced* optimizer controls in `sklearn-genetic-opt`. We tune a `RandomForestClassifier` on a deliberately hard classification problem, then read the search telemetry (`fit_stats_`, `history`) and convergence plots to see how the controls shape the run.
 

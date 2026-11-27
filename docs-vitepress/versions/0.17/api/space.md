@@ -1,6 +1,6 @@
 ---
 title: Search Space
-description: API reference for Integer, Continuous, and Categorical search space dimensions.
+description: "API reference for the Integer, Continuous and Categorical search space dimensions, and for converting scikit-learn and SciPy-style parameter spaces."
 ---
 
 # Search Space

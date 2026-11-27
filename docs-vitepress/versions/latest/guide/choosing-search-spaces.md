@@ -1,5 +1,5 @@
 ---
-title: "Choosing the Right Search Space for Hyperparameter Tuning"
+title: "Choosing Search Spaces for Hyperparameter Tuning"
 description: "How to define Integer, Continuous, and Categorical search spaces for common scikit-learn estimators, with recommended bounds and log-uniform guidance."
 ---
 

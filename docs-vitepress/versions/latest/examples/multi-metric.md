@@ -1,6 +1,6 @@
 ---
 title: "Multi-Metric Search on Imbalanced Data"
-description: "Track multiple scorers simultaneously, choose which metric drives the refit, and inspect per-metric cv_results_ where the metrics genuinely disagree about the best candidate."
+description: "Track several scorers in one GASearchCV run on imbalanced data, choose the metric that drives the refit, and compare the per-metric cv_results_ rankings."
 ---
 
 :::warning Development version

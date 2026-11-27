@@ -1,13 +1,13 @@
 ---
-title: "Tuning Isolation Forest With GASearchCV"
-description: "Tune IsolationForest's four key hyperparameters using a genetic algorithm on a labeled anomaly dataset with a custom score_samples scorer. Includes anomaly-score contour plots, a ROC curve, and a 3-way comparison."
+title: "Isolation Forest Hyperparameter Tuning"
+description: "Tune IsolationForest hyperparameters (contamination, max_samples, max_features, n_estimators) with GASearchCV and a custom ROC-AUC scorer on score_samples."
 ---
 
 :::warning Development version
 This is the **latest (dev)** documentation. It may contain unreleased features or breaking changes. For the stable release, use [stable](/stable/).
 :::
 
-# Tuning Isolation Forest With GASearchCV
+# Isolation Forest Hyperparameter Tuning
 
 `IsolationForest` has four hyperparameters that interact in non-obvious ways: `contamination` sets the decision threshold, `max_samples` controls how many points each tree sees, `max_features` determines which dimensions each tree uses, and `n_estimators` sets the ensemble size. The right values depend on the actual anomaly ratio and the structure of the data — a natural fit for evolutionary search.
 

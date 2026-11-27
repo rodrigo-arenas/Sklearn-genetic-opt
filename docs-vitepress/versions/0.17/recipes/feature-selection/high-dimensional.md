@@ -1,6 +1,6 @@
 ---
-title: "Feature Selection on 50+ Columns with Genetic Algorithms"
-description: "Copy-paste recipe to run GAFeatureSelectionCV on high-dimensional datasets with a threshold strategy."
+title: "Genetic Feature Selection on 50+ Columns"
+description: "Copy-paste recipe to run GAFeatureSelectionCV on a dataset with 50+ features, keep a compact subset that maximizes CV ROC-AUC, and add early stopping."
 ---
 
 # Feature Selection on 50+ Columns

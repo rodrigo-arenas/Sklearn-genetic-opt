@@ -21,10 +21,8 @@ nb = Notebook(
     path="examples/advanced-rf.md",
     title="Advanced Random Forest Tuning",
     description=(
-        "A guided tour of the advanced optimizer controls — smart "
-        "initialization, warm starts, diversity control, fitness sharing, "
-        "local search, and adaptive schedules — that tune a RandomForestClassifier "
-        "to beat its own defaults, with real telemetry and convergence plots."
+        "Tune a RandomForestClassifier with smart initialization, warm starts, diversity "
+        "control, fitness sharing and local search, then read the search telemetry."
     ),
     intro=(
         "This example is a guided tour of the *advanced* optimizer controls in "

@@ -1,6 +1,6 @@
 ---
-title: "Random Forest Hyperparameter Tuning with Genetic Algorithms"
-description: "A step-by-step tutorial for tuning RandomForestClassifier and RandomForestRegressor hyperparameters using sklearn-genetic-opt, with recommended search ranges, interaction analysis, and comparison to baseline."
+title: "Random Forest Hyperparameter Tuning"
+description: "Tune RandomForestClassifier and RandomForestRegressor with GASearchCV: recommended ranges, a baseline comparison and the max_depth vs n_estimators trade-off."
 ---
 
 **Estimated reading time:** 15 minutes

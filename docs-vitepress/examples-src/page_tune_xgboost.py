@@ -16,11 +16,10 @@ from _nbgen import Notebook  # noqa: E402
 
 nb = Notebook(
     path="tutorials/tune-xgboost.md",
-    title="Tuning XGBoost With GASearchCV",
+    title="XGBoost Hyperparameter Tuning With GASearchCV",
     description=(
-        "Optimize 9 interacting XGBoost hyperparameters with a genetic algorithm "
-        "on a noisy dataset where the defaults overfit — with a real baseline "
-        "comparison, interaction visualization, and feature importance."
+        "Tune 9 interacting XGBoost hyperparameters with GASearchCV on a noisy dataset "
+        "where the defaults overfit, then compare with the baseline and random search."
     ),
     intro=(
         "XGBoost has around nine hyperparameters that interact non-linearly: the "

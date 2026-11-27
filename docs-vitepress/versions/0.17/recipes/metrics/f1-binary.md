@@ -1,6 +1,6 @@
 ---
-title: "Tune Hyperparameters for F1 Score (Binary Classification)"
-description: "Recipe to optimize hyperparameters for F1 score in binary classification, with confusion matrix evaluation."
+title: "Tune Hyperparameters for Binary F1 Score"
+description: "Recipe to tune a RandomForestClassifier for binary F1 with GASearchCV, compare the F1 scoring options, and check the result with a confusion matrix."
 ---
 
 # Tune for F1 Score (Binary Classification)

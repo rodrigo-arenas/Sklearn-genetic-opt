@@ -1,9 +1,9 @@
 ---
-title: "Switch optimization backends in a scikit-learn search"
+title: "Switch optimization backends in scikit-learn"
 description: "Compare DEAP, SciPy, Nevergrad, CatCMAwM and pymoo at a fixed cross-validation budget, diagnose fold errors and resume from checkpoints."
 ---
 
-# Switch optimization backends in a scikit-learn search
+# Switch optimization backends in scikit-learn
 
 Use the same folds and scorer when changing engines. This walkthrough uses all five named backends and keeps a test partition for the final model.
 

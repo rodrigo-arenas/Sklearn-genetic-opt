@@ -1,5 +1,5 @@
 ---
-title: How to Tune an Entire scikit-learn Pipeline with Genetic Algorithms
+title: "Tune a scikit-learn Pipeline with GASearchCV"
 description: Tune preprocessing and model hyperparameters together by building a scikit-learn Pipeline and running GASearchCV across the full parameter space.
 ---
 

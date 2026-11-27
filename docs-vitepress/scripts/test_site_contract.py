@@ -2,6 +2,7 @@
 
 from html import unescape
 from pathlib import Path
+import ast
 import importlib.util
 import io
 import json
@@ -188,6 +189,65 @@ def test_numbered_docs_landing_describes_the_release_in_search_and_social():
         assert f'property="og:title" content="{title}"' in html
     latest = (dist / "latest" / "index.html").read_text(encoding="utf-8")
     assert "latest / dev" in re.search(r"<title>([^<]+)</title>", latest).group(1)
+
+
+# Pages whose metadata belongs to a separate change; remove each entry once it passes.
+SNIPPET_EXEMPT = {
+    "examples/plotting-gallery.md",
+    "tutorials/budgeted-optimizer-search.md",
+}
+
+
+def _front_matter(page: Path) -> dict[str, str]:
+    """Return the single-line ``title`` and ``description`` values of a page."""
+    block = re.match(r"---\r?\n(.*?)\r?\n---", page.read_text(encoding="utf-8"), re.S)
+    fields = {}
+    for line in block.group(1).splitlines():
+        key, _, value = line.partition(":")
+        if key in ("title", "description"):
+            value = value.strip()
+            # A plain YAML scalar ends at " #", which would silently cut the text; single-quoted
+            # and block scalars would be measured with their YAML syntax included.
+            assert value.startswith('"') or " #" not in value, f"{page}: {line}"
+            assert not value.startswith(("'", ">", "|")), f"{page}: {line}"
+            fields[key] = json.loads(value) if value.startswith('"') else value
+    return fields
+
+
+def test_indexed_pages_have_search_snippet_sized_metadata():
+    problems = []
+    for version in ("latest", RELEASES[-1]):
+        root = DOCS / "versions" / version
+        for page in sorted(root.rglob("*.md")):
+            relative = page.relative_to(root).as_posix()
+            # Numbered landing pages get their metadata from transformPageData.
+            if relative in SNIPPET_EXEMPT or (relative == "index.md" and version != "latest"):
+                continue
+            fields = _front_matter(page)
+            title = f"{fields['title']} | sklearn-genetic-opt"
+            description = fields["description"]
+            if len(title) > 70:
+                problems.append(f"{version}/{relative}: title has {len(title)} characters")
+            if not 110 <= len(description) <= 160:
+                problems.append(f"{version}/{relative}: description has {len(description)}")
+    assert not problems, "\n".join(problems)
+
+
+def test_generated_pages_keep_their_generator_metadata():
+    for generator in sorted((DOCS / "examples-src").glob("page_*.py")):
+        call = next(
+            node
+            for node in ast.walk(ast.parse(generator.read_text(encoding="utf-8")))
+            if isinstance(node, ast.Call) and getattr(node.func, "id", None) == "Notebook"
+        )
+        spec = {
+            kw.arg: ast.literal_eval(kw.value)
+            for kw in call.keywords
+            if kw.arg in ("path", "title", "description")
+        }
+        page = DOCS / "versions" / "latest" / spec.pop("path")
+        assert _front_matter(page) == spec, generator.name
+        assert f"\n# {spec['title']}\n" in page.read_text(encoding="utf-8"), generator.name
 
 
 @pytest.mark.parametrize(

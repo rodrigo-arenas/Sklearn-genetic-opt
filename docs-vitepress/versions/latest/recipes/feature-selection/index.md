@@ -1,6 +1,6 @@
 ---
 title: Feature Selection Recipes
-description: Copy-paste recipes for genetic algorithm feature selection with GAFeatureSelectionCV.
+description: "Four copy-paste recipes for GAFeatureSelectionCV: high-dimensional data, select-then-tune, a feature-count penalty scorer and leakage-free CV evaluation."
 ---
 
 :::warning Development version

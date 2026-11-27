@@ -1,5 +1,5 @@
 ---
-title: "Combine Feature Selection and Hyperparameter Tuning"
+title: "Select Features, Then Tune Hyperparameters"
 description: "Two-stage recipe: use GAFeatureSelectionCV to select features, then GASearchCV to tune the estimator on the reduced feature set."
 ---
 
