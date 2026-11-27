@@ -40,17 +40,24 @@ def test_built_site_advertises_only_indexable_pages():
         for element in sitemap.findall(".//{http://www.sitemaps.org/schemas/sitemap/0.9}loc")
     }
     assert f"{SITE}/" in locations
-    assert f"{SITE}/versions/{RELEASES[-1]}/" in locations
-    assert not any(url.endswith("/stable/") for url in locations)
     tutorial = "tutorials/budgeted-optimizer-search"
     latest_tutorial = f"{SITE}/versions/latest/{tutorial}"
     stable_tutorial = DOCS / "versions" / RELEASES[-1] / f"{tutorial}.md"
     if stable_tutorial.is_file():
-        assert f"{SITE}/versions/{RELEASES[-1]}/{tutorial}" in locations
+        assert f"{SITE}/stable/{tutorial}" in locations
         assert latest_tutorial not in locations
     else:
         assert latest_tutorial in locations
-    assert {url for url in locations if "/versions/latest/" in url} <= {latest_tutorial}
+    # No numbered release URL is advertised: the stable release lives at /stable/.
+    assert {url for url in locations if "/versions/" in url} <= {latest_tutorial}
+    stable_pages = {
+        re.sub(r"(^|/)index$", r"\1", page.relative_to(dist).as_posix().removesuffix(".html"))
+        for page in (dist / "stable").rglob("*.html")
+    }
+    assert f"{SITE}/stable/" in locations and len(stable_pages) > 1
+    assert {url for url in locations if "/stable/" in url} == {
+        f"{SITE}/{page}" for page in stable_pages
+    }
 
     for url in locations:
         parsed = urlparse(url)
@@ -61,18 +68,66 @@ def test_built_site_advertises_only_indexable_pages():
         assert f'rel="canonical" href="{url}"' in html
         assert 'name="robots" content="noindex' not in html
 
-    stable_html = (dist / "stable" / "index.html").read_text(encoding="utf-8")
     latest_html = (dist / "versions" / "latest" / "index.html").read_text(encoding="utf-8")
-    assert f'rel="canonical" href="{SITE}/versions/{RELEASES[-1]}/"' in stable_html
-    assert 'name="robots" content="noindex,follow"' in stable_html
     # `latest` repeats the stable page, so it consolidates on it instead of noindex.
-    assert f'rel="canonical" href="{SITE}/versions/{RELEASES[-1]}/"' in latest_html
+    assert f'rel="canonical" href="{SITE}/stable/"' in latest_html
     assert 'name="robots" content="noindex' not in latest_html
 
     for older in RELEASES[:-1]:
         older_html = (dist / "versions" / older / "index.html").read_text(encoding="utf-8")
-        assert f'rel="canonical" href="{SITE}/versions/{RELEASES[-1]}/"' in older_html
-    assert not any(f"/versions/{older}/" in url for older in RELEASES[:-1] for url in locations)
+        assert f'rel="canonical" href="{SITE}/stable/"' in older_html
+
+
+@pytest.mark.parametrize("version", [*RELEASES, "latest"])
+def test_every_copy_of_a_stable_page_canonicalizes_to_its_stable_url(version):
+    page = "tutorials/isolation-forest"
+    built = "stable" if version == RELEASES[-1] else f"versions/{version}"
+    html = (DOCS / ".vitepress" / "dist" / built / f"{page}.html").read_text(encoding="utf-8")
+    assert f'rel="canonical" href="{SITE}/stable/{page}"' in html
+    assert f'property="og:url" content="{SITE}/stable/{page}"' in html
+    assert 'name="robots" content="noindex' not in html
+    # The edit link opens the source file, which stays under versions/.
+    assert f"/edit/master/docs-vitepress/versions/{version}/{page}.md" in html
+
+
+def test_stable_release_numbered_urls_are_redirect_stubs():
+    dist = DOCS / ".vitepress" / "dist"
+    numbered = dist / "versions" / RELEASES[-1]
+    pages = sorted(
+        page.relative_to(dist / "stable").as_posix() for page in (dist / "stable").rglob("*.html")
+    )
+    assert "tutorials/isolation-forest.html" in pages
+    # Only stubs remain in the old URL space, one per stable page.
+    assert (
+        sorted(
+            path.relative_to(numbered).as_posix() for path in numbered.rglob("*") if path.is_file()
+        )
+        == pages
+    )
+    sitemap = (dist / "sitemap.xml").read_text(encoding="utf-8")
+    assert f"/versions/{RELEASES[-1]}/" not in sitemap
+    for page in pages:
+        target = "/stable/" + re.sub(r"(^|/)index$", r"\1", page.removesuffix(".html"))
+        html = (numbered / page).read_text(encoding="utf-8")
+        assert f'http-equiv="refresh" content="0; url={target}"' in html
+        assert f'rel="canonical" href="{SITE}{target}"' in html
+        assert 'name="robots" content="noindex,follow"' in html
+        assert f'<a href="{target}">' in html
+        # A plain static page: the VitePress app would render its 404 page here.
+        assert "<script" not in html
+
+
+def test_built_site_does_not_link_to_the_stable_release_numbered_urls():
+    # The client router does not know the stub URLs, so in-site links must use /stable/.
+    dist = DOCS / ".vitepress" / "dist"
+    stubs = dist / "versions" / RELEASES[-1]
+    numbered_link = re.compile(rf"[\"'`]/versions/{re.escape(RELEASES[-1])}/")
+    offenders = [
+        path.relative_to(dist).as_posix()
+        for path in [*dist.rglob("*.html"), *(dist / "assets").rglob("*.js")]
+        if not path.is_relative_to(stubs) and numbered_link.search(path.read_text(encoding="utf-8"))
+    ]
+    assert not offenders
 
 
 def test_budgeted_search_tutorial_links_to_diagnostics():
@@ -111,7 +166,8 @@ def test_homepage_links_to_released_pages():
     assert "The GA finds better hyperparameters than a grid search" not in homepage
     assert "Joint hyperparameter + feature search in one step" not in homepage
     tutorial_link = re.search(
-        r'<a\b[^>]*href="/versions/[^/]+/tutorials/budgeted-optimizer-search"' r"[^>]*>(.*?)</a>",
+        r'<a\b[^>]*href="/(?:stable|versions/latest)/tutorials/budgeted-optimizer-search"'
+        r"[^>]*>(.*?)</a>",
         homepage,
         re.DOTALL,
     )
@@ -128,7 +184,7 @@ def test_homepage_links_to_released_pages():
         ("tutorials/tune-xgboost", "XGBoost hyperparameter tuning"),
         ("tutorials/isolation-forest", "Isolation Forest hyperparameter tuning"),
     ]:
-        target = f"/versions/{RELEASES[-1]}/{page}"
+        target = f"/stable/{page}"
         assert re.search(
             rf'<a\b[^>]*href="{re.escape(target)}"[^>]*>{re.escape(label)}</a>', homepage
         ), f"Homepage is missing the link {label!r} to {target}"
@@ -137,7 +193,7 @@ def test_homepage_links_to_released_pages():
 def test_homepage_plot_previews_link_to_full_gallery_sections():
     dist = DOCS / ".vitepress" / "dist"
     homepage = (dist / "index.html").read_text(encoding="utf-8")
-    gallery = f"/versions/{RELEASES[-1]}/examples/plotting-gallery"
+    gallery = "/stable/examples/plotting-gallery"
     full_plots = (dist / f"{gallery.lstrip('/')}.html").read_text(encoding="utf-8")
     cards = re.findall(
         rf'<a\b[^>]*href="{re.escape(gallery)}#([^"]+)"[^>]*>(.*?)</a>', homepage, re.S
@@ -177,9 +233,10 @@ def test_homepage_metadata_identifies_the_site_and_python_package():
 
 
 def test_numbered_docs_landing_describes_the_release_in_search_and_social():
-    dist = DOCS / ".vitepress" / "dist" / "versions"
+    dist = DOCS / ".vitepress" / "dist"
     for version in RELEASES:
-        html = (dist / version / "index.html").read_text(encoding="utf-8")
+        built = "stable" if version == RELEASES[-1] else f"versions/{version}"
+        html = (dist / built / "index.html").read_text(encoding="utf-8")
         title = f"sklearn-genetic-opt {version} Documentation"
         assert f"<title>{title}</title>" in html
         assert re.search(
@@ -187,7 +244,7 @@ def test_numbered_docs_landing_describes_the_release_in_search_and_social():
             html,
         )
         assert f'property="og:title" content="{title}"' in html
-    latest = (dist / "latest" / "index.html").read_text(encoding="utf-8")
+    latest = (dist / "versions" / "latest" / "index.html").read_text(encoding="utf-8")
     assert "latest / dev" in re.search(r"<title>([^<]+)</title>", latest).group(1)
 
 
@@ -267,22 +324,17 @@ def test_legacy_development_links_reach_equivalent_pages(old_path, new_path):
     assert f"{SITE}/versions/latest/{old_path}" not in sitemap
 
 
-def test_freeze_points_homepage_at_new_stable_version(tmp_path):
-    old_version = RELEASES[-1]
-    major, minor = map(int, old_version.split("."))
-    next_version = f"{major}.{minor + 1}"
+def _next_release():
+    major, minor = map(int, RELEASES[-1].split("."))
+    return f"{major}.{minor + 1}"
+
+
+def test_freeze_keeps_homepage_stable_links_resolvable(tmp_path):
+    next_version = _next_release()
     docs = tmp_path / "docs-vitepress"
     (docs / "scripts").mkdir(parents=True)
-    (docs / "versions").mkdir()
-    (docs / "stable").mkdir()
     shutil.copy2(DOCS / "scripts" / "freeze-version.mjs", docs / "scripts")
     shutil.copytree(DOCS / "versions" / "latest", docs / "versions" / "latest")
-    shutil.copy2(DOCS / "stable" / "index.md", docs / "stable")
-    shutil.copy2(DOCS / "index.md", docs)
-    shutil.copytree(
-        DOCS / ".vitepress" / "theme" / "components",
-        docs / ".vitepress" / "theme" / "components",
-    )
 
     subprocess.run(
         ["node", "scripts/freeze-version.mjs", next_version],
@@ -291,34 +343,95 @@ def test_freeze_points_homepage_at_new_stable_version(tmp_path):
         capture_output=True,
         text=True,
     )
-    homepage = (docs / "index.md").read_text(encoding="utf-8")
-    assert f"/versions/{next_version}/guide/basic-usage" in homepage
-    assert f"/versions/{next_version}/benchmarks/optimizer-catalog" in homepage
-    assert f"/versions/{old_version}/" not in homepage
-    for original in (DOCS / ".vitepress" / "theme" / "components").glob("Home*.vue"):
-        source = original.read_text(encoding="utf-8")
-        frozen = (docs / ".vitepress" / "theme" / "components" / original.name).read_text(
-            encoding="utf-8"
-        )
-        assert f"/versions/{old_version}/" not in frozen
-        if f"/versions/{old_version}/" in source:
-            assert f"/versions/{next_version}/" in frozen
-    assert (docs / "versions" / next_version / "guide" / "basic-usage.md").is_file()
-    frozen_paths = (
-        docs / ".vitepress" / "theme" / "components" / "HomeLearningPaths.vue"
-    ).read_text(encoding="utf-8")
-    for target in (
+    # The homepage links to /stable/, which renders the newest frozen release.
+    home_sources = [DOCS / "index.md", *(DOCS / ".vitepress/theme/components").glob("Home*.vue")]
+    links = {
+        link
+        for source in home_sources
+        for link in re.findall(r"/stable/([\w./-]*)", source.read_text(encoding="utf-8"))
+    }
+    assert {
+        "guide/basic-usage",
+        "benchmarks/optimizer-catalog",
         "tutorials/optimizer-backends",
         "examples/sklearn-comparison",
         "comparisons/optuna-vs-sklearn-genetic-opt",
-    ):
-        assert f"/versions/{next_version}/{target}" in frozen_paths
-        assert (docs / "versions" / next_version / f"{target}.md").is_file()
+    } <= links
+    for link in links:
+        page = re.sub(r"(^|/)$", r"\1index", link)
+        assert (docs / "versions" / next_version / f"{page}.md").is_file(), link
     frozen_index = (docs / "versions" / next_version / "index.md").read_text(encoding="utf-8")
     latest_index = (docs / "versions" / "latest" / "index.md").read_text(encoding="utf-8")
     assert "pip install sklearn-genetic-opt" in frozen_index
     assert "pip install git+" not in frozen_index
     assert "pip install git+" in latest_index
+
+
+def test_next_freeze_moves_stable_urls_without_manual_edits(tmp_path):
+    previous, new = RELEASES[-1], _next_release()
+    docs, dist = tmp_path / "docs", tmp_path / "dist"
+    sources = [
+        f"versions/{new}/index.md",
+        f"versions/{new}/guide/basic-usage.md",
+        f"versions/{previous}/guide/basic-usage.md",
+        f"versions/{previous}/guide/removed.md",
+        "versions/latest/index.md",
+        "versions/latest/guide/unreleased.md",
+    ]
+    for source in sources:
+        (docs / source).parent.mkdir(parents=True, exist_ok=True)
+        (docs / source).write_text("# Page\n", encoding="utf-8")
+    # The new release's pages as VitePress writes them after the rewrite.
+    for page in ("index.html", "guide/basic-usage.html"):
+        (dist / "stable" / page).parent.mkdir(parents=True, exist_ok=True)
+        (dist / "stable" / page).write_text("<html></html>", encoding="utf-8")
+    # Releases are ordered by number, not as text: 1.10 is newer than 1.9.
+    numbered = tmp_path / "numbered"
+    for release in ("0.9", "0.10", "1.0", "1.9", "1.10"):
+        (numbered / "versions" / release).mkdir(parents=True)
+
+    script = f"""
+import * as routes from {json.dumps((DOCS / ".vitepress" / "stable-routes.mjs").as_uri())}
+const [docs, dist, site, sources] = {json.dumps([str(docs), str(dist), SITE, sources])}
+const versions = routes.discoverReleaseVersions(docs)
+const rewrite = routes.stableRewrite(versions[0])
+routes.writeStableStubs(dist, site, versions[0])
+console.log(JSON.stringify({{
+  versions,
+  numbered: routes.discoverReleaseVersions({json.dumps(str(numbered))}),
+  pages: sources.map((source) => {{
+    const page = rewrite(source)
+    return [page, routes.stableCounterpart(docs, versions[0], page) ?? null]
+  }}),
+}}))
+"""
+    result = subprocess.run(
+        ["node", "--input-type=module", "-e", script],
+        capture_output=True,
+        text=True,
+        check=True,
+        timeout=60,
+    )
+    routed = json.loads(result.stdout)
+    assert routed["versions"] == [new, previous]
+    assert routed["numbered"] == ["1.10", "1.9", "1.0", "0.10", "0.9"]
+    # [rendered page, canonical path when it is not the page's own URL]
+    assert routed["pages"] == [
+        ["stable/index.md", None],
+        ["stable/guide/basic-usage.md", None],
+        [f"versions/{previous}/guide/basic-usage.md", "/stable/guide/basic-usage"],
+        [f"versions/{previous}/guide/removed.md", None],
+        ["versions/latest/index.md", "/stable/"],
+        ["versions/latest/guide/unreleased.md", None],
+    ]
+    for stub, target in (
+        ("index.html", "/stable/"),
+        ("guide/basic-usage.html", "/stable/guide/basic-usage"),
+    ):
+        html = (dist / "versions" / new / stub).read_text(encoding="utf-8")
+        assert f'http-equiv="refresh" content="0; url={target}"' in html
+        assert f'rel="canonical" href="{SITE}{target}"' in html
+    assert not (dist / "versions" / previous).exists()
 
 
 @pytest.mark.parametrize("script", ["examples:generate", "examples:check"])

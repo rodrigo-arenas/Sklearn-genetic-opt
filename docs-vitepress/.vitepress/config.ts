@@ -1,7 +1,14 @@
-import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs'
+import { existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { defineConfig, HeadConfig } from 'vitepress'
+import {
+  discoverReleaseVersions,
+  stableCounterpart,
+  stableRewrite,
+  writeRedirectStub,
+  writeStableStubs,
+} from './stable-routes.mjs'
 
 const GITHUB_PAGES_BASE = '/'
 const SITE = 'https://sklearngeneticopt.rodrigo-arenas.com'
@@ -11,41 +18,19 @@ const PYPI = 'https://pypi.org/project/sklearn-genetic-opt/'
 const GA_TAG = process.env.GOOGLE_ANALYTICS_TAG
 const DOCS_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 
-function discoverReleaseVersions() {
-  const versionsRoot = join(DOCS_ROOT, 'versions')
-  if (!existsSync(versionsRoot)) return []
-
-  return readdirSync(versionsRoot, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory() && /^\d+\.\d+$/.test(entry.name))
-    .map((entry) => entry.name)
-    .sort((a, b) => {
-      const [aMajor, aMinor] = a.split('.').map(Number)
-      const [bMajor, bMinor] = b.split('.').map(Number)
-      return bMajor - aMajor || bMinor - aMinor
-    })
-}
-
-const releaseVersions = discoverReleaseVersions()
+const releaseVersions = discoverReleaseVersions(DOCS_ROOT)
 const stableVersion = releaseVersions[0]
-
-// Older releases and `latest` repeat the stable pages, so their canonical points
-// to the stable counterpart and ranking signals consolidate on one URL.
-function stableCounterpart(relativePath: string) {
-  const match = relativePath.replace(/\\/g, '/').match(/^versions\/(latest|\d+\.\d+)\/(.*)\.md$/)
-  if (!match || !stableVersion || match[1] === stableVersion) return undefined
-  if (!existsSync(join(DOCS_ROOT, 'versions', stableVersion, `${match[2]}.md`))) return undefined
-  return `/versions/${stableVersion}/${match[2]}`.replace(/\/index$/, '/')
-}
 
 // Index this standalone tutorial while it is new. After it is released, use
 // the stable URL in search results and on the homepage.
 const budgetedTutorial = 'versions/latest/tutorials/budgeted-optimizer-search'
-const budgetedTutorialUrl = stableCounterpart(`${budgetedTutorial}.md`) ?? `/${budgetedTutorial}`
+const budgetedTutorialUrl =
+  stableCounterpart(DOCS_ROOT, stableVersion, `${budgetedTutorial}.md`) ?? `/${budgetedTutorial}`
 
 const versionNavItems = [
   ...releaseVersions.map((version, index) => ({
     text: index === 0 ? `${version} (stable)` : version,
-    link: `/versions/${version}/`,
+    link: index === 0 ? '/stable/' : `/versions/${version}/`,
   })),
   { text: 'latest (dev)', link: '/versions/latest/' },
 ]
@@ -71,10 +56,10 @@ const packageIcon = {
 }
 
 const versionSidebarEntries = Object.fromEntries([
-  ...releaseVersions.map((version) => [
-    `/versions/${version}/`,
-    versionSidebar(`/versions/${version}`),
-  ]),
+  ...releaseVersions.map((version, index) => {
+    const prefix = index === 0 ? '/stable' : `/versions/${version}`
+    return [`${prefix}/`, versionSidebar(prefix)]
+  }),
   ['/versions/latest/', versionSidebar('/versions/latest')],
 ])
 
@@ -85,8 +70,10 @@ const gaHead: HeadConfig[] = GA_TAG
     ]
   : []
 
+// Source directory under versions/ of a sidebar prefix; /stable renders the stable release.
 function versionName(versionPrefix: string) {
-  return versionPrefix.replace(/\/$/, '').split('/').at(-1) || versionPrefix
+  const name = versionPrefix.replace(/\/$/, '').split('/').at(-1) || versionPrefix
+  return name === 'stable' ? stableVersion : name
 }
 
 function hasVersionPage(versionPrefix: string, relativePath: string) {
@@ -249,13 +236,15 @@ export default defineConfig({
 
   titleTemplate: ':title | sklearn-genetic-opt',
 
+  // The stable release renders at /stable/; see stable-routes.mjs.
+  rewrites: stableRewrite(stableVersion),
+
   sitemap: {
     hostname: SITE,
+    // Released pages are advertised only at /stable/; numbered URLs consolidate there.
     transformItems: (items) => items.filter((item) => {
       const path = new URL(item.url, SITE).pathname
-      if (path === '/stable/') return false
-      const version = path.match(/^\/versions\/([^/]+)\//)?.[1]
-      return !version || version === stableVersion || path === budgetedTutorialUrl
+      return !path.startsWith('/versions/') || path === budgetedTutorialUrl
     }),
   },
 
@@ -273,26 +262,16 @@ export default defineConfig({
       if (!existsSync(join(latest, `${destination}.html`))) {
         throw new Error(`Missing legacy URL destination: ${target}`)
       }
-      const output = join(latest, oldPath)
-      mkdirSync(output, { recursive: true })
-      writeFileSync(join(output, 'index.html'), `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta http-equiv="refresh" content="0; url=${target}">
-  <link rel="canonical" href="${SITE}${target}">
-  <title>Documentation moved | sklearn-genetic-opt</title>
-</head>
-<body><p>Continue to the <a href="${target}">updated documentation</a>.</p></body>
-</html>
-`)
+      writeRedirectStub(join(latest, oldPath, 'index.html'), SITE, target)
     }
+    writeStableStubs(outDir, SITE, stableVersion)
   },
 
   transformPageData(pageData) {
     const base = SITE
     const ogImage = `${base}/brand/social-preview-1280x640.png`
-    const release = pageData.relativePath.match(/^versions\/(\d+\.\d+)\/index\.md$/)?.[1]
+    // filePath is the source path, so the /stable/ landing keeps its release number.
+    const release = pageData.filePath.match(/^versions\/(\d+\.\d+)\/index\.md$/)?.[1]
     if (release) {
       pageData.title = `sklearn-genetic-opt ${release} Documentation`
       pageData.description = `Released documentation for sklearn-genetic-opt ${release}. Find examples and API references for hyperparameter tuning and feature selection with scikit-learn.`
@@ -310,15 +289,13 @@ export default defineConfig({
       .replace(/\\/g, '/')
       .replace(/index\.md$/, '')
       .replace(/\.md$/, '')
-    const counterpart = stableCounterpart(pageData.relativePath)
-    const pageUrl = pageData.relativePath === 'stable/index.md' && releaseVersions.length
-      ? `${base}/versions/${stableVersion}/`
-      : `${base}${counterpart ?? `/${cleanPath}`}`
+    // Copies of a stable page canonicalize to /stable/<page>; others are self-canonical.
+    const counterpart = stableCounterpart(DOCS_ROOT, stableVersion, pageData.relativePath)
+    const pageUrl = `${base}${counterpart ?? `/${cleanPath}`}`
 
     pageData.frontmatter.head ??= []
-    if (pageData.relativePath === 'stable/index.md' ||
-        (pageData.relativePath.startsWith('versions/latest/') && !counterpart &&
-         cleanPath !== budgetedTutorial)) {
+    if (pageData.relativePath.startsWith('versions/latest/') && !counterpart &&
+        cleanPath !== budgetedTutorial) {
       pageData.frontmatter.head.push(['meta', { name: 'robots', content: 'noindex,follow' }])
     }
     pageData.frontmatter.head.push(

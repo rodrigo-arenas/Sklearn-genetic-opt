@@ -195,10 +195,13 @@ Check internal documentation links:
 python docs-vitepress/scripts/check_links.py
 ```
 
-The public sitemap lists released documentation. `/versions/latest/` is a
-development preview and `/stable/` redirects to the newest release; neither is
-an indexable destination. A release tag freezes `latest` under its numbered
-version and updates homepage links. After deployment, verify the published
+The public sitemap lists released documentation at `/stable/`, which always
+serves the newest release and is the indexed destination. That release's
+numbered URLs redirect to `/stable/`; older releases and the `/versions/latest/`
+development preview point their canonical there for every page the newest
+release also has. A release tag freezes `latest`
+under its numbered version; homepage links already target `/stable/` and need
+no update. After deployment, verify the published
 `/robots.txt` and `/sitemap.xml`, then inspect indexing and submit the sitemap
 in [Google Search Console](https://search.google.com/search-console) and
 [Bing Webmaster Tools](https://www.bing.com/webmasters). Search visits alone do

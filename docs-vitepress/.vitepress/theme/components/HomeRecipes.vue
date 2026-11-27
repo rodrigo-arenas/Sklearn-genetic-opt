@@ -29,7 +29,7 @@
       </div>
 
       <div class="recipes-cta">
-        <a href="/versions/0.17/recipes/" class="browse-all-btn">Browse all recipes →</a>
+        <a href="/stable/recipes/" class="browse-all-btn">Browse all recipes →</a>
       </div>
     </div>
   </section>
@@ -44,7 +44,7 @@ const recipes = [
     desc: '7-parameter joint search. Which parameters matter, classification and regression variants.',
     time: '8 min',
     difficulty: 'Beginner',
-    link: '/versions/0.17/recipes/classification/random-forest-classifier',
+    link: '/stable/recipes/classification/random-forest-classifier',
   },
   {
     icon: '⚡',
@@ -53,7 +53,7 @@ const recipes = [
     desc: 'learning_rate × n_estimators interaction, subsample, colsample_bytree — 8-parameter search.',
     time: '10 min',
     difficulty: 'Intermediate',
-    link: '/versions/0.17/recipes/classification/xgboost-classifier',
+    link: '/stable/recipes/classification/xgboost-classifier',
   },
   {
     icon: '🔦',
@@ -62,7 +62,7 @@ const recipes = [
     desc: 'num_leaves vs max_depth, min_child_samples, feature_fraction — LightGBM-specific parameters.',
     time: '10 min',
     difficulty: 'Intermediate',
-    link: '/versions/0.17/recipes/classification/lightgbm-classifier',
+    link: '/stable/recipes/classification/lightgbm-classifier',
   },
   {
     icon: '🎯',
@@ -71,7 +71,7 @@ const recipes = [
     desc: 'Use GAFeatureSelectionCV with a feature-count limit and cross-validation.',
     time: '7 min',
     difficulty: 'Intermediate',
-    link: '/versions/0.17/recipes/feature-selection/high-dimensional',
+    link: '/stable/recipes/feature-selection/high-dimensional',
   },
   {
     icon: '🔗',
@@ -80,7 +80,7 @@ const recipes = [
     desc: 'Tune preprocessing parameters and model hyperparameters jointly in a single Pipeline.',
     time: '8 min',
     difficulty: 'Intermediate',
-    link: '/versions/0.17/recipes/pipelines/preprocessing-pipeline',
+    link: '/stable/recipes/pipelines/preprocessing-pipeline',
   },
   {
     icon: '📋',
@@ -89,7 +89,7 @@ const recipes = [
     desc: 'Set scoring="roc_auc", handle predict_proba requirements, multi-class extension.',
     time: '5 min',
     difficulty: 'Beginner',
-    link: '/versions/0.17/recipes/metrics/roc-auc',
+    link: '/stable/recipes/metrics/roc-auc',
   },
   {
     icon: '🧪',
@@ -98,7 +98,7 @@ const recipes = [
     desc: 'Seed the initial population with hyperparameters from a previous run or domain knowledge.',
     time: '6 min',
     difficulty: 'Advanced',
-    link: '/versions/0.17/recipes/advanced/warm-start',
+    link: '/stable/recipes/advanced/warm-start',
   },
   {
     icon: '🔬',
@@ -107,7 +107,7 @@ const recipes = [
     desc: 'Same parameters as XGBClassifier but optimized for RMSE, MAE, and R² objectives.',
     time: '8 min',
     difficulty: 'Intermediate',
-    link: '/versions/0.17/recipes/regression/xgboost-regressor',
+    link: '/stable/recipes/regression/xgboost-regressor',
   },
   {
     icon: '⚓',
@@ -116,7 +116,7 @@ const recipes = [
     desc: 'Search regularization strength and the L1/L2 ratio in a scaled regression pipeline.',
     time: '5 min',
     difficulty: 'Intermediate',
-    link: '/versions/0.17/recipes/regression/elasticnet',
+    link: '/stable/recipes/regression/elasticnet',
   },
 ]
 </script>
