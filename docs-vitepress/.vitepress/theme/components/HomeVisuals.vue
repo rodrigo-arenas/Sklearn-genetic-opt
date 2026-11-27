@@ -38,7 +38,7 @@
 </template>
 
 <script setup>
-const gallery = '/versions/0.17/examples/plotting-gallery'
+const gallery = '/stable/examples/plotting-gallery'
 const visuals = [
   {
     image: 'fitness',

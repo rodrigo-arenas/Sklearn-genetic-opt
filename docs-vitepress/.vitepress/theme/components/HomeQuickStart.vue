@@ -25,8 +25,8 @@
           </div>
 
           <div class="qs-ctas">
-            <a href="/versions/0.17/guide/installation" class="qs-btn primary">Installation Guide</a>
-            <a href="/versions/0.17/tutorials/" class="qs-btn secondary">All Tutorials</a>
+            <a href="/stable/guide/installation" class="qs-btn primary">Installation Guide</a>
+            <a href="/stable/tutorials/" class="qs-btn secondary">All Tutorials</a>
           </div>
         </div>
 
